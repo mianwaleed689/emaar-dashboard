@@ -134,6 +134,41 @@ const TABS = ["Overview", "Financials", "Portfolio", "Competitors", "Yields", "R
 
 export default function EmaarDashboard() {
   const [tab, setTab] = useState("Overview");
+  const [authenticated, setAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const ACCESS_CODE = "EMAAR2026";
+
+  if (!authenticated) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#060E1A", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans',sans-serif" }}>
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <div style={{ background: "rgba(11,31,63,0.9)", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 16, padding: 48, width: 420, textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
+          <h1 style={{ fontFamily: "'Playfair Display',serif", color: "#D4A843", fontSize: 28, marginBottom: 8 }}>EMAAR PROPERTIES</h1>
+          <p style={{ color: "#64748B", fontSize: 13, marginBottom: 32, letterSpacing: 2 }}>INTELLIGENCE DASHBOARD</p>
+          <div style={{ width: 60, height: 2, background: "#D4A843", margin: "0 auto 32px" }} />
+          <p style={{ color: "#94A3B8", fontSize: 14, marginBottom: 16 }}>Enter access code to continue</p>
+          <input
+            type="password"
+            value={password}
+            onChange={e => { setPassword(e.target.value); setError(""); }}
+            onKeyDown={e => { if (e.key === "Enter") { if (password === ACCESS_CODE) setAuthenticated(true); else setError("Invalid access code"); }}}
+            placeholder="Access Code"
+            style={{ width: "100%", padding: "14px 16px", background: "rgba(255,255,255,0.05)", border: error ? "1px solid #E53935" : "1px solid rgba(212,168,67,0.3)", borderRadius: 8, color: "#FFFFFF", fontSize: 16, outline: "none", textAlign: "center", letterSpacing: 4, marginBottom: 8, boxSizing: "border-box" }}
+          />
+          {error && <p style={{ color: "#E53935", fontSize: 12, marginBottom: 8 }}>{error}</p>}
+          <button
+            onClick={() => { if (password === ACCESS_CODE) setAuthenticated(true); else setError("Invalid access code"); }}
+            style={{ width: "100%", padding: "14px 0", background: "linear-gradient(135deg, #D4A843, #B8912F)", border: "none", borderRadius: 8, color: "#0B1F3F", fontSize: 15, fontWeight: 700, cursor: "pointer", marginTop: 8, letterSpacing: 1 }}
+          >
+            ACCESS DASHBOARD
+          </button>
+          <p style={{ color: "#64748B", fontSize: 11, marginTop: 24 }}>Authorized personnel only</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, color: C.white, fontFamily: "'DM Sans',sans-serif" }}>

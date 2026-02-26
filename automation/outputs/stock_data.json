@@ -1,0 +1,351 @@
+{
+  "last_updated": "2026-02-26T19:20:34.828179",
+  "source": "Yahoo Finance",
+  "ticker": "EMAAR.AE",
+  "price": {
+    "current": 16.9,
+    "previous_close": 17.1,
+    "open": 17.05,
+    "day_high": 17.1,
+    "day_low": 16.85,
+    "52w_high": 17.25,
+    "52w_low": 10.7,
+    "50d_avg": 15.193,
+    "200d_avg": 14.27675,
+    "currency": "AED"
+  },
+  "valuation": {
+    "market_cap": 149375549440,
+    "market_cap_aed_b": 149.4,
+    "pe_ratio": 8.492462,
+    "forward_pe": 6.657868,
+    "pb_ratio": 1.584474,
+    "ev_ebitda": 6.087,
+    "enterprise_value": 146902122496
+  },
+  "dividend": {
+    "dividend_rate": 1.0,
+    "dividend_yield": 5.85,
+    "payout_ratio": 0.5025,
+    "ex_date": "1775174400"
+  },
+  "analysts": {
+    "target_mean": 19.9375,
+    "target_high": 30.0,
+    "target_low": 15.8,
+    "target_median": 19.25,
+    "recommendation": "strong_buy",
+    "num_analysts": 12
+  },
+  "financials_summary": {
+    "revenue": 49557262336,
+    "revenue_aed_b": 49.6,
+    "net_income": 17599178752,
+    "ebitda": 24132392960,
+    "total_debt": 10614988800,
+    "total_cash": 28254455808,
+    "profit_margin": 0.35513002,
+    "operating_margin": 0.46332002,
+    "return_on_equity": 0.21915,
+    "book_value": 10.666,
+    "eps_trailing": 1.99,
+    "eps_forward": 2.53835
+  },
+  "shares": {
+    "shares_outstanding": 8838789849,
+    "float_shares": 6211106015
+  },
+  "performance": {
+    "1d_change_pct": -1.17,
+    "1m_change_pct": 15.36,
+    "ytd_change_pct": 30.88,
+    "1y_high": 17.1,
+    "1y_low": 11.55,
+    "avg_volume": 13255766
+  },
+  "price_history_30d": [
+    {
+      "date": "2026-01-07",
+      "close": 14.8,
+      "volume": 22202743
+    },
+    {
+      "date": "2026-01-08",
+      "close": 14.65,
+      "volume": 15957255
+    },
+    {
+      "date": "2026-01-12",
+      "close": 14.6,
+      "volume": 12409324
+    },
+    {
+      "date": "2026-01-13",
+      "close": 14.65,
+      "volume": 12231719
+    },
+    {
+      "date": "2026-01-14",
+      "close": 14.45,
+      "volume": 11599288
+    },
+    {
+      "date": "2026-01-15",
+      "close": 14.3,
+      "volume": 13078037
+    },
+    {
+      "date": "2026-01-19",
+      "close": 14.6,
+      "volume": 8790348
+    },
+    {
+      "date": "2026-01-20",
+      "close": 14.7,
+      "volume": 9860547
+    },
+    {
+      "date": "2026-01-21",
+      "close": 14.65,
+      "volume": 9242452
+    },
+    {
+      "date": "2026-01-22",
+      "close": 15.0,
+      "volume": 24095879
+    },
+    {
+      "date": "2026-01-26",
+      "close": 14.85,
+      "volume": 15783661
+    },
+    {
+      "date": "2026-01-27",
+      "close": 15.05,
+      "volume": 15444480
+    },
+    {
+      "date": "2026-01-28",
+      "close": 15.4,
+      "volume": 25755563
+    },
+    {
+      "date": "2026-01-29",
+      "close": 15.3,
+      "volume": 15090549
+    },
+    {
+      "date": "2026-02-02",
+      "close": 15.6,
+      "volume": 20186793
+    },
+    {
+      "date": "2026-02-03",
+      "close": 15.8,
+      "volume": 22011297
+    },
+    {
+      "date": "2026-02-04",
+      "close": 15.9,
+      "volume": 28500932
+    },
+    {
+      "date": "2026-02-05",
+      "close": 16.0,
+      "volume": 21352000
+    },
+    {
+      "date": "2026-02-09",
+      "close": 16.4,
+      "volume": 22332889
+    },
+    {
+      "date": "2026-02-10",
+      "close": 16.5,
+      "volume": 29044020
+    },
+    {
+      "date": "2026-02-11",
+      "close": 16.4,
+      "volume": 16730296
+    },
+    {
+      "date": "2026-02-12",
+      "close": 16.3,
+      "volume": 4863658
+    },
+    {
+      "date": "2026-02-16",
+      "close": 16.3,
+      "volume": 10659740
+    },
+    {
+      "date": "2026-02-17",
+      "close": 16.35,
+      "volume": 11710596
+    },
+    {
+      "date": "2026-02-18",
+      "close": 16.9,
+      "volume": 19477746
+    },
+    {
+      "date": "2026-02-19",
+      "close": 16.45,
+      "volume": 21461778
+    },
+    {
+      "date": "2026-02-23",
+      "close": 17.05,
+      "volume": 32471473
+    },
+    {
+      "date": "2026-02-24",
+      "close": 17.1,
+      "volume": 36847960
+    },
+    {
+      "date": "2026-02-25",
+      "close": 17.1,
+      "volume": 13543908
+    },
+    {
+      "date": "2026-02-26",
+      "close": 16.9,
+      "volume": 13938228
+    }
+  ],
+  "income_statement": {
+    "2025": {
+      "total_revenue": 49557263000.0,
+      "gross_profit": 27227303000.0,
+      "operating_income": 22551938000.0,
+      "net_income": 17599179000.0,
+      "ebitda": 27837206000.0
+    },
+    "2024": {
+      "total_revenue": 35504920000.0,
+      "gross_profit": 20380554000.0,
+      "operating_income": 16136330000.0,
+      "net_income": 13513938000.0,
+      "ebitda": 21024300000.0
+    },
+    "2023": {
+      "total_revenue": 26749821000.0,
+      "gross_profit": 16865324000.0,
+      "operating_income": 13007783000.0,
+      "net_income": 11629238000.0,
+      "ebitda": 17260393000.0
+    },
+    "2022": {
+      "total_revenue": 24925674000.0,
+      "gross_profit": 12587312000.0,
+      "operating_income": 8056194000.0,
+      "net_income": 6832049000.0,
+      "ebitda": 10594340000.0
+    }
+  },
+  "quarterly_results": {
+    "Q4 2025": {
+      "revenue": 16450281000.0,
+      "net_income": 6146182000.0
+    },
+    "Q2 2025": {
+      "revenue": 9736007000.0,
+      "net_income": 3370625000.0
+    },
+    "Q1 2025": {
+      "revenue": 10097712000.0,
+      "net_income": 3709152000.0
+    },
+    "Q4 2024": {
+      "revenue": 11712440000.0,
+      "net_income": 4991018000.0
+    }
+  },
+  "dividend_history": [
+    {
+      "date": "2017-04-26",
+      "amount": 0.15
+    },
+    {
+      "date": "2018-01-23",
+      "amount": 0.42
+    },
+    {
+      "date": "2018-05-01",
+      "amount": 0.14
+    },
+    {
+      "date": "2019-04-30",
+      "amount": 0.15
+    },
+    {
+      "date": "2019-05-01",
+      "amount": 0.15
+    },
+    {
+      "date": "2021-04-20",
+      "amount": 0.1
+    },
+    {
+      "date": "2022-04-28",
+      "amount": 0.15
+    },
+    {
+      "date": "2023-04-26",
+      "amount": 0.25
+    },
+    {
+      "date": "2024-05-01",
+      "amount": 0.5
+    },
+    {
+      "date": "2025-04-03",
+      "amount": 1.0
+    }
+  ],
+  "peer_comparison": {
+    "Emaar Properties": {
+      "ticker": "EMAAR.AE",
+      "price": 16.9,
+      "market_cap_b": 149.4,
+      "pe_ratio": 8.492462,
+      "dividend_yield": 5.85,
+      "52w_change_pct": 0.1834532
+    },
+    "Emaar Development": {
+      "ticker": "EMAARDEV.AE",
+      "price": 20.0,
+      "market_cap_b": 80.0,
+      "pe_ratio": 7.067138,
+      "dividend_yield": 3.47,
+      "52w_change_pct": 0.42803025
+    },
+    "DAMAC": {
+      "ticker": "DAMAC.AE",
+      "price": null,
+      "market_cap_b": null,
+      "pe_ratio": null,
+      "dividend_yield": null,
+      "52w_change_pct": null
+    },
+    "Aldar": {
+      "ticker": "ALDAR.AD",
+      "price": null,
+      "market_cap_b": null,
+      "pe_ratio": null,
+      "dividend_yield": null,
+      "52w_change_pct": null
+    },
+    "Deyaar": {
+      "ticker": "DEYAAR.AE",
+      "price": 1.02,
+      "market_cap_b": 4.5,
+      "pe_ratio": 7.285714,
+      "dividend_yield": 4.85,
+      "52w_change_pct": 0.10633731
+    }
+  },
+  "alerts": []
+}
