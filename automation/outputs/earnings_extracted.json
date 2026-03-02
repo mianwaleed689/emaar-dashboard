@@ -1,0 +1,166 @@
+{
+  "processed_at": "2026-02-26T19:19:39.136373",
+  "source": "DEMO \u2014 FY 2025 sample text",
+  "extracted_kpis": {
+    "extraction_method": "regex_pattern_matching",
+    "document_info": {
+      "document_type": "emaar_group_results",
+      "reporting_period": "annual",
+      "reporting_year": 2026
+    },
+    "property_sales_aed_b": 80.4,
+    "revenue_aed_b": 49.6,
+    "net_profit_pretax_aed_b": 25.7,
+    "net_profit_attr_aed_b": 17.6,
+    "ebitda_aed_b": 25.6,
+    "revenue_backlog_aed_b": 155.0,
+    "recurring_revenue_aed_b": 10.5,
+    "intl_sales_aed_b": 9.3,
+    "mall_revenue_aed_b": 6.3,
+    "hotel_revenue_aed_b": 4.2,
+    "mall_occupancy_pct": 98.0,
+    "new_project_launches": 48.0,
+    "units_delivered_cumulative": 79000.0,
+    "land_bank_sqft_m": null,
+    "yoy_growth": {
+      "revenue_yoy_pct": 36.0,
+      "net_profit_yoy_pct": 36.0,
+      "ebitda_yoy_pct": 33.0,
+      "property_sales_yoy_pct": 16.0,
+      "intl_sales_yoy_pct": 124.0,
+      "backlog_yoy_pct": 39.0
+    },
+    "emaar_development": {
+      "emaardev_sales_aed_b": 71.1,
+      "emaardev_revenue_aed_b": null,
+      "emaardev_net_profit_aed_b": null
+    },
+    "credit_ratings": {
+      "sp_rating": "BBB+",
+      "moodys_rating": "Baa1",
+      "fitch_rating": "BBB"
+    },
+    "extraction_stats": {
+      "kpis_extracted": 13,
+      "total_possible": 14,
+      "extraction_rate_pct": 92.9,
+      "confidence": "HIGH"
+    }
+  },
+  "comparison_vs_baseline": {
+    "baseline_period": "FY 2025",
+    "changes": [
+      {
+        "metric": "Property Sales",
+        "field": "property_sales_aed_b",
+        "baseline": 80.4,
+        "current": 80.4,
+        "change_abs": 0.0,
+        "change_pct": 0.0,
+        "direction": "\u2192",
+        "significance": "LOW"
+      },
+      {
+        "metric": "Revenue",
+        "field": "revenue_aed_b",
+        "baseline": 49.6,
+        "current": 49.6,
+        "change_abs": 0.0,
+        "change_pct": 0.0,
+        "direction": "\u2192",
+        "significance": "LOW"
+      },
+      {
+        "metric": "Net Profit (Pre-Tax)",
+        "field": "net_profit_pretax_aed_b",
+        "baseline": 25.7,
+        "current": 25.7,
+        "change_abs": 0.0,
+        "change_pct": 0.0,
+        "direction": "\u2192",
+        "significance": "LOW"
+      },
+      {
+        "metric": "EBITDA",
+        "field": "ebitda_aed_b",
+        "baseline": 25.6,
+        "current": 25.6,
+        "change_abs": 0.0,
+        "change_pct": 0.0,
+        "direction": "\u2192",
+        "significance": "LOW"
+      },
+      {
+        "metric": "Revenue Backlog",
+        "field": "revenue_backlog_aed_b",
+        "baseline": 155,
+        "current": 155.0,
+        "change_abs": 0.0,
+        "change_pct": 0.0,
+        "direction": "\u2192",
+        "significance": "LOW"
+      },
+      {
+        "metric": "Recurring Revenue",
+        "field": "recurring_revenue_aed_b",
+        "baseline": 10.5,
+        "current": 10.5,
+        "change_abs": 0.0,
+        "change_pct": 0.0,
+        "direction": "\u2192",
+        "significance": "LOW"
+      },
+      {
+        "metric": "International Sales",
+        "field": "intl_sales_aed_b",
+        "baseline": 9.3,
+        "current": 9.3,
+        "change_abs": 0.0,
+        "change_pct": 0.0,
+        "direction": "\u2192",
+        "significance": "LOW"
+      },
+      {
+        "metric": "Mall Revenue",
+        "field": "mall_revenue_aed_b",
+        "baseline": 6.3,
+        "current": 6.3,
+        "change_abs": 0.0,
+        "change_pct": 0.0,
+        "direction": "\u2192",
+        "significance": "LOW"
+      },
+      {
+        "metric": "Hotel Revenue",
+        "field": "hotel_revenue_aed_b",
+        "baseline": 4.2,
+        "current": 4.2,
+        "change_abs": 0.0,
+        "change_pct": 0.0,
+        "direction": "\u2192",
+        "significance": "LOW"
+      },
+      {
+        "metric": "Mall Occupancy",
+        "field": "mall_occupancy_pct",
+        "baseline": 98,
+        "current": 98.0,
+        "change_abs": 0.0,
+        "change_pct": 0.0,
+        "direction": "\u2192",
+        "significance": "LOW"
+      },
+      {
+        "metric": "New Launches",
+        "field": "new_project_launches",
+        "baseline": 48,
+        "current": 48.0,
+        "change_abs": 0.0,
+        "change_pct": 0.0,
+        "direction": "\u2192",
+        "significance": "LOW"
+      }
+    ]
+  },
+  "alerts": []
+}

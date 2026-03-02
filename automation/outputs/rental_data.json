@@ -1,0 +1,232 @@
+{
+  "last_updated": "2026-02-26T19:21:22.568244",
+  "source": "DLD Rental Index, Bayut, Property Finder",
+  "yield_data": [
+    {
+      "community": "Dubai Hills Estate",
+      "unit_type": "1BR Apt",
+      "annual_rent": 75000,
+      "purchase_price": 1529388,
+      "gross_yield": 4.9,
+      "net_yield": 4.2,
+      "demand": "Very High",
+      "tenant_profile": "Professionals, couples"
+    },
+    {
+      "community": "Dubai Hills Estate",
+      "unit_type": "2BR Apt",
+      "annual_rent": 110000,
+      "purchase_price": 2200000,
+      "gross_yield": 5.0,
+      "net_yield": 4.3,
+      "demand": "Very High",
+      "tenant_profile": "Families, professionals"
+    },
+    {
+      "community": "Dubai Hills Estate",
+      "unit_type": "3BR Apt",
+      "annual_rent": 160000,
+      "purchase_price": 3500000,
+      "gross_yield": 4.6,
+      "net_yield": 3.9,
+      "demand": "High",
+      "tenant_profile": "HNW families"
+    },
+    {
+      "community": "Dubai Creek Harbour",
+      "unit_type": "1BR Apt",
+      "annual_rent": 80000,
+      "purchase_price": 1750000,
+      "gross_yield": 4.6,
+      "net_yield": 3.9,
+      "demand": "High",
+      "tenant_profile": "Young professionals"
+    },
+    {
+      "community": "Dubai Creek Harbour",
+      "unit_type": "2BR Apt",
+      "annual_rent": 120000,
+      "purchase_price": 2500000,
+      "gross_yield": 4.8,
+      "net_yield": 4.1,
+      "demand": "High",
+      "tenant_profile": "Expat families"
+    },
+    {
+      "community": "Dubai Creek Harbour",
+      "unit_type": "3BR Apt",
+      "annual_rent": 170000,
+      "purchase_price": 3500000,
+      "gross_yield": 4.9,
+      "net_yield": 4.1,
+      "demand": "Moderate-High",
+      "tenant_profile": "HNW tenants"
+    },
+    {
+      "community": "Emaar Beachfront",
+      "unit_type": "1BR Apt",
+      "annual_rent": 120000,
+      "purchase_price": 3200000,
+      "gross_yield": 3.8,
+      "net_yield": 3.2,
+      "demand": "Very High",
+      "tenant_profile": "Luxury expats"
+    },
+    {
+      "community": "Emaar Beachfront",
+      "unit_type": "2BR Apt",
+      "annual_rent": 180000,
+      "purchase_price": 5000000,
+      "gross_yield": 3.6,
+      "net_yield": 3.1,
+      "demand": "High",
+      "tenant_profile": "UHNW tenants"
+    },
+    {
+      "community": "Emaar South",
+      "unit_type": "1BR Apt",
+      "annual_rent": 60000,
+      "purchase_price": 1200000,
+      "gross_yield": 5.0,
+      "net_yield": 4.3,
+      "demand": "Growing",
+      "tenant_profile": "Airport staff, young prof."
+    },
+    {
+      "community": "Emaar South",
+      "unit_type": "2BR Apt",
+      "annual_rent": 85000,
+      "purchase_price": 1800000,
+      "gross_yield": 4.7,
+      "net_yield": 4.0,
+      "demand": "Growing",
+      "tenant_profile": "Families, value seekers"
+    },
+    {
+      "community": "The Valley",
+      "unit_type": "3BR TH",
+      "annual_rent": 95000,
+      "purchase_price": 1600000,
+      "gross_yield": 5.9,
+      "net_yield": 5.0,
+      "demand": "High",
+      "tenant_profile": "Family end-users"
+    },
+    {
+      "community": "The Valley",
+      "unit_type": "4BR Villa",
+      "annual_rent": 140000,
+      "purchase_price": 3000000,
+      "gross_yield": 4.7,
+      "net_yield": 4.0,
+      "demand": "High",
+      "tenant_profile": "Large families"
+    },
+    {
+      "community": "Rashid Marina",
+      "unit_type": "1BR Apt",
+      "annual_rent": 85000,
+      "purchase_price": 2100000,
+      "gross_yield": 4.0,
+      "net_yield": 3.4,
+      "demand": "Moderate",
+      "tenant_profile": "Maritime lifestyle"
+    },
+    {
+      "community": "Downtown Dubai",
+      "unit_type": "1BR Apt",
+      "annual_rent": 95000,
+      "purchase_price": 2500000,
+      "gross_yield": 3.8,
+      "net_yield": 3.2,
+      "demand": "Very High",
+      "tenant_profile": "Tourists, executives"
+    },
+    {
+      "community": "Downtown Dubai",
+      "unit_type": "2BR Apt",
+      "annual_rent": 145000,
+      "purchase_price": 4000000,
+      "gross_yield": 3.6,
+      "net_yield": 3.1,
+      "demand": "Very High",
+      "tenant_profile": "UHNW, corp. housing"
+    }
+  ],
+  "analytics": {
+    "portfolio_avg_gross_yield": 4.53,
+    "portfolio_avg_net_yield": 3.85,
+    "highest_gross_yield": 5.9,
+    "lowest_gross_yield": 3.6,
+    "avg_annual_cash_flow": 97467,
+    "best_yield_community": "The Valley",
+    "best_yield_community_avg": 5.3,
+    "community_averages": {
+      "Dubai Hills Estate": 4.83,
+      "Dubai Creek Harbour": 4.77,
+      "Emaar Beachfront": 3.7,
+      "Emaar South": 4.85,
+      "The Valley": 5.3,
+      "Rashid Marina": 4.0,
+      "Downtown Dubai": 3.7
+    },
+    "yield_spread": 2.3,
+    "golden_visa_eligible": "All communities (AED 2M+ threshold)"
+  },
+  "tenant_segments": [
+    {
+      "segment": "Executive Professionals",
+      "income_aed_month": "40,000-80,000",
+      "preferred_unit": "1-2BR Apt",
+      "preferred_community": "Dubai Hills, Downtown, Creek Harbour",
+      "demand_driver": "DIFC/Business Bay proximity"
+    },
+    {
+      "segment": "HNW Families",
+      "income_aed_month": "80,000+",
+      "preferred_unit": "3BR+ Villa/TH",
+      "preferred_community": "Dubai Hills, The Valley, Grand Polo",
+      "demand_driver": "Schools, space, Golden Visa"
+    },
+    {
+      "segment": "International Investors",
+      "income_aed_month": "N/A (Buy & Rent)",
+      "preferred_unit": "1-2BR Apt",
+      "preferred_community": "Emaar South, Creek Harbour, Hills",
+      "demand_driver": "Yield optimization, brand trust"
+    },
+    {
+      "segment": "Waterfront Lifestyle",
+      "income_aed_month": "50,000-100,000",
+      "preferred_unit": "1-3BR Apt",
+      "preferred_community": "Emaar Beachfront, Rashid Marina",
+      "demand_driver": "Beach access, marina views"
+    },
+    {
+      "segment": "Young Professionals",
+      "income_aed_month": "20,000-40,000",
+      "preferred_unit": "Studio/1BR",
+      "preferred_community": "Emaar South, The Valley",
+      "demand_driver": "Affordability, metro access"
+    },
+    {
+      "segment": "Tourism Investors",
+      "income_aed_month": "N/A (Short-term)",
+      "preferred_unit": "1-2BR Branded",
+      "preferred_community": "Address/Vida/Palace",
+      "demand_driver": "Hotel-managed returns"
+    },
+    {
+      "segment": "Ultra-HNW",
+      "income_aed_month": "200,000+",
+      "preferred_unit": "5BR+ Mansion",
+      "preferred_community": "The Oasis, Grand Polo, Downtown PH",
+      "demand_driver": "Privacy, exclusivity, trophy asset"
+    }
+  ],
+  "data_freshness": {
+    "baseline": "Feb 2026 (from Emaar launch prices + market rents)",
+    "methodology": "Gross = Annual Rent / Purchase Price. Net = Gross \u00d7 85%.",
+    "note": "Run property_scraper.py to get live rental prices that override these baselines."
+  }
+}

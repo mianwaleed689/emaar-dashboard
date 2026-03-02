@@ -1,0 +1,2 @@
+2026-02-26 19:20:41,155 [ERROR] HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: ALDAR.AD"}}}
+2026-02-26 19:21:22,625 [INFO] Automation run complete in 50.7s

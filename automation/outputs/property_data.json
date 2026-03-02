@@ -1,0 +1,116 @@
+{
+  "last_updated": "2026-02-26T19:21:12.660736",
+  "source": "Bayut / Property Finder",
+  "sale_data": [
+    {
+      "community": "Dubai Hills Estate",
+      "source": "Bayut",
+      "timestamp": "2026-02-26T19:20:43.370191",
+      "total_listings_found": 0,
+      "avg_price": null,
+      "min_price": null,
+      "max_price": null,
+      "avg_price_per_sqft": null,
+      "sample_listings": []
+    },
+    {
+      "community": "Dubai Creek Harbour",
+      "source": "Bayut",
+      "timestamp": "2026-02-26T19:20:45.792498",
+      "total_listings_found": 0,
+      "avg_price": null,
+      "min_price": null,
+      "max_price": null,
+      "avg_price_per_sqft": null,
+      "sample_listings": []
+    },
+    {
+      "community": "Emaar Beachfront",
+      "source": "Bayut",
+      "timestamp": "2026-02-26T19:20:48.413645",
+      "total_listings_found": 0,
+      "avg_price": null,
+      "min_price": null,
+      "max_price": null,
+      "avg_price_per_sqft": null,
+      "sample_listings": []
+    },
+    {
+      "community": "Emaar South",
+      "source": "Bayut",
+      "timestamp": "2026-02-26T19:20:50.954884",
+      "total_listings_found": 0,
+      "avg_price": null,
+      "min_price": null,
+      "max_price": null,
+      "avg_price_per_sqft": null,
+      "sample_listings": []
+    },
+    {
+      "community": "Downtown Dubai",
+      "source": "Bayut",
+      "timestamp": "2026-02-26T19:20:53.533914",
+      "total_listings_found": 0,
+      "avg_price": null,
+      "min_price": null,
+      "max_price": null,
+      "avg_price_per_sqft": null,
+      "sample_listings": []
+    },
+    {
+      "community": "The Valley",
+      "source": "Bayut",
+      "timestamp": "2026-02-26T19:20:57.026363",
+      "total_listings_found": 0,
+      "avg_price": null,
+      "min_price": null,
+      "max_price": null,
+      "avg_price_per_sqft": null,
+      "sample_listings": []
+    }
+  ],
+  "rental_data": [
+    {
+      "community": "Dubai Hills Estate",
+      "type": "rental",
+      "avg_annual_rent": null,
+      "min_rent": null,
+      "max_rent": null,
+      "listings_sampled": 0
+    },
+    {
+      "community": "Dubai Creek Harbour",
+      "type": "rental",
+      "avg_annual_rent": null,
+      "min_rent": null,
+      "max_rent": null,
+      "listings_sampled": 0
+    },
+    {
+      "community": "Emaar Beachfront",
+      "type": "rental",
+      "avg_annual_rent": null,
+      "min_rent": null,
+      "max_rent": null,
+      "listings_sampled": 0
+    },
+    {
+      "community": "Downtown Dubai",
+      "type": "rental",
+      "avg_annual_rent": null,
+      "min_rent": null,
+      "max_rent": null,
+      "listings_sampled": 0
+    },
+    {
+      "community": "Emaar South",
+      "type": "rental",
+      "avg_annual_rent": null,
+      "min_rent": null,
+      "max_rent": null,
+      "listings_sampled": 0
+    }
+  ],
+  "live_yields": [],
+  "price_changes_vs_baseline": []
+}

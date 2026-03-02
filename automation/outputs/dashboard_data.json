@@ -1,0 +1,1027 @@
+{
+  "last_updated": "2026-02-26T19:21:22.570430",
+  "version": "1.0",
+  "data_sources": [
+    "Yahoo Finance (stock, financials)",
+    "Bayut (property listings, rentals)",
+    "DXBinteract (developer rankings)",
+    "DLD (market transactions)",
+    "Knight Frank / CW Core / Fitch (forecasts)"
+  ],
+  "stock": {
+    "last_updated": "2026-02-26T19:20:34.828179",
+    "source": "Yahoo Finance",
+    "ticker": "EMAAR.AE",
+    "price": {
+      "current": 16.9,
+      "previous_close": 17.1,
+      "open": 17.05,
+      "day_high": 17.1,
+      "day_low": 16.85,
+      "52w_high": 17.25,
+      "52w_low": 10.7,
+      "50d_avg": 15.193,
+      "200d_avg": 14.27675,
+      "currency": "AED"
+    },
+    "valuation": {
+      "market_cap": 149375549440,
+      "market_cap_aed_b": 149.4,
+      "pe_ratio": 8.492462,
+      "forward_pe": 6.657868,
+      "pb_ratio": 1.584474,
+      "ev_ebitda": 6.087,
+      "enterprise_value": 146902122496
+    },
+    "dividend": {
+      "dividend_rate": 1.0,
+      "dividend_yield": 5.85,
+      "payout_ratio": 0.5025,
+      "ex_date": "1775174400"
+    },
+    "analysts": {
+      "target_mean": 19.9375,
+      "target_high": 30.0,
+      "target_low": 15.8,
+      "target_median": 19.25,
+      "recommendation": "strong_buy",
+      "num_analysts": 12
+    },
+    "financials_summary": {
+      "revenue": 49557262336,
+      "revenue_aed_b": 49.6,
+      "net_income": 17599178752,
+      "ebitda": 24132392960,
+      "total_debt": 10614988800,
+      "total_cash": 28254455808,
+      "profit_margin": 0.35513002,
+      "operating_margin": 0.46332002,
+      "return_on_equity": 0.21915,
+      "book_value": 10.666,
+      "eps_trailing": 1.99,
+      "eps_forward": 2.53835
+    },
+    "shares": {
+      "shares_outstanding": 8838789849,
+      "float_shares": 6211106015
+    },
+    "performance": {
+      "1d_change_pct": -1.17,
+      "1m_change_pct": 15.36,
+      "ytd_change_pct": 30.88,
+      "1y_high": 17.1,
+      "1y_low": 11.55,
+      "avg_volume": 13255766
+    },
+    "price_history_30d": [
+      {
+        "date": "2026-01-07",
+        "close": 14.8,
+        "volume": 22202743
+      },
+      {
+        "date": "2026-01-08",
+        "close": 14.65,
+        "volume": 15957255
+      },
+      {
+        "date": "2026-01-12",
+        "close": 14.6,
+        "volume": 12409324
+      },
+      {
+        "date": "2026-01-13",
+        "close": 14.65,
+        "volume": 12231719
+      },
+      {
+        "date": "2026-01-14",
+        "close": 14.45,
+        "volume": 11599288
+      },
+      {
+        "date": "2026-01-15",
+        "close": 14.3,
+        "volume": 13078037
+      },
+      {
+        "date": "2026-01-19",
+        "close": 14.6,
+        "volume": 8790348
+      },
+      {
+        "date": "2026-01-20",
+        "close": 14.7,
+        "volume": 9860547
+      },
+      {
+        "date": "2026-01-21",
+        "close": 14.65,
+        "volume": 9242452
+      },
+      {
+        "date": "2026-01-22",
+        "close": 15.0,
+        "volume": 24095879
+      },
+      {
+        "date": "2026-01-26",
+        "close": 14.85,
+        "volume": 15783661
+      },
+      {
+        "date": "2026-01-27",
+        "close": 15.05,
+        "volume": 15444480
+      },
+      {
+        "date": "2026-01-28",
+        "close": 15.4,
+        "volume": 25755563
+      },
+      {
+        "date": "2026-01-29",
+        "close": 15.3,
+        "volume": 15090549
+      },
+      {
+        "date": "2026-02-02",
+        "close": 15.6,
+        "volume": 20186793
+      },
+      {
+        "date": "2026-02-03",
+        "close": 15.8,
+        "volume": 22011297
+      },
+      {
+        "date": "2026-02-04",
+        "close": 15.9,
+        "volume": 28500932
+      },
+      {
+        "date": "2026-02-05",
+        "close": 16.0,
+        "volume": 21352000
+      },
+      {
+        "date": "2026-02-09",
+        "close": 16.4,
+        "volume": 22332889
+      },
+      {
+        "date": "2026-02-10",
+        "close": 16.5,
+        "volume": 29044020
+      },
+      {
+        "date": "2026-02-11",
+        "close": 16.4,
+        "volume": 16730296
+      },
+      {
+        "date": "2026-02-12",
+        "close": 16.3,
+        "volume": 4863658
+      },
+      {
+        "date": "2026-02-16",
+        "close": 16.3,
+        "volume": 10659740
+      },
+      {
+        "date": "2026-02-17",
+        "close": 16.35,
+        "volume": 11710596
+      },
+      {
+        "date": "2026-02-18",
+        "close": 16.9,
+        "volume": 19477746
+      },
+      {
+        "date": "2026-02-19",
+        "close": 16.45,
+        "volume": 21461778
+      },
+      {
+        "date": "2026-02-23",
+        "close": 17.05,
+        "volume": 32471473
+      },
+      {
+        "date": "2026-02-24",
+        "close": 17.1,
+        "volume": 36847960
+      },
+      {
+        "date": "2026-02-25",
+        "close": 17.1,
+        "volume": 13543908
+      },
+      {
+        "date": "2026-02-26",
+        "close": 16.9,
+        "volume": 13938228
+      }
+    ],
+    "income_statement": {
+      "2025": {
+        "total_revenue": 49557263000.0,
+        "gross_profit": 27227303000.0,
+        "operating_income": 22551938000.0,
+        "net_income": 17599179000.0,
+        "ebitda": 27837206000.0
+      },
+      "2024": {
+        "total_revenue": 35504920000.0,
+        "gross_profit": 20380554000.0,
+        "operating_income": 16136330000.0,
+        "net_income": 13513938000.0,
+        "ebitda": 21024300000.0
+      },
+      "2023": {
+        "total_revenue": 26749821000.0,
+        "gross_profit": 16865324000.0,
+        "operating_income": 13007783000.0,
+        "net_income": 11629238000.0,
+        "ebitda": 17260393000.0
+      },
+      "2022": {
+        "total_revenue": 24925674000.0,
+        "gross_profit": 12587312000.0,
+        "operating_income": 8056194000.0,
+        "net_income": 6832049000.0,
+        "ebitda": 10594340000.0
+      }
+    },
+    "quarterly_results": {
+      "Q4 2025": {
+        "revenue": 16450281000.0,
+        "net_income": 6146182000.0
+      },
+      "Q2 2025": {
+        "revenue": 9736007000.0,
+        "net_income": 3370625000.0
+      },
+      "Q1 2025": {
+        "revenue": 10097712000.0,
+        "net_income": 3709152000.0
+      },
+      "Q4 2024": {
+        "revenue": 11712440000.0,
+        "net_income": 4991018000.0
+      }
+    },
+    "dividend_history": [
+      {
+        "date": "2017-04-26",
+        "amount": 0.15
+      },
+      {
+        "date": "2018-01-23",
+        "amount": 0.42
+      },
+      {
+        "date": "2018-05-01",
+        "amount": 0.14
+      },
+      {
+        "date": "2019-04-30",
+        "amount": 0.15
+      },
+      {
+        "date": "2019-05-01",
+        "amount": 0.15
+      },
+      {
+        "date": "2021-04-20",
+        "amount": 0.1
+      },
+      {
+        "date": "2022-04-28",
+        "amount": 0.15
+      },
+      {
+        "date": "2023-04-26",
+        "amount": 0.25
+      },
+      {
+        "date": "2024-05-01",
+        "amount": 0.5
+      },
+      {
+        "date": "2025-04-03",
+        "amount": 1.0
+      }
+    ],
+    "peer_comparison": {
+      "Emaar Properties": {
+        "ticker": "EMAAR.AE",
+        "price": 16.9,
+        "market_cap_b": 149.4,
+        "pe_ratio": 8.492462,
+        "dividend_yield": 5.85,
+        "52w_change_pct": 0.1834532
+      },
+      "Emaar Development": {
+        "ticker": "EMAARDEV.AE",
+        "price": 20.0,
+        "market_cap_b": 80.0,
+        "pe_ratio": 7.067138,
+        "dividend_yield": 3.47,
+        "52w_change_pct": 0.42803025
+      },
+      "DAMAC": {
+        "ticker": "DAMAC.AE",
+        "price": null,
+        "market_cap_b": null,
+        "pe_ratio": null,
+        "dividend_yield": null,
+        "52w_change_pct": null
+      },
+      "Aldar": {
+        "ticker": "ALDAR.AD",
+        "price": null,
+        "market_cap_b": null,
+        "pe_ratio": null,
+        "dividend_yield": null,
+        "52w_change_pct": null
+      },
+      "Deyaar": {
+        "ticker": "DEYAAR.AE",
+        "price": 1.02,
+        "market_cap_b": 4.5,
+        "pe_ratio": 7.285714,
+        "dividend_yield": 4.85,
+        "52w_change_pct": 0.10633731
+      }
+    },
+    "alerts": []
+  },
+  "property": {
+    "last_updated": "2026-02-26T19:21:12.660736",
+    "source": "Bayut / Property Finder",
+    "sale_data": [
+      {
+        "community": "Dubai Hills Estate",
+        "source": "Bayut",
+        "timestamp": "2026-02-26T19:20:43.370191",
+        "total_listings_found": 0,
+        "avg_price": null,
+        "min_price": null,
+        "max_price": null,
+        "avg_price_per_sqft": null,
+        "sample_listings": []
+      },
+      {
+        "community": "Dubai Creek Harbour",
+        "source": "Bayut",
+        "timestamp": "2026-02-26T19:20:45.792498",
+        "total_listings_found": 0,
+        "avg_price": null,
+        "min_price": null,
+        "max_price": null,
+        "avg_price_per_sqft": null,
+        "sample_listings": []
+      },
+      {
+        "community": "Emaar Beachfront",
+        "source": "Bayut",
+        "timestamp": "2026-02-26T19:20:48.413645",
+        "total_listings_found": 0,
+        "avg_price": null,
+        "min_price": null,
+        "max_price": null,
+        "avg_price_per_sqft": null,
+        "sample_listings": []
+      },
+      {
+        "community": "Emaar South",
+        "source": "Bayut",
+        "timestamp": "2026-02-26T19:20:50.954884",
+        "total_listings_found": 0,
+        "avg_price": null,
+        "min_price": null,
+        "max_price": null,
+        "avg_price_per_sqft": null,
+        "sample_listings": []
+      },
+      {
+        "community": "Downtown Dubai",
+        "source": "Bayut",
+        "timestamp": "2026-02-26T19:20:53.533914",
+        "total_listings_found": 0,
+        "avg_price": null,
+        "min_price": null,
+        "max_price": null,
+        "avg_price_per_sqft": null,
+        "sample_listings": []
+      },
+      {
+        "community": "The Valley",
+        "source": "Bayut",
+        "timestamp": "2026-02-26T19:20:57.026363",
+        "total_listings_found": 0,
+        "avg_price": null,
+        "min_price": null,
+        "max_price": null,
+        "avg_price_per_sqft": null,
+        "sample_listings": []
+      }
+    ],
+    "rental_data": [
+      {
+        "community": "Dubai Hills Estate",
+        "type": "rental",
+        "avg_annual_rent": null,
+        "min_rent": null,
+        "max_rent": null,
+        "listings_sampled": 0
+      },
+      {
+        "community": "Dubai Creek Harbour",
+        "type": "rental",
+        "avg_annual_rent": null,
+        "min_rent": null,
+        "max_rent": null,
+        "listings_sampled": 0
+      },
+      {
+        "community": "Emaar Beachfront",
+        "type": "rental",
+        "avg_annual_rent": null,
+        "min_rent": null,
+        "max_rent": null,
+        "listings_sampled": 0
+      },
+      {
+        "community": "Downtown Dubai",
+        "type": "rental",
+        "avg_annual_rent": null,
+        "min_rent": null,
+        "max_rent": null,
+        "listings_sampled": 0
+      },
+      {
+        "community": "Emaar South",
+        "type": "rental",
+        "avg_annual_rent": null,
+        "min_rent": null,
+        "max_rent": null,
+        "listings_sampled": 0
+      }
+    ],
+    "live_yields": [],
+    "price_changes_vs_baseline": []
+  },
+  "market": {
+    "last_updated": "2026-02-26T19:21:15.649977",
+    "market_data": {
+      "annual_2025": {
+        "total_sales_value_aed_b": 682.5,
+        "total_transactions": 214912,
+        "total_txn_value_aed_b": 919,
+        "total_all_transactions": 275442,
+        "q4_sales_aed_b": 187.5,
+        "december_sales_aed_b": 64.82,
+        "avg_price_per_sqft": 1755,
+        "off_plan_share_pct": 62.6,
+        "off_plan_value_aed_b": 293,
+        "new_investors_h1": 59075,
+        "total_investors_h1": 94700,
+        "residential_sales_txns": 203000,
+        "avg_apt_rent_aed": 75000,
+        "avg_villa_rent_aed": 189900,
+        "mortgage_txns": 50974,
+        "mortgage_value_aed_b": 179.26,
+        "cash_buyers_pct": 87,
+        "reidin_price_growth_pct": 12.9,
+        "developer_count": 228,
+        "units_launched": 131504,
+        "yoy_sales_value_growth_pct": 30.7,
+        "yoy_txn_volume_growth_pct": 18.8,
+        "women_investors_aed_b": 154,
+        "total_investor_base": 193100,
+        "source": "DLD / DXBinteract / Emarat Al Youm / Zawya",
+        "verified_date": "Feb 2026"
+      },
+      "forecasts_2026": {
+        "knight_frank": {
+          "prime_growth_pct": 3,
+          "mainstream_growth_pct": 1,
+          "supply_2026_2030_units": 331000,
+          "annual_delivery_est": 66000,
+          "notes": "Market transitioning to sustainable phase. 56+ month growth cycle."
+        },
+        "cushman_wakefield_core": {
+          "price_growth_pct": "5-8",
+          "notes": "Marked slowdown from 12-22% annual growth in 2024-25."
+        },
+        "fitch_ratings": {
+          "correction_possible": true,
+          "pipeline_units": 120000,
+          "notes": "Moderate correction possible. Oversupply risk in select areas."
+        },
+        "industry_consensus": {
+          "transaction_growth_pct": "10-15",
+          "notes": "Multiple CEOs forecast growth supported by Golden Visa and D33 strategy."
+        }
+      },
+      "key_indicators": {
+        "population_target": "5.8M by 2040",
+        "price_cycle_months": "56+",
+        "gdp_growth_2025_pct": 4.8,
+        "gdp_growth_2026_pct": 5.0,
+        "d33_target": "AED 1T annual RE transactions"
+      }
+    },
+    "latest_news": [
+      {
+        "title": "Islamic Finance Glossary",
+        "url": "https://www.zawya.com/en/islamic-economy/glossary",
+        "source": "Zawya"
+      }
+    ],
+    "data_freshness": {
+      "annual_data": "FY 2025 (DLD verified Jan 2026)",
+      "forecasts": "2026 outlook (Knight Frank Nov 2025, CW Core Jan 2026, Fitch 2026)",
+      "news": "Scraped Feb 26, 2026"
+    },
+    "next_data_points_to_watch": [
+      "Q1 2026 DLD transaction data (expected Apr 2026)",
+      "Emaar Q1 2026 earnings (expected May 7, 2026)",
+      "Knight Frank Q4 2025 report",
+      "Monthly DLD transaction updates",
+      "REIDIN price index monthly update"
+    ]
+  },
+  "developers": {
+    "last_updated": "2026-02-26T19:21:22.550380",
+    "rankings": {
+      "data_source": "DXBinteract via fam Properties / Arabian Business / Khaleej Times",
+      "data_period": "Full Year 2025",
+      "verified_date": "Jan 2026",
+      "total_dubai_sales_aed_b": 682.5,
+      "rankings_by_sales_value": [
+        {
+          "rank": 1,
+          "developer": "Emaar Properties",
+          "sales_aed_b": 65.8,
+          "sales_usd_b": 17.9,
+          "units_sold": 13149,
+          "projects_delivered": 27,
+          "units_delivered": 7318,
+          "projects_launched": 54,
+          "units_under_construction": 51032,
+          "segment": "Full Spectrum",
+          "confidence": "VERIFIED"
+        },
+        {
+          "rank": 2,
+          "developer": "DAMAC Properties",
+          "sales_aed_b": 35.9,
+          "sales_usd_b": 9.8,
+          "units_sold": 15393,
+          "projects_delivered": 12,
+          "units_delivered": 2113,
+          "projects_launched": 22,
+          "units_under_construction": 46554,
+          "segment": "Mid-Premium \u2192 Ultra-Lux",
+          "confidence": "VERIFIED"
+        },
+        {
+          "rank": 3,
+          "developer": "Binghatti Developers",
+          "sales_aed_b": 26.0,
+          "sales_usd_b": 7.08,
+          "units_sold": 17061,
+          "projects_delivered": 12,
+          "units_delivered": 4093,
+          "projects_launched": 25,
+          "units_under_construction": 38000,
+          "segment": "Affordable \u2192 Mid-Premium",
+          "confidence": "VERIFIED"
+        },
+        {
+          "rank": 4,
+          "developer": "Nakheel (Dubai Holding)",
+          "sales_aed_b": 24.6,
+          "sales_usd_b": 6.7,
+          "units_sold": 4160,
+          "projects_delivered": 8,
+          "units_delivered": 1522,
+          "projects_launched": 12,
+          "units_under_construction": 15000,
+          "segment": "Waterfront & Master Comm.",
+          "confidence": "VERIFIED"
+        },
+        {
+          "rank": 5,
+          "developer": "Sobha Realty",
+          "sales_aed_b": 22.4,
+          "sales_usd_b": 6.1,
+          "units_sold": 9698,
+          "projects_delivered": 6,
+          "units_delivered": 2260,
+          "projects_launched": 15,
+          "units_under_construction": 26933,
+          "segment": "Premium \u2192 Ultra-Luxury",
+          "confidence": "VERIFIED"
+        },
+        {
+          "rank": 6,
+          "developer": "Meraas (Dubai Holding)",
+          "sales_aed_b": 20.9,
+          "sales_usd_b": 5.69,
+          "units_sold": 2385,
+          "projects_delivered": 10,
+          "units_delivered": 1913,
+          "projects_launched": 8,
+          "units_under_construction": 12000,
+          "segment": "Premium Lifestyle",
+          "confidence": "VERIFIED"
+        },
+        {
+          "rank": 7,
+          "developer": "Omniyat",
+          "sales_aed_b": 11.0,
+          "sales_usd_b": 2.995,
+          "units_sold": 1656,
+          "projects_delivered": 5,
+          "units_delivered": 800,
+          "projects_launched": 6,
+          "units_under_construction": 4500,
+          "segment": "Ultra-Luxury",
+          "confidence": "VERIFIED"
+        },
+        {
+          "rank": 8,
+          "developer": "Aldar Properties",
+          "sales_aed_b": 9.9,
+          "sales_usd_b": 2.7,
+          "units_sold": 1732,
+          "projects_delivered": 8,
+          "units_delivered": 1200,
+          "projects_launched": 10,
+          "units_under_construction": 18000,
+          "segment": "Full Spectrum (AD+Dubai)",
+          "confidence": "VERIFIED"
+        },
+        {
+          "rank": 9,
+          "developer": "H&H Development",
+          "sales_aed_b": 8.1,
+          "sales_usd_b": 2.2,
+          "units_sold": 1200,
+          "projects_delivered": 4,
+          "units_delivered": 600,
+          "projects_launched": 6,
+          "units_under_construction": 8000,
+          "segment": "Ultra-Luxury Villas",
+          "confidence": "VERIFIED"
+        },
+        {
+          "rank": 10,
+          "developer": "Danube Properties",
+          "sales_aed_b": 7.0,
+          "sales_usd_b": 1.906,
+          "units_sold": 4089,
+          "projects_delivered": 15,
+          "units_delivered": 1757,
+          "projects_launched": 18,
+          "units_under_construction": 22000,
+          "segment": "Affordable \u2192 Mid-Market",
+          "confidence": "VERIFIED"
+        }
+      ],
+      "rankings_by_volume": [
+        {
+          "rank": 1,
+          "developer": "Binghatti",
+          "units_sold": 17061
+        },
+        {
+          "rank": 2,
+          "developer": "DAMAC",
+          "units_sold": 15393
+        },
+        {
+          "rank": 3,
+          "developer": "Emaar",
+          "units_sold": 13149
+        },
+        {
+          "rank": 4,
+          "developer": "Sobha",
+          "units_sold": 9698
+        },
+        {
+          "rank": 5,
+          "developer": "Samana",
+          "units_sold": 4754
+        }
+      ],
+      "luxury_segment_above_15m": [
+        {
+          "rank": 1,
+          "developer": "Nakheel",
+          "sales_aed_b": 16.9,
+          "transactions": 672
+        },
+        {
+          "rank": 2,
+          "developer": "Emaar",
+          "sales_aed_b": 15.7,
+          "transactions": 680
+        },
+        {
+          "rank": 3,
+          "developer": "Meraas",
+          "sales_aed_b": 9.5,
+          "transactions": 289
+        }
+      ],
+      "affordable_segment_below_2m": [
+        {
+          "rank": 1,
+          "developer": "Binghatti",
+          "sales_aed_b": 16.2,
+          "transactions": 14627
+        },
+        {
+          "rank": 2,
+          "developer": "DAMAC",
+          "sales_aed_b": 8.4,
+          "transactions": 6828
+        },
+        {
+          "rank": 3,
+          "developer": "Sobha",
+          "sales_aed_b": 8.0,
+          "transactions": 5887
+        }
+      ]
+    },
+    "emaar_analytics": {
+      "emaar_market_position": {
+        "rank_by_value": 1,
+        "rank_by_volume": 3,
+        "rank_luxury_segment": 2,
+        "sales_aed_b": 65.8,
+        "pct_of_top_10_sales": 28.4,
+        "pct_of_dubai_total": 9.6,
+        "lead_over_number_2_aed_b": 29.9,
+        "multiple_vs_number_2": 1.83,
+        "units_delivered_pct_of_top_10": 31.0,
+        "largest_pipeline_units": 51032,
+        "most_projects_launched": 54
+      },
+      "competitive_moats": [
+        "1.83\u00d7 sales vs #2 (DAMAC) \u2014 AED 65.8B vs 35.9B",
+        "Largest pipeline: 51,032 units under construction",
+        "Most projects launched: 54 in 2025",
+        "Most units delivered: 7,318 (31% of Top 10)",
+        "Only developer with 3 investment-grade credit ratings",
+        "14+ master communities vs competitors' 2-5 average"
+      ]
+    },
+    "developer_news": [],
+    "data_freshness": {
+      "rankings": "FY 2025 (DXBinteract verified Jan 2026)",
+      "note": "Rankings update annually. Monitor DXBinteract for quarterly updates."
+    }
+  },
+  "rentals": {
+    "last_updated": "2026-02-26T19:21:22.568244",
+    "source": "DLD Rental Index, Bayut, Property Finder",
+    "yield_data": [
+      {
+        "community": "Dubai Hills Estate",
+        "unit_type": "1BR Apt",
+        "annual_rent": 75000,
+        "purchase_price": 1529388,
+        "gross_yield": 4.9,
+        "net_yield": 4.2,
+        "demand": "Very High",
+        "tenant_profile": "Professionals, couples"
+      },
+      {
+        "community": "Dubai Hills Estate",
+        "unit_type": "2BR Apt",
+        "annual_rent": 110000,
+        "purchase_price": 2200000,
+        "gross_yield": 5.0,
+        "net_yield": 4.3,
+        "demand": "Very High",
+        "tenant_profile": "Families, professionals"
+      },
+      {
+        "community": "Dubai Hills Estate",
+        "unit_type": "3BR Apt",
+        "annual_rent": 160000,
+        "purchase_price": 3500000,
+        "gross_yield": 4.6,
+        "net_yield": 3.9,
+        "demand": "High",
+        "tenant_profile": "HNW families"
+      },
+      {
+        "community": "Dubai Creek Harbour",
+        "unit_type": "1BR Apt",
+        "annual_rent": 80000,
+        "purchase_price": 1750000,
+        "gross_yield": 4.6,
+        "net_yield": 3.9,
+        "demand": "High",
+        "tenant_profile": "Young professionals"
+      },
+      {
+        "community": "Dubai Creek Harbour",
+        "unit_type": "2BR Apt",
+        "annual_rent": 120000,
+        "purchase_price": 2500000,
+        "gross_yield": 4.8,
+        "net_yield": 4.1,
+        "demand": "High",
+        "tenant_profile": "Expat families"
+      },
+      {
+        "community": "Dubai Creek Harbour",
+        "unit_type": "3BR Apt",
+        "annual_rent": 170000,
+        "purchase_price": 3500000,
+        "gross_yield": 4.9,
+        "net_yield": 4.1,
+        "demand": "Moderate-High",
+        "tenant_profile": "HNW tenants"
+      },
+      {
+        "community": "Emaar Beachfront",
+        "unit_type": "1BR Apt",
+        "annual_rent": 120000,
+        "purchase_price": 3200000,
+        "gross_yield": 3.8,
+        "net_yield": 3.2,
+        "demand": "Very High",
+        "tenant_profile": "Luxury expats"
+      },
+      {
+        "community": "Emaar Beachfront",
+        "unit_type": "2BR Apt",
+        "annual_rent": 180000,
+        "purchase_price": 5000000,
+        "gross_yield": 3.6,
+        "net_yield": 3.1,
+        "demand": "High",
+        "tenant_profile": "UHNW tenants"
+      },
+      {
+        "community": "Emaar South",
+        "unit_type": "1BR Apt",
+        "annual_rent": 60000,
+        "purchase_price": 1200000,
+        "gross_yield": 5.0,
+        "net_yield": 4.3,
+        "demand": "Growing",
+        "tenant_profile": "Airport staff, young prof."
+      },
+      {
+        "community": "Emaar South",
+        "unit_type": "2BR Apt",
+        "annual_rent": 85000,
+        "purchase_price": 1800000,
+        "gross_yield": 4.7,
+        "net_yield": 4.0,
+        "demand": "Growing",
+        "tenant_profile": "Families, value seekers"
+      },
+      {
+        "community": "The Valley",
+        "unit_type": "3BR TH",
+        "annual_rent": 95000,
+        "purchase_price": 1600000,
+        "gross_yield": 5.9,
+        "net_yield": 5.0,
+        "demand": "High",
+        "tenant_profile": "Family end-users"
+      },
+      {
+        "community": "The Valley",
+        "unit_type": "4BR Villa",
+        "annual_rent": 140000,
+        "purchase_price": 3000000,
+        "gross_yield": 4.7,
+        "net_yield": 4.0,
+        "demand": "High",
+        "tenant_profile": "Large families"
+      },
+      {
+        "community": "Rashid Marina",
+        "unit_type": "1BR Apt",
+        "annual_rent": 85000,
+        "purchase_price": 2100000,
+        "gross_yield": 4.0,
+        "net_yield": 3.4,
+        "demand": "Moderate",
+        "tenant_profile": "Maritime lifestyle"
+      },
+      {
+        "community": "Downtown Dubai",
+        "unit_type": "1BR Apt",
+        "annual_rent": 95000,
+        "purchase_price": 2500000,
+        "gross_yield": 3.8,
+        "net_yield": 3.2,
+        "demand": "Very High",
+        "tenant_profile": "Tourists, executives"
+      },
+      {
+        "community": "Downtown Dubai",
+        "unit_type": "2BR Apt",
+        "annual_rent": 145000,
+        "purchase_price": 4000000,
+        "gross_yield": 3.6,
+        "net_yield": 3.1,
+        "demand": "Very High",
+        "tenant_profile": "UHNW, corp. housing"
+      }
+    ],
+    "analytics": {
+      "portfolio_avg_gross_yield": 4.53,
+      "portfolio_avg_net_yield": 3.85,
+      "highest_gross_yield": 5.9,
+      "lowest_gross_yield": 3.6,
+      "avg_annual_cash_flow": 97467,
+      "best_yield_community": "The Valley",
+      "best_yield_community_avg": 5.3,
+      "community_averages": {
+        "Dubai Hills Estate": 4.83,
+        "Dubai Creek Harbour": 4.77,
+        "Emaar Beachfront": 3.7,
+        "Emaar South": 4.85,
+        "The Valley": 5.3,
+        "Rashid Marina": 4.0,
+        "Downtown Dubai": 3.7
+      },
+      "yield_spread": 2.3,
+      "golden_visa_eligible": "All communities (AED 2M+ threshold)"
+    },
+    "tenant_segments": [
+      {
+        "segment": "Executive Professionals",
+        "income_aed_month": "40,000-80,000",
+        "preferred_unit": "1-2BR Apt",
+        "preferred_community": "Dubai Hills, Downtown, Creek Harbour",
+        "demand_driver": "DIFC/Business Bay proximity"
+      },
+      {
+        "segment": "HNW Families",
+        "income_aed_month": "80,000+",
+        "preferred_unit": "3BR+ Villa/TH",
+        "preferred_community": "Dubai Hills, The Valley, Grand Polo",
+        "demand_driver": "Schools, space, Golden Visa"
+      },
+      {
+        "segment": "International Investors",
+        "income_aed_month": "N/A (Buy & Rent)",
+        "preferred_unit": "1-2BR Apt",
+        "preferred_community": "Emaar South, Creek Harbour, Hills",
+        "demand_driver": "Yield optimization, brand trust"
+      },
+      {
+        "segment": "Waterfront Lifestyle",
+        "income_aed_month": "50,000-100,000",
+        "preferred_unit": "1-3BR Apt",
+        "preferred_community": "Emaar Beachfront, Rashid Marina",
+        "demand_driver": "Beach access, marina views"
+      },
+      {
+        "segment": "Young Professionals",
+        "income_aed_month": "20,000-40,000",
+        "preferred_unit": "Studio/1BR",
+        "preferred_community": "Emaar South, The Valley",
+        "demand_driver": "Affordability, metro access"
+      },
+      {
+        "segment": "Tourism Investors",
+        "income_aed_month": "N/A (Short-term)",
+        "preferred_unit": "1-2BR Branded",
+        "preferred_community": "Address/Vida/Palace",
+        "demand_driver": "Hotel-managed returns"
+      },
+      {
+        "segment": "Ultra-HNW",
+        "income_aed_month": "200,000+",
+        "preferred_unit": "5BR+ Mansion",
+        "preferred_community": "The Oasis, Grand Polo, Downtown PH",
+        "demand_driver": "Privacy, exclusivity, trophy asset"
+      }
+    ],
+    "data_freshness": {
+      "baseline": "Feb 2026 (from Emaar launch prices + market rents)",
+      "methodology": "Gross = Annual Rent / Purchase Price. Net = Gross \u00d7 85%.",
+      "note": "Run property_scraper.py to get live rental prices that override these baselines."
+    }
+  }
+}

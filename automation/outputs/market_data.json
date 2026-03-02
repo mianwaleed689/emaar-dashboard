@@ -1,0 +1,81 @@
+{
+  "last_updated": "2026-02-26T19:21:15.649977",
+  "market_data": {
+    "annual_2025": {
+      "total_sales_value_aed_b": 682.5,
+      "total_transactions": 214912,
+      "total_txn_value_aed_b": 919,
+      "total_all_transactions": 275442,
+      "q4_sales_aed_b": 187.5,
+      "december_sales_aed_b": 64.82,
+      "avg_price_per_sqft": 1755,
+      "off_plan_share_pct": 62.6,
+      "off_plan_value_aed_b": 293,
+      "new_investors_h1": 59075,
+      "total_investors_h1": 94700,
+      "residential_sales_txns": 203000,
+      "avg_apt_rent_aed": 75000,
+      "avg_villa_rent_aed": 189900,
+      "mortgage_txns": 50974,
+      "mortgage_value_aed_b": 179.26,
+      "cash_buyers_pct": 87,
+      "reidin_price_growth_pct": 12.9,
+      "developer_count": 228,
+      "units_launched": 131504,
+      "yoy_sales_value_growth_pct": 30.7,
+      "yoy_txn_volume_growth_pct": 18.8,
+      "women_investors_aed_b": 154,
+      "total_investor_base": 193100,
+      "source": "DLD / DXBinteract / Emarat Al Youm / Zawya",
+      "verified_date": "Feb 2026"
+    },
+    "forecasts_2026": {
+      "knight_frank": {
+        "prime_growth_pct": 3,
+        "mainstream_growth_pct": 1,
+        "supply_2026_2030_units": 331000,
+        "annual_delivery_est": 66000,
+        "notes": "Market transitioning to sustainable phase. 56+ month growth cycle."
+      },
+      "cushman_wakefield_core": {
+        "price_growth_pct": "5-8",
+        "notes": "Marked slowdown from 12-22% annual growth in 2024-25."
+      },
+      "fitch_ratings": {
+        "correction_possible": true,
+        "pipeline_units": 120000,
+        "notes": "Moderate correction possible. Oversupply risk in select areas."
+      },
+      "industry_consensus": {
+        "transaction_growth_pct": "10-15",
+        "notes": "Multiple CEOs forecast growth supported by Golden Visa and D33 strategy."
+      }
+    },
+    "key_indicators": {
+      "population_target": "5.8M by 2040",
+      "price_cycle_months": "56+",
+      "gdp_growth_2025_pct": 4.8,
+      "gdp_growth_2026_pct": 5.0,
+      "d33_target": "AED 1T annual RE transactions"
+    }
+  },
+  "latest_news": [
+    {
+      "title": "Islamic Finance Glossary",
+      "url": "https://www.zawya.com/en/islamic-economy/glossary",
+      "source": "Zawya"
+    }
+  ],
+  "data_freshness": {
+    "annual_data": "FY 2025 (DLD verified Jan 2026)",
+    "forecasts": "2026 outlook (Knight Frank Nov 2025, CW Core Jan 2026, Fitch 2026)",
+    "news": "Scraped Feb 26, 2026"
+  },
+  "next_data_points_to_watch": [
+    "Q1 2026 DLD transaction data (expected Apr 2026)",
+    "Emaar Q1 2026 earnings (expected May 7, 2026)",
+    "Knight Frank Q4 2025 report",
+    "Monthly DLD transaction updates",
+    "REIDIN price index monthly update"
+  ]
+}
