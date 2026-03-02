@@ -556,7 +556,7 @@ export default function EmaarDashboardV2() {
           </button>
           <style>{`@media (max-width: 768px) { .mobile-menu-btn { display: block !important; } }`}</style>
           <div>
-            <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}}>Emaar Properties <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>PJSC</span></h1>
+            <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>Emaar Properties <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>PJSC</span></h1>
             <p style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1 }}>DFM: EMAAR · Last updated: {time.toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}</p>
           </div>
         </div>
