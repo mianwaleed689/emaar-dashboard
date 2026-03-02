@@ -1,21 +1,13 @@
 {
-  "meta": {
-    "last_updated": "2026-02-28T14:30:00",
-    "version": "1.0",
-    "source": "DXB Analytics Automation",
-    "developer": "Emaar Properties PJSC"
-  },
+  "last_updated": "2026-02-28T14:30:00",
+  "version": "2.0",
+  "developer": "Emaar Properties",
+  "ticker": "EMAAR:DFM",
   "stock": {
     "price": 17.05,
     "target": 20.77,
     "rating": "STRONG BUY",
-    "change_pct": 2.1,
-    "52w_high": 18.20,
-    "52w_low": 9.85,
-    "market_cap_b": 68.2,
-    "pe_ratio": 8.5,
-    "credit_rating": "BBB+",
-    "credit_agency": "S&P / Baa1"
+    "credit": "BBB+"
   },
   "financials": [
     { "year": "2020", "revenue": 14.9, "grossProfit": 4.8, "ebitda": 6.2, "netProfit": 2.7, "propertySales": 14, "backlog": 28, "recurringRev": 5.3, "intlSales": 0.6, "mallRev": 3.2, "hotelRev": 2.1, "dividend": 0.15, "eps": 0.24, "gm": 32.2, "em": 41.6, "nm": 14.1 },
@@ -73,7 +65,7 @@
     { "phase": "Rental Y1+", "low": 4.5, "high": 8, "avg": 6.3 },
     { "phase": "5-Year Hold", "low": 30, "high": 50, "avg": 40 }
   ],
-  "communities": [
+  "communityProjects": [
     { "name": "DHE", "full": "Dubai Hills Estate", "projects": 16, "yield": "5.0-7.0%", "ppsf": "1,800-3,500" },
     { "name": "DCH", "full": "Dubai Creek Harbour", "projects": 11, "yield": "5.0-6.5%", "ppsf": "1,700-3,000" },
     { "name": "EBF", "full": "Emaar Beachfront", "projects": 5, "yield": "4.0-5.5%", "ppsf": "3,000-5,500" },
@@ -83,33 +75,36 @@
     { "name": "RYM", "full": "Rashid Yachts & Marina", "projects": 2, "yield": "5.0-6.5%", "ppsf": "2,000-3,500" },
     { "name": "TO", "full": "The Oasis", "projects": 1, "yield": "3.0-4.5%", "ppsf": "1,500-2,000" }
   ],
-  "dubaiMarket": {
-    "stats": [
-      { "metric": "Total Sales Value", "val": "AED 682.5B", "yoy": "+30.7%" },
-      { "metric": "Sales Transactions", "val": "214,912", "yoy": "+18.8%" },
-      { "metric": "Off-Plan Share", "val": "62.6%", "yoy": "Growing" },
-      { "metric": "Cash Buyers", "val": "87%", "yoy": "Dominant" },
-      { "metric": "Avg Price/sqft", "val": "AED 1,755", "yoy": "+18.3%" },
-      { "metric": "New Investors H1", "val": "59,075", "yoy": "+22%" }
-    ],
-    "salesHistory": [
-      { "year": "2020", "sales": 120 },
-      { "year": "2021", "sales": 230 },
-      { "year": "2022", "sales": 300 },
-      { "year": "2023", "sales": 410 },
-      { "year": "2024", "sales": 522.4 },
-      { "year": "2025", "sales": 682.5 }
-    ],
-    "indicators": [
-      ["Population", "5.8M by 2040"],
-      ["Price Cycle", "56+ months up"],
-      ["Developers", "228 active"],
-      ["Units Launched", "131,504"],
-      ["Mortgage Txns", "50,974"],
-      ["2026 Pipeline", "~120K units"],
-      ["Women Investors", "AED 154B"],
-      ["REIDIN Growth", "+12.9% YoY"],
-      ["Investor Base", "193.1K"]
-    ]
-  }
+  "dubaiMarket": [
+    { "metric": "Total Sales Value", "val": "AED 682.5B", "yoy": "+30.7%" },
+    { "metric": "Sales Transactions", "val": "214,912", "yoy": "+18.8%" },
+    { "metric": "Off-Plan Share", "val": "62.6%", "yoy": "Growing" },
+    { "metric": "Cash Buyers", "val": "87%", "yoy": "Dominant" },
+    { "metric": "Avg Price/sqft", "val": "AED 1,755", "yoy": "+18.3%" },
+    { "metric": "New Investors H1", "val": "59,075", "yoy": "+22%" }
+  ],
+  "dubaiSalesHistory": [
+    { "year": "2020", "sales": 120 },
+    { "year": "2021", "sales": 230 },
+    { "year": "2022", "sales": 300 },
+    { "year": "2023", "sales": 410 },
+    { "year": "2024", "sales": 522.4 },
+    { "year": "2025", "sales": 682.5 }
+  ],
+  "mitigations": [
+    { "title": "Market Cycle", "desc": "AED 155B backlog = 3-4yr cushion. 35% recurring from malls & hotels.", "severity": "orange" },
+    { "title": "Supply Competition", "desc": "Brand premium 20-40%. 79K delivery track record. 14+ communities.", "severity": "orange" },
+    { "title": "Premium Pricing", "desc": "80/20 payment plans. Branded residences justify premium.", "severity": "red" },
+    { "title": "Geographic Conc.", "desc": "Intl sales grew +124% YoY. Expanding to Saudi, Egypt, India.", "severity": "gold" }
+  ],
+  "outlook": [
+    { "firm": "Knight Frank", "view": "+3% prime, ~1% mainstream. Sustainable growth phase." },
+    { "firm": "CW Core", "view": "5-8% appreciation. Slowdown from 12-22% in 2024-25." },
+    { "firm": "Fitch Ratings", "view": "Moderate correction possible. ~120K units in 2026 pipeline." }
+  ],
+  "marketIndicators": [
+    ["Population", "5.8M by 2040"], ["Price Cycle", "56+ months up"], ["Developers", "228 active"],
+    ["Units Launched", "131,504"], ["Mortgage Txns", "50,974"], ["2026 Pipeline", "~120K units"],
+    ["Women Investors", "AED 154B"], ["REIDIN Growth", "+12.9% YoY"], ["Investor Base", "193.1K"]
+  ]
 }
