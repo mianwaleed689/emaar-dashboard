@@ -840,7 +840,7 @@ export default function EmaarDashboardV2() {
                   return matchSearch && matchFilter;
                 })
                 .map((p, i) => (
-                <div key={p.id} className="chart-box fade-up" style={{ animationDelay: `${Math.min(i * 0.03, 0.5)}s`, padding: 0, overflow: "hidden", cursor: "pointer", border: compareList.find(x=>x.id===p.id) ? `1px solid ${T.gold}` : `1px solid ${T.border}` }} onClick={() => setSelectedProject(p)}>
+                <div key={p.id} className="chart-box fade-up" style={{ animationDelay: `${Math.min(i * 0.03, 0.5)}s`, padding: 0, overflow: "hidden", cursor: "pointer", outline: compareList.find(x=>x.id===p.id) ? `2px solid ${T.gold}` : "none", outlineOffset: "-1px" }} onClick={() => setSelectedProject(p)}>
                   {/* Project Image */}
                   {p.imageUrl && (
                     <div style={{ width: "100%", height: 140, overflow: "hidden", borderBottom: `1px solid ${T.border}` }}>
