@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { auth } from "./firebase";
-import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "firebase/auth";
 
 /* ─── DESIGN TOKENS ─── */
 const T = {
@@ -389,6 +389,18 @@ const LoginScreen = ({ onLogin }) => {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [resetSent, setResetSent] = useState(false);
+
+  const handleForgot = async () => {
+    if (!email) { setError("Enter your email first, then click Forgot password"); return; }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setResetSent(true);
+      setError("");
+    } catch (err) {
+      setError("Could not send reset email. Check your email address.");
+    }
+  };
 
   const handleLogin = async (e) => {
     e?.preventDefault?.();
@@ -454,12 +466,13 @@ const LoginScreen = ({ onLogin }) => {
             </div>
 
             {error && <div style={{ color: T.red, fontSize: 12, padding: "8px 12px", background: "rgba(239,68,68,0.08)", borderRadius: 8, border: "1px solid rgba(239,68,68,0.2)" }}>{error}</div>}
+            {resetSent && <div style={{ color: T.green, fontSize: 12, padding: "8px 12px", background: "rgba(16,185,129,0.08)", borderRadius: 8, border: "1px solid rgba(16,185,129,0.2)" }}>Password reset email sent! Check your inbox.</div>}
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", color: T.textSecondary, fontSize: 12 }}>
                 <input type="checkbox" style={{ accentColor: T.gold }} /> Remember me
               </label>
-              <a style={{ color: T.gold, fontSize: 12, textDecoration: "none", cursor: "pointer" }}>Forgot password?</a>
+              <a onClick={handleForgot} style={{ color: T.gold, fontSize: 12, textDecoration: "none", cursor: "pointer" }}>Forgot password?</a>
             </div>
 
             <button className="login-btn" onClick={handleLogin} disabled={loading}>
