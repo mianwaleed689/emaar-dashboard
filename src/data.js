@@ -1,0 +1,189 @@
+/* ─── DXB ANALYTICS — MASTER DATA FILE ─── */
+/* Source: Emaar THE BEAST Excel + DLD + DXBinteract + Yahoo Finance */
+
+export const T = {
+  bg: "#04090F", surface: "#0A1628", surfaceAlt: "#0E1D35", card: "#0D1B30", cardHover: "#112240",
+  gold: "#D4A843", goldLight: "#E8C96A", goldGlow: "rgba(212,168,67,0.15)", goldMuted: "rgba(212,168,67,0.08)",
+  teal: "#00BFA5", navy: "#0B1F3F", white: "#FFFFFF",
+  textPrimary: "#E2E8F0", textSecondary: "#94A3B8", textMuted: "#64748B",
+  border: "rgba(212,168,67,0.12)", borderHover: "rgba(212,168,67,0.3)",
+  red: "#EF4444", green: "#10B981", blue: "#3B82F6", purple: "#8B5CF6",
+  orange: "#F59E0B", cyan: "#06B6D4",
+};
+
+/* ─── 48 EMAAR PROJECTS (from Excel) ─── */
+export const emaarProjects = [
+  { id:1, name:"The Golf Residence", community:"Dubai Hills Estate", district:"DHE", type:"Apartments", beds:"1-3", status:"Under Construction", handover:"Q2 2026", price:1750000, sizeFrom:750, sizeTo:2200, ppsf:2333, payment:"20/30/50", construction:80, branded:false, brand:"—", tier:"Mid-Premium" },
+  { id:2, name:"Hills Park", community:"Dubai Hills Estate", district:"DHE", type:"Apartments", beds:"1-3", status:"Under Construction", handover:"Q2 2026", price:1210000, sizeFrom:650, sizeTo:1800, ppsf:1862, payment:"80/20", construction:75, branded:false, brand:"—", tier:"Mid-Market" },
+  { id:3, name:"Golf Grand", community:"Dubai Hills Estate", district:"DHE", type:"Apartments", beds:"1-3", status:"Under Construction", handover:"Q1 2027", price:1529388, sizeFrom:700, sizeTo:2100, ppsf:2185, payment:"10/80/10", construction:96, branded:false, brand:"—", tier:"Mid-Premium" },
+  { id:4, name:"Parkside Views", community:"Dubai Hills Estate", district:"DHE", type:"Apts & TH", beds:"1-3", status:"Under Construction", handover:"Q3 2027", price:2756888, sizeFrom:900, sizeTo:2800, ppsf:3063, payment:"10/80/10", construction:74, branded:false, brand:"—", tier:"Premium" },
+  { id:5, name:"Greenside Residence", community:"Dubai Hills Estate", district:"DHE", type:"Apartments", beds:"1-3", status:"Under Construction", handover:"Q3 2027", price:1540000, sizeFrom:700, sizeTo:2000, ppsf:2200, payment:"10/80/10", construction:61, branded:false, brand:"—", tier:"Mid-Premium" },
+  { id:6, name:"Club Drive", community:"Dubai Hills Estate", district:"DHE", type:"Apartments", beds:"1-3", status:"Under Construction", handover:"Q1 2028", price:1626566, sizeFrom:726, sizeTo:2622, ppsf:2240, payment:"10/90", construction:55, branded:false, brand:"—", tier:"Mid-Premium" },
+  { id:7, name:"Golf Hillside", community:"Dubai Hills Estate", district:"DHE", type:"Apartments", beds:"1-3", status:"Under Construction", handover:"Q4 2028", price:2816888, sizeFrom:741, sizeTo:2322, ppsf:3801, payment:"80/20", construction:37, branded:false, brand:"—", tier:"Premium" },
+  { id:8, name:"Park Lane", community:"Dubai Hills Estate", district:"DHE", type:"Apts & TH", beds:"1-3", status:"Under Construction", handover:"Q4 2028", price:1480000, sizeFrom:700, sizeTo:2200, ppsf:2114, payment:"10/70/20", construction:33, branded:false, brand:"—", tier:"Mid-Premium" },
+  { id:9, name:"Palace Residences Hillside", community:"Dubai Hills Estate", district:"DHE", type:"Apts & TH", beds:"1-3", status:"Under Construction", handover:"Q2 2028", price:1760888, sizeFrom:750, sizeTo:2500, ppsf:2348, payment:"80/20", construction:17, branded:true, brand:"Palace", tier:"Luxury Branded" },
+  { id:10, name:"Greencrest", community:"Dubai Hills Estate", district:"DHE", type:"Apartments", beds:"1-3", status:"Off-Plan", handover:"Q1 2029", price:null, sizeFrom:700, sizeTo:2200, ppsf:null, payment:"80/20", construction:10, branded:false, brand:"—", tier:"Mid-Premium" },
+  { id:11, name:"Vida Residences Hillside", community:"Dubai Hills Estate", district:"DHE", type:"Apartments", beds:"1-3", status:"Off-Plan", handover:"Q2 2029", price:1800000, sizeFrom:700, sizeTo:2200, ppsf:2571, payment:"80/20", construction:8, branded:true, brand:"Vida", tier:"Luxury Branded" },
+  { id:12, name:"Parkwood", community:"Dubai Hills Estate", district:"DHE", type:"Apts & TH", beds:"1-3", status:"Off-Plan", handover:"Q1 2029", price:1770000, sizeFrom:750, sizeTo:2400, ppsf:2360, payment:"80/20", construction:5, branded:false, brand:"—", tier:"Mid-Premium" },
+  { id:13, name:"Hillsedge", community:"Dubai Hills Estate", district:"DHE", type:"Apartments", beds:"1-3", status:"Off-Plan", handover:"Q1 2029", price:1840000, sizeFrom:700, sizeTo:2000, ppsf:2629, payment:"80/20", construction:5, branded:false, brand:"—", tier:"Mid-Premium" },
+  { id:14, name:"Club Place", community:"Dubai Hills Estate", district:"DHE", type:"Apts & Duplex", beds:"1-3", status:"Off-Plan", handover:"Q4 2028", price:1450000, sizeFrom:700, sizeTo:2200, ppsf:2071, payment:"80/20", construction:10, branded:false, brand:"—", tier:"Mid-Premium" },
+  { id:15, name:"Rosehill", community:"Dubai Hills Estate", district:"DHE", type:"Apartments", beds:"1-3", status:"Off-Plan", handover:"Q2 2029", price:null, sizeFrom:700, sizeTo:2000, ppsf:null, payment:"80/20", construction:5, branded:false, brand:"—", tier:"Mid-Premium" },
+  { id:16, name:"Parkland", community:"Dubai Hills Estate", district:"DHE", type:"Apartments", beds:"1-3", status:"Off-Plan", handover:"Q4 2028", price:1500000, sizeFrom:700, sizeTo:2200, ppsf:2143, payment:"80/20", construction:8, branded:false, brand:"—", tier:"Mid-Premium" },
+  { id:17, name:"The Cove II", community:"Dubai Creek Harbour", district:"DCH", type:"Apts & TH", beds:"1-4", status:"Under Construction", handover:"Q4 2026", price:1669000, sizeFrom:650, sizeTo:2800, ppsf:2568, payment:"10/70/20", construction:87, branded:false, brand:"—", tier:"Mid-Premium" },
+  { id:18, name:"Creek Waters", community:"Dubai Creek Harbour", district:"DCH", type:"Apts & TH", beds:"1-4", status:"Under Construction", handover:"Q3 2027", price:1750000, sizeFrom:700, sizeTo:2600, ppsf:2500, payment:"10/80/10", construction:62, branded:false, brand:"—", tier:"Premium" },
+  { id:19, name:"Creek Waters 2", community:"Dubai Creek Harbour", district:"DCH", type:"Apts & TH", beds:"1-4", status:"Under Construction", handover:"Q4 2027", price:1938110, sizeFrom:700, sizeTo:2800, ppsf:2769, payment:"10/80/10", construction:63, branded:false, brand:"—", tier:"Premium" },
+  { id:20, name:"Oria", community:"Dubai Creek Harbour", district:"DCH", type:"Apartments", beds:"1-3", status:"Under Construction", handover:"Q3 2028", price:1814888, sizeFrom:700, sizeTo:2200, ppsf:2593, payment:"10/80/10", construction:49, branded:false, brand:"—", tier:"Premium" },
+  { id:21, name:"Albero", community:"Dubai Creek Harbour", district:"DCH", type:"Apartments", beds:"1-3", status:"Off-Plan", handover:"Q4 2028", price:1810000, sizeFrom:700, sizeTo:2200, ppsf:2586, payment:"80/20", construction:10, branded:false, brand:"—", tier:"Premium" },
+  { id:22, name:"Montiva by Vida", community:"Dubai Creek Harbour", district:"DCH", type:"Apartments", beds:"1-3", status:"Off-Plan", handover:"Q2 2029", price:null, sizeFrom:700, sizeTo:2200, ppsf:null, payment:"80/20", construction:5, branded:true, brand:"Vida", tier:"Luxury Branded" },
+  { id:23, name:"Silva", community:"Dubai Creek Harbour", district:"DCH", type:"Apartments", beds:"1-3", status:"Off-Plan", handover:"Q3 2029", price:null, sizeFrom:700, sizeTo:2200, ppsf:null, payment:"80/20", construction:3, branded:false, brand:"—", tier:"Premium" },
+  { id:24, name:"Creek Bay", community:"Dubai Creek Harbour", district:"DCH", type:"Apartments", beds:"1-3", status:"Off-Plan", handover:"Q4 2029", price:null, sizeFrom:700, sizeTo:2200, ppsf:null, payment:"10/70/20", construction:0, branded:false, brand:"—", tier:"Premium" },
+  { id:25, name:"Creek Haven", community:"Dubai Creek Harbour", district:"DCH", type:"Apartments", beds:"1-3", status:"Off-Plan", handover:"Q4 2029", price:null, sizeFrom:700, sizeTo:2200, ppsf:null, payment:"80/20", construction:0, branded:false, brand:"—", tier:"Premium" },
+  { id:26, name:"Lyvia by Palace", community:"Dubai Creek Harbour", district:"DCH", type:"Apartments", beds:"1-3", status:"Off-Plan", handover:"Q4 2029", price:null, sizeFrom:700, sizeTo:2500, ppsf:null, payment:"80/20", construction:0, branded:true, brand:"Palace", tier:"Ultra-Lux Branded" },
+  { id:27, name:"Altan", community:"Dubai Creek Harbour", district:"DCH", type:"Apartments", beds:"1-3", status:"Off-Plan", handover:"Q3 2029", price:null, sizeFrom:700, sizeTo:2200, ppsf:null, payment:"80/20", construction:5, branded:false, brand:"—", tier:"Premium" },
+  { id:28, name:"Address The Bay", community:"Emaar Beachfront", district:"EBF", type:"Apts & PH", beds:"1-4", status:"Under Construction", handover:"Q4 2026", price:3500000, sizeFrom:800, sizeTo:4500, ppsf:4375, payment:"80/20", construction:70, branded:true, brand:"Address", tier:"Ultra-Lux Branded" },
+  { id:29, name:"Beachgate by Address", community:"Emaar Beachfront", district:"EBF", type:"Apts, TH, PH", beds:"1-4", status:"Under Construction", handover:"Q4 2026", price:3200000, sizeFrom:800, sizeTo:4000, ppsf:4000, payment:"80/20", construction:70, branded:true, brand:"Address", tier:"Ultra-Lux Branded" },
+  { id:30, name:"Seapoint", community:"Emaar Beachfront", district:"EBF", type:"Apts & Villas", beds:"1-4", status:"Under Construction", handover:"Q2 2028", price:3000000, sizeFrom:750, sizeTo:3500, ppsf:4000, payment:"80/20", construction:45, branded:false, brand:"—", tier:"Luxury" },
+  { id:31, name:"Bayview", community:"Emaar Beachfront", district:"EBF", type:"Apartments", beds:"1-4", status:"Under Construction", handover:"Q3 2028", price:3000000, sizeFrom:750, sizeTo:3500, ppsf:4000, payment:"80/20", construction:40, branded:true, brand:"Address", tier:"Ultra-Lux Branded" },
+  { id:32, name:"Bristol Luxury Residences", community:"Emaar Beachfront", district:"EBF", type:"Branded Res.", beds:"1-4", status:"Off-Plan", handover:"Q3 2029", price:3500000, sizeFrom:800, sizeTo:4000, ppsf:4375, payment:"80/20", construction:15, branded:true, brand:"Bristol", tier:"Ultra-Lux Branded" },
+  { id:33, name:"Golf Verge", community:"Emaar South", district:"ES", type:"Apartments", beds:"1-3", status:"Off-Plan", handover:"Q2 2029", price:1200000, sizeFrom:650, sizeTo:1800, ppsf:1846, payment:"10/70/20", construction:5, branded:false, brand:"—", tier:"Affordable" },
+  { id:34, name:"Golf Meadow", community:"Emaar South", district:"ES", type:"Apts & TH", beds:"1-3", status:"Off-Plan", handover:"Q3 2029", price:3045888, sizeFrom:800, sizeTo:2500, ppsf:3807, payment:"10/70/20", construction:5, branded:false, brand:"—", tier:"Mid-Premium" },
+  { id:35, name:"Terra Gardens", community:"Expo Living", district:"EL", type:"Apartments", beds:"1-3", status:"Off-Plan", handover:"Q1 2029", price:null, sizeFrom:650, sizeTo:1800, ppsf:null, payment:"80/20", construction:0, branded:false, brand:"—", tier:"Affordable" },
+  { id:36, name:"Farm Gardens", community:"The Valley", district:"TV", type:"Villas", beds:"4-5", status:"Under Construction", handover:"Q3 2026", price:7300000, sizeFrom:4950, sizeTo:10004, ppsf:1475, payment:"10/70/20", construction:76, branded:false, brand:"—", tier:"Ultra-Luxury" },
+  { id:37, name:"Elora", community:"The Valley", district:"TV", type:"Townhouses", beds:"3-4", status:"Off-Plan", handover:"Q4 2026", price:1600000, sizeFrom:2111, sizeTo:2608, ppsf:758, payment:"80/20", construction:30, branded:false, brand:"—", tier:"Mid-Market" },
+  { id:38, name:"Selvara", community:"Grand Polo Club", district:"GPC", type:"Villas", beds:"3-5", status:"Off-Plan", handover:"Q2 2029", price:5670000, sizeFrom:2948, sizeTo:5115, ppsf:1923, payment:"80/20", construction:10, branded:false, brand:"—", tier:"Ultra-Luxury" },
+  { id:39, name:"Equestra", community:"Grand Polo Club", district:"GPC", type:"Townhouses", beds:"3-4", status:"Off-Plan", handover:"Q2 2029", price:3700000, sizeFrom:2176, sizeTo:2176, ppsf:1700, payment:"80/20", construction:5, branded:false, brand:"—", tier:"Luxury" },
+  { id:40, name:"Equiterra", community:"Grand Polo Club", district:"GPC", type:"Townhouses", beds:"3-4", status:"Off-Plan", handover:"Q2 2029", price:3700000, sizeFrom:2176, sizeTo:2176, ppsf:1700, payment:"80/20", construction:5, branded:false, brand:"—", tier:"Luxury" },
+  { id:41, name:"Chevalia Estate 2", community:"Grand Polo Club", district:"GPC", type:"Villas", beds:"4-5", status:"Off-Plan", handover:"Q4 2029", price:null, sizeFrom:3800, sizeTo:5400, ppsf:null, payment:"80/20", construction:3, branded:false, brand:"—", tier:"Ultra-Luxury" },
+  { id:42, name:"Selvara 3", community:"Grand Polo Club", district:"GPC", type:"Villas", beds:"3-5", status:"Off-Plan", handover:"Q2 2029", price:null, sizeFrom:2948, sizeTo:5115, ppsf:null, payment:"80/20", construction:5, branded:false, brand:"—", tier:"Ultra-Luxury" },
+  { id:43, name:"Selvara 4", community:"Grand Polo Club", district:"GPC", type:"Villas", beds:"3-5", status:"Off-Plan", handover:"Q2 2029", price:null, sizeFrom:2948, sizeTo:5115, ppsf:null, payment:"80/20", construction:3, branded:false, brand:"—", tier:"Ultra-Luxury" },
+  { id:44, name:"Aurea", community:"Rashid Yachts & Marina", district:"RYM", type:"Apartments", beds:"1-3", status:"Off-Plan", handover:"Q4 2029", price:2100000, sizeFrom:700, sizeTo:2500, ppsf:3000, payment:"10/70/20", construction:0, branded:false, brand:"—", tier:"Premium" },
+  { id:45, name:"Baystar by Vida", community:"Rashid Yachts & Marina", district:"RYM", type:"Apartments", beds:"1-4", status:"Off-Plan", handover:"Q4 2029", price:2100000, sizeFrom:700, sizeTo:3000, ppsf:3000, payment:"80/20", construction:5, branded:true, brand:"Vida", tier:"Luxury Branded" },
+  { id:46, name:"Marèva 2", community:"The Oasis", district:"TO", type:"Villas", beds:"4-6", status:"Off-Plan", handover:"Q4 2029", price:13830000, sizeFrom:7200, sizeTo:12700, ppsf:1921, payment:"80/20", construction:5, branded:false, brand:"—", tier:"Ultra-Luxury" },
+  { id:47, name:"Avarra by Palace", community:"Business Bay", district:"BB", type:"Apts & PH", beds:"1-4", status:"Off-Plan", handover:"Q4 2029", price:null, sizeFrom:750, sizeTo:3500, ppsf:null, payment:"80/20", construction:0, branded:true, brand:"Palace", tier:"Ultra-Lux Branded" },
+  { id:48, name:"Greencrest Heights", community:"The Heights CW", district:"TH", type:"Townhouses", beds:"3-4", status:"Off-Plan", handover:"Q4 2029", price:2500000, sizeFrom:2200, sizeTo:3000, ppsf:1136, payment:"80/20", construction:3, branded:false, brand:"—", tier:"Mid-Premium" },
+];
+
+/* ─── ENHANCED FINANCIALS (from Excel PBI_Financials) ─── */
+export const emaarFinancials = [
+  { year:"2020", revenue:14.9, grossProfit:4.8, ebitda:6.2, netProfit:2.7, netProfitAttr:2.1, propertySales:14, backlog:28, recurringRev:5.3, intlSales:0.6, mallRev:3.2, hotelRev:2.1, mallOccupancy:93, dubaiMallFootfall:65, dividend:0.15, eps:0.24, unitsDelivered:59000, newLaunches:15, revenueUSD:4.1, netProfitUSD:0.6, gm:32.2, nm:14.1 },
+  { year:"2021", revenue:27.9, grossProfit:11.6, ebitda:8.5, netProfit:6.6, netProfitAttr:5.3, propertySales:23.9, backlog:32, recurringRev:5.8, intlSales:0.8, mallRev:3.5, hotelRev:2.3, mallOccupancy:95, dubaiMallFootfall:80, dividend:0.25, eps:0.60, unitsDelivered:62000, newLaunches:20, revenueUSD:7.6, netProfitUSD:1.4, gm:41.6, nm:19.0 },
+  { year:"2022", revenue:24.9, grossProfit:12.6, ebitda:9.8, netProfit:8.1, netProfitAttr:6.8, propertySales:30.7, backlog:41.5, recurringRev:7.5, intlSales:1.2, mallRev:4.2, hotelRev:3.3, mallOccupancy:96, dubaiMallFootfall:88, dividend:0.35, eps:0.77, unitsDelivered:65000, newLaunches:22, revenueUSD:6.8, netProfitUSD:1.9, gm:50.6, nm:27.3 },
+  { year:"2023", revenue:26.7, grossProfit:16.9, ebitda:16.0, netProfit:15.1, netProfitAttr:11.6, propertySales:40.3, backlog:71.8, recurringRev:8.6, intlSales:2.9, mallRev:5.8, hotelRev:2.8, mallOccupancy:97, dubaiMallFootfall:105, dividend:0.50, eps:1.32, unitsDelivered:70000, newLaunches:27, revenueUSD:7.3, netProfitUSD:3.2, gm:63.3, nm:43.4 },
+  { year:"2024", revenue:35.5, grossProfit:20.4, ebitda:19.3, netProfit:18.9, netProfitAttr:13.5, propertySales:69.5, backlog:111.5, recurringRev:9.3, intlSales:4.1, mallRev:5.6, hotelRev:3.7, mallOccupancy:98.5, dubaiMallFootfall:111, dividend:1.00, eps:1.53, unitsDelivered:75000, newLaunches:62, revenueUSD:9.7, netProfitUSD:3.7, gm:57.5, nm:38.0 },
+  { year:"2025", revenue:49.6, grossProfit:28.5, ebitda:25.6, netProfit:25.7, netProfitAttr:17.6, propertySales:80.4, backlog:155, recurringRev:10.5, intlSales:9.3, mallRev:6.3, hotelRev:4.2, mallOccupancy:98, dubaiMallFootfall:111, dividend:1.00, eps:2.00, unitsDelivered:79000, newLaunches:48, revenueUSD:13.5, netProfitUSD:4.8, gm:57.5, nm:35.5 },
+];
+
+/* ─── COMMUNITIES (from Excel PBI_Communities) ─── */
+export const emaarCommunities = [
+  { district:"DHE", name:"Dubai Hills Estate", acres:2700, avgPpsf:2400, avgYield:5.0, projects:16, buyer:"Families, professionals", strengths:"Golf, schools, mall, parks" },
+  { district:"DCH", name:"Dubai Creek Harbour", acres:2500, avgPpsf:2700, avgYield:4.8, projects:11, buyer:"Investors, expats", strengths:"Dubai Square; Creek Tower; waterfront" },
+  { district:"EBF", name:"Emaar Beachfront", acres:250, avgPpsf:4150, avgYield:3.7, projects:5, buyer:"Luxury expats, UHNW", strengths:"Beach access; Address/Bristol brands" },
+  { district:"ES", name:"Emaar South", acres:7000, avgPpsf:2800, avgYield:4.9, projects:2, buyer:"Value investors", strengths:"Expo legacy; golf; affordable entry" },
+  { district:"EL", name:"Expo Living", acres:3000, avgPpsf:null, avgYield:null, projects:1, buyer:"Value seekers", strengths:"Emerging area" },
+  { district:"TV", name:"The Valley", acres:4000, avgPpsf:1100, avgYield:5.3, projects:2, buyer:"End-user families", strengths:"Townhouses & villas; community" },
+  { district:"GPC", name:"Grand Polo Club", acres:3500, avgPpsf:1770, avgYield:null, projects:6, buyer:"UHNW, polo", strengths:"First polo-themed community" },
+  { district:"RYM", name:"Rashid Yachts & Marina", acres:1000, avgPpsf:3000, avgYield:4.0, projects:2, buyer:"Maritime lifestyle", strengths:"Yacht marina; Vida" },
+  { district:"TO", name:"The Oasis", acres:2500, avgPpsf:1921, avgYield:null, projects:1, buyer:"UHNW families", strengths:"Ultra-luxury villas" },
+  { district:"BB", name:"Business Bay", acres:null, avgPpsf:null, avgYield:null, projects:1, buyer:"Executives", strengths:"Central; Palace branded" },
+  { district:"TH", name:"The Heights CW", acres:null, avgPpsf:1136, avgYield:null, projects:1, buyer:"Mid-market families", strengths:"Townhouse community" },
+];
+
+/* ─── ENHANCED YIELDS (from Excel PBI_RentalYields) ─── */
+export const emaarYields = [
+  { community:"Dubai Hills Estate", unit:"1BR Apt", rent:75000, price:1529388, gross:4.9, net:4.17, demand:"Very High", tenant:"Professionals, couples", visa:"Yes (≥2M)" },
+  { community:"Dubai Hills Estate", unit:"2BR Apt", rent:110000, price:2200000, gross:5.0, net:4.25, demand:"Very High", tenant:"Families, professionals", visa:"Yes (≥2M)" },
+  { community:"Dubai Hills Estate", unit:"3BR Apt", rent:160000, price:3500000, gross:4.57, net:3.89, demand:"High", tenant:"HNW families", visa:"Yes (≥2M)" },
+  { community:"Dubai Creek Harbour", unit:"1BR Apt", rent:80000, price:1750000, gross:4.57, net:3.89, demand:"High", tenant:"Young professionals", visa:"Yes (≥2M)" },
+  { community:"Dubai Creek Harbour", unit:"2BR Apt", rent:120000, price:2500000, gross:4.8, net:4.08, demand:"High", tenant:"Expat families", visa:"Yes (≥2M)" },
+  { community:"Dubai Creek Harbour", unit:"3BR Apt", rent:170000, price:3500000, gross:4.86, net:4.13, demand:"Moderate-High", tenant:"HNW tenants", visa:"Yes (≥2M)" },
+  { community:"Emaar Beachfront", unit:"1BR Apt", rent:120000, price:3200000, gross:3.75, net:3.19, demand:"Very High", tenant:"Luxury expats", visa:"Yes (≥2M)" },
+  { community:"Emaar Beachfront", unit:"2BR Apt", rent:180000, price:5000000, gross:3.6, net:3.06, demand:"High", tenant:"UHNW tenants", visa:"Yes (≥2M)" },
+  { community:"Emaar South", unit:"1BR Apt", rent:60000, price:1200000, gross:5.0, net:4.25, demand:"Growing", tenant:"Airport staff, young prof.", visa:"Yes (≥2M)" },
+  { community:"Emaar South", unit:"2BR Apt", rent:85000, price:1800000, gross:4.72, net:4.01, demand:"Growing", tenant:"Families, value seekers", visa:"Yes (≥2M)" },
+  { community:"The Valley", unit:"3BR TH", rent:95000, price:1600000, gross:5.94, net:5.05, demand:"High", tenant:"Family end-users", visa:"Yes (≥2M)" },
+  { community:"The Valley", unit:"4BR Villa", rent:140000, price:3000000, gross:4.67, net:3.97, demand:"High", tenant:"Large families", visa:"Yes (≥2M)" },
+  { community:"Rashid Marina", unit:"1BR Apt", rent:85000, price:2100000, gross:4.05, net:3.44, demand:"Moderate", tenant:"Maritime lifestyle", visa:"Yes (≥2M)" },
+  { community:"Downtown Dubai", unit:"1BR Apt", rent:95000, price:2500000, gross:3.8, net:3.23, demand:"Very High", tenant:"Tourists, executives", visa:"Yes (≥2M)" },
+  { community:"Downtown Dubai", unit:"2BR Apt", rent:145000, price:4000000, gross:3.62, net:3.08, demand:"Very High", tenant:"UHNW, corp. housing", visa:"Yes (≥2M)" },
+];
+
+/* ─── TOP 10 DEVELOPERS (from Excel PBI_Developers) ─── */
+export const topDevelopers = [
+  { rank:1, name:"Emaar Properties", sales:65.8, salesUSD:17.9, units:13149, delivered:7318, underConst:51032, segment:"Full Spectrum", confidence:"VERIFIED", share:9.64, color:T.gold },
+  { rank:2, name:"DAMAC Properties", sales:35.9, salesUSD:9.8, units:15393, delivered:2113, underConst:46554, segment:"Mid-Premium → Ultra-Lux", confidence:"VERIFIED", share:5.26, color:T.teal },
+  { rank:3, name:"Binghatti", sales:26.0, salesUSD:7.1, units:17061, delivered:4093, underConst:38000, segment:"Affordable → Mid-Premium", confidence:"VERIFIED", share:3.81, color:T.blue },
+  { rank:4, name:"Nakheel", sales:24.6, salesUSD:6.7, units:4160, delivered:1522, underConst:15000, segment:"Waterfront", confidence:"VERIFIED", share:3.60, color:T.green },
+  { rank:5, name:"Sobha Realty", sales:22.4, salesUSD:6.1, units:9698, delivered:2260, underConst:26933, segment:"Premium → Ultra-Lux", confidence:"VERIFIED", share:3.28, color:T.purple },
+  { rank:6, name:"Meraas", sales:20.9, salesUSD:5.7, units:2385, delivered:1913, underConst:12000, segment:"Premium Lifestyle", confidence:"VERIFIED", share:3.06, color:T.orange },
+  { rank:7, name:"Omniyat", sales:11.0, salesUSD:3.0, units:1656, delivered:800, underConst:4500, segment:"Ultra-Luxury", confidence:"VERIFIED", share:1.61, color:"#FF7043" },
+  { rank:8, name:"Aldar", sales:9.9, salesUSD:2.7, units:1732, delivered:1200, underConst:18000, segment:"Abu Dhabi + Dubai", confidence:"VERIFIED", share:1.45, color:"#42A5F5" },
+  { rank:9, name:"H&H Development", sales:8.1, salesUSD:2.2, units:1200, delivered:600, underConst:8000, segment:"Mid-Premium", confidence:"VERIFIED", share:1.19, color:"#AB47BC" },
+  { rank:10, name:"Danube Properties", sales:7.0, salesUSD:1.9, units:4089, delivered:1757, underConst:22000, segment:"Affordable", confidence:"VERIFIED", share:1.03, color:T.textMuted },
+];
+
+/* ─── RISK MATRIX (from Excel PBI_Risks) ─── */
+export const emaarRisks = [
+  { factor:"Premium Pricing Risk", level:5, likelihood:5, impact:5, score:125, mitigation:"Off-plan payment plans (80/20); branded residences justify premium", assessment:"HIGH", color:T.red },
+  { factor:"Market Cycle Correction", level:4, likelihood:5, impact:5, score:100, mitigation:"Diversified revenue; 35% recurring from malls/hotels", assessment:"ELEVATED", color:T.orange },
+  { factor:"Supply Competition", level:4, likelihood:5, impact:3, score:60, mitigation:"Brand premium 20-40%; 79K track record; master communities", assessment:"ELEVATED", color:T.orange },
+  { factor:"Geographic Concentration", level:3, likelihood:3, impact:5, score:45, mitigation:"Expanding to Saudi, Egypt, India; +124% intl sales YoY", assessment:"MODERATE", color:T.gold },
+  { factor:"Interest Rate Sensitivity", level:2, likelihood:2, impact:2, score:8, mitigation:"87% cash buyers; no floating debt exposure", assessment:"LOW", color:T.teal },
+  { factor:"Execution / Delivery", level:1, likelihood:1, impact:2, score:2, mitigation:"23-year record; 79,000+ units completed on schedule", assessment:"VERY LOW", color:T.green },
+  { factor:"Regulatory Changes", level:1, likelihood:1, impact:2, score:2, mitigation:"DLD/RERA framework; transparent governance", assessment:"VERY LOW", color:T.green },
+  { factor:"Currency (AED Peg)", level:1, likelihood:1, impact:2, score:2, mitigation:"USD peg since 1997; zero FX risk for USD investors", assessment:"VERY LOW", color:T.green },
+  { factor:"Liquidity / Exit Risk", level:1, likelihood:1, impact:1, score:1, mitigation:"DFM-listed; AED 150B+ market cap; deep secondary market", assessment:"VERY LOW", color:T.green },
+];
+
+/* ─── DUBAI MARKET 2025 (from Excel PBI_DubaiMarket) ─── */
+export const dubaiMarket = [
+  { metric:"Total Sales Value", val2024:"AED 522.4B", val2025:"AED 682.5B", yoy:"+30.7%", category:"Sales" },
+  { metric:"Sales Transactions", val2024:"180,860", val2025:"214,912", yoy:"+18.8%", category:"Volume" },
+  { metric:"Total Txn Value", val2024:"AED 760.7B", val2025:"AED 919B", yoy:"+20.8%", category:"Sales" },
+  { metric:"All Transactions", val2024:"226,117", val2025:"275,442", yoy:"+21.8%", category:"Volume" },
+  { metric:"Q4 Sales", val2024:"AED 147.8B", val2025:"AED 187.5B", yoy:"+26.9%", category:"Sales" },
+  { metric:"Avg Price/sqft", val2024:"AED 1,484", val2025:"AED 1,755", yoy:"+18.3%", category:"Pricing" },
+  { metric:"Off-Plan Share", val2024:"55%", val2025:"62.6%", yoy:"Growing", category:"Structure" },
+  { metric:"Cash Buyers", val2024:"85%", val2025:"87%", yoy:"Dominant", category:"Structure" },
+  { metric:"New Investors H1", val2024:"48,600", val2025:"59,075", yoy:"+22%", category:"Demand" },
+];
+
+export const dubaiSalesHistory = [
+  { year:"2020", sales:120 }, { year:"2021", sales:230 }, { year:"2022", sales:300 },
+  { year:"2023", sales:410 }, { year:"2024", sales:522.4 }, { year:"2025", sales:682.5 },
+];
+
+/* ─── ROI PHASES (from Excel PBI_ROIPhases) ─── */
+export const roiPhases = [
+  { phase:"Pre-Launch", timeline:"At Booking", low:8, high:12, avg:10, risk:"Low" },
+  { phase:"Construction", timeline:"2-3 Years", low:12, high:20, avg:16, risk:"Low-Medium" },
+  { phase:"Handover", timeline:"Completion", low:15, high:25, avg:20, risk:"Medium" },
+  { phase:"Rental Y1+", timeline:"Post-Handover", low:4.5, high:8, avg:6.3, risk:"Low" },
+  { phase:"5-Year Hold", timeline:"2026-2031", low:30, high:50, avg:40, risk:"Medium" },
+];
+
+/* ─── SEGMENTS ─── */
+export const emaarSegments = [
+  { name:"UAE Property Dev", revenue:36.4, growth:"44%", color:T.gold },
+  { name:"Malls & Retail", revenue:6.3, growth:"13%", color:T.teal },
+  { name:"Hospitality", revenue:4.2, growth:"12%", color:T.cyan },
+  { name:"International", revenue:2.6, growth:"124%", color:T.green },
+];
+
+/* ─── RADAR DATA ─── */
+export const radarData = [
+  { metric:"Revenue Growth", value:85 },
+  { metric:"Profit Margin", value:72 },
+  { metric:"Market Share", value:90 },
+  { metric:"Brand Strength", value:95 },
+  { metric:"Diversification", value:68 },
+  { metric:"Delivery Record", value:92 },
+];
+
+/* ─── MEGA PROJECTS ─── */
+export const megaProjects = [
+  { name:"Dubai Square", community:"Dubai Creek Harbour", value:"AED 180B+", scale:"2.6M sqm retail/hospitality", type:"Retail + Mixed-Use", timeline:"Phased 2028+", feature:"Future rival to Dubai Mall" },
+  { name:"Dubai Mall Expansion", community:"Downtown Dubai", value:"AED 1.5B", scale:"240 new luxury stores + F&B", type:"Retail Expansion", timeline:"2025-2027", feature:"World's most visited (111M/yr)" },
+  { name:"Dubai Creek Tower", community:"Creek Harbour", value:"TBD", scale:"Iconic observation tower", type:"Mixed-Use Tower", timeline:"Revival announced", feature:"Landmark structure for DCH" },
+  { name:"The Oasis", community:"Al Barari Area", value:"AED 72B", scale:"9,000 villas on 100M sqft", type:"Ultra-Luxury Villas", timeline:"2026-2032", feature:"Largest villa project globally" },
+  { name:"Grand Polo Club", community:"Dubai South", value:"AED 25B+", scale:"900 units, polo grounds", type:"Luxury Lifestyle", timeline:"2026-2030", feature:"First polo-themed community" },
+];

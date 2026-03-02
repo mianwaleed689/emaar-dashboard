@@ -3,131 +3,15 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { auth } from "./firebase";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "firebase/auth";
 
-/* ─── DESIGN TOKENS ─── */
-const T = {
-  bg: "#04090F",
-  surface: "#0A1628",
-  surfaceAlt: "#0E1D35",
-  card: "#0D1B30",
-  cardHover: "#112240",
-  border: "rgba(212,168,67,0.12)",
-  borderHover: "rgba(212,168,67,0.3)",
-  gold: "#D4A843",
-  goldLight: "#E8C96A",
-  goldMuted: "rgba(212,168,67,0.15)",
-  goldGlow: "rgba(212,168,67,0.08)",
-  teal: "#00BFA5",
-  tealMuted: "rgba(0,191,165,0.12)",
-  navy: "#0B1F3F",
-  white: "#F1F5F9",
-  textPrimary: "#E2E8F0",
-  textSecondary: "#94A3B8",
-  textMuted: "#64748B",
-  red: "#EF4444",
-  green: "#10B981",
-  blue: "#3B82F6",
-  purple: "#8B5CF6",
-  orange: "#F59E0B",
-  cyan: "#06B6D4",
-};
+import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects } from "./data";
 
-/* ─── DATA ─── */
-const financials = [
-  { year: "2020", revenue: 14.9, grossProfit: 4.8, ebitda: 6.2, netProfit: 2.7, propertySales: 14, backlog: 28, recurringRev: 5.3, intlSales: 0.6, mallRev: 3.2, hotelRev: 2.1, dividend: 0.15, eps: 0.24, gm: 32.2, em: 41.6, nm: 14.1 },
-  { year: "2021", revenue: 27.9, grossProfit: 11.6, ebitda: 8.5, netProfit: 6.6, propertySales: 23.9, backlog: 32, recurringRev: 5.8, intlSales: 0.8, mallRev: 3.5, hotelRev: 2.3, dividend: 0.25, eps: 0.60, gm: 41.6, em: 30.5, nm: 19.0 },
-  { year: "2022", revenue: 24.9, grossProfit: 12.6, ebitda: 9.8, netProfit: 8.1, propertySales: 30.7, backlog: 41.5, recurringRev: 7.5, intlSales: 1.2, mallRev: 4.2, hotelRev: 3.3, dividend: 0.35, eps: 0.77, gm: 50.6, em: 39.4, nm: 27.3 },
-  { year: "2023", revenue: 26.7, grossProfit: 16.9, ebitda: 16, netProfit: 15.1, propertySales: 40.3, backlog: 71.8, recurringRev: 8.6, intlSales: 2.9, mallRev: 5.8, hotelRev: 2.8, dividend: 0.50, eps: 1.32, gm: 63.3, em: 59.9, nm: 43.4 },
-  { year: "2024", revenue: 35.5, grossProfit: 20.4, ebitda: 19.3, netProfit: 18.9, propertySales: 69.5, backlog: 111.5, recurringRev: 9.3, intlSales: 4.1, mallRev: 5.6, hotelRev: 3.7, dividend: 1.00, eps: 1.53, gm: 57.5, em: 54.4, nm: 38.0 },
-  { year: "2025", revenue: 49.6, grossProfit: 28.5, ebitda: 25.6, netProfit: 25.7, propertySales: 80.4, backlog: 155, recurringRev: 10.5, intlSales: 9.3, mallRev: 6.3, hotelRev: 4.2, dividend: 1.00, eps: 2.00, gm: 57.5, em: 51.6, nm: 35.5 },
-];
-
-const developers = [
-  { rank: 1, name: "Emaar", sales: 65.8, units: 13149, delivered: 7318, underConst: 51032, color: T.gold },
-  { rank: 2, name: "DAMAC", sales: 35.9, units: 15393, delivered: 2113, underConst: 46554, color: T.teal },
-  { rank: 3, name: "Binghatti", sales: 26.0, units: 17061, delivered: 4093, underConst: 38000, color: T.blue },
-  { rank: 4, name: "Nakheel", sales: 24.6, units: 4160, delivered: 1522, underConst: 15000, color: T.green },
-  { rank: 5, name: "Sobha", sales: 22.4, units: 9698, delivered: 2260, underConst: 26933, color: T.purple },
-  { rank: 6, name: "Meraas", sales: 20.9, units: 2385, delivered: 1913, underConst: 12000, color: T.orange },
-  { rank: 7, name: "Omniyat", sales: 11.0, units: 1656, delivered: 800, underConst: 4500, color: "#FF7043" },
-  { rank: 8, name: "Aldar", sales: 9.9, units: 1732, delivered: 1200, underConst: 18000, color: "#42A5F5" },
-  { rank: 9, name: "H&H", sales: 8.1, units: 1200, delivered: 600, underConst: 8000, color: "#AB47BC" },
-  { rank: 10, name: "Danube", sales: 7.0, units: 4089, delivered: 1757, underConst: 22000, color: T.textMuted },
-];
-
-const segments = [
-  { name: "UAE Property Dev", revenue: 36.4, growth: "44%", color: T.gold },
-  { name: "Malls & Retail", revenue: 6.3, growth: "13%", color: T.teal },
-  { name: "Hospitality", revenue: 4.2, growth: "12%", color: T.cyan },
-  { name: "International", revenue: 2.6, growth: "124%", color: T.green },
-];
-
-const risks = [
-  { factor: "Premium Pricing", score: 125, max: 150, color: T.red },
-  { factor: "Market Cycle", score: 100, max: 150, color: T.orange },
-  { factor: "Supply Competition", score: 60, max: 150, color: T.orange },
-  { factor: "Geographic Conc.", score: 45, max: 150, color: T.gold },
-  { factor: "Interest Rate", score: 8, max: 150, color: T.teal },
-  { factor: "Execution", score: 2, max: 150, color: T.green },
-  { factor: "Regulatory", score: 2, max: 150, color: T.green },
-  { factor: "Currency (Peg)", score: 2, max: 150, color: T.green },
-  { factor: "Liquidity", score: 1, max: 150, color: T.green },
-];
-
-const yields = [
-  { label: "DHE 1BR", community: "Dubai Hills", rent: 75, price: 1529, gross: 4.9, net: 4.2, demand: "V.High" },
-  { label: "DHE 2BR", community: "Dubai Hills", rent: 110, price: 2200, gross: 5.0, net: 4.3, demand: "V.High" },
-  { label: "DHE 3BR", community: "Dubai Hills", rent: 160, price: 3500, gross: 4.6, net: 3.9, demand: "High" },
-  { label: "DCH 1BR", community: "Creek Harbour", rent: 80, price: 1750, gross: 4.6, net: 3.9, demand: "High" },
-  { label: "DCH 2BR", community: "Creek Harbour", rent: 120, price: 2500, gross: 4.8, net: 4.1, demand: "High" },
-  { label: "EBF 1BR", community: "Beachfront", rent: 120, price: 3200, gross: 3.8, net: 3.2, demand: "V.High" },
-  { label: "ES 1BR", community: "Emaar South", rent: 60, price: 1200, gross: 5.0, net: 4.3, demand: "Growing" },
-  { label: "ES 2BR", community: "Emaar South", rent: 85, price: 1800, gross: 4.7, net: 4.0, demand: "Growing" },
-  { label: "TV 3BR", community: "The Valley", rent: 95, price: 1600, gross: 5.9, net: 5.0, demand: "High" },
-  { label: "DT 1BR", community: "Downtown", rent: 95, price: 2500, gross: 3.8, net: 3.2, demand: "V.High" },
-];
-
-const roiPhases = [
-  { phase: "Pre-Launch", low: 8, high: 12, avg: 10 },
-  { phase: "Construction", low: 12, high: 20, avg: 16 },
-  { phase: "Handover", low: 15, high: 25, avg: 20 },
-  { phase: "Rental Y1+", low: 4.5, high: 8, avg: 6.3 },
-  { phase: "5-Year Hold", low: 30, high: 50, avg: 40 },
-];
-
-const communityProjects = [
-  { name: "DHE", full: "Dubai Hills Estate", projects: 16, yield: "5.0-7.0%", ppsf: "1,800-3,500" },
-  { name: "DCH", full: "Dubai Creek Harbour", projects: 11, yield: "5.0-6.5%", ppsf: "1,700-3,000" },
-  { name: "EBF", full: "Emaar Beachfront", projects: 5, yield: "4.0-5.5%", ppsf: "3,000-5,500" },
-  { name: "GPC", full: "Grand Polo Club", projects: 6, yield: "3.5-5.0%", ppsf: "1,500-2,200" },
-  { name: "ES", full: "Emaar South", projects: 2, yield: "6.0-8.0%", ppsf: "1,200-1,650" },
-  { name: "TV", full: "The Valley", projects: 2, yield: "5.5-7.0%", ppsf: "1,200-1,500" },
-  { name: "RYM", full: "Rashid Yachts & Marina", projects: 2, yield: "5.0-6.5%", ppsf: "2,000-3,500" },
-  { name: "TO", full: "The Oasis", projects: 1, yield: "3.0-4.5%", ppsf: "1,500-2,000" },
-];
-
-const dubaiMarket = [
-  { metric: "Total Sales Value", val: "AED 682.5B", yoy: "+30.7%" },
-  { metric: "Sales Transactions", val: "214,912", yoy: "+18.8%" },
-  { metric: "Off-Plan Share", val: "62.6%", yoy: "Growing" },
-  { metric: "Cash Buyers", val: "87%", yoy: "Dominant" },
-  { metric: "Avg Price/sqft", val: "AED 1,755", yoy: "+18.3%" },
-  { metric: "New Investors H1", val: "59,075", yoy: "+22%" },
-];
-
-const dubaiSalesHistory = [
-  { year: "2020", sales: 120 }, { year: "2021", sales: 230 }, { year: "2022", sales: 300 },
-  { year: "2023", sales: 410 }, { year: "2024", sales: 522.4 }, { year: "2025", sales: 682.5 },
-];
-
-const radarData = [
-  { metric: "Revenue Growth", value: 85 },
-  { metric: "Profit Margin", value: 72 },
-  { metric: "Market Share", value: 90 },
-  { metric: "Brand Strength", value: 95 },
-  { metric: "Diversification", value: 68 },
-  { metric: "Delivery Record", value: 92 },
-];
-
+/* ─── DATA ALIASES (for backward compat) ─── */
+const financials = emaarFinancials;
+const segments = emaarSegments;
+const risks = emaarRisks.map(r => ({ factor: r.factor, score: r.score, max: 150, color: r.color }));
+const yields = emaarYields.map(y => ({ label: y.unit, community: y.community, rent: y.rent/1000, price: y.price/1000, gross: y.gross, net: y.net, demand: y.demand === "Very High" ? "V.High" : y.demand === "Moderate-High" ? "High" : y.demand }));
+const developers = topDevelopers.map(d => ({ rank: d.rank, name: d.name.replace(" Properties","").replace(" Realty","").replace(" Development",""), sales: d.sales, units: d.units, delivered: d.delivered, underConst: d.underConst, color: d.color }));
+const communityProjects = emaarCommunities.filter(c => c.name).map(c => ({ name: c.district, full: c.name, projects: c.projects, yield: c.avgYield ? `${c.avgYield}%` : "—", ppsf: c.avgPpsf ? c.avgPpsf.toLocaleString() : "—" }));
 /* ─── ICONS (inline SVG) ─── */
 const Icons = {
   overview: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
@@ -147,11 +31,14 @@ const Icons = {
   bell: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
   up: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="18 15 12 9 6 15"/></svg>,
   down: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>,
+  projects: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="12.01"/></svg>,
+  megaProj: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>,
 };
 
 const TABS = [
   { key: "Overview", icon: Icons.overview },
   { key: "Financials", icon: Icons.financials },
+  { key: "Projects", icon: Icons.projects },
   { key: "Portfolio", icon: Icons.portfolio },
   { key: "Competitors", icon: Icons.competitors },
   { key: "Yields", icon: Icons.yields },
@@ -509,6 +396,8 @@ export default function EmaarDashboardV2() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [time, setTime] = useState(new Date());
   const [authLoading, setAuthLoading] = useState(true);
+  const [projectSearch, setProjectSearch] = useState("");
+  const [projectFilter, setProjectFilter] = useState("All");
   const [stock, setStock] = useState({ price: 17.05, change: 0.46, changePercent: 2.75, dayHigh: null, dayLow: null, volume: null, marketState: "LOADING", open: null });
   const [stockLive, setStockLive] = useState(false);
 
@@ -887,6 +776,117 @@ export default function EmaarDashboardV2() {
             </Section>
           </>}
 
+          {/* ─── PROJECTS TAB (48 Projects from Excel) ─── */}
+          {tab === "Projects" && <>
+            <Section title="48 Active Projects" sub="Complete Emaar off-plan portfolio · 2026–2030 · Search & filter">
+              <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
+                <KPI label="Total Projects" value="48" sub="18 under construction · 30 off-plan" delay={1} />
+                <KPI label="Communities" value="11" sub="DHE · DCH · EBF · GPC + 7 more" delay={2} />
+                <KPI label="Branded" value={`${emaarProjects.filter(p=>p.branded).length}`} sub="Address · Vida · Palace · Bristol" delay={3} />
+                <KPI label="Avg Construction" value={`${Math.round(emaarProjects.reduce((a,p)=>a+p.construction,0)/emaarProjects.length)}%`} sub="Weighted average progress" delay={4} />
+              </div>
+            </Section>
+
+            {/* Search & Filters */}
+            <div style={{ display: "flex", gap: 10, marginTop: 20, flexWrap: "wrap", alignItems: "center" }}>
+              <div style={{ position: "relative", flex: "1 1 250px", maxWidth: 350 }}>
+                <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{Icons.search}</span>
+                <input value={projectSearch} onChange={e => setProjectSearch(e.target.value)} placeholder="Search projects..." style={{ width: "100%", padding: "10px 12px 10px 36px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none" }} />
+              </div>
+              {["All", "DHE", "DCH", "EBF", "GPC", "ES", "TV", "RYM", "Branded"].map(f => (
+                <button key={f} onClick={() => setProjectFilter(f)} style={{ padding: "7px 14px", borderRadius: 8, border: `1px solid ${projectFilter === f ? T.gold : T.border}`, background: projectFilter === f ? T.goldGlow : "transparent", color: projectFilter === f ? T.gold : T.textSecondary, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}>{f}</button>
+              ))}
+            </div>
+
+            {/* Project Cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12, marginTop: 16 }}>
+              {emaarProjects
+                .filter(p => {
+                  const matchSearch = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase());
+                  const matchFilter = projectFilter === "All" || p.district === projectFilter || (projectFilter === "Branded" && p.branded);
+                  return matchSearch && matchFilter;
+                })
+                .map((p, i) => (
+                <div key={p.id} className="chart-box fade-up" style={{ animationDelay: `${Math.min(i * 0.03, 0.5)}s`, padding: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 2 }}>{p.name}</div>
+                      <div style={{ fontSize: 11, color: T.textSecondary }}>{p.community}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      {p.branded && <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{p.brand}</span>}
+                      <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: p.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: p.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{p.status === "Under Construction" ? "Building" : "Off-Plan"}</span>
+                    </div>
+                  </div>
+                  {/* Construction Progress */}
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>Construction</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: p.construction >= 70 ? T.green : p.construction >= 30 ? T.gold : T.blue }}>{p.construction}%</span>
+                    </div>
+                    <div style={{ height: 4, borderRadius: 2, background: T.surfaceAlt, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${p.construction}%`, borderRadius: 2, background: p.construction >= 70 ? T.green : p.construction >= 30 ? T.gold : T.blue, transition: "width 0.5s ease" }} />
+                    </div>
+                  </div>
+                  {/* Details Grid */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>FROM</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.price ? `AED ${(p.price/1000000).toFixed(1)}M` : "TBD"}</span></div>
+                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>HANDOVER</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.handover}</span></div>
+                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PRICE/SQFT</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "TBD"}</span></div>
+                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>SIZE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.sizeFrom.toLocaleString()} - {p.sizeTo.toLocaleString()} sqft</span></div>
+                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TYPE</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.type} · {p.beds} BR</span></div>
+                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PAYMENT</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.payment}</span></div>
+                  </div>
+                  <div style={{ marginTop: 8, padding: "4px 8px", borderRadius: 6, background: T.surfaceAlt, display: "inline-block" }}>
+                    <span style={{ fontSize: 10, color: T.textMuted }}>{p.tier}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Community Summary */}
+            <Section title="Communities Overview" sub="11 master-planned communities">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginTop: 16 }}>
+                {emaarCommunities.filter(c => c.name).map((c, i) => (
+                  <div key={c.district} className="chart-box fade-up" style={{ animationDelay: `${i*0.05}s`, padding: 14 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                      <div>
+                        <span style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.gold }}>{c.district}</span>
+                        <span style={{ fontSize: 11, color: T.textSecondary, marginLeft: 8 }}>{c.name}</span>
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: T.teal }}>{c.projects} projects</span>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, fontSize: 11 }}>
+                      <div><span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>AVG PPSF</span><span style={{ color: T.white, fontWeight: 600 }}>{c.avgPpsf ? `AED ${c.avgPpsf.toLocaleString()}` : "—"}</span></div>
+                      <div><span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>YIELD</span><span style={{ color: T.white, fontWeight: 600 }}>{c.avgYield ? `${c.avgYield}%` : "—"}</span></div>
+                      <div><span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>ACRES</span><span style={{ color: T.white, fontWeight: 600 }}>{c.acres ? c.acres.toLocaleString() : "—"}</span></div>
+                    </div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{c.buyer} · {c.strengths}</div>
+                  </div>
+                ))}
+              </div>
+            </Section>
+
+            {/* Mega Projects */}
+            <Section title="Mega Projects Pipeline" sub="Strategic developments 2026–2032">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10, marginTop: 16 }}>
+                {megaProjects.map((m, i) => (
+                  <div key={m.name} className="chart-box fade-up" style={{ animationDelay: `${i*0.05}s`, padding: 16, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                    <div style={{ flex: "1 1 200px" }}>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: T.gold }}>{m.name}</div>
+                      <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>{m.community} · {m.type}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+                      <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>VALUE</span><span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{m.value}</span></div>
+                      <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TIMELINE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.teal }}>{m.timeline}</span></div>
+                    </div>
+                    <div style={{ fontSize: 11, color: T.textMuted, width: "100%" }}>{m.scale} · {m.feature}</div>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          </>}
+
           {/* ─── PORTFOLIO TAB ─── */}
           {tab === "Portfolio" && <>
             <Section title="Project Portfolio" sub="48 active projects · 10+ master communities · 2026–2030">
@@ -1098,7 +1098,7 @@ export default function EmaarDashboardV2() {
           {tab === "Market" && <>
             <Section title="Dubai Real Estate — 2025" sub="Official DLD Data · 5th Consecutive Record Year">
               <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 16 }}>
-                {dubaiMarket.map((m, i) => <KPI key={i} label={m.metric} value={m.val} sub={m.yoy} delay={Math.min(i + 1, 8)} />)}
+                {dubaiMarket.map((m, i) => <KPI key={i} label={m.metric} value={m.val2025} sub={m.yoy} delay={Math.min(i + 1, 8)} />)}
               </div>
             </Section>
 
