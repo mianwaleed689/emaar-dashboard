@@ -827,13 +827,9 @@ export default function EmaarDashboardV2() {
                 .map((p, i) => (
                 <div key={p.id} className="chart-box fade-up" style={{ animationDelay: `${Math.min(i * 0.03, 0.5)}s`, padding: 0, overflow: "hidden" }}>
                   {/* Project Image */}
-                  {p.imageUrl ? (
+                  {p.imageUrl && (
                     <div style={{ width: "100%", height: 140, overflow: "hidden", borderBottom: `1px solid ${T.border}` }}>
                       <img src={p.imageUrl} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.parentElement.style.display = "none"; }} />
-                    </div>
-                  ) : (
-                    <div style={{ width: "100%", height: 60, background: `linear-gradient(135deg, ${T.surfaceAlt} 0%, ${T.surface} 100%)`, display: "flex", alignItems: "center", justifyContent: "center", borderBottom: `1px solid ${T.border}` }}>
-                      <span style={{ fontSize: 11, color: T.textMuted }}>📷 No image yet</span>
                     </div>
                   )}
                   <div style={{ padding: 16 }}>
