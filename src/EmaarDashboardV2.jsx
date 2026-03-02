@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
+import { auth } from "./firebase";
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
 
 /* ─── DESIGN TOKENS ─── */
 const T = {
@@ -305,20 +307,32 @@ const css = `
   .mobile-overlay.open { opacity: 1; pointer-events: auto; }
 
   @media (max-width: 768px) {
+    html { font-size: 13px; }
     .sidebar { transform: translateX(-100%); position: fixed !important; z-index: 100; }
     .sidebar.open { transform: translateX(0); }
     .main-content { margin-left: 0 !important; }
     .top-bar { left: 0 !important; }
-    .kpi-grid { grid-template-columns: 1fr 1fr !important; }
+    .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
     .chart-grid-2 { grid-template-columns: 1fr !important; }
     .chart-grid-3 { grid-template-columns: 1fr !important; }
     .chart-grid-4 { grid-template-columns: 1fr 1fr !important; }
-    .header-badges { display: none !important; }
+    .header-badges { gap: 4px !important; }
+    .header-badges > div:nth-child(n+3) { display: none !important; }
+    .mobile-menu-btn { display: block !important; }
+    .kpi-card { padding: 14px 12px !important; border-radius: 12px !important; }
+    .kpi-card .kpi-value { font-size: 22px !important; }
+    .chart-box { padding: 14px 10px !important; border-radius: 12px !important; }
+    .main-content > div { padding: 0 14px 40px !important; }
   }
 
   @media (max-width: 480px) {
-    .kpi-grid { grid-template-columns: 1fr !important; }
+    html { font-size: 12px; }
+    .kpi-grid { grid-template-columns: 1fr !important; gap: 6px !important; }
     .chart-grid-4 { grid-template-columns: 1fr !important; }
+    .header-badges { display: none !important; }
+    .top-bar { padding: 0 12px !important; }
+    .top-bar h1 { font-size: 13px !important; }
+    .mobile-stock-bar { display: flex !important; }
   }
 `;
 
@@ -376,15 +390,26 @@ const LoginScreen = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e?.preventDefault?.();
     if (!email || !pass) { setError("Please fill in all fields"); return; }
     setLoading(true);
     setError("");
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
       onLogin(email);
-    }, 1200);
+    } catch (err) {
+      if (err.code === "auth/user-not-found" || err.code === "auth/invalid-credential") {
+        setError("Invalid email or password");
+      } else if (err.code === "auth/wrong-password") {
+        setError("Incorrect password");
+      } else if (err.code === "auth/too-many-requests") {
+        setError("Too many attempts. Please try again later.");
+      } else {
+        setError("Login failed. Please try again.");
+      }
+    }
+    setLoading(false);
   };
 
   return (
@@ -470,8 +495,24 @@ export default function EmaarDashboardV2() {
   const [tab, setTab] = useState("Overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [time, setTime] = useState(new Date());
+  const [authLoading, setAuthLoading] = useState(true);
   const [stock, setStock] = useState({ price: 17.05, change: 0.46, changePercent: 2.75, dayHigh: null, dayLow: null, volume: null, marketState: "LOADING", open: null });
   const [stockLive, setStockLive] = useState(false);
+
+  // Listen to Firebase auth state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        setIsLoggedIn(true);
+        setUser(firebaseUser.email || "");
+      } else {
+        setIsLoggedIn(false);
+        setUser("");
+      }
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Fetch live stock data
   useEffect(() => {
@@ -506,6 +547,21 @@ export default function EmaarDashboardV2() {
     const t = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(t);
   }, []);
+
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
+        <style>{css}</style>
+        <svg width="40" height="40" viewBox="0 0 40 40">
+          <rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" />
+          <path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} />
+        </svg>
+        <div style={{ color: T.gold, fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 700 }}>DXB Analytics</div>
+        <div style={{ width: 24, height: 24, border: `2px solid ${T.border}`, borderTopColor: T.gold, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     return <LoginScreen onLogin={(email) => { setIsLoggedIn(true); setUser(email); }} />;
@@ -565,7 +621,7 @@ export default function EmaarDashboardV2() {
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.split("@")[0]}</div>
               <div style={{ fontSize: 10, color: T.textMuted }}>Pro Plan</div>
             </div>
-            <button onClick={() => { setIsLoggedIn(false); setUser(""); }} style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }} title="Sign out">
+            <button onClick={() => { signOut(auth); }} style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }} title="Sign out">
               {Icons.logout}
             </button>
           </div>
@@ -585,7 +641,6 @@ export default function EmaarDashboardV2() {
           <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: T.textSecondary, display: "none", padding: 4 }} className="mobile-menu-btn">
             {sidebarOpen ? Icons.close : Icons.menu}
           </button>
-          <style>{`@media (max-width: 768px) { .mobile-menu-btn { display: block !important; } }`}</style>
           <div>
             <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>Emaar Properties <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>PJSC</span></h1>
             <p style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1 }}>DFM: EMAAR · {stockLive ? <span style={{ color: T.green }}>Market {stock.marketState === "REGULAR" ? "Open" : stock.marketState === "PRE" ? "Pre-Market" : "Closed"}</span> : "Offline"} · {time.toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}</p>
@@ -619,6 +674,17 @@ export default function EmaarDashboardV2() {
 
       {/* ─── MAIN CONTENT ─── */}
       <main className="main-content" style={{ marginLeft: 240, paddingTop: 60, minHeight: "100vh" }}>
+        {/* Mobile stock ticker - only visible on small screens */}
+        <div className="mobile-stock-bar" style={{ display: "none", alignItems: "center", justifyContent: "center", gap: 12, padding: "8px 14px", background: T.surface, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            {stockLive && <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />}
+            <span style={{ fontSize: 9, color: T.textMuted }}>{stockLive ? "LIVE" : "STOCK"}</span>
+            <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 13, color: T.gold }}>{stock.price.toFixed(2)}</span>
+            <span style={{ color: stock.change >= 0 ? T.green : T.red, fontSize: 10, fontWeight: 600 }}>{stock.change >= 0 ? "▲" : "▼"} {Math.abs(stock.changePercent).toFixed(2)}%</span>
+          </div>
+          <span style={{ fontSize: 9, color: T.textMuted }}>BBB+ / Baa1</span>
+          <span style={{ fontSize: 9, color: T.goldLight }}>Target: 20.77</span>
+        </div>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px 60px" }}>
 
           {/* ─── OVERVIEW TAB ─── */}
