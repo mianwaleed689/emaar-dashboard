@@ -1,15 +1,57 @@
-import React, { useState, useEffect, useRef } from "react";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart } from "recharts";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import {
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area,
+  ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  Treemap
+} from "recharts";
 
-const C = {
-  navy: "#0B1F3F", navyL: "#132D54", navyM: "#1A3A6A", navyS: "#0D2847",
-  gold: "#D4A843", goldL: "#E8C96A", goldD: "#B8912F", goldS: "rgba(212,168,67,0.15)",
-  teal: "#00897B", tealL: "#26A69A", green: "#2E7D32",
-  white: "#FFFFFF", light: "#F5F7FA", gray: "#64748B", grayL: "#94A3B8",
-  red: "#E53935", orange: "#FB8C00", blue: "#1E88E5", purple: "#7E57C2",
-  bg: "#060E1A", card: "rgba(11,31,63,0.85)", border: "rgba(212,168,67,0.2)",
+/* ═══════════════════════════════════════════════════════════
+   THEME & DESIGN TOKENS
+   ═══════════════════════════════════════════════════════════ */
+const T = {
+  // Core palette
+  bg: "#04080F",
+  surface: "#0A1628",
+  surfaceAlt: "#0E1D35",
+  card: "rgba(14,29,53,0.75)",
+  cardHover: "rgba(14,29,53,0.95)",
+  glass: "rgba(10,22,40,0.6)",
+  // Brand
+  gold: "#C9A84C",
+  goldLight: "#E2C872",
+  goldDim: "rgba(201,168,76,0.15)",
+  goldBorder: "rgba(201,168,76,0.25)",
+  // Accents
+  teal: "#00BFA5",
+  tealDim: "rgba(0,191,165,0.12)",
+  blue: "#2196F3",
+  blueDim: "rgba(33,150,243,0.12)",
+  green: "#4CAF50",
+  greenDim: "rgba(76,175,80,0.12)",
+  red: "#EF5350",
+  redDim: "rgba(239,83,80,0.12)",
+  orange: "#FF9800",
+  purple: "#AB47BC",
+  // Text
+  text: "#F0F2F5",
+  textSecondary: "#8899B0",
+  textMuted: "#546580",
+  // Borders
+  border: "rgba(201,168,76,0.12)",
+  borderLight: "rgba(255,255,255,0.06)",
+  // Shadows
+  shadow: "0 4px 24px rgba(0,0,0,0.4)",
+  shadowLg: "0 8px 40px rgba(0,0,0,0.5)",
+  // Radii
+  r: 12,
+  rSm: 8,
+  rLg: 16,
 };
 
+/* ═══════════════════════════════════════════════════════════
+   DATA
+   ═══════════════════════════════════════════════════════════ */
 const financials = [
   { year: "2020", revenue: 14.9, grossProfit: 4.8, ebitda: 6.2, netProfit: 2.7, propertySales: 14, backlog: 28, recurringRev: 5.3, intlSales: 0.6, mallRev: 3.2, hotelRev: 2.1, dividend: 0.15, eps: 0.24, gm: 32.2, em: 41.6, nm: 14.1 },
   { year: "2021", revenue: 27.9, grossProfit: 11.6, ebitda: 8.5, netProfit: 6.6, propertySales: 23.9, backlog: 32, recurringRev: 5.8, intlSales: 0.8, mallRev: 3.5, hotelRev: 2.3, dividend: 0.25, eps: 0.60, gm: 41.6, em: 30.5, nm: 19.0 },
@@ -20,35 +62,35 @@ const financials = [
 ];
 
 const developers = [
-  { rank: 1, name: "Emaar", sales: 65.8, units: 13149, delivered: 7318, underConst: 51032, color: C.gold },
-  { rank: 2, name: "DAMAC", sales: 35.9, units: 15393, delivered: 2113, underConst: 46554, color: C.teal },
-  { rank: 3, name: "Binghatti", sales: 26.0, units: 17061, delivered: 4093, underConst: 38000, color: C.blue },
-  { rank: 4, name: "Nakheel", sales: 24.6, units: 4160, delivered: 1522, underConst: 15000, color: C.green },
-  { rank: 5, name: "Sobha", sales: 22.4, units: 9698, delivered: 2260, underConst: 26933, color: C.purple },
-  { rank: 6, name: "Meraas", sales: 20.9, units: 2385, delivered: 1913, underConst: 12000, color: C.orange },
+  { rank: 1, name: "Emaar", sales: 65.8, units: 13149, delivered: 7318, underConst: 51032, color: T.gold },
+  { rank: 2, name: "DAMAC", sales: 35.9, units: 15393, delivered: 2113, underConst: 46554, color: T.teal },
+  { rank: 3, name: "Binghatti", sales: 26.0, units: 17061, delivered: 4093, underConst: 38000, color: T.blue },
+  { rank: 4, name: "Nakheel", sales: 24.6, units: 4160, delivered: 1522, underConst: 15000, color: T.green },
+  { rank: 5, name: "Sobha", sales: 22.4, units: 9698, delivered: 2260, underConst: 26933, color: T.purple },
+  { rank: 6, name: "Meraas", sales: 20.9, units: 2385, delivered: 1913, underConst: 12000, color: T.orange },
   { rank: 7, name: "Omniyat", sales: 11.0, units: 1656, delivered: 800, underConst: 4500, color: "#FF7043" },
   { rank: 8, name: "Aldar", sales: 9.9, units: 1732, delivered: 1200, underConst: 18000, color: "#42A5F5" },
   { rank: 9, name: "H&H", sales: 8.1, units: 1200, delivered: 600, underConst: 8000, color: "#AB47BC" },
-  { rank: 10, name: "Danube", sales: 7.0, units: 4089, delivered: 1757, underConst: 22000, color: C.grayL },
+  { rank: 10, name: "Danube", sales: 7.0, units: 4089, delivered: 1757, underConst: 22000, color: T.textSecondary },
 ];
 
 const segments = [
-  { name: "UAE Property Dev", revenue: 36.4, growth: "44%", color: C.gold },
-  { name: "Malls & Retail", revenue: 6.3, growth: "13%", color: C.teal },
-  { name: "Hospitality", revenue: 4.2, growth: "12%", color: C.blue },
-  { name: "International", revenue: 2.6, growth: "124%", color: C.green },
+  { name: "UAE Property Dev", revenue: 36.4, growth: "44%", color: T.gold },
+  { name: "Malls & Retail", revenue: 6.3, growth: "13%", color: T.teal },
+  { name: "Hospitality", revenue: 4.2, growth: "12%", color: T.blue },
+  { name: "International", revenue: 2.6, growth: "124%", color: T.green },
 ];
 
 const risks = [
-  { factor: "Premium Pricing", score: 125, color: C.red },
-  { factor: "Market Cycle", score: 100, color: C.orange },
-  { factor: "Supply Competition", score: 60, color: C.orange },
-  { factor: "Geographic Conc.", score: 45, color: C.gold },
-  { factor: "Interest Rate", score: 8, color: C.teal },
-  { factor: "Execution", score: 2, color: C.green },
-  { factor: "Regulatory", score: 2, color: C.green },
-  { factor: "Currency (Peg)", score: 2, color: C.green },
-  { factor: "Liquidity", score: 1, color: C.green },
+  { factor: "Premium Pricing", score: 125, color: T.red, level: "High" },
+  { factor: "Market Cycle", score: 100, color: T.orange, level: "High" },
+  { factor: "Supply Competition", score: 60, color: T.orange, level: "Medium" },
+  { factor: "Geographic Conc.", score: 45, color: T.gold, level: "Medium" },
+  { factor: "Interest Rate", score: 8, color: T.teal, level: "Low" },
+  { factor: "Execution", score: 2, color: T.green, level: "V.Low" },
+  { factor: "Regulatory", score: 2, color: T.green, level: "V.Low" },
+  { factor: "Currency (Peg)", score: 2, color: T.green, level: "V.Low" },
+  { factor: "Liquidity", score: 1, color: T.green, level: "V.Low" },
 ];
 
 const yields = [
@@ -97,445 +139,930 @@ const dubaiSalesHistory = [
   { year: "2023", sales: 410 }, { year: "2024", sales: 522.4 }, { year: "2025", sales: 682.5 },
 ];
 
-const KPICard = ({ label, value, sub }) => (
-  <div style={{ background: `linear-gradient(135deg, ${C.card} 0%, rgba(19,45,84,0.9) 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: "18px 14px", display: "flex", flexDirection: "column", gap: 4, position: "relative", overflow: "hidden" }}>
-    <div style={{ position: "absolute", top: -20, right: -20, width: 70, height: 70, borderRadius: "50%", background: `radial-gradient(circle, ${C.goldS} 0%, transparent 70%)` }} />
-    <span style={{ color: C.grayL, fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase", fontFamily: "'DM Sans',sans-serif" }}>{label}</span>
-    <span style={{ color: C.gold, fontSize: 24, fontWeight: 700, fontFamily: "'Playfair Display',serif", lineHeight: 1.1 }}>{value}</span>
-    <span style={{ color: C.tealL, fontSize: 11, fontWeight: 600 }}>{sub}</span>
-  </div>
-);
+/* ═══════════════════════════════════════════════════════════
+   CSS KEYFRAMES & GLOBAL STYLES
+   ═══════════════════════════════════════════════════════════ */
+const globalCSS = `
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Cormorant+Garamond:wght@400;500;600;700&display=swap');
 
-const SectionTitle = ({ children, sub }) => (
-  <div style={{ marginBottom: 16, marginTop: 36 }}>
-    <h2 style={{ color: C.white, fontSize: 20, fontWeight: 700, fontFamily: "'Playfair Display',serif", margin: 0, borderLeft: `3px solid ${C.gold}`, paddingLeft: 14 }}>{children}</h2>
-    {sub && <p style={{ color: C.grayL, fontSize: 11, margin: "4px 0 0 17px" }}>{sub}</p>}
-  </div>
-);
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: ${T.goldBorder}; border-radius: 10px; }
 
-const ChartBox = ({ children, title }) => (
-  <div style={{ background: `linear-gradient(180deg, ${C.card} 0%, rgba(6,14,26,0.95) 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px 14px" }}>
-    {title && <h3 style={{ color: C.goldL, fontSize: 12, fontWeight: 600, marginBottom: 10, letterSpacing: 0.5, textTransform: "uppercase" }}>{title}</h3>}
-    {children}
-  </div>
-);
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-16px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes countUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
-const Tip = ({ active, payload, label }) => {
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: ${T.bg};
+    color: ${T.text};
+    overflow: hidden;
+  }
+`;
+
+/* ═══════════════════════════════════════════════════════════
+   ICONS (inline SVG)
+   ═══════════════════════════════════════════════════════════ */
+const icons = {
+  overview: (c) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+  financial: (c) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+  portfolio: (c) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>,
+  competitors: (c) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>,
+  yields: (c) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23,6 13.5,15.5 8.5,10.5 1,18"/><polyline points="17,6 23,6 23,12"/></svg>,
+  risk: (c) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+  market: (c) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+  menu: (c) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
+  close: (c) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  live: (c) => <svg width="8" height="8"><circle cx="4" cy="4" r="4" fill={c}/></svg>,
+  arrow: (up, c) => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.5"><path d={up ? "M18 15l-6-6-6 6" : "M6 9l6 6 6-6"}/></svg>,
+};
+
+const tabs = [
+  { id: "overview", label: "Overview", icon: icons.overview },
+  { id: "financials", label: "Financials", icon: icons.financial },
+  { id: "portfolio", label: "Portfolio", icon: icons.portfolio },
+  { id: "competitors", label: "Competitors", icon: icons.competitors },
+  { id: "yields", label: "Yields", icon: icons.yields },
+  { id: "risk", label: "Risk", icon: icons.risk },
+  { id: "market", label: "Market", icon: icons.market },
+];
+
+/* ═══════════════════════════════════════════════════════════
+   REUSABLE COMPONENTS
+   ═══════════════════════════════════════════════════════════ */
+
+const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: C.navy, border: `1px solid ${C.gold}`, borderRadius: 8, padding: "8px 12px", boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
-      <p style={{ color: C.gold, fontWeight: 700, margin: 0, fontSize: 12 }}>{label}</p>
-      {payload.map((p, i) => <p key={i} style={{ color: p.color || C.white, margin: "2px 0 0", fontSize: 11 }}>{p.name}: <strong>{typeof p.value === "number" ? p.value.toFixed(1) : p.value}</strong></p>)}
+    <div style={{
+      background: T.surface,
+      border: `1px solid ${T.goldBorder}`,
+      borderRadius: T.rSm,
+      padding: "10px 14px",
+      boxShadow: T.shadowLg,
+    }}>
+      <p style={{ color: T.gold, fontWeight: 600, fontSize: 12, marginBottom: 6, fontFamily: "'Cormorant Garamond',serif" }}>{label}</p>
+      {payload.map((p, i) => (
+        <p key={i} style={{ color: p.color || T.text, fontSize: 11, lineHeight: 1.6 }}>
+          {p.name}: <strong>{typeof p.value === "number" ? p.value.toLocaleString() : p.value}</strong>
+        </p>
+      ))}
     </div>
   );
 };
 
-const TABS = ["Overview", "Financials", "Portfolio", "Competitors", "Yields", "Risk", "Market"];
+const StatCard = ({ label, value, change, changeColor, icon, delay = 0 }) => (
+  <div style={{
+    background: `linear-gradient(135deg, ${T.card} 0%, rgba(10,22,40,0.5) 100%)`,
+    backdropFilter: "blur(12px)",
+    border: `1px solid ${T.border}`,
+    borderRadius: T.r,
+    padding: "20px 18px",
+    position: "relative",
+    overflow: "hidden",
+    animation: `fadeIn 0.5s ease ${delay}s both`,
+    transition: "border-color 0.3s, transform 0.2s",
+  }}
+    onMouseEnter={e => { e.currentTarget.style.borderColor = T.goldBorder; e.currentTarget.style.transform = "translateY(-2px)"; }}
+    onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "translateY(0)"; }}
+  >
+    <div style={{
+      position: "absolute", top: -30, right: -30,
+      width: 80, height: 80, borderRadius: "50%",
+      background: `radial-gradient(circle, ${T.goldDim} 0%, transparent 70%)`,
+    }} />
+    <span style={{
+      color: T.textSecondary, fontSize: 10, letterSpacing: 1.8,
+      textTransform: "uppercase", fontWeight: 500, display: "block", marginBottom: 8,
+    }}>{label}</span>
+    <span style={{
+      color: T.gold, fontSize: 26, fontWeight: 700, display: "block",
+      fontFamily: "'Cormorant Garamond', serif", lineHeight: 1.1,
+      animation: `countUp 0.6s ease ${delay + 0.2}s both`,
+    }}>{value}</span>
+    {change && (
+      <span style={{
+        display: "inline-flex", alignItems: "center", gap: 3,
+        marginTop: 8, fontSize: 11, fontWeight: 600,
+        color: changeColor || T.teal,
+        background: changeColor === T.red ? T.redDim : T.tealDim,
+        padding: "2px 8px", borderRadius: 20,
+      }}>
+        {icons.arrow(!changeColor || changeColor !== T.red, changeColor || T.teal)}
+        {change}
+      </span>
+    )}
+  </div>
+);
 
-export default function EmaarDashboard() {
-  const [tab, setTab] = useState("Overview");
-  const [authenticated, setAuthenticated] = useState(false);
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+const SectionHeader = ({ title, subtitle, delay = 0 }) => (
+  <div style={{ marginBottom: 20, marginTop: 40, animation: `fadeIn 0.4s ease ${delay}s both` }}>
+    <h2 style={{
+      fontFamily: "'Cormorant Garamond', serif",
+      fontSize: 22, fontWeight: 600, color: T.text,
+      display: "flex", alignItems: "center", gap: 12,
+    }}>
+      <span style={{
+        width: 3, height: 22, background: `linear-gradient(180deg, ${T.gold}, ${T.teal})`,
+        borderRadius: 4, display: "inline-block",
+      }} />
+      {title}
+    </h2>
+    {subtitle && (
+      <p style={{ color: T.textMuted, fontSize: 12, marginTop: 4, marginLeft: 15, letterSpacing: 0.3 }}>{subtitle}</p>
+    )}
+  </div>
+);
 
-  const ACCESS_CODE = "EMAAR2026";
+const ChartContainer = ({ title, children, delay = 0 }) => (
+  <div style={{
+    background: T.card,
+    backdropFilter: "blur(12px)",
+    border: `1px solid ${T.border}`,
+    borderRadius: T.r,
+    padding: "20px",
+    marginBottom: 16,
+    animation: `fadeIn 0.5s ease ${delay}s both`,
+  }}>
+    {title && (
+      <h3 style={{
+        fontFamily: "'Cormorant Garamond', serif",
+        fontSize: 15, fontWeight: 600, color: T.textSecondary,
+        marginBottom: 16, letterSpacing: 0.5,
+      }}>{title}</h3>
+    )}
+    {children}
+  </div>
+);
 
-  if (!authenticated) {
-    return (
-      <div style={{ minHeight: "100vh", background: "#060E1A", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans',sans-serif" }}>
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-        <div style={{ background: "rgba(11,31,63,0.9)", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 16, padding: 48, width: 420, textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
-          <h1 style={{ fontFamily: "'Playfair Display',serif", color: "#D4A843", fontSize: 28, marginBottom: 8 }}>EMAAR PROPERTIES</h1>
-          <p style={{ color: "#64748B", fontSize: 13, marginBottom: 32, letterSpacing: 2 }}>INTELLIGENCE DASHBOARD</p>
-          <div style={{ width: 60, height: 2, background: "#D4A843", margin: "0 auto 32px" }} />
-          <p style={{ color: "#94A3B8", fontSize: 14, marginBottom: 16 }}>Enter access code to continue</p>
-          <input
-            type="password"
-            value={password}
-            onChange={e => { setPassword(e.target.value); setError(""); }}
-            onKeyDown={e => { if (e.key === "Enter") { if (password === ACCESS_CODE) setAuthenticated(true); else setError("Invalid access code"); }}}
-            placeholder="Access Code"
-            style={{ width: "100%", padding: "14px 16px", background: "rgba(255,255,255,0.05)", border: error ? "1px solid #E53935" : "1px solid rgba(212,168,67,0.3)", borderRadius: 8, color: "#FFFFFF", fontSize: 16, outline: "none", textAlign: "center", letterSpacing: 4, marginBottom: 8, boxSizing: "border-box" }}
-          />
-          {error && <p style={{ color: "#E53935", fontSize: 12, marginBottom: 8 }}>{error}</p>}
-          <button
-            onClick={() => { if (password === ACCESS_CODE) setAuthenticated(true); else setError("Invalid access code"); }}
-            style={{ width: "100%", padding: "14px 0", background: "linear-gradient(135deg, #D4A843, #B8912F)", border: "none", borderRadius: 8, color: "#0B1F3F", fontSize: 15, fontWeight: 700, cursor: "pointer", marginTop: 8, letterSpacing: 1 }}
-          >
-            ACCESS DASHBOARD
-          </button>
-          <p style={{ color: "#64748B", fontSize: 11, marginTop: 24 }}>Authorized personnel only</p>
-        </div>
-      </div>
-    );
-  }
+/* ═══════════════════════════════════════════════════════════
+   TAB CONTENT SECTIONS
+   ═══════════════════════════════════════════════════════════ */
+
+const OverviewTab = () => {
+  const latest = financials[financials.length - 1];
+  const prev = financials[financials.length - 2];
+  const revGrowth = (((latest.revenue - prev.revenue) / prev.revenue) * 100).toFixed(1);
+  const profitGrowth = (((latest.netProfit - prev.netProfit) / prev.netProfit) * 100).toFixed(1);
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, color: C.white, fontFamily: "'DM Sans',sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      <div style={{ position: "fixed", inset: 0, opacity: 0.03, backgroundImage: `radial-gradient(${C.gold} 1px, transparent 1px)`, backgroundSize: "40px 40px", pointerEvents: "none" }} />
+    <>
+      {/* Hero KPIs */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 14 }}>
+        <StatCard label="Property Sales" value="AED 80.4B" change={`+${(((80.4-69.5)/69.5)*100).toFixed(0)}% YoY`} delay={0} />
+        <StatCard label="Revenue" value="AED 49.6B" change={`+${revGrowth}%`} delay={0.05} />
+        <StatCard label="Net Profit" value="AED 25.7B" change={`+${profitGrowth}%`} delay={0.1} />
+        <StatCard label="Revenue Backlog" value="AED 155B" change="+39%" delay={0.15} />
+        <StatCard label="Stock Price" value="AED 17.05" change="STRONG BUY" changeColor={T.teal} delay={0.2} />
+        <StatCard label="Developer Rank" value="#1 Dubai" change="AED 65.8B" delay={0.25} />
+      </div>
 
-      <header style={{ background: `linear-gradient(135deg, ${C.navy} 0%, ${C.navyS} 50%, ${C.navyM} 100%)`, borderBottom: `1px solid ${C.border}`, padding: "16px 20px", position: "sticky", top: 0, zIndex: 50, backdropFilter: "blur(20px)" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
-            <div>
-              <h1 style={{ margin: 0, fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 900, color: C.gold }}>EMAAR PROPERTIES</h1>
-              <p style={{ margin: 0, fontSize: 10, color: C.grayL, letterSpacing: 2 }}>INTELLIGENCE DASHBOARD · FEB 2026 · DFM: EMAAR</p>
+      {/* Revenue Trend */}
+      <SectionHeader title="Revenue & Profit Growth" subtitle="FY 2020 — FY 2025 · AED Billions" delay={0.2} />
+      <ChartContainer delay={0.25}>
+        <ResponsiveContainer width="100%" height={280}>
+          <AreaChart data={financials}>
+            <defs>
+              <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={T.gold} stopOpacity={0.3}/>
+                <stop offset="100%" stopColor={T.gold} stopOpacity={0}/>
+              </linearGradient>
+              <linearGradient id="tealGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={T.teal} stopOpacity={0.3}/>
+                <stop offset="100%" stopColor={T.teal} stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} />
+            <XAxis dataKey="year" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+            <Tooltip content={<ChartTooltip />} />
+            <Area type="monotone" dataKey="revenue" stroke={T.gold} fill="url(#goldGrad)" strokeWidth={2.5} name="Revenue" dot={{ r: 3, fill: T.gold }} />
+            <Area type="monotone" dataKey="netProfit" stroke={T.teal} fill="url(#tealGrad)" strokeWidth={2.5} name="Net Profit" dot={{ r: 3, fill: T.teal }} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </ChartContainer>
+
+      {/* Business Segments */}
+      <SectionHeader title="Business Segments" subtitle="FY 2025 Revenue by Division" delay={0.3} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
+        {segments.map((s, i) => (
+          <div key={i} style={{
+            background: T.card, border: `1px solid ${T.border}`, borderRadius: T.r,
+            padding: "18px", borderLeft: `3px solid ${s.color}`,
+            animation: `fadeIn 0.4s ease ${0.3 + i * 0.05}s both`,
+            transition: "transform 0.2s",
+          }}
+            onMouseEnter={e => e.currentTarget.style.transform = "translateX(4px)"}
+            onMouseLeave={e => e.currentTarget.style.transform = "translateX(0)"}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div>
+                <span style={{ color: T.textSecondary, fontSize: 11, display: "block", marginBottom: 4 }}>{s.name}</span>
+                <span style={{ color: T.text, fontSize: 22, fontWeight: 700, fontFamily: "'Cormorant Garamond',serif" }}>AED {s.revenue}B</span>
+              </div>
+              <span style={{
+                background: T.tealDim, color: T.teal, fontSize: 11,
+                fontWeight: 600, padding: "3px 8px", borderRadius: 20,
+              }}>+{s.growth}</span>
             </div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-              <div style={{ background: C.navyL, borderRadius: 8, padding: "5px 10px", border: `1px solid ${C.border}` }}>
-                <span style={{ color: C.grayL, fontSize: 9 }}>STOCK </span>
-                <span style={{ color: C.gold, fontWeight: 700, fontSize: 13 }}>AED 17.05</span>
-                <span style={{ color: C.tealL, fontSize: 10, marginLeft: 4 }}>▲ 2.75%</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Key Metrics Row */}
+      <SectionHeader title="Investment Snapshot" subtitle="Key metrics for investor consideration" delay={0.4} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 14 }}>
+        <StatCard label="EPS" value={`AED ${latest.eps}`} change="+31%" delay={0.4} />
+        <StatCard label="Dividend / Share" value={`AED ${latest.dividend}`} change="100% payout" delay={0.45} />
+        <StatCard label="Analyst Target" value="AED 20.77" change="+22% upside" delay={0.5} />
+        <StatCard label="Credit Rating" value="BBB+ / Baa1" change="Investment Grade" delay={0.55} />
+        <StatCard label="Recurring Rev" value="AED 10.5B" change="+13%" delay={0.6} />
+        <StatCard label="Intl Sales" value="AED 9.3B" change="+127%" delay={0.65} />
+      </div>
+    </>
+  );
+};
+
+const FinancialsTab = () => {
+  const latest = financials[financials.length - 1];
+  const marginData = financials.map(f => ({
+    year: f.year, gross: f.gm, ebitda: f.em, net: f.nm,
+  }));
+
+  return (
+    <>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 14 }}>
+        <StatCard label="Revenue" value="AED 49.6B" change="+40%" delay={0} />
+        <StatCard label="Gross Profit" value="AED 28.5B" change="+40%" delay={0.05} />
+        <StatCard label="EBITDA" value="AED 25.6B" change="+33%" delay={0.1} />
+        <StatCard label="Net Profit" value="AED 25.7B" change="+36%" delay={0.15} />
+      </div>
+
+      <SectionHeader title="Revenue Composition" subtitle="Stacked view by revenue stream · AED Billions" delay={0.2} />
+      <ChartContainer delay={0.25}>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={financials}>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} />
+            <XAxis dataKey="year" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+            <Tooltip content={<ChartTooltip />} />
+            <Legend wrapperStyle={{ fontSize: 11, color: T.textSecondary }} />
+            <Bar dataKey="recurringRev" name="Recurring" fill={T.teal} radius={[0, 0, 0, 0]} stackId="a" />
+            <Bar dataKey="intlSales" name="International" fill={T.blue} stackId="a" />
+            <Bar dataKey="mallRev" name="Malls" fill={T.green} stackId="a" />
+            <Bar dataKey="hotelRev" name="Hotels" fill={T.purple} stackId="a" />
+            <Bar dataKey="netProfit" name="Net Profit" fill={T.gold} radius={[4, 4, 0, 0]} stackId="b" opacity={0.5} />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartContainer>
+
+      <SectionHeader title="Margin Trends" subtitle="Profitability improvement over 6 years" delay={0.3} />
+      <ChartContainer delay={0.35}>
+        <ResponsiveContainer width="100%" height={260}>
+          <LineChart data={marginData}>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} />
+            <XAxis dataKey="year" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} unit="%" />
+            <Tooltip content={<ChartTooltip />} />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            <Line type="monotone" dataKey="gross" name="Gross Margin" stroke={T.gold} strokeWidth={2.5} dot={{ r: 4, fill: T.gold }} />
+            <Line type="monotone" dataKey="ebitda" name="EBITDA Margin" stroke={T.teal} strokeWidth={2.5} dot={{ r: 4, fill: T.teal }} />
+            <Line type="monotone" dataKey="net" name="Net Margin" stroke={T.blue} strokeWidth={2.5} dot={{ r: 4, fill: T.blue }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartContainer>
+
+      <SectionHeader title="Property Sales & Backlog" subtitle="Growth trajectory FY 2020 — FY 2025" delay={0.4} />
+      <ChartContainer delay={0.45}>
+        <ResponsiveContainer width="100%" height={260}>
+          <ComposedChart data={financials}>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} />
+            <XAxis dataKey="year" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+            <Tooltip content={<ChartTooltip />} />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            <Bar dataKey="propertySales" name="Property Sales" fill={T.gold} radius={[4, 4, 0, 0]} barSize={30} opacity={0.85} />
+            <Line type="monotone" dataKey="backlog" name="Revenue Backlog" stroke={T.teal} strokeWidth={2.5} dot={{ r: 4, fill: T.teal }} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </ChartContainer>
+
+      {/* EPS & Dividends */}
+      <SectionHeader title="Shareholder Returns" subtitle="EPS & Dividend per Share · AED" delay={0.5} />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        {financials.map((f, i) => (
+          <div key={i} style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            background: T.card, border: `1px solid ${T.border}`, borderRadius: T.rSm,
+            padding: "12px 16px", animation: `fadeIn 0.3s ease ${0.5 + i * 0.03}s both`,
+          }}>
+            <span style={{ color: T.gold, fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 16 }}>{f.year}</span>
+            <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+              <div style={{ textAlign: "right" }}>
+                <span style={{ color: T.textMuted, fontSize: 9, display: "block", textTransform: "uppercase", letterSpacing: 1 }}>EPS</span>
+                <span style={{ color: T.text, fontWeight: 600, fontSize: 14 }}>{f.eps}</span>
               </div>
-              <div style={{ background: C.navyL, borderRadius: 8, padding: "5px 10px", border: `1px solid ${C.border}` }}>
-                <span style={{ color: C.grayL, fontSize: 9 }}>RATING </span>
-                <span style={{ color: C.tealL, fontWeight: 700, fontSize: 11 }}>BBB+ / Baa1 / BBB</span>
-              </div>
-              <div style={{ background: C.navyL, borderRadius: 8, padding: "5px 10px", border: `1px solid ${C.border}` }}>
-                <span style={{ color: C.grayL, fontSize: 9 }}>TARGET </span>
-                <span style={{ color: C.goldL, fontWeight: 700, fontSize: 11 }}>AED 20.77 · STRONG BUY</span>
+              <div style={{ textAlign: "right" }}>
+                <span style={{ color: T.textMuted, fontSize: 9, display: "block", textTransform: "uppercase", letterSpacing: 1 }}>DPS</span>
+                <span style={{ color: T.teal, fontWeight: 600, fontSize: 14 }}>{f.dividend}</span>
               </div>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 4, marginTop: 12, overflowX: "auto", paddingBottom: 2 }}>
-            {TABS.map(t => (
-              <button key={t} onClick={() => setTab(t)} style={{
-                background: tab === t ? `linear-gradient(135deg, ${C.gold}, ${C.goldD})` : "transparent",
-                color: tab === t ? C.navy : C.grayL, border: tab === t ? "none" : `1px solid rgba(100,116,139,0.25)`,
-                borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 11, fontWeight: 600, whiteSpace: "nowrap", transition: "all 0.2s",
-              }}>{t}</button>
-            ))}
-          </div>
-        </div>
-      </header>
+        ))}
+      </div>
+    </>
+  );
+};
 
-      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "0 20px 50px", position: "relative", zIndex: 1 }}>
-        {tab === "Overview" && <>
-          <SectionTitle sub="FY 2025 — All-Time Records Across Every Metric">Key Performance Indicators</SectionTitle>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }}>
-            <KPICard label="Property Sales" value="AED 80.4B" sub="+16% YoY · USD 21.9B" />
-            <KPICard label="Revenue" value="AED 49.6B" sub="+40% YoY · USD 13.5B" />
-            <KPICard label="Net Profit" value="AED 25.7B" sub="+36% YoY · USD 7.0B" />
-            <KPICard label="EBITDA" value="AED 25.6B" sub="+33% YoY · USD 7.0B" />
-            <KPICard label="Backlog" value="AED 155B" sub="+39% YoY · 3-4yr visibility" />
-            <KPICard label="Recurring Rev" value="AED 10.5B" sub="+13% · 32% of EBITDA" />
-            <KPICard label="Units Delivered" value="79,000+" sub="Since 2002 · #1 in GCC" />
-            <KPICard label="Land Bank" value="618M sqft" sub="344M UAE · AED 120B dev" />
-          </div>
-          <SectionTitle sub="Revenue contribution by business line">Segment Performance</SectionTitle>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <ChartBox title="Revenue by Segment (AED B)">
-              <ResponsiveContainer width="100%" height={220}>
-                <PieChart><Pie data={segments} dataKey="revenue" nameKey="name" cx="50%" cy="50%" outerRadius={85} innerRadius={48} paddingAngle={3} stroke="none">
-                  {segments.map((s, i) => <Cell key={i} fill={s.color} />)}
-                </Pie><Tooltip content={<Tip />} /></PieChart>
-              </ResponsiveContainer>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center" }}>
-                {segments.map((s, i) => <span key={i} style={{ fontSize: 10, color: C.grayL, display: "flex", alignItems: "center", gap: 3 }}><span style={{ width: 7, height: 7, borderRadius: 2, background: s.color, display: "inline-block" }} />{s.name} ({s.revenue}B · {s.growth})</span>)}
-              </div>
-            </ChartBox>
-            <ChartBox title="6-Year Revenue & Profit Trend (AED B)">
-              <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={financials}>
-                  <defs><linearGradient id="gR" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={C.gold} stopOpacity={0.3} /><stop offset="100%" stopColor={C.gold} stopOpacity={0} /></linearGradient></defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="year" tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                  <YAxis tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                  <Tooltip content={<Tip />} />
-                  <Area type="monotone" dataKey="revenue" stroke={C.gold} fill="url(#gR)" strokeWidth={2} name="Revenue" />
-                  <Line type="monotone" dataKey="netProfit" stroke={C.teal} strokeWidth={2} dot={{ fill: C.teal, r: 3 }} name="Net Profit" />
-                  <Line type="monotone" dataKey="ebitda" stroke={C.blue} strokeWidth={2} dot={{ fill: C.blue, r: 3 }} name="EBITDA" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </ChartBox>
-          </div>
-          <SectionTitle sub="Analyst consensus: STRONG BUY (12/12 analysts)">Company Profile</SectionTitle>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 10 }}>
-            {[["Founded", "1997 by Mohamed Alabbar"], ["HQ & Listing", "Dubai, UAE · DFM: EMAAR"], ["Market Cap", "AED ~150B+ (USD 41B+)"], ["Credit Ratings", "S&P BBB+ ↑ · Moody's Baa1 · Fitch BBB"], ["Dividend 2025", "100% of capital · AED 8.9B · ~7.1% yield"], ["Iconic Assets", "Burj Khalifa · Dubai Mall · Address Hotels"], ["International", "Egypt, India, Saudi + 3 · +124% YoY"], ["ESG Rating", "MSCI 'A' (upgraded 2025)"]].map(([k, v], i) => (
-              <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 14px" }}>
-                <span style={{ color: C.grayL, fontSize: 9, letterSpacing: 1, textTransform: "uppercase" }}>{k}</span>
-                <p style={{ color: C.white, fontSize: 12, fontWeight: 500, margin: "3px 0 0" }}>{v}</p>
-              </div>
-            ))}
-          </div>
-        </>}
-
-        {tab === "Financials" && <>
-          <SectionTitle sub="Emaar IR, Annual Reports · AED Billions · 2020–2025">6-Year Financial History</SectionTitle>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <ChartBox title="Property Sales & Revenue Backlog (AED B)">
-              <ResponsiveContainer width="100%" height={260}>
-                <ComposedChart data={financials}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="year" tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                  <YAxis tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                  <Tooltip content={<Tip />} />
-                  <Bar dataKey="propertySales" fill={C.gold} name="Property Sales" radius={[4, 4, 0, 0]} barSize={26} />
-                  <Line type="monotone" dataKey="backlog" stroke={C.teal} strokeWidth={3} dot={{ fill: C.teal, r: 4 }} name="Backlog" />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </ChartBox>
-            <ChartBox title="Margin Trends (%)">
-              <ResponsiveContainer width="100%" height={260}>
-                <LineChart data={financials}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="year" tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                  <YAxis tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                  <Tooltip content={<Tip />} />
-                  <Line type="monotone" dataKey="gm" stroke={C.gold} strokeWidth={2} name="Gross Margin" dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="em" stroke={C.teal} strokeWidth={2} name="EBITDA Margin" dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="nm" stroke={C.blue} strokeWidth={2} name="Net Margin" dot={{ r: 3 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartBox>
-            <ChartBox title="EPS & Dividend Per Share (AED)">
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={financials}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="year" tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                  <YAxis tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                  <Tooltip content={<Tip />} />
-                  <Bar dataKey="eps" fill={C.gold} name="EPS" radius={[4, 4, 0, 0]} barSize={22} />
-                  <Bar dataKey="dividend" fill={C.teal} name="Dividend" radius={[4, 4, 0, 0]} barSize={22} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartBox>
-            <ChartBox title="International Sales Growth (AED B) — CAGR 73%">
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={financials}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="year" tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                  <YAxis tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                  <Tooltip content={<Tip />} />
-                  <Bar dataKey="intlSales" fill={C.green} name="Intl Sales" radius={[4, 4, 0, 0]} barSize={30} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartBox>
-          </div>
-          <ChartBox title="Recurring Revenue — Mall + Hotel (AED B)">
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={financials}>
-                <defs><linearGradient id="gM" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={C.gold} stopOpacity={0.4} /><stop offset="100%" stopColor={C.gold} stopOpacity={0} /></linearGradient><linearGradient id="gH" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={C.teal} stopOpacity={0.4} /><stop offset="100%" stopColor={C.teal} stopOpacity={0} /></linearGradient></defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="year" tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                <YAxis tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                <Tooltip content={<Tip />} />
-                <Area type="monotone" dataKey="mallRev" stroke={C.gold} fill="url(#gM)" name="Mall Revenue" stackId="1" />
-                <Area type="monotone" dataKey="hotelRev" stroke={C.teal} fill="url(#gH)" name="Hotel Revenue" stackId="1" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </ChartBox>
-        </>}
-
-        {tab === "Portfolio" && <>
-          <SectionTitle sub="48 active projects · 10+ master communities · 2026–2030">Project Portfolio</SectionTitle>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginBottom: 16 }}>
-            <KPICard label="Total Projects" value="48" sub="18 under construction · 30 off-plan" />
-            <KPICard label="Branded Projects" value="10" sub="Address · Vida · Palace · Bristol" />
-            <KPICard label="Avg Starting Price" value="AED 2.76M" sub="Range: 1.2M – 13.8M" />
-            <KPICard label="Avg Price/sqft" value="AED 2,570" sub="Across all tiers" />
-          </div>
-          <ChartBox title="Projects by Community">
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={communityProjects} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis type="number" tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                <YAxis type="category" dataKey="name" tick={{ fill: C.grayL, fontSize: 10 }} width={36} axisLine={false} />
-                <Tooltip content={<Tip />} />
-                <Bar dataKey="projects" fill={C.gold} name="Projects" radius={[0, 6, 6, 0]} barSize={18} />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartBox>
-          <SectionTitle sub="Handover timeline">Delivery Schedule</SectionTitle>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
-            {[["2026", "7", C.tealL], ["2027", "5", C.gold], ["2028", "10", C.blue], ["2029", "26", C.purple]].map(([yr, ct, cl], i) => (
-              <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, textAlign: "center" }}>
-                <div style={{ color: cl, fontSize: 26, fontWeight: 900, fontFamily: "'Playfair Display',serif" }}>{yr}</div>
-                <div style={{ color: C.grayL, fontSize: 11 }}>{ct} projects</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ marginTop: 16, overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-              <thead><tr style={{ borderBottom: `1px solid ${C.border}` }}>
-                {["Community", "Projects", "Yield Range", "Avg Price/sqft"].map(h => <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: C.gold, fontWeight: 600, fontSize: 10 }}>{h}</th>)}
-              </tr></thead>
-              <tbody>{communityProjects.map((c, i) => (
-                <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                  <td style={{ padding: "8px 10px", color: C.white, fontWeight: 500 }}>{c.full}</td>
-                  <td style={{ padding: "8px 10px", color: C.goldL }}>{c.projects}</td>
-                  <td style={{ padding: "8px 10px", color: C.tealL }}>{c.yield}</td>
-                  <td style={{ padding: "8px 10px", color: C.grayL }}>AED {c.ppsf}</td>
-                </tr>
-              ))}</tbody>
-            </table>
-          </div>
-        </>}
-
-        {tab === "Competitors" && <>
-          <SectionTitle sub="DXBinteract verified · fam Properties analysis · Jan 2026">Dubai Developer Rankings — 2025</SectionTitle>
-          <ChartBox title="Sales Value (AED Billions) — Emaar leads at AED 65.8B">
-            <ResponsiveContainer width="100%" height={340}>
-              <BarChart data={developers} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis type="number" tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                <YAxis type="category" dataKey="name" tick={{ fill: C.grayL, fontSize: 10 }} width={65} axisLine={false} />
-                <Tooltip content={<Tip />} />
-                <Bar dataKey="sales" name="Sales (AED B)" radius={[0, 6, 6, 0]} barSize={20}>
-                  {developers.map((d, i) => <Cell key={i} fill={d.color} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartBox>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
-            <ChartBox title="Units Sold (Volume)">
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={developers} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis type="number" tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                  <YAxis type="category" dataKey="name" tick={{ fill: C.grayL, fontSize: 10 }} width={65} axisLine={false} />
-                  <Tooltip content={<Tip />} /><Bar dataKey="units" fill={C.teal} name="Units Sold" radius={[0, 4, 4, 0]} barSize={16} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartBox>
-            <ChartBox title="Units Under Construction">
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={developers} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis type="number" tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                  <YAxis type="category" dataKey="name" tick={{ fill: C.grayL, fontSize: 10 }} width={65} axisLine={false} />
-                  <Tooltip content={<Tip />} /><Bar dataKey="underConst" fill={C.blue} name="Under Const." radius={[0, 4, 4, 0]} barSize={16} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartBox>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10, marginTop: 12 }}>
-            <KPICard label="Emaar % of Top 30" value="22.6%" sub="Dominant market leader" />
-            <KPICard label="Lead vs #2" value="AED 29.9B" sub="1.83× larger than DAMAC" />
-            <KPICard label="% of Dubai Total" value="9.6%" sub="Of AED 682.5B market" />
-            <KPICard label="Delivered % Top 10" value="31%" sub="7,318 of 23,576 units" />
-          </div>
-        </>}
-
-        {tab === "Yields" && <>
-          <SectionTitle sub="DLD Rental Index, Bayut, Property Finder · Launch prices">Rental Yield Analysis</SectionTitle>
-          <ChartBox title="Gross Yield by Community & Unit Type (%)">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={yields}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="label" tick={{ fill: C.grayL, fontSize: 9 }} axisLine={false} angle={-30} textAnchor="end" height={50} />
-                <YAxis tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} domain={[0, 7]} />
-                <Tooltip content={({ active, payload }) => {
-                  if (!active || !payload?.length) return null;
-                  const d = payload[0].payload;
-                  return <div style={{ background: C.navy, border: `1px solid ${C.gold}`, borderRadius: 8, padding: "8px 12px" }}>
-                    <p style={{ color: C.gold, fontWeight: 700, margin: 0, fontSize: 12 }}>{d.community} — {d.label}</p>
-                    <p style={{ color: C.white, margin: "3px 0 0", fontSize: 11 }}>Rent: AED {d.rent}K/yr · Price: AED {d.price}K</p>
-                    <p style={{ color: C.tealL, margin: "2px 0 0", fontSize: 11 }}>Gross: {d.gross}% · Net: {d.net}% · {d.demand}</p>
-                  </div>;
-                }} />
-                <Bar dataKey="gross" name="Gross Yield %" radius={[4, 4, 0, 0]} barSize={28}>
-                  {yields.map((y, i) => <Cell key={i} fill={y.demand === "V.High" ? C.gold : y.demand === "High" ? C.teal : C.blue} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartBox>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginTop: 12 }}>
-            <KPICard label="Avg Gross Yield" value="4.5%" sub="Across all communities" />
-            <KPICard label="Highest Yield" value="5.9%" sub="The Valley 3BR TH" />
-            <KPICard label="Lowest Yield" value="3.6%" sub="Downtown 2BR Apt" />
-            <KPICard label="Avg Cash Flow" value="AED 62K" sub="Annual per unit" />
-          </div>
-          <SectionTitle sub="Expected returns for Emaar off-plan investments">ROI Framework</SectionTitle>
-          <ChartBox title="Return Range by Phase (%)">
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={roiPhases}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="phase" tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                <YAxis tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                <Tooltip content={<Tip />} />
-                <Bar dataKey="low" fill={C.teal} name="Low %" radius={[0, 0, 0, 0]} barSize={32} opacity={0.5} />
-                <Bar dataKey="high" fill={C.gold} name="High %" radius={[4, 4, 0, 0]} barSize={32} opacity={0.8} />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartBox>
-        </>}
-
-        {tab === "Risk" && <>
-          <SectionTitle sub="Overall: LOW-MODERATE · Investment Grade · BBB+/Baa1/BBB">9-Factor Risk Assessment</SectionTitle>
-          <ChartBox title="Risk Score by Factor (Higher = More Risk)">
-            <ResponsiveContainer width="100%" height={340}>
-              <BarChart data={risks} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis type="number" tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} domain={[0, 140]} />
-                <YAxis type="category" dataKey="factor" tick={{ fill: C.grayL, fontSize: 10 }} width={105} axisLine={false} />
-                <Tooltip content={<Tip />} />
-                <Bar dataKey="score" name="Risk Score" radius={[0, 6, 6, 0]} barSize={20}>
-                  {risks.map((r, i) => <Cell key={i} fill={r.color} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartBox>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 12 }}>
-            <KPICard label="Avg Risk Score" value="38.3" sub="LOW-MODERATE overall" />
-            <KPICard label="Highest Risk" value="125" sub="Premium Pricing" />
-            <KPICard label="Lowest Risk" value="1" sub="Liquidity / Exit" />
-          </div>
-          <SectionTitle sub="How Emaar mitigates key risks">Mitigation Strategies</SectionTitle>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {[["Market Cycle", "AED 155B backlog = 3-4yr cushion. 35% recurring from malls/hotels."], ["Supply Competition", "Brand premium 20-40%. 79K delivery track record. 14+ master communities."], ["Premium Pricing", "80/20 payment plans reduce barrier. Branded residences justify premium."], ["Geographic Conc.", "+124% intl sales YoY. Expanding to Saudi, Egypt, India."]].map(([t, d], i) => (
-              <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 14 }}>
-                <h4 style={{ color: C.gold, fontSize: 12, fontWeight: 600, margin: "0 0 4px" }}>{t}</h4>
-                <p style={{ color: C.grayL, fontSize: 11, margin: 0, lineHeight: 1.5 }}>{d}</p>
-              </div>
-            ))}
-          </div>
-        </>}
-
-        {tab === "Market" && <>
-          <SectionTitle sub="Official DLD Data · 5th Consecutive Record Year">Dubai Real Estate — 2025</SectionTitle>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
-            {dubaiMarket.map((m, i) => <KPICard key={i} label={m.metric} value={m.val} sub={m.yoy} />)}
-          </div>
-          <SectionTitle sub="Knight Frank, CW Core, Fitch Ratings">2026 Outlook</SectionTitle>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-            {[["Knight Frank", "+3% prime, ~1% mainstream. Transitioning to sustainable growth phase.", C.gold], ["CW Core", "5-8% appreciation forecast. Slowdown from 12-22% in 2024-25.", C.teal], ["Fitch Ratings", "Moderate correction possible. ~120K units in 2026 pipeline.", C.orange]].map(([f, v, cl], i) => (
-              <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 14, borderTop: `3px solid ${cl}` }}>
-                <h4 style={{ color: cl, fontSize: 13, fontWeight: 700, margin: "0 0 6px", fontFamily: "'Playfair Display',serif" }}>{f}</h4>
-                <p style={{ color: C.grayL, fontSize: 11, margin: 0, lineHeight: 1.5 }}>{v}</p>
-              </div>
-            ))}
-          </div>
-          <ChartBox title="Dubai Total Sales Value Growth (AED B)">
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={dubaiSalesHistory}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="year" tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                <YAxis tick={{ fill: C.grayL, fontSize: 10 }} axisLine={false} />
-                <Tooltip content={<Tip />} />
-                <Bar dataKey="sales" name="Sales (AED B)" radius={[4, 4, 0, 0]} barSize={34}>
-                  {[C.gray, C.grayL, C.teal, C.blue, C.gold, C.goldL].map((c, i) => <Cell key={i} fill={c} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartBox>
-          <ChartBox title="Key Market Indicators">
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-              {[["Population Target", "5.8M by 2040"], ["Price Cycle", "56+ months positive"], ["Developer Count", "228 active"], ["Units Launched", "131,504 in 2025"], ["Mortgage Txns", "50,974 deals"], ["2026 Pipeline", "~120K units"], ["Women Investors", "AED 154B"], ["REIDIN Growth", "+12.9% YoY"], ["Investor Base", "193.1K (+24%)"]].map(([k, v], i) => (
-                <div key={i} style={{ padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                  <span style={{ color: C.grayL, fontSize: 9, display: "block" }}>{k}</span>
-                  <span style={{ color: C.white, fontSize: 12, fontWeight: 600 }}>{v}</span>
-                </div>
-              ))}
-            </div>
-          </ChartBox>
-        </>}
-      </main>
-
-      <footer style={{ borderTop: `1px solid ${C.border}`, padding: 16, textAlign: "center" }}>
-        <p style={{ color: C.gray, fontSize: 9, margin: 0 }}>Sources: Emaar IR, DLD, DXBinteract, Gulf News, Zawya, Knight Frank, CW Core, Fitch | Verified Feb 2026 | Not financial advice</p>
-      </footer>
+const PortfolioTab = () => (
+  <>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 14 }}>
+      <StatCard label="Active Projects" value="48" change="10 communities" delay={0} />
+      <StatCard label="Under Construction" value="51,032" change="Units" delay={0.05} />
+      <StatCard label="Delivered (Track)" value="79,000+" change="Since 2002" delay={0.1} />
+      <StatCard label="Master Communities" value="14+" change="Across Dubai" delay={0.15} />
     </div>
+
+    <SectionHeader title="Community Breakdown" subtitle="Active Emaar communities with projects, yields, and pricing" delay={0.2} />
+    <div style={{ overflowX: "auto" }}>
+      <table style={{
+        width: "100%", borderCollapse: "separate", borderSpacing: "0 6px",
+        animation: "fadeIn 0.5s ease 0.25s both",
+      }}>
+        <thead>
+          <tr>
+            {["Community", "Projects", "Yield Range", "Price/sqft (AED)"].map((h, i) => (
+              <th key={i} style={{
+                textAlign: "left", padding: "10px 16px", color: T.textMuted,
+                fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase",
+                borderBottom: `1px solid ${T.border}`, fontWeight: 500,
+              }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {communityProjects.map((c, i) => (
+            <tr key={i} style={{ transition: "background 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+            >
+              <td style={{ padding: "12px 16px" }}>
+                <div>
+                  <span style={{ color: T.text, fontWeight: 600, fontSize: 13 }}>{c.full}</span>
+                  <span style={{ color: T.textMuted, fontSize: 10, marginLeft: 8, background: T.goldDim, padding: "1px 6px", borderRadius: 4 }}>{c.name}</span>
+                </div>
+              </td>
+              <td style={{ padding: "12px 16px", color: T.gold, fontWeight: 700, fontSize: 16, fontFamily: "'Cormorant Garamond',serif" }}>{c.projects}</td>
+              <td style={{ padding: "12px 16px", color: T.teal, fontWeight: 600, fontSize: 13 }}>{c.yield}</td>
+              <td style={{ padding: "12px 16px", color: T.textSecondary, fontSize: 13 }}>{c.ppsf}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <SectionHeader title="Project Distribution" subtitle="Projects per community" delay={0.3} />
+    <ChartContainer delay={0.35}>
+      <ResponsiveContainer width="100%" height={280}>
+        <BarChart data={communityProjects}>
+          <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} />
+          <XAxis dataKey="name" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+          <Tooltip content={<ChartTooltip />} />
+          <Bar dataKey="projects" name="Active Projects" radius={[6, 6, 0, 0]} barSize={36}>
+            {communityProjects.map((_, i) => (
+              <Cell key={i} fill={[T.gold, T.teal, T.blue, T.green, T.purple, T.orange, "#42A5F5", T.textSecondary][i]} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartContainer>
+  </>
+);
+
+const CompetitorsTab = () => (
+  <>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 14 }}>
+      <StatCard label="Emaar Sales" value="AED 65.8B" change="#1 in Dubai" delay={0} />
+      <StatCard label="Market Share" value="~30%" change="By value" delay={0.05} />
+      <StatCard label="Lead Over #2" value="+83%" change="vs DAMAC 35.9B" delay={0.1} />
+      <StatCard label="Units Sold" value="13,149" change="FY 2025" delay={0.15} />
+    </div>
+
+    <SectionHeader title="Developer Rankings" subtitle="DXBinteract · Top 10 Dubai Developers by Sales Value 2025" delay={0.2} />
+    <ChartContainer delay={0.25}>
+      <ResponsiveContainer width="100%" height={360}>
+        <BarChart data={developers} layout="vertical">
+          <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} />
+          <XAxis type="number" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+          <YAxis type="category" dataKey="name" tick={{ fill: T.textSecondary, fontSize: 12, fontWeight: 500 }} width={70} axisLine={false} tickLine={false} />
+          <Tooltip content={<ChartTooltip />} />
+          <Bar dataKey="sales" name="Sales (AED B)" radius={[0, 6, 6, 0]} barSize={22}>
+            {developers.map((d, i) => <Cell key={i} fill={d.color} />)}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartContainer>
+
+    <SectionHeader title="Developer Details" subtitle="Sales, units, and construction pipeline" delay={0.3} />
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 4px", animation: "fadeIn 0.5s ease 0.35s both" }}>
+        <thead>
+          <tr>
+            {["#", "Developer", "Sales (AED B)", "Units Sold", "Delivered", "Under Construction"].map((h, i) => (
+              <th key={i} style={{
+                textAlign: i > 1 ? "right" : "left", padding: "10px 14px",
+                color: T.textMuted, fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase",
+                borderBottom: `1px solid ${T.border}`, fontWeight: 500,
+              }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {developers.map((d, i) => (
+            <tr key={i}
+              style={{ background: i === 0 ? T.goldDim : "transparent", transition: "background 0.2s" }}
+              onMouseEnter={e => { if (i !== 0) e.currentTarget.style.background = T.surfaceAlt; }}
+              onMouseLeave={e => { if (i !== 0) e.currentTarget.style.background = "transparent"; }}
+            >
+              <td style={{ padding: "10px 14px", color: d.color, fontWeight: 700, fontSize: 14 }}>{d.rank}</td>
+              <td style={{ padding: "10px 14px", color: i === 0 ? T.gold : T.text, fontWeight: i === 0 ? 700 : 500, fontSize: 13 }}>{d.name}</td>
+              <td style={{ padding: "10px 14px", color: T.text, fontWeight: 600, fontSize: 14, textAlign: "right", fontFamily: "'Cormorant Garamond',serif" }}>{d.sales}</td>
+              <td style={{ padding: "10px 14px", color: T.textSecondary, textAlign: "right", fontSize: 12 }}>{d.units.toLocaleString()}</td>
+              <td style={{ padding: "10px 14px", color: T.teal, textAlign: "right", fontSize: 12 }}>{d.delivered.toLocaleString()}</td>
+              <td style={{ padding: "10px 14px", color: T.textMuted, textAlign: "right", fontSize: 12 }}>{d.underConst.toLocaleString()}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </>
+);
+
+const YieldsTab = () => (
+  <>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 14 }}>
+      <StatCard label="Avg Gross Yield" value="4.5%" change="Across communities" delay={0} />
+      <StatCard label="Highest Yield" value="5.9%" change="The Valley 3BR" delay={0.05} />
+      <StatCard label="Lowest Yield" value="3.6%" change="Downtown 2BR" delay={0.1} />
+      <StatCard label="Avg Cash Flow" value="AED 62K" change="Annual per unit" delay={0.15} />
+    </div>
+
+    <SectionHeader title="Rental Yield Analysis" subtitle="Gross yield by community and unit type" delay={0.2} />
+    <ChartContainer delay={0.25}>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={yields}>
+          <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} />
+          <XAxis dataKey="label" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} unit="%" />
+          <Tooltip content={({ active, payload }) => {
+            if (!active || !payload?.length) return null;
+            const d = payload[0]?.payload;
+            return (
+              <div style={{ background: T.surface, border: `1px solid ${T.goldBorder}`, borderRadius: T.rSm, padding: "12px 14px", boxShadow: T.shadowLg }}>
+                <p style={{ color: T.gold, fontWeight: 600, fontSize: 13, marginBottom: 6, fontFamily: "'Cormorant Garamond',serif" }}>{d.community} — {d.label}</p>
+                <p style={{ color: T.text, fontSize: 11 }}>Rent: AED {d.rent}K/yr · Price: AED {d.price}K</p>
+                <p style={{ color: T.teal, fontSize: 11, marginTop: 2 }}>Gross: {d.gross}% · Net: {d.net}% · Demand: {d.demand}</p>
+              </div>
+            );
+          }} />
+          <Bar dataKey="gross" name="Gross Yield %" radius={[6, 6, 0, 0]} barSize={30}>
+            {yields.map((y, i) => <Cell key={i} fill={y.demand === "V.High" ? T.gold : y.demand === "High" ? T.teal : T.blue} />)}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartContainer>
+
+    <SectionHeader title="Yield Detail Table" subtitle="Comprehensive yield data by unit" delay={0.3} />
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 4px", animation: "fadeIn 0.5s ease 0.35s both" }}>
+        <thead>
+          <tr>
+            {["Unit", "Community", "Rent (K/yr)", "Price (K)", "Gross %", "Net %", "Demand"].map((h, i) => (
+              <th key={i} style={{
+                textAlign: i > 1 ? "right" : "left", padding: "10px 14px",
+                color: T.textMuted, fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase",
+                borderBottom: `1px solid ${T.border}`, fontWeight: 500,
+              }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {yields.map((y, i) => (
+            <tr key={i} style={{ transition: "background 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+            >
+              <td style={{ padding: "10px 14px", color: T.text, fontWeight: 500, fontSize: 12 }}>{y.label}</td>
+              <td style={{ padding: "10px 14px", color: T.textSecondary, fontSize: 12 }}>{y.community}</td>
+              <td style={{ padding: "10px 14px", color: T.text, textAlign: "right", fontSize: 12 }}>{y.rent}</td>
+              <td style={{ padding: "10px 14px", color: T.text, textAlign: "right", fontSize: 12 }}>{y.price.toLocaleString()}</td>
+              <td style={{ padding: "10px 14px", color: T.gold, fontWeight: 600, textAlign: "right", fontSize: 13 }}>{y.gross}%</td>
+              <td style={{ padding: "10px 14px", color: T.teal, fontWeight: 600, textAlign: "right", fontSize: 13 }}>{y.net}%</td>
+              <td style={{ padding: "10px 14px", textAlign: "right" }}>
+                <span style={{
+                  background: y.demand === "V.High" ? T.goldDim : y.demand === "High" ? T.tealDim : T.blueDim,
+                  color: y.demand === "V.High" ? T.gold : y.demand === "High" ? T.teal : T.blue,
+                  fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 20,
+                }}>{y.demand}</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <SectionHeader title="ROI Framework" subtitle="Expected returns for Emaar off-plan investments" delay={0.4} />
+    <ChartContainer delay={0.45}>
+      <ResponsiveContainer width="100%" height={260}>
+        <BarChart data={roiPhases}>
+          <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} />
+          <XAxis dataKey="phase" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} unit="%" />
+          <Tooltip content={<ChartTooltip />} />
+          <Legend wrapperStyle={{ fontSize: 11 }} />
+          <Bar dataKey="low" fill={T.teal} name="Low %" radius={[0, 0, 0, 0]} barSize={28} opacity={0.5} />
+          <Bar dataKey="high" fill={T.gold} name="High %" radius={[6, 6, 0, 0]} barSize={28} opacity={0.85} />
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartContainer>
+  </>
+);
+
+const RiskTab = () => (
+  <>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 14 }}>
+      <StatCard label="Overall Risk" value="LOW-MOD" change="Investment Grade" delay={0} />
+      <StatCard label="Avg Risk Score" value="38.3" change="Out of 200" delay={0.05} />
+      <StatCard label="Credit Rating" value="BBB+" change="S&P · Baa1 Moody's" delay={0.1} />
+      <StatCard label="Highest Risk" value="125" change="Premium Pricing" changeColor={T.red} delay={0.15} />
+    </div>
+
+    <SectionHeader title="9-Factor Risk Assessment" subtitle="Comprehensive risk scoring model · Higher = More Risk" delay={0.2} />
+    <ChartContainer delay={0.25}>
+      <ResponsiveContainer width="100%" height={380}>
+        <BarChart data={risks} layout="vertical">
+          <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} />
+          <XAxis type="number" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 140]} />
+          <YAxis type="category" dataKey="factor" tick={{ fill: T.textSecondary, fontSize: 11 }} width={120} axisLine={false} tickLine={false} />
+          <Tooltip content={<ChartTooltip />} />
+          <Bar dataKey="score" name="Risk Score" radius={[0, 8, 8, 0]} barSize={20}>
+            {risks.map((r, i) => <Cell key={i} fill={r.color} />)}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartContainer>
+
+    <SectionHeader title="Risk Mitigation" subtitle="How Emaar addresses key risk factors" delay={0.3} />
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
+      {[
+        ["Market Cycle", "AED 155B backlog provides 3-4yr revenue cushion. 35% recurring from malls & hotels.", T.orange],
+        ["Supply Competition", "Brand premium of 20-40%. 79K delivery track record. 14+ master communities.", T.orange],
+        ["Premium Pricing", "80/20 payment plans reduce barrier. Branded residences justify premium.", T.red],
+        ["Geographic Concentration", "International sales grew +124% YoY. Expanding to Saudi, Egypt, India.", T.gold],
+      ].map(([title, desc, color], i) => (
+        <div key={i} style={{
+          background: T.card, border: `1px solid ${T.border}`, borderRadius: T.r,
+          padding: "18px", borderTop: `3px solid ${color}`,
+          animation: `fadeIn 0.4s ease ${0.3 + i * 0.05}s both`,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, display: "inline-block" }} />
+            <span style={{ color: T.text, fontWeight: 600, fontSize: 13 }}>{title}</span>
+          </div>
+          <p style={{ color: T.textSecondary, fontSize: 12, lineHeight: 1.7 }}>{desc}</p>
+        </div>
+      ))}
+    </div>
+  </>
+);
+
+const MarketTab = () => (
+  <>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 14 }}>
+      {dubaiMarket.map((m, i) => (
+        <StatCard key={i} label={m.metric} value={m.val} change={m.yoy} delay={i * 0.05} />
+      ))}
+    </div>
+
+    <SectionHeader title="Dubai Sales Growth" subtitle="Total market value · AED Billions · 5th consecutive record year" delay={0.2} />
+    <ChartContainer delay={0.25}>
+      <ResponsiveContainer width="100%" height={280}>
+        <BarChart data={dubaiSalesHistory}>
+          <defs>
+            <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={T.gold} stopOpacity={0.9}/>
+              <stop offset="100%" stopColor={T.gold} stopOpacity={0.4}/>
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke={T.borderLight} />
+          <XAxis dataKey="year" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+          <Tooltip content={<ChartTooltip />} />
+          <Bar dataKey="sales" name="Sales (AED B)" radius={[8, 8, 0, 0]} barSize={40}>
+            {dubaiSalesHistory.map((_, i) => (
+              <Cell key={i} fill={i === dubaiSalesHistory.length - 1 ? T.gold : `rgba(201,168,76,${0.25 + (i * 0.12)})`} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartContainer>
+
+    <SectionHeader title="2026 Outlook" subtitle="Analyst forecasts from major consultancies" delay={0.3} />
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 14 }}>
+      {[
+        ["Knight Frank", "+3% prime, ~1% mainstream. Transitioning to a sustainable growth phase.", T.gold],
+        ["CW Core", "5-8% appreciation forecast. A slowdown from 12-22% seen in 2024-25.", T.teal],
+        ["Fitch Ratings", "Moderate correction possible. Approximately 120K units in 2026 pipeline.", T.orange],
+      ].map(([firm, view, color], i) => (
+        <div key={i} style={{
+          background: T.card, border: `1px solid ${T.border}`, borderRadius: T.r,
+          padding: "20px", borderTop: `3px solid ${color}`,
+          animation: `fadeIn 0.4s ease ${0.35 + i * 0.05}s both`,
+        }}>
+          <h4 style={{
+            color, fontSize: 16, fontWeight: 600, marginBottom: 8,
+            fontFamily: "'Cormorant Garamond', serif",
+          }}>{firm}</h4>
+          <p style={{ color: T.textSecondary, fontSize: 12, lineHeight: 1.7 }}>{view}</p>
+        </div>
+      ))}
+    </div>
+
+    <SectionHeader title="Key Market Indicators" subtitle="Structural metrics supporting the Dubai market thesis" delay={0.4} />
+    <div style={{
+      display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14,
+      animation: "fadeIn 0.5s ease 0.45s both",
+    }}>
+      {[
+        ["Population Target", "5.8M by 2040"], ["Price Cycle", "56+ months positive"], ["Developer Count", "228 active"],
+        ["Units Launched", "131,504 in 2025"], ["Mortgage Txns", "50,974 deals"], ["2026 Pipeline", "~120K units"],
+        ["Women Investors", "AED 154B"], ["REIDIN Growth", "+12.9% YoY"], ["Investor Base", "193.1K (+24%)"],
+      ].map(([k, v], i) => (
+        <div key={i} style={{
+          background: T.card, border: `1px solid ${T.border}`, borderRadius: T.rSm,
+          padding: "14px 16px", transition: "border-color 0.2s",
+        }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = T.goldBorder}
+          onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
+        >
+          <span style={{ color: T.textMuted, fontSize: 10, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>{k}</span>
+          <span style={{ color: T.text, fontSize: 15, fontWeight: 600, fontFamily: "'Cormorant Garamond',serif" }}>{v}</span>
+        </div>
+      ))}
+    </div>
+  </>
+);
+
+/* ═══════════════════════════════════════════════════════════
+   MAIN APP
+   ═══════════════════════════════════════════════════════════ */
+export default function EmaarDashboard() {
+  const [activeTab, setActiveTab] = useState("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [time, setTime] = useState(new Date());
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [activeTab]);
+
+  const handleTabChange = (id) => {
+    setActiveTab(id);
+    setSidebarOpen(false);
+  };
+
+  const renderTab = () => {
+    switch (activeTab) {
+      case "overview": return <OverviewTab />;
+      case "financials": return <FinancialsTab />;
+      case "portfolio": return <PortfolioTab />;
+      case "competitors": return <CompetitorsTab />;
+      case "yields": return <YieldsTab />;
+      case "risk": return <RiskTab />;
+      case "market": return <MarketTab />;
+      default: return <OverviewTab />;
+    }
+  };
+
+  return (
+    <>
+      <style>{globalCSS}</style>
+      <div style={{
+        display: "flex", height: "100vh", width: "100vw",
+        background: T.bg, overflow: "hidden",
+        fontFamily: "'DM Sans', sans-serif",
+      }}>
+
+        {/* ── SIDEBAR ── */}
+        <aside style={{
+          width: sidebarOpen ? 240 : 240,
+          minWidth: 240,
+          height: "100vh",
+          background: `linear-gradient(180deg, ${T.surface} 0%, ${T.bg} 100%)`,
+          borderRight: `1px solid ${T.border}`,
+          display: "flex",
+          flexDirection: "column",
+          zIndex: 100,
+          transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          position: window.innerWidth < 768 ? "fixed" : "relative",
+          transform: window.innerWidth < 768 && !sidebarOpen ? "translateX(-100%)" : "translateX(0)",
+        }}>
+          {/* Logo */}
+          <div style={{
+            padding: "28px 24px 24px",
+            borderBottom: `1px solid ${T.border}`,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: 18, fontWeight: 700, color: T.bg,
+              }}>E</div>
+              <div>
+                <h1 style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: 18, fontWeight: 700, color: T.text, lineHeight: 1.1,
+                }}>Emaar Intel</h1>
+                <span style={{
+                  fontSize: 9, color: T.textMuted, letterSpacing: 2,
+                  textTransform: "uppercase",
+                }}>Real Estate Intelligence</span>
+              </div>
+            </div>
+            {/* Live indicator */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 6,
+              marginTop: 16, padding: "6px 10px",
+              background: "rgba(0,191,165,0.08)", borderRadius: 6,
+              border: "1px solid rgba(0,191,165,0.15)",
+            }}>
+              <span style={{ animation: "pulse 2s infinite" }}>{icons.live(T.teal)}</span>
+              <span style={{ color: T.teal, fontSize: 10, fontWeight: 500, letterSpacing: 0.5 }}>
+                DATA VERIFIED · FEB 2026
+              </span>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <nav style={{ flex: 1, padding: "16px 12px", overflowY: "auto" }}>
+            <span style={{
+              color: T.textMuted, fontSize: 9, letterSpacing: 2.5,
+              textTransform: "uppercase", padding: "0 12px", display: "block", marginBottom: 8,
+            }}>Navigation</span>
+            {tabs.map((t, i) => {
+              const active = activeTab === t.id;
+              return (
+                <button key={t.id} onClick={() => handleTabChange(t.id)} style={{
+                  width: "100%", display: "flex", alignItems: "center", gap: 12,
+                  padding: "11px 14px", marginBottom: 2,
+                  background: active ? T.goldDim : "transparent",
+                  border: active ? `1px solid ${T.goldBorder}` : "1px solid transparent",
+                  borderRadius: T.rSm,
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  animation: `slideIn 0.3s ease ${i * 0.04}s both`,
+                }}
+                  onMouseEnter={e => { if (!active) e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+                  onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}
+                >
+                  {t.icon(active ? T.gold : T.textMuted)}
+                  <span style={{
+                    color: active ? T.gold : T.textSecondary,
+                    fontSize: 13, fontWeight: active ? 600 : 400,
+                    letterSpacing: 0.3,
+                  }}>{t.label}</span>
+                  {active && <span style={{
+                    marginLeft: "auto", width: 4, height: 4, borderRadius: "50%", background: T.gold,
+                  }} />}
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Sidebar Footer */}
+          <div style={{
+            padding: "16px 20px",
+            borderTop: `1px solid ${T.border}`,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <span style={{ color: T.textMuted, fontSize: 10 }}>EMAAR:DFM</span>
+              <span style={{ color: T.gold, fontWeight: 600, fontSize: 12, fontFamily: "'Cormorant Garamond',serif" }}>AED 17.05</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ color: T.textMuted, fontSize: 9 }}>Target:</span>
+              <span style={{ color: T.teal, fontWeight: 600, fontSize: 11 }}>AED 20.77</span>
+              <span style={{
+                background: T.tealDim, color: T.teal, fontSize: 9,
+                fontWeight: 600, padding: "1px 6px", borderRadius: 10,
+              }}>STRONG BUY</span>
+            </div>
+            <p style={{ color: T.textMuted, fontSize: 8, marginTop: 8, lineHeight: 1.4 }}>
+              {time.toLocaleDateString("en-AE", { weekday: "short", day: "numeric", month: "short", year: "numeric" })} · Not financial advice
+            </p>
+          </div>
+        </aside>
+
+        {/* ── MOBILE OVERLAY ── */}
+        {sidebarOpen && window.innerWidth < 768 && (
+          <div onClick={() => setSidebarOpen(false)} style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)",
+            zIndex: 99, backdropFilter: "blur(4px)",
+          }} />
+        )}
+
+        {/* ── MAIN CONTENT ── */}
+        <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          {/* Top Bar */}
+          <header style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "14px 28px",
+            background: T.surface,
+            borderBottom: `1px solid ${T.border}`,
+            minHeight: 56,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              {/* Mobile menu button */}
+              <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{
+                background: "none", border: "none", cursor: "pointer",
+                display: window.innerWidth < 768 ? "block" : "none",
+                padding: 4,
+              }}>
+                {sidebarOpen ? icons.close(T.textSecondary) : icons.menu(T.textSecondary)}
+              </button>
+              <div>
+                <h2 style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: 20, fontWeight: 600, color: T.text,
+                }}>
+                  {tabs.find(t => t.id === activeTab)?.label}
+                </h2>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <span style={{ color: T.textMuted, fontSize: 11 }}>
+                Emaar Properties PJSC · DFM
+              </span>
+              <div style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: T.goldDim, border: `1px solid ${T.goldBorder}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontFamily: "'Cormorant Garamond',serif", fontSize: 14,
+                fontWeight: 700, color: T.gold,
+              }}>W</div>
+            </div>
+          </header>
+
+          {/* Scrollable Content */}
+          <div ref={contentRef} style={{
+            flex: 1, overflowY: "auto", padding: "24px 28px 60px",
+          }}>
+            {renderTab()}
+
+            {/* Footer */}
+            <div style={{
+              marginTop: 48, paddingTop: 20,
+              borderTop: `1px solid ${T.border}`,
+              textAlign: "center",
+            }}>
+              <p style={{ color: T.textMuted, fontSize: 10, lineHeight: 1.6 }}>
+                Sources: Emaar IR · DLD · DXBinteract · Yahoo Finance · Knight Frank · CW Core · Fitch Ratings · Gulf News · Zawya
+              </p>
+              <p style={{ color: T.textMuted, fontSize: 9, marginTop: 4 }}>
+                Data verified February 2026 · Not financial advice · Built by The Address Holding
+              </p>
+            </div>
+          </div>
+        </main>
+      </div>
+    </>
   );
 }
