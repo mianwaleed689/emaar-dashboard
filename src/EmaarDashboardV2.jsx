@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
-import { auth } from "./firebase";
+import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "firebase/auth";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
 
 import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects } from "./data";
 
@@ -398,6 +399,23 @@ export default function EmaarDashboardV2() {
   const [authLoading, setAuthLoading] = useState(true);
   const [projectSearch, setProjectSearch] = useState("");
   const [projectFilter, setProjectFilter] = useState("All");
+  const [liveProjects, setLiveProjects] = useState(null);
+
+  // Load projects from Firestore
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const snap = await getDocs(query(collection(db, "projects"), orderBy("id")));
+        if (snap.size > 0) {
+          setLiveProjects(snap.docs.map(d => d.data()));
+        }
+      } catch (e) { console.log("Firestore not available, using static data"); }
+    };
+    if (isLoggedIn) loadProjects();
+  }, [isLoggedIn]);
+
+  // Use Firestore data if available, otherwise fall back to hardcoded
+  const activeProjects = liveProjects || emaarProjects;
   const [stock, setStock] = useState({ price: 17.05, change: 0.46, changePercent: 2.75, dayHigh: null, dayLow: null, volume: null, marketState: "LOADING", open: null });
   const [stockLive, setStockLive] = useState(false);
 
@@ -782,8 +800,8 @@ export default function EmaarDashboardV2() {
               <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
                 <KPI label="Total Projects" value="48" sub="18 under construction · 30 off-plan" delay={1} />
                 <KPI label="Communities" value="11" sub="DHE · DCH · EBF · GPC + 7 more" delay={2} />
-                <KPI label="Branded" value={`${emaarProjects.filter(p=>p.branded).length}`} sub="Address · Vida · Palace · Bristol" delay={3} />
-                <KPI label="Avg Construction" value={`${Math.round(emaarProjects.reduce((a,p)=>a+p.construction,0)/emaarProjects.length)}%`} sub="Weighted average progress" delay={4} />
+                <KPI label="Branded" value={`${activeProjects.filter(p=>p.branded).length}`} sub="Address · Vida · Palace · Bristol" delay={3} />
+                <KPI label="Avg Construction" value={`${Math.round(activeProjects.reduce((a,p)=>a+p.construction,0)/activeProjects.length)}%`} sub="Weighted average progress" delay={4} />
               </div>
             </Section>
 
@@ -800,7 +818,7 @@ export default function EmaarDashboardV2() {
 
             {/* Project Cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12, marginTop: 16 }}>
-              {emaarProjects
+              {activeProjects
                 .filter(p => {
                   const matchSearch = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase());
                   const matchFilter = projectFilter === "All" || p.district === projectFilter || (projectFilter === "Branded" && p.branded);
@@ -815,17 +833,17 @@ export default function EmaarDashboardV2() {
                     </div>
                     <div style={{ display: "flex", gap: 4 }}>
                       {p.branded && <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{p.brand}</span>}
-                      <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: p.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: p.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{p.status === "Under Construction" ? "Building" : "Off-Plan"}</span>
+                      <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: p.status === "Completed" ? "rgba(16,185,129,0.2)" : p.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: p.status === "Completed" ? T.green : p.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{p.status === "Completed" ? "✓ Done" : p.status === "Under Construction" ? "Building" : "Off-Plan"}</span>
                     </div>
                   </div>
                   {/* Construction Progress */}
                   <div style={{ marginBottom: 10 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                       <span style={{ fontSize: 10, color: T.textMuted }}>Construction</span>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: p.construction >= 70 ? T.green : p.construction >= 30 ? T.gold : T.blue }}>{p.construction}%</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: p.construction >= 100 ? T.green : p.construction >= 70 ? T.green : p.construction >= 30 ? T.gold : T.blue }}>{p.construction}%</span>
                     </div>
                     <div style={{ height: 4, borderRadius: 2, background: T.surfaceAlt, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${p.construction}%`, borderRadius: 2, background: p.construction >= 70 ? T.green : p.construction >= 30 ? T.gold : T.blue, transition: "width 0.5s ease" }} />
+                      <div style={{ height: "100%", width: `${p.construction}%`, borderRadius: 2, background: p.construction >= 100 ? T.green : p.construction >= 70 ? T.green : p.construction >= 30 ? T.gold : T.blue, transition: "width 0.5s ease" }} />
                     </div>
                   </div>
                   {/* Details Grid */}
@@ -833,10 +851,25 @@ export default function EmaarDashboardV2() {
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>FROM</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.price ? `AED ${(p.price/1000000).toFixed(1)}M` : "TBD"}</span></div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>HANDOVER</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.handover}</span></div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PRICE/SQFT</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "TBD"}</span></div>
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>SIZE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.sizeFrom.toLocaleString()} - {p.sizeTo.toLocaleString()} sqft</span></div>
+                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>SIZE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.sizeFrom?.toLocaleString()} - {p.sizeTo?.toLocaleString()} sqft</span></div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TYPE</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.type} · {p.beds} BR</span></div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PAYMENT</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.payment}</span></div>
                   </div>
+                  {/* Unit Inventory */}
+                  {p.units && <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 6, fontWeight: 600, letterSpacing: 0.5 }}>UNIT AVAILABILITY</div>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      {Object.entries(p.units).filter(([,d]) => d.total > 0).map(([type, d]) => {
+                        const avail = d.total - d.sold;
+                        return (
+                          <div key={type} style={{ padding: "4px 8px", borderRadius: 6, background: T.surfaceAlt, fontSize: 10, display: "flex", gap: 4, alignItems: "center" }}>
+                            <span style={{ fontWeight: 700, color: T.white, textTransform: "uppercase" }}>{type}</span>
+                            <span style={{ color: avail > 0 ? T.green : T.red }}>{avail > 0 ? `${avail} left` : "Sold out"}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>}
                   <div style={{ marginTop: 8, padding: "4px 8px", borderRadius: 6, background: T.surfaceAlt, display: "inline-block" }}>
                     <span style={{ fontSize: 10, color: T.textMuted }}>{p.tier}</span>
                   </div>
