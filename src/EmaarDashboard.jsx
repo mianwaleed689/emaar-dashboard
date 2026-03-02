@@ -144,6 +144,18 @@ const icons = {
   arrow: (up, c) => <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.5"><path d={up ? "M18 15l-6-6-6 6" : "M6 9l6 6 6-6"}/></svg>,
 };
 
+/* Logo icon — rising bars */
+const LogoIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 64 64">
+    <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E2C872"/><stop offset="100%" stopColor="#C9A84C"/></linearGradient></defs>
+    <rect width="64" height="64" rx="14" fill={T.card}/>
+    <rect x="12" y="36" width="8" height="20" rx="2" fill="url(#lg)" opacity="0.45"/>
+    <rect x="23" y="26" width="8" height="30" rx="2" fill="url(#lg)" opacity="0.65"/>
+    <rect x="34" y="16" width="8" height="40" rx="2" fill="url(#lg)" opacity="0.85"/>
+    <rect x="45" y="8" width="8" height="48" rx="2" fill="url(#lg)"/>
+  </svg>
+);
+
 const tabs = [
   { id: "overview", label: "Overview", icon: icons.overview },
   { id: "financials", label: "Financials", icon: icons.financial },
@@ -608,12 +620,16 @@ export default function EmaarDashboard() {
     <style>{globalCSS}</style>
     <div style={{ display: "flex", height: "100vh", width: "100vw", background: T.bg, overflow: "hidden", fontFamily: "'DM Sans', sans-serif" }}>
       <aside style={{ width: 220, minWidth: 220, height: "100vh", background: T.surface, display: "flex", flexDirection: "column", zIndex: 100, transition: "transform 0.25s ease", position: isMobile ? "fixed" : "relative", transform: isMobile && !sidebarOpen ? "translateX(-100%)" : "translateX(0)" }}>
+        {/* BRANDED LOGO */}
         <div style={{ padding: "20px 16px 16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: T.rSm, background: T.gold, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: T.bg }}>E</div>
+            <LogoIcon />
             <div>
-              <h1 style={{ fontSize: 15, fontWeight: 700, color: T.text, lineHeight: 1.1 }}>Emaar Intel</h1>
-              <span style={{ fontSize: 9, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase" }}>Real Estate Intelligence</span>
+              <h1 style={{ fontSize: 15, fontWeight: 700, color: T.text, lineHeight: 1.1 }}>
+                <span style={{ color: T.text }}>DXB</span>
+                <span style={{ color: T.gold, marginLeft: 4 }}>Analytics</span>
+              </h1>
+              <span style={{ fontSize: 9, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase" }}>Dubai Real Estate Intel</span>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, padding: "5px 8px", background: T.tealDim, borderRadius: 4 }}>
@@ -621,7 +637,19 @@ export default function EmaarDashboard() {
             <span style={{ color: T.teal, fontSize: 9, fontWeight: 600, letterSpacing: 0.5 }}>VERIFIED · FEB 2026</span>
           </div>
         </div>
-        <nav style={{ flex: 1, padding: "8px 8px", overflowY: "auto" }}>
+
+        {/* Current developer indicator */}
+        <div style={{ padding: "0 16px 12px" }}>
+          <div style={{ background: T.goldDim, borderRadius: T.rSm, padding: "8px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <span style={{ color: T.textMuted, fontSize: 8, textTransform: "uppercase", letterSpacing: 1, display: "block" }}>Viewing</span>
+              <span style={{ color: T.gold, fontSize: 12, fontWeight: 700 }}>Emaar Properties</span>
+            </div>
+            <span style={{ color: T.textMuted, fontSize: 9, background: T.cardAlt, padding: "2px 6px", borderRadius: 3 }}>PJSC</span>
+          </div>
+        </div>
+
+        <nav style={{ flex: 1, padding: "4px 8px", overflowY: "auto" }}>
           <span style={{ color: T.textMuted, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", padding: "0 8px", display: "block", marginBottom: 6 }}>Navigation</span>
           {tabs.map((t) => {
             const active = activeTab === t.id;
@@ -645,7 +673,7 @@ export default function EmaarDashboard() {
             <span style={{ color: T.teal, fontWeight: 600, fontSize: 11 }}>20.77</span>
             <span style={{ background: T.tealDim, color: T.teal, fontSize: 8, fontWeight: 700, padding: "1px 5px", borderRadius: 3 }}>BUY</span>
           </div>
-          <p style={{ color: T.textMuted, fontSize: 8, marginTop: 6 }}>Not financial advice</p>
+          <p style={{ color: T.textMuted, fontSize: 8, marginTop: 6 }}>Not financial advice · DXB Analytics</p>
         </div>
       </aside>
       {sidebarOpen && isMobile && <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 99 }} />}
@@ -664,7 +692,7 @@ export default function EmaarDashboard() {
           {renderTab()}
           <div style={{ marginTop: 32, paddingTop: 12, borderTop: `1px solid ${T.cardAlt}`, textAlign: "center" }}>
             <p style={{ color: T.textMuted, fontSize: 9, lineHeight: 1.5 }}>Sources: Emaar IR · DLD · DXBinteract · Yahoo Finance · Knight Frank · CW Core · Fitch</p>
-            <p style={{ color: T.textMuted, fontSize: 8, marginTop: 2 }}>Verified Feb 2026 · Not financial advice · The Address Holding</p>
+            <p style={{ color: T.textMuted, fontSize: 8, marginTop: 2 }}>Verified Feb 2026 · Not financial advice · DXB Analytics by The Address Holding</p>
           </div>
         </div>
       </main>
