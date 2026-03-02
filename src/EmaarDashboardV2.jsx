@@ -1452,8 +1452,8 @@ export default function EmaarDashboardV2() {
               </div>
 
               {/* TradingView Chart */}
-              <div style={{ background: T.surfaceAlt, borderRadius: 12, overflow: "hidden", marginBottom: 20, border: `1px solid ${T.border}` }}>
-                <iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tv&symbol=DFM%3AEMAAR&interval=D&hidesidetoolbar=1&symboledit=0&saveimage=0&toolbarbg=0A1628&theme=dark&style=1&timezone=Asia%2FDubai&withdateranges=1&showpopupbutton=0&locale=en" style={{ width: "100%", height: 400, border: "none" }} title="Emaar Chart" />
+              <div style={{ background: T.surfaceAlt, borderRadius: 12, overflow: "hidden", marginBottom: 20, border: `1px solid ${T.border}`, height: 450 }}>
+                <iframe src={`https://www.tradingview.com/widgetembed/?symbol=DFM:EMAAR&interval=D&hidesidetoolbar=1&symboledit=1&saveimage=0&theme=dark&style=1&timezone=Asia/Dubai&withdateranges=1&locale=en&allow_symbol_change=1`} style={{ width: "100%", height: "100%", border: "none" }} title="Emaar Chart" allow="fullscreen" />
               </div>
 
               {/* Key Metrics */}
@@ -1507,10 +1507,10 @@ export default function EmaarDashboardV2() {
               </div>
 
               {/* Trade Buttons */}
-              <div style={{ display: "flex", gap: 10 }}>
-                <a href="https://www.dfm.ae/issuers/listed-securities/securities-details?id=EMAAR" target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "14px 0", background: T.gold, borderRadius: 12, color: T.bg, fontSize: 14, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>📊 View on DFM</a>
-                <a href="https://www.emiratesnbd.com/en/personal-banking/investments" target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "14px 0", background: T.teal, borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>🏦 Trade via Emirates NBD</a>
-                <a href={whatsappLink("Emaar Stock (EMAAR)", "DFM")} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "14px 0", background: "#25D366", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>💬 Ask About Stock</a>
+              <div style={{ display: "flex", gap: 10, position: "sticky", bottom: 0, background: T.surface, padding: "16px 0 0" }}>
+                <a href="https://www.dfm.ae/issuers/listed-securities/securities-details?id=EMAAR" target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "14px 0", background: T.gold, borderRadius: 12, color: T.bg, fontSize: 14, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>View on DFM</a>
+                <a href="tel:+971542410599" style={{ flex: 1, padding: "14px 0", background: T.teal, borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>Call to Trade</a>
+                <a href={whatsappLink("Emaar Stock (EMAAR)", "DFM")} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "14px 0", background: "#25D366", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>Ask on WhatsApp</a>
               </div>
             </div>
           </div>
