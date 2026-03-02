@@ -1,5 +1,4 @@
-import React from 'react';
-import EmaarDashboard from './EmaarDashboard';
+import EmaarDashboard from './EmaarDashboardV2';
 
 function App() {
   return <EmaarDashboard />;
