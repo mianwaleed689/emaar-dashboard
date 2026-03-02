@@ -825,7 +825,18 @@ export default function EmaarDashboardV2() {
                   return matchSearch && matchFilter;
                 })
                 .map((p, i) => (
-                <div key={p.id} className="chart-box fade-up" style={{ animationDelay: `${Math.min(i * 0.03, 0.5)}s`, padding: 16 }}>
+                <div key={p.id} className="chart-box fade-up" style={{ animationDelay: `${Math.min(i * 0.03, 0.5)}s`, padding: 0, overflow: "hidden" }}>
+                  {/* Project Image */}
+                  {p.imageUrl ? (
+                    <div style={{ width: "100%", height: 140, overflow: "hidden", borderBottom: `1px solid ${T.border}` }}>
+                      <img src={p.imageUrl} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.parentElement.style.display = "none"; }} />
+                    </div>
+                  ) : (
+                    <div style={{ width: "100%", height: 60, background: `linear-gradient(135deg, ${T.surfaceAlt} 0%, ${T.surface} 100%)`, display: "flex", alignItems: "center", justifyContent: "center", borderBottom: `1px solid ${T.border}` }}>
+                      <span style={{ fontSize: 11, color: T.textMuted }}>📷 No image yet</span>
+                    </div>
+                  )}
+                  <div style={{ padding: 16 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 2 }}>{p.name}</div>
@@ -873,6 +884,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ marginTop: 8, padding: "4px 8px", borderRadius: 6, background: T.surfaceAlt, display: "inline-block" }}>
                     <span style={{ fontSize: 10, color: T.textMuted }}>{p.tier}</span>
                   </div>
+                  </div>{/* end padding wrapper */}
                 </div>
               ))}
             </div>

@@ -186,6 +186,25 @@ export default function AdminPanel() {
               </div>
             </div>
 
+            {/* Project Image */}
+            <div style={{ background: T.surface, borderRadius: 12, padding: 20, border: `1px solid ${T.border}`, marginBottom: 16 }}>
+              <h3 style={{ color: T.goldLight, fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>🖼️ Project Image</h3>
+              <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 11, color: T.textMuted, display: "block", marginBottom: 4 }}>IMAGE URL (paste from Emaar website)</label>
+                  <input value={selected.imageUrl || ""} onChange={e => setSelected({...selected, imageUrl: e.target.value})}
+                    placeholder="https://emaar.com/..." 
+                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13 }} />
+                  <p style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>Go to emaar.com → find the project → right-click the render image → "Copy image address" → paste here</p>
+                </div>
+                {selected.imageUrl && (
+                  <div style={{ width: 160, height: 100, borderRadius: 8, overflow: "hidden", border: `1px solid ${T.border}`, flexShrink: 0 }}>
+                    <img src={selected.imageUrl} alt={selected.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Pricing */}
             <div style={{ background: T.surface, borderRadius: 12, padding: 20, border: `1px solid ${T.border}`, marginBottom: 16 }}>
               <h3 style={{ color: T.goldLight, fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>Pricing & Details</h3>
