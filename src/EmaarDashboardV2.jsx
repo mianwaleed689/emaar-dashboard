@@ -470,6 +470,37 @@ export default function EmaarDashboardV2() {
   const [tab, setTab] = useState("Overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [time, setTime] = useState(new Date());
+  const [stock, setStock] = useState({ price: 17.05, change: 0.46, changePercent: 2.75, dayHigh: null, dayLow: null, volume: null, marketState: "LOADING", open: null });
+  const [stockLive, setStockLive] = useState(false);
+
+  // Fetch live stock data
+  useEffect(() => {
+    const fetchStock = async () => {
+      try {
+        const res = await fetch("/api/stock");
+        const data = await res.json();
+        if (data && data.price) {
+          setStock({
+            price: data.price,
+            change: data.change,
+            changePercent: data.changePercent,
+            dayHigh: data.dayHigh,
+            dayLow: data.dayLow,
+            volume: data.volume,
+            marketState: data.marketState || "CLOSED",
+            open: data.open,
+          });
+          setStockLive(data.success !== false);
+        }
+      } catch (e) {
+        console.log("Stock fetch failed, using fallback data");
+        setStockLive(false);
+      }
+    };
+    fetchStock();
+    const stockInterval = setInterval(fetchStock, 5 * 60 * 1000); // Refresh every 5 min
+    return () => clearInterval(stockInterval);
+  }, []);
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 60000);
@@ -557,14 +588,15 @@ export default function EmaarDashboardV2() {
           <style>{`@media (max-width: 768px) { .mobile-menu-btn { display: block !important; } }`}</style>
           <div>
             <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>Emaar Properties <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>PJSC</span></h1>
-            <p style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1 }}>DFM: EMAAR · Last updated: {time.toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}</p>
+            <p style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1 }}>DFM: EMAAR · {stockLive ? <span style={{ color: T.green }}>Market {stock.marketState === "REGULAR" ? "Open" : stock.marketState === "PRE" ? "Pre-Market" : "Closed"}</span> : "Offline"} · {time.toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}</p>
           </div>
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ fontSize: 10, color: T.textMuted }}>STOCK</span>
-            <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 14, color: T.gold }}>17.05</span>
-            <span style={{ color: T.green, fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", gap: 2 }}>{Icons.up} 2.75%</span>
+            {stockLive && <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />}
+            <span style={{ fontSize: 10, color: T.textMuted }}>{stockLive ? "LIVE" : "STOCK"}</span>
+            <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 14, color: T.gold }}>{stock.price.toFixed(2)}</span>
+            <span style={{ color: stock.change >= 0 ? T.green : T.red, fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", gap: 2 }}>{stock.change >= 0 ? Icons.up : Icons.down} {Math.abs(stock.changePercent).toFixed(2)}%</span>
           </div>
           <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}` }}>
             <span style={{ fontSize: 10, color: T.textMuted }}>RATING </span>
@@ -574,6 +606,10 @@ export default function EmaarDashboardV2() {
             <span style={{ fontSize: 10, color: T.textMuted }}>TARGET </span>
             <span style={{ fontSize: 12, fontWeight: 600, color: T.goldLight }}>AED 20.77</span>
           </div>
+          {stock.dayHigh && <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}` }}>
+            <span style={{ fontSize: 10, color: T.textMuted }}>H/L </span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: T.textPrimary }}>{stock.dayHigh} / {stock.dayLow}</span>
+          </div>}
           <button style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: 8, cursor: "pointer", color: T.textSecondary, position: "relative" }}>
             {Icons.bell}
             <span style={{ position: "absolute", top: 4, right: 4, width: 7, height: 7, borderRadius: "50%", background: T.red }} />
