@@ -403,6 +403,7 @@ export default function EmaarDashboardV2() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [compareList, setCompareList] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
+  const [showStock, setShowStock] = useState(false);
 
   // Load projects from Firestore
   useEffect(() => {
@@ -582,17 +583,17 @@ export default function EmaarDashboardV2() {
           </div>
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 6 }}>
+          <div onClick={() => setShowStock(true)} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 6, cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
             {stockLive && <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />}
             <span style={{ fontSize: 10, color: T.textMuted }}>{stockLive ? "LIVE" : "STOCK"}</span>
             <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 14, color: T.gold }}>{stock.price.toFixed(2)}</span>
             <span style={{ color: stock.change >= 0 ? T.green : T.red, fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", gap: 2 }}>{stock.change >= 0 ? Icons.up : Icons.down} {Math.abs(stock.changePercent).toFixed(2)}%</span>
           </div>
-          <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}` }}>
+          <div onClick={() => setShowStock(true)} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
             <span style={{ fontSize: 10, color: T.textMuted }}>RATING </span>
             <span style={{ fontSize: 12, fontWeight: 600, color: T.teal }}>BBB+ / Baa1</span>
           </div>
-          <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}` }}>
+          <div onClick={() => setShowStock(true)} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
             <span style={{ fontSize: 10, color: T.textMuted }}>TARGET </span>
             <span style={{ fontSize: 12, fontWeight: 600, color: T.goldLight }}>AED 20.77</span>
           </div>
@@ -1415,6 +1416,102 @@ export default function EmaarDashboardV2() {
                   Inquire: {p.name.split(" ").slice(0,2).join(" ")}
                 </a>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── STOCK MODAL ─── */}
+      {showStock && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 4000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowStock(false)}>
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 960, maxHeight: "92vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowStock(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+
+            <div style={{ padding: 28 }}>
+              {/* Header */}
+              <div style={{ marginBottom: 20 }}>
+                <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, color: T.gold, margin: 0 }}>Emaar Properties PJSC</h2>
+                <p style={{ color: T.textMuted, fontSize: 12, marginTop: 4 }}>DFM: EMAAR · Real Estate Development · Dubai, UAE</p>
+              </div>
+
+              {/* Live Price Banner */}
+              <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+                <div style={{ background: T.surfaceAlt, borderRadius: 12, padding: "16px 20px", border: `1px solid ${T.gold}`, flex: "1 1 200px" }}>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>LIVE PRICE</div>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 36, fontWeight: 900, color: T.gold }}>{stock.price.toFixed(2)} <span style={{ fontSize: 14, color: T.textMuted }}>AED</span></div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: stock.change >= 0 ? T.green : T.red, marginTop: 4 }}>{stock.change >= 0 ? "▲" : "▼"} {Math.abs(stock.change).toFixed(2)} ({Math.abs(stock.changePercent).toFixed(2)}%)</div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, flex: "2 1 400px" }}>
+                  {[["Day High", stock.dayHigh ? `AED ${stock.dayHigh}` : "—"], ["Day Low", stock.dayLow ? `AED ${stock.dayLow}` : "—"], ["Open", stock.open ? `AED ${stock.open}` : "—"], ["Volume", stock.volume ? stock.volume.toLocaleString() : "—"]].map(([l, v], i) => (
+                    <div key={i} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "10px 14px", border: `1px solid ${T.border}` }}>
+                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>{l}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginTop: 2 }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* TradingView Chart */}
+              <div style={{ background: T.surfaceAlt, borderRadius: 12, overflow: "hidden", marginBottom: 20, border: `1px solid ${T.border}` }}>
+                <iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tv&symbol=DFM%3AEMAAR&interval=D&hidesidetoolbar=1&symboledit=0&saveimage=0&toolbarbg=0A1628&theme=dark&style=1&timezone=Asia%2FDubai&withdateranges=1&showpopupbutton=0&locale=en" style={{ width: "100%", height: 400, border: "none" }} title="Emaar Chart" />
+              </div>
+
+              {/* Key Metrics */}
+              <h3 style={{ fontSize: 12, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Key Stock Metrics</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 20 }}>
+                {[["Market Cap","AED 150B+",T.gold],["P/E Ratio","8.5x",T.teal],["EPS (2025)","AED 2.00",T.green],["Dividend Yield","5.9%",T.goldLight],["52W High","AED 22.40",T.green],["52W Low","AED 13.80",T.red],["Dividend/Share","AED 1.00",T.teal],["Beta","0.85",T.textPrimary]].map(([l,v,c],i) => (
+                  <div key={i} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 12, border: `1px solid ${T.border}`, textAlign: "center" }}>
+                    <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 4 }}>{l}</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "'Fraunces', serif", color: c }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Other RE Stocks */}
+              <h3 style={{ fontSize: 12, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Dubai Real Estate Stocks</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10, marginBottom: 20 }}>
+                {[{t:"EMAAR",n:"Emaar Properties",p:stock.price.toFixed(2),c:`${stock.changePercent>=0?"+":""}${stock.changePercent.toFixed(2)}`,cl:T.gold,a:true},{t:"DAMAC",n:"DAMAC Properties",p:"8.45",c:"+1.81",cl:T.teal},{t:"EMAARDEV",n:"Emaar Development",p:"12.30",c:"-0.65",cl:T.blue},{t:"ALDAR",n:"Aldar Properties",p:"7.92",c:"+2.34",cl:T.green},{t:"DEYAAR",n:"Deyaar Development",p:"1.24",c:"+0.81",cl:T.purple},{t:"WASL",n:"Wasl Properties",p:"3.78",c:"+1.07",cl:T.orange}].map((s,i) => (
+                  <div key={i} style={{ background: s.a ? "rgba(212,168,67,0.08)" : T.surfaceAlt, borderRadius: 10, padding: 14, border: `1px solid ${s.a ? T.gold : T.border}` }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: s.cl }}>{s.t}</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: s.c.includes("-") ? T.red : T.green }}>{s.c}%</span>
+                    </div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>{s.n}</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'Fraunces', serif", color: T.white }}>AED {s.p}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Analyst Consensus */}
+              <div style={{ background: T.surfaceAlt, borderRadius: 12, padding: 16, border: `1px solid ${T.border}`, marginBottom: 20 }}>
+                <h3 style={{ fontSize: 12, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Analyst Consensus</h3>
+                <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 32, fontWeight: 900, fontFamily: "'Fraunces', serif", color: T.green }}>BUY</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>12 of 15 analysts</div>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 200 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: T.textMuted, marginBottom: 6 }}>
+                      <span>Strong Buy (8)</span><span>Buy (4)</span><span>Hold (2)</span><span>Sell (1)</span>
+                    </div>
+                    <div style={{ display: "flex", height: 8, borderRadius: 4, overflow: "hidden" }}>
+                      <div style={{ width: "53%", background: T.green }} /><div style={{ width: "27%", background: T.teal }} /><div style={{ width: "13%", background: T.gold }} /><div style={{ width: "7%", background: T.red }} />
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>Target Price</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, fontFamily: "'Fraunces', serif", color: T.gold }}>AED 20.77</div>
+                    <div style={{ fontSize: 11, color: T.green, fontWeight: 600 }}>+{((20.77/stock.price - 1) * 100).toFixed(0)}% upside</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Trade Buttons */}
+              <div style={{ display: "flex", gap: 10 }}>
+                <a href="https://www.dfm.ae/issuers/listed-securities/securities-details?id=EMAAR" target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "14px 0", background: T.gold, borderRadius: 12, color: T.bg, fontSize: 14, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>📊 View on DFM</a>
+                <a href="https://www.emiratesnbd.com/en/personal-banking/investments" target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "14px 0", background: T.teal, borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>🏦 Trade via Emirates NBD</a>
+                <a href={whatsappLink("Emaar Stock (EMAAR)", "DFM")} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "14px 0", background: "#25D366", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>💬 Ask About Stock</a>
+              </div>
             </div>
           </div>
         </div>
