@@ -1489,7 +1489,7 @@ export default function EmaarDashboardV2() {
 
 
             {/* Mega Projects */}
-            <Section title="Mega Projects Pipeline" sub="Strategic developments 2026-2032 - Click any project for full details">
+            <Section title="Mega Projects Pipeline" sub="Strategic developments 2026-2035 · AED 800B+ combined value · Global benchmarks & DLD price data · Click any project for deep analysis">
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginTop: 16 }}>
                 {megaProjects.map((m, i) => {
                   const isOpen = expandedMega === m.name;
@@ -1527,10 +1527,33 @@ export default function EmaarDashboardV2() {
                               <div style={{ fontSize: 11, fontWeight: 700, color: T.green, marginBottom: 6, letterSpacing: 0.5 }}>INVESTOR IMPACT</div>
                               <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>{m.investorImpact || "Impact analysis coming soon."}</div>
                             </div>
-                            <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 14 }}>
+                            {m.benchmark && (
+                            <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 14, marginBottom: 12 }}>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa", marginBottom: 6, letterSpacing: 0.5 }}>GLOBAL BENCHMARK</div>
+                              <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>{m.benchmark}</div>
+                            </div>
+                            )}
+                            {m.priceImpact && (
+                            <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 14, marginBottom: 12 }}>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: "#f59e0b", marginBottom: 6, letterSpacing: 0.5 }}>PRICE IMPACT DATA</div>
+                              <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>{m.priceImpact}</div>
+                            </div>
+                            )}
+                            <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 14, marginBottom: 12 }}>
                               <div style={{ fontSize: 11, fontWeight: 700, color: T.teal, marginBottom: 6, letterSpacing: 0.5 }}>COMPLETION STATUS</div>
                               <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>{m.completion || m.timeline}</div>
                             </div>
+                            {m.milestones && (
+                            <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 14 }}>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: T.blue, marginBottom: 8, letterSpacing: 0.5 }}>CONSTRUCTION MILESTONES</div>
+                              {m.milestones.map((ms, msi) => (
+                                <div key={msi} style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+                                  <span style={{ fontSize: 11, color: T.blue }}>●</span>
+                                  <span style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>{ms}</span>
+                                </div>
+                              ))}
+                            </div>
+                            )}
                           </div>
                         </div>
                         <div style={{ display: "flex", gap: 16, marginTop: 14, flexWrap: "wrap", padding: "10px 0 0", borderTop: `1px solid ${T.border}` }}>
@@ -1538,6 +1561,11 @@ export default function EmaarDashboardV2() {
                           <div style={{ fontSize: 10, color: T.textMuted }}>Announced: <span style={{ color: T.white, fontWeight: 600 }}>{m.announced || "—"}</span></div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>Scale: <span style={{ color: T.white, fontWeight: 600 }}>{m.scale}</span></div>
                         </div>
+                        {m.sources && (
+                        <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
+                          <div style={{ fontSize: 9, color: T.textMuted, fontStyle: "italic" }}>Sources: {m.sources}</div>
+                        </div>
+                        )}
                       </div>
                     )}
                   </div>
