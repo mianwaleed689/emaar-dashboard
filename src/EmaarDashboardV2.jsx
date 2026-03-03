@@ -755,6 +755,8 @@ export default function EmaarDashboardV2() {
 
   // Load projects from Firestore
   const [projectsLoading, setProjectsLoading] = useState(true);
+  const [projectOverrides, setProjectOverrides] = useState({});
+  const [liveROI, setLiveROI] = useState({});
   useEffect(() => {
     const loadProjects = async () => {
       setProjectsLoading(true);
@@ -764,14 +766,42 @@ export default function EmaarDashboardV2() {
           setLiveProjects(snap.docs.map(d => d.data()));
         }
       } catch (e) { console.log("Firestore not available, using static data"); }
+      // Load admin data overrides
+      try {
+        const overSnap = await getDocs(collection(db, "projectData"));
+        if (overSnap.size > 0) {
+          const map = {};
+          overSnap.forEach(d => { map[d.id] = d.data(); });
+          setProjectOverrides(map);
+        }
+      } catch (e) { /* silent */ }
+      // Load community ROI overrides
+      try {
+        const roiSnap = await getDocs(collection(db, "communityROI"));
+        if (roiSnap.size > 0) {
+          const map = {};
+          roiSnap.forEach(d => { map[d.id] = d.data(); });
+          setLiveROI(map);
+        }
+      } catch (e) { /* silent */ }
       setProjectsLoading(false);
     };
     if (isLoggedIn) loadProjects();
     else setProjectsLoading(false);
   }, [isLoggedIn]);
 
-  // Use Firestore data if available, otherwise fall back to hardcoded
-  const activeProjects = liveProjects || emaarProjects;
+  // Use Firestore data if available, otherwise fall back to hardcoded, then apply admin overrides
+  const activeProjects = (liveProjects || emaarProjects).map(p => ({ ...p, ...(projectOverrides[p.id] || {}) }));
+
+  // Merged community ROI (admin overrides on top of defaults)
+  const activeCommunityROI = Object.keys(communityROI).reduce((acc, key) => {
+    acc[key] = { ...communityROI[key], ...(liveROI[key] || {}) };
+    // Deep merge nested objects (grossYield, netYield, estRent)
+    if (communityROI[key]?.grossYield || liveROI[key]?.grossYield) acc[key].grossYield = { ...(communityROI[key]?.grossYield || {}), ...(liveROI[key]?.grossYield || {}) };
+    if (communityROI[key]?.netYield || liveROI[key]?.netYield) acc[key].netYield = { ...(communityROI[key]?.netYield || {}), ...(liveROI[key]?.netYield || {}) };
+    if (communityROI[key]?.estRent || liveROI[key]?.estRent) acc[key].estRent = { ...(communityROI[key]?.estRent || {}), ...(liveROI[key]?.estRent || {}) };
+    return acc;
+  }, {});
 
   // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
   const getUnitEntries = (units) => {
@@ -1768,7 +1798,7 @@ export default function EmaarDashboardV2() {
                 <div style={{ flex: "0 0 320px", minWidth: 280 }}>
                   {selectedComm ? (() => {
                     const commData = emaarCommunities.find(ec => ec.district === selectedComm.district);
-                    const roi = communityROI[commData?.name] || communityROI[Object.keys(communityROI).find(k => k.includes(selectedComm.district))] || null;
+                    const roi = activeCommunityROI[commData?.name] || activeCommunityROI[Object.keys(activeCommunityROI).find(k => k.includes(selectedComm.district))] || null;
                     return (
                       <div style={{ background: T.card, borderRadius: 14, border: `1px solid ${selectedComm.color}40`, overflow: "hidden" }}>
                         {/* Header */}
@@ -2861,7 +2891,7 @@ export default function EmaarDashboardV2() {
 
               {/* Contact CTAs */}
               {(() => {
-                const roi = communityROI[selectedProject_.community];
+                const roi = activeCommunityROI[selectedProject_.community];
                 if (!roi) return null;
                 // Determine unit type for yield lookup
                 const isVilla = /villa/i.test(selectedProject_.type);

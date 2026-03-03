@@ -7,6 +7,7 @@ import { auth, db } from "./firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI } from "./data";
 
 /* ─── THEME (exact dashboard match) ─── */
 const T = {
@@ -26,6 +27,7 @@ const I = {
   revenue: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
   leads: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
   analytics: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+  data: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/></svg>,
   logout: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
   search: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
   download: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
@@ -114,6 +116,20 @@ export default function AdminPanel() {
   const [toast, setToast] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  /* ─── DATA MANAGER STATE ─── */
+  const [dataSubTab, setDataSubTab] = useState("projects"); // projects | communities | yields
+  const [editingProject, setEditingProject] = useState(null);
+  const [editingCommunity, setEditingCommunity] = useState(null);
+  const [editingYield, setEditingYield] = useState(null);
+  const [liveProjects, setLiveProjects] = useState({});
+  const [liveCommunityROI, setLiveCommunityROI] = useState({});
+  const [liveYields, setLiveYields] = useState({});
+  const [dataSearch, setDataSearch] = useState("");
+  const [dataSaving, setDataSaving] = useState(false);
+  const [projectForm, setProjectForm] = useState({});
+  const [communityForm, setCommunityForm] = useState({});
+  const [yieldForm, setYieldForm] = useState({});
+
   /* ─── ESCAPE KEY ─── */
   useEffect(() => {
     const handleKey = (e) => { if (e.key === "Escape") setSidebarOpen(false); };
@@ -148,6 +164,31 @@ export default function AdminPanel() {
   }, []);
 
   useEffect(() => { if (isAdmin) fetchUsers(); }, [isAdmin, fetchUsers]);
+
+  /* ─── FETCH LIVE DATA FROM FIRESTORE ─── */
+  const fetchLiveData = useCallback(async () => {
+    try {
+      // Fetch project overrides
+      const projSnap = await getDocs(collection(db, "projectData"));
+      const projMap = {};
+      projSnap.forEach(d => { projMap[d.id] = plainify(d.data()); });
+      setLiveProjects(projMap);
+
+      // Fetch community ROI overrides
+      const roiSnap = await getDocs(collection(db, "communityROI"));
+      const roiMap = {};
+      roiSnap.forEach(d => { roiMap[d.id] = plainify(d.data()); });
+      setLiveCommunityROI(roiMap);
+
+      // Fetch yield overrides
+      const yieldSnap = await getDocs(collection(db, "yieldData"));
+      const yieldMap = {};
+      yieldSnap.forEach(d => { yieldMap[d.id] = plainify(d.data()); });
+      setLiveYields(yieldMap);
+    } catch (e) { console.error("Fetch live data:", e); }
+  }, []);
+
+  useEffect(() => { if (isAdmin) fetchLiveData(); }, [isAdmin, fetchLiveData]);
 
   /* ─── USER STATS ─── */
   const now = new Date();
@@ -207,6 +248,80 @@ export default function AdminPanel() {
     { month: "+3mo", revenue: Math.round(mrr + projectedMRR) },
     { month: "+6mo", revenue: Math.round((mrr + projectedMRR) * 1.8) },
   ];
+
+  /* ─── DATA MANAGER ACTIONS ─── */
+  const saveProjectData = async (projectId, data) => {
+    setDataSaving(true);
+    try {
+      const clean = {};
+      Object.entries(data).forEach(([k, v]) => {
+        if (v !== "" && v !== undefined && v !== null) {
+          clean[k] = typeof v === "string" && !isNaN(v) && v.trim() !== "" ? Number(v) : v;
+        }
+      });
+      clean.updatedAt = new Date().toISOString();
+      clean.updatedBy = adminUser?.email || "admin";
+      await setDoc(doc(db, "projectData", projectId), clean, { merge: true });
+      notify("✅ Project data saved");
+      setEditingProject(null);
+      fetchLiveData();
+    } catch (e) { notify("❌ Error: " + e.message); }
+    setDataSaving(false);
+  };
+
+  const saveCommunityROI = async (communityKey, data) => {
+    setDataSaving(true);
+    try {
+      const clean = JSON.parse(JSON.stringify(data));
+      clean.updatedAt = new Date().toISOString();
+      clean.updatedBy = adminUser?.email || "admin";
+      await setDoc(doc(db, "communityROI", communityKey), clean, { merge: true });
+      notify("✅ Community ROI saved");
+      setEditingCommunity(null);
+      fetchLiveData();
+    } catch (e) { notify("❌ Error: " + e.message); }
+    setDataSaving(false);
+  };
+
+  const saveYieldData = async (yieldKey, data) => {
+    setDataSaving(true);
+    try {
+      const clean = {};
+      Object.entries(data).forEach(([k, v]) => {
+        if (v !== "" && v !== undefined && v !== null) {
+          clean[k] = typeof v === "string" && !isNaN(v) && v.trim() !== "" ? Number(v) : v;
+        }
+      });
+      clean.updatedAt = new Date().toISOString();
+      await setDoc(doc(db, "yieldData", yieldKey), clean, { merge: true });
+      notify("✅ Yield data saved");
+      setEditingYield(null);
+      fetchLiveData();
+    } catch (e) { notify("❌ Error: " + e.message); }
+    setDataSaving(false);
+  };
+
+  const resetProjectData = async (projectId) => {
+    if (!window.confirm("Reset to default data.js values? This removes all live overrides for this project.")) return;
+    try {
+      await deleteDoc(doc(db, "projectData", projectId));
+      notify("✅ Reset to defaults");
+      fetchLiveData();
+    } catch (e) { notify("❌ " + e.message); }
+  };
+
+  const resetCommunityROI = async (key) => {
+    if (!window.confirm("Reset this community ROI to defaults?")) return;
+    try {
+      await deleteDoc(doc(db, "communityROI", key));
+      notify("✅ Reset to defaults");
+      fetchLiveData();
+    } catch (e) { notify("❌ " + e.message); }
+  };
+
+  /* Merge live data with defaults */
+  const getMergedProject = (p) => ({ ...p, ...(liveProjects[p.id] || {}) });
+  const getMergedROI = (key) => ({ ...(defaultCommunityROI[key] || {}), ...(liveCommunityROI[key] || {}) });
 
   /* ─── ACTIONS ─── */
   const changeTier = async (uid, tier) => {
@@ -331,6 +446,7 @@ export default function AdminPanel() {
     { id: "overview", label: "Overview", icon: I.overview },
     { id: "users", label: "Users", icon: I.users },
     { id: "revenue", label: "Revenue", icon: I.revenue },
+    { id: "data", label: "Data Manager", icon: I.data },
     { id: "leads", label: "Leads", icon: I.leads },
     { id: "analytics", label: "Analytics", icon: I.analytics },
   ];
@@ -672,6 +788,371 @@ export default function AdminPanel() {
                   </div>
                 </div>
               </Section>
+            </>
+          )}
+
+          {/* ═══════════════════════════════════════
+             DATA MANAGER TAB
+             ═══════════════════════════════════════ */}
+          {tab === "data" && (
+            <>
+              {/* Sub-tab navigation */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+                {[
+                  { id: "projects", label: "Projects", count: emaarProjects.length, icon: "🏗️" },
+                  { id: "communities", label: "Community ROI", count: Object.keys(defaultCommunityROI).length, icon: "📊" },
+                  { id: "yields", label: "Yield Table", count: emaarYields.length, icon: "💰" },
+                ].map(st => (
+                  <button type="button" key={st.id} onClick={() => { setDataSubTab(st.id); setEditingProject(null); setEditingCommunity(null); setEditingYield(null); }}
+                    style={{ flex: 1, padding: "14px 16px", borderRadius: 12, border: `1px solid ${dataSubTab === st.id ? T.gold : T.border}`, background: dataSubTab === st.id ? T.goldGlow : T.surface, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all .2s" }}>
+                    <div style={{ fontSize: 20, marginBottom: 6 }}>{st.icon}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: dataSubTab === st.id ? T.gold : T.white }}>{st.label}</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>{st.count} items · {Object.keys(st.id === "projects" ? liveProjects : st.id === "communities" ? liveCommunityROI : liveYields).length} live overrides</div>
+                  </button>
+                ))}
+              </div>
+
+              {/* ─── PROJECTS EDITOR ─── */}
+              {dataSubTab === "projects" && (
+                <Section title="Project Data Manager" sub="Edit prices, PPSF, status — changes go live instantly" action={
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button type="button" onClick={fetchLiveData} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
+                  </div>
+                }>
+                  {/* Search */}
+                  <div style={{ position: "relative", maxWidth: 400, marginBottom: 16 }}>
+                    <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</span>
+                    <input value={dataSearch} onChange={e => setDataSearch(e.target.value)} placeholder="Search projects..."
+                      style={{ width: "100%", padding: "10px 12px 10px 36px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                  </div>
+
+                  {/* Editing form */}
+                  {editingProject && (() => {
+                    const p = emaarProjects.find(x => x.id === editingProject);
+                    if (!p) return null;
+                    const merged = getMergedProject(p);
+                    const hasOverride = !!liveProjects[p.id];
+                    const fields = [
+                      { key: "price", label: "Price (AED)", type: "number", placeholder: "e.g. 2500000" },
+                      { key: "ppsf", label: "Price/sqft (AED)", type: "number", placeholder: "e.g. 2200" },
+                      { key: "sqft", label: "Size (sqft)", type: "number", placeholder: "e.g. 1200" },
+                      { key: "status", label: "Status", type: "select", options: ["Selling", "Upcoming", "Sold Out", "Ready"] },
+                      { key: "handover", label: "Handover", type: "text", placeholder: "e.g. Q4 2027" },
+                      { key: "type", label: "Type", type: "select", options: ["Apartment", "Townhouse", "Villa", "Penthouse", "Duplex"] },
+                      { key: "beds", label: "Bedrooms", type: "text", placeholder: "e.g. 1-3 BR" },
+                      { key: "paymentPlan", label: "Payment Plan", type: "text", placeholder: "e.g. 80/20" },
+                      { key: "dldPpsf", label: "DLD PPSF (AED)", type: "number", placeholder: "e.g. 2100" },
+                    ];
+                    return (
+                      <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: `1px solid ${T.gold}30` }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                          <div>
+                            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{p.name}</h3>
+                            <span style={{ fontSize: 12, color: T.textMuted }}>{p.community} · ID: {p.id}</span>
+                            {hasOverride && <span style={{ marginLeft: 8, fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 600 }}>LIVE DATA</span>}
+                          </div>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            {hasOverride && <button type="button" onClick={() => resetProjectData(p.id)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.3)`, background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Reset to Default</button>}
+                            <button type="button" onClick={() => setEditingProject(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                          </div>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                          {fields.map(f => (
+                            <div key={f.key}>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                              {f.type === "select" ? (
+                                <select value={projectForm[f.key] ?? merged[f.key] ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                                  <option value="">—</option>
+                                  {f.options.map(o => <option key={o} value={o}>{o}</option>)}
+                                </select>
+                              ) : (
+                                <input type={f.type} value={projectForm[f.key] ?? merged[f.key] ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={f.placeholder}
+                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                              )}
+                              {hasOverride && liveProjects[p.id]?.[f.key] !== undefined && (
+                                <div style={{ fontSize: 9, color: T.green, marginTop: 2 }}>Live: {liveProjects[p.id][f.key]} · Default: {p[f.key] ?? "—"}</div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <button type="button" disabled={dataSaving} onClick={() => saveProjectData(p.id, projectForm)}
+                          style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
+                          {dataSaving ? "Saving..." : "💾 Save to Firestore — Goes Live Instantly"}
+                        </button>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Projects list */}
+                  <div className="chart-box" style={{ padding: 0, overflow: "hidden" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "40px 2fr 100px 110px 100px 80px 90px 80px", gap: 8, padding: "12px 20px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt }}>
+                      {["#", "Project", "Community", "Price", "PPSF", "Status", "Source", ""].map(h => (
+                        <span key={h} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>{h}</span>
+                      ))}
+                    </div>
+                    {emaarProjects
+                      .filter(p => !dataSearch || p.name.toLowerCase().includes(dataSearch.toLowerCase()) || (p.community || "").toLowerCase().includes(dataSearch.toLowerCase()))
+                      .map((p, i) => {
+                        const merged = getMergedProject(p);
+                        const hasOverride = !!liveProjects[p.id];
+                        return (
+                          <div key={p.id} className="fade-up" style={{ display: "grid", gridTemplateColumns: "40px 2fr 100px 110px 100px 80px 90px 80px", gap: 8, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", animationDelay: `${Math.min(i * 0.02, 0.5)}s`, cursor: "pointer", transition: "background .15s", background: editingProject === p.id ? T.goldGlow : "transparent" }}
+                            onMouseEnter={e => { if (editingProject !== p.id) e.currentTarget.style.background = T.surfaceAlt; }}
+                            onMouseLeave={e => { if (editingProject !== p.id) e.currentTarget.style.background = "transparent"; }}
+                            onClick={() => { setEditingProject(p.id); setProjectForm(liveProjects[p.id] || {}); }}>
+                            <span style={{ fontSize: 11, color: T.textMuted }}>{i + 1}</span>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>{merged.type} · {merged.beds || "—"}</div>
+                            </div>
+                            <span style={{ fontSize: 11, color: T.textSecondary }}>{p.community}</span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{merged.price ? `AED ${(merged.price / 1e6).toFixed(2)}M` : "TBA"}</span>
+                            <span style={{ fontSize: 12, color: T.textPrimary }}>{merged.ppsf ? merged.ppsf.toLocaleString() : "—"}</span>
+                            <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: merged.status === "Selling" ? "rgba(16,185,129,0.12)" : merged.status === "Upcoming" ? "rgba(212,168,67,0.12)" : "rgba(148,163,184,0.1)", color: merged.status === "Selling" ? T.green : merged.status === "Upcoming" ? T.gold : T.textMuted }}>{merged.status || "—"}</span>
+                            <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? "🟢 Live" : "📄 Default"}</span>
+                            <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>Edit →</span>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </Section>
+              )}
+
+              {/* ─── COMMUNITY ROI EDITOR ─── */}
+              {dataSubTab === "communities" && (
+                <Section title="Community ROI Data" sub="Edit yields, rents, appreciation, occupancy per community" action={
+                  <button type="button" onClick={fetchLiveData} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
+                }>
+                  {/* Editing form */}
+                  {editingCommunity && (() => {
+                    const key = editingCommunity;
+                    const merged = getMergedROI(key);
+                    const hasOverride = !!liveCommunityROI[key];
+                    return (
+                      <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: `1px solid ${T.gold}30` }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                          <div>
+                            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{key}</h3>
+                            {hasOverride && <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 600 }}>LIVE DATA</span>}
+                          </div>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            {hasOverride && <button type="button" onClick={() => resetCommunityROI(key)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.3)`, background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Reset</button>}
+                            <button type="button" onClick={() => setEditingCommunity(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                          </div>
+                        </div>
+
+                        {/* Gross Yields */}
+                        <div style={{ marginBottom: 16 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Gross Yield (%)</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+                            {["apt1", "apt2", "apt3", "th", "villa"].filter(k => merged.grossYield?.[k] !== undefined || merged.estRent?.[k]).map(k => (
+                              <div key={k}>
+                                <label style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>{k}</label>
+                                <input type="number" step="0.1" value={communityForm.grossYield?.[k] ?? merged.grossYield?.[k] ?? ""} onChange={e => setCommunityForm(prev => ({ ...prev, grossYield: { ...(prev.grossYield || merged.grossYield || {}), [k]: Number(e.target.value) } }))}
+                                  style={{ width: "100%", padding: "8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Net Yields */}
+                        <div style={{ marginBottom: 16 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.green, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Net Yield (%)</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+                            {["apt1", "apt2", "apt3", "th", "villa"].filter(k => merged.netYield?.[k] !== undefined || merged.estRent?.[k]).map(k => (
+                              <div key={k}>
+                                <label style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>{k}</label>
+                                <input type="number" step="0.1" value={communityForm.netYield?.[k] ?? merged.netYield?.[k] ?? ""} onChange={e => setCommunityForm(prev => ({ ...prev, netYield: { ...(prev.netYield || merged.netYield || {}), [k]: Number(e.target.value) } }))}
+                                  style={{ width: "100%", padding: "8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Est Rents */}
+                        <div style={{ marginBottom: 16 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.blue, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Est. Annual Rent (AED)</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+                            {["apt1", "apt2", "apt3", "apt4", "th", "villa", "penthouse"].filter(k => merged.estRent?.[k] !== undefined).map(k => (
+                              <div key={k}>
+                                <label style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>{k}</label>
+                                <input type="number" value={communityForm.estRent?.[k] ?? merged.estRent?.[k] ?? ""} onChange={e => setCommunityForm(prev => ({ ...prev, estRent: { ...(prev.estRent || merged.estRent || {}), [k]: Number(e.target.value) } }))}
+                                  style={{ width: "100%", padding: "8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Key metrics */}
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
+                          {[
+                            { key: "appreciation5yr", label: "5Y Appreciation %", type: "number" },
+                            { key: "appreciationYoY", label: "YoY Growth %", type: "number" },
+                            { key: "serviceCharge", label: "Service Charge (AED/sqft)", type: "number" },
+                            { key: "occupancy", label: "Occupancy %", type: "number" },
+                            { key: "avgDaysToLease", label: "Avg Days to Lease", type: "number" },
+                            { key: "riskLevel", label: "Risk Level", type: "text" },
+                            { key: "shortTermPremium", label: "Short-term Premium %", type: "number" },
+                            { key: "capitalGrowthDriver", label: "Growth Driver", type: "text" },
+                          ].map(f => (
+                            <div key={f.key} style={f.key === "capitalGrowthDriver" ? { gridColumn: "span 4" } : {}}>
+                              <label style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                              {f.key === "capitalGrowthDriver" ? (
+                                <textarea value={communityForm[f.key] ?? merged[f.key] ?? ""} onChange={e => setCommunityForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                  style={{ width: "100%", padding: "8px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", minHeight: 60, resize: "vertical" }} />
+                              ) : (
+                                <input type={f.type} step={f.type === "number" ? "0.1" : undefined} value={communityForm[f.key] ?? merged[f.key] ?? ""} onChange={e => setCommunityForm(prev => ({ ...prev, [f.key]: f.type === "number" ? Number(e.target.value) : e.target.value }))}
+                                  style={{ width: "100%", padding: "8px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+
+                        <button type="button" disabled={dataSaving} onClick={() => saveCommunityROI(key, communityForm)}
+                          style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
+                          {dataSaving ? "Saving..." : "💾 Save Community ROI — Goes Live Instantly"}
+                        </button>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Community list */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+                    {Object.entries(defaultCommunityROI).map(([key, roi]) => {
+                      const merged = getMergedROI(key);
+                      const hasOverride = !!liveCommunityROI[key];
+                      const comm = emaarCommunities.find(c => c.district === key);
+                      return (
+                        <div key={key} className="chart-box fade-up" style={{ padding: 18, cursor: "pointer", border: editingCommunity === key ? `1px solid ${T.gold}` : `1px solid ${T.border}`, transition: "all .2s" }}
+                          onClick={() => { setEditingCommunity(key); setCommunityForm(liveCommunityROI[key] || {}); }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                            <div>
+                              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{comm?.name || key}</div>
+                              <div style={{ fontSize: 11, color: T.textMuted }}>{key}</div>
+                            </div>
+                            <span style={{ fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: hasOverride ? "rgba(16,185,129,0.12)" : "rgba(148,163,184,0.08)", color: hasOverride ? T.green : T.textMuted }}>{hasOverride ? "🟢 Live" : "Default"}</span>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                            <div>
+                              <div style={{ fontSize: 9, color: T.textMuted }}>GROSS YIELD</div>
+                              <div style={{ fontSize: 16, fontWeight: 700, color: T.gold }}>{merged.grossYield?.apt2 || merged.grossYield?.apt1 || merged.grossYield?.th || "—"}%</div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 9, color: T.textMuted }}>YoY GROWTH</div>
+                              <div style={{ fontSize: 16, fontWeight: 700, color: T.green }}>{merged.appreciationYoY || "—"}%</div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 9, color: T.textMuted }}>OCCUPANCY</div>
+                              <div style={{ fontSize: 16, fontWeight: 700, color: T.blue }}>{merged.occupancy || "—"}%</div>
+                            </div>
+                          </div>
+                          {merged.updatedAt && <div style={{ fontSize: 9, color: T.textMuted, marginTop: 8 }}>Updated: {new Date(merged.updatedAt).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" })} by {merged.updatedBy || "—"}</div>}
+                          <div style={{ textAlign: "right", marginTop: 8 }}><span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>Edit →</span></div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Section>
+              )}
+
+              {/* ─── YIELD TABLE EDITOR ─── */}
+              {dataSubTab === "yields" && (
+                <Section title="Yield Table Data" sub="Edit yield table entries shown in the Yields tab" action={
+                  <button type="button" onClick={fetchLiveData} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
+                }>
+                  {/* Editing form */}
+                  {editingYield !== null && (() => {
+                    const y = emaarYields[editingYield];
+                    if (!y) return null;
+                    const yieldKey = `${y.community}_${y.unit}`.replace(/\s+/g, "_");
+                    const merged = { ...y, ...(liveYields[yieldKey] || {}) };
+                    const hasOverride = !!liveYields[yieldKey];
+                    const fields = [
+                      { key: "rent", label: "Annual Rent (AED)", type: "number" },
+                      { key: "price", label: "Unit Price (AED)", type: "number" },
+                      { key: "gross", label: "Gross Yield %", type: "number" },
+                      { key: "net", label: "Net Yield %", type: "number" },
+                      { key: "demand", label: "Demand", type: "select", options: ["Very High", "High", "Moderate-High", "Moderate", "Growing"] },
+                      { key: "visa", label: "Golden Visa", type: "select", options: ["Yes", "No", "Some"] },
+                    ];
+                    return (
+                      <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: `1px solid ${T.gold}30` }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                          <div>
+                            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{y.unit} — {y.community}</h3>
+                            {hasOverride && <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 600 }}>LIVE DATA</span>}
+                          </div>
+                          <button type="button" onClick={() => setEditingYield(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                          {fields.map(f => (
+                            <div key={f.key}>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                              {f.type === "select" ? (
+                                <select value={yieldForm[f.key] ?? merged[f.key] ?? ""} onChange={e => setYieldForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                                  {f.options.map(o => <option key={o} value={o}>{o}</option>)}
+                                </select>
+                              ) : (
+                                <input type={f.type} step="0.1" value={yieldForm[f.key] ?? merged[f.key] ?? ""} onChange={e => setYieldForm(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={`e.g. ${merged[f.key] || ""}`}
+                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <button type="button" disabled={dataSaving} onClick={() => saveYieldData(yieldKey, yieldForm)}
+                          style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
+                          {dataSaving ? "Saving..." : "💾 Save Yield Data"}
+                        </button>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Yields table */}
+                  <div className="chart-box" style={{ padding: 0, overflow: "hidden" }}>
+                    <div className="table-scroll">
+                      <div style={{ display: "grid", gridTemplateColumns: "40px 1.5fr 1fr 100px 110px 80px 80px 80px 70px", gap: 8, padding: "12px 20px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt, minWidth: 800 }}>
+                        {["#", "Unit Type", "Community", "Rent", "Price", "Gross", "Net", "Demand", ""].map(h => (
+                          <span key={h} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>{h}</span>
+                        ))}
+                      </div>
+                      {emaarYields.map((y, i) => {
+                        const yieldKey = `${y.community}_${y.unit}`.replace(/\s+/g, "_");
+                        const hasOverride = !!liveYields[yieldKey];
+                        const merged = { ...y, ...(liveYields[yieldKey] || {}) };
+                        return (
+                          <div key={i} style={{ display: "grid", gridTemplateColumns: "40px 1.5fr 1fr 100px 110px 80px 80px 80px 70px", gap: 8, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", cursor: "pointer", transition: "background .15s", minWidth: 800, background: editingYield === i ? T.goldGlow : "transparent" }}
+                            onMouseEnter={e => { if (editingYield !== i) e.currentTarget.style.background = T.surfaceAlt; }}
+                            onMouseLeave={e => { if (editingYield !== i) e.currentTarget.style.background = "transparent"; }}
+                            onClick={() => { setEditingYield(i); setYieldForm(liveYields[yieldKey] || {}); }}>
+                            <span style={{ fontSize: 11, color: T.textMuted }}>{i + 1}</span>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{merged.unit}</span>
+                            <span style={{ fontSize: 11, color: T.textSecondary }}>{merged.community}</span>
+                            <span style={{ fontSize: 12, color: T.textPrimary }}>AED {(merged.rent / 1000).toFixed(0)}K</span>
+                            <span style={{ fontSize: 12, color: T.gold, fontWeight: 600 }}>AED {(merged.price / 1e6).toFixed(2)}M</span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: T.green }}>{merged.gross}%</span>
+                            <span style={{ fontSize: 12, color: T.teal }}>{merged.net}%</span>
+                            <span style={{ fontSize: 10, color: merged.demand === "Very High" ? T.gold : T.textSecondary }}>{merged.demand}</span>
+                            <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? "🟢" : "—"}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </Section>
+              )}
+
+              {/* Data sync info */}
+              <div className="chart-box fade-up" style={{ padding: 16, marginTop: 8, display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ fontSize: 24 }}>ℹ️</div>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>How Live Data Works</div>
+                  <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6 }}>
+                    Data saved here goes to Firestore and overrides default values from data.js. The main dashboard reads Firestore first, falls back to defaults if no override exists. Click "Reset to Default" on any item to remove the live override. Last updated timestamps are tracked per entry.
+                  </div>
+                </div>
+              </div>
             </>
           )}
 
