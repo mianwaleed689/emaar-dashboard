@@ -80,7 +80,19 @@ export default function ProjectManager() {
     try {
       const snap = await getDocs(collection(db, "projects"));
       const list = [];
-      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+      snap.forEach(d => {
+        const raw = d.data();
+        const data = {};
+        for (const key of Object.keys(raw)) {
+          const val = raw[key];
+          if (val && typeof val === "object" && typeof val.toDate === "function") {
+            data[key] = val.toDate().toISOString();
+          } else {
+            data[key] = val;
+          }
+        }
+        list.push({ id: d.id, ...data });
+      });
       list.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
       setProjects(list);
     } catch (err) { console.log("Error:", err); }
@@ -88,10 +100,38 @@ export default function ProjectManager() {
 
   useEffect(() => { if (isAdmin) fetchProjects(); }, [isAdmin, fetchProjects]);
 
+  // Safe deep clone that handles Firestore Timestamps
+  const safeClone = (obj) => {
+    if (obj === null || obj === undefined) return obj;
+    if (typeof obj !== "object") return obj;
+    if (Array.isArray(obj)) return obj.map(safeClone);
+    const clone = {};
+    for (const key of Object.keys(obj)) {
+      const val = obj[key];
+      if (val && typeof val === "object" && typeof val.toDate === "function") {
+        clone[key] = val.toDate().toISOString();
+      } else if (val && typeof val === "object" && !Array.isArray(val)) {
+        clone[key] = safeClone(val);
+      } else if (Array.isArray(val)) {
+        clone[key] = val.map(safeClone);
+      } else {
+        clone[key] = val;
+      }
+    }
+    return clone;
+  };
+
   // Select project
   const selectProject = (p) => {
-    setSelected(p);
-    setEditData(JSON.parse(JSON.stringify(p)));
+    try {
+      const cloned = safeClone(p);
+      setSelected(cloned);
+      setEditData(safeClone(p));
+    } catch (err) {
+      console.log("Clone error:", err);
+      setSelected(p);
+      setEditData({ ...p, units: p.units ? [...p.units] : [] });
+    }
   };
 
   // Update field
@@ -256,12 +296,12 @@ export default function ProjectManager() {
               {/* Header */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
                 <div>
-                  <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 900, color: T.white }}>{editData.name}</h1>
-                  <p style={{ color: T.textSecondary, fontSize: 12, marginTop: 2 }}>{editData.community} · ID: {selected.id}</p>
-                  {editData.lastUpdated && <p style={{ color: T.textMuted, fontSize: 10, marginTop: 2 }}>Last saved: {new Date(editData.lastUpdated).toLocaleString()}</p>}
+                  <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 900, color: T.white }}>{editData.name || "Untitled"}</h1>
+                  <p style={{ color: T.textSecondary, fontSize: 12, marginTop: 2 }}>{editData.community || "—"} · ID: {selected.id || "—"}</p>
+                  {editData.lastUpdated && <p style={{ color: T.textMuted, fontSize: 10, marginTop: 2 }}>Last saved: {(() => { try { return new Date(editData.lastUpdated).toLocaleString(); } catch { return "—"; } })()}</p>}
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => { setEditData(JSON.parse(JSON.stringify(selected))); showToast("↩️ Changes reset"); }} className="pm-btn pm-btn-outline" style={{ fontSize: 12, padding: "8px 16px" }}>↩ Reset</button>
+                  <button onClick={() => { setEditData(safeClone(selected)); showToast("↩️ Changes reset"); }} className="pm-btn pm-btn-outline" style={{ fontSize: 12, padding: "8px 16px" }}>↩ Reset</button>
                   <button onClick={handleSave} disabled={saving} className="pm-btn pm-btn-gold" style={{ fontSize: 12, padding: "8px 24px" }}>
                     {saving ? "Saving..." : "💾 Save Changes"}
                   </button>
@@ -450,7 +490,7 @@ export default function ProjectManager() {
 
               {/* Bottom save */}
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, padding: "16px 0 40px" }}>
-                <button onClick={() => { setEditData(JSON.parse(JSON.stringify(selected))); showToast("↩️ Changes reset"); }} className="pm-btn pm-btn-outline">↩ Reset Changes</button>
+                <button onClick={() => { setEditData(safeClone(selected)); showToast("↩️ Changes reset"); }} className="pm-btn pm-btn-outline">↩ Reset Changes</button>
                 <button onClick={handleSave} disabled={saving} className="pm-btn pm-btn-gold" style={{ padding: "10px 32px" }}>
                   {saving ? "Saving..." : "💾 Save All Changes"}
                 </button>
