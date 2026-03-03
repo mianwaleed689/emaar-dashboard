@@ -1489,7 +1489,7 @@ export default function EmaarDashboardV2() {
 
 
             {/* Mega Projects */}
-            <Section title="Mega Projects Pipeline" sub="Strategic developments 2026-2035 · AED 800B+ combined value · Global benchmarks & DLD price data · Click any project for deep analysis">
+            <Section title="Mega Projects Pipeline" sub="Strategic developments 2026-2035 · AED 800B+ combined investment pipeline · Global benchmarks & DLD price data · Click any project for deep analysis">
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginTop: 16 }}>
                 {megaProjects.map((m, i) => {
                   const isOpen = expandedMega === m.name;
