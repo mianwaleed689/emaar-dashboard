@@ -617,6 +617,7 @@ export default function EmaarDashboardV2() {
   const notify = (msg) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
   const [adminUsers, setAdminUsers] = useState([]);
   const [adminLoading, setAdminLoading] = useState(false);
+  const fetchAdminUsersRef = useRef(null);
 
   // Tier access helper
   const isPro = userTier === "admin" || userTier === "pro" || userTier === "pro_trial" || userTier === "enterprise";
@@ -867,7 +868,6 @@ export default function EmaarDashboardV2() {
     return <LoginScreen onLogin={() => {}} onBack={() => setShowLogin(false)} defaultMode={showLogin === "signup" ? "signup" : "login"} />;
   }
 
-  const fetchAdminUsersRef = useRef(null);
   if (!fetchAdminUsersRef.current) {
     fetchAdminUsersRef.current = async () => {
       setAdminLoading(true);
