@@ -300,6 +300,29 @@ export const communityROI = {
   }
 };
 
+/* ─── COMMUNITY MAP COORDINATES (Google Maps verified) ─── */
+export const communityCoords = [
+  { district: "DHE", name: "Dubai Hills Estate", lat: 25.1267, lng: 55.2367, color: "#10B981", projects: 16, type: "Master Community" },
+  { district: "DCH", name: "Dubai Creek Harbour", lat: 25.2048, lng: 55.3480, color: "#3B82F6", projects: 11, type: "Waterfront" },
+  { district: "EBF", name: "Emaar Beachfront", lat: 25.0785, lng: 55.1330, color: "#D4A843", projects: 5, type: "Beachfront Island" },
+  { district: "ES", name: "Emaar South", lat: 24.9650, lng: 55.1520, color: "#8B5CF6", projects: 2, type: "Golf & Airport" },
+  { district: "EL", name: "Expo Living", lat: 24.9700, lng: 55.1380, color: "#EC4899", projects: 1, type: "Expo Legacy" },
+  { district: "TV", name: "The Valley", lat: 25.0250, lng: 55.3150, color: "#F59E0B", projects: 2, type: "Suburban Villas" },
+  { district: "GPC", name: "Grand Polo Club", lat: 24.9800, lng: 55.1750, color: "#EF4444", projects: 6, type: "Polo Lifestyle" },
+  { district: "RYM", name: "Rashid Yachts & Marina", lat: 25.2650, lng: 55.2850, color: "#06B6D4", projects: 2, type: "Marina Heritage" },
+  { district: "TO", name: "The Oasis", lat: 25.0800, lng: 55.2800, color: "#14B8A6", projects: 1, type: "Ultra-Luxury Villas" },
+  { district: "BB", name: "Business Bay", lat: 25.1850, lng: 55.2650, color: "#F97316", projects: 1, type: "CBD" },
+  { district: "TH", name: "The Heights CW", lat: 25.0600, lng: 55.2000, color: "#A78BFA", projects: 1, type: "Wellness Community" },
+];
+export const dubaiLandmarks = [
+  { name: "Burj Khalifa", lat: 25.1972, lng: 55.2744, icon: "▲" },
+  { name: "Palm Jumeirah", lat: 25.1124, lng: 55.1390, icon: "🌴" },
+  { name: "DXB Airport", lat: 25.2532, lng: 55.3657, icon: "✈" },
+  { name: "Al Maktoum Airport", lat: 24.8967, lng: 55.1614, icon: "✈" },
+  { name: "Dubai Marina", lat: 25.0800, lng: 55.1400, icon: "⚓" },
+  { name: "Dubai Mall", lat: 25.1985, lng: 55.2796, icon: "🏬" },
+];
+
 /* ─── TOP 10 DEVELOPERS (from Excel PBI_Developers) ─── */
 export const topDevelopers = [
   { rank:1, name:"Emaar Properties", sales:65.8, salesUSD:17.9, units:13149, delivered:7318, underConst:51032, segment:"Full Spectrum", confidence:"VERIFIED", share:9.64, color:T.gold },

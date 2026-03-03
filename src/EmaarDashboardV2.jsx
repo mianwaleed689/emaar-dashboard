@@ -4,7 +4,7 @@ import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "firebase/auth";
 import { collection, getDocs, orderBy, query, doc, getDoc, setDoc } from "firebase/firestore";
 
-import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
+import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI, communityCoords, dubaiLandmarks } from "./data";
 import LandingPage from "./LandingPage";
 
 /* ─── DATA ALIASES (for backward compat) ─── */
@@ -37,12 +37,14 @@ const Icons = {
   projects: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="12.01"/></svg>,
   megaProj: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>,
   admin: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+  map: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
 };
 
 const TABS = [
   { key: "Overview", icon: Icons.overview },
   { key: "Financials", icon: Icons.financials },
   { key: "Projects", icon: Icons.projects },
+  { key: "Map", icon: Icons.map },
   { key: "Portfolio", icon: Icons.portfolio },
   { key: "Competitors", icon: Icons.competitors },
   { key: "Yields", icon: Icons.yields },
@@ -293,6 +295,11 @@ const css = `
 
     /* Fixed modals full width on tablet */
     .modal-box { width: 100% !important; max-width: 100% !important; border-radius: 12px !important; margin: 8px !important; }
+
+    /* Map tab responsive */
+    .map-layout { grid-template-columns: 1fr !important; }
+    .map-detail-panel { max-height: 400px !important; }
+    .map-stats-grid { grid-template-columns: 1fr 1fr !important; }
   }
 
   /* ─── MOBILE (480px) ─── */
@@ -340,6 +347,10 @@ const css = `
     /* Contact buttons */
     .contact-btns { flex-direction: column !important; gap: 6px !important; }
     .contact-btns a, .contact-btns button { width: 100% !important; }
+
+    /* Map tab mobile */
+    .map-stats-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+    .map-detail-panel { max-height: 350px !important; padding: 14px !important; }
   }
 
   /* ─── SMALL MOBILE (360px) ─── */
@@ -732,6 +743,7 @@ export default function EmaarDashboardV2() {
   const [liveProjects, setLiveProjects] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
   const [roiYears, setRoiYears] = useState(5);
+  const [mapSelectedCommunity, setMapSelectedCommunity] = useState(null);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [expandedMega, setExpandedMega] = useState(null);
   const [compareList, setCompareList] = useState([]);
@@ -1656,6 +1668,218 @@ export default function EmaarDashboardV2() {
               </div>
             </Section>
           </>}
+
+          {/* ─── MAP TAB ─── */}
+          {tab === "Map" && (() => {
+            const MAP_W = 900, MAP_H = 620;
+            const LAT_MIN = 24.88, LAT_MAX = 25.30, LNG_MIN = 55.08, LNG_MAX = 55.42;
+            const toX = lng => ((lng - LNG_MIN) / (LNG_MAX - LNG_MIN)) * MAP_W;
+            const toY = lat => MAP_H - ((lat - LAT_MIN) / (LAT_MAX - LAT_MIN)) * MAP_H;
+            const selectedComm = mapSelectedCommunity;
+            const communityProj = selectedComm ? emaarProjects.filter(p => p.district === selectedComm.district) : [];
+            return <>
+            <Section title="Dubai Investment Map" sub="Interactive map of all 48 Emaar projects across 11 communities">
+              <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
+                {/* MAP CANVAS */}
+                <div style={{ flex: "1 1 600px", minWidth: 0 }}>
+                  <div style={{ position: "relative", background: "linear-gradient(135deg, #040D1A 0%, #0A1628 50%, #071220 100%)", borderRadius: 16, border: `1px solid ${T.gold}22`, overflow: "hidden", padding: 0 }}>
+                    {/* Map Title Overlay */}
+                    <div style={{ position: "absolute", top: 16, left: 20, zIndex: 5, display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ fontSize: 11, color: T.gold, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase" }}>Dubai · UAE</span>
+                      <span style={{ fontSize: 10, color: T.textMuted, padding: "2px 8px", background: `${T.gold}15`, borderRadius: 4, border: `1px solid ${T.gold}30` }}>11 Communities · 48 Projects</span>
+                    </div>
+                    <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} style={{ width: "100%", height: "auto", display: "block" }}>
+                      <defs>
+                        {communityCoords.map(c => (
+                          <radialGradient key={`glow-${c.district}`} id={`glow-${c.district}`}>
+                            <stop offset="0%" stopColor={c.color} stopOpacity="0.6" />
+                            <stop offset="100%" stopColor={c.color} stopOpacity="0" />
+                          </radialGradient>
+                        ))}
+                        <filter id="mapGlow"><feGaussianBlur stdDeviation="3" result="glow" /><feMerge><feMergeNode in="glow" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+                        <linearGradient id="waterGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#0A2A4A" /><stop offset="100%" stopColor="#061828" /></linearGradient>
+                        <linearGradient id="coastGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={`${T.gold}40`} /><stop offset="100%" stopColor={`${T.gold}10`} /></linearGradient>
+                      </defs>
+                      {/* Water / Background */}
+                      <rect width={MAP_W} height={MAP_H} fill="url(#waterGrad)" />
+                      {/* Grid Lines */}
+                      {[24.9, 25.0, 25.1, 25.2].map(lat => (
+                        <line key={lat} x1={0} y1={toY(lat)} x2={MAP_W} y2={toY(lat)} stroke={`${T.gold}08`} strokeWidth={0.5} strokeDasharray="4 8" />
+                      ))}
+                      {[55.1, 55.2, 55.3, 55.4].map(lng => (
+                        <line key={lng} x1={toX(lng)} y1={0} x2={toX(lng)} y2={MAP_H} stroke={`${T.gold}08`} strokeWidth={0.5} strokeDasharray="4 8" />
+                      ))}
+                      {/* Simplified Dubai Coastline */}
+                      <path d={`M ${toX(55.08)} ${toY(25.27)} Q ${toX(55.12)} ${toY(25.27)} ${toX(55.13)} ${toY(25.26)} L ${toX(55.14)} ${toY(25.10)} Q ${toX(55.14)} ${toY(25.08)} ${toX(55.18)} ${toY(25.07)} L ${toX(55.28)} ${toY(25.06)} Q ${toX(55.35)} ${toY(25.08)} ${toX(55.38)} ${toY(25.15)} L ${toX(55.42)} ${toY(25.20)}`} fill="none" stroke="url(#coastGrad)" strokeWidth={2} />
+                      {/* Connection lines to selected community */}
+                      {selectedComm && communityCoords.filter(c => c.district !== selectedComm.district).map(c => (
+                        <line key={`conn-${c.district}`} x1={toX(selectedComm.lng)} y1={toY(selectedComm.lat)} x2={toX(c.lng)} y2={toY(c.lat)} stroke={`${T.gold}10`} strokeWidth={0.5} strokeDasharray="3 6" />
+                      ))}
+                      {/* Landmarks */}
+                      {dubaiLandmarks.map((lm, i) => (
+                        <g key={`lm-${i}`} transform={`translate(${toX(lm.lng)},${toY(lm.lat)})`}>
+                          <circle r={3} fill={`${T.gold}30`} stroke={`${T.gold}50`} strokeWidth={0.5} />
+                          <text x={8} y={4} fill={T.textMuted} fontSize={8} fontFamily="monospace" opacity={0.6}>{lm.icon} {lm.name}</text>
+                        </g>
+                      ))}
+                      {/* Community Markers */}
+                      {communityCoords.map(c => {
+                        const cx = toX(c.lng), cy = toY(c.lat);
+                        const r = Math.max(10, Math.sqrt(c.projects) * 8);
+                        const isSelected = selectedComm?.district === c.district;
+                        return (
+                          <g key={c.district} style={{ cursor: "pointer" }} onClick={() => setMapSelectedCommunity(isSelected ? null : c)}>
+                            {/* Outer glow */}
+                            <circle cx={cx} cy={cy} r={r * 2.5} fill={`url(#glow-${c.district})`} opacity={isSelected ? 0.8 : 0.4}>
+                              <animate attributeName="opacity" values={isSelected ? "0.8;0.5;0.8" : "0.4;0.2;0.4"} dur="3s" repeatCount="indefinite" />
+                            </circle>
+                            {/* Pulse ring */}
+                            <circle cx={cx} cy={cy} r={r} fill="none" stroke={c.color} strokeWidth={1.5} opacity={0.4}>
+                              <animate attributeName="r" values={`${r};${r + 8};${r}`} dur="2.5s" repeatCount="indefinite" />
+                              <animate attributeName="opacity" values="0.4;0;0.4" dur="2.5s" repeatCount="indefinite" />
+                            </circle>
+                            {/* Main circle */}
+                            <circle cx={cx} cy={cy} r={r} fill={isSelected ? c.color : `${c.color}40`} stroke={c.color} strokeWidth={isSelected ? 2.5 : 1.5} filter={isSelected ? "url(#mapGlow)" : undefined} />
+                            {/* Project count */}
+                            <text x={cx} y={cy + 4} textAnchor="middle" fill={isSelected ? "#fff" : c.color} fontSize={r > 12 ? 12 : 10} fontWeight="700" fontFamily="system-ui">{c.projects}</text>
+                            {/* Label */}
+                            <text x={cx} y={cy - r - 6} textAnchor="middle" fill={isSelected ? "#fff" : `${c.color}cc`} fontSize={isSelected ? 11 : 9} fontWeight={isSelected ? "700" : "500"} fontFamily="system-ui">{c.district}</text>
+                          </g>
+                        );
+                      })}
+                      {/* Scale & compass */}
+                      <text x={MAP_W - 20} y={MAP_H - 15} textAnchor="end" fill={`${T.gold}40`} fontSize={9} fontFamily="monospace">N ↑</text>
+                      <line x1={20} y1={MAP_H - 20} x2={80} y2={MAP_H - 20} stroke={`${T.gold}30`} strokeWidth={1} />
+                      <text x={50} y={MAP_H - 10} textAnchor="middle" fill={`${T.gold}30`} fontSize={7} fontFamily="monospace">~5 km</text>
+                    </svg>
+                  </div>
+                  {/* Legend */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12, justifyContent: "center" }}>
+                    {communityCoords.map(c => (
+                      <button key={c.district} type="button" onClick={() => setMapSelectedCommunity(selectedComm?.district === c.district ? null : c)}
+                        style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 6, background: selectedComm?.district === c.district ? `${c.color}30` : `${T.surface}cc`, border: `1px solid ${selectedComm?.district === c.district ? c.color : T.gold + "15"}`, cursor: "pointer", transition: "all 0.2s" }}>
+                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: c.color, boxShadow: selectedComm?.district === c.district ? `0 0 6px ${c.color}` : "none" }} />
+                        <span style={{ fontSize: 10, color: selectedComm?.district === c.district ? "#fff" : T.textMuted, fontWeight: selectedComm?.district === c.district ? 600 : 400 }}>{c.district}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {/* SIDE PANEL */}
+                <div style={{ flex: "0 0 320px", minWidth: 280 }}>
+                  {selectedComm ? (() => {
+                    const commData = emaarCommunities.find(ec => ec.district === selectedComm.district);
+                    const roi = communityROI[commData?.name] || communityROI[Object.keys(communityROI).find(k => k.includes(selectedComm.district))] || null;
+                    return (
+                      <div style={{ background: T.card, borderRadius: 14, border: `1px solid ${selectedComm.color}40`, overflow: "hidden" }}>
+                        {/* Header */}
+                        <div style={{ padding: "16px 20px", background: `linear-gradient(135deg, ${selectedComm.color}20, transparent)`, borderBottom: `1px solid ${selectedComm.color}25` }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <span style={{ width: 12, height: 12, borderRadius: "50%", background: selectedComm.color, boxShadow: `0 0 10px ${selectedComm.color}60` }} />
+                            <div>
+                              <div style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>{commData?.name || selectedComm.name}</div>
+                              <div style={{ fontSize: 11, color: T.textMuted }}>{selectedComm.type} · {selectedComm.projects} projects</div>
+                            </div>
+                          </div>
+                          {commData && (
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 12 }}>
+                              {commData.avgYield && <div style={{ padding: "6px 10px", background: `${T.gold}12`, borderRadius: 8, textAlign: "center" }}>
+                                <div style={{ fontSize: 16, fontWeight: 700, color: T.gold }}>{commData.avgYield}%</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Avg Yield</div>
+                              </div>}
+                              {commData.avgPpsf && <div style={{ padding: "6px 10px", background: `${selectedComm.color}12`, borderRadius: 8, textAlign: "center" }}>
+                                <div style={{ fontSize: 16, fontWeight: 700, color: selectedComm.color }}>AED {commData.avgPpsf.toLocaleString()}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Avg PSF</div>
+                              </div>}
+                            </div>
+                          )}
+                          {roi && (
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginTop: 8 }}>
+                              <div style={{ padding: "5px 6px", background: `${T.green}12`, borderRadius: 6, textAlign: "center" }}>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: T.green }}>+{roi.appreciationYoY}%</div>
+                                <div style={{ fontSize: 8, color: T.textMuted }}>YoY</div>
+                              </div>
+                              <div style={{ padding: "5px 6px", background: `${T.blue}12`, borderRadius: 6, textAlign: "center" }}>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: T.blue }}>{roi.occupancy}%</div>
+                                <div style={{ fontSize: 8, color: T.textMuted }}>Occupied</div>
+                              </div>
+                              <div style={{ padding: "5px 6px", background: `${T.purple}12`, borderRadius: 6, textAlign: "center" }}>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: T.purple }}>{roi.riskLevel}</div>
+                                <div style={{ fontSize: 8, color: T.textMuted }}>Risk</div>
+                              </div>
+                            </div>
+                          )}
+                          {roi?.capitalGrowthDriver && (
+                            <div style={{ marginTop: 8, padding: "6px 10px", background: `${T.gold}08`, borderRadius: 6, fontSize: 10, color: T.textMuted, lineHeight: 1.4 }}>
+                              <span style={{ color: T.gold, fontWeight: 600 }}>Growth Driver:</span> {roi.capitalGrowthDriver}
+                            </div>
+                          )}
+                        </div>
+                        {/* Project List */}
+                        <div style={{ padding: "12px 16px", maxHeight: 340, overflowY: "auto" }}>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 8, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>Projects in {selectedComm.district}</div>
+                          {communityProj.map(p => (
+                            <button key={p.id} type="button" onClick={() => { setSelectedProject(p); handleTabChange("Projects"); }}
+                              style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", marginBottom: 6, background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.gold}10`, cursor: "pointer", textAlign: "left", transition: "all 0.2s" }}
+                              onMouseEnter={e => { e.currentTarget.style.borderColor = `${selectedComm.color}50`; e.currentTarget.style.background = `${selectedComm.color}10`; }}
+                              onMouseLeave={e => { e.currentTarget.style.borderColor = `${T.gold}10`; e.currentTarget.style.background = T.surfaceAlt; }}>
+                              <div>
+                                <div style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>{p.name}</div>
+                                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{p.type} · {p.beds}BR · {p.status}</div>
+                              </div>
+                              <div style={{ textAlign: "right" }}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>AED {(p.price / 1e6).toFixed(1)}M</div>
+                                <div style={{ fontSize: 9, color: selectedComm.color }}>{p.ppsf.toLocaleString()} PSF</div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })() : (
+                    <div style={{ background: T.card, borderRadius: 14, border: `1px solid ${T.gold}15`, padding: 30, textAlign: "center" }}>
+                      <div style={{ fontSize: 40, marginBottom: 12 }}>🗺️</div>
+                      <div style={{ fontSize: 16, fontWeight: 600, color: "#fff", marginBottom: 6 }}>Select a Community</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.5 }}>Click any community marker on the map or legend below to explore projects, yields, and investment metrics.</div>
+                      {/* Quick Stats */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 20 }}>
+                        <div style={{ padding: "12px", background: T.surfaceAlt, borderRadius: 10 }}>
+                          <div style={{ fontSize: 22, fontWeight: 700, color: T.gold }}>48</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>Total Projects</div>
+                        </div>
+                        <div style={{ padding: "12px", background: T.surfaceAlt, borderRadius: 10 }}>
+                          <div style={{ fontSize: 22, fontWeight: 700, color: T.green }}>11</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>Communities</div>
+                        </div>
+                        <div style={{ padding: "12px", background: T.surfaceAlt, borderRadius: 10 }}>
+                          <div style={{ fontSize: 22, fontWeight: 700, color: T.blue }}>5.8%</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>Avg Yield</div>
+                        </div>
+                        <div style={{ padding: "12px", background: T.surfaceAlt, borderRadius: 10 }}>
+                          <div style={{ fontSize: 22, fontWeight: 700, color: T.purple }}>AED 2.2K</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>Avg PSF</div>
+                        </div>
+                      </div>
+                      {/* Top communities by yield */}
+                      <div style={{ marginTop: 16, textAlign: "left" }}>
+                        <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Top Yields by Community</div>
+                        {emaarCommunities.filter(c => c.avgYield).sort((a, b) => b.avgYield - a.avgYield).slice(0, 5).map((c, i) => {
+                          const cc = communityCoords.find(co => co.district === c.district);
+                          return (
+                            <div key={c.district} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: i < 4 ? `1px solid ${T.gold}08` : "none" }}>
+                              <span style={{ width: 8, height: 8, borderRadius: "50%", background: cc?.color || T.gold }} />
+                              <span style={{ flex: 1, fontSize: 11, color: "#ccc" }}>{c.name}</span>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{c.avgYield}%</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Section>
+          </>;
+          })()}
 
           {/* ─── PORTFOLIO TAB ─── */}
           {tab === "Portfolio" && <>
