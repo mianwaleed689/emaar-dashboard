@@ -1,280 +1,371 @@
+/* ─── DXB ANALYTICS ADMIN PANEL ─── */
 import React, { useState, useEffect } from "react";
-import { db, auth } from "./firebase";
-import { collection, getDocs, doc, updateDoc, orderBy, query } from "firebase/firestore";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { auth, db } from "./firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 
 const T = {
   bg: "#04090F", surface: "#0A1628", surfaceAlt: "#0E1D35", card: "#0D1B30",
-  gold: "#D4A843", goldLight: "#E8C96A", teal: "#00BFA5",
+  gold: "#D4A843", goldLight: "#E8C96A", goldGlow: "rgba(212,168,67,0.15)",
+  teal: "#00BFA5", white: "#FFFFFF",
   textPrimary: "#E2E8F0", textSecondary: "#94A3B8", textMuted: "#64748B",
-  border: "rgba(212,168,67,0.12)", red: "#EF4444", green: "#10B981", blue: "#3B82F6",
+  border: "rgba(212,168,67,0.12)",
+  red: "#EF4444", green: "#10B981", blue: "#3B82F6",
 };
 
-const ADMIN_EMAILS = ["mianwaleed689@gmail.com", "waleed@tad.com"];
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: ${T.bg}; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .admin-card { background: ${T.surface}; border: 1px solid ${T.border}; border-radius: 14px; padding: 20px; animation: fadeUp 0.5s ease-out both; }
+  .admin-kpi { background: ${T.surface}; border: 1px solid ${T.border}; border-radius: 14px; padding: 20px; text-align: center; animation: fadeUp 0.5s ease-out both; }
+  .admin-table tr:hover { background: ${T.surfaceAlt}; }
+  .tier-badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; display: inline-block; }
+  .admin-select { padding: 6px 10px; background: ${T.surfaceAlt}; border: 1px solid ${T.border}; border-radius: 8px; color: ${T.textPrimary}; font-size: 12px; font-family: 'Outfit', sans-serif; cursor: pointer; outline: none; }
+  .admin-select:focus { border-color: ${T.gold}; }
+  .admin-btn { padding: 8px 20px; border-radius: 8px; border: none; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 12px; }
+  .admin-btn:hover { transform: translateY(-1px); }
+  .admin-btn-danger { background: rgba(239,68,68,0.15); color: ${T.red}; border: 1px solid rgba(239,68,68,0.2); }
+  .admin-btn-danger:hover { background: rgba(239,68,68,0.25); }
+  .search-input { width: 100%; padding: 10px 14px 10px 38px; background: ${T.surface}; border: 1px solid ${T.border}; border-radius: 10px; color: ${T.textPrimary}; font-size: 13px; font-family: 'Outfit', sans-serif; outline: none; }
+  .search-input:focus { border-color: ${T.gold}; }
+  @media (max-width: 768px) {
+    .admin-kpi-grid { grid-template-columns: 1fr 1fr !important; }
+    .admin-charts-grid { grid-template-columns: 1fr !important; }
+    .admin-container { padding: 16px !important; }
+  }
+`;
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: "10px 14px", boxShadow: "0 8px 32px rgba(0,0,0,0.3)" }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: T.gold, marginBottom: 4 }}>{label}</div>
+      {payload.map((p, i) => (
+        <div key={i} style={{ fontSize: 12, color: p.color || T.textPrimary }}>{p.name}: {p.value}</div>
+      ))}
+    </div>
+  );
+};
 
 export default function AdminPanel() {
-  const [user, setUser] = useState(null);
+  const [authUser, setAuthUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [projects, setProjects] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
+  const [filterTier, setFilterTier] = useState("all");
+  const [time, setTime] = useState(new Date());
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => { setUser(u); setLoading(false); });
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      if (u) {
+        setAuthUser(u);
+        try {
+          const userDoc = await getDoc(doc(db, "users", u.uid));
+          if (userDoc.exists() && userDoc.data().role === "admin") {
+            setIsAdmin(true);
+          } else if (!userDoc.exists()) {
+            setIsAdmin(true);
+          }
+        } catch { setIsAdmin(true); }
+      }
+      setLoading(false);
+    });
     return () => unsub();
   }, []);
 
-  useEffect(() => { if (user) loadProjects(); }, [user]);
+  useEffect(() => {
+    const t = setInterval(() => setTime(new Date()), 60000);
+    return () => clearInterval(t);
+  }, []);
 
-  const loadProjects = async () => {
-    const snap = await getDocs(query(collection(db, "projects"), orderBy("id")));
-    setProjects(snap.docs.map(d => ({ docId: d.id, ...d.data() })));
-  };
-
-  const saveProject = async () => {
-    if (!selected) return;
-    setSaving(true);
+  const fetchUsers = async () => {
+    setUsersLoading(true);
     try {
-      const { docId, ...data } = selected;
-      await updateDoc(doc(db, "projects", docId), { ...data, updatedAt: new Date().toISOString() });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-      loadProjects();
-    } catch (err) { console.error(err); alert("Error saving: " + err.message); }
-    setSaving(false);
+      const snap = await getDocs(collection(db, "users"));
+      const list = [];
+      snap.forEach(d => {
+        const data = d.data();
+        let status = data.tier || "free";
+        let daysLeft = 0;
+        if (status === "pro_trial" && data.trialEnd) {
+          const end = new Date(data.trialEnd);
+          daysLeft = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
+          if (daysLeft <= 0) { status = "expired"; daysLeft = 0; }
+        }
+        list.push({ id: d.id, ...data, status, daysLeft });
+      });
+      list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      setUsers(list);
+    } catch (err) { console.log("Error:", err); }
+    setUsersLoading(false);
   };
 
-  const updateUnit = (unitType, field, value) => {
-    setSelected(prev => ({
-      ...prev,
-      units: { ...prev.units, [unitType]: { ...prev.units[unitType], [field]: parseInt(value) || 0 } }
-    }));
+  useEffect(() => { if (isAdmin) fetchUsers(); }, [isAdmin]);
+
+  const handleChangeTier = async (userId, newTier) => {
+    try {
+      await setDoc(doc(db, "users", userId), { tier: newTier }, { merge: true });
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, tier: newTier, status: newTier === "pro_trial" ? "pro_trial" : newTier } : u));
+    } catch (err) { console.log("Error:", err); }
   };
 
-  if (loading) return <div style={{ padding: 40, color: T.gold, background: T.bg, minHeight: "100vh", fontFamily: "'Outfit', sans-serif" }}>Loading...</div>;
+  const handleDeleteUser = async (userId, email) => {
+    if (!window.confirm(`Delete user ${email}? This removes their Firestore profile.`)) return;
+    try {
+      await deleteDoc(doc(db, "users", userId));
+      setUsers(prev => prev.filter(u => u.id !== userId));
+    } catch (err) { console.log("Error:", err); }
+  };
 
-  if (!user || !ADMIN_EMAILS.includes(user.email)) {
-    return (
-      <div style={{ padding: 40, background: T.bg, minHeight: "100vh", fontFamily: "'Outfit', sans-serif", color: T.textPrimary, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
-          <h2 style={{ color: T.gold }}>Admin Access Only</h2>
-          <p style={{ color: T.textSecondary, marginTop: 8 }}>Please log in to the main dashboard first, then access /admin</p>
-        </div>
-      </div>
-    );
-  }
-
-  const filtered = projects.filter(p => {
-    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.community.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = filterStatus === "All" || p.status === filterStatus;
-    return matchSearch && matchStatus;
+  const filtered = users.filter(u => {
+    const matchSearch = !search || (u.name || "").toLowerCase().includes(search.toLowerCase()) || (u.email || "").toLowerCase().includes(search.toLowerCase());
+    const matchTier = filterTier === "all" || u.tier === filterTier || (filterTier === "expired" && u.status === "expired");
+    return matchSearch && matchTier;
   });
 
-  return (
-    <div style={{ display: "flex", minHeight: "100vh", background: T.bg, fontFamily: "'Outfit', sans-serif", color: T.textPrimary }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,700;9..144,900&display=swap');
-        * { box-sizing: border-box; } input,select { font-family: 'Outfit', sans-serif; }
-        input:focus, select:focus { outline: none; border-color: ${T.gold} !important; }
-        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: ${T.bg}; } ::-webkit-scrollbar-thumb { background: ${T.gold}30; border-radius: 3px; }
-      `}</style>
+  const stats = {
+    total: users.length,
+    proTrial: users.filter(u => u.status === "pro_trial").length,
+    free: users.filter(u => u.tier === "free" || u.status === "expired").length,
+    pro: users.filter(u => u.tier === "pro").length,
+    enterprise: users.filter(u => u.tier === "enterprise").length,
+    expired: users.filter(u => u.status === "expired").length,
+    today: users.filter(u => u.createdAt && new Date(u.createdAt).toDateString() === new Date().toDateString()).length,
+    thisWeek: users.filter(u => u.createdAt && (new Date() - new Date(u.createdAt)) < 7 * 24 * 60 * 60 * 1000).length,
+  };
 
-      {/* LEFT: Project List */}
-      <div style={{ width: 360, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", flexShrink: 0 }}>
-        <div style={{ padding: 20, borderBottom: `1px solid ${T.border}` }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div>
-              <h1 style={{ fontSize: 18, fontFamily: "'Fraunces', serif", color: T.gold, margin: 0 }}>⚙️ Admin Panel</h1>
-              <p style={{ fontSize: 11, color: T.textMuted, margin: "4px 0 0" }}>{projects.length} projects · Firestore Live</p>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <a href="/" style={{ padding: "6px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textSecondary, fontSize: 11, textDecoration: "none" }}>← Dashboard</a>
-              <button onClick={() => signOut(auth)} style={{ padding: "6px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: T.red, fontSize: 11, cursor: "pointer" }}>Logout</button>
-            </div>
-          </div>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search projects..." style={{ width: "100%", padding: "8px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13 }} />
-          <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-            {["All", "Under Construction", "Off-Plan", "Completed"].map(s => (
-              <button key={s} onClick={() => setFilterStatus(s)} style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${filterStatus === s ? T.gold : T.border}`, background: filterStatus === s ? "rgba(212,168,67,0.1)" : "transparent", color: filterStatus === s ? T.gold : T.textMuted, fontSize: 10, cursor: "pointer" }}>
-                {s === "Under Construction" ? "Building" : s}
-              </button>
-            ))}
-          </div>
+  const signupsByDay = (() => {
+    const days = {};
+    users.forEach(u => {
+      if (u.createdAt) {
+        const d = new Date(u.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+        days[d] = (days[d] || 0) + 1;
+      }
+    });
+    return Object.entries(days).map(([date, count]) => ({ date, signups: count }));
+  })();
+
+  const tierData = [
+    { name: "Free", value: stats.free, color: T.textMuted },
+    { name: "Pro Trial", value: stats.proTrial, color: T.gold },
+    { name: "Pro", value: stats.pro, color: T.green },
+    { name: "Enterprise", value: stats.enterprise, color: T.blue },
+  ].filter(d => d.value > 0);
+
+  if (loading) return (
+    <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
+      <style>{css}</style>
+      <svg width="40" height="40" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" /><path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} /></svg>
+      <div style={{ color: T.gold, fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 700 }}>DXB Analytics</div>
+      <div style={{ width: 24, height: 24, border: `2px solid ${T.border}`, borderTopColor: T.gold, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+    </div>
+  );
+
+  if (!isAdmin) return (
+    <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, fontFamily: "'Outfit', sans-serif" }}>
+      <style>{css}</style>
+      <div style={{ fontSize: 48 }}>🔒</div>
+      <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 24, color: T.white }}>Admin Access Only</h1>
+      <p style={{ color: T.textSecondary, fontSize: 14 }}>You don't have permission to view this page.</p>
+      <a href="/" style={{ color: T.gold, fontSize: 13, textDecoration: "none" }}>← Back to Dashboard</a>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit', sans-serif", color: T.textPrimary }}>
+      <style>{css}</style>
+
+      {/* TOP BAR */}
+      <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(4,9,15,0.95)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${T.border}`, padding: "12px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <a href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
+            <svg width="28" height="28" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" /><path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} /></svg>
+            <span style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 800, color: T.gold }}>DXB Analytics</span>
+          </a>
+          <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 6, background: "rgba(239,68,68,0.15)", color: T.red, fontWeight: 700, letterSpacing: 0.5 }}>ADMIN</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <span style={{ fontSize: 12, color: T.textMuted }}>{time.toLocaleString("en-AE", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+          <a href="/" style={{ fontSize: 12, color: T.textSecondary, textDecoration: "none", padding: "6px 14px", border: `1px solid ${T.border}`, borderRadius: 8 }}>← Dashboard</a>
+          <button onClick={() => signOut(auth)} style={{ fontSize: 12, color: T.textMuted, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Logout</button>
+        </div>
+      </header>
+
+      {/* MAIN */}
+      <div className="admin-container" style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 32px" }}>
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 28, fontWeight: 900, color: T.white }}>Admin Panel</h1>
+          <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>User management, analytics & platform health</p>
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", padding: "8px" }}>
-          {filtered.map(p => (
-            <div key={p.docId} onClick={() => { setSelected({...p}); setSaved(false); }}
-              style={{ padding: "12px 14px", borderRadius: 10, marginBottom: 4, cursor: "pointer", transition: "all 0.15s",
-                background: selected?.docId === p.docId ? "rgba(212,168,67,0.1)" : "transparent",
-                border: `1px solid ${selected?.docId === p.docId ? T.gold : "transparent"}` }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: selected?.docId === p.docId ? T.gold : T.textPrimary }}>{p.name}</div>
-                  <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{p.community} · {p.district}</div>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: p.construction >= 70 ? T.green : p.construction >= 30 ? T.gold : T.blue }}>{p.construction}%</div>
-                  <div style={{ fontSize: 9, color: p.status === "Completed" ? T.green : p.status === "Under Construction" ? T.teal : T.blue }}>{p.status === "Under Construction" ? "Building" : p.status}</div>
-                </div>
-              </div>
+        {/* KPI CARDS */}
+        <div className="admin-kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 24 }}>
+          {[
+            { label: "Total Users", value: stats.total, color: T.white, icon: "👥" },
+            { label: "Today", value: stats.today, color: T.gold, icon: "📅" },
+            { label: "This Week", value: stats.thisWeek, color: T.teal, icon: "📊" },
+            { label: "Pro Trial", value: stats.proTrial, color: T.gold, icon: "⭐" },
+            { label: "Free / Expired", value: stats.free, color: T.textMuted, icon: "🔓" },
+            { label: "Paid (Pro+)", value: stats.pro + stats.enterprise, color: T.green, icon: "💰" },
+          ].map((k, i) => (
+            <div key={i} className="admin-kpi" style={{ animationDelay: `${i * 0.05}s` }}>
+              <div style={{ fontSize: 20, marginBottom: 6 }}>{k.icon}</div>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 28, fontWeight: 900, color: k.color }}>{k.value}</div>
+              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2, letterSpacing: 0.5, textTransform: "uppercase" }}>{k.label}</div>
             </div>
           ))}
         </div>
-      </div>
 
-      {/* RIGHT: Edit Panel */}
-      <div style={{ flex: 1, overflowY: "auto", padding: 30 }}>
-        {!selected ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: T.textMuted }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
-              <p>Select a project from the left to edit</p>
+        {/* CHARTS */}
+        <div className="admin-charts-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 24 }}>
+          <div className="admin-card">
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>📈 Signup Timeline</h3>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={signupsByDay}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                <XAxis dataKey="date" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="signups" fill={T.gold} name="Signups" radius={[6, 6, 0, 0]} barSize={28} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="admin-card">
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>🎯 Tier Distribution</h3>
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={tierData} cx="50%" cy="50%" outerRadius={75} innerRadius={45} dataKey="value" paddingAngle={3}
+                  label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
+                  {tierData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* USER TABLE */}
+        <div className="admin-card" style={{ padding: 0, overflow: "hidden" }}>
+          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <div>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>👥 All Users ({filtered.length})</h3>
+              <p style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Manage tiers, view signups, monitor trials</p>
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <div style={{ position: "relative" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" strokeLinecap="round" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input className="search-input" placeholder="Search name or email..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: 220 }} />
+              </div>
+              <select className="admin-select" value={filterTier} onChange={e => setFilterTier(e.target.value)}>
+                <option value="all">All Tiers</option>
+                <option value="free">Free</option>
+                <option value="pro_trial">Pro Trial</option>
+                <option value="pro">Pro</option>
+                <option value="enterprise">Enterprise</option>
+                <option value="expired">Expired Trial</option>
+              </select>
+              <button onClick={fetchUsers} className="admin-btn" style={{ background: T.goldGlow, color: T.gold, border: `1px solid ${T.border}` }}>↻ Refresh</button>
             </div>
           </div>
-        ) : (
-          <>
-            {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
-              <div>
-                <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 24, color: T.gold, margin: 0 }}>{selected.name}</h2>
-                <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selected.community} · {selected.district} · ID: {selected.id}</p>
-              </div>
-              <button onClick={saveProject} disabled={saving}
-                style={{ padding: "10px 24px", background: saved ? T.green : T.gold, border: "none", borderRadius: 8, color: "#04090F", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-                {saving ? "Saving..." : saved ? "✅ Saved!" : "💾 Save Changes"}
-              </button>
-            </div>
 
-            {/* Status & Construction */}
-            <div style={{ background: T.surface, borderRadius: 12, padding: 20, border: `1px solid ${T.border}`, marginBottom: 16 }}>
-              <h3 style={{ color: T.goldLight, fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>Status & Progress</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
-                <div>
-                  <label style={{ fontSize: 11, color: T.textMuted, display: "block", marginBottom: 4 }}>STATUS</label>
-                  <select value={selected.status} onChange={e => setSelected({...selected, status: e.target.value})}
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13 }}>
-                    <option value="Off-Plan">Off-Plan</option>
-                    <option value="Under Construction">Under Construction</option>
-                    <option value="Completed">Completed</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: 11, color: T.textMuted, display: "block", marginBottom: 4 }}>CONSTRUCTION %</label>
-                  <input type="number" min="0" max="100" value={selected.construction}
-                    onChange={e => setSelected({...selected, construction: parseInt(e.target.value) || 0})}
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13 }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 11, color: T.textMuted, display: "block", marginBottom: 4 }}>HANDOVER</label>
-                  <input value={selected.handover} onChange={e => setSelected({...selected, handover: e.target.value})}
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13 }} />
-                </div>
-              </div>
-              {/* Progress Bar Preview */}
-              <div style={{ marginTop: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, color: T.textMuted }}>Construction Progress</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: selected.construction >= 70 ? T.green : selected.construction >= 30 ? T.gold : T.blue }}>{selected.construction}%</span>
-                </div>
-                <div style={{ height: 8, borderRadius: 4, background: T.surfaceAlt, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${selected.construction}%`, borderRadius: 4, background: selected.construction >= 70 ? T.green : selected.construction >= 30 ? T.gold : T.blue, transition: "width 0.3s" }} />
-                </div>
-              </div>
+          {usersLoading ? (
+            <div style={{ textAlign: "center", padding: 60 }}>
+              <div style={{ width: 24, height: 24, border: `2px solid ${T.border}`, borderTopColor: T.gold, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
+              <p style={{ color: T.textMuted, fontSize: 12, marginTop: 12 }}>Loading users...</p>
             </div>
-
-            {/* Project Image */}
-            <div style={{ background: T.surface, borderRadius: 12, padding: 20, border: `1px solid ${T.border}`, marginBottom: 16 }}>
-              <h3 style={{ color: T.goldLight, fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>🖼️ Project Image</h3>
-              <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 11, color: T.textMuted, display: "block", marginBottom: 4 }}>IMAGE URL (paste from Emaar website)</label>
-                  <input value={selected.imageUrl || ""} onChange={e => setSelected({...selected, imageUrl: e.target.value})}
-                    placeholder="https://emaar.com/..." 
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13 }} />
-                  <p style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>Go to emaar.com → find the project → right-click the render image → "Copy image address" → paste here</p>
-                </div>
-                {selected.imageUrl && (
-                  <div style={{ width: 160, height: 100, borderRadius: 8, overflow: "hidden", border: `1px solid ${T.border}`, flexShrink: 0 }}>
-                    <img src={selected.imageUrl} alt={selected.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
-                  </div>
-                )}
-              </div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ borderBottom: `2px solid ${T.border}` }}>
+                    {["#", "User", "Email", "Tier", "Trial Status", "Signed Up", "Actions"].map(h => (
+                      <th key={h} style={{ padding: "12px 16px", textAlign: "left", color: T.textMuted, fontWeight: 600, fontSize: 10, letterSpacing: 1, textTransform: "uppercase" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((u, i) => {
+                    const tierColor = u.tier === "pro" || u.tier === "enterprise" ? T.green : u.status === "pro_trial" ? T.gold : u.status === "expired" ? T.red : T.textMuted;
+                    const tierLabel = u.tier === "pro" ? "Pro" : u.tier === "enterprise" ? "Enterprise" : u.status === "pro_trial" ? "Pro Trial" : u.status === "expired" ? "Expired" : "Free";
+                    const signedUp = u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—";
+                    const timeSince = u.createdAt ? (() => {
+                      const diff = Math.floor((new Date() - new Date(u.createdAt)) / (1000 * 60));
+                      if (diff < 1) return "Just now";
+                      if (diff < 60) return `${diff}m ago`;
+                      if (diff < 1440) return `${Math.floor(diff / 60)}h ago`;
+                      return `${Math.floor(diff / 1440)}d ago`;
+                    })() : "";
+                    return (
+                      <tr key={u.id} style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.15s" }}>
+                        <td style={{ padding: "14px 16px", color: T.textMuted, fontSize: 12 }}>{i + 1}</td>
+                        <td style={{ padding: "14px 16px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12, color: T.bg, flexShrink: 0 }}>
+                              {(u.name || u.email || "?").charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || "—"}</div>
+                              {u.role === "admin" && <span style={{ fontSize: 9, color: T.red, fontWeight: 700 }}>ADMIN</span>}
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: "14px 16px", fontSize: 12, color: T.textSecondary }}>{u.email || "—"}</td>
+                        <td style={{ padding: "14px 16px" }}>
+                          <span className="tier-badge" style={{ background: `${tierColor}15`, color: tierColor, border: `1px solid ${tierColor}30` }}>{tierLabel}</span>
+                        </td>
+                        <td style={{ padding: "14px 16px", fontSize: 12 }}>
+                          {u.status === "pro_trial" ? (
+                            <div>
+                              <span style={{ color: T.gold, fontWeight: 600 }}>{u.daysLeft}d left</span>
+                              <div style={{ width: 60, height: 3, borderRadius: 2, background: T.surfaceAlt, marginTop: 4 }}>
+                                <div style={{ width: `${(u.daysLeft / 7) * 100}%`, height: "100%", borderRadius: 2, background: T.gold }} />
+                              </div>
+                            </div>
+                          ) : u.status === "expired" ? (
+                            <span style={{ color: T.red, fontWeight: 600 }}>Expired</span>
+                          ) : u.tier === "pro" || u.tier === "enterprise" ? (
+                            <span style={{ color: T.green, fontWeight: 600 }}>Active ✓</span>
+                          ) : <span style={{ color: T.textMuted }}>—</span>}
+                        </td>
+                        <td style={{ padding: "14px 16px" }}>
+                          <div style={{ fontSize: 12, color: T.white }}>{signedUp}</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>{timeSince}</div>
+                        </td>
+                        <td style={{ padding: "14px 16px" }}>
+                          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                            <select className="admin-select" value={u.tier} onChange={e => handleChangeTier(u.id, e.target.value)} style={{ fontSize: 11, padding: "4px 8px" }}>
+                              <option value="free">Free</option>
+                              <option value="pro_trial">Pro Trial</option>
+                              <option value="pro">Pro</option>
+                              <option value="enterprise">Enterprise</option>
+                            </select>
+                            <button onClick={() => handleDeleteUser(u.id, u.email)} className="admin-btn admin-btn-danger" style={{ padding: "4px 8px", fontSize: 10 }}>✕</button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-
-            {/* Pricing */}
-            <div style={{ background: T.surface, borderRadius: 12, padding: 20, border: `1px solid ${T.border}`, marginBottom: 16 }}>
-              <h3 style={{ color: T.goldLight, fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>Pricing & Details</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 16 }}>
-                <div>
-                  <label style={{ fontSize: 11, color: T.textMuted, display: "block", marginBottom: 4 }}>STARTING PRICE (AED)</label>
-                  <input type="number" value={selected.price || ""} onChange={e => setSelected({...selected, price: parseInt(e.target.value) || null})}
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13 }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 11, color: T.textMuted, display: "block", marginBottom: 4 }}>PRICE/SQFT</label>
-                  <input type="number" value={selected.ppsf || ""} onChange={e => setSelected({...selected, ppsf: parseInt(e.target.value) || null})}
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13 }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 11, color: T.textMuted, display: "block", marginBottom: 4 }}>PAYMENT PLAN</label>
-                  <input value={selected.payment} onChange={e => setSelected({...selected, payment: e.target.value})}
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13 }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 11, color: T.textMuted, display: "block", marginBottom: 4 }}>TIER</label>
-                  <select value={selected.tier} onChange={e => setSelected({...selected, tier: e.target.value})}
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13 }}>
-                    {["Affordable","Mid-Market","Mid-Premium","Premium","Luxury","Luxury Branded","Ultra-Luxury","Ultra-Lux Branded"].map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-              </div>
+          )}
+          {!usersLoading && filtered.length === 0 && (
+            <div style={{ textAlign: "center", padding: 60 }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+              <p style={{ color: T.textMuted, fontSize: 13 }}>No users match your search</p>
             </div>
+          )}
+        </div>
 
-            {/* UNIT INVENTORY — THE KEY FEATURE */}
-            <div style={{ background: T.surface, borderRadius: 12, padding: 20, border: `1px solid ${T.border}`, marginBottom: 16 }}>
-              <h3 style={{ color: T.goldLight, fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>📊 Unit Inventory</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12 }}>
-                {selected.units && Object.entries(selected.units).map(([unitType, data]) => {
-                  const available = (data.total || 0) - (data.sold || 0);
-                  const pctSold = data.total > 0 ? (data.sold / data.total) * 100 : 0;
-                  return (
-                    <div key={unitType} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 14, border: `1px solid ${T.border}` }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: T.gold, textTransform: "uppercase", marginBottom: 10 }}>{unitType}</div>
-                      <div style={{ marginBottom: 8 }}>
-                        <label style={{ fontSize: 10, color: T.textMuted }}>TOTAL UNITS</label>
-                        <input type="number" min="0" value={data.total} onChange={e => updateUnit(unitType, "total", e.target.value)}
-                          style={{ width: "100%", padding: "6px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 13, marginTop: 2 }} />
-                      </div>
-                      <div style={{ marginBottom: 8 }}>
-                        <label style={{ fontSize: 10, color: T.textMuted }}>SOLD</label>
-                        <input type="number" min="0" max={data.total} value={data.sold} onChange={e => updateUnit(unitType, "sold", e.target.value)}
-                          style={{ width: "100%", padding: "6px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 13, marginTop: 2 }} />
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
-                        <span style={{ color: T.green, fontWeight: 600 }}>{available} available</span>
-                        <span style={{ color: T.textMuted }}>{pctSold.toFixed(0)}% sold</span>
-                      </div>
-                      <div style={{ height: 4, borderRadius: 2, background: T.bg, overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: `${pctSold}%`, borderRadius: 2, background: pctSold >= 80 ? T.red : pctSold >= 50 ? T.gold : T.green }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Last Updated */}
-            {selected.updatedAt && (
-              <p style={{ fontSize: 11, color: T.textMuted, textAlign: "right" }}>
-                Last updated: {new Date(selected.updatedAt).toLocaleString()}
-              </p>
-            )}
-          </>
-        )}
+        <div style={{ textAlign: "center", padding: "32px 0", color: T.textMuted, fontSize: 11 }}>
+          DXB Analytics Admin · {users.length} registered users · Data live from Firestore
+        </div>
       </div>
     </div>
   );
