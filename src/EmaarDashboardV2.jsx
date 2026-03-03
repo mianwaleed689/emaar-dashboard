@@ -551,7 +551,7 @@ const UpgradeModal = ({ show, onClose }) => {
   if (!show) return null;
   const plans = [
     { name: "Pro", price: "99", features: ["All 48+ projects", "Full 6-year financials", "Yields & ROI data", "Stock market tracker", "Competitor analysis", "3-project comparison", "Location intelligence", "WhatsApp/Email inquiry"], popular: true },
-    { name: "Enterprise", price: "499", features: ["Everything in Pro", "PDF report generation", "API access", "Custom dashboards", "Multi-user accounts", "Developer-level data", "Dedicated account manager", "White-label options"], popular: false },
+    { name: "Enterprise", price: "499", features: ["Everything in Pro", "PDF report generation ⏳", "API access ⏳", "Custom dashboards ⏳", "Multi-user accounts ⏳", "Developer-level data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Coming Q3 2026" },
   ];
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={onClose}>
@@ -579,6 +579,7 @@ const UpgradeModal = ({ show, onClose }) => {
                   <span style={{ color: T.green, fontSize: 12 }}>✓</span>{f}
                 </div>
               ))}
+              {plan.note && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8, fontStyle: "italic" }}>{plan.note}</div>}
               <button type="button" onClick={() => { onClose(); window.dispatchEvent(new CustomEvent("dxb-checkout", { detail: plan })); }} style={{ width: "100%", marginTop: 16, padding: "10px 0", background: plan.popular ? `linear-gradient(135deg, ${T.gold}, ${T.goldLight})` : "transparent", color: plan.popular ? T.bg : T.gold, border: plan.popular ? "none" : `1px solid ${T.gold}`, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
                 {plan.popular ? "Get Pro Now" : "Contact Sales"}
               </button>
@@ -1039,9 +1040,8 @@ export default function EmaarDashboardV2() {
             <span style={{ fontSize: 10, color: T.textMuted }}>H/L </span>
             <span style={{ fontSize: 11, fontWeight: 600, color: T.textPrimary }}>{stock.dayHigh} / {stock.dayLow}</span>
           </div>}
-          <button type="button" onClick={() => { alert("Notifications coming soon! You'll receive alerts for price changes and new project launches."); }} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: 8, cursor: "pointer", color: T.textSecondary, position: "relative" }}>
+          <button type="button" onClick={() => { alert("Notifications launching soon — you'll get alerts for price changes, new project launches, and construction milestones."); }} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: 8, cursor: "pointer", color: T.textSecondary, position: "relative" }} title="Notifications — Coming Soon">
             {Icons.bell}
-            <span style={{ position: "absolute", top: 4, right: 4, width: 7, height: 7, borderRadius: "50%", background: T.red }} />
           </button>
         </div>
       </header>
@@ -2542,11 +2542,11 @@ export default function EmaarDashboardV2() {
               {/* Other RE Stocks */}
               <h3 style={{ fontSize: 12, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Dubai Real Estate Stocks</h3>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10, marginBottom: 20 }}>
-                {[{t:"EMAAR",n:"Emaar Properties",p:stock.price.toFixed(2),c:`${stock.changePercent>=0?"+":""}${stock.changePercent.toFixed(2)}`,cl:T.gold,a:true},{t:"EMAARDEV",n:"Emaar Development",p:"--",c:"no feed",cl:T.blue},{t:"ALDAR",n:"Aldar Properties",p:"--",c:"no feed",cl:T.green},{t:"DEYAAR",n:"Deyaar Development",p:"--",c:"no feed",cl:T.purple},{t:"TECOM",n:"TECOM Group",p:"--",c:"no feed",cl:T.teal}].map((s,i) => (
+                {[{t:"EMAAR",n:"Emaar Properties",p:stock.price.toFixed(2),c:`${stock.changePercent>=0?"+":""}${stock.changePercent.toFixed(2)}`,cl:T.gold,a:true},{t:"EMAARDEV",n:"Emaar Development",p:"—",c:"dfm",cl:T.blue},{t:"ALDAR",n:"Aldar Properties",p:"—",c:"dfm",cl:T.green},{t:"DEYAAR",n:"Deyaar Development",p:"—",c:"dfm",cl:T.purple},{t:"TECOM",n:"TECOM Group",p:"—",c:"dfm",cl:T.teal}].map((s,i) => (
                   <div key={i} style={{ background: s.a ? "rgba(212,168,67,0.08)" : T.surfaceAlt, borderRadius: 10, padding: 14, border: `1px solid ${s.a ? T.gold : T.border}` }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                       <span style={{ fontSize: 12, fontWeight: 700, color: s.cl }}>{s.t}</span>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: s.c === "no feed" ? T.textMuted : s.c.includes("-") ? T.red : T.green }}>{s.c === "no feed" ? "No Feed" : `${s.c}%`}</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: s.c === "dfm" ? T.textMuted : s.c.includes("-") ? T.red : T.green }}>{s.c === "dfm" ? "DFM Only" : `${s.c}%`}</span>
                     </div>
                     <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>{s.n}</div>
                     <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'Fraunces', serif", color: T.white }}>AED {s.p}</div>
