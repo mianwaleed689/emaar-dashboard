@@ -5,6 +5,7 @@ import { signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordRe
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 
 import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel } from "./data";
+import LandingPage from "./LandingPage";
 
 /* ─── DATA ALIASES (for backward compat) ─── */
 const financials = emaarFinancials;
@@ -310,7 +311,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 /* ─── LOGIN SCREEN ─── */
-const LoginScreen = ({ onLogin }) => {
+const LoginScreen = ({ onLogin, onBack }) => {
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -354,6 +355,14 @@ const LoginScreen = ({ onLogin }) => {
   return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
       <style>{css}</style>
+      {/* Back to Landing */}
+      {onBack && (
+        <button onClick={onBack} style={{ position: "absolute", top: 24, left: 24, display: "flex", alignItems: "center", gap: 6, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 16px", color: T.textSecondary, fontSize: 13, fontFamily: "'Outfit', sans-serif", cursor: "pointer", zIndex: 10, transition: "all 0.2s" }}
+          onMouseEnter={e => { e.target.style.borderColor = T.gold; e.target.style.color = T.gold; }}
+          onMouseLeave={e => { e.target.style.borderColor = T.border; e.target.style.color = T.textSecondary; }}>
+          ← Back to Home
+        </button>
+      )}
       {/* Background pattern */}
       <div style={{ position: "absolute", inset: 0, opacity: 0.015, backgroundImage: `radial-gradient(${T.gold} 1px, transparent 1px)`, backgroundSize: "50px 50px" }} />
       <div style={{ position: "absolute", top: "20%", left: "10%", width: 400, height: 400, borderRadius: "50%", background: `radial-gradient(circle, rgba(212,168,67,0.04) 0%, transparent 70%)` }} />
@@ -432,6 +441,7 @@ const LoginScreen = ({ onLogin }) => {
 export default function EmaarDashboardV2() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState("");
+  const [showLogin, setShowLogin] = useState(false);
   const [tab, setTab] = useState("Overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [time, setTime] = useState(new Date());
@@ -541,8 +551,12 @@ export default function EmaarDashboardV2() {
     );
   }
 
+  if (!isLoggedIn && !showLogin) {
+    return <LandingPage onLoginClick={() => setShowLogin(true)} />;
+  }
+
   if (!isLoggedIn) {
-    return <LoginScreen onLogin={(email) => { setIsLoggedIn(true); setUser(email); }} />;
+    return <LoginScreen onLogin={(email) => { setIsLoggedIn(true); setUser(email); }} onBack={() => setShowLogin(false)} />;
   }
 
   const handleTabChange = (key) => {
