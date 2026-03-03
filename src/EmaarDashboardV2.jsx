@@ -2681,10 +2681,10 @@ export default function EmaarDashboardV2() {
                     </div>
 
                     <div style={{ display: "flex", gap: 4, marginBottom: 14, flexWrap: "wrap" }}>
-                      {[1, 1.5, 2, 3, 4, 5].map(y => (
+                      {[1, 2, 3, 4, 5].map(y => (
                         <button key={y} type="button" onClick={() => setRoiYears(y)}
                           style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${yrs === y ? T.green : T.border}`, background: yrs === y ? "rgba(16,185,129,0.15)" : T.surfaceAlt, color: yrs === y ? T.green : T.textSecondary, fontSize: 12, fontWeight: yrs === y ? 800 : 500, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}>
-                          {y === 1 ? "1 Year" : y === 1.5 ? "1.5 Yr" : `${y} Years`}
+                          {y} {y === 1 ? "Year" : "Years"}
                         </button>
                       ))}
                     </div>
@@ -2708,7 +2708,7 @@ export default function EmaarDashboardV2() {
                       </div>
                     </div>
 
-                    <div style={{ fontSize: 10, fontWeight: 700, color: T.white, marginBottom: 8, marginTop: 4 }}>{yrs === 1 ? "1-YEAR" : yrs === 1.5 ? "1.5-YEAR" : `${yrs}-YEAR`} INVESTMENT PROJECTION</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.white, marginBottom: 8, marginTop: 4 }}>{yrs}-YEAR INVESTMENT PROJECTION</div>
                     <div className="detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
                       <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
                         <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3 }}>CAPITAL APPRECIATION</div>
