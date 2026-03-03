@@ -499,7 +499,7 @@ export default function ProjectManager() {
                       <Input label="Community" value={form.community} onChange={v => set("community", v)} />
                       <Select label="Status" value={form.status} onChange={v => set("status", v)} options={["Off-Plan", "Under Construction", "Ready", "Sold Out", "Launching"]} />
                       <Input label="Property Type" value={form.type} onChange={v => set("type", v)} placeholder="e.g. Apartments · 1-3 BR" />
-                      <Select label="Segment" value={form.segment} onChange={v => set("segment", v)} options={["Mid-Market", "Mid-Premium", "Premium", "Ultra-Premium", "Luxury"]} />
+                      <Select label="Segment" value={form.segment} onChange={v => set("segment", v)} options={["Affordable", "Mid-Market", "Mid-Premium", "Premium", "Ultra-Premium", "Luxury", "Luxury Branded", "Ultra-Lux Branded", "Ultra-Luxury"]} />
                       <Input label="Branded" value={form.branded} onChange={v => set("branded", v)} placeholder="Address, Vida, etc." />
                     </div>
                   </div>

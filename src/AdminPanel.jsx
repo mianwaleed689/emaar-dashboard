@@ -681,21 +681,28 @@ export default function AdminPanel() {
           {tab === "leads" && (
             <>
               <Section title="Lead Tracking" sub="WhatsApp, Email & Call inquiries from Pro users">
-                <div className="kpi-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-                  <KPI label="Total Leads" value="0" sub="Tracking enabled" icon="📞" delay={1} />
-                  <KPI label="WhatsApp" value="0" sub="Most popular channel" icon="💬" color={T.green} delay={2} />
-                  <KPI label="Email" value="0" sub="Professional inquiries" icon="📧" color={T.blue} delay={3} />
-                  <KPI label="Est. Value" value="AED 0" sub="AED 125 per lead avg" icon="💎" color={T.gold} delay={4} />
+                <div className="chart-box fade-up" style={{ padding: 40, textAlign: "center" }}>
+                  <div style={{ fontSize: 48, marginBottom: 16 }}>📞</div>
+                  <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.white, marginBottom: 8 }}>Lead Tracking — Coming Q3 2026</h3>
+                  <p style={{ color: T.textSecondary, fontSize: 13, maxWidth: 520, margin: "0 auto 28px", lineHeight: 1.7 }}>
+                    When Pro users click WhatsApp, Email, or Call buttons on project pages, each inquiry will be logged here automatically. You'll see which projects generate the most interest and track your lead pipeline.
+                  </p>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, maxWidth: 600, margin: "0 auto" }}>
+                    {[
+                      { icon: "💬", label: "WhatsApp Clicks", desc: "Auto-logged per project" },
+                      { icon: "📧", label: "Email Inquiries", desc: "Tracked with project context" },
+                      { icon: "📞", label: "Call Tracking", desc: "Click-to-call logging" },
+                      { icon: "💎", label: "Lead Valuation", desc: "AED value per lead pipeline" },
+                    ].map((item, i) => (
+                      <div key={i} className="fade-up" style={{ background: T.surfaceAlt, borderRadius: 10, padding: 16, border: `1px solid ${T.border}`, animationDelay: `${i * 0.06}s` }}>
+                        <div style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: T.textPrimary, marginBottom: 4 }}>{item.label}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{item.desc}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </Section>
-
-              <div className="chart-box fade-up" style={{ padding: 40, textAlign: "center" }}>
-                <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.4 }}>📊</div>
-                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.white, marginBottom: 8 }}>Lead Tracking Coming Soon</h3>
-                <p style={{ color: T.textSecondary, fontSize: 13, maxWidth: 480, margin: "0 auto", lineHeight: 1.6 }}>
-                  When Pro users click WhatsApp, Email, or Call buttons on project pages, each inquiry will be logged here automatically. You'll see which projects generate the most interest and track your lead pipeline.
-                </p>
-              </div>
             </>
           )}
 
@@ -731,7 +738,7 @@ export default function AdminPanel() {
                     </AreaChart>
                   </ResponsiveContainer>
                 </Chart>
-                <Chart title="Signup Source Distribution">
+                <Chart title="Signup Sources (Estimated)">
                   <div style={{ padding: "20px 0" }}>
                     {[
                       { label: "Direct (Landing Page)", pct: 65, color: T.gold },

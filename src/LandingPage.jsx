@@ -128,8 +128,9 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
       price: "499",
       period: "/month",
       desc: "For agencies & funds",
-      features: ["Everything in Pro", "PDF report generation", "API access", "Custom dashboards", "Multi-user accounts", "Developer-level data", "Dedicated account manager", "White-label options"],
+      features: ["Everything in Pro", "PDF report generation ⏳", "API access ⏳", "Custom dashboards ⏳", "Multi-user accounts ⏳", "Developer-level data", "Dedicated account manager", "White-label options ⏳"],
       cta: "Contact Sales",
+      note: "⏳ = Coming Q3 2026",
       popular: false,
     },
   ];
@@ -278,6 +279,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                 <button onClick={onSignUpClick} className={plan.popular ? "cta-btn" : "cta-btn-outline"} style={{ width: "100%", justifyContent: "center", padding: "12px 0" }}>
                   {plan.cta}
                 </button>
+                {plan.note && <p style={{ fontSize: 10, color: T.textMuted, marginTop: 12, textAlign: "center" }}>{plan.note}</p>}
               </div>
             ))}
           </div>
@@ -352,7 +354,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             <a href="#pricing" className="nav-link" style={{ fontSize: 12 }}>Pricing</a>
             <a href="mailto:mianwaleed689@gmail.com" className="nav-link" style={{ fontSize: 12 }}>Contact</a>
           </div>
-          <p style={{ fontSize: 11, color: T.textMuted }}>© 2025 DXB Analytics. Dubai, UAE.</p>
+          <p style={{ fontSize: 11, color: T.textMuted }}>© 2026 DXB Analytics. Dubai, UAE.</p>
         </div>
       </footer>
     </div>
