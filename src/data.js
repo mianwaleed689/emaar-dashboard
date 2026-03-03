@@ -1,4 +1,4 @@
-/* ─── DXB ANALYTICS — MASTER DATA FILE ─── */
+/* ─── DXB ANALYTICS — MASTER DATA FILE v2.1 ─── */
 /* Source: Emaar THE BEAST Excel + DLD + DXBinteract + Yahoo Finance */
 
 export const T = {
