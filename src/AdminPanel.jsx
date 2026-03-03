@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   DXB ANALYTICS — ADMIN PANEL
+   DXB ANALYTICS — ADMIN PANELs
    Matching dashboard design DNA: sidebar nav, KPI cards, sections
    ═══════════════════════════════════════════════════════════════ */
 import React, { useState, useEffect, useCallback } from "react";
