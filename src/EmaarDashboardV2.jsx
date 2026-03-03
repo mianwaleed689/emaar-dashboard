@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { auth, db } from "./firebase";
-import { signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "firebase/auth";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "firebase/auth";
+import { collection, getDocs, orderBy, query, doc, getDoc, setDoc } from "firebase/firestore";
 
 import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel } from "./data";
 import LandingPage from "./LandingPage";
@@ -311,7 +311,9 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 /* ─── LOGIN SCREEN ─── */
-const LoginScreen = ({ onLogin, onBack }) => {
+const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
+  const [mode, setMode] = useState(defaultMode); // "login" or "signup"
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -352,6 +354,42 @@ const LoginScreen = ({ onLogin, onBack }) => {
     setLoading(false);
   };
 
+  const handleSignUp = async (e) => {
+    e?.preventDefault?.();
+    if (!name.trim()) { setError("Please enter your name"); return; }
+    if (!email || !pass) { setError("Please fill in all fields"); return; }
+    if (pass.length < 6) { setError("Password must be at least 6 characters"); return; }
+    setLoading(true);
+    setError("");
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      // Create user profile in Firestore with 7-day Pro trial
+      const now = new Date();
+      const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      await setDoc(doc(db, "users", cred.user.uid), {
+        name: name.trim(),
+        email: email,
+        tier: "pro_trial",
+        createdAt: now.toISOString(),
+        trialStart: now.toISOString(),
+        trialEnd: trialEnd.toISOString(),
+        role: "user",
+      });
+      onLogin(email);
+    } catch (err) {
+      if (err.code === "auth/email-already-in-use") {
+        setError("This email is already registered. Try logging in instead.");
+      } else if (err.code === "auth/weak-password") {
+        setError("Password must be at least 6 characters.");
+      } else if (err.code === "auth/invalid-email") {
+        setError("Please enter a valid email address.");
+      } else {
+        setError("Sign up failed. Please try again.");
+      }
+    }
+    setLoading(false);
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
       <style>{css}</style>
@@ -381,20 +419,36 @@ const LoginScreen = ({ onLogin, onBack }) => {
           <p style={{ color: T.textMuted, fontSize: 13, letterSpacing: 2, textTransform: "uppercase" }}>Dubai Real Estate Intelligence</p>
         </div>
 
-        {/* Login Card */}
+        {/* Login/SignUp Card */}
         <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 32, backdropFilter: "blur(20px)" }}>
-          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 700, color: T.white, marginBottom: 4 }}>Welcome back</h2>
-          <p style={{ color: T.textSecondary, fontSize: 13, marginBottom: 28 }}>Sign in to access your dashboard</p>
+          {/* Mode Toggle */}
+          <div style={{ display: "flex", marginBottom: 24, background: T.surfaceAlt, borderRadius: 10, padding: 3 }}>
+            <button onClick={() => { setMode("login"); setError(""); }} style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: "none", fontFamily: "'Outfit', sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: mode === "login" ? T.gold : "transparent", color: mode === "login" ? T.bg : T.textMuted }}>Sign In</button>
+            <button onClick={() => { setMode("signup"); setError(""); }} style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: "none", fontFamily: "'Outfit', sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: mode === "signup" ? T.gold : "transparent", color: mode === "signup" ? T.bg : T.textMuted }}>Sign Up Free</button>
+          </div>
+
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 700, color: T.white, marginBottom: 4 }}>
+            {mode === "login" ? "Welcome back" : "Start your free trial"}
+          </h2>
+          <p style={{ color: T.textSecondary, fontSize: 13, marginBottom: 28 }}>
+            {mode === "login" ? "Sign in to access your dashboard" : "7 days of Pro access — no credit card required"}
+          </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {mode === "signup" && (
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Full Name</label>
+                <input className="login-input" type="text" placeholder="John Smith" value={name} onChange={e => setName(e.target.value)} />
+              </div>
+            )}
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Email</label>
-              <input className="login-input" type="email" placeholder="you@company.com" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} />
+              <input className="login-input" type="email" placeholder="you@company.com" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && (mode === "login" ? handleLogin() : handleSignUp())} />
             </div>
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Password</label>
               <div style={{ position: "relative" }}>
-                <input className="login-input" type={showPass ? "text" : "password"} placeholder="••••••••" value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} style={{ paddingRight: 44 }} />
+                <input className="login-input" type={showPass ? "text" : "password"} placeholder={mode === "signup" ? "Min 6 characters" : "••••••••"} value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && (mode === "login" ? handleLogin() : handleSignUp())} style={{ paddingRight: 44 }} />
                 <button onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }}>
                   {showPass ? Icons.eyeOff : Icons.eye}
                 </button>
@@ -404,26 +458,41 @@ const LoginScreen = ({ onLogin, onBack }) => {
             {error && <div style={{ color: T.red, fontSize: 12, padding: "8px 12px", background: "rgba(239,68,68,0.08)", borderRadius: 8, border: "1px solid rgba(239,68,68,0.2)" }}>{error}</div>}
             {resetSent && <div style={{ color: T.green, fontSize: 12, padding: "8px 12px", background: "rgba(16,185,129,0.08)", borderRadius: 8, border: "1px solid rgba(16,185,129,0.2)" }}>Password reset email sent! Check your inbox.</div>}
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", color: T.textSecondary, fontSize: 12 }}>
-                <input type="checkbox" style={{ accentColor: T.gold }} /> Remember me
-              </label>
-              <a onClick={handleForgot} style={{ color: T.gold, fontSize: 12, textDecoration: "none", cursor: "pointer" }}>Forgot password?</a>
-            </div>
+            {mode === "login" && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", color: T.textSecondary, fontSize: 12 }}>
+                  <input type="checkbox" style={{ accentColor: T.gold }} /> Remember me
+                </label>
+                <a onClick={handleForgot} style={{ color: T.gold, fontSize: 12, textDecoration: "none", cursor: "pointer" }}>Forgot password?</a>
+              </div>
+            )}
 
-            <button className="login-btn" onClick={handleLogin} disabled={loading}>
+            <button className="login-btn" onClick={mode === "login" ? handleLogin : handleSignUp} disabled={loading}>
               {loading ? (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                   <span style={{ width: 16, height: 16, border: "2px solid rgba(4,9,15,0.3)", borderTopColor: T.bg, borderRadius: "50%", animation: "spin 0.6s linear infinite", display: "inline-block" }} />
-                  Signing in...
+                  {mode === "login" ? "Signing in..." : "Creating account..."}
                 </span>
-              ) : "Sign In"}
+              ) : mode === "login" ? "Sign In" : "Start Free Trial →"}
             </button>
+
+            {mode === "signup" && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: "rgba(212,168,67,0.06)", borderRadius: 8, border: `1px solid ${T.border}` }}>
+                <span style={{ fontSize: 16 }}>⭐</span>
+                <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.4 }}>
+                  <span style={{ color: T.gold, fontWeight: 600 }}>7-day Pro trial</span> — Full access to all projects, financials, yields, stocks & comparisons. No credit card needed.
+                </div>
+              </div>
+            )}
           </div>
 
           <div style={{ textAlign: "center", marginTop: 24, paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
             <p style={{ color: T.textMuted, fontSize: 12 }}>
-              Don't have an account? <a style={{ color: T.gold, textDecoration: "none", fontWeight: 600, cursor: "pointer" }}>Request Access</a>
+              {mode === "login" ? (
+                <>Don't have an account? <a onClick={() => { setMode("signup"); setError(""); }} style={{ color: T.gold, textDecoration: "none", fontWeight: 600, cursor: "pointer" }}>Sign up free</a></>
+              ) : (
+                <>Already have an account? <a onClick={() => { setMode("login"); setError(""); }} style={{ color: T.gold, textDecoration: "none", fontWeight: 600, cursor: "pointer" }}>Sign in</a></>
+              )}
             </p>
           </div>
         </div>
@@ -441,7 +510,10 @@ const LoginScreen = ({ onLogin, onBack }) => {
 export default function EmaarDashboardV2() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState("");
-  const [showLogin, setShowLogin] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [userTier, setUserTier] = useState("free"); // "free", "pro_trial", "pro", "enterprise", "admin"
+  const [trialDaysLeft, setTrialDaysLeft] = useState(0);
+  const [showLogin, setShowLogin] = useState(false); // false, "login", or "signup"
   const [tab, setTab] = useState("Overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [time, setTime] = useState(new Date());
@@ -487,15 +559,50 @@ export default function EmaarDashboardV2() {
   const [stock, setStock] = useState({ price: 17.05, change: 0.46, changePercent: 2.75, dayHigh: null, dayLow: null, volume: null, marketState: "LOADING", open: null });
   const [stockLive, setStockLive] = useState(false);
 
-  // Listen to Firebase auth state
+  // Listen to Firebase auth state + fetch user profile
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setIsLoggedIn(true);
         setUser(firebaseUser.email || "");
+        // Fetch user profile from Firestore
+        try {
+          const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            setUserName(data.name || "");
+            let tier = data.tier || "free";
+            // Check if trial has expired
+            if (tier === "pro_trial" && data.trialEnd) {
+              const trialEnd = new Date(data.trialEnd);
+              const now = new Date();
+              const daysLeft = Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24));
+              if (daysLeft <= 0) {
+                tier = "free";
+                setTrialDaysLeft(0);
+                // Update Firestore to reflect expired trial
+                await setDoc(doc(db, "users", firebaseUser.uid), { tier: "free" }, { merge: true });
+              } else {
+                setTrialDaysLeft(daysLeft);
+              }
+            }
+            // Admin override
+            if (data.role === "admin") tier = "admin";
+            setUserTier(tier);
+          } else {
+            // Existing user without profile (e.g. your admin account) — treat as admin/pro
+            setUserTier("admin");
+            setUserName("");
+          }
+        } catch (err) {
+          console.log("Could not fetch user profile:", err);
+          setUserTier("pro"); // fallback for existing users
+        }
       } else {
         setIsLoggedIn(false);
         setUser("");
+        setUserTier("free");
+        setTrialDaysLeft(0);
       }
       setAuthLoading(false);
     });
@@ -552,11 +659,11 @@ export default function EmaarDashboardV2() {
   }
 
   if (!isLoggedIn && !showLogin) {
-    return <LandingPage onLoginClick={() => setShowLogin(true)} />;
+    return <LandingPage onLoginClick={() => setShowLogin("login")} onSignUpClick={() => setShowLogin("signup")} />;
   }
 
   if (!isLoggedIn) {
-    return <LoginScreen onLogin={(email) => { setIsLoggedIn(true); setUser(email); }} onBack={() => setShowLogin(false)} />;
+    return <LoginScreen onLogin={(email) => { setIsLoggedIn(true); setUser(email); }} onBack={() => setShowLogin(false)} defaultMode={showLogin === "signup" ? "signup" : "login"} />;
   }
 
   const handleTabChange = (key) => {
@@ -605,13 +712,28 @@ export default function EmaarDashboardV2() {
 
         {/* Bottom */}
         <div style={{ padding: "16px 12px", borderTop: `1px solid ${T.border}` }}>
+          {/* Trial Banner */}
+          {userTier === "pro_trial" && trialDaysLeft > 0 && (
+            <div style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, background: "rgba(212,168,67,0.08)", border: `1px solid ${T.border}`, textAlign: "center" }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 0.5 }}>⭐ PRO TRIAL</div>
+              <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>{trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining</div>
+            </div>
+          )}
+          {userTier === "free" && (
+            <div style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.15)", textAlign: "center", cursor: "pointer" }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.blue, letterSpacing: 0.5 }}>FREE PLAN</div>
+              <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>Upgrade to Pro →</div>
+            </div>
+          )}
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 10, background: T.surfaceAlt }}>
             <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: T.bg }}>
               {user.charAt(0).toUpperCase()}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.split("@")[0]}</div>
-              <div style={{ fontSize: 10, color: T.textMuted }}>Pro Plan</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userName || user.split("@")[0]}</div>
+              <div style={{ fontSize: 10, color: userTier === "pro_trial" ? T.gold : userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : T.textMuted }}>
+                {userTier === "admin" ? "Admin" : userTier === "pro_trial" ? "Pro Trial" : userTier === "pro" ? "Pro Plan" : userTier === "enterprise" ? "Enterprise" : "Free Plan"}
+              </div>
             </div>
             <button onClick={() => { signOut(auth); }} style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }} title="Sign out">
               {Icons.logout}
@@ -666,6 +788,27 @@ export default function EmaarDashboardV2() {
 
       {/* ─── MAIN CONTENT ─── */}
       <main className="main-content" style={{ marginLeft: 240, paddingTop: 60, minHeight: "100vh" }}>
+        {/* Trial / Free tier banner */}
+        {userTier === "pro_trial" && trialDaysLeft > 0 && (
+          <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: `linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.04))`, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 16 }}>⭐</span>
+              <span style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>Pro Trial Active</span>
+              <span style={{ fontSize: 12, color: T.textSecondary }}>— {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining. Enjoying full access to all features.</span>
+            </div>
+            <button style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro</button>
+          </div>
+        )}
+        {userTier === "free" && (
+          <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 16 }}>🔒</span>
+              <span style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>Free Plan</span>
+              <span style={{ fontSize: 12, color: T.textSecondary }}>— You're seeing limited data. Upgrade to unlock all projects, yields, stocks & more.</span>
+            </div>
+            <button style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro — AED 99/mo</button>
+          </div>
+        )}
         {/* Mobile stock ticker - only visible on small screens */}
         <div className="mobile-stock-bar" style={{ display: "none", alignItems: "center", justifyContent: "center", gap: 12, padding: "8px 14px", background: T.surface, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>

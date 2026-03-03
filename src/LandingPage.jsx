@@ -84,7 +84,7 @@ const landingCss = `
   }
 `;
 
-export default function LandingPage({ onLoginClick }) {
+export default function LandingPage({ onLoginClick, onSignUpClick }) {
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -166,7 +166,7 @@ export default function LandingPage({ onLoginClick }) {
           <a href="#pricing" className="nav-link">Pricing</a>
           <a href="#stats" className="nav-link">Data</a>
           <button onClick={onLoginClick} className="cta-btn-outline" style={{ padding: "8px 20px", fontSize: 13 }}>Login</button>
-          <button onClick={onLoginClick} className="cta-btn" style={{ padding: "8px 20px", fontSize: 13 }}>Get Started</button>
+          <button onClick={onSignUpClick} className="cta-btn" style={{ padding: "8px 20px", fontSize: 13 }}>Get Started</button>
         </div>
       </nav>
 
@@ -190,7 +190,7 @@ export default function LandingPage({ onLoginClick }) {
           </p>
           
           <div className="hero-buttons" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
-            <button onClick={onLoginClick} className="cta-btn" style={{ padding: "16px 40px", fontSize: 16 }}>
+            <button onClick={onSignUpClick} className="cta-btn" style={{ padding: "16px 40px", fontSize: 16 }}>
               Start Free →
             </button>
             <button onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })} className="cta-btn-outline" style={{ padding: "16px 40px", fontSize: 16 }}>
@@ -275,7 +275,7 @@ export default function LandingPage({ onLoginClick }) {
                     </div>
                   ))}
                 </div>
-                <button onClick={onLoginClick} className={plan.popular ? "cta-btn" : "cta-btn-outline"} style={{ width: "100%", justifyContent: "center", padding: "12px 0" }}>
+                <button onClick={onSignUpClick} className={plan.popular ? "cta-btn" : "cta-btn-outline"} style={{ width: "100%", justifyContent: "center", padding: "12px 0" }}>
                   {plan.cta}
                 </button>
               </div>
@@ -331,7 +331,7 @@ export default function LandingPage({ onLoginClick }) {
           <p style={{ fontSize: 16, color: T.textSecondary, marginBottom: 32, maxWidth: 500, margin: "0 auto 32px" }}>
             Join Dubai's most informed agents and investors. Start with the free tier — upgrade when you're ready.
           </p>
-          <button onClick={onLoginClick} className="cta-btn" style={{ padding: "18px 48px", fontSize: 17 }}>
+          <button onClick={onSignUpClick} className="cta-btn" style={{ padding: "18px 48px", fontSize: 17 }}>
             Get Started Free →
           </button>
         </div>
