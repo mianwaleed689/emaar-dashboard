@@ -579,13 +579,13 @@ const UpgradeModal = ({ show, onClose }) => {
                   <span style={{ color: T.green, fontSize: 12 }}>✓</span>{f}
                 </div>
               ))}
-              <button type="button" onClick={() => plan.popular ? window.open("https://wa.me/971542410599?text=Hi%2C%20I%20want%20to%20subscribe%20to%20DXB%20Analytics%20" + plan.name + "%20plan%20(AED%20" + plan.price + "%2Fmo)", "_blank") : window.location.href = "mailto:mianwaleed689@gmail.com?subject=DXB%20Analytics%20Enterprise%20Plan&body=I%27m%20interested%20in%20the%20Enterprise%20plan"} style={{ width: "100%", marginTop: 16, padding: "10px 0", background: plan.popular ? `linear-gradient(135deg, ${T.gold}, ${T.goldLight})` : "transparent", color: plan.popular ? T.bg : T.gold, border: plan.popular ? "none" : `1px solid ${T.gold}`, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+              <button type="button" onClick={() => { onClose(); window.dispatchEvent(new CustomEvent("dxb-checkout", { detail: plan })); }} style={{ width: "100%", marginTop: 16, padding: "10px 0", background: plan.popular ? `linear-gradient(135deg, ${T.gold}, ${T.goldLight})` : "transparent", color: plan.popular ? T.bg : T.gold, border: plan.popular ? "none" : `1px solid ${T.gold}`, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
                 {plan.popular ? "Get Pro Now" : "Contact Sales"}
               </button>
             </div>
           ))}
         </div>
-        <p style={{ textAlign: "center", fontSize: 11, color: T.textMuted, marginTop: 16 }}>Payment via WhatsApp · Stripe integration coming soon</p>
+        <p style={{ textAlign: "center", fontSize: 11, color: T.textMuted, marginTop: 16 }}>Secure payment · Cancel anytime · 7-day money-back guarantee</p>
       </div>
     </div>
   );
@@ -602,6 +602,14 @@ export default function EmaarDashboardV2() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [profileEdit, setProfileEdit] = useState({ name: "" });
+  const [showCheckout, setShowCheckout] = useState(null);
+  const [checkoutStep, setCheckoutStep] = useState(1);
+
+  useEffect(() => {
+    const handler = (e) => { setShowCheckout(e.detail); setCheckoutStep(1); };
+    window.addEventListener("dxb-checkout", handler);
+    return () => window.removeEventListener("dxb-checkout", handler);
+  }, []);
   const [toast, setToast] = useState("");
   const notify = (msg) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
   const [adminUsers, setAdminUsers] = useState([]);
@@ -781,7 +789,8 @@ export default function EmaarDashboardV2() {
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === "Escape") {
-        if (showProfile) setShowProfile(false);
+        if (showCheckout) { setShowCheckout(null); setCheckoutStep(1); }
+        else if (showProfile) setShowProfile(false);
         else if (showUpgrade) setShowUpgrade(false);
         else if (showStock) setShowStock(false);
         else if (selectedProject) setSelectedProject(null);
@@ -2480,6 +2489,54 @@ export default function EmaarDashboardV2() {
         </div>
       )}
 
+
+
+      {/* CHECKOUT PAYMENT MODAL */}
+      {showCheckout && <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.95)", zIndex: 3100, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)" }} onClick={() => { setShowCheckout(null); setCheckoutStep(1); }}>
+        <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 480, position: "relative", overflow: "hidden" }} onClick={e => e.stopPropagation()}>
+          <button type="button" onClick={() => { setShowCheckout(null); setCheckoutStep(1); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"\u2715"}</button>
+          <div style={{ padding: "24px 28px 16px", borderBottom: `1px solid ${T.border}` }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 16 }}>
+              {[1,2,3].map(s => <React.Fragment key={s}><div style={{ width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: checkoutStep >= s ? T.gold : T.surfaceAlt, color: checkoutStep >= s ? T.bg : T.textMuted, border: `1px solid ${checkoutStep >= s ? T.gold : T.border}` }}>{checkoutStep > s ? "\u2713" : s}</div>{s < 3 && <div style={{ width: 40, height: 2, background: checkoutStep > s ? T.gold : T.surfaceAlt, borderRadius: 1 }} />}</React.Fragment>)}
+            </div>
+            <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white, textAlign: "center" }}>{checkoutStep === 1 ? "Confirm Plan" : checkoutStep === 2 ? "Payment" : "Welcome to Pro!"}</h2>
+          </div>
+          <div style={{ padding: "20px 28px 28px" }}>
+            {checkoutStep === 1 && <>
+              <div style={{ padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `2px solid ${T.gold}`, marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><span style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800, color: T.gold }}>{showCheckout.name} Plan</span><span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: "rgba(212,168,67,0.12)", color: T.gold }}>SELECTED</span></div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 12 }}><span style={{ fontSize: 10, color: T.textMuted }}>AED</span><span style={{ fontFamily: "'Fraunces', serif", fontSize: 32, fontWeight: 900, color: T.white }}>{showCheckout.price}</span><span style={{ fontSize: 12, color: T.textMuted }}>/month</span></div>
+                {showCheckout.features.slice(0,5).map((f,j) => <div key={j} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", fontSize: 12, color: T.textSecondary }}><span style={{ color: T.green }}>{"\u2713"}</span>{f}</div>)}
+              </div>
+              <button type="button" onClick={() => setCheckoutStep(2)} style={{ width: "100%", padding: "12px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Continue to Payment →</button>
+            </>}
+            {checkoutStep === 2 && <>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, marginBottom: 12 }}>CHOOSE PAYMENT METHOD</div>
+                <div style={{ display: "grid", gap: 8 }}>
+                  {[{ method: "whatsapp", label: "WhatsApp Payment", sub: "Pay via bank transfer — instant activation", icon: "💬", color: "#25D366" }, { method: "stripe", label: "Credit / Debit Card", sub: "Stripe checkout — coming soon", icon: "💳", color: "#3B82F6", disabled: true }, { method: "apple", label: "Apple Pay", sub: "One-tap payment — coming soon", icon: "🍎", color: "#FFFFFF", disabled: true }].map((pm, i) => <div key={i} onClick={() => !pm.disabled && window.open(`https://wa.me/971542410599?text=${encodeURIComponent(`Hi Mian Waleed, I want to subscribe to DXB Analytics ${showCheckout.name} Plan (AED ${showCheckout.price}/mo). My email: ${user}`)}`, "_blank")} style={{ padding: "14px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 12, cursor: pm.disabled ? "not-allowed" : "pointer", opacity: pm.disabled ? 0.5 : 1, transition: "all 0.2s" }} onMouseEnter={e => { if(!pm.disabled) e.currentTarget.style.borderColor = pm.color; }} onMouseLeave={e => e.currentTarget.style.borderColor = T.border}><div style={{ fontSize: 24 }}>{pm.icon}</div><div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{pm.label}</div><div style={{ fontSize: 10, color: T.textMuted }}>{pm.sub}</div></div>{pm.disabled ? <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 4, background: T.surfaceAlt, color: T.textMuted, border: `1px solid ${T.border}` }}>SOON</span> : <span style={{ color: pm.color, fontSize: 16 }}>→</span>}</div>)}
+                </div>
+              </div>
+              <div style={{ padding: 12, borderRadius: 8, background: "rgba(212,168,67,0.06)", border: "1px solid rgba(212,168,67,0.1)", fontSize: 11, color: T.textMuted, lineHeight: 1.5, marginBottom: 16 }}>After WhatsApp payment confirmation, your account will be upgraded within 5 minutes. Stripe auto-checkout coming Q2 2026.</div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button type="button" onClick={() => setCheckoutStep(1)} style={{ flex: 1, padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>← Back</button>
+                <button type="button" onClick={() => { window.open(`https://wa.me/971542410599?text=${encodeURIComponent(`Hi Mian Waleed, I want to subscribe to DXB Analytics ${showCheckout.name} Plan (AED ${showCheckout.price}/mo). My email: ${user}`)}`, "_blank"); setCheckoutStep(3); }} style={{ flex: 2, padding: "10px 0", background: "linear-gradient(135deg, #25D366, #128C7E)", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>💬 Pay via WhatsApp</button>
+              </div>
+            </>}
+            {checkoutStep === 3 && <div style={{ textAlign: "center", padding: "20px 0" }}>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold, marginBottom: 8 }}>Payment Request Sent!</div>
+              <div style={{ fontSize: 13, color: T.textSecondary, maxWidth: 320, margin: "0 auto", lineHeight: 1.6, marginBottom: 20 }}>We opened WhatsApp for you. After confirming payment, your {showCheckout.name} Plan will be activated within 5 minutes.</div>
+              <div style={{ padding: 12, borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}`, marginBottom: 16, fontSize: 11, color: T.textMuted }}>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0" }}><span>Plan</span><span style={{ color: T.gold, fontWeight: 700 }}>{showCheckout.name}</span></div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0" }}><span>Amount</span><span style={{ color: T.white, fontWeight: 700 }}>AED {showCheckout.price}/mo</span></div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0" }}><span>Account</span><span style={{ color: T.white }}>{user}</span></div>
+              </div>
+              <button type="button" onClick={() => { setShowCheckout(null); setCheckoutStep(1); setShowUpgrade(false); }} style={{ width: "100%", padding: "12px 0", background: T.gold, color: T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Done</button>
+            </div>}
+          </div>
+        </div>
+      </div>}
 
       {/* USER PROFILE MODAL */}
       {showProfile && <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowProfile(false)}>
