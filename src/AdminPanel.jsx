@@ -101,6 +101,37 @@ function plainify(obj) {
   return String(obj);
 }
 
+/* ─── REUSABLE COMPONENTS (outside component to prevent re-mount on state change) ─── */
+const KPI = ({ label, value, sub, icon, color, delay = 0 }) => (
+  <div className="chart-box fade-up" style={{ animationDelay: `${delay * 0.05}s`, padding: "20px 20px 16px", position: "relative", overflow: "hidden" }}>
+    <div style={{ position: "absolute", top: 12, right: 14, fontSize: 10, padding: "3px 8px", borderRadius: 6, background: (color || T.gold) + "15", color: color || T.gold, fontWeight: 700 }}>{icon}</div>
+    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
+    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: color || T.gold, lineHeight: 1 }}>{value}</div>
+    {sub && <div style={{ fontSize: 11, color: T.green, marginTop: 6, fontWeight: 500 }}>{sub}</div>}
+  </div>
+);
+
+const Section = ({ title, sub, children, action }) => (
+  <div style={{ marginBottom: 28 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 16 }}>
+      <div style={{ borderLeft: `3px solid ${T.gold}`, paddingLeft: 14 }}>
+        <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, lineHeight: 1.2 }}>{title}</h2>
+        {sub && <p style={{ fontSize: 12, color: T.textSecondary, marginTop: 3 }}>{sub}</p>}
+      </div>
+      {action}
+    </div>
+    {children}
+  </div>
+);
+
+const Chart = ({ title, sub, children }) => (
+  <div className="chart-box fade-up" style={{ padding: 20 }}>
+    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: sub ? 2 : 14 }}>{title}</div>
+    {sub && <div style={{ fontSize: 11, color: T.textSecondary, marginBottom: 14 }}>{sub}</div>}
+    {children}
+  </div>
+);
+
 /* ═══════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════ */
@@ -411,36 +442,6 @@ export default function AdminPanel() {
   );
 
   /* ─── REUSABLE COMPONENTS ─── */
-  const KPI = ({ label, value, sub, icon, color, delay = 0 }) => (
-    <div className="chart-box fade-up" style={{ animationDelay: `${delay * 0.05}s`, padding: "20px 20px 16px", position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", top: 12, right: 14, fontSize: 10, padding: "3px 8px", borderRadius: 6, background: (color || T.gold) + "15", color: color || T.gold, fontWeight: 700 }}>{icon}</div>
-      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
-      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: color || T.gold, lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: T.green, marginTop: 6, fontWeight: 500 }}>{sub}</div>}
-    </div>
-  );
-
-  const Section = ({ title, sub, children, action }) => (
-    <div style={{ marginBottom: 28 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 16 }}>
-        <div style={{ borderLeft: `3px solid ${T.gold}`, paddingLeft: 14 }}>
-          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, lineHeight: 1.2 }}>{title}</h2>
-          {sub && <p style={{ fontSize: 12, color: T.textSecondary, marginTop: 3 }}>{sub}</p>}
-        </div>
-        {action}
-      </div>
-      {children}
-    </div>
-  );
-
-  const Chart = ({ title, sub, children }) => (
-    <div className="chart-box fade-up" style={{ padding: 20 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: sub ? 2 : 14 }}>{title}</div>
-      {sub && <div style={{ fontSize: 11, color: T.textSecondary, marginBottom: 14 }}>{sub}</div>}
-      {children}
-    </div>
-  );
-
   /* ─── TABS CONFIG ─── */
   const TABS = [
     { id: "overview", label: "Overview", icon: I.overview },

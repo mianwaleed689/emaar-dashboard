@@ -86,6 +86,64 @@ function plainify(obj) {
 /* ═══════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════ */
+/* ─── REUSABLE COMPONENTS (outside component to prevent re-mount on state change) ─── */
+const inputStyle = {
+  width: "100%", padding: "11px 14px", background: T.bg, border: `1px solid ${T.border}`,
+  borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif",
+  outline: "none", transition: "border-color 0.2s, box-shadow 0.2s",
+};
+const labelStyle = { display: "block", fontSize: 9, fontWeight: 700, color: T.textMuted, marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" };
+
+const KPI = ({ label, value, sub, icon, color, delay = 0 }) => (
+  <div className="chart-box fade-up" style={{ animationDelay: `${delay * 0.05}s`, padding: "20px 20px 16px", position: "relative", overflow: "hidden" }}>
+    <div style={{ position: "absolute", top: 12, right: 14, fontSize: 10, padding: "3px 8px", borderRadius: 6, background: (color || T.gold) + "15", color: color || T.gold, fontWeight: 700 }}>{icon}</div>
+    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
+    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: color || T.gold, lineHeight: 1 }}>{value}</div>
+    {sub && <div style={{ fontSize: 11, color: T.green, marginTop: 6, fontWeight: 500 }}>{sub}</div>}
+  </div>
+);
+
+const Section = ({ title, sub, children, action }) => (
+  <div style={{ marginBottom: 24 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 16 }}>
+      <div style={{ borderLeft: `3px solid ${T.gold}`, paddingLeft: 14 }}>
+        <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.white, lineHeight: 1.2 }}>{title}</h2>
+        {sub && <p style={{ fontSize: 12, color: T.textSecondary, marginTop: 3 }}>{sub}</p>}
+      </div>
+      {action}
+    </div>
+    {children}
+  </div>
+);
+
+const Input = ({ label, value, onChange, placeholder, type, rows }) => (
+  <div>
+    <label style={labelStyle}>{label}</label>
+    {rows ? (
+      <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={rows}
+        style={{ ...inputStyle, resize: "vertical", minHeight: 60 }}
+        onFocus={e => { e.target.style.borderColor = T.gold; e.target.style.boxShadow = `0 0 0 3px ${T.goldGlow}`; }}
+        onBlur={e => { e.target.style.borderColor = T.border; e.target.style.boxShadow = "none"; }} />
+    ) : (
+      <input type={type || "text"} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+        style={inputStyle}
+        onFocus={e => { e.target.style.borderColor = T.gold; e.target.style.boxShadow = `0 0 0 3px ${T.goldGlow}`; }}
+        onBlur={e => { e.target.style.borderColor = T.border; e.target.style.boxShadow = "none"; }} />
+    )}
+  </div>
+);
+
+const Select = ({ label, value, onChange, options }) => (
+  <div>
+    <label style={labelStyle}>{label}</label>
+    <select value={value} onChange={e => onChange(e.target.value)}
+      style={{ ...inputStyle, cursor: "pointer", appearance: "none", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
+      onFocus={e => { e.target.style.borderColor = T.gold; }} onBlur={e => { e.target.style.borderColor = T.border; }}>
+      {options.map(o => <option key={o} value={o}>{o}</option>)}
+    </select>
+  </div>
+);
+
 export default function ProjectManager() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -230,63 +288,7 @@ export default function ProjectManager() {
     </div>
   );
 
-  /* ─── REUSABLE COMPONENTS ─── */
-  const KPI = ({ label, value, sub, icon, color, delay = 0 }) => (
-    <div className="chart-box fade-up" style={{ animationDelay: `${delay * 0.05}s`, padding: "20px 20px 16px", position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", top: 12, right: 14, fontSize: 10, padding: "3px 8px", borderRadius: 6, background: (color || T.gold) + "15", color: color || T.gold, fontWeight: 700 }}>{icon}</div>
-      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
-      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: color || T.gold, lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: T.green, marginTop: 6, fontWeight: 500 }}>{sub}</div>}
-    </div>
-  );
-
-  const Section = ({ title, sub, children, action }) => (
-    <div style={{ marginBottom: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 16 }}>
-        <div style={{ borderLeft: `3px solid ${T.gold}`, paddingLeft: 14 }}>
-          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.white, lineHeight: 1.2 }}>{title}</h2>
-          {sub && <p style={{ fontSize: 12, color: T.textSecondary, marginTop: 3 }}>{sub}</p>}
-        </div>
-        {action}
-      </div>
-      {children}
-    </div>
-  );
-
-  const inputStyle = {
-    width: "100%", padding: "11px 14px", background: T.bg, border: `1px solid ${T.border}`,
-    borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif",
-    outline: "none", transition: "border-color 0.2s, box-shadow 0.2s",
-  };
-  const labelStyle = { display: "block", fontSize: 9, fontWeight: 700, color: T.textMuted, marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" };
-
-  const Input = ({ label, value, onChange, placeholder, type, rows }) => (
-    <div>
-      <label style={labelStyle}>{label}</label>
-      {rows ? (
-        <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={rows}
-          style={{ ...inputStyle, resize: "vertical", minHeight: 60 }}
-          onFocus={e => { e.target.style.borderColor = T.gold; e.target.style.boxShadow = `0 0 0 3px ${T.goldGlow}`; }}
-          onBlur={e => { e.target.style.borderColor = T.border; e.target.style.boxShadow = "none"; }} />
-      ) : (
-        <input type={type || "text"} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-          style={inputStyle}
-          onFocus={e => { e.target.style.borderColor = T.gold; e.target.style.boxShadow = `0 0 0 3px ${T.goldGlow}`; }}
-          onBlur={e => { e.target.style.borderColor = T.border; e.target.style.boxShadow = "none"; }} />
-      )}
-    </div>
-  );
-
-  const Select = ({ label, value, onChange, options }) => (
-    <div>
-      <label style={labelStyle}>{label}</label>
-      <select value={value} onChange={e => onChange(e.target.value)}
-        style={{ ...inputStyle, cursor: "pointer", appearance: "none", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-        onFocus={e => { e.target.style.borderColor = T.gold; }} onBlur={e => { e.target.style.borderColor = T.border; }}>
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
-      </select>
-    </div>
-  );
+  /* ─── RENDER (components defined at module level above) ─── */
 
   /* ═══════════════════════════════════════
      RENDER
