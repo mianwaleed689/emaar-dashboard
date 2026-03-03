@@ -254,6 +254,13 @@ const css = `
     .kpi-card .kpi-value { font-size: 22px !important; }
     .chart-box { padding: 14px 10px !important; border-radius: 12px !important; }
     .main-content > div { padding: 0 14px 40px !important; }
+    .filter-scroll { overflow-x: auto; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 4px; }
+    .filter-scroll::-webkit-scrollbar { display: none; }
+    .filter-scroll button { flex-shrink: 0; }
+    .compare-bar { padding: 10px 14px !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
+    .compare-bar > div { justify-content: center; flex-wrap: wrap; }
+    .table-scroll { position: relative; }
+    .table-scroll::after { content: "→"; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: ${T.gold}; font-size: 16px; opacity: 0.4; pointer-events: none; }
   }
 
   @media (max-width: 480px) {
@@ -264,10 +271,24 @@ const css = `
     .top-bar { padding: 0 12px !important; }
     .top-bar h1 { font-size: 13px !important; }
     .mobile-stock-bar { display: flex !important; }
+    .chart-box .recharts-responsive-container { max-height: 200px !important; }
   }
 `;
 
 /* ─── COMPONENTS ─── */
+
+/* Loading Skeleton for data fetch */
+const LoadingSkeleton = ({ rows = 6, cols = 3 }) => (
+  <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 12 }}>
+    {Array.from({ length: rows }).map((_, i) => (
+      <div key={i} className="chart-box fade-up" style={{ animationDelay: `${i * 0.05}s`, padding: 20, minHeight: 120 }}>
+        <div style={{ width: "40%", height: 10, borderRadius: 4, background: T.surfaceAlt, marginBottom: 12 }} />
+        <div style={{ width: "60%", height: 22, borderRadius: 4, background: T.surfaceAlt, marginBottom: 10 }} />
+        <div style={{ width: "80%", height: 8, borderRadius: 4, background: T.surfaceAlt }} />
+      </div>
+    ))}
+  </div>
+);
 
 const KPI = ({ label, value, sub, icon, delay = 0 }) => (
   <div className={`kpi-card fade-up delay-${delay}`}>
@@ -580,6 +601,8 @@ export default function EmaarDashboardV2() {
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
   const [showLogin, setShowLogin] = useState(false); // false, "login", or "signup"
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [toast, setToast] = useState("");
+  const notify = (msg) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
   const [adminUsers, setAdminUsers] = useState([]);
   const [adminLoading, setAdminLoading] = useState(false);
 
@@ -620,16 +643,20 @@ export default function EmaarDashboardV2() {
   const [selectedStockTv, setSelectedStockTv] = useState(null);
 
   // Load projects from Firestore
+  const [projectsLoading, setProjectsLoading] = useState(true);
   useEffect(() => {
     const loadProjects = async () => {
+      setProjectsLoading(true);
       try {
         const snap = await getDocs(query(collection(db, "projects"), orderBy("id")));
         if (snap.size > 0) {
           setLiveProjects(snap.docs.map(d => d.data()));
         }
       } catch (e) { console.log("Firestore not available, using static data"); }
+      setProjectsLoading(false);
     };
     if (isLoggedIn) loadProjects();
+    else setProjectsLoading(false);
   }, [isLoggedIn]);
 
   // Use Firestore data if available, otherwise fall back to hardcoded
@@ -645,6 +672,10 @@ export default function EmaarDashboardV2() {
       if (prev.length >= 3) return prev;
       return [...prev, p];
     });
+    const exists = compareList.find(x => x.id === p.id);
+    if (exists) notify("Removed " + p.name + " from comparison");
+    else if (compareList.length < 3) notify("\u2705 Added " + p.name + " to comparison");
+    else notify("\u26A0\uFE0F Max 3 projects for comparison");
   };
   const [stock, setStock] = useState({ price: 17.05, change: 0.46, changePercent: 2.75, dayHigh: null, dayLow: null, volume: null, marketState: "LOADING", open: null });
   const [stockLive, setStockLive] = useState(false);
@@ -797,10 +828,15 @@ export default function EmaarDashboardV2() {
   };
 
   const handleChangeTier = async (userId, newTier) => {
+    const user = adminUsers.find(u => u.id === userId);
+    const userName = user ? (user.name || user.email) : userId;
+    if (!window.confirm(`Change ${userName} to "${newTier}"?`)) return;
     try {
       await setDoc(doc(db, "users", userId), { tier: newTier }, { merge: true });
       setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, tier: newTier, status: newTier } : u));
+      notify(`✅ ${userName} → ${newTier}`);
     } catch (err) {
+      notify("❌ Failed to update tier");
       console.log("Failed to update tier:", err);
     }
   };
@@ -817,6 +853,9 @@ export default function EmaarDashboardV2() {
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit', sans-serif" }}>
       <style>{css}</style>
+
+      {/* Toast notification */}
+      {toast && <div className="fade-up" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : toast.includes("❌") ? T.red : T.gold, color: "#fff", fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)", fontFamily: "'Outfit', sans-serif" }}>{toast}</div>}
 
       {/* Mobile overlay */}
       <div className={`mobile-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
@@ -1188,7 +1227,7 @@ export default function EmaarDashboardV2() {
             </Section>
 
             <Section title="Full Financial Summary" sub="All key metrics · 2020–2025 · AED Billions">
-              <div style={{ overflowX: "auto", marginTop: 12 }}>
+              <div className="table-scroll" style={{ overflowX: "auto", marginTop: 12 }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 700 }}>
                   <thead>
                     <tr style={{ borderBottom: `2px solid ${T.border}` }}>
@@ -1231,7 +1270,7 @@ export default function EmaarDashboardV2() {
             </Section>
 
             {/* Search & Filters */}
-            <div style={{ display: "flex", gap: 10, marginTop: 20, flexWrap: "wrap", alignItems: "center" }}>
+            <div className="filter-scroll" style={{ display: "flex", gap: 10, marginTop: 20, flexWrap: "wrap", alignItems: "center" }}>
               <div style={{ position: "relative", flex: "1 1 250px", maxWidth: 350 }}>
                 <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{Icons.search}</span>
                 <input value={projectSearch} onChange={e => setProjectSearch(e.target.value)} placeholder="Search projects..." style={{ width: "100%", padding: "10px 12px 10px 36px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none" }} />
@@ -1242,7 +1281,8 @@ export default function EmaarDashboardV2() {
             </div>
 
             {/* Project Cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12, marginTop: 16 }}>
+            {projectsLoading ? <LoadingSkeleton rows={6} cols={3} /> : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginTop: 16 }}>
               {activeProjects
                 .filter(p => {
                   const matchSearch = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase());
@@ -1252,7 +1292,7 @@ export default function EmaarDashboardV2() {
                 .map((p, i) => {
                   const isLocked = !isPro && i >= 5;
                   return (
-                <div key={p.id} className="chart-box fade-up" style={{ animationDelay: `${Math.min(i * 0.03, 0.5)}s`, padding: 0, overflow: "hidden", cursor: isLocked ? "default" : "pointer", outline: compareList.find(x=>x.id===p.id) ? `2px solid ${T.gold}` : "none", outlineOffset: "-1px", position: "relative" }} onClick={() => !isLocked && setSelectedProject(p)}>
+                <div key={p.id} className="chart-box fade-up" style={{ animationDelay: `${Math.min(i * 0.03, 0.5)}s`, padding: 0, overflow: "hidden", cursor: isLocked ? "default" : "pointer", outline: compareList.find(x=>x.id===p.id) ? `2px solid ${T.gold}` : "none", outlineOffset: "-1px", position: "relative", boxShadow: compareList.find(x=>x.id===p.id) ? `0 0 20px rgba(212,168,67,0.2)` : "none" }} onClick={() => !isLocked && setSelectedProject(p)}>
                   {/* Lock overlay for free users */}
                   {isLocked && (
                     <div style={{ position: "absolute", inset: 0, background: "rgba(4,9,15,0.7)", backdropFilter: "blur(4px)", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRadius: 12 }}>
@@ -1260,6 +1300,10 @@ export default function EmaarDashboardV2() {
                       <span style={{ fontSize: 12, fontWeight: 600, color: T.white }}>Pro Feature</span>
                       <button type="button" onClick={(e) => { e.stopPropagation(); setShowUpgrade(true); }} style={{ marginTop: 8, padding: "6px 16px", background: T.gold, color: T.bg, border: "none", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Unlock</button>
                     </div>
+                  )}
+                  {/* Compare badge */}
+                  {compareList.find(x=>x.id===p.id) && (
+                    <div style={{ position: "absolute", top: 8, right: 8, padding: "3px 8px", borderRadius: 6, background: T.gold, color: T.bg, fontSize: 9, fontWeight: 800, zIndex: 5, letterSpacing: 0.5 }}>COMPARING</div>
                   )}
                   {/* Project Image */}
                   {p.imageUrl && (
@@ -1347,6 +1391,7 @@ export default function EmaarDashboardV2() {
                 </div>
               )}
             </div>
+            )}
 
             {/* Community Summary */}
             <Section title="Communities Overview" sub="11 master-planned communities">
@@ -1431,7 +1476,7 @@ export default function EmaarDashboardV2() {
             </div>
 
             <Section title="Community Details" sub="Yield ranges and pricing per community">
-              <div style={{ overflowX: "auto", marginTop: 12 }}>
+              <div className="table-scroll" style={{ overflowX: "auto", marginTop: 12 }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ borderBottom: `2px solid ${T.border}` }}>
@@ -1527,7 +1572,7 @@ export default function EmaarDashboardV2() {
             </div>
 
             <Section title="Developer Profiles" sub="Verified from DXBinteract · Full year 2025">
-              <div style={{ overflowX: "auto", marginTop: 12 }}>
+              <div className="table-scroll" style={{ overflowX: "auto", marginTop: 12 }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
                   <thead>
                     <tr style={{ borderBottom: `2px solid ${T.border}` }}>
@@ -1613,7 +1658,7 @@ export default function EmaarDashboardV2() {
             </div>
 
             <Section title="Detailed Yield Data" sub="All Emaar communities · Annual rents · Launch prices · Demand levels">
-              <div style={{ overflowX: "auto", marginTop: 12 }}>
+              <div className="table-scroll" style={{ overflowX: "auto", marginTop: 12 }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 750 }}>
                   <thead>
                     <tr style={{ borderBottom: `2px solid ${T.border}` }}>
@@ -1870,7 +1915,7 @@ export default function EmaarDashboardV2() {
                   <p style={{ color: T.textMuted, fontSize: 12, marginTop: 12 }}>Loading users...</p>
                 </div>
               ) : (
-                <div style={{ overflowX: "auto", marginTop: 12 }}>
+                <div className="table-scroll" style={{ overflowX: "auto", marginTop: 12 }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
                     <thead>
                       <tr style={{ borderBottom: `2px solid ${T.border}` }}>
@@ -1998,7 +2043,7 @@ export default function EmaarDashboardV2() {
 
       {/* ─── FLOATING COMPARE BAR ─── */}
       {compareList.length > 0 && tab === "Projects" && (
-        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: T.surface, borderTop: `2px solid ${T.gold}`, padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 1000, backdropFilter: "blur(12px)" }}>
+        <div className="compare-bar" style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: T.surface, borderTop: `2px solid ${T.gold}`, padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 1000, backdropFilter: "blur(12px)", flexWrap: "wrap", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ color: T.gold, fontWeight: 700, fontSize: 13 }}>Compare ({compareList.length}/3):</span>
             {compareList.map(p => (
@@ -2216,7 +2261,7 @@ export default function EmaarDashboardV2() {
               <button type="button" onClick={() => setShowCompare(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>✕</button>
             </div>
 
-            <div style={{ overflowX: "auto" }}>
+            <div className="table-scroll" style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ borderBottom: `2px solid ${T.gold}` }}>
