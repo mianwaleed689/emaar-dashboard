@@ -506,6 +506,71 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
   );
 };
 
+/* ─── PRO GATE OVERLAY ─── */
+const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this data", onUpgrade, blur = true }) => {
+  if (isPro) return children;
+  return (
+    <div style={{ position: "relative" }}>
+      <div style={{ filter: blur ? "blur(6px)" : "none", pointerEvents: "none", userSelect: "none", opacity: blur ? 0.5 : 1 }}>
+        {children}
+      </div>
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(4,9,15,0.6)", borderRadius: 12, backdropFilter: "blur(2px)", zIndex: 5 }}>
+        <div style={{ fontSize: 28, marginBottom: 8 }}>🔒</div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 4, textAlign: "center" }}>{message}</div>
+        <div style={{ fontSize: 11, color: T.textSecondary, marginBottom: 12, textAlign: "center", maxWidth: 260 }}>Get full access to all features with Pro</div>
+        <button onClick={onUpgrade} style={{ padding: "8px 24px", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}>
+          Upgrade to Pro — AED 99/mo
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/* ─── UPGRADE MODAL ─── */
+const UpgradeModal = ({ show, onClose }) => {
+  if (!show) return null;
+  const plans = [
+    { name: "Pro", price: "99", features: ["All 48+ projects", "Full 6-year financials", "Yields & ROI data", "Stock market tracker", "Competitor analysis", "3-project comparison", "Location intelligence", "WhatsApp/Email inquiry"], popular: true },
+    { name: "Enterprise", price: "499", features: ["Everything in Pro", "PDF report generation", "API access", "Custom dashboards", "Multi-user accounts", "Developer-level data", "Dedicated account manager", "White-label options"], popular: false },
+  ];
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={onClose}>
+      <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 680, padding: 32, position: "relative" }} onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+        
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>⭐</div>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 900, color: T.white, marginBottom: 4 }}>Unlock Full Access</h2>
+          <p style={{ color: T.textSecondary, fontSize: 13 }}>Choose the plan that fits your needs</p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          {plans.map((plan, i) => (
+            <div key={i} style={{ background: T.surfaceAlt, borderRadius: 14, padding: 24, border: plan.popular ? `2px solid ${T.gold}` : `1px solid ${T.border}`, position: "relative" }}>
+              {plan.popular && <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", padding: "3px 12px", borderRadius: 10, background: T.gold, color: T.bg, fontSize: 10, fontWeight: 700 }}>RECOMMENDED</div>}
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: T.white, marginBottom: 4 }}>{plan.name}</h3>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 16 }}>
+                <span style={{ fontSize: 10, color: T.textMuted }}>AED</span>
+                <span style={{ fontFamily: "'Fraunces', serif", fontSize: 36, fontWeight: 900, color: plan.popular ? T.gold : T.white }}>{plan.price}</span>
+                <span style={{ fontSize: 12, color: T.textMuted }}>/month</span>
+              </div>
+              {plan.features.map((f, j) => (
+                <div key={j} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0", fontSize: 12, color: T.textSecondary }}>
+                  <span style={{ color: T.green, fontSize: 12 }}>✓</span>{f}
+                </div>
+              ))}
+              <button style={{ width: "100%", marginTop: 16, padding: "10px 0", background: plan.popular ? `linear-gradient(135deg, ${T.gold}, ${T.goldLight})` : "transparent", color: plan.popular ? T.bg : T.gold, border: plan.popular ? "none" : `1px solid ${T.gold}`, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                {plan.popular ? "Get Pro Now" : "Contact Sales"}
+              </button>
+            </div>
+          ))}
+        </div>
+        <p style={{ textAlign: "center", fontSize: 11, color: T.textMuted, marginTop: 16 }}>Coming soon — Stripe payment integration</p>
+      </div>
+    </div>
+  );
+};
+
 /* ─── MAIN DASHBOARD ─── */
 export default function EmaarDashboardV2() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -514,6 +579,29 @@ export default function EmaarDashboardV2() {
   const [userTier, setUserTier] = useState("free"); // "free", "pro_trial", "pro", "enterprise", "admin"
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
   const [showLogin, setShowLogin] = useState(false); // false, "login", or "signup"
+  const [showUpgrade, setShowUpgrade] = useState(false);
+
+  // Tier access helper
+  const isPro = userTier === "admin" || userTier === "pro" || userTier === "pro_trial" || userTier === "enterprise";
+
+  // Upgrade overlay for locked content
+  const UpgradeOverlay = ({ message, compact }) => (
+    <div style={{ position: "absolute", inset: 0, background: "rgba(4,9,15,0.85)", backdropFilter: "blur(8px)", borderRadius: "inherit", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, flexDirection: "column", gap: compact ? 8 : 12 }}>
+      <div style={{ fontSize: compact ? 20 : 28 }}>🔒</div>
+      <div style={{ fontSize: compact ? 12 : 14, fontWeight: 600, color: T.white, textAlign: "center", maxWidth: 220 }}>{message || "Pro Feature"}</div>
+      <button style={{ padding: compact ? "6px 14px" : "8px 20px", borderRadius: 8, background: T.gold, color: T.bg, border: "none", fontSize: compact ? 11 : 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro</button>
+    </div>
+  );
+
+  // Blur wrapper for free users
+  const BlurGate = ({ children, locked, message, compact }) => (
+    <div style={{ position: "relative" }}>
+      <div style={locked ? { filter: "blur(6px)", pointerEvents: "none", userSelect: "none" } : {}}>
+        {children}
+      </div>
+      {locked && <UpgradeOverlay message={message} compact={compact} />}
+    </div>
+  );
   const [tab, setTab] = useState("Overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [time, setTime] = useState(new Date());
@@ -914,6 +1002,7 @@ export default function EmaarDashboardV2() {
               </div>
             </Section>
 
+            <ProGate isPro={isPro} message="Unlock 6 Years of Financial Data" onUpgrade={() => setShowUpgrade(true)}>
             <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 20 }}>
               <Chart title="Revenue vs Property Sales (AED B)">
                 <ResponsiveContainer width="100%" height={280}>
@@ -1063,6 +1152,7 @@ export default function EmaarDashboardV2() {
                 </table>
               </div>
             </Section>
+            </ProGate>
           </>}
 
           {/* ─── PROJECTS TAB (48 Projects from Excel) ─── */}
@@ -1095,8 +1185,18 @@ export default function EmaarDashboardV2() {
                   const matchFilter = projectFilter === "All" || p.district === projectFilter || (projectFilter === "Branded" && p.branded);
                   return matchSearch && matchFilter;
                 })
-                .map((p, i) => (
-                <div key={p.id} className="chart-box fade-up" style={{ animationDelay: `${Math.min(i * 0.03, 0.5)}s`, padding: 0, overflow: "hidden", cursor: "pointer", outline: compareList.find(x=>x.id===p.id) ? `2px solid ${T.gold}` : "none", outlineOffset: "-1px" }} onClick={() => setSelectedProject(p)}>
+                .map((p, i) => {
+                  const isLocked = !isPro && i >= 5;
+                  return (
+                <div key={p.id} className="chart-box fade-up" style={{ animationDelay: `${Math.min(i * 0.03, 0.5)}s`, padding: 0, overflow: "hidden", cursor: isLocked ? "default" : "pointer", outline: compareList.find(x=>x.id===p.id) ? `2px solid ${T.gold}` : "none", outlineOffset: "-1px", position: "relative" }} onClick={() => !isLocked && setSelectedProject(p)}>
+                  {/* Lock overlay for free users */}
+                  {isLocked && (
+                    <div style={{ position: "absolute", inset: 0, background: "rgba(4,9,15,0.7)", backdropFilter: "blur(4px)", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRadius: 12 }}>
+                      <span style={{ fontSize: 24, marginBottom: 6 }}>🔒</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: T.white }}>Pro Feature</span>
+                      <button onClick={(e) => { e.stopPropagation(); setShowUpgrade(true); }} style={{ marginTop: 8, padding: "6px 16px", background: T.gold, color: T.bg, border: "none", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Unlock</button>
+                    </div>
+                  )}
                   {/* Project Image */}
                   {p.imageUrl && (
                     <div style={{ width: "100%", height: 140, overflow: "hidden", borderBottom: `1px solid ${T.border}` }}>
@@ -1153,6 +1253,7 @@ export default function EmaarDashboardV2() {
                   </div>
                   {/* Action Buttons */}
                   <div style={{ display: "flex", gap: 6, marginTop: 10 }} onClick={e => e.stopPropagation()}>
+                    {isPro ? (<>
                     <a href={whatsappLink(p.name, p.community)} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "8px 0", background: "#25D366", borderRadius: 8, color: "#fff", fontSize: 11, fontWeight: 600, textAlign: "center", textDecoration: "none" }}>
                       WhatsApp
                     </a>
@@ -1162,13 +1263,18 @@ export default function EmaarDashboardV2() {
                     <a href="tel:+971542410599" style={{ padding: "8px 10px", background: T.teal, borderRadius: 8, color: "#fff", fontSize: 11, fontWeight: 600, textAlign: "center", textDecoration: "none" }}>
                       📞
                     </a>
-                    <button onClick={(e) => { e.stopPropagation(); toggleCompare(p); }} style={{ padding: "8px 10px", background: compareList.find(x=>x.id===p.id) ? T.goldGlow : T.surfaceAlt, border: `1px solid ${compareList.find(x=>x.id===p.id) ? T.gold : T.border}`, borderRadius: 8, color: compareList.find(x=>x.id===p.id) ? T.gold : T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                      {compareList.find(x=>x.id===p.id) ? "✓" : "⊕"}
+                    </>) : (<>
+                    <button onClick={() => setShowUpgrade(true)} style={{ flex: 1, padding: "8px 0", background: "rgba(37,211,102,0.15)", borderRadius: 8, color: "rgba(37,211,102,0.5)", fontSize: 11, fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 WhatsApp</button>
+                    <button onClick={() => setShowUpgrade(true)} style={{ flex: 1, padding: "8px 0", background: "rgba(212,168,67,0.1)", borderRadius: 8, color: "rgba(212,168,67,0.5)", fontSize: 11, fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 Email</button>
+                    <button onClick={() => setShowUpgrade(true)} style={{ padding: "8px 10px", background: "rgba(0,191,165,0.1)", borderRadius: 8, color: "rgba(0,191,165,0.5)", fontSize: 11, fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer" }}>🔒</button>
+                    </>)}
+                    <button onClick={(e) => { e.stopPropagation(); isPro ? toggleCompare(p) : setShowUpgrade(true); }} style={{ padding: "8px 10px", background: !isPro ? "rgba(212,168,67,0.05)" : compareList.find(x=>x.id===p.id) ? T.goldGlow : T.surfaceAlt, border: `1px solid ${!isPro ? T.border : compareList.find(x=>x.id===p.id) ? T.gold : T.border}`, borderRadius: 8, color: !isPro ? T.textMuted : compareList.find(x=>x.id===p.id) ? T.gold : T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                      {!isPro ? "🔒" : compareList.find(x=>x.id===p.id) ? "✓" : "⊕"}
                     </button>
                   </div>
                   </div>{/* end padding wrapper */}
                 </div>
-              ))}
+              );})}
             </div>
 
             {/* Community Summary */}
@@ -1309,6 +1415,7 @@ export default function EmaarDashboardV2() {
               </div>
             </Section>
 
+            <ProGate isPro={isPro} message="Unlock Competitor Analysis" onUpgrade={() => setShowUpgrade(true)}>
             <Chart title="Sales Value (AED Billions) — Top 10 Developers" style={{ marginTop: 20 }}>
               <ResponsiveContainer width="100%" height={380}>
                 <BarChart data={developers} layout="vertical">
@@ -1395,10 +1502,12 @@ export default function EmaarDashboardV2() {
                 ))}
               </div>
             </Section>
+            </ProGate>
           </>}
 
           {/* ─── YIELDS TAB ─── */}
           {tab === "Yields" && <>
+            <ProGate isPro={isPro} message="Unlock Rental Yield Analysis" onUpgrade={() => setShowUpgrade(true)}>
             <Section title="Rental Yield Analysis" sub="DLD Rental Index, Bayut, Property Finder · Launch prices">
               <Chart title="Gross Yield by Community & Unit Type (%)" style={{ marginTop: 16 }}>
                 <ResponsiveContainer width="100%" height={320}>
@@ -1476,6 +1585,7 @@ export default function EmaarDashboardV2() {
                 </ResponsiveContainer>
               </Chart>
             </Section>
+            </ProGate>
           </>}
 
           {/* ─── RISK TAB ─── */}
@@ -1486,7 +1596,8 @@ export default function EmaarDashboardV2() {
                 <KPI label="Highest Risk" value="125" sub="Premium Pricing" delay={2} />
                 <KPI label="Lowest Risk" value="1" sub="Liquidity / Exit" delay={3} />
               </div>
-
+            </Section>
+            <ProGate isPro={isPro} message="Unlock Full Risk Analysis" onUpgrade={() => setShowUpgrade(true)}>
               <Chart title="Risk Score by Factor (Higher = More Risk)" style={{ marginTop: 20 }}>
                 <ResponsiveContainer width="100%" height={380}>
                   <BarChart data={risks} layout="vertical">
@@ -1500,7 +1611,6 @@ export default function EmaarDashboardV2() {
                   </BarChart>
                 </ResponsiveContainer>
               </Chart>
-            </Section>
 
             <Section title="Mitigation Strategies" sub="How Emaar mitigates key risks">
               <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
@@ -1517,6 +1627,7 @@ export default function EmaarDashboardV2() {
                 ))}
               </div>
             </Section>
+            </ProGate>
           </>}
 
           {/* ─── STOCKS TAB ─── */}
@@ -1552,6 +1663,7 @@ export default function EmaarDashboardV2() {
             </div>
 
             {/* Stock Cards Grid */}
+            <ProGate isPro={isPro} message="Unlock 30 RE Stocks Tracker" onUpgrade={() => setShowUpgrade(true)}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
               {RE_STOCKS.filter(s => {
                 const matchFilter = stockFilter === "All" || s.exchange === stockFilter;
@@ -1606,6 +1718,7 @@ export default function EmaarDashboardV2() {
                 DAMAC Properties (delisted 2020), Nakheel (Dubai Holding subsidiary), Azizi Developments, Sobha Realty, Binghatti, Select Group, Omniyat, Meraas, Ellington Properties, Danube Properties, Samana Developers, MAG, and many others are private companies. They do not have publicly traded shares. Only the 30 companies above can be invested in through stock exchanges.
               </p>
             </div>
+            </ProGate>
           </>}
 
           {/* ─── MARKET TAB ─── */}
@@ -1777,6 +1890,7 @@ export default function EmaarDashboardV2() {
 
               {/* ─── LOCATION INTELLIGENCE SECTION ─── */}
               {ci && (
+                <ProGate isPro={isPro} message="Unlock Location Intelligence" onUpgrade={() => setShowUpgrade(true)}>
                 <>
                   {/* Community Famous For */}
                   <div style={{ marginBottom: 16, background: `linear-gradient(135deg, rgba(212,168,67,0.08), rgba(0,191,165,0.05))`, borderRadius: 12, padding: 14, border: `1px solid ${T.border}` }}>
@@ -1849,9 +1963,11 @@ export default function EmaarDashboardV2() {
                     </div>
                   </div>
                 </>
+                </ProGate>
               )}
 
               {/* Contact CTAs */}
+              {isPro ? (
               <div style={{ display: "flex", gap: 8 }}>
                 <a href={whatsappLink(selectedProject.name, selectedProject.community)} target="_blank" rel="noopener noreferrer"
                   style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "#25D366", borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
@@ -1869,6 +1985,13 @@ export default function EmaarDashboardV2() {
                   Call
                 </a>
               </div>
+              ) : (
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => setShowUpgrade(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "rgba(37,211,102,0.1)", borderRadius: 12, color: "rgba(37,211,102,0.5)", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 WhatsApp</button>
+                <button onClick={() => setShowUpgrade(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "rgba(212,168,67,0.1)", borderRadius: 12, color: "rgba(212,168,67,0.5)", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 Email</button>
+                <button onClick={() => setShowUpgrade(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "rgba(0,191,165,0.1)", borderRadius: 12, color: "rgba(0,191,165,0.5)", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 Call</button>
+              </div>
+              )}
             </div>
           </div>
         </div>
@@ -2074,6 +2197,9 @@ export default function EmaarDashboardV2() {
           </div>
         </div>
       )}
+
+      {/* Upgrade Modal */}
+      <UpgradeModal show={showUpgrade} onClose={() => setShowUpgrade(false)} />
     </div>
   );
 }
