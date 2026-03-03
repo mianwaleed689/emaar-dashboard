@@ -11,8 +11,8 @@ import LandingPage from "./LandingPage";
 const financials = emaarFinancials;
 const segments = emaarSegments;
 const risks = emaarRisks.map(r => ({ factor: r.factor, score: r.score, max: 150, color: r.color }));
-const yields = emaarYields.map(y => ({ label: y.unit, community: y.community, rent: y.rent/1000, price: y.price/1000, gross: y.gross, net: y.net, demand: y.demand === "Very High" ? "V.High" : y.demand === "Moderate-High" ? "High" : y.demand }));
-const developers = topDevelopers.map(d => ({ rank: d.rank, name: d.name.replace(" Properties","").replace(" Realty","").replace(" Development",""), sales: d.sales, units: d.units, delivered: d.delivered, underConst: d.underConst, color: d.color }));
+const yields = emaarYields.map(y => ({ label: y.unit, community: y.community, rent: y.rent/1000, price: y.price/1000, gross: y.gross, net: y.net, demand: y.demand === "Very High" ? "V.High" : y.demand === "Moderate-High" ? "High" : y.demand, visa: y.visa }));
+const developers = topDevelopers.map(d => ({ rank: d.rank, name: d.name.replace(" Properties","").replace(" Realty","").replace(" Development",""), sales: d.sales, units: d.units, delivered: d.delivered, underConst: d.underConst, color: d.color, share: d.share, segment: d.segment }));
 const communityProjects = emaarCommunities.filter(c => c.name).map(c => ({ name: c.district, full: c.name, projects: c.projects, yield: c.avgYield ? `${c.avgYield}%` : "—", ppsf: c.avgPpsf ? c.avgPpsf.toLocaleString() : "—" }));
 /* ─── ICONS (inline SVG) ─── */
 const Icons = {
@@ -102,7 +102,7 @@ const css = `
   ::-webkit-scrollbar-thumb:hover { background: rgba(212,168,67,0.35); }
 
   @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
   @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
   @keyframes glow { 0%, 100% { box-shadow: 0 0 20px rgba(212,168,67,0.1); } 50% { box-shadow: 0 0 40px rgba(212,168,67,0.2); } }
@@ -151,6 +151,8 @@ const css = `
     transition: border-color 0.3s;
   }
   .chart-box:hover { border-color: ${T.borderHover}; }
+  select option { background: ${T.surface}; color: ${T.textPrimary}; }
+  * { scrollbar-width: thin; scrollbar-color: rgba(212,168,67,0.15) transparent; }
 
   .sidebar-btn {
     display: flex;
@@ -396,7 +398,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
       <style>{css}</style>
       {/* Back to Landing */}
       {onBack && (
-        <button onClick={onBack} style={{ position: "absolute", top: 24, left: 24, display: "flex", alignItems: "center", gap: 6, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 16px", color: T.textSecondary, fontSize: 13, fontFamily: "'Outfit', sans-serif", cursor: "pointer", zIndex: 10, transition: "all 0.2s" }}
+        <button type="button" onClick={onBack} style={{ position: "absolute", top: 24, left: 24, display: "flex", alignItems: "center", gap: 6, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 16px", color: T.textSecondary, fontSize: 13, fontFamily: "'Outfit', sans-serif", cursor: "pointer", zIndex: 10, transition: "all 0.2s" }}
           onMouseEnter={e => { e.target.style.borderColor = T.gold; e.target.style.color = T.gold; }}
           onMouseLeave={e => { e.target.style.borderColor = T.border; e.target.style.color = T.textSecondary; }}>
           ← Back to Home
@@ -424,8 +426,8 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 32, backdropFilter: "blur(20px)" }}>
           {/* Mode Toggle */}
           <div style={{ display: "flex", marginBottom: 24, background: T.surfaceAlt, borderRadius: 10, padding: 3 }}>
-            <button onClick={() => { setMode("login"); setError(""); }} style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: "none", fontFamily: "'Outfit', sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: mode === "login" ? T.gold : "transparent", color: mode === "login" ? T.bg : T.textMuted }}>Sign In</button>
-            <button onClick={() => { setMode("signup"); setError(""); }} style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: "none", fontFamily: "'Outfit', sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: mode === "signup" ? T.gold : "transparent", color: mode === "signup" ? T.bg : T.textMuted }}>Sign Up Free</button>
+            <button type="button" onClick={() => { setMode("login"); setError(""); }} style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: "none", fontFamily: "'Outfit', sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: mode === "login" ? T.gold : "transparent", color: mode === "login" ? T.bg : T.textMuted }}>Sign In</button>
+            <button type="button" onClick={() => { setMode("signup"); setError(""); }} style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: "none", fontFamily: "'Outfit', sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: mode === "signup" ? T.gold : "transparent", color: mode === "signup" ? T.bg : T.textMuted }}>Sign Up Free</button>
           </div>
 
           <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 700, color: T.white, marginBottom: 4 }}>
@@ -450,7 +452,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
               <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Password</label>
               <div style={{ position: "relative" }}>
                 <input className="login-input" type={showPass ? "text" : "password"} placeholder={mode === "signup" ? "Min 6 characters" : "••••••••"} value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && (mode === "login" ? handleLogin() : handleSignUp())} style={{ paddingRight: 44 }} />
-                <button onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }}>
+                <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }}>
                   {showPass ? Icons.eyeOff : Icons.eye}
                 </button>
               </div>
@@ -460,15 +462,12 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             {resetSent && <div style={{ color: T.green, fontSize: 12, padding: "8px 12px", background: "rgba(16,185,129,0.08)", borderRadius: 8, border: "1px solid rgba(16,185,129,0.2)" }}>Password reset email sent! Check your inbox.</div>}
 
             {mode === "login" && (
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", color: T.textSecondary, fontSize: 12 }}>
-                  <input type="checkbox" style={{ accentColor: T.gold }} /> Remember me
-                </label>
-                <a onClick={handleForgot} style={{ color: T.gold, fontSize: 12, textDecoration: "none", cursor: "pointer" }}>Forgot password?</a>
+              <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+                <button onClick={handleForgot} type="button" style={{ background: "none", border: "none", color: T.gold, fontSize: 12, textDecoration: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Forgot password?</button>
               </div>
             )}
 
-            <button className="login-btn" onClick={mode === "login" ? handleLogin : handleSignUp} disabled={loading}>
+            <button type="button" className="login-btn" onClick={mode === "login" ? handleLogin : handleSignUp} disabled={loading}>
               {loading ? (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                   <span style={{ width: 16, height: 16, border: "2px solid rgba(4,9,15,0.3)", borderTopColor: T.bg, borderRadius: "50%", animation: "spin 0.6s linear infinite", display: "inline-block" }} />
@@ -490,9 +489,9 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
           <div style={{ textAlign: "center", marginTop: 24, paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
             <p style={{ color: T.textMuted, fontSize: 12 }}>
               {mode === "login" ? (
-                <>Don't have an account? <a onClick={() => { setMode("signup"); setError(""); }} style={{ color: T.gold, textDecoration: "none", fontWeight: 600, cursor: "pointer" }}>Sign up free</a></>
+                <>Don't have an account? <button type="button" onClick={() => { setMode("signup"); setError(""); }} style={{ color: T.gold, background: "none", border: "none", fontWeight: 600, cursor: "pointer", fontSize: 12, fontFamily: "'Outfit', sans-serif", padding: 0 }}>Sign up free</button></>
               ) : (
-                <>Already have an account? <a onClick={() => { setMode("login"); setError(""); }} style={{ color: T.gold, textDecoration: "none", fontWeight: 600, cursor: "pointer" }}>Sign in</a></>
+                <>Already have an account? <button type="button" onClick={() => { setMode("login"); setError(""); }} style={{ color: T.gold, background: "none", border: "none", fontWeight: 600, cursor: "pointer", fontSize: 12, fontFamily: "'Outfit', sans-serif", padding: 0 }}>Sign in</button></>
               )}
             </p>
           </div>
@@ -519,7 +518,7 @@ const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this dat
         <div style={{ fontSize: 28, marginBottom: 8 }}>🔒</div>
         <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 4, textAlign: "center" }}>{message}</div>
         <div style={{ fontSize: 11, color: T.textSecondary, marginBottom: 12, textAlign: "center", maxWidth: 260 }}>Get full access to all features with Pro</div>
-        <button onClick={onUpgrade} style={{ padding: "8px 24px", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}>
+        <button type="button" onClick={onUpgrade} style={{ padding: "8px 24px", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}>
           Upgrade to Pro — AED 99/mo
         </button>
       </div>
@@ -537,7 +536,7 @@ const UpgradeModal = ({ show, onClose }) => {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={onClose}>
       <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 680, padding: 32, position: "relative" }} onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+        <button type="button" onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
         
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{ fontSize: 28, marginBottom: 8 }}>⭐</div>
@@ -560,13 +559,13 @@ const UpgradeModal = ({ show, onClose }) => {
                   <span style={{ color: T.green, fontSize: 12 }}>✓</span>{f}
                 </div>
               ))}
-              <button style={{ width: "100%", marginTop: 16, padding: "10px 0", background: plan.popular ? `linear-gradient(135deg, ${T.gold}, ${T.goldLight})` : "transparent", color: plan.popular ? T.bg : T.gold, border: plan.popular ? "none" : `1px solid ${T.gold}`, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+              <button type="button" onClick={() => plan.popular ? window.open("https://wa.me/971542410599?text=Hi%2C%20I%20want%20to%20subscribe%20to%20DXB%20Analytics%20" + plan.name + "%20plan%20(AED%20" + plan.price + "%2Fmo)", "_blank") : window.location.href = "mailto:mianwaleed689@gmail.com?subject=DXB%20Analytics%20Enterprise%20Plan&body=I%27m%20interested%20in%20the%20Enterprise%20plan"} style={{ width: "100%", marginTop: 16, padding: "10px 0", background: plan.popular ? `linear-gradient(135deg, ${T.gold}, ${T.goldLight})` : "transparent", color: plan.popular ? T.bg : T.gold, border: plan.popular ? "none" : `1px solid ${T.gold}`, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }} type="button">
                 {plan.popular ? "Get Pro Now" : "Contact Sales"}
               </button>
             </div>
           ))}
         </div>
-        <p style={{ textAlign: "center", fontSize: 11, color: T.textMuted, marginTop: 16 }}>Coming soon — Stripe payment integration</p>
+        <p style={{ textAlign: "center", fontSize: 11, color: T.textMuted, marginTop: 16 }}>Payment via WhatsApp · Stripe integration coming soon</p>
       </div>
     </div>
   );
@@ -592,7 +591,7 @@ export default function EmaarDashboardV2() {
     <div style={{ position: "absolute", inset: 0, background: "rgba(4,9,15,0.85)", backdropFilter: "blur(8px)", borderRadius: "inherit", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, flexDirection: "column", gap: compact ? 8 : 12 }}>
       <div style={{ fontSize: compact ? 20 : 28 }}>🔒</div>
       <div style={{ fontSize: compact ? 12 : 14, fontWeight: 600, color: T.white, textAlign: "center", maxWidth: 220 }}>{message || "Pro Feature"}</div>
-      <button style={{ padding: compact ? "6px 14px" : "8px 20px", borderRadius: 8, background: T.gold, color: T.bg, border: "none", fontSize: compact ? 11 : 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro</button>
+      <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: compact ? "6px 14px" : "8px 20px", borderRadius: 8, background: T.gold, color: T.bg, border: "none", fontSize: compact ? 11 : 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }} type="button">Upgrade to Pro</button>
     </div>
   );
 
@@ -734,6 +733,20 @@ export default function EmaarDashboardV2() {
     return () => clearInterval(t);
   }, []);
 
+  // FIX #28: Close modals on Escape key
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") {
+        if (showUpgrade) setShowUpgrade(false);
+        else if (selectedProject) setSelectedProject(null);
+        else if (showCompare) setShowCompare(false);
+        else if (selectedStockTv) setSelectedStockTv(null);
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [showUpgrade, selectedProject, showCompare, selectedStockTv]);
+
   if (authLoading) {
     return (
       <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
@@ -796,6 +809,9 @@ export default function EmaarDashboardV2() {
     setTab(key);
     setSidebarOpen(false);
     if (key === "Admin" && userTier === "admin") fetchAdminUsers();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    const mainEl = document.querySelector(".main-content");
+    if (mainEl) mainEl.scrollTop = 0;
   };
 
   return (
@@ -830,7 +846,7 @@ export default function EmaarDashboardV2() {
         <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 3 }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px" }}>Emaar Properties</div>
           {TABS.map(t => (
-            <button key={t.key} className={`sidebar-btn ${tab === t.key ? "active" : ""}`} onClick={() => handleTabChange(t.key)}>
+            <button type="button" key={t.key} className={`sidebar-btn ${tab === t.key ? "active" : ""}`} onClick={() => handleTabChange(t.key)}>
               {t.icon}
               {t.key}
             </button>
@@ -838,7 +854,7 @@ export default function EmaarDashboardV2() {
           {userTier === "admin" && (
             <>
               <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Admin</div>
-              <button className={`sidebar-btn ${tab === "Admin" ? "active" : ""}`} onClick={() => handleTabChange("Admin")}>
+              <button type="button" className={`sidebar-btn ${tab === "Admin" ? "active" : ""}`} onClick={() => handleTabChange("Admin")}>
                 {Icons.admin}
                 Users & Analytics
               </button>
@@ -856,7 +872,7 @@ export default function EmaarDashboardV2() {
             </div>
           )}
           {userTier === "free" && (
-            <div style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.15)", textAlign: "center", cursor: "pointer" }}>
+            <div onClick={() => setShowUpgrade(true)} style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.15)", textAlign: "center", cursor: "pointer" }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: T.blue, letterSpacing: 0.5 }}>FREE PLAN</div>
               <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>Upgrade to Pro →</div>
             </div>
@@ -871,7 +887,7 @@ export default function EmaarDashboardV2() {
                 {userTier === "admin" ? "Admin" : userTier === "pro_trial" ? "Pro Trial" : userTier === "pro" ? "Pro Plan" : userTier === "enterprise" ? "Enterprise" : "Free Plan"}
               </div>
             </div>
-            <button onClick={() => { signOut(auth); }} style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }} title="Sign out">
+            <button type="button" onClick={() => { signOut(auth); }} style={{ background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }} title="Sign out">
               {Icons.logout}
             </button>
           </div>
@@ -888,7 +904,7 @@ export default function EmaarDashboardV2() {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           {/* Mobile menu button */}
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: T.textSecondary, display: "none", padding: 4 }} className="mobile-menu-btn">
+          <button type="button" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: T.textSecondary, display: "none", padding: 4 }} className="mobile-menu-btn">
             {sidebarOpen ? Icons.close : Icons.menu}
           </button>
           <div>
@@ -915,7 +931,7 @@ export default function EmaarDashboardV2() {
             <span style={{ fontSize: 10, color: T.textMuted }}>H/L </span>
             <span style={{ fontSize: 11, fontWeight: 600, color: T.textPrimary }}>{stock.dayHigh} / {stock.dayLow}</span>
           </div>}
-          <button style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: 8, cursor: "pointer", color: T.textSecondary, position: "relative" }}>
+          <button type="button" onClick={() => { alert("Notifications coming soon! You'll receive alerts for price changes and new project launches."); }} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: 8, cursor: "pointer", color: T.textSecondary, position: "relative" }} type="button">
             {Icons.bell}
             <span style={{ position: "absolute", top: 4, right: 4, width: 7, height: 7, borderRadius: "50%", background: T.red }} />
           </button>
@@ -923,7 +939,7 @@ export default function EmaarDashboardV2() {
       </header>
 
       {/* ─── MAIN CONTENT ─── */}
-      <main className="main-content" style={{ marginLeft: 240, paddingTop: 60, minHeight: "100vh" }}>
+      <main role="main" className="main-content" style={{ marginLeft: 240, paddingTop: 60, minHeight: "100vh" }}>
         {/* Trial / Free tier banner */}
         {userTier === "pro_trial" && trialDaysLeft > 0 && (
           <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: `linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.04))`, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
@@ -932,7 +948,7 @@ export default function EmaarDashboardV2() {
               <span style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>Pro Trial Active</span>
               <span style={{ fontSize: 12, color: T.textSecondary }}>— {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining. Enjoying full access to all features.</span>
             </div>
-            <button style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro</button>
+            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }} type="button">Upgrade to Pro</button>
           </div>
         )}
         {userTier === "free" && (
@@ -942,7 +958,7 @@ export default function EmaarDashboardV2() {
               <span style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>Free Plan</span>
               <span style={{ fontSize: 12, color: T.textSecondary }}>— You're seeing limited data. Upgrade to unlock all projects, yields, stocks & more.</span>
             </div>
-            <button style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro — AED 99/mo</button>
+            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }} type="button">Upgrade to Pro — AED 99/mo</button>
           </div>
         )}
         {/* Mobile stock ticker - only visible on small screens */}
@@ -1011,7 +1027,7 @@ export default function EmaarDashboardV2() {
               </Chart>
             </div>
 
-            <Section title="Company Strength" sub="Analyst consensus: STRONG BUY (12/12 analysts)">
+            <Section title="Company Strength" sub="Analyst consensus: STRONG BUY (12 of 15 analysts)">
               <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
                 <Chart title="Performance Radar">
                   <ResponsiveContainer width="100%" height={260}>
@@ -1221,7 +1237,7 @@ export default function EmaarDashboardV2() {
                 <input value={projectSearch} onChange={e => setProjectSearch(e.target.value)} placeholder="Search projects..." style={{ width: "100%", padding: "10px 12px 10px 36px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none" }} />
               </div>
               {["All", "DHE", "DCH", "EBF", "GPC", "ES", "TV", "RYM", "Branded"].map(f => (
-                <button key={f} onClick={() => setProjectFilter(f)} style={{ padding: "7px 14px", borderRadius: 8, border: `1px solid ${projectFilter === f ? T.gold : T.border}`, background: projectFilter === f ? T.goldGlow : "transparent", color: projectFilter === f ? T.gold : T.textSecondary, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}>{f}</button>
+                <button type="button" key={f} onClick={() => setProjectFilter(f)} style={{ padding: "7px 14px", borderRadius: 8, border: `1px solid ${projectFilter === f ? T.gold : T.border}`, background: projectFilter === f ? T.goldGlow : "transparent", color: projectFilter === f ? T.gold : T.textSecondary, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}>{f}</button>
               ))}
             </div>
 
@@ -1242,7 +1258,7 @@ export default function EmaarDashboardV2() {
                     <div style={{ position: "absolute", inset: 0, background: "rgba(4,9,15,0.7)", backdropFilter: "blur(4px)", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRadius: 12 }}>
                       <span style={{ fontSize: 24, marginBottom: 6 }}>🔒</span>
                       <span style={{ fontSize: 12, fontWeight: 600, color: T.white }}>Pro Feature</span>
-                      <button onClick={(e) => { e.stopPropagation(); setShowUpgrade(true); }} style={{ marginTop: 8, padding: "6px 16px", background: T.gold, color: T.bg, border: "none", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Unlock</button>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); setShowUpgrade(true); }} style={{ marginTop: 8, padding: "6px 16px", background: T.gold, color: T.bg, border: "none", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Unlock</button>
                     </div>
                   )}
                   {/* Project Image */}
@@ -1312,17 +1328,24 @@ export default function EmaarDashboardV2() {
                       📞
                     </a>
                     </>) : (<>
-                    <button onClick={() => setShowUpgrade(true)} style={{ flex: 1, padding: "8px 0", background: "rgba(37,211,102,0.15)", borderRadius: 8, color: "rgba(37,211,102,0.5)", fontSize: 11, fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 WhatsApp</button>
-                    <button onClick={() => setShowUpgrade(true)} style={{ flex: 1, padding: "8px 0", background: "rgba(212,168,67,0.1)", borderRadius: 8, color: "rgba(212,168,67,0.5)", fontSize: 11, fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 Email</button>
-                    <button onClick={() => setShowUpgrade(true)} style={{ padding: "8px 10px", background: "rgba(0,191,165,0.1)", borderRadius: 8, color: "rgba(0,191,165,0.5)", fontSize: 11, fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer" }}>🔒</button>
+                    <button type="button" onClick={() => setShowUpgrade(true)} style={{ flex: 1, padding: "8px 0", background: "rgba(37,211,102,0.15)", borderRadius: 8, color: "rgba(37,211,102,0.5)", fontSize: 11, fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 WhatsApp</button>
+                    <button type="button" onClick={() => setShowUpgrade(true)} style={{ flex: 1, padding: "8px 0", background: "rgba(212,168,67,0.1)", borderRadius: 8, color: "rgba(212,168,67,0.5)", fontSize: 11, fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 Email</button>
+                    <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "8px 10px", background: "rgba(0,191,165,0.1)", borderRadius: 8, color: "rgba(0,191,165,0.5)", fontSize: 11, fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer" }}>🔒</button>
                     </>)}
-                    <button onClick={(e) => { e.stopPropagation(); isPro ? toggleCompare(p) : setShowUpgrade(true); }} style={{ padding: "8px 10px", background: !isPro ? "rgba(212,168,67,0.05)" : compareList.find(x=>x.id===p.id) ? T.goldGlow : T.surfaceAlt, border: `1px solid ${!isPro ? T.border : compareList.find(x=>x.id===p.id) ? T.gold : T.border}`, borderRadius: 8, color: !isPro ? T.textMuted : compareList.find(x=>x.id===p.id) ? T.gold : T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); isPro ? toggleCompare(p) : setShowUpgrade(true); }} style={{ padding: "8px 10px", background: !isPro ? "rgba(212,168,67,0.05)" : compareList.find(x=>x.id===p.id) ? T.goldGlow : T.surfaceAlt, border: `1px solid ${!isPro ? T.border : compareList.find(x=>x.id===p.id) ? T.gold : T.border}`, borderRadius: 8, color: !isPro ? T.textMuted : compareList.find(x=>x.id===p.id) ? T.gold : T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
                       {!isPro ? "🔒" : compareList.find(x=>x.id===p.id) ? "✓" : "⊕"}
                     </button>
                   </div>
                   </div>{/* end padding wrapper */}
                 </div>
               );})}
+              {activeProjects.filter(p => { const ms = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase()); const mf = projectFilter === "All" || p.district === projectFilter || (projectFilter === "Branded" && p.branded); return ms && mf; }).length === 0 && (
+                <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 20px" }}>
+                  <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>🔍</div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: T.white, marginBottom: 4 }}>No projects found</div>
+                  <div style={{ fontSize: 13, color: T.textMuted }}>Try adjusting your search or filter</div>
+                </div>
+              )}
             </div>
 
             {/* Community Summary */}
@@ -1706,7 +1729,7 @@ export default function EmaarDashboardV2() {
                 <input value={stockSearch} onChange={e => setStockSearch(e.target.value)} placeholder="Search stocks..." style={{ width: "100%", padding: "10px 12px 10px 34px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 13, outline: "none", fontFamily: "'Outfit', sans-serif" }} />
               </div>
               {["All", "DFM", "ADX", "Tadawul", "LSE"].map(f => (
-                <button key={f} onClick={() => setStockFilter(f)} style={{ padding: "8px 14px", borderRadius: 20, border: `1px solid ${stockFilter === f ? T.gold : T.border}`, background: stockFilter === f ? T.goldGlow : "transparent", color: stockFilter === f ? T.gold : T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{f}</button>
+                <button type="button" key={f} onClick={() => setStockFilter(f)} style={{ padding: "8px 14px", borderRadius: 20, border: `1px solid ${stockFilter === f ? T.gold : T.border}`, background: stockFilter === f ? T.goldGlow : "transparent", color: stockFilter === f ? T.gold : T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{f}</button>
               ))}
             </div>
 
@@ -1757,6 +1780,13 @@ export default function EmaarDashboardV2() {
                   </div>
                 </div>
               ))}
+              {RE_STOCKS.filter(s => { const mf = stockFilter === "All" || s.exchange === stockFilter; const ms = !stockSearch || s.name.toLowerCase().includes(stockSearch.toLowerCase()) || s.ticker.toLowerCase().includes(stockSearch.toLowerCase()); return mf && ms; }).length === 0 && (
+                <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 20px" }}>
+                  <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>🔍</div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: T.white, marginBottom: 4 }}>No stocks found</div>
+                  <div style={{ fontSize: 13, color: T.textMuted }}>Try adjusting your search or filter</div>
+                </div>
+              )}
             </div>
 
             {/* Note about private companies */}
@@ -1974,13 +2004,13 @@ export default function EmaarDashboardV2() {
             {compareList.map(p => (
               <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                 <span style={{ fontSize: 12, color: T.white }}>{p.name}</span>
-                <button onClick={() => toggleCompare(p)} style={{ background: "none", border: "none", color: T.red, cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1 }}>×</button>
+                <button type="button" onClick={() => toggleCompare(p)} style={{ background: "none", border: "none", color: T.red, cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1 }}>×</button>
               </div>
             ))}
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => setCompareList([])} style={{ padding: "8px 16px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Clear</button>
-            <button onClick={() => setShowCompare(true)} disabled={compareList.length < 2} style={{ padding: "8px 20px", background: compareList.length >= 2 ? T.gold : T.textMuted, border: "none", borderRadius: 8, color: T.bg, fontSize: 12, fontWeight: 700, cursor: compareList.length >= 2 ? "pointer" : "not-allowed", fontFamily: "'Outfit', sans-serif" }}>Compare Now</button>
+            <button type="button" onClick={() => setCompareList([])} style={{ padding: "8px 16px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Clear</button>
+            <button type="button" onClick={() => setShowCompare(true)} disabled={compareList.length < 2} style={{ padding: "8px 20px", background: compareList.length >= 2 ? T.gold : T.textMuted, border: "none", borderRadius: 8, color: T.bg, fontSize: 12, fontWeight: 700, cursor: compareList.length >= 2 ? "pointer" : "not-allowed", fontFamily: "'Outfit', sans-serif" }}>Compare Now</button>
           </div>
         </div>
       )}
@@ -1992,12 +2022,12 @@ export default function EmaarDashboardV2() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setSelectedProject(null)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 820, maxHeight: "92vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
             {/* Close */}
-            <button onClick={() => setSelectedProject(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            <button type="button" onClick={() => setSelectedProject(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             
             {/* Image */}
             {selectedProject.imageUrl && (
               <div style={{ width: "100%", height: 200, overflow: "hidden", borderRadius: "16px 16px 0 0" }}>
-                <img src={selectedProject.imageUrl} alt={selectedProject.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <img src={selectedProject.imageUrl} alt={selectedProject.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.parentElement.style.display = "none"; }} />
               </div>
             )}
 
@@ -2166,9 +2196,9 @@ export default function EmaarDashboardV2() {
               </div>
               ) : (
               <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => setShowUpgrade(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "rgba(37,211,102,0.1)", borderRadius: 12, color: "rgba(37,211,102,0.5)", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 WhatsApp</button>
-                <button onClick={() => setShowUpgrade(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "rgba(212,168,67,0.1)", borderRadius: 12, color: "rgba(212,168,67,0.5)", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 Email</button>
-                <button onClick={() => setShowUpgrade(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "rgba(0,191,165,0.1)", borderRadius: 12, color: "rgba(0,191,165,0.5)", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 Call</button>
+                <button type="button" onClick={() => setShowUpgrade(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "rgba(37,211,102,0.1)", borderRadius: 12, color: "rgba(37,211,102,0.5)", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 WhatsApp</button>
+                <button type="button" onClick={() => setShowUpgrade(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "rgba(212,168,67,0.1)", borderRadius: 12, color: "rgba(212,168,67,0.5)", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 Email</button>
+                <button type="button" onClick={() => setShowUpgrade(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "rgba(0,191,165,0.1)", borderRadius: 12, color: "rgba(0,191,165,0.5)", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 Call</button>
               </div>
               )}
             </div>
@@ -2183,7 +2213,7 @@ export default function EmaarDashboardV2() {
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}`, width: "95%", maxWidth: 900, maxHeight: "90vh", overflowY: "auto", padding: 28 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: T.gold, margin: 0 }}>⚖️ Project Comparison</h2>
-              <button onClick={() => setShowCompare(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>✕</button>
+              <button type="button" onClick={() => setShowCompare(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>✕</button>
             </div>
 
             <div style={{ overflowX: "auto" }}>
@@ -2230,10 +2260,17 @@ export default function EmaarDashboardV2() {
             {/* WhatsApp for all */}
             <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
               {compareList.map(p => (
+                isPro ? (
                 <a key={p.id} href={whatsappLink(p.name, p.community)} target="_blank" rel="noopener noreferrer"
                   style={{ flex: 1, padding: "10px 0", background: "#25D366", borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none" }}>
                   Inquire: {p.name.split(" ").slice(0,2).join(" ")}
                 </a>
+                ) : (
+                <button type="button" key={p.id} onClick={() => setShowUpgrade(true)} type="button"
+                  style={{ flex: 1, padding: "10px 0", background: "rgba(37,211,102,0.15)", borderRadius: 10, color: "rgba(37,211,102,0.5)", fontSize: 12, fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer" }}>
+                  🔒 Inquire: {p.name.split(" ").slice(0,2).join(" ")}
+                </button>
+                )
               ))}
             </div>
           </div>
@@ -2244,7 +2281,7 @@ export default function EmaarDashboardV2() {
       {selectedStockTv && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 4500, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setSelectedStockTv(null)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 900, maxHeight: "92vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-            <button onClick={() => setSelectedStockTv(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            <button type="button" onClick={() => setSelectedStockTv(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             <div style={{ padding: 24 }}>
               {/* Header */}
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
@@ -2267,7 +2304,7 @@ export default function EmaarDashboardV2() {
 
               {/* TradingView Chart */}
               <div style={{ background: T.surfaceAlt, borderRadius: 12, overflow: "hidden", marginBottom: 16, border: `1px solid ${T.border}`, height: 420 }}>
-                <iframe src={`https://www.tradingview.com/widgetembed/?symbol=${encodeURIComponent(selectedStockTv.tv)}&interval=D&hidesidetoolbar=1&symboledit=1&saveimage=0&theme=dark&style=1&timezone=Asia/Dubai&withdateranges=1&locale=en&allow_symbol_change=1`} style={{ width: "100%", height: "100%", border: "none" }} title={`${selectedStockTv.ticker} Chart`} allow="fullscreen" />
+                <iframe src={`https://www.tradingview.com/widgetembed/?symbol=${encodeURIComponent(selectedStockTv.tv)}&interval=D&hidesidetoolbar=1&symboledit=1&saveimage=0&theme=dark&style=1&timezone=Asia/Dubai&withdateranges=1&locale=en&allow_symbol_change=1`} style={{ width: "100%", height: "100%", border: "none" }} title={`${selectedStockTv.ticker} Chart`} allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-popups" />
               </div>
 
               {/* Action Buttons */}
@@ -2285,7 +2322,7 @@ export default function EmaarDashboardV2() {
       {showStock && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 4000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowStock(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 960, maxHeight: "92vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-            <button onClick={() => setShowStock(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            <button type="button" onClick={() => setShowStock(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
 
             <div style={{ padding: 28 }}>
               {/* Header */}
@@ -2297,7 +2334,7 @@ export default function EmaarDashboardV2() {
               {/* Live Price Banner */}
               <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
                 <div style={{ background: T.surfaceAlt, borderRadius: 12, padding: "16px 20px", border: `1px solid ${T.gold}`, flex: "1 1 200px" }}>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>LIVE PRICE</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>{stockLive ? "LIVE PRICE" : "LAST KNOWN PRICE"}</div>
                   <div style={{ fontFamily: "'Fraunces', serif", fontSize: 36, fontWeight: 900, color: T.gold }}>{stock.price.toFixed(2)} <span style={{ fontSize: 14, color: T.textMuted }}>AED</span></div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: stock.change >= 0 ? T.green : T.red, marginTop: 4 }}>{stock.change >= 0 ? "▲" : "▼"} {Math.abs(stock.change).toFixed(2)} ({Math.abs(stock.changePercent).toFixed(2)}%)</div>
                 </div>
@@ -2313,7 +2350,7 @@ export default function EmaarDashboardV2() {
 
               {/* TradingView Chart */}
               <div style={{ background: T.surfaceAlt, borderRadius: 12, overflow: "hidden", marginBottom: 20, border: `1px solid ${T.border}`, height: 450 }}>
-                <iframe src={`https://www.tradingview.com/widgetembed/?symbol=DFM:EMAAR&interval=D&hidesidetoolbar=1&symboledit=1&saveimage=0&theme=dark&style=1&timezone=Asia/Dubai&withdateranges=1&locale=en&allow_symbol_change=1`} style={{ width: "100%", height: "100%", border: "none" }} title="Emaar Chart" allow="fullscreen" />
+                <iframe src={`https://www.tradingview.com/widgetembed/?symbol=DFM:EMAAR&interval=D&hidesidetoolbar=1&symboledit=1&saveimage=0&theme=dark&style=1&timezone=Asia/Dubai&withdateranges=1&locale=en&allow_symbol_change=1`} style={{ width: "100%", height: "100%", border: "none" }} title="Emaar Chart" allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-popups" />
               </div>
 
               {/* Key Metrics */}
@@ -2330,11 +2367,11 @@ export default function EmaarDashboardV2() {
               {/* Other RE Stocks */}
               <h3 style={{ fontSize: 12, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Dubai Real Estate Stocks</h3>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10, marginBottom: 20 }}>
-                {[{t:"EMAAR",n:"Emaar Properties",p:stock.price.toFixed(2),c:`${stock.changePercent>=0?"+":""}${stock.changePercent.toFixed(2)}`,cl:T.gold,a:true},{t:"DAMAC",n:"DAMAC Properties",p:"8.45",c:"+1.81",cl:T.teal},{t:"EMAARDEV",n:"Emaar Development",p:"12.30",c:"-0.65",cl:T.blue},{t:"ALDAR",n:"Aldar Properties",p:"7.92",c:"+2.34",cl:T.green},{t:"DEYAAR",n:"Deyaar Development",p:"1.24",c:"+0.81",cl:T.purple},{t:"WASL",n:"Wasl Properties",p:"3.78",c:"+1.07",cl:T.orange}].map((s,i) => (
+                {[{t:"EMAAR",n:"Emaar Properties",p:stock.price.toFixed(2),c:`${stock.changePercent>=0?"+":""}${stock.changePercent.toFixed(2)}`,cl:T.gold,a:true},{t:"EMAARDEV",n:"Emaar Development",p:"12.30",c:"delayed",cl:T.blue},{t:"ALDAR",n:"Aldar Properties",p:"7.92",c:"delayed",cl:T.green},{t:"DEYAAR",n:"Deyaar Development",p:"1.24",c:"delayed",cl:T.purple},{t:"TECOM",n:"TECOM Group",p:"5.40",c:"delayed",cl:T.teal}].map((s,i) => (
                   <div key={i} style={{ background: s.a ? "rgba(212,168,67,0.08)" : T.surfaceAlt, borderRadius: 10, padding: 14, border: `1px solid ${s.a ? T.gold : T.border}` }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                       <span style={{ fontSize: 12, fontWeight: 700, color: s.cl }}>{s.t}</span>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: s.c.includes("-") ? T.red : T.green }}>{s.c}%</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: s.c === "delayed" ? T.textMuted : s.c.includes("-") ? T.red : T.green }}>{s.c === "delayed" ? "Delayed" : `${s.c}%`}</span>
                     </div>
                     <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>{s.n}</div>
                     <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'Fraunces', serif", color: T.white }}>AED {s.p}</div>
