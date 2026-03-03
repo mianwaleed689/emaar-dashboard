@@ -105,7 +105,7 @@ const css = `
 
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
   @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-  @keyframes glow { 0%, 100% { box-shadow: 0 0 20px rgba(212,168,67,0.1); } 50% { box-shadow: 0 0 40px rgba(212,168,67,0.2); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   .fade-up { animation: fadeUp 0.5s ease-out forwards; opacity: 0; }
   .delay-1 { animation-delay: 0.05s; }
@@ -420,8 +420,8 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
       {/* Back to Landing */}
       {onBack && (
         <button type="button" onClick={onBack} style={{ position: "absolute", top: 24, left: 24, display: "flex", alignItems: "center", gap: 6, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 16px", color: T.textSecondary, fontSize: 13, fontFamily: "'Outfit', sans-serif", cursor: "pointer", zIndex: 10, transition: "all 0.2s" }}
-          onMouseEnter={e => { e.target.style.borderColor = T.gold; e.target.style.color = T.gold; }}
-          onMouseLeave={e => { e.target.style.borderColor = T.border; e.target.style.color = T.textSecondary; }}>
+          onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold; e.currentTarget.style.color = T.gold; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSecondary; }}>
           ← Back to Home
         </button>
       )}
@@ -522,7 +522,6 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
           Powered by The Address Holding · Emaar Intelligence Platform
         </p>
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 };
@@ -580,7 +579,7 @@ const UpgradeModal = ({ show, onClose }) => {
                   <span style={{ color: T.green, fontSize: 12 }}>✓</span>{f}
                 </div>
               ))}
-              <button type="button" onClick={() => plan.popular ? window.open("https://wa.me/971542410599?text=Hi%2C%20I%20want%20to%20subscribe%20to%20DXB%20Analytics%20" + plan.name + "%20plan%20(AED%20" + plan.price + "%2Fmo)", "_blank") : window.location.href = "mailto:mianwaleed689@gmail.com?subject=DXB%20Analytics%20Enterprise%20Plan&body=I%27m%20interested%20in%20the%20Enterprise%20plan"} style={{ width: "100%", marginTop: 16, padding: "10px 0", background: plan.popular ? `linear-gradient(135deg, ${T.gold}, ${T.goldLight})` : "transparent", color: plan.popular ? T.bg : T.gold, border: plan.popular ? "none" : `1px solid ${T.gold}`, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }} type="button">
+              <button type="button" onClick={() => plan.popular ? window.open("https://wa.me/971542410599?text=Hi%2C%20I%20want%20to%20subscribe%20to%20DXB%20Analytics%20" + plan.name + "%20plan%20(AED%20" + plan.price + "%2Fmo)", "_blank") : window.location.href = "mailto:mianwaleed689@gmail.com?subject=DXB%20Analytics%20Enterprise%20Plan&body=I%27m%20interested%20in%20the%20Enterprise%20plan"} style={{ width: "100%", marginTop: 16, padding: "10px 0", background: plan.popular ? `linear-gradient(135deg, ${T.gold}, ${T.goldLight})` : "transparent", color: plan.popular ? T.bg : T.gold, border: plan.popular ? "none" : `1px solid ${T.gold}`, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
                 {plan.popular ? "Get Pro Now" : "Contact Sales"}
               </button>
             </div>
@@ -614,7 +613,7 @@ export default function EmaarDashboardV2() {
     <div style={{ position: "absolute", inset: 0, background: "rgba(4,9,15,0.85)", backdropFilter: "blur(8px)", borderRadius: "inherit", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, flexDirection: "column", gap: compact ? 8 : 12 }}>
       <div style={{ fontSize: compact ? 20 : 28 }}>🔒</div>
       <div style={{ fontSize: compact ? 12 : 14, fontWeight: 600, color: T.white, textAlign: "center", maxWidth: 220 }}>{message || "Pro Feature"}</div>
-      <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: compact ? "6px 14px" : "8px 20px", borderRadius: 8, background: T.gold, color: T.bg, border: "none", fontSize: compact ? 11 : 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }} type="button">Upgrade to Pro</button>
+      <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: compact ? "6px 14px" : "8px 20px", borderRadius: 8, background: T.gold, color: T.bg, border: "none", fontSize: compact ? 11 : 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro</button>
     </div>
   );
 
@@ -662,22 +661,34 @@ export default function EmaarDashboardV2() {
   // Use Firestore data if available, otherwise fall back to hardcoded
   const activeProjects = liveProjects || emaarProjects;
 
+  // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
+  const getUnitEntries = (units) => {
+    if (!units) return [];
+    if (Array.isArray(units)) {
+      return units.filter(u => u && (u.total || 0) > 0).map(u => [u.type || "Unit", { total: u.total || 0, sold: (u.total || 0) - (u.available || 0) }]);
+    }
+    return Object.entries(units).filter(([, d]) => d && d.total > 0);
+  };
+
   const whatsappLink = (projectName, community) => 
     `https://wa.me/971542410599?text=${encodeURIComponent(`Hi Mian Waleed, I'm interested in *${projectName}* at ${community}. Could you share more details?`)}`;
 
   const toggleCompare = (p) => {
     setCompareList(prev => {
       const exists = prev.find(x => x.id === p.id);
-      if (exists) return prev.filter(x => x.id !== p.id);
-      if (prev.length >= 3) return prev;
+      if (exists) {
+        notify("Removed " + p.name + " from comparison");
+        return prev.filter(x => x.id !== p.id);
+      }
+      if (prev.length >= 3) {
+        notify("\u26A0\uFE0F Max 3 projects for comparison");
+        return prev;
+      }
+      notify("\u2705 Added " + p.name + " to comparison");
       return [...prev, p];
     });
-    const exists = compareList.find(x => x.id === p.id);
-    if (exists) notify("Removed " + p.name + " from comparison");
-    else if (compareList.length < 3) notify("\u2705 Added " + p.name + " to comparison");
-    else notify("\u26A0\uFE0F Max 3 projects for comparison");
   };
-  const [stock, setStock] = useState({ price: 17.05, change: 0.46, changePercent: 2.75, dayHigh: null, dayLow: null, volume: null, marketState: "LOADING", open: null });
+  const [stock, setStock] = useState({ price: 0, change: 0, changePercent: 0, dayHigh: null, dayLow: null, volume: null, marketState: "LOADING", open: null });
   const [stockLive, setStockLive] = useState(false);
 
   // Listen to Firebase auth state + fetch user profile
@@ -769,6 +780,7 @@ export default function EmaarDashboardV2() {
     const handleEsc = (e) => {
       if (e.key === "Escape") {
         if (showUpgrade) setShowUpgrade(false);
+        else if (showStock) setShowStock(false);
         else if (selectedProject) setSelectedProject(null);
         else if (showCompare) setShowCompare(false);
         else if (selectedStockTv) setSelectedStockTv(null);
@@ -776,7 +788,7 @@ export default function EmaarDashboardV2() {
     };
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
-  }, [showUpgrade, selectedProject, showCompare, selectedStockTv]);
+  }, [showUpgrade, showStock, selectedProject, showCompare, selectedStockTv]);
 
   if (authLoading) {
     return (
@@ -788,7 +800,6 @@ export default function EmaarDashboardV2() {
         </svg>
         <div style={{ color: T.gold, fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 700 }}>DXB Analytics</div>
         <div style={{ width: 24, height: 24, border: `2px solid ${T.border}`, borderTopColor: T.gold, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -798,34 +809,36 @@ export default function EmaarDashboardV2() {
   }
 
   if (!isLoggedIn) {
-    return <LoginScreen onLogin={(email) => { setIsLoggedIn(true); setUser(email); }} onBack={() => setShowLogin(false)} defaultMode={showLogin === "signup" ? "signup" : "login"} />;
+    return <LoginScreen onLogin={() => {}} onBack={() => setShowLogin(false)} defaultMode={showLogin === "signup" ? "signup" : "login"} />;
   }
 
-  const fetchAdminUsers = async () => {
-    setAdminLoading(true);
-    try {
-      const snap = await getDocs(collection(db, "users"));
-      const users = [];
-      snap.forEach(d => {
-        const data = d.data();
-        // Calculate trial status
-        let status = data.tier || "free";
-        let daysLeft = 0;
-        if (status === "pro_trial" && data.trialEnd) {
-          const end = new Date(data.trialEnd);
-          daysLeft = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
-          if (daysLeft <= 0) { status = "expired"; daysLeft = 0; }
-        }
-        users.push({ id: d.id, ...data, status, daysLeft });
-      });
-      // Sort by most recent first
-      users.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      setAdminUsers(users);
-    } catch (err) {
-      console.log("Failed to fetch users:", err);
-    }
-    setAdminLoading(false);
-  };
+  const fetchAdminUsersRef = useRef(null);
+  if (!fetchAdminUsersRef.current) {
+    fetchAdminUsersRef.current = async () => {
+      setAdminLoading(true);
+      try {
+        const snap = await getDocs(collection(db, "users"));
+        const users = [];
+        snap.forEach(d => {
+          const data = d.data();
+          let status = data.tier || "free";
+          let daysLeft = 0;
+          if (status === "pro_trial" && data.trialEnd) {
+            const end = new Date(data.trialEnd);
+            daysLeft = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
+            if (daysLeft <= 0) { status = "expired"; daysLeft = 0; }
+          }
+          users.push({ id: d.id, ...data, status, daysLeft });
+        });
+        users.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        setAdminUsers(users);
+      } catch (err) {
+        console.log("Failed to fetch users:", err);
+      }
+      setAdminLoading(false);
+    };
+  }
+  const fetchAdminUsers = fetchAdminUsersRef.current;
 
   const handleChangeTier = async (userId, newTier) => {
     const user = adminUsers.find(u => u.id === userId);
@@ -911,7 +924,7 @@ export default function EmaarDashboardV2() {
             </div>
           )}
           {userTier === "free" && (
-            <div onClick={() => setShowUpgrade(true)} style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.15)", textAlign: "center", cursor: "pointer" }}>
+            <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setShowUpgrade(true); }} onClick={() => setShowUpgrade(true)} style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.15)", textAlign: "center", cursor: "pointer" }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: T.blue, letterSpacing: 0.5 }}>FREE PLAN</div>
               <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>Upgrade to Pro →</div>
             </div>
@@ -952,17 +965,17 @@ export default function EmaarDashboardV2() {
           </div>
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <div onClick={() => setShowStock(true)} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 6, cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
+          <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setShowStock(true); }} onClick={() => setShowStock(true)} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 6, cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
             {stockLive && <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />}
             <span style={{ fontSize: 10, color: T.textMuted }}>{stockLive ? "LIVE" : "STOCK"}</span>
             <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 14, color: T.gold }}>{stock.price.toFixed(2)}</span>
             <span style={{ color: stock.change >= 0 ? T.green : T.red, fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", gap: 2 }}>{stock.change >= 0 ? Icons.up : Icons.down} {Math.abs(stock.changePercent).toFixed(2)}%</span>
           </div>
-          <div onClick={() => setShowStock(true)} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
+          <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setShowStock(true); }} onClick={() => setShowStock(true)} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
             <span style={{ fontSize: 10, color: T.textMuted }}>RATING </span>
             <span style={{ fontSize: 12, fontWeight: 600, color: T.teal }}>BBB+ / Baa1</span>
           </div>
-          <div onClick={() => setShowStock(true)} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
+          <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setShowStock(true); }} onClick={() => setShowStock(true)} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
             <span style={{ fontSize: 10, color: T.textMuted }}>TARGET </span>
             <span style={{ fontSize: 12, fontWeight: 600, color: T.goldLight }}>AED 20.77</span>
           </div>
@@ -970,7 +983,7 @@ export default function EmaarDashboardV2() {
             <span style={{ fontSize: 10, color: T.textMuted }}>H/L </span>
             <span style={{ fontSize: 11, fontWeight: 600, color: T.textPrimary }}>{stock.dayHigh} / {stock.dayLow}</span>
           </div>}
-          <button type="button" onClick={() => { alert("Notifications coming soon! You'll receive alerts for price changes and new project launches."); }} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: 8, cursor: "pointer", color: T.textSecondary, position: "relative" }} type="button">
+          <button type="button" onClick={() => { alert("Notifications coming soon! You'll receive alerts for price changes and new project launches."); }} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: 8, cursor: "pointer", color: T.textSecondary, position: "relative" }}>
             {Icons.bell}
             <span style={{ position: "absolute", top: 4, right: 4, width: 7, height: 7, borderRadius: "50%", background: T.red }} />
           </button>
@@ -987,7 +1000,7 @@ export default function EmaarDashboardV2() {
               <span style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>Pro Trial Active</span>
               <span style={{ fontSize: 12, color: T.textSecondary }}>— {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining. Enjoying full access to all features.</span>
             </div>
-            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }} type="button">Upgrade to Pro</button>
+            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro</button>
           </div>
         )}
         {userTier === "free" && (
@@ -997,7 +1010,7 @@ export default function EmaarDashboardV2() {
               <span style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>Free Plan</span>
               <span style={{ fontSize: 12, color: T.textSecondary }}>— You're seeing limited data. Upgrade to unlock all projects, yields, stocks & more.</span>
             </div>
-            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }} type="button">Upgrade to Pro — AED 99/mo</button>
+            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro — AED 99/mo</button>
           </div>
         )}
         {/* Mobile stock ticker - only visible on small screens */}
@@ -1011,7 +1024,7 @@ export default function EmaarDashboardV2() {
           <span style={{ fontSize: 9, color: T.textMuted }}>BBB+ / Baa1</span>
           <span style={{ fontSize: 9, color: T.goldLight }}>Target: 20.77</span>
         </div>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px 60px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: `0 24px ${compareList.length > 0 && tab === "Projects" ? "120px" : "60px"}` }}>
 
           {/* ─── OVERVIEW TAB ─── */}
           {tab === "Overview" && <>
@@ -1265,7 +1278,7 @@ export default function EmaarDashboardV2() {
                 <KPI label="Total Projects" value="48" sub="18 under construction · 30 off-plan" delay={1} />
                 <KPI label="Communities" value="11" sub="DHE · DCH · EBF · GPC + 7 more" delay={2} />
                 <KPI label="Branded" value={`${activeProjects.filter(p=>p.branded).length}`} sub="Address · Vida · Palace · Bristol" delay={3} />
-                <KPI label="Avg Construction" value={`${Math.round(activeProjects.reduce((a,p)=>a+p.construction,0)/activeProjects.length)}%`} sub="Weighted average progress" delay={4} />
+                <KPI label="Avg Construction" value={`${Math.round(activeProjects.reduce((a,p)=>a+(p.construction||0),0)/activeProjects.length)}%`} sub="Weighted average progress" delay={4} />
               </div>
             </Section>
 
@@ -1345,7 +1358,7 @@ export default function EmaarDashboardV2() {
                   {p.units && <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${T.border}` }}>
                     <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 6, fontWeight: 600, letterSpacing: 0.5 }}>UNIT AVAILABILITY</div>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                      {Object.entries(p.units).filter(([,d]) => d.total > 0).map(([type, d]) => {
+                      {getUnitEntries(p.units).map(([type, d]) => {
                         const avail = d.total - d.sold;
                         return (
                           <div key={type} style={{ padding: "4px 8px", borderRadius: 6, background: T.surfaceAlt, fontSize: 10, display: "flex", gap: 4, alignItems: "center" }}>
@@ -1764,7 +1777,7 @@ export default function EmaarDashboardV2() {
               <KPI label="Total Listed RE Stocks" value="30" sub="DFM · ADX · Tadawul · LSE" delay={1} />
               <KPI label="UAE Stocks" value="18" sub="12 DFM · 6 ADX" delay={2} />
               <KPI label="Saudi Stocks" value="10" sub="Tadawul Exchange" delay={3} />
-              <KPI label="International" value="2" sub="LSE · Private" delay={4} />
+              <KPI label="International" value="1" sub="LSE (DarGlobal)" delay={4} />
             </div>
 
             {/* Search & Filter */}
@@ -2015,12 +2028,17 @@ export default function EmaarDashboardV2() {
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
                     <Pie data={[
-                      { name: "Free", value: adminUsers.filter(u => u.tier === "free" || u.status === "expired").length || 0 },
-                      { name: "Pro Trial", value: adminUsers.filter(u => u.status === "pro_trial").length || 0 },
-                      { name: "Pro", value: adminUsers.filter(u => u.tier === "pro").length || 0 },
-                      { name: "Enterprise", value: adminUsers.filter(u => u.tier === "enterprise").length || 0 },
+                      { name: "Free", value: adminUsers.filter(u => u.tier === "free" || u.status === "expired").length || 0, color: T.textMuted },
+                      { name: "Pro Trial", value: adminUsers.filter(u => u.status === "pro_trial").length || 0, color: T.gold },
+                      { name: "Pro", value: adminUsers.filter(u => u.tier === "pro").length || 0, color: T.green },
+                      { name: "Enterprise", value: adminUsers.filter(u => u.tier === "enterprise").length || 0, color: T.blue },
                     ].filter(d => d.value > 0)} cx="50%" cy="50%" outerRadius={90} innerRadius={50} dataKey="value" paddingAngle={3} label={({ name, value }) => `${name}: ${value}`}>
-                      {[T.textMuted, T.gold, T.green, T.blue].map((c, i) => <Cell key={i} fill={c} />)}
+                      {[
+                        { name: "Free", value: adminUsers.filter(u => u.tier === "free" || u.status === "expired").length || 0, color: T.textMuted },
+                        { name: "Pro Trial", value: adminUsers.filter(u => u.status === "pro_trial").length || 0, color: T.gold },
+                        { name: "Pro", value: adminUsers.filter(u => u.tier === "pro").length || 0, color: T.green },
+                        { name: "Enterprise", value: adminUsers.filter(u => u.tier === "enterprise").length || 0, color: T.blue },
+                      ].filter(d => d.value > 0).map((d, i) => <Cell key={i} fill={d.color} />)}
                     </Pie>
                     <Tooltip />
                   </PieChart>
@@ -2123,7 +2141,7 @@ export default function EmaarDashboardV2() {
                 <div style={{ marginBottom: 16 }}>
                   <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Unit Inventory & Availability</h3>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 8 }}>
-                    {Object.entries(selectedProject.units).filter(([,d]) => d.total > 0).map(([type, d]) => {
+                    {getUnitEntries(selectedProject.units).map(([type, d]) => {
                       const avail = d.total - d.sold;
                       const pct = d.total > 0 ? (d.sold / d.total) * 100 : 0;
                       return (
@@ -2287,9 +2305,9 @@ export default function EmaarDashboardV2() {
                     { label: "Payment Plan", fn: p => p.payment },
                     { label: "Tier", fn: p => p.tier },
                     { label: "Branded", fn: p => p.branded ? `✓ ${p.brand}` : "No" },
-                    { label: "Total Units", fn: p => p.units ? Object.values(p.units).reduce((a,u) => a + u.total, 0) : "—" },
-                    { label: "Available", fn: p => p.units ? Object.values(p.units).reduce((a,u) => a + (u.total - u.sold), 0) : "—", highlight: true },
-                    { label: "% Sold", fn: p => { if (!p.units) return "—"; const t = Object.values(p.units).reduce((a,u) => a + u.total, 0); const s = Object.values(p.units).reduce((a,u) => a + u.sold, 0); return t > 0 ? `${((s/t)*100).toFixed(0)}%` : "—"; } },
+                    { label: "Total Units", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + u.total, 0) : "—" },
+                    { label: "Available", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + (u.total - u.sold), 0) : "—", highlight: true },
+                    { label: "% Sold", fn: p => { if (!p.units) return "—"; const entries = getUnitEntries(p.units); const t = entries.reduce((a,[,u]) => a + u.total, 0); const s = entries.reduce((a,[,u]) => a + u.sold, 0); return t > 0 ? `${((s/t)*100).toFixed(0)}%` : "—"; } },
                   ].map((row, ri) => (
                     <tr key={ri} style={{ borderBottom: `1px solid ${T.border}`, background: row.highlight ? "rgba(212,168,67,0.04)" : "transparent" }}>
                       <td style={{ padding: "10px 16px", color: T.textMuted, fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>{row.label}</td>
@@ -2311,7 +2329,7 @@ export default function EmaarDashboardV2() {
                   Inquire: {p.name.split(" ").slice(0,2).join(" ")}
                 </a>
                 ) : (
-                <button type="button" key={p.id} onClick={() => setShowUpgrade(true)} type="button"
+                <button type="button" key={p.id} onClick={() => setShowUpgrade(true)}
                   style={{ flex: 1, padding: "10px 0", background: "rgba(37,211,102,0.15)", borderRadius: 10, color: "rgba(37,211,102,0.5)", fontSize: 12, fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer" }}>
                   🔒 Inquire: {p.name.split(" ").slice(0,2).join(" ")}
                 </button>
@@ -2412,11 +2430,11 @@ export default function EmaarDashboardV2() {
               {/* Other RE Stocks */}
               <h3 style={{ fontSize: 12, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Dubai Real Estate Stocks</h3>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10, marginBottom: 20 }}>
-                {[{t:"EMAAR",n:"Emaar Properties",p:stock.price.toFixed(2),c:`${stock.changePercent>=0?"+":""}${stock.changePercent.toFixed(2)}`,cl:T.gold,a:true},{t:"EMAARDEV",n:"Emaar Development",p:"12.30",c:"delayed",cl:T.blue},{t:"ALDAR",n:"Aldar Properties",p:"7.92",c:"delayed",cl:T.green},{t:"DEYAAR",n:"Deyaar Development",p:"1.24",c:"delayed",cl:T.purple},{t:"TECOM",n:"TECOM Group",p:"5.40",c:"delayed",cl:T.teal}].map((s,i) => (
+                {[{t:"EMAAR",n:"Emaar Properties",p:stock.price.toFixed(2),c:`${stock.changePercent>=0?"+":""}${stock.changePercent.toFixed(2)}`,cl:T.gold,a:true},{t:"EMAARDEV",n:"Emaar Development",p:"--",c:"no feed",cl:T.blue},{t:"ALDAR",n:"Aldar Properties",p:"--",c:"no feed",cl:T.green},{t:"DEYAAR",n:"Deyaar Development",p:"--",c:"no feed",cl:T.purple},{t:"TECOM",n:"TECOM Group",p:"--",c:"no feed",cl:T.teal}].map((s,i) => (
                   <div key={i} style={{ background: s.a ? "rgba(212,168,67,0.08)" : T.surfaceAlt, borderRadius: 10, padding: 14, border: `1px solid ${s.a ? T.gold : T.border}` }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                       <span style={{ fontSize: 12, fontWeight: 700, color: s.cl }}>{s.t}</span>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: s.c === "delayed" ? T.textMuted : s.c.includes("-") ? T.red : T.green }}>{s.c === "delayed" ? "Delayed" : `${s.c}%`}</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: s.c === "no feed" ? T.textMuted : s.c.includes("-") ? T.red : T.green }}>{s.c === "no feed" ? "No Feed" : `${s.c}%`}</span>
                     </div>
                     <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>{s.n}</div>
                     <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'Fraunces', serif", color: T.white }}>AED {s.p}</div>

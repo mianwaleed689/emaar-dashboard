@@ -4,7 +4,7 @@
    ═══════════════════════════════════════════════════════════════ */
 import React, { useState, useEffect } from "react";
 import { auth, db } from "./firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc } from "firebase/firestore";
 
 /* ─── THEME (exact dashboard match) ─── */
@@ -37,7 +37,7 @@ const I = {
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:${T.bg};overflow:hidden;}
+body{background:${T.bg};}
 ::-webkit-scrollbar{width:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:rgba(212,168,67,0.15);border-radius:4px;}
@@ -120,8 +120,8 @@ export default function ProjectManager() {
         try {
           const snap = await getDoc(doc(db, "users", u.uid));
           if (snap.exists() && snap.data().role === "admin") setIsAdmin(true);
-          else if (!snap.exists()) setIsAdmin(true);
-        } catch { setIsAdmin(true); }
+          else setIsAdmin(false);
+        } catch (err) { console.error("Admin auth check failed:", err); setIsAdmin(false); }
       }
       setLoading(false);
     });
@@ -395,7 +395,7 @@ export default function ProjectManager() {
               <div style={{ fontSize: 11, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{adminUser?.displayName || adminUser?.email?.split("@")[0]}</div>
               <div style={{ fontSize: 9, color: T.gold, fontWeight: 600 }}>Admin</div>
             </div>
-            <button type="button" onClick={() => window.location.href = "/"} title="Dashboard" style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", padding: 4 }}>{I.logout}</button>
+            <button type="button" onClick={() => { signOut(auth).then(() => window.location.href = "/").catch(err => console.error("Sign out failed:", err)); }} title="Sign Out" style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", padding: 4 }}>{I.logout}</button>
           </div>
         </div>
       </aside>

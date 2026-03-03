@@ -40,7 +40,7 @@ const I = {
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:${T.bg};overflow:hidden;}
+body{background:${T.bg};}
 ::-webkit-scrollbar{width:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:rgba(212,168,67,0.15);border-radius:4px;}
@@ -111,7 +111,6 @@ export default function AdminPanel() {
   const [userSearch, setUserSearch] = useState("");
   const [tierFilter, setTierFilter] = useState("All");
   const [sortBy, setSortBy] = useState("newest");
-  const [selectedUsers, setSelectedUsers] = useState([]);
   const [toast, setToast] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -130,8 +129,8 @@ export default function AdminPanel() {
         try {
           const snap = await getDoc(doc(db, "users", u.uid));
           if (snap.exists() && snap.data().role === "admin") setIsAdmin(true);
-          else if (!snap.exists()) setIsAdmin(true);
-        } catch { setIsAdmin(true); }
+          else setIsAdmin(false);
+        } catch (err) { console.error("Admin auth check failed:", err); setIsAdmin(false); }
       }
       setLoading(false);
     });
