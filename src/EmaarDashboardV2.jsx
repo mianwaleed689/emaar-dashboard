@@ -237,6 +237,7 @@ const css = `
   }
   .mobile-overlay.open { opacity: 1; pointer-events: auto; }
 
+  /* ─── TABLET (768px) ─── */
   @media (max-width: 768px) {
     html { font-size: 13px; }
     .sidebar { transform: translateX(-100%); position: fixed !important; z-index: 100; }
@@ -259,19 +260,100 @@ const css = `
     .filter-scroll button { flex-shrink: 0; }
     .compare-bar { padding: 10px 14px !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
     .compare-bar > div { justify-content: center; flex-wrap: wrap; }
-    .table-scroll { position: relative; }
-    .table-scroll::after { content: "→"; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: ${T.gold}; font-size: 16px; opacity: 0.4; pointer-events: none; }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-scroll::-webkit-scrollbar { height: 4px; }
+    .table-scroll::-webkit-scrollbar-thumb { background: ${T.border}; border-radius: 4px; }
+
+    /* Tab bar scrollable */
+    .tab-bar { overflow-x: auto !important; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; scrollbar-width: none; gap: 2px !important; }
+    .tab-bar::-webkit-scrollbar { display: none; }
+    .tab-bar button { flex-shrink: 0 !important; font-size: 11px !important; padding: 8px 12px !important; white-space: nowrap !important; }
+
+    /* Project detail modal */
+    .detail-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+    .modal-pad { padding: 16px !important; }
+    .modal-header h2 { font-size: 18px !important; }
+
+    /* Community modal */
+    .comm-stats-grid { grid-template-columns: 1fr 1fr !important; gap: 6px !important; }
+    .comm-projects-grid { grid-template-columns: 1fr !important; }
+
+    /* Mega projects */
+    .mega-facts-grid { grid-template-columns: 1fr !important; }
+
+    /* Strategy cards */
+    .strategy-grid { grid-template-columns: 1fr !important; }
+
+    /* Compare modal */
+    .compare-table { font-size: 11px !important; }
+    .compare-table td, .compare-table th { padding: 8px 6px !important; }
+
+    /* Portfolio grid */
+    .portfolio-grid { grid-template-columns: 1fr !important; }
+
+    /* Fixed modals full width on tablet */
+    .modal-box { width: 100% !important; max-width: 100% !important; border-radius: 12px !important; margin: 8px !important; }
   }
 
+  /* ─── MOBILE (480px) ─── */
   @media (max-width: 480px) {
     html { font-size: 12px; }
     .kpi-grid { grid-template-columns: 1fr !important; gap: 6px !important; }
     .chart-grid-4 { grid-template-columns: 1fr !important; }
     .header-badges { display: none !important; }
-    .top-bar { padding: 0 12px !important; }
-    .top-bar h1 { font-size: 13px !important; }
+    .top-bar { padding: 0 10px !important; height: 50px !important; }
+    .top-bar h1 { font-size: 12px !important; }
     .mobile-stock-bar { display: flex !important; }
     .chart-box .recharts-responsive-container { max-height: 200px !important; }
+    .main-content > div { padding: 0 10px 32px !important; }
+
+    /* Detail modal single column */
+    .detail-grid { grid-template-columns: 1fr !important; }
+    .modal-pad { padding: 12px !important; }
+    .modal-header h2 { font-size: 16px !important; }
+
+    /* Community stats single col */
+    .comm-stats-grid { grid-template-columns: 1fr !important; }
+
+    /* Tab bar compact */
+    .tab-bar button { font-size: 10px !important; padding: 6px 10px !important; }
+
+    /* KPI values smaller */
+    .kpi-card .kpi-value { font-size: 18px !important; }
+    .kpi-card { padding: 10px !important; }
+
+    /* Section headers */
+    .section-title { font-size: 16px !important; }
+    .section-sub { font-size: 11px !important; }
+
+    /* Mega project cards */
+    .mega-card { padding: 12px !important; }
+    .mega-card h3 { font-size: 14px !important; }
+
+    /* Action buttons in modals */
+    .modal-actions { flex-direction: column !important; }
+    .modal-actions a, .modal-actions button { width: 100% !important; text-align: center !important; }
+
+    /* Compare modal */
+    .compare-table { font-size: 10px !important; }
+
+    /* Contact buttons */
+    .contact-btns { flex-direction: column !important; gap: 6px !important; }
+    .contact-btns a, .contact-btns button { width: 100% !important; }
+  }
+
+  /* ─── SMALL MOBILE (360px) ─── */
+  @media (max-width: 360px) {
+    html { font-size: 11px; }
+    .top-bar h1 { font-size: 11px !important; }
+    .sidebar { width: 220px !important; }
+    .kpi-card .kpi-value { font-size: 16px !important; }
+    .tab-bar button { font-size: 9px !important; padding: 5px 8px !important; }
+  }
+
+  /* Fix auto-fill grids on narrow screens */
+  @media (max-width: 640px) {
+    .auto-grid { grid-template-columns: 1fr !important; }
   }
 `;
 
@@ -306,9 +388,9 @@ const Section = ({ title, sub, children, delay = 0 }) => (
   <div className={`fade-up delay-${delay}`} style={{ marginTop: 36, marginBottom: 16 }}>
     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
       <div style={{ width: 4, height: 28, background: `linear-gradient(180deg, ${T.gold}, transparent)`, borderRadius: 2 }} />
-      <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 700, color: T.white }}>{title}</h2>
+      <h2 className="section-title" style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 700, color: T.white }}>{title}</h2>
     </div>
-    {sub && <p style={{ color: T.textSecondary, fontSize: 12, marginLeft: 16, marginTop: 2 }}>{sub}</p>}
+    {sub && <p className="section-sub" style={{ color: T.textSecondary, fontSize: 12, marginLeft: 16, marginTop: 2 }}>{sub}</p>}
     {children}
   </div>
 );
@@ -1489,7 +1571,7 @@ export default function EmaarDashboardV2() {
 
 
             {/* Mega Projects */}
-            <Section title="Mega Projects Pipeline" sub="Strategic developments 2026-2035 · AED 800B+ combined investment pipeline · Global benchmarks & DLD price data · Click any project for deep analysis">
+            <Section title="Mega Projects Pipeline" sub="Strategic developments 2026-2035 · AED 800B+ combined value · Global benchmarks & DLD price data · Click any project for deep analysis">
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginTop: 16 }}>
                 {megaProjects.map((m, i) => {
                   const isOpen = expandedMega === m.name;
@@ -1589,7 +1671,7 @@ export default function EmaarDashboardV2() {
                 <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
                   <button type="button" onClick={() => setShowAddPortfolio(true)} style={{ padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>+ Add Investment</button>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, marginTop: 12 }}>
+                <div className="auto-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, marginTop: 12 }}>
                   {myPortfolio.map((h, i) => {
                     const p = activeProjects.find(x => x.id === h.projectId);
                     if (!p) return null;
@@ -1694,7 +1776,7 @@ export default function EmaarDashboardV2() {
             </Section>
 
             <Section title="Investment Allocation Guide" sub="Strategy by buyer profile · Based on market research">
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, marginTop: 16 }}>
+              <div className="auto-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, marginTop: 16 }}>
                 {[
                   ["Yield Seeker", "AED 1.2M–2.5M", "Target: 5-6% gross yield. Best picks: The Valley 3BR townhouses, Emaar South 1BR apartments, Dubai Hills Estate 1BR. Payment plans (80/20) maximize leveraged returns. Hold 3-5 years minimum.", T.teal, "DHE · ES · TV"],
                   ["Capital Growth", "AED 2.5M–5M", "Target: 15-25% appreciation by handover. Best picks: Dubai Creek Harbour waterfront, Grand Polo Club villas, Emaar Beachfront 2BR. Buy early in launch phase for maximum upside.", T.gold, "DCH · GPC · EBF"],
@@ -1974,7 +2056,7 @@ export default function EmaarDashboardV2() {
 
             {/* Stock Cards Grid */}
             <ProGate isPro={isPro} message="Unlock 30 RE Stocks Tracker" onUpgrade={() => setShowUpgrade(true)}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
+            <div className="auto-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
               {RE_STOCKS.filter(s => {
                 const matchFilter = stockFilter === "All" || s.exchange === stockFilter;
                 const matchSearch = !stockSearch || s.name.toLowerCase().includes(stockSearch.toLowerCase()) || s.ticker.toLowerCase().includes(stockSearch.toLowerCase());
@@ -2270,8 +2352,8 @@ export default function EmaarDashboardV2() {
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 3000, display: "flex", justifyContent: "center", alignItems: "flex-start", padding: "40px 16px", overflowY: "auto" }} onClick={() => setSelectedCommunity(null)}>
             <div style={{ background: T.surface, borderRadius: 16, maxWidth: 800, width: "100%", maxHeight: "90vh", overflowY: "auto", border: `1px solid ${T.border}` }} onClick={e => e.stopPropagation()}>
               {/* Header */}
-              <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
+              <div className="modal-pad" style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ minWidth: 0 }}>
                   <div style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 800, color: T.gold }}>{selectedCommunity}</div>
                   <div style={{ fontSize: 13, color: T.textSecondary, marginTop: 4 }}>{intel.tagline}</div>
                   {intel.masterDev && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{intel.masterDev}</div>}
@@ -2279,10 +2361,10 @@ export default function EmaarDashboardV2() {
                 <button type="button" onClick={() => setSelectedCommunity(null)} style={{ background: "none", border: "none", color: T.textMuted, fontSize: 22, cursor: "pointer", padding: 4 }}>&times;</button>
               </div>
 
-              <div style={{ padding: "20px 24px" }}>
+              <div className="modal-pad" style={{ padding: "20px 24px" }}>
                 {/* KPI Row */}
                 {comm && (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 20 }}>
+                  <div className="comm-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 20 }}>
                     {[
                       { label: "Projects", value: comm.projects },
                       { label: "Avg Price/sqft", value: comm.avgPpsf ? `AED ${comm.avgPpsf.toLocaleString()}` : "—" },
@@ -2408,11 +2490,11 @@ export default function EmaarDashboardV2() {
               </div>
             )}
 
-            <div style={{ padding: 24 }}>
+            <div className="modal-pad" style={{ padding: 24 }}>
               {/* Header */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                <div>
-                  <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h2>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+                <div style={{ minWidth: 0 }}>
+                  <h2 className="modal-header" style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h2>
                   <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject_.community} · {selectedProject_.district} · {selectedProject_.type}</p>
                   {ci && <p style={{ color: T.teal, fontSize: 11, marginTop: 2, fontStyle: "italic" }}>{ci.tagline}</p>}
                 </div>
@@ -2434,7 +2516,7 @@ export default function EmaarDashboardV2() {
               </div>
 
               {/* Details Grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
+              <div className="detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
                 {[
                   ["Starting From", selectedProject_.price ? `AED ${(selectedProject_.price/1000000).toFixed(1)}M` : selectedProject_.priceFrom ? `AED ${(Number(selectedProject_.priceFrom)/1000000).toFixed(1)}M` : "TBD"],
                   ["Handover", selectedProject_.handover || "—"],
@@ -2554,7 +2636,7 @@ export default function EmaarDashboardV2() {
 
               {/* Contact CTAs */}
               {isPro ? (
-              <div style={{ display: "flex", gap: 8 }}>
+              <div className="contact-btns" style={{ display: "flex", gap: 8 }}>
                 <a href={whatsappLink(selectedProject_.name, selectedProject_.community)} target="_blank" rel="noopener noreferrer"
                   style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "#25D366", borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -2572,7 +2654,7 @@ export default function EmaarDashboardV2() {
                 </a>
               </div>
               ) : (
-              <div style={{ display: "flex", gap: 8 }}>
+              <div className="contact-btns" style={{ display: "flex", gap: 8 }}>
                 <button type="button" onClick={() => setShowUpgrade(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "rgba(37,211,102,0.1)", borderRadius: 12, color: "rgba(37,211,102,0.5)", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 WhatsApp</button>
                 <button type="button" onClick={() => setShowUpgrade(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "rgba(212,168,67,0.1)", borderRadius: 12, color: "rgba(212,168,67,0.5)", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 Email</button>
                 <button type="button" onClick={() => setShowUpgrade(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "rgba(0,191,165,0.1)", borderRadius: 12, color: "rgba(0,191,165,0.5)", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 Call</button>
