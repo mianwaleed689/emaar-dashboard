@@ -36,6 +36,7 @@ const Icons = {
   down: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>,
   projects: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="12.01"/></svg>,
   megaProj: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>,
+  admin: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
 };
 
 const TABS = [
@@ -580,6 +581,8 @@ export default function EmaarDashboardV2() {
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
   const [showLogin, setShowLogin] = useState(false); // false, "login", or "signup"
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [adminUsers, setAdminUsers] = useState([]);
+  const [adminLoading, setAdminLoading] = useState(false);
 
   // Tier access helper
   const isPro = userTier === "admin" || userTier === "pro" || userTier === "pro_trial" || userTier === "enterprise";
@@ -754,9 +757,45 @@ export default function EmaarDashboardV2() {
     return <LoginScreen onLogin={(email) => { setIsLoggedIn(true); setUser(email); }} onBack={() => setShowLogin(false)} defaultMode={showLogin === "signup" ? "signup" : "login"} />;
   }
 
+  const fetchAdminUsers = async () => {
+    setAdminLoading(true);
+    try {
+      const snap = await getDocs(collection(db, "users"));
+      const users = [];
+      snap.forEach(d => {
+        const data = d.data();
+        // Calculate trial status
+        let status = data.tier || "free";
+        let daysLeft = 0;
+        if (status === "pro_trial" && data.trialEnd) {
+          const end = new Date(data.trialEnd);
+          daysLeft = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
+          if (daysLeft <= 0) { status = "expired"; daysLeft = 0; }
+        }
+        users.push({ id: d.id, ...data, status, daysLeft });
+      });
+      // Sort by most recent first
+      users.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      setAdminUsers(users);
+    } catch (err) {
+      console.log("Failed to fetch users:", err);
+    }
+    setAdminLoading(false);
+  };
+
+  const handleChangeTier = async (userId, newTier) => {
+    try {
+      await setDoc(doc(db, "users", userId), { tier: newTier }, { merge: true });
+      setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, tier: newTier, status: newTier } : u));
+    } catch (err) {
+      console.log("Failed to update tier:", err);
+    }
+  };
+
   const handleTabChange = (key) => {
     setTab(key);
     setSidebarOpen(false);
+    if (key === "Admin" && userTier === "admin") fetchAdminUsers();
   };
 
   return (
@@ -796,6 +835,15 @@ export default function EmaarDashboardV2() {
               {t.key}
             </button>
           ))}
+          {userTier === "admin" && (
+            <>
+              <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Admin</div>
+              <button className={`sidebar-btn ${tab === "Admin" ? "active" : ""}`} onClick={() => handleTabChange("Admin")}>
+                {Icons.admin}
+                Users & Analytics
+              </button>
+            </>
+          )}
         </nav>
 
         {/* Bottom */}
@@ -1774,9 +1822,140 @@ export default function EmaarDashboardV2() {
             </Section>
           </>}
 
+          {/* ─── ADMIN TAB ─── */}
+          {tab === "Admin" && userTier === "admin" && <>
+            <Section title="User Management" sub="All registered users · Real-time data from Firestore">
+              <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
+                <KPI label="Total Users" value={adminUsers.length} sub="Registered accounts" delay={1} />
+                <KPI label="Pro Trial" value={adminUsers.filter(u => u.status === "pro_trial").length} sub="Active trials" delay={2} />
+                <KPI label="Free Users" value={adminUsers.filter(u => u.status === "free" || u.status === "expired").length} sub="Trial expired or free" delay={3} />
+                <KPI label="Pro / Paid" value={adminUsers.filter(u => u.tier === "pro" || u.tier === "enterprise").length} sub="Paying customers" delay={4} />
+              </div>
+            </Section>
+
+            <Section title="All Users" sub={`${adminUsers.length} registered · Click tier to change`}>
+              {adminLoading ? (
+                <div style={{ textAlign: "center", padding: 40 }}>
+                  <div style={{ width: 24, height: 24, border: `2px solid ${T.border}`, borderTopColor: T.gold, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
+                  <p style={{ color: T.textMuted, fontSize: 12, marginTop: 12 }}>Loading users...</p>
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto", marginTop: 12 }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
+                    <thead>
+                      <tr style={{ borderBottom: `2px solid ${T.border}` }}>
+                        {["#", "Name", "Email", "Tier", "Trial Status", "Signed Up", "Actions"].map(h => (
+                          <th key={h} style={{ padding: "10px 12px", textAlign: "left", color: T.textMuted, fontWeight: 600, fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {adminUsers.map((u, i) => {
+                        const tierColor = u.tier === "pro" || u.tier === "enterprise" ? T.green : u.status === "pro_trial" ? T.gold : u.status === "expired" ? T.red : T.textMuted;
+                        const tierLabel = u.tier === "pro" ? "Pro" : u.tier === "enterprise" ? "Enterprise" : u.status === "pro_trial" ? "Pro Trial" : u.status === "expired" ? "Trial Expired" : "Free";
+                        const signedUp = u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—";
+                        const timeSince = u.createdAt ? (() => {
+                          const diff = Math.floor((new Date() - new Date(u.createdAt)) / (1000 * 60 * 60));
+                          if (diff < 1) return "Just now";
+                          if (diff < 24) return `${diff}h ago`;
+                          return `${Math.floor(diff / 24)}d ago`;
+                        })() : "";
+                        return (
+                          <tr key={u.id} style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.2s" }}
+                            onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <td style={{ padding: "12px", color: T.textMuted, fontSize: 12 }}>{i + 1}</td>
+                            <td style={{ padding: "12px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <div style={{ width: 28, height: 28, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 11, color: T.bg }}>
+                                  {(u.name || u.email || "?").charAt(0).toUpperCase()}
+                                </div>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || "—"}</span>
+                              </div>
+                            </td>
+                            <td style={{ padding: "12px", fontSize: 12, color: T.textSecondary }}>{u.email || "—"}</td>
+                            <td style={{ padding: "12px" }}>
+                              <span style={{ padding: "4px 10px", borderRadius: 6, fontSize: 10, fontWeight: 700, background: `${tierColor}15`, color: tierColor, border: `1px solid ${tierColor}30` }}>
+                                {tierLabel}
+                              </span>
+                            </td>
+                            <td style={{ padding: "12px", fontSize: 12, color: T.textSecondary }}>
+                              {u.status === "pro_trial" ? (
+                                <span style={{ color: T.gold }}>{u.daysLeft} day{u.daysLeft !== 1 ? "s" : ""} left</span>
+                              ) : u.status === "expired" ? (
+                                <span style={{ color: T.red }}>Expired</span>
+                              ) : u.tier === "pro" || u.tier === "enterprise" ? (
+                                <span style={{ color: T.green }}>Active</span>
+                              ) : (
+                                <span style={{ color: T.textMuted }}>—</span>
+                              )}
+                            </td>
+                            <td style={{ padding: "12px" }}>
+                              <div style={{ fontSize: 12, color: T.white }}>{signedUp}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>{timeSince}</div>
+                            </td>
+                            <td style={{ padding: "12px" }}>
+                              <select value={u.tier} onChange={e => handleChangeTier(u.id, e.target.value)}
+                                style={{ padding: "5px 8px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit', sans-serif", cursor: "pointer", outline: "none" }}>
+                                <option value="free">Free</option>
+                                <option value="pro_trial">Pro Trial</option>
+                                <option value="pro">Pro</option>
+                                <option value="enterprise">Enterprise</option>
+                              </select>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Section>
+
+            <Section title="Signup Timeline" sub="User registration activity">
+              <div style={{ marginTop: 16 }}>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={(() => {
+                    const days = {};
+                    adminUsers.forEach(u => {
+                      if (u.createdAt) {
+                        const d = new Date(u.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+                        days[d] = (days[d] || 0) + 1;
+                      }
+                    });
+                    return Object.entries(days).map(([date, count]) => ({ date, signups: count }));
+                  })()}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                    <XAxis dataKey="date" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="signups" fill={T.gold} name="Signups" radius={[6, 6, 0, 0]} barSize={30} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Section>
+
+            <Section title="Tier Distribution" sub="Current user breakdown">
+              <div style={{ marginTop: 16, display: "flex", justifyContent: "center" }}>
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie data={[
+                      { name: "Free", value: adminUsers.filter(u => u.tier === "free" || u.status === "expired").length || 0 },
+                      { name: "Pro Trial", value: adminUsers.filter(u => u.status === "pro_trial").length || 0 },
+                      { name: "Pro", value: adminUsers.filter(u => u.tier === "pro").length || 0 },
+                      { name: "Enterprise", value: adminUsers.filter(u => u.tier === "enterprise").length || 0 },
+                    ].filter(d => d.value > 0)} cx="50%" cy="50%" outerRadius={90} innerRadius={50} dataKey="value" paddingAngle={3} label={({ name, value }) => `${name}: ${value}`}>
+                      {[T.textMuted, T.gold, T.green, T.blue].map((c, i) => <Cell key={i} fill={c} />)}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </Section>
+          </>}
+
         </div>
 
-        {/* Footer */}
         <footer style={{ borderTop: `1px solid ${T.border}`, padding: "20px 24px", textAlign: "center" }}>
           <p style={{ color: T.textMuted, fontSize: 11 }}>
             Sources: Emaar IR, DLD, DXBinteract, Gulf News, Zawya, Knight Frank, CW Core, Fitch · Verified Feb 2026 · Not financial advice
