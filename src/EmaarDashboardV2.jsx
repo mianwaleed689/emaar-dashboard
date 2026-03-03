@@ -2359,7 +2359,14 @@ export default function EmaarDashboardV2() {
       })()}
 
             {selectedProject && (() => {
-        const ci = communityIntel[selectedProject.community] || null;
+        /* Resolve: if selectedProject is an ID (number/string), find the full object */
+        const _sp = (typeof selectedProject === "number" || typeof selectedProject === "string" || !selectedProject.name)
+          ? activeProjects.find(x => x.id === selectedProject || x.id === Number(selectedProject)) || null
+          : selectedProject;
+        if (!_sp) { return null; }
+        /* Use _sp below but keep variable name short */
+        const selectedProject_ = _sp;
+        const ci = communityIntel[selectedProject_.community] || null;
         return (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setSelectedProject(null)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 820, maxHeight: "92vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
@@ -2367,9 +2374,9 @@ export default function EmaarDashboardV2() {
             <button type="button" onClick={() => setSelectedProject(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             
             {/* Image */}
-            {selectedProject.imageUrl && (
+            {selectedProject_.imageUrl && (
               <div style={{ width: "100%", height: 200, overflow: "hidden", borderRadius: "16px 16px 0 0" }}>
-                <img src={selectedProject.imageUrl} alt={selectedProject.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.parentElement.style.display = "none"; }} />
+                <img src={selectedProject_.imageUrl} alt={selectedProject_.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.parentElement.style.display = "none"; }} />
               </div>
             )}
 
@@ -2377,13 +2384,13 @@ export default function EmaarDashboardV2() {
               {/* Header */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                 <div>
-                  <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject.name}</h2>
-                  <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject.community} · {selectedProject.district} · {selectedProject.type}</p>
+                  <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h2>
+                  <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject_.community} · {selectedProject_.district} · {selectedProject_.type}</p>
                   {ci && <p style={{ color: T.teal, fontSize: 11, marginTop: 2, fontStyle: "italic" }}>{ci.tagline}</p>}
                 </div>
                 <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                  {selectedProject.branded && <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{selectedProject.brand}</span>}
-                  <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: selectedProject.status === "Completed" ? "rgba(16,185,129,0.15)" : selectedProject.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: selectedProject.status === "Completed" ? T.green : selectedProject.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{selectedProject.status}</span>
+                  {selectedProject_.branded && <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{selectedProject_.brand}</span>}
+                  <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: selectedProject_.status === "Completed" ? "rgba(16,185,129,0.15)" : selectedProject_.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: selectedProject_.status === "Completed" ? T.green : selectedProject_.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{selectedProject_.status}</span>
                 </div>
               </div>
 
@@ -2391,22 +2398,22 @@ export default function EmaarDashboardV2() {
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                   <span style={{ fontSize: 12, color: T.textMuted }}>Construction Progress</span>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: selectedProject.construction >= 100 ? T.green : selectedProject.construction >= 70 ? T.green : selectedProject.construction >= 30 ? T.gold : T.blue }}>{selectedProject.construction}%</span>
+                  <span style={{ fontSize: 16, fontWeight: 800, color: selectedProject_.construction >= 100 ? T.green : selectedProject_.construction >= 70 ? T.green : selectedProject_.construction >= 30 ? T.gold : T.blue }}>{selectedProject_.construction}%</span>
                 </div>
                 <div style={{ height: 8, borderRadius: 4, background: T.surfaceAlt, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${selectedProject.construction}%`, borderRadius: 4, background: selectedProject.construction >= 100 ? T.green : selectedProject.construction >= 70 ? T.green : selectedProject.construction >= 30 ? T.gold : T.blue }} />
+                  <div style={{ height: "100%", width: `${selectedProject_.construction}%`, borderRadius: 4, background: selectedProject_.construction >= 100 ? T.green : selectedProject_.construction >= 70 ? T.green : selectedProject_.construction >= 30 ? T.gold : T.blue }} />
                 </div>
               </div>
 
               {/* Details Grid */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
                 {[
-                  ["Starting From", selectedProject.price ? `AED ${(selectedProject.price/1000000).toFixed(1)}M` : "TBD"],
-                  ["Handover", selectedProject.handover],
-                  ["Price/sqft", selectedProject.ppsf ? `AED ${selectedProject.ppsf.toLocaleString()}` : "TBD"],
-                  ["Size Range", `${selectedProject.sizeFrom?.toLocaleString()} - ${selectedProject.sizeTo?.toLocaleString()} sqft`],
-                  ["Bedrooms", selectedProject.beds + " BR"],
-                  ["Payment Plan", selectedProject.payment],
+                  ["Starting From", selectedProject_.price ? `AED ${(selectedProject_.price/1000000).toFixed(1)}M` : selectedProject_.priceFrom ? `AED ${(Number(selectedProject_.priceFrom)/1000000).toFixed(1)}M` : "TBD"],
+                  ["Handover", selectedProject_.handover || "—"],
+                  ["Price/sqft", selectedProject_.ppsf ? `AED ${selectedProject_.ppsf.toLocaleString()}` : selectedProject_.pricePerSqft ? `AED ${Number(selectedProject_.pricePerSqft).toLocaleString()}` : "TBD"],
+                  ["Size Range", selectedProject_.sizeFrom ? `${selectedProject_.sizeFrom.toLocaleString()} - ${selectedProject_.sizeTo?.toLocaleString()} sqft` : selectedProject_.sizeRange || "—"],
+                  ["Bedrooms", selectedProject_.beds ? selectedProject_.beds + " BR" : "—"],
+                  ["Payment Plan", selectedProject_.payment || selectedProject_.paymentPlan || "—"],
                 ].map(([label, value], idx) => (
                   <div key={idx} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
                     <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
@@ -2416,11 +2423,11 @@ export default function EmaarDashboardV2() {
               </div>
 
               {/* Unit Inventory */}
-              {selectedProject.units && (
+              {selectedProject_.units && (
                 <div style={{ marginBottom: 16 }}>
                   <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Unit Inventory & Availability</h3>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 8 }}>
-                    {getUnitEntries(selectedProject.units).map(([type, d]) => {
+                    {getUnitEntries(selectedProject_.units).map(([type, d]) => {
                       const avail = d.total - d.sold;
                       const pct = d.total > 0 ? (d.sold / d.total) * 100 : 0;
                       return (
@@ -2510,7 +2517,7 @@ export default function EmaarDashboardV2() {
                     </div>
                     <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
                       <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Tier</div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{selectedProject.tier}</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{selectedProject_.tier}</div>
                     </div>
                   </div>
                 </>
@@ -2520,12 +2527,12 @@ export default function EmaarDashboardV2() {
               {/* Contact CTAs */}
               {isPro ? (
               <div style={{ display: "flex", gap: 8 }}>
-                <a href={whatsappLink(selectedProject.name, selectedProject.community)} target="_blank" rel="noopener noreferrer"
+                <a href={whatsappLink(selectedProject_.name, selectedProject_.community)} target="_blank" rel="noopener noreferrer"
                   style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "#25D366", borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                   WhatsApp
                 </a>
-                <a href={`mailto:mianwaleed689@gmail.com?subject=Inquiry: ${selectedProject.name} — ${selectedProject.community}&body=Hi Mian Waleed,%0A%0AI'm interested in ${selectedProject.name} at ${selectedProject.community}.%0A%0ACould you please share more details about pricing, availability, and payment plans?%0A%0AThank you.`} 
+                <a href={`mailto:mianwaleed689@gmail.com?subject=Inquiry: ${selectedProject_.name} — ${selectedProject_.community}&body=Hi Mian Waleed,%0A%0AI'm interested in ${selectedProject_.name} at ${selectedProject_.community}.%0A%0ACould you please share more details about pricing, availability, and payment plans?%0A%0AThank you.`} 
                   style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: T.gold, borderRadius: 12, color: T.bg, fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#04090F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                   Email
