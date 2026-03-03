@@ -2337,7 +2337,7 @@ export default function EmaarDashboardV2() {
                     <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 10 }}>PROJECTS IN {selectedCommunity.toUpperCase()} ({commProjects.length})</div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
                       {commProjects.map((p, pi) => (
-                        <div key={pi} style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, cursor: "pointer" }} onClick={() => { setSelectedCommunity(null); setSelectedProject(p.id); }}>
+                        <div key={pi} style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, cursor: "pointer" }} onClick={() => { setSelectedCommunity(null); setSelectedProject(activeProjects.find(x => x.id === p.id) || p); }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{p.name}</div>
                           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{p.type} &middot; {p.beds} beds &middot; {p.status}</div>
                           <div style={{ fontSize: 11, fontWeight: 600, color: T.white, marginTop: 4 }}>{p.price ? `AED ${(p.price/1e6).toFixed(2)}M` : "TBD"}</div>
