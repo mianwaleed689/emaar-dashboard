@@ -4,7 +4,7 @@ import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "firebase/auth";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 
-import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects } from "./data";
+import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel } from "./data";
 
 /* ─── DATA ALIASES (for backward compat) ─── */
 const financials = emaarFinancials;
@@ -1536,35 +1536,38 @@ export default function EmaarDashboardV2() {
         </div>
       )}
 
-      {/* ─── PROJECT DETAIL MODAL ─── */}
-      {selectedProject && (
+            {/* ─── PROJECT DETAIL MODAL ─── */}
+      {selectedProject && (() => {
+        const ci = communityIntel[selectedProject.community] || null;
+        return (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setSelectedProject(null)}>
-          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "90%", maxWidth: 720, maxHeight: "90vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 820, maxHeight: "92vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
             {/* Close */}
             <button onClick={() => setSelectedProject(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             
             {/* Image */}
             {selectedProject.imageUrl && (
-              <div style={{ width: "100%", height: 220, overflow: "hidden", borderRadius: "16px 16px 0 0" }}>
+              <div style={{ width: "100%", height: 200, overflow: "hidden", borderRadius: "16px 16px 0 0" }}>
                 <img src={selectedProject.imageUrl} alt={selectedProject.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               </div>
             )}
 
-            <div style={{ padding: 28 }}>
+            <div style={{ padding: 24 }}>
               {/* Header */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                 <div>
-                  <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject.name}</h2>
+                  <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject.name}</h2>
                   <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject.community} · {selectedProject.district} · {selectedProject.type}</p>
+                  {ci && <p style={{ color: T.teal, fontSize: 11, marginTop: 2, fontStyle: "italic" }}>{ci.tagline}</p>}
                 </div>
-                <div style={{ display: "flex", gap: 6 }}>
+                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                   {selectedProject.branded && <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{selectedProject.brand}</span>}
                   <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: selectedProject.status === "Completed" ? "rgba(16,185,129,0.15)" : selectedProject.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: selectedProject.status === "Completed" ? T.green : selectedProject.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{selectedProject.status}</span>
                 </div>
               </div>
 
               {/* Construction */}
-              <div style={{ marginBottom: 20 }}>
+              <div style={{ marginBottom: 16 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                   <span style={{ fontSize: 12, color: T.textMuted }}>Construction Progress</span>
                   <span style={{ fontSize: 16, fontWeight: 800, color: selectedProject.construction >= 100 ? T.green : selectedProject.construction >= 70 ? T.green : selectedProject.construction >= 30 ? T.gold : T.blue }}>{selectedProject.construction}%</span>
@@ -1575,7 +1578,7 @@ export default function EmaarDashboardV2() {
               </div>
 
               {/* Details Grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 20 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
                 {[
                   ["Starting From", selectedProject.price ? `AED ${(selectedProject.price/1000000).toFixed(1)}M` : "TBD"],
                   ["Handover", selectedProject.handover],
@@ -1584,30 +1587,30 @@ export default function EmaarDashboardV2() {
                   ["Bedrooms", selectedProject.beds + " BR"],
                   ["Payment Plan", selectedProject.payment],
                 ].map(([label, value], idx) => (
-                  <div key={idx} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 12 }}>
-                    <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{value}</div>
+                  <div key={idx} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
+                    <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{value}</div>
                   </div>
                 ))}
               </div>
 
               {/* Unit Inventory */}
               {selectedProject.units && (
-                <div style={{ marginBottom: 20 }}>
-                  <h3 style={{ fontSize: 12, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Unit Inventory & Availability</h3>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+                <div style={{ marginBottom: 16 }}>
+                  <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Unit Inventory & Availability</h3>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 8 }}>
                     {Object.entries(selectedProject.units).filter(([,d]) => d.total > 0).map(([type, d]) => {
                       const avail = d.total - d.sold;
                       const pct = d.total > 0 ? (d.sold / d.total) * 100 : 0;
                       return (
-                        <div key={type} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 12, textAlign: "center" }}>
-                          <div style={{ fontSize: 14, fontWeight: 800, color: T.gold, textTransform: "uppercase", marginBottom: 6 }}>{type}</div>
-                          <div style={{ fontSize: 22, fontWeight: 900, fontFamily: "'Fraunces', serif", color: avail > 0 ? T.green : T.red }}>{avail}</div>
-                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6 }}>available of {d.total}</div>
+                        <div key={type} style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
+                          <div style={{ fontSize: 12, fontWeight: 800, color: T.gold, textTransform: "uppercase", marginBottom: 4 }}>{type}</div>
+                          <div style={{ fontSize: 20, fontWeight: 900, fontFamily: "'Fraunces', serif", color: avail > 0 ? T.green : T.red }}>{avail}</div>
+                          <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4 }}>available of {d.total}</div>
                           <div style={{ height: 4, borderRadius: 2, background: T.bg, overflow: "hidden" }}>
                             <div style={{ height: "100%", width: `${pct}%`, borderRadius: 2, background: pct >= 90 ? T.red : pct >= 60 ? T.gold : T.green }} />
                           </div>
-                          <div style={{ fontSize: 9, color: T.textMuted, marginTop: 4 }}>{pct.toFixed(0)}% sold</div>
+                          <div style={{ fontSize: 8, color: T.textMuted, marginTop: 3 }}>{pct.toFixed(0)}% sold</div>
                         </div>
                       );
                     })}
@@ -1615,33 +1618,105 @@ export default function EmaarDashboardV2() {
                 </div>
               )}
 
-              {/* Tier Badge */}
-              <div style={{ marginBottom: 20 }}>
-                <span style={{ padding: "6px 14px", borderRadius: 8, background: T.surfaceAlt, fontSize: 12, color: T.textSecondary }}>{selectedProject.tier}</span>
-              </div>
+              {/* ─── LOCATION INTELLIGENCE SECTION ─── */}
+              {ci && (
+                <>
+                  {/* Community Famous For */}
+                  <div style={{ marginBottom: 16, background: `linear-gradient(135deg, rgba(212,168,67,0.08), rgba(0,191,165,0.05))`, borderRadius: 12, padding: 14, border: `1px solid ${T.border}` }}>
+                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>⭐ Famous For</h3>
+                    <p style={{ fontSize: 12, color: T.textPrimary, lineHeight: 1.5, margin: 0 }}>{ci.famousFor}</p>
+                    <p style={{ fontSize: 10, color: T.textMuted, marginTop: 6, margin: 0 }}><span style={{ color: T.teal }}>Developer:</span> {ci.masterDev}</p>
+                    <p style={{ fontSize: 10, color: T.textMuted, marginTop: 3, margin: 0 }}><span style={{ color: T.teal }}>Lifestyle:</span> {ci.lifestyle}</p>
+                  </div>
+
+                  {/* Key Amenities */}
+                  <div style={{ marginBottom: 16 }}>
+                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>🏢 Key Amenities Nearby</h3>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                      {ci.keyAmenities.map((a, i) => (
+                        <div key={i} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10, borderLeft: `3px solid ${i === 0 ? T.blue : i === 1 ? T.red : i === 2 ? T.gold : T.teal}` }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.white, marginBottom: 4 }}>{a.icon} {a.label}</div>
+                          <div style={{ fontSize: 10, color: T.textSecondary, lineHeight: 1.4 }}>{a.items}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Distance Table */}
+                  <div style={{ marginBottom: 16 }}>
+                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>📍 Distance to Key Dubai Locations</h3>
+                    <div style={{ borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}` }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                        <thead>
+                          <tr style={{ background: T.surfaceAlt }}>
+                            <th style={{ padding: "8px 10px", textAlign: "left", color: T.gold, fontWeight: 600, fontSize: 10 }}>Destination</th>
+                            <th style={{ padding: "8px 10px", textAlign: "center", color: T.gold, fontWeight: 600, fontSize: 10 }}>Distance</th>
+                            <th style={{ padding: "8px 10px", textAlign: "center", color: T.gold, fontWeight: 600, fontSize: 10 }}>Drive Time</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {ci.distances.map((d, i) => (
+                            <tr key={i} style={{ borderTop: `1px solid ${T.border}`, background: i % 2 === 0 ? "transparent" : "rgba(14,29,53,0.3)" }}>
+                              <td style={{ padding: "7px 10px", color: T.textPrimary, fontWeight: d.dest.includes("Downtown") || d.dest.includes("Sheikh Zayed") ? 600 : 400 }}>{d.dest}</td>
+                              <td style={{ padding: "7px 10px", textAlign: "center", color: T.textSecondary }}>{d.km} km</td>
+                              <td style={{ padding: "7px 10px", textAlign: "center" }}>
+                                <span style={{ 
+                                  padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 700,
+                                  background: d.min <= 10 ? "rgba(16,185,129,0.15)" : d.min <= 20 ? "rgba(212,168,67,0.15)" : "rgba(59,130,246,0.12)",
+                                  color: d.min <= 10 ? T.green : d.min <= 20 ? T.gold : T.blue
+                                }}>
+                                  {d.min} min
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <p style={{ fontSize: 9, color: T.textMuted, marginTop: 6 }}>🛣️ <strong>Road Access:</strong> {ci.roads}</p>
+                  </div>
+
+                  {/* Investment Quick Facts */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
+                    <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
+                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Est. Yield</div>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: T.green, fontFamily: "'Fraunces', serif" }}>{ci.avgYield}</div>
+                    </div>
+                    <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
+                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Golden Visa</div>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: ci.goldenVisa ? T.green : T.textMuted, fontFamily: "'Fraunces', serif" }}>{ci.goldenVisa ? "✓ Eligible" : "Below 2M"}</div>
+                    </div>
+                    <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
+                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Tier</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{selectedProject.tier}</div>
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Contact CTAs */}
-              <div style={{ display: "flex", gap: 10 }}>
+              <div style={{ display: "flex", gap: 8 }}>
                 <a href={whatsappLink(selectedProject.name, selectedProject.community)} target="_blank" rel="noopener noreferrer"
-                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "14px 0", background: "#25D366", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "#25D366", borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                   WhatsApp
                 </a>
                 <a href={`mailto:mianwaleed689@gmail.com?subject=Inquiry: ${selectedProject.name} — ${selectedProject.community}&body=Hi Mian Waleed,%0A%0AI'm interested in ${selectedProject.name} at ${selectedProject.community}.%0A%0ACould you please share more details about pricing, availability, and payment plans?%0A%0AThank you.`} 
-                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "14px 0", background: T.gold, borderRadius: 12, color: T.bg, fontSize: 14, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#04090F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: T.gold, borderRadius: 12, color: T.bg, fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#04090F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                   Email
                 </a>
                 <a href="tel:+971542410599"
-                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "14px 0", background: T.teal, borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: T.teal, borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                   Call
                 </a>
               </div>
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ─── COMPARE MODAL ─── */}
       {showCompare && compareList.length >= 2 && (
