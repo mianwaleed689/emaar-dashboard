@@ -1,64 +1,67 @@
-/* ─── DXB ANALYTICS ADMIN PANEL — FULL VERSION ─── */
+/* ═══════════════════════════════════════════════════════════════
+   DXB ANALYTICS — ADMIN PANEL
+   Matching dashboard design DNA: sidebar nav, KPI cards, sections
+   ═══════════════════════════════════════════════════════════════ */
 import React, { useState, useEffect, useCallback } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, LineChart, Line, ComposedChart, Legend } from "recharts";
 import { auth, db } from "./firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, addDoc, query, orderBy, limit } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
+import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 
+/* ─── THEME (exact dashboard match) ─── */
 const T = {
   bg: "#04090F", surface: "#0A1628", surfaceAlt: "#0E1D35", card: "#0D1B30",
-  gold: "#D4A843", goldLight: "#E8C96A", goldGlow: "rgba(212,168,67,0.15)",
+  gold: "#D4A843", goldLight: "#E8C96A", goldDim: "#B8912F", goldGlow: "rgba(212,168,67,0.12)",
   teal: "#00BFA5", white: "#FFFFFF",
   textPrimary: "#E2E8F0", textSecondary: "#94A3B8", textMuted: "#64748B",
-  border: "rgba(212,168,67,0.12)",
-  red: "#EF4444", green: "#10B981", blue: "#3B82F6", purple: "#8B5CF6", orange: "#F59E0B",
+  border: "rgba(212,168,67,0.08)", borderHover: "rgba(212,168,67,0.2)",
+  red: "#EF4444", green: "#10B981", blue: "#3B82F6", purple: "#8B5CF6",
+  cyan: "#06B6D4", orange: "#F59E0B",
 };
 
+/* ─── ICONS (matching dashboard SVG style) ─── */
+const I = {
+  overview: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>,
+  users: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  revenue: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+  leads: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
+  analytics: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+  logout: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+  search: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  download: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+  refresh: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>,
+  trash: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>,
+  check: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  arrow: <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="18 15 12 9 6 15"/></svg>,
+  bell: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+};
+
+/* ─── CSS (matching dashboard animations & scrollbar) ─── */
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: ${T.bg}; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-  .a-card { background: ${T.surface}; border: 1px solid ${T.border}; border-radius: 14px; padding: 20px; animation: fadeUp 0.5s ease-out both; transition: border-color 0.2s; }
-  .a-card:hover { border-color: rgba(212,168,67,0.25); }
-  .a-kpi { background: ${T.surface}; border: 1px solid ${T.border}; border-radius: 14px; padding: 20px; text-align: center; animation: fadeUp 0.5s ease-out both; }
-  .a-table tr:hover { background: ${T.surfaceAlt}; }
-  .a-badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; display: inline-block; }
-  .a-select { padding: 6px 10px; background: ${T.surfaceAlt}; border: 1px solid ${T.border}; border-radius: 8px; color: ${T.textPrimary}; font-size: 12px; font-family: 'Outfit', sans-serif; cursor: pointer; outline: none; }
-  .a-select:focus { border-color: ${T.gold}; }
-  .a-btn { padding: 8px 20px; border-radius: 8px; border: none; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 12px; }
-  .a-btn:hover { transform: translateY(-1px); }
-  .a-btn-gold { background: linear-gradient(135deg, ${T.gold}, ${T.goldLight}); color: ${T.bg}; }
-  .a-btn-outline { background: transparent; color: ${T.gold}; border: 1px solid ${T.gold}; }
-  .a-btn-danger { background: rgba(239,68,68,0.15); color: ${T.red}; border: 1px solid rgba(239,68,68,0.2); }
-  .a-btn-danger:hover { background: rgba(239,68,68,0.25); }
-  .a-btn-teal { background: rgba(0,191,165,0.15); color: ${T.teal}; border: 1px solid rgba(0,191,165,0.2); }
-  .a-input { width: 100%; padding: 10px 14px 10px 38px; background: ${T.surface}; border: 1px solid ${T.border}; border-radius: 10px; color: ${T.textPrimary}; font-size: 13px; font-family: 'Outfit', sans-serif; outline: none; }
-  .a-input:focus { border-color: ${T.gold}; }
-  .a-tab { padding: 10px 20px; border-radius: 8px; border: none; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; color: ${T.textMuted}; background: transparent; }
-  .a-tab:hover { color: ${T.textSecondary}; background: ${T.surfaceAlt}; }
-  .a-tab.active { color: ${T.bg}; background: ${T.gold}; }
-  .a-status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-  @media (max-width: 768px) {
-    .a-kpi-grid { grid-template-columns: 1fr 1fr !important; }
-    .a-charts-grid { grid-template-columns: 1fr !important; }
-    .a-container { padding: 16px !important; }
-    .a-tab-bar { overflow-x: auto !important; }
-  }
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:${T.bg};overflow:hidden;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(212,168,67,0.15);border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(212,168,67,0.3);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fade-up{animation:fadeUp 0.4s ease-out both;}
+.chart-box{background:${T.surface};border:1px solid ${T.border};border-radius:14px;padding:20px;transition:border-color 0.3s;}
+.chart-box:hover{border-color:${T.borderHover};}
 `;
 
-const SearchIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" strokeLinecap="round" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
-
+/* ─── CUSTOM TOOLTIP (matching dashboard) ─── */
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: "10px 14px", boxShadow: "0 8px 32px rgba(0,0,0,0.3)" }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: T.gold, marginBottom: 4 }}>{label}</div>
+    <div style={{ background: "rgba(10,22,40,0.95)", border: `1px solid ${T.border}`, borderRadius: 10, padding: "10px 14px", backdropFilter: "blur(12px)" }}>
+      <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, fontWeight: 600 }}>{label}</div>
       {payload.map((p, i) => (
-        <div key={i} style={{ fontSize: 12, color: p.color || T.textPrimary, display: "flex", alignItems: "center", gap: 4 }}>
-          <span style={{ width: 8, height: 8, borderRadius: 2, background: p.color, display: "inline-block" }} />
+        <div key={i} style={{ fontSize: 12, color: p.color, fontWeight: 600, display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+          <div style={{ width: 8, height: 8, borderRadius: 2, background: p.color }} />
           {p.name}: {typeof p.value === "number" ? p.value.toLocaleString() : p.value}
         </div>
       ))}
@@ -66,28 +69,40 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
+/* ─── SAFE FIRESTORE DATA ─── */
+function plainify(obj) {
+  if (obj === null || obj === undefined) return "";
+  if (typeof obj === "string" || typeof obj === "number" || typeof obj === "boolean") return obj;
+  if (typeof obj.toDate === "function") return obj.toDate().toISOString();
+  if (Array.isArray(obj)) return obj.map(plainify);
+  if (typeof obj === "object") { const o = {}; Object.keys(obj).forEach(k => { o[k] = plainify(obj[k]); }); return o; }
+  return String(obj);
+}
+
+/* ═══════════════════════════════════════
+   MAIN COMPONENT
+   ═══════════════════════════════════════ */
 export default function AdminPanel() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [adminUser, setAdminUser] = useState(null);
   const [tab, setTab] = useState("overview");
   const [users, setUsers] = useState([]);
-  const [leads, setLeads] = useState([]);
-  const [usersLoading, setUsersLoading] = useState(false);
-  const [search, setSearch] = useState("");
-  const [filterTier, setFilterTier] = useState("all");
+  const [userSearch, setUserSearch] = useState("");
+  const [tierFilter, setTierFilter] = useState("All");
   const [sortBy, setSortBy] = useState("newest");
-  const [time, setTime] = useState(new Date());
   const [selectedUsers, setSelectedUsers] = useState([]);
-  const [bulkAction, setBulkAction] = useState("");
+  const [toast, setToast] = useState("");
 
-  // Auth
+  /* ─── AUTH ─── */
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       if (u) {
+        setAdminUser(u);
         try {
-          const userDoc = await getDoc(doc(db, "users", u.uid));
-          if (userDoc.exists() && userDoc.data().role === "admin") setIsAdmin(true);
-          else if (!userDoc.exists()) setIsAdmin(true);
+          const snap = await getDoc(doc(db, "users", u.uid));
+          if (snap.exists() && snap.data().role === "admin") setIsAdmin(true);
+          else if (!snap.exists()) setIsAdmin(true);
         } catch { setIsAdmin(true); }
       }
       setLoading(false);
@@ -95,712 +110,657 @@ export default function AdminPanel() {
     return () => unsub();
   }, []);
 
-  useEffect(() => {
-    const t = setInterval(() => setTime(new Date()), 60000);
-    return () => clearInterval(t);
-  }, []);
-
-  // Fetch users
+  /* ─── FETCH USERS ─── */
   const fetchUsers = useCallback(async () => {
-    setUsersLoading(true);
     try {
       const snap = await getDocs(collection(db, "users"));
       const list = [];
-      snap.forEach(d => {
-        const data = d.data();
-        let status = data.tier || "free";
-        let daysLeft = 0;
-        if (status === "pro_trial" && data.trialEnd) {
-          const end = new Date(data.trialEnd);
-          daysLeft = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
-          if (daysLeft <= 0) { status = "expired"; daysLeft = 0; }
-        }
-        list.push({ id: d.id, ...data, status, daysLeft });
-      });
-      list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      snap.forEach(d => list.push({ uid: d.id, ...plainify(d.data()) }));
       setUsers(list);
-    } catch (err) { console.log("Error:", err); }
-    setUsersLoading(false);
+    } catch (e) { console.error("Fetch users:", e); }
   }, []);
 
-  // Fetch leads
-  const fetchLeads = useCallback(async () => {
-    try {
-      const snap = await getDocs(collection(db, "leads"));
-      const list = [];
-      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-      list.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
-      setLeads(list);
-    } catch (err) { console.log("Leads:", err); }
-  }, []);
+  useEffect(() => { if (isAdmin) fetchUsers(); }, [isAdmin, fetchUsers]);
 
-  useEffect(() => {
-    if (isAdmin) { fetchUsers(); fetchLeads(); }
-  }, [isAdmin, fetchUsers, fetchLeads]);
-
-  // Actions
-  const handleChangeTier = async (userId, newTier) => {
-    try {
-      const updates = { tier: newTier };
-      if (newTier === "pro_trial") {
-        const now = new Date();
-        updates.trialStart = now.toISOString();
-        updates.trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      }
-      await setDoc(doc(db, "users", userId), updates, { merge: true });
-      fetchUsers();
-    } catch (err) { console.log("Error:", err); }
-  };
-
-  const handleDeleteUser = async (userId, email) => {
-    if (!window.confirm(`Delete ${email}? This removes their Firestore profile.`)) return;
-    try {
-      await deleteDoc(doc(db, "users", userId));
-      setUsers(prev => prev.filter(u => u.id !== userId));
-      setSelectedUsers(prev => prev.filter(id => id !== userId));
-    } catch (err) { console.log("Error:", err); }
-  };
-
-  const handleBulkAction = async () => {
-    if (!bulkAction || selectedUsers.length === 0) return;
-    if (bulkAction === "delete") {
-      if (!window.confirm(`Delete ${selectedUsers.length} users?`)) return;
-      for (const id of selectedUsers) {
-        try { await deleteDoc(doc(db, "users", id)); } catch {}
-      }
-    } else {
-      for (const id of selectedUsers) {
-        try { await setDoc(doc(db, "users", id), { tier: bulkAction }, { merge: true }); } catch {}
-      }
-    }
-    setSelectedUsers([]);
-    setBulkAction("");
-    fetchUsers();
-  };
-
-  const toggleSelectUser = (id) => {
-    setSelectedUsers(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedUsers.length === filtered.length) setSelectedUsers([]);
-    else setSelectedUsers(filtered.map(u => u.id));
-  };
-
-  // CSV Export
-  const exportCSV = () => {
-    const headers = ["Name", "Email", "Tier", "Status", "Trial Days Left", "Signed Up"];
-    const rows = users.map(u => [
-      u.name || "", u.email || "", u.tier || "", u.status || "", u.daysLeft || 0,
-      u.createdAt ? new Date(u.createdAt).toLocaleDateString() : ""
-    ]);
-    const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `dxb-analytics-users-${new Date().toISOString().split("T")[0]}.csv`;
-    a.click(); URL.revokeObjectURL(url);
-  };
-
-  // Filter & Sort
-  const filtered = users.filter(u => {
-    const matchSearch = !search || (u.name || "").toLowerCase().includes(search.toLowerCase()) || (u.email || "").toLowerCase().includes(search.toLowerCase());
-    const matchTier = filterTier === "all" || u.tier === filterTier || (filterTier === "expired" && u.status === "expired");
-    return matchSearch && matchTier;
-  }).sort((a, b) => {
-    if (sortBy === "newest") return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-    if (sortBy === "oldest") return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
-    if (sortBy === "name") return (a.name || "").localeCompare(b.name || "");
-    if (sortBy === "tier") return (a.tier || "").localeCompare(b.tier || "");
-    return 0;
-  });
-
-  // ─── STATS ───
+  /* ─── USER STATS ─── */
   const now = new Date();
   const stats = {
     total: users.length,
-    proTrial: users.filter(u => u.status === "pro_trial").length,
-    free: users.filter(u => u.tier === "free" || u.status === "expired").length,
+    today: users.filter(u => { try { return new Date(u.createdAt).toDateString() === now.toDateString(); } catch { return false; } }).length,
+    thisWeek: users.filter(u => { try { return (now - new Date(u.createdAt)) < 7 * 86400000; } catch { return false; } }).length,
+    thisMonth: users.filter(u => { try { const d = new Date(u.createdAt); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); } catch { return false; } }).length,
+    proTrial: users.filter(u => u.tier === "pro_trial" && (!u.trialEnd || new Date(u.trialEnd) > now)).length,
+    free: users.filter(u => u.tier === "free" || !u.tier).length,
+    expired: users.filter(u => u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) <= now).length,
     pro: users.filter(u => u.tier === "pro").length,
     enterprise: users.filter(u => u.tier === "enterprise").length,
-    expired: users.filter(u => u.status === "expired").length,
-    today: users.filter(u => u.createdAt && new Date(u.createdAt).toDateString() === now.toDateString()).length,
-    thisWeek: users.filter(u => u.createdAt && (now - new Date(u.createdAt)) < 7 * 24 * 60 * 60 * 1000).length,
-    thisMonth: users.filter(u => u.createdAt && new Date(u.createdAt).getMonth() === now.getMonth() && new Date(u.createdAt).getFullYear() === now.getFullYear()).length,
   };
-
-  // Revenue
+  stats.paid = stats.pro + stats.enterprise;
+  stats.freeExpired = stats.free + stats.expired;
   const mrr = (stats.pro * 99) + (stats.enterprise * 499);
   const arr = mrr * 12;
-  const projectedMRR = Math.round(mrr + (stats.proTrial * 99 * 0.3)); // 30% conversion assumption
-  const trialConversionRate = stats.expired > 0 ? Math.round((stats.pro / (stats.pro + stats.expired)) * 100) : 0;
-  const avgRevenuePerUser = stats.total > 0 ? Math.round(mrr / stats.total) : 0;
-  const leadValue = leads.length * 125; // AED 125 avg per lead
+  const projectedMRR = mrr + Math.round(stats.proTrial * 99 * 0.3);
+  const trialConversion = (stats.pro + stats.expired) > 0 ? Math.round((stats.pro / (stats.pro + stats.expired)) * 100) : 0;
 
-  // Chart data
-  const signupsByDay = (() => {
-    const days = {};
-    const last14 = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-    users.forEach(u => {
-      if (u.createdAt && new Date(u.createdAt) >= last14) {
-        const d = new Date(u.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-        days[d] = (days[d] || 0) + 1;
-      }
-    });
-    return Object.entries(days).map(([date, count]) => ({ date, signups: count }));
+  /* ─── SIGNUP TIMELINE DATA ─── */
+  const signupTimeline = (() => {
+    const days = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now); d.setDate(d.getDate() - i);
+      const key = d.toDateString();
+      const count = users.filter(u => { try { return new Date(u.createdAt).toDateString() === key; } catch { return false; } }).length;
+      days.push({ date: `${d.getDate()} ${d.toLocaleString("en", { month: "short" })}`, count });
+    }
+    return days;
   })();
 
+  /* ─── TIER DISTRIBUTION ─── */
   const tierData = [
-    { name: "Free", value: stats.free, color: T.textMuted },
     { name: "Pro Trial", value: stats.proTrial, color: T.gold },
+    { name: "Free", value: stats.free, color: T.textMuted },
     { name: "Pro", value: stats.pro, color: T.green },
-    { name: "Enterprise", value: stats.enterprise, color: T.blue },
+    { name: "Enterprise", value: stats.enterprise, color: T.teal },
+    { name: "Expired", value: stats.expired, color: T.red },
   ].filter(d => d.value > 0);
 
+  /* ─── CUMULATIVE GROWTH ─── */
+  const cumulativeData = (() => {
+    const sorted = [...users].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+    return sorted.map((u, i) => {
+      const d = new Date(u.createdAt || now);
+      return { date: `${d.getDate()}/${d.getMonth() + 1}`, total: i + 1 };
+    });
+  })();
+
+  /* ─── REVENUE PROJECTION ─── */
   const revenueProjection = [
-    { month: "Now", actual: mrr, projected: mrr },
-    { month: "+1mo", actual: 0, projected: Math.round(mrr + (stats.thisMonth * 99 * 0.3)) },
-    { month: "+2mo", actual: 0, projected: Math.round(mrr * 1.4 + (stats.thisMonth * 2 * 99 * 0.3)) },
-    { month: "+3mo", actual: 0, projected: Math.round(mrr * 1.8 + (stats.thisMonth * 3 * 99 * 0.25)) },
-    { month: "+6mo", actual: 0, projected: Math.round(mrr * 3 + (stats.thisMonth * 6 * 99 * 0.2)) },
+    { month: "Now", revenue: mrr },
+    { month: "+1mo", revenue: Math.round(mrr + projectedMRR * 0.3) },
+    { month: "+2mo", revenue: Math.round(mrr + projectedMRR * 0.6) },
+    { month: "+3mo", revenue: Math.round(mrr + projectedMRR) },
+    { month: "+6mo", revenue: Math.round((mrr + projectedMRR) * 1.8) },
   ];
 
-  // Loading / Access
+  /* ─── ACTIONS ─── */
+  const changeTier = async (uid, tier) => {
+    try {
+      const data = { tier };
+      if (tier === "pro_trial") { const end = new Date(); end.setDate(end.getDate() + 7); data.trialEnd = end.toISOString(); }
+      await setDoc(doc(db, "users", uid), data, { merge: true });
+      notify(`✅ Tier updated to ${tier}`);
+      fetchUsers();
+    } catch (e) { notify("❌ Error: " + e.message); }
+  };
+
+  const deleteUser = async (uid) => {
+    if (!window.confirm("Delete this user permanently?")) return;
+    try { await deleteDoc(doc(db, "users", uid)); notify("✅ User deleted"); fetchUsers(); } catch (e) { notify("❌ " + e.message); }
+  };
+
+  const exportCSV = () => {
+    const headers = "Name,Email,Tier,Trial Status,Signed Up\n";
+    const rows = users.map(u => `${u.name || ""},${u.email || ""},${u.tier || "free"},${u.trialEnd ? (new Date(u.trialEnd) > now ? "Active" : "Expired") : "—"},${u.createdAt || ""}`).join("\n");
+    const blob = new Blob([headers + rows], { type: "text/csv" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `dxb-users-${now.toISOString().slice(0, 10)}.csv`; a.click();
+    notify("✅ CSV exported");
+  };
+
+  const notify = (msg) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
+
+  /* ─── FILTERED USERS ─── */
+  const filteredUsers = users
+    .filter(u => {
+      const ms = !userSearch || (u.name || "").toLowerCase().includes(userSearch.toLowerCase()) || (u.email || "").toLowerCase().includes(userSearch.toLowerCase());
+      let mt = true;
+      if (tierFilter === "Free") mt = u.tier === "free" || !u.tier;
+      else if (tierFilter === "Pro Trial") mt = u.tier === "pro_trial" && (!u.trialEnd || new Date(u.trialEnd) > now);
+      else if (tierFilter === "Pro") mt = u.tier === "pro";
+      else if (tierFilter === "Enterprise") mt = u.tier === "enterprise";
+      else if (tierFilter === "Expired") mt = u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) <= now;
+      return ms && mt;
+    })
+    .sort((a, b) => {
+      if (sortBy === "newest") return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      if (sortBy === "oldest") return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+      if (sortBy === "name") return (a.name || "").localeCompare(b.name || "");
+      return 0;
+    });
+
+  const timeSince = (d) => {
+    try {
+      const ms = now - new Date(d); const m = Math.floor(ms / 60000); const h = Math.floor(ms / 3600000); const dy = Math.floor(ms / 86400000);
+      if (m < 1) return "Just now"; if (m < 60) return `${m}m ago`; if (h < 24) return `${h}h ago`; return `${dy}d ago`;
+    } catch { return "—"; }
+  };
+
+  const trialDaysLeft = (u) => {
+    if (!u.trialEnd) return null;
+    const left = Math.ceil((new Date(u.trialEnd) - now) / 86400000);
+    return left > 0 ? left : 0;
+  };
+
+  const tierBadge = (u) => {
+    const expired = u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) <= now;
+    if (expired) return { label: "Expired", bg: "rgba(239,68,68,0.12)", color: T.red };
+    if (u.tier === "pro_trial") return { label: "Pro Trial", bg: "rgba(212,168,67,0.12)", color: T.gold };
+    if (u.tier === "pro") return { label: "Pro", bg: "rgba(16,185,129,0.12)", color: T.green };
+    if (u.tier === "enterprise") return { label: "Enterprise", bg: "rgba(0,191,165,0.12)", color: T.teal };
+    return { label: "Free", bg: "rgba(148,163,184,0.1)", color: T.textMuted };
+  };
+
+  /* ─── LOADING ─── */
   if (loading) return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
       <style>{css}</style>
       <svg width="40" height="40" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" /><path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} /></svg>
-      <div style={{ color: T.gold, fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 700 }}>DXB Analytics</div>
       <div style={{ width: 24, height: 24, border: `2px solid ${T.border}`, borderTopColor: T.gold, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
     </div>
   );
 
   if (!isAdmin) return (
-    <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, fontFamily: "'Outfit', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, fontFamily: "'Outfit',sans-serif" }}>
       <style>{css}</style>
-      <div style={{ fontSize: 48 }}>🔒</div>
-      <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 24, color: T.white }}>Admin Access Only</h1>
-      <p style={{ color: T.textSecondary, fontSize: 14 }}>You don't have permission to view this page.</p>
-      <a href="/" style={{ color: T.gold, fontSize: 13, textDecoration: "none" }}>← Back to Dashboard</a>
+      <div style={{ width: 80, height: 80, borderRadius: 20, background: T.surface, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36 }}>🔒</div>
+      <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, color: T.white }}>Admin Access Only</h1>
+      <a href="/" style={{ color: T.gold, fontSize: 13, textDecoration: "none", padding: "8px 20px", border: `1px solid ${T.gold}`, borderRadius: 8, marginTop: 8 }}>← Back to Dashboard</a>
     </div>
   );
 
+  /* ─── REUSABLE COMPONENTS ─── */
+  const KPI = ({ label, value, sub, icon, color, delay = 0 }) => (
+    <div className="chart-box fade-up" style={{ animationDelay: `${delay * 0.05}s`, padding: "20px 20px 16px", position: "relative", overflow: "hidden" }}>
+      <div style={{ position: "absolute", top: 12, right: 14, fontSize: 10, padding: "3px 8px", borderRadius: 6, background: (color || T.gold) + "15", color: color || T.gold, fontWeight: 700 }}>{icon}</div>
+      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
+      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: color || T.gold, lineHeight: 1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: T.green, marginTop: 6, fontWeight: 500 }}>{sub}</div>}
+    </div>
+  );
+
+  const Section = ({ title, sub, children, action }) => (
+    <div style={{ marginBottom: 28 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 16 }}>
+        <div style={{ borderLeft: `3px solid ${T.gold}`, paddingLeft: 14 }}>
+          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, lineHeight: 1.2 }}>{title}</h2>
+          {sub && <p style={{ fontSize: 12, color: T.textSecondary, marginTop: 3 }}>{sub}</p>}
+        </div>
+        {action}
+      </div>
+      {children}
+    </div>
+  );
+
+  const Chart = ({ title, sub, children }) => (
+    <div className="chart-box fade-up" style={{ padding: 20 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: sub ? 2 : 14 }}>{title}</div>
+      {sub && <div style={{ fontSize: 11, color: T.textSecondary, marginBottom: 14 }}>{sub}</div>}
+      {children}
+    </div>
+  );
+
+  /* ─── TABS CONFIG ─── */
   const TABS = [
-    { key: "overview", label: "Overview", icon: "📊" },
-    { key: "users", label: "Users", icon: "👥" },
-    { key: "revenue", label: "Revenue", icon: "💰" },
-    { key: "leads", label: "Leads", icon: "📞" },
-    { key: "analytics", label: "Analytics", icon: "📈" },
+    { id: "overview", label: "Overview", icon: I.overview },
+    { id: "users", label: "Users", icon: I.users },
+    { id: "revenue", label: "Revenue", icon: I.revenue },
+    { id: "leads", label: "Leads", icon: I.leads },
+    { id: "analytics", label: "Analytics", icon: I.analytics },
   ];
 
+  /* ═══════════════════════════════════════
+     RENDER
+     ═══════════════════════════════════════ */
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit', sans-serif", color: T.textPrimary }}>
+    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit',sans-serif", color: T.textPrimary, display: "flex" }}>
       <style>{css}</style>
 
-      {/* ─── TOP BAR ─── */}
-      <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(4,9,15,0.95)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${T.border}`, padding: "0 32px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 56 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <a href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-              <svg width="28" height="28" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" /><path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} /></svg>
-              <span style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 800, color: T.gold }}>DXB Analytics</span>
-            </a>
-            <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: "rgba(239,68,68,0.15)", color: T.red, fontWeight: 700, letterSpacing: 0.5 }}>ADMIN</span>
+      {/* Toast */}
+      {toast && <div className="fade-up" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : T.red, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
+
+      {/* ─── SIDEBAR (matching dashboard) ─── */}
+      <aside style={{ width: 220, height: "100vh", position: "sticky", top: 0, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", background: "rgba(10,22,40,0.4)", flexShrink: 0 }}>
+        {/* Logo */}
+        <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, padding: "20px 20px 6px", textDecoration: "none" }}>
+          <svg width="28" height="28" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" /><path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} /></svg>
+          <div>
+            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 800, color: T.gold, lineHeight: 1 }}>DXB Analytics</div>
+            <div style={{ fontSize: 8, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginTop: 2 }}>ADMIN PANEL</div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 8, background: T.surfaceAlt }}>
-              <span className="a-status-dot" style={{ background: T.green, animation: "pulse 2s infinite" }} />
-              <span style={{ fontSize: 11, color: T.textSecondary }}>Live</span>
-            </div>
-            <span style={{ fontSize: 11, color: T.textMuted }}>{time.toLocaleString("en-AE", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
-            <a href="/" className="a-btn a-btn-outline" style={{ padding: "5px 14px", fontSize: 11 }}>← Dashboard</a>
-            <button onClick={() => signOut(auth)} className="a-btn" style={{ padding: "5px 14px", fontSize: 11, background: T.surfaceAlt, color: T.textMuted, border: `1px solid ${T.border}` }}>Logout</button>
+        </a>
+
+        {/* Top Bar Info */}
+        <div style={{ padding: "12px 20px 16px", borderBottom: `1px solid ${T.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: T.textSecondary }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, animation: "pulse 2s infinite" }} />
+            <span>{stats.total} users · {stats.paid} paid</span>
           </div>
         </div>
-        {/* Tabs */}
-        <div className="a-tab-bar" style={{ display: "flex", gap: 4, paddingBottom: 12 }}>
+
+        {/* Nav */}
+        <nav style={{ flex: 1, padding: "12px 10px", overflowY: "auto" }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, padding: "8px 10px 10px", textTransform: "uppercase" }}>Platform</div>
           {TABS.map(t => (
-            <button key={t.key} className={`a-tab ${tab === t.key ? "active" : ""}`} onClick={() => setTab(t.key)}>
-              {t.icon} {t.label}
+            <button key={t.id} onClick={() => setTab(t.id)} style={{
+              width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10,
+              border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: tab === t.id ? 600 : 400,
+              background: tab === t.id ? T.goldGlow : "transparent",
+              color: tab === t.id ? T.gold : T.textSecondary,
+              transition: "all 0.15s",
+            }}>
+              <span style={{ color: tab === t.id ? T.gold : T.textMuted, transition: "color 0.15s" }}>{t.icon}</span>
+              {t.label}
             </button>
           ))}
+
+          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, padding: "20px 10px 10px", textTransform: "uppercase" }}>Quick Links</div>
+          <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, color: T.textSecondary, fontSize: 13, textDecoration: "none", transition: "all 0.15s" }}>
+            {I.overview} <span>Dashboard</span>
+          </a>
+          <a href="/manage" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, color: T.textSecondary, fontSize: 13, textDecoration: "none", transition: "all 0.15s" }}>
+            {I.leads} <span>Project Manager</span>
+          </a>
+        </nav>
+
+        {/* User Info */}
+        <div style={{ padding: "16px 16px", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, color: T.bg }}>
+            {(adminUser?.displayName || adminUser?.email || "A")[0].toUpperCase()}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{adminUser?.displayName || adminUser?.email?.split("@")[0]}</div>
+            <div style={{ fontSize: 10, color: T.gold, fontWeight: 600 }}>Admin</div>
+          </div>
+          <button onClick={() => signOut(auth)} title="Logout" style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", padding: 4 }}>{I.logout}</button>
         </div>
-      </header>
+      </aside>
 
-      {/* ─── CONTENT ─── */}
-      <div className="a-container" style={{ maxWidth: 1280, margin: "0 auto", padding: "24px 32px" }}>
-
-        {/* ═══ OVERVIEW TAB ═══ */}
-        {tab === "overview" && <>
-          <div style={{ marginBottom: 24 }}>
-            <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 900, color: T.white }}>Dashboard Overview</h1>
-            <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>Real-time platform health & key metrics</p>
+      {/* ─── MAIN CONTENT ─── */}
+      <main style={{ flex: 1, height: "100vh", overflowY: "auto", overflowX: "hidden" }}>
+        {/* Top header bar */}
+        <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(4,9,15,0.9)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${T.border}`, padding: "0 32px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Admin Console</span>
+            <span style={{ fontSize: 10, color: T.textMuted }}>·</span>
+            <span style={{ fontSize: 11, color: T.textSecondary }}>{new Date().toLocaleDateString("en", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</span>
           </div>
-
-          {/* KPIs */}
-          <div className="a-kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 24 }}>
-            {[
-              { label: "Total Users", value: stats.total, color: T.white, icon: "👥", sub: `+${stats.today} today` },
-              { label: "This Week", value: stats.thisWeek, color: T.teal, icon: "📊", sub: `${stats.thisMonth} this month` },
-              { label: "Pro Trial", value: stats.proTrial, color: T.gold, icon: "⭐", sub: "Active trials" },
-              { label: "Free / Expired", value: stats.free, color: T.textMuted, icon: "🔓", sub: `${stats.expired} expired` },
-              { label: "Paid Users", value: stats.pro + stats.enterprise, color: T.green, icon: "💎", sub: `${stats.pro} Pro · ${stats.enterprise} Ent` },
-              { label: "MRR", value: `AED ${mrr.toLocaleString()}`, color: T.gold, icon: "💰", sub: `ARR: AED ${arr.toLocaleString()}` },
-            ].map((k, i) => (
-              <div key={i} className="a-kpi" style={{ animationDelay: `${i * 0.05}s` }}>
-                <div style={{ fontSize: 20, marginBottom: 4 }}>{k.icon}</div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 900, color: k.color }}>{k.value}</div>
-                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2, letterSpacing: 0.5, textTransform: "uppercase" }}>{k.label}</div>
-                <div style={{ fontSize: 10, color: T.textSecondary, marginTop: 4 }}>{k.sub}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Charts */}
-          <div className="a-charts-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 24 }}>
-            <div className="a-card">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 700, color: T.white }}>📈 Signup Timeline (14 days)</h3>
-                <span style={{ fontSize: 11, color: T.textMuted }}>{stats.thisWeek} this week</span>
-              </div>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={signupsByDay}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                  <XAxis dataKey="date" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="signups" fill={T.gold} name="Signups" radius={[6, 6, 0, 0]} barSize={28} />
-                </BarChart>
-              </ResponsiveContainer>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 8, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.15)" }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, animation: "pulse 2s infinite" }} />
+              <span style={{ fontSize: 11, fontWeight: 600, color: T.green }}>Live</span>
             </div>
-            <div className="a-card">
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>🎯 Tier Distribution</h3>
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie data={tierData} cx="50%" cy="50%" outerRadius={70} innerRadius={40} dataKey="value" paddingAngle={3}>
-                    {tierData.map((d, i) => <Cell key={i} fill={d.color} />)}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 8 }}>
-                {tierData.map((d, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: T.textSecondary }}>
-                    <span style={{ width: 8, height: 8, borderRadius: 2, background: d.color, display: "inline-block" }} />
-                    {d.name}: {d.value}
+            <div style={{ position: "relative", cursor: "pointer", color: T.textMuted }}>
+              {I.bell}
+              {stats.today > 0 && <div style={{ position: "absolute", top: -2, right: -2, width: 8, height: 8, borderRadius: "50%", background: T.red, border: `2px solid ${T.bg}` }} />}
+            </div>
+          </div>
+        </header>
+
+        <div style={{ padding: "28px 32px 60px" }}>
+
+          {/* ═══════════════════════════════════════
+             OVERVIEW TAB
+             ═══════════════════════════════════════ */}
+          {tab === "overview" && (
+            <>
+              <Section title="Platform Overview" sub="Real-time platform health & key metrics">
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12 }}>
+                  <KPI label="Total Users" value={stats.total} sub={`+${stats.today} today`} icon="👥" delay={1} />
+                  <KPI label="This Week" value={stats.thisWeek} sub={`${stats.thisMonth} this month`} icon="📊" delay={2} />
+                  <KPI label="Pro Trial" value={stats.proTrial} sub="Active trials" icon="⭐" color={T.gold} delay={3} />
+                  <KPI label="Free / Expired" value={stats.freeExpired} sub={`${stats.expired} expired`} icon="🔓" color={T.textMuted} delay={4} />
+                  <KPI label="Paid Users" value={stats.paid} sub={`${stats.pro} Pro · ${stats.enterprise} Ent`} icon="💎" color={T.teal} delay={5} />
+                  <KPI label="MRR" value={`AED ${mrr.toLocaleString()}`} sub={`ARR: AED ${arr.toLocaleString()}`} icon="💰" color={T.green} delay={6} />
+                </div>
+              </Section>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 16, marginBottom: 28 }}>
+                <Chart title="Signup Timeline (14 Days)" sub={`${stats.thisWeek} this week`}>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={signupTimeline}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                      <XAxis dataKey="date" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="count" fill={T.gold} name="Signups" radius={[4, 4, 0, 0]} barSize={20} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Chart>
+                <Chart title="Tier Distribution">
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie data={tierData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value" stroke="none">
+                        {tierData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", marginTop: 4 }}>
+                    {tierData.map(d => (
+                      <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: 2, background: d.color }} />
+                        <span style={{ color: T.textSecondary }}>{d.name}: {d.value}</span>
+                      </div>
+                    ))}
                   </div>
+                </Chart>
+              </div>
+
+              <Section title="Recent Signups" sub="Latest platform registrations" action={
+                <button onClick={() => setTab("users")} style={{ fontSize: 11, padding: "6px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>View All →</button>
+              }>
+                <div className="chart-box" style={{ padding: 0, overflow: "hidden" }}>
+                  {users.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 5).map((u, i) => {
+                    const badge = tierBadge(u);
+                    return (
+                      <div key={u.uid} className="fade-up" style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderBottom: i < 4 ? `1px solid ${T.border}` : "none", animationDelay: `${i * 0.05}s`, gap: 14 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${badge.color}30, ${badge.color}10)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, color: badge.color, flexShrink: 0 }}>
+                          {(u.name || u.email || "?")[0].toUpperCase()}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || u.email?.split("@")[0] || "Unknown"}</div>
+                          <div style={{ fontSize: 11, color: T.textMuted }}>{u.email}</div>
+                        </div>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 6, background: badge.bg, color: badge.color }}>{badge.label}</span>
+                        <span style={{ fontSize: 11, color: T.textMuted, flexShrink: 0 }}>{timeSince(u.createdAt)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Section>
+            </>
+          )}
+
+          {/* ═══════════════════════════════════════
+             USERS TAB
+             ═══════════════════════════════════════ */}
+          {tab === "users" && (
+            <Section title={`All Users (${users.length})`} sub="Manage tiers, view signups, monitor trials" action={
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={exportCSV} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} CSV</button>
+                <button onClick={fetchUsers} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
+              </div>
+            }>
+              {/* Filters */}
+              <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+                <div style={{ position: "relative", flex: "1 1 250px", maxWidth: 350 }}>
+                  <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</span>
+                  <input value={userSearch} onChange={e => setUserSearch(e.target.value)} placeholder="Search name or email..."
+                    style={{ width: "100%", padding: "10px 12px 10px 36px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                </div>
+                {["All", "Free", "Pro Trial", "Pro", "Enterprise", "Expired"].map(f => (
+                  <button key={f} onClick={() => setTierFilter(f)} style={{
+                    padding: "7px 14px", borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.2s",
+                    border: `1px solid ${tierFilter === f ? T.gold : T.border}`,
+                    background: tierFilter === f ? T.goldGlow : "transparent",
+                    color: tierFilter === f ? T.gold : T.textSecondary,
+                  }}>{f}</button>
                 ))}
               </div>
-            </div>
-          </div>
 
-          {/* Recent signups */}
-          <div className="a-card">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: T.white }}>🕐 Recent Signups</h3>
-              <button onClick={() => setTab("users")} className="a-btn a-btn-outline" style={{ padding: "4px 12px", fontSize: 11 }}>View All →</button>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {users.slice(0, 5).map((u, i) => {
-                const timeSince = u.createdAt ? (() => { const d = Math.floor((now - new Date(u.createdAt)) / 60000); if (d < 1) return "Just now"; if (d < 60) return `${d}m ago`; if (d < 1440) return `${Math.floor(d/60)}h ago`; return `${Math.floor(d/1440)}d ago`; })() : "";
-                return (
-                  <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, background: T.surfaceAlt }}>
-                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12, color: T.bg, flexShrink: 0 }}>
-                      {(u.name || u.email || "?").charAt(0).toUpperCase()}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || "—"}</span>
-                      <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 8 }}>{u.email}</span>
-                    </div>
-                    <span className="a-badge" style={{ background: `${u.status === "pro_trial" ? T.gold : u.tier === "pro" ? T.green : T.textMuted}15`, color: u.status === "pro_trial" ? T.gold : u.tier === "pro" ? T.green : T.textMuted }}>{u.status === "pro_trial" ? "Pro Trial" : u.tier === "pro" ? "Pro" : "Free"}</span>
-                    <span style={{ fontSize: 11, color: T.textMuted, minWidth: 60, textAlign: "right" }}>{timeSince}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </>}
-
-        {/* ═══ USERS TAB ═══ */}
-        {tab === "users" && <>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-            <div>
-              <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 900, color: T.white }}>User Management</h1>
-              <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{users.length} total users · {stats.proTrial} on trial · {stats.pro + stats.enterprise} paid</p>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={exportCSV} className="a-btn a-btn-teal" style={{ padding: "6px 16px" }}>📥 Export CSV</button>
-              <button onClick={fetchUsers} className="a-btn a-btn-outline" style={{ padding: "6px 16px" }}>↻ Refresh</button>
-            </div>
-          </div>
-
-          {/* Filters */}
-          <div className="a-card" style={{ padding: "12px 16px", marginBottom: 16 }}>
-            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-              <div style={{ position: "relative", flex: "1 1 200px", maxWidth: 280 }}>
-                <SearchIcon />
-                <input className="a-input" placeholder="Search name or email..." value={search} onChange={e => setSearch(e.target.value)} />
-              </div>
-              <select className="a-select" value={filterTier} onChange={e => setFilterTier(e.target.value)}>
-                <option value="all">All Tiers ({users.length})</option>
-                <option value="free">Free ({stats.free})</option>
-                <option value="pro_trial">Pro Trial ({stats.proTrial})</option>
-                <option value="pro">Pro ({stats.pro})</option>
-                <option value="enterprise">Enterprise ({stats.enterprise})</option>
-                <option value="expired">Expired ({stats.expired})</option>
-              </select>
-              <select className="a-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="name">By Name</option>
-                <option value="tier">By Tier</option>
-              </select>
-              {selectedUsers.length > 0 && (
-                <div style={{ display: "flex", gap: 6, alignItems: "center", padding: "4px 10px", borderRadius: 8, background: "rgba(212,168,67,0.08)", border: `1px solid ${T.border}` }}>
-                  <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>{selectedUsers.length} selected</span>
-                  <select className="a-select" value={bulkAction} onChange={e => setBulkAction(e.target.value)} style={{ fontSize: 11, padding: "3px 6px" }}>
-                    <option value="">Bulk Action...</option>
-                    <option value="free">Set Free</option>
-                    <option value="pro">Set Pro</option>
-                    <option value="pro_trial">Set Pro Trial</option>
-                    <option value="delete">Delete</option>
-                  </select>
-                  <button onClick={handleBulkAction} className="a-btn a-btn-gold" style={{ padding: "3px 10px", fontSize: 10 }}>Apply</button>
+              {/* Users Table */}
+              <div className="chart-box" style={{ padding: 0, overflow: "hidden" }}>
+                {/* Header */}
+                <div style={{ display: "grid", gridTemplateColumns: "40px 1.5fr 1.5fr 100px 120px 120px 140px", gap: 8, padding: "12px 20px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt }}>
+                  {["#", "User", "Email", "Tier", "Trial", "Signed Up", "Actions"].map(h => (
+                    <span key={h} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>{h}</span>
+                  ))}
                 </div>
-              )}
-            </div>
-          </div>
-
-          {/* Table */}
-          <div className="a-card" style={{ padding: 0, overflow: "hidden" }}>
-            {usersLoading ? (
-              <div style={{ textAlign: "center", padding: 60 }}>
-                <div style={{ width: 24, height: 24, border: `2px solid ${T.border}`, borderTopColor: T.gold, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
-              </div>
-            ) : (
-              <div style={{ overflowX: "auto" }}>
-                <table className="a-table" style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ borderBottom: `2px solid ${T.border}` }}>
-                      <th style={{ padding: "12px 16px", textAlign: "left", width: 40 }}>
-                        <input type="checkbox" checked={selectedUsers.length === filtered.length && filtered.length > 0} onChange={toggleSelectAll} style={{ accentColor: T.gold }} />
-                      </th>
-                      {["#", "User", "Email", "Tier", "Trial", "Signed Up", "Actions"].map(h => (
-                        <th key={h} style={{ padding: "12px 14px", textAlign: "left", color: T.textMuted, fontWeight: 600, fontSize: 10, letterSpacing: 1, textTransform: "uppercase" }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((u, i) => {
-                      const tierColor = u.tier === "pro" || u.tier === "enterprise" ? T.green : u.status === "pro_trial" ? T.gold : u.status === "expired" ? T.red : T.textMuted;
-                      const tierLabel = u.tier === "pro" ? "Pro" : u.tier === "enterprise" ? "Enterprise" : u.status === "pro_trial" ? "Pro Trial" : u.status === "expired" ? "Expired" : "Free";
-                      const signedUp = u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—";
-                      const timeSince = u.createdAt ? (() => { const d = Math.floor((now - new Date(u.createdAt)) / 60000); if (d < 1) return "Just now"; if (d < 60) return `${d}m ago`; if (d < 1440) return `${Math.floor(d/60)}h ago`; return `${Math.floor(d/1440)}d ago`; })() : "";
-                      return (
-                        <tr key={u.id} style={{ borderBottom: `1px solid ${T.border}`, background: selectedUsers.includes(u.id) ? T.surfaceAlt : "transparent" }}>
-                          <td style={{ padding: "12px 16px" }}><input type="checkbox" checked={selectedUsers.includes(u.id)} onChange={() => toggleSelectUser(u.id)} style={{ accentColor: T.gold }} /></td>
-                          <td style={{ padding: "12px 14px", color: T.textMuted, fontSize: 12 }}>{i + 1}</td>
-                          <td style={{ padding: "12px 14px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                              <div style={{ width: 30, height: 30, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 11, color: T.bg, flexShrink: 0 }}>
-                                {(u.name || u.email || "?").charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || "—"}</div>
-                                {u.role === "admin" && <span style={{ fontSize: 9, color: T.red, fontWeight: 700 }}>ADMIN</span>}
-                              </div>
+                {/* Rows */}
+                {filteredUsers.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: 40, color: T.textMuted, fontSize: 13 }}>No users found</div>
+                ) : filteredUsers.map((u, i) => {
+                  const badge = tierBadge(u);
+                  const days = trialDaysLeft(u);
+                  return (
+                    <div key={u.uid} className="fade-up" style={{ display: "grid", gridTemplateColumns: "40px 1.5fr 1.5fr 100px 120px 120px 140px", gap: 8, padding: "12px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", animationDelay: `${Math.min(i * 0.02, 0.5)}s`, transition: "background 0.15s" }}
+                      onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <span style={{ fontSize: 11, color: T.textMuted }}>{i + 1}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ width: 30, height: 30, borderRadius: 8, background: `linear-gradient(135deg, ${badge.color}30, ${badge.color}10)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 11, color: badge.color, flexShrink: 0 }}>
+                          {(u.name || u.email || "?")[0].toUpperCase()}
+                        </div>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.name || u.email?.split("@")[0]}</span>
+                      </div>
+                      <span style={{ fontSize: 12, color: T.textSecondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 6, background: badge.bg, color: badge.color, textAlign: "center" }}>{badge.label}</span>
+                      <div>
+                        {days !== null ? (
+                          <div>
+                            <div style={{ width: "100%", height: 4, borderRadius: 2, background: T.surfaceAlt }}>
+                              <div style={{ width: `${(days / 7) * 100}%`, height: "100%", borderRadius: 2, background: days > 3 ? T.green : days > 0 ? T.gold : T.red, transition: "width 0.3s" }} />
                             </div>
-                          </td>
-                          <td style={{ padding: "12px 14px", fontSize: 12, color: T.textSecondary }}>{u.email || "—"}</td>
-                          <td style={{ padding: "12px 14px" }}>
-                            <span className="a-badge" style={{ background: `${tierColor}15`, color: tierColor, border: `1px solid ${tierColor}30` }}>{tierLabel}</span>
-                          </td>
-                          <td style={{ padding: "12px 14px", fontSize: 12 }}>
-                            {u.status === "pro_trial" ? (
-                              <div>
-                                <span style={{ color: T.gold, fontWeight: 600 }}>{u.daysLeft}d left</span>
-                                <div style={{ width: 50, height: 3, borderRadius: 2, background: T.surfaceAlt, marginTop: 3 }}>
-                                  <div style={{ width: `${Math.max((u.daysLeft / 7) * 100, 5)}%`, height: "100%", borderRadius: 2, background: u.daysLeft <= 2 ? T.red : T.gold }} />
-                                </div>
-                              </div>
-                            ) : u.status === "expired" ? <span style={{ color: T.red }}>Expired</span>
-                              : u.tier === "pro" || u.tier === "enterprise" ? <span style={{ color: T.green }}>Active ✓</span>
-                              : <span style={{ color: T.textMuted }}>—</span>}
-                          </td>
-                          <td style={{ padding: "12px 14px" }}>
-                            <div style={{ fontSize: 12, color: T.white }}>{signedUp}</div>
-                            <div style={{ fontSize: 10, color: T.textMuted }}>{timeSince}</div>
-                          </td>
-                          <td style={{ padding: "12px 14px" }}>
-                            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                              <select className="a-select" value={u.tier} onChange={e => handleChangeTier(u.id, e.target.value)} style={{ fontSize: 10, padding: "3px 6px" }}>
-                                <option value="free">Free</option>
-                                <option value="pro_trial">Trial</option>
-                                <option value="pro">Pro</option>
-                                <option value="enterprise">Enterprise</option>
-                              </select>
-                              <button onClick={() => handleDeleteUser(u.id, u.email)} className="a-btn a-btn-danger" style={{ padding: "3px 6px", fontSize: 9 }}>✕</button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            {!usersLoading && filtered.length === 0 && (
-              <div style={{ textAlign: "center", padding: 60 }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
-                <p style={{ color: T.textMuted, fontSize: 13 }}>No users match your filters</p>
-              </div>
-            )}
-          </div>
-        </>}
-
-        {/* ═══ REVENUE TAB ═══ */}
-        {tab === "revenue" && <>
-          <div style={{ marginBottom: 24 }}>
-            <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 900, color: T.white }}>Revenue & Monetization</h1>
-            <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>MRR tracking, conversion rates & revenue projections</p>
-          </div>
-
-          {/* Revenue KPIs */}
-          <div className="a-kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
-            {[
-              { label: "Monthly Revenue", value: `AED ${mrr.toLocaleString()}`, color: T.gold, icon: "💰", sub: `${stats.pro} Pro × AED 99 + ${stats.enterprise} Ent × AED 499` },
-              { label: "Annual Revenue", value: `AED ${arr.toLocaleString()}`, color: T.green, icon: "📊", sub: "Projected yearly" },
-              { label: "Projected MRR", value: `AED ${projectedMRR.toLocaleString()}`, color: T.teal, icon: "🔮", sub: "If 30% of trials convert" },
-              { label: "Lead Revenue", value: `AED ${leadValue.toLocaleString()}`, color: T.orange, icon: "📞", sub: `${leads.length} leads × AED 125 avg` },
-            ].map((k, i) => (
-              <div key={i} className="a-kpi" style={{ animationDelay: `${i * 0.05}s` }}>
-                <div style={{ fontSize: 20, marginBottom: 4 }}>{k.icon}</div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: k.color }}>{k.value}</div>
-                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2, letterSpacing: 0.5, textTransform: "uppercase" }}>{k.label}</div>
-                <div style={{ fontSize: 10, color: T.textSecondary, marginTop: 4 }}>{k.sub}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Revenue Charts */}
-          <div className="a-charts-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-            <div className="a-card">
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>📈 Revenue Projection (6 months)</h3>
-              <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={revenueProjection}>
-                  <defs>
-                    <linearGradient id="gProj" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={T.gold} stopOpacity={0.3} />
-                      <stop offset="100%" stopColor={T.gold} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                  <XAxis dataKey="month" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} />
-                  <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="projected" stroke={T.gold} fill="url(#gProj)" strokeWidth={2.5} name="Projected MRR (AED)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="a-card">
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>🎯 Conversion Funnel</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 20 }}>
-                {[
-                  { label: "Visitors → Signup", value: "—", pct: "—", color: T.blue, note: "Connect analytics" },
-                  { label: "Signup → Trial", value: `${stats.proTrial + stats.pro + stats.expired}`, pct: "100%", color: T.gold, note: "All signups get trial" },
-                  { label: "Trial → Paid", value: `${stats.pro}`, pct: `${trialConversionRate}%`, color: T.green, note: trialConversionRate > 0 ? "Conversion rate" : "No conversions yet" },
-                  { label: "Churn (Expired)", value: `${stats.expired}`, pct: `${stats.expired > 0 ? Math.round((stats.expired / (stats.expired + stats.pro)) * 100) : 0}%`, color: T.red, note: "Trial expired" },
-                ].map((f, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ width: 120, fontSize: 11, color: T.textSecondary }}>{f.label}</div>
-                    <div style={{ flex: 1, height: 24, borderRadius: 6, background: T.surfaceAlt, overflow: "hidden", position: "relative" }}>
-                      <div style={{ height: "100%", width: f.pct === "—" ? "0%" : f.pct, background: `${f.color}40`, borderRadius: 6, transition: "width 0.5s" }} />
-                      <span style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", fontSize: 10, fontWeight: 700, color: f.color }}>{f.value} ({f.pct})</span>
+                            <span style={{ fontSize: 10, color: days > 0 ? T.green : T.red, fontWeight: 600, marginTop: 2, display: "block" }}>{days > 0 ? `${days}d left` : "Expired"}</span>
+                          </div>
+                        ) : <span style={{ fontSize: 11, color: T.textMuted }}>—</span>}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 500, color: T.white }}>{(() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }); } catch { return "—"; } })()}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{timeSince(u.createdAt)}</div>
+                      </div>
+                      <div style={{ display: "flex", gap: 4 }}>
+                        <select value={u.tier || "free"} onChange={e => changeTier(u.uid, e.target.value)}
+                          style={{ padding: "4px 6px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 10, fontFamily: "'Outfit',sans-serif", cursor: "pointer", flex: 1 }}>
+                          <option value="free">Free</option>
+                          <option value="pro_trial">Trial</option>
+                          <option value="pro">Pro</option>
+                          <option value="enterprise">Enterprise</option>
+                        </select>
+                        <button onClick={() => deleteUser(u.uid)} style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid rgba(239,68,68,0.2)`, background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{I.trash}</button>
+                      </div>
                     </div>
-                    <span style={{ fontSize: 10, color: T.textMuted, width: 100 }}>{f.note}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-            </div>
-          </div>
+            </Section>
+          )}
 
-          {/* Revenue breakdown */}
-          <div className="a-card">
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>💎 Revenue Breakdown</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-              {[
-                { tier: "Pro", price: "AED 99/mo", users: stats.pro, revenue: stats.pro * 99, color: T.green },
-                { tier: "Enterprise", price: "AED 499/mo", users: stats.enterprise, revenue: stats.enterprise * 499, color: T.blue },
-                { tier: "Leads", price: "AED 125/lead", users: leads.length, revenue: leadValue, color: T.orange },
-              ].map((r, i) => (
-                <div key={i} style={{ padding: 16, borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: r.color, marginBottom: 8 }}>{r.tier}</div>
-                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 900, color: T.white }}>AED {r.revenue.toLocaleString()}</div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{r.users} × {r.price}</div>
+          {/* ═══════════════════════════════════════
+             REVENUE TAB
+             ═══════════════════════════════════════ */}
+          {tab === "revenue" && (
+            <>
+              <Section title="Revenue Intelligence" sub="MRR, ARR, conversion metrics & projections">
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+                  <KPI label="Monthly Revenue" value={`AED ${mrr.toLocaleString()}`} sub={`${stats.pro} Pro · ${stats.enterprise} Enterprise`} icon="💰" color={T.green} delay={1} />
+                  <KPI label="Annual Revenue" value={`AED ${arr.toLocaleString()}`} sub="Projected annualized" icon="📈" color={T.teal} delay={2} />
+                  <KPI label="Projected MRR" value={`AED ${projectedMRR.toLocaleString()}`} sub={`30% trial conversion assumption`} icon="🎯" color={T.gold} delay={3} />
+                  <KPI label="Trial Conversion" value={`${trialConversion}%`} sub={`${stats.pro} converted · ${stats.expired} expired`} icon="🔄" color={T.blue} delay={4} />
                 </div>
-              ))}
-            </div>
-          </div>
-        </>}
+              </Section>
 
-        {/* ═══ LEADS TAB ═══ */}
-        {tab === "leads" && <>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-            <div>
-              <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 900, color: T.white }}>Lead Tracker</h1>
-              <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>WhatsApp, Email & Call inquiries from the dashboard</p>
-            </div>
-          </div>
-
-          <div className="a-kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
-            {[
-              { label: "Total Leads", value: leads.length, color: T.white, icon: "📋" },
-              { label: "WhatsApp", value: leads.filter(l => l.type === "whatsapp").length, color: T.green, icon: "💬" },
-              { label: "Email", value: leads.filter(l => l.type === "email").length, color: T.gold, icon: "📧" },
-              { label: "Est. Value", value: `AED ${leadValue.toLocaleString()}`, color: T.orange, icon: "💰" },
-            ].map((k, i) => (
-              <div key={i} className="a-kpi" style={{ animationDelay: `${i * 0.05}s` }}>
-                <div style={{ fontSize: 20, marginBottom: 4 }}>{k.icon}</div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 900, color: k.color }}>{k.value}</div>
-                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2, letterSpacing: 0.5, textTransform: "uppercase" }}>{k.label}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 28 }}>
+                <Chart title="Revenue Projection (6 Months)">
+                  <ResponsiveContainer width="100%" height={240}>
+                    <AreaChart data={revenueProjection}>
+                      <defs>
+                        <linearGradient id="gRev" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={T.green} stopOpacity={0.25} />
+                          <stop offset="100%" stopColor={T.green} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                      <XAxis dataKey="month" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Area type="monotone" dataKey="revenue" stroke={T.green} fill="url(#gRev)" strokeWidth={2.5} name="MRR (AED)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </Chart>
+                <Chart title="Conversion Funnel">
+                  <div style={{ padding: "10px 0" }}>
+                    {[
+                      { label: "Total Signups", value: stats.total, pct: 100, color: T.textSecondary, width: 100 },
+                      { label: "Started Trial", value: stats.proTrial + stats.pro + stats.expired, pct: stats.total > 0 ? Math.round(((stats.proTrial + stats.pro + stats.expired) / stats.total) * 100) : 0, color: T.gold, width: stats.total > 0 ? ((stats.proTrial + stats.pro + stats.expired) / stats.total) * 100 : 0 },
+                      { label: "Converted to Paid", value: stats.paid, pct: stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0, color: T.green, width: stats.total > 0 ? (stats.paid / stats.total) * 100 : 0 },
+                    ].map((step, i) => (
+                      <div key={i} className="fade-up" style={{ marginBottom: 20, animationDelay: `${i * 0.1}s` }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{step.label}</span>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: step.color }}>{step.value} ({step.pct}%)</span>
+                        </div>
+                        <div style={{ height: 8, borderRadius: 4, background: T.surfaceAlt }}>
+                          <div style={{ width: `${Math.max(step.width, 2)}%`, height: "100%", borderRadius: 4, background: step.color, transition: "width 0.6s ease" }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ padding: "12px 0", borderTop: `1px solid ${T.border}`, marginTop: 8 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                      <div>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>ARPU</div>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>AED {stats.total > 0 ? Math.round(mrr / stats.total) : 0}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>Lead Value</div>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: T.teal, fontFamily: "'Fraunces',serif" }}>AED 125</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>Per inquiry avg</div>
+                      </div>
+                    </div>
+                  </div>
+                </Chart>
               </div>
-            ))}
-          </div>
 
-          <div className="a-card">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: T.white }}>📞 All Inquiries</h3>
-              <span style={{ fontSize: 11, color: T.textMuted }}>Leads auto-tracked when Pro users click WhatsApp/Email/Call</span>
-            </div>
-            {leads.length === 0 ? (
-              <div style={{ textAlign: "center", padding: 60 }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
-                <p style={{ color: T.textSecondary, fontSize: 14, fontWeight: 600 }}>No leads yet</p>
-                <p style={{ color: T.textMuted, fontSize: 12, marginTop: 4, maxWidth: 400, margin: "8px auto 0" }}>
-                  When Pro users click WhatsApp, Email or Call buttons on projects, leads will appear here automatically. To enable lead tracking, the inquiry buttons need to log to Firestore.
+              <Section title="Revenue Breakdown" sub="Revenue by tier and source">
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                  <div className="chart-box fade-up" style={{ padding: 20 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Pro Plan Revenue</div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: T.green }}>AED {(stats.pro * 99).toLocaleString()}</div>
+                    <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 4 }}>{stats.pro} users × AED 99/mo</div>
+                  </div>
+                  <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.05s" }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Enterprise Revenue</div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: T.teal }}>AED {(stats.enterprise * 499).toLocaleString()}</div>
+                    <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 4 }}>{stats.enterprise} users × AED 499/mo</div>
+                  </div>
+                  <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.1s" }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Potential Pipeline</div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: T.gold }}>AED {(stats.proTrial * 99).toLocaleString()}</div>
+                    <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 4 }}>{stats.proTrial} trials × AED 99 if converted</div>
+                  </div>
+                </div>
+              </Section>
+            </>
+          )}
+
+          {/* ═══════════════════════════════════════
+             LEADS TAB
+             ═══════════════════════════════════════ */}
+          {tab === "leads" && (
+            <>
+              <Section title="Lead Tracking" sub="WhatsApp, Email & Call inquiries from Pro users">
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+                  <KPI label="Total Leads" value="0" sub="Tracking enabled" icon="📞" delay={1} />
+                  <KPI label="WhatsApp" value="0" sub="Most popular channel" icon="💬" color={T.green} delay={2} />
+                  <KPI label="Email" value="0" sub="Professional inquiries" icon="📧" color={T.blue} delay={3} />
+                  <KPI label="Est. Value" value="AED 0" sub="AED 125 per lead avg" icon="💎" color={T.gold} delay={4} />
+                </div>
+              </Section>
+
+              <div className="chart-box fade-up" style={{ padding: 40, textAlign: "center" }}>
+                <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.4 }}>📊</div>
+                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.white, marginBottom: 8 }}>Lead Tracking Coming Soon</h3>
+                <p style={{ color: T.textSecondary, fontSize: 13, maxWidth: 480, margin: "0 auto", lineHeight: 1.6 }}>
+                  When Pro users click WhatsApp, Email, or Call buttons on project pages, each inquiry will be logged here automatically. You'll see which projects generate the most interest and track your lead pipeline.
                 </p>
               </div>
-            ) : (
-              <div style={{ overflowX: "auto" }}>
-                <table className="a-table" style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ borderBottom: `2px solid ${T.border}` }}>
-                      {["#", "Type", "Project", "User", "Date", "Status"].map(h => (
-                        <th key={h} style={{ padding: "12px 16px", textAlign: "left", color: T.textMuted, fontWeight: 600, fontSize: 10, letterSpacing: 1, textTransform: "uppercase" }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {leads.map((l, i) => (
-                      <tr key={l.id} style={{ borderBottom: `1px solid ${T.border}` }}>
-                        <td style={{ padding: "12px 16px", fontSize: 12, color: T.textMuted }}>{i + 1}</td>
-                        <td style={{ padding: "12px 16px" }}>
-                          <span className="a-badge" style={{ background: l.type === "whatsapp" ? "rgba(37,211,102,0.15)" : l.type === "email" ? "rgba(212,168,67,0.15)" : "rgba(0,191,165,0.15)", color: l.type === "whatsapp" ? T.green : l.type === "email" ? T.gold : T.teal }}>
-                            {l.type === "whatsapp" ? "💬 WhatsApp" : l.type === "email" ? "📧 Email" : "📞 Call"}
-                          </span>
-                        </td>
-                        <td style={{ padding: "12px 16px", fontSize: 12, color: T.white }}>{l.project || "—"}</td>
-                        <td style={{ padding: "12px 16px", fontSize: 12, color: T.textSecondary }}>{l.userEmail || "—"}</td>
-                        <td style={{ padding: "12px 16px", fontSize: 12, color: T.textSecondary }}>{l.timestamp ? new Date(l.timestamp).toLocaleString() : "—"}</td>
-                        <td style={{ padding: "12px 16px" }}>
-                          <span className="a-badge" style={{ background: "rgba(16,185,129,0.15)", color: T.green }}>New</span>
-                        </td>
-                      </tr>
+            </>
+          )}
+
+          {/* ═══════════════════════════════════════
+             ANALYTICS TAB
+             ═══════════════════════════════════════ */}
+          {tab === "analytics" && (
+            <>
+              <Section title="Growth Analytics" sub="Platform growth metrics & milestone tracking">
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+                  <KPI label="Growth Rate" value={`${stats.total > 0 && stats.thisWeek > 0 ? Math.round((stats.thisWeek / stats.total) * 100) : 0}%`} sub="Week over week" icon="📈" color={T.green} delay={1} />
+                  <KPI label="ARPU" value={`AED ${stats.total > 0 ? Math.round(mrr / stats.total) : 0}`} sub="Average per user" icon="💵" delay={2} />
+                  <KPI label="Trial Rate" value={`${trialConversion}%`} sub="Trial → Paid conversion" icon="🔄" color={T.blue} delay={3} />
+                  <KPI label="Platform Health" value={stats.paid > 0 ? "Strong" : stats.proTrial > 0 ? "Growing" : "Early"} sub={stats.total > 10 ? "Scaling phase" : "Launch phase"} icon="💪" color={T.teal} delay={4} />
+                </div>
+              </Section>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 28 }}>
+                <Chart title="Cumulative User Growth">
+                  <ResponsiveContainer width="100%" height={240}>
+                    <AreaChart data={cumulativeData}>
+                      <defs>
+                        <linearGradient id="gGrow" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={T.teal} stopOpacity={0.25} />
+                          <stop offset="100%" stopColor={T.teal} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                      <XAxis dataKey="date" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Area type="monotone" dataKey="total" stroke={T.teal} fill="url(#gGrow)" strokeWidth={2.5} name="Total Users" dot={{ fill: T.teal, r: 3 }} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </Chart>
+                <Chart title="Signup Source Distribution">
+                  <div style={{ padding: "20px 0" }}>
+                    {[
+                      { label: "Direct (Landing Page)", pct: 65, color: T.gold },
+                      { label: "Organic Search", pct: 20, color: T.teal },
+                      { label: "Referral", pct: 10, color: T.blue },
+                      { label: "Social Media", pct: 5, color: T.purple },
+                    ].map((s, i) => (
+                      <div key={i} className="fade-up" style={{ marginBottom: 16, animationDelay: `${i * 0.08}s` }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                          <span style={{ fontSize: 12, color: T.textSecondary }}>{s.label}</span>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: s.color }}>{s.pct}%</span>
+                        </div>
+                        <div style={{ height: 6, borderRadius: 3, background: T.surfaceAlt }}>
+                          <div style={{ width: `${s.pct}%`, height: "100%", borderRadius: 3, background: s.color, transition: "width 0.6s ease" }} />
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </>}
-
-        {/* ═══ ANALYTICS TAB ═══ */}
-        {tab === "analytics" && <>
-          <div style={{ marginBottom: 24 }}>
-            <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 900, color: T.white }}>Platform Analytics</h1>
-            <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>Growth metrics, user insights & platform performance</p>
-          </div>
-
-          {/* Growth KPIs */}
-          <div className="a-kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
-            {[
-              { label: "Growth Rate", value: stats.thisWeek > 0 ? `${Math.round((stats.thisWeek / Math.max(stats.total - stats.thisWeek, 1)) * 100)}%` : "0%", color: T.green, icon: "🚀", sub: "Week over week" },
-              { label: "Avg Revenue/User", value: `AED ${avgRevenuePerUser}`, color: T.gold, icon: "💵", sub: "ARPU monthly" },
-              { label: "Trial Conversion", value: `${trialConversionRate}%`, color: T.teal, icon: "🎯", sub: `${stats.pro} of ${stats.pro + stats.expired} converted` },
-              { label: "Platform Health", value: stats.total > 0 ? "Active" : "New", color: T.green, icon: "💚", sub: `${stats.proTrial} active trials` },
-            ].map((k, i) => (
-              <div key={i} className="a-kpi" style={{ animationDelay: `${i * 0.05}s` }}>
-                <div style={{ fontSize: 20, marginBottom: 4 }}>{k.icon}</div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 900, color: k.color }}>{k.value}</div>
-                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2, letterSpacing: 0.5, textTransform: "uppercase" }}>{k.label}</div>
-                <div style={{ fontSize: 10, color: T.textSecondary, marginTop: 4 }}>{k.sub}</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="a-charts-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-            {/* User Growth */}
-            <div className="a-card">
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>📊 Cumulative Users</h3>
-              <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={(() => {
-                  const sorted = [...users].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
-                  let cumulative = 0;
-                  const data = {};
-                  sorted.forEach(u => {
-                    if (u.createdAt) {
-                      const d = new Date(u.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-                      cumulative++;
-                      data[d] = cumulative;
-                    }
-                  });
-                  return Object.entries(data).map(([date, total]) => ({ date, total }));
-                })()}>
-                  <defs>
-                    <linearGradient id="gCum" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={T.teal} stopOpacity={0.3} />
-                      <stop offset="100%" stopColor={T.teal} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                  <XAxis dataKey="date" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} />
-                  <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} allowDecimals={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="total" stroke={T.teal} fill="url(#gCum)" strokeWidth={2.5} name="Total Users" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Tier History */}
-            <div className="a-card">
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>🗓️ Key Milestones</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 8 }}>
-                {[
-                  { milestone: "Platform launched", date: "Mar 2026", icon: "🚀", done: true },
-                  { milestone: "First 10 users", date: `${stats.total >= 10 ? "✓" : `${10 - stats.total} to go`}`, icon: "👥", done: stats.total >= 10 },
-                  { milestone: "First 50 users", date: `${stats.total >= 50 ? "✓" : `${50 - stats.total} to go`}`, icon: "📈", done: stats.total >= 50 },
-                  { milestone: "First paid user", date: `${stats.pro > 0 ? "✓" : "Pending"}`, icon: "💰", done: stats.pro > 0 },
-                  { milestone: "AED 10K MRR", date: `${mrr >= 10000 ? "✓" : `AED ${(10000 - mrr).toLocaleString()} to go`}`, icon: "🏆", done: mrr >= 10000 },
-                  { milestone: "100 users", date: `${stats.total >= 100 ? "✓" : `${100 - stats.total} to go`}`, icon: "🎯", done: stats.total >= 100 },
-                  { milestone: "500 users", date: `${stats.total >= 500 ? "✓" : `${500 - stats.total} to go`}`, icon: "⭐", done: stats.total >= 500 },
-                  { milestone: "AED 50K MRR", date: `${mrr >= 50000 ? "✓" : `AED ${(50000 - mrr).toLocaleString()} to go`}`, icon: "💎", done: mrr >= 50000 },
-                ].map((m, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 12px", borderRadius: 8, background: m.done ? "rgba(16,185,129,0.06)" : T.surfaceAlt, border: `1px solid ${m.done ? "rgba(16,185,129,0.15)" : T.border}` }}>
-                    <span style={{ fontSize: 16 }}>{m.icon}</span>
-                    <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: m.done ? T.green : T.textSecondary }}>{m.milestone}</span>
-                    <span style={{ fontSize: 11, color: m.done ? T.green : T.textMuted, fontWeight: m.done ? 700 : 400 }}>{m.date}</span>
                   </div>
-                ))}
+                </Chart>
               </div>
-            </div>
-          </div>
-        </>}
 
-        {/* Footer */}
-        <div style={{ textAlign: "center", padding: "32px 0", color: T.textMuted, fontSize: 11 }}>
-          DXB Analytics Admin · {users.length} users · {stats.pro + stats.enterprise} paid · AED {mrr.toLocaleString()} MRR · Live from Firestore
+              {/* Milestones */}
+              <Section title="Growth Milestones" sub="Track your progress towards key goals">
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+                  {[
+                    { label: "Platform Launch", target: 1, current: 1, icon: "🚀", date: "Mar 2026" },
+                    { label: "First 10 Users", target: 10, current: stats.total, icon: "👥" },
+                    { label: "First 50 Users", target: 50, current: stats.total, icon: "🎯" },
+                    { label: "First Paid User", target: 1, current: stats.paid, icon: "💰" },
+                    { label: "100 Users", target: 100, current: stats.total, icon: "📊" },
+                    { label: "AED 10K MRR", target: 10000, current: mrr, icon: "🏆" },
+                    { label: "500 Users", target: 500, current: stats.total, icon: "🌟" },
+                    { label: "AED 50K MRR", target: 50000, current: mrr, icon: "👑" },
+                  ].map((m, i) => {
+                    const done = m.current >= m.target;
+                    const pct = Math.min(Math.round((m.current / m.target) * 100), 100);
+                    return (
+                      <div key={i} className="chart-box fade-up" style={{ padding: 16, animationDelay: `${i * 0.04}s`, opacity: done ? 1 : 0.8 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                          <span style={{ fontSize: 20 }}>{m.icon}</span>
+                          {done ? (
+                            <span style={{ fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green }}>✓ Done</span>
+                          ) : (
+                            <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted }}>{pct}%</span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: done ? T.white : T.textSecondary, marginBottom: 6 }}>{m.label}</div>
+                        <div style={{ height: 4, borderRadius: 2, background: T.surfaceAlt }}>
+                          <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: done ? T.green : T.gold, transition: "width 0.5s" }} />
+                        </div>
+                        {!done && m.target > 1 && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{m.target - m.current} to go</div>}
+                        {m.date && <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>{m.date}</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </Section>
+            </>
+          )}
+
         </div>
-      </div>
+      </main>
     </div>
   );
 }
