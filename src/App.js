@@ -17,10 +17,3 @@ function App() {
   );
 }
 export default App;
-```
-
-Then deploy:
-```
-git add -A
-git commit -m "Add temporary price fix tool"
-git push
