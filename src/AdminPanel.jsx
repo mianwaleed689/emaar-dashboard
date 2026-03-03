@@ -45,12 +45,32 @@ body{background:${T.bg};overflow:hidden;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:rgba(212,168,67,0.15);border-radius:4px;}
 ::-webkit-scrollbar-thumb:hover{background:rgba(212,168,67,0.3);}
+* { scrollbar-width: thin; scrollbar-color: rgba(212,168,67,0.15) transparent; }
+select option { background: ${T.surface}; color: ${T.textPrimary}; }
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 @keyframes spin{to{transform:rotate(360deg)}}
 .fade-up{animation:fadeUp 0.4s ease-out both;}
 .chart-box{background:${T.surface};border:1px solid ${T.border};border-radius:14px;padding:20px;transition:border-color 0.3s;}
 .chart-box:hover{border-color:${T.borderHover};}
+.admin-sidebar{transition:transform 0.3s ease;}
+@media(max-width:768px){
+  .admin-sidebar{position:fixed!important;z-index:200;transform:translateX(-100%);}
+  .admin-sidebar.open{transform:translateX(0);}
+  .admin-main{margin-left:0!important;}
+  .admin-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:199;}
+  .admin-overlay.open{display:block;}
+  .admin-mobile-btn{display:flex!important;}
+  .kpi-grid-4{grid-template-columns:1fr 1fr!important;}
+  .kpi-grid-6{grid-template-columns:1fr 1fr!important;}
+  .chart-grid-2{grid-template-columns:1fr!important;}
+  .chart-grid-3{grid-template-columns:1fr!important;}
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+}
+@media(max-width:480px){
+  .kpi-grid-4{grid-template-columns:1fr!important;}
+  .kpi-grid-6{grid-template-columns:1fr!important;}
+}
 `;
 
 /* ─── CUSTOM TOOLTIP (matching dashboard) ─── */
@@ -93,6 +113,14 @@ export default function AdminPanel() {
   const [sortBy, setSortBy] = useState("newest");
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [toast, setToast] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  /* ─── ESCAPE KEY ─── */
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === "Escape") setSidebarOpen(false); };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
 
   /* ─── AUTH ─── */
   useEffect(() => {
@@ -183,6 +211,8 @@ export default function AdminPanel() {
 
   /* ─── ACTIONS ─── */
   const changeTier = async (uid, tier) => {
+    const u = users.find(x => x.uid === uid);
+    if (!window.confirm(`Change ${u?.name || u?.email || uid} to "${tier}"?`)) return;
     try {
       const data = { tier };
       if (tier === "pro_trial") { const end = new Date(); end.setDate(end.getDate() + 7); data.trialEnd = end.toISOString(); }
@@ -316,8 +346,11 @@ export default function AdminPanel() {
       {/* Toast */}
       {toast && <div className="fade-up" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : T.red, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
 
+      {/* Mobile overlay */}
+      <div className={`admin-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
+
       {/* ─── SIDEBAR (matching dashboard) ─── */}
-      <aside style={{ width: 220, height: "100vh", position: "sticky", top: 0, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", background: "rgba(10,22,40,0.4)", flexShrink: 0 }}>
+      <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`} role="navigation" aria-label="Admin navigation" style={{ width: 220, height: "100vh", position: "sticky", top: 0, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", background: "rgba(10,22,40,0.4)", flexShrink: 0 }}>
         {/* Logo */}
         <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, padding: "20px 20px 6px", textDecoration: "none" }}>
           <svg width="28" height="28" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" /><path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} /></svg>
@@ -339,7 +372,7 @@ export default function AdminPanel() {
         <nav style={{ flex: 1, padding: "12px 10px", overflowY: "auto" }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, padding: "8px 10px 10px", textTransform: "uppercase" }}>Platform</div>
           {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{
+            <button type="button" key={t.id} onClick={() => setTab(t.id)} style={{
               width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10,
               border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: tab === t.id ? 600 : 400,
               background: tab === t.id ? T.goldGlow : "transparent",
@@ -369,15 +402,16 @@ export default function AdminPanel() {
             <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{adminUser?.displayName || adminUser?.email?.split("@")[0]}</div>
             <div style={{ fontSize: 10, color: T.gold, fontWeight: 600 }}>Admin</div>
           </div>
-          <button onClick={() => signOut(auth)} title="Logout" style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", padding: 4 }}>{I.logout}</button>
+          <button type="button" onClick={() => signOut(auth)} title="Logout" style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", padding: 4 }}>{I.logout}</button>
         </div>
       </aside>
 
       {/* ─── MAIN CONTENT ─── */}
-      <main style={{ flex: 1, height: "100vh", overflowY: "auto", overflowX: "hidden" }}>
+      <main className="admin-main" role="main" style={{ flex: 1, height: "100vh", overflowY: "auto", overflowX: "hidden" }}>
         {/* Top header bar */}
         <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(4,9,15,0.9)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${T.border}`, padding: "0 32px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button type="button" className="admin-mobile-btn" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display: "none", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 8, background: T.surfaceAlt, border: "1px solid " + T.border, color: T.textSecondary, cursor: "pointer", marginRight: 8 }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <span style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Admin Console</span>
             <span style={{ fontSize: 10, color: T.textMuted }}>·</span>
             <span style={{ fontSize: 11, color: T.textSecondary }}>{new Date().toLocaleDateString("en", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</span>
@@ -402,7 +436,7 @@ export default function AdminPanel() {
           {tab === "overview" && (
             <>
               <Section title="Platform Overview" sub="Real-time platform health & key metrics">
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12 }}>
+                <div className="kpi-grid-6" style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12 }}>
                   <KPI label="Total Users" value={stats.total} sub={`+${stats.today} today`} icon="👥" delay={1} />
                   <KPI label="This Week" value={stats.thisWeek} sub={`${stats.thisMonth} this month`} icon="📊" delay={2} />
                   <KPI label="Pro Trial" value={stats.proTrial} sub="Active trials" icon="⭐" color={T.gold} delay={3} />
@@ -445,7 +479,7 @@ export default function AdminPanel() {
               </div>
 
               <Section title="Recent Signups" sub="Latest platform registrations" action={
-                <button onClick={() => setTab("users")} style={{ fontSize: 11, padding: "6px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>View All →</button>
+                <button type="button" onClick={() => setTab("users")} style={{ fontSize: 11, padding: "6px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>View All →</button>
               }>
                 <div className="chart-box" style={{ padding: 0, overflow: "hidden" }}>
                   {users.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 5).map((u, i) => {
@@ -475,8 +509,8 @@ export default function AdminPanel() {
           {tab === "users" && (
             <Section title={`All Users (${users.length})`} sub="Manage tiers, view signups, monitor trials" action={
               <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={exportCSV} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} CSV</button>
-                <button onClick={fetchUsers} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
+                <button type="button" onClick={exportCSV} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} CSV</button>
+                <button type="button" onClick={fetchUsers} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
               </div>
             }>
               {/* Filters */}
@@ -487,7 +521,7 @@ export default function AdminPanel() {
                     style={{ width: "100%", padding: "10px 12px 10px 36px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
                 </div>
                 {["All", "Free", "Pro Trial", "Pro", "Enterprise", "Expired"].map(f => (
-                  <button key={f} onClick={() => setTierFilter(f)} style={{
+                  <button type="button" key={f} onClick={() => setTierFilter(f)} style={{
                     padding: "7px 14px", borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.2s",
                     border: `1px solid ${tierFilter === f ? T.gold : T.border}`,
                     background: tierFilter === f ? T.goldGlow : "transparent",
@@ -545,7 +579,7 @@ export default function AdminPanel() {
                           <option value="pro">Pro</option>
                           <option value="enterprise">Enterprise</option>
                         </select>
-                        <button onClick={() => deleteUser(u.uid)} style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid rgba(239,68,68,0.2)`, background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{I.trash}</button>
+                        <button type="button" onClick={() => deleteUser(u.uid)} style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid rgba(239,68,68,0.2)`, background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{I.trash}</button>
                       </div>
                     </div>
                   );
@@ -560,7 +594,7 @@ export default function AdminPanel() {
           {tab === "revenue" && (
             <>
               <Section title="Revenue Intelligence" sub="MRR, ARR, conversion metrics & projections">
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+                <div className="kpi-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
                   <KPI label="Monthly Revenue" value={`AED ${mrr.toLocaleString()}`} sub={`${stats.pro} Pro · ${stats.enterprise} Enterprise`} icon="💰" color={T.green} delay={1} />
                   <KPI label="Annual Revenue" value={`AED ${arr.toLocaleString()}`} sub="Projected annualized" icon="📈" color={T.teal} delay={2} />
                   <KPI label="Projected MRR" value={`AED ${projectedMRR.toLocaleString()}`} sub={`30% trial conversion assumption`} icon="🎯" color={T.gold} delay={3} />
@@ -621,7 +655,7 @@ export default function AdminPanel() {
               </div>
 
               <Section title="Revenue Breakdown" sub="Revenue by tier and source">
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                <div className="chart-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                   <div className="chart-box fade-up" style={{ padding: 20 }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Pro Plan Revenue</div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: T.green }}>AED {(stats.pro * 99).toLocaleString()}</div>
@@ -648,7 +682,7 @@ export default function AdminPanel() {
           {tab === "leads" && (
             <>
               <Section title="Lead Tracking" sub="WhatsApp, Email & Call inquiries from Pro users">
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+                <div className="kpi-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
                   <KPI label="Total Leads" value="0" sub="Tracking enabled" icon="📞" delay={1} />
                   <KPI label="WhatsApp" value="0" sub="Most popular channel" icon="💬" color={T.green} delay={2} />
                   <KPI label="Email" value="0" sub="Professional inquiries" icon="📧" color={T.blue} delay={3} />
@@ -672,7 +706,7 @@ export default function AdminPanel() {
           {tab === "analytics" && (
             <>
               <Section title="Growth Analytics" sub="Platform growth metrics & milestone tracking">
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+                <div className="kpi-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
                   <KPI label="Growth Rate" value={`${stats.total > 0 && stats.thisWeek > 0 ? Math.round((stats.thisWeek / stats.total) * 100) : 0}%`} sub="Week over week" icon="📈" color={T.green} delay={1} />
                   <KPI label="ARPU" value={`AED ${stats.total > 0 ? Math.round(mrr / stats.total) : 0}`} sub="Average per user" icon="💵" delay={2} />
                   <KPI label="Trial Rate" value={`${trialConversion}%`} sub="Trial → Paid conversion" icon="🔄" color={T.blue} delay={3} />
@@ -722,7 +756,7 @@ export default function AdminPanel() {
 
               {/* Milestones */}
               <Section title="Growth Milestones" sub="Track your progress towards key goals">
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+                <div className="kpi-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
                   {[
                     { label: "Platform Launch", target: 1, current: 1, icon: "🚀", date: "Mar 2026" },
                     { label: "First 10 Users", target: 10, current: stats.total, icon: "👥" },

@@ -51,6 +51,26 @@ body{background:${T.bg};overflow:hidden;}
 .slide-right{animation:slideRight 0.35s ease-out both;}
 .chart-box{background:${T.surface};border:1px solid ${T.border};border-radius:14px;padding:20px;transition:border-color 0.3s;}
 .chart-box:hover{border-color:${T.borderHover};}
+* { scrollbar-width: thin; scrollbar-color: rgba(212,168,67,0.15) transparent; }
+select option { background: ${T.surface}; color: ${T.textPrimary}; }
+.pm-sidebar{transition:transform 0.3s ease;}
+@media(max-width:768px){
+  .pm-sidebar{position:fixed!important;z-index:200;transform:translateX(-100%);height:100vh!important;}
+  .pm-sidebar.open{transform:translateX(0);}
+  .pm-main{margin-left:0!important;}
+  .pm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:199;}
+  .pm-overlay.open{display:block;}
+  .pm-mobile-btn{display:flex!important;}
+  .pm-header{flex-wrap:wrap;gap:8px;}
+  .pm-pills{overflow-x:auto;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .pm-pills::-webkit-scrollbar{display:none;}
+  .pm-pills button{flex-shrink:0;}
+  .pm-form-grid{grid-template-columns:1fr!important;}
+  .pm-unit-table{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+}
+@media(max-width:480px){
+  .pm-kpi-grid{grid-template-columns:1fr 1fr!important;}
+}
 `;
 
 /* ─── SAFE FIRESTORE DATA ─── */
@@ -78,6 +98,18 @@ export default function ProjectManager() {
   const [search, setSearch] = useState("");
   const [communityFilter, setCommunityFilter] = useState("all");
   const [hasChanges, setHasChanges] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const hk = (e) => { if (e.key === "Escape") setSidebarOpen(false); };
+    window.addEventListener("keydown", hk);
+    return () => window.removeEventListener("keydown", hk);
+  }, []);
+  useEffect(() => {
+    const hu = (e) => { if (hasChanges) { e.preventDefault(); e.returnValue = ""; } };
+    window.addEventListener("beforeunload", hu);
+    return () => window.removeEventListener("beforeunload", hu);
+  }, [hasChanges]);
   const [activeSection, setActiveSection] = useState("basic");
 
   /* ─── AUTH ─── */
@@ -112,6 +144,7 @@ export default function ProjectManager() {
 
   /* ─── PROJECT SELECTION ─── */
   function handleSelect(id) {
+    if (hasChanges && !window.confirm("You have unsaved changes. Discard them?")) return;
     setSelectedId(id);
     setHasChanges(false);
     setActiveSection("basic");
@@ -136,7 +169,7 @@ export default function ProjectManager() {
     setHasChanges(true);
   }
   function addUnit() { setForm(prev => ({ ...prev, units: [...prev.units, { type: "1BR", available: 0, total: 0 }] })); setHasChanges(true); }
-  function removeUnit(i) { setForm(prev => ({ ...prev, units: prev.units.filter((_, x) => x !== i) })); setHasChanges(true); }
+  function removeUnit(i) { if (!window.confirm("Remove this unit type?")) return; setForm(prev => ({ ...prev, units: prev.units.filter((_, x) => x !== i) })); setHasChanges(true); }
 
   /* ─── SAVE ─── */
   async function handleSave() {
@@ -265,8 +298,11 @@ export default function ProjectManager() {
       {/* Toast */}
       {toast && <div className="fade-up" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : T.red, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
 
+      {/* Mobile overlay */}
+      <div className={`pm-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
+
       {/* ─── LEFT SIDEBAR ─── */}
-      <aside style={{ width: 220, height: "100vh", position: "sticky", top: 0, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", background: "rgba(10,22,40,0.4)", flexShrink: 0 }}>
+      <aside className={`pm-sidebar ${sidebarOpen ? "open" : ""}`} role="navigation" aria-label="Project navigation" style={{ width: 220, height: "100vh", position: "sticky", top: 0, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", background: "rgba(10,22,40,0.4)", flexShrink: 0 }}>
         {/* Logo */}
         <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, padding: "20px 20px 6px", textDecoration: "none" }}>
           <svg width="28" height="28" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" /><path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} /></svg>
@@ -278,7 +314,7 @@ export default function ProjectManager() {
 
         {/* Portfolio KPIs */}
         <div style={{ padding: "12px 16px 14px", borderBottom: `1px solid ${T.border}` }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <div className="pm-kpi-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
               <div style={{ fontSize: 8, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>Projects</div>
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 900, color: T.gold }}>{projects.length}</div>
@@ -359,16 +395,17 @@ export default function ProjectManager() {
               <div style={{ fontSize: 11, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{adminUser?.displayName || adminUser?.email?.split("@")[0]}</div>
               <div style={{ fontSize: 9, color: T.gold, fontWeight: 600 }}>Admin</div>
             </div>
-            <button onClick={() => window.location.href = "/"} title="Dashboard" style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", padding: 4 }}>{I.logout}</button>
+            <button type="button" onClick={() => window.location.href = "/"} title="Dashboard" style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", padding: 4 }}>{I.logout}</button>
           </div>
         </div>
       </aside>
 
       {/* ─── MAIN CONTENT ─── */}
-      <main style={{ flex: 1, height: "100vh", overflowY: "auto", overflowX: "hidden" }}>
+      <main className="pm-main" role="main" style={{ flex: 1, height: "100vh", overflowY: "auto", overflowX: "hidden" }}>
         {/* Top header */}
-        <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(4,9,15,0.9)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${T.border}`, padding: "0 32px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <header className="pm-header" style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(4,9,15,0.9)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${T.border}`, padding: "0 32px", minHeight: 52, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button type="button" className="pm-mobile-btn" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display: "none", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 8, background: T.surfaceAlt, border: "1px solid " + T.border, color: T.textSecondary, cursor: "pointer", marginRight: 4 }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <span style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>
               {form ? form.name || "Untitled" : "Project Manager"}
             </span>
@@ -381,7 +418,7 @@ export default function ProjectManager() {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {hasChanges && <span style={{ fontSize: 10, fontWeight: 700, padding: "4px 12px", borderRadius: 6, background: T.goldGlow, color: T.gold, animation: "glow 2s infinite" }}>Unsaved</span>}
             {form && (
-              <button onClick={handleSave} disabled={saving} style={{
+              <button type="button" onClick={handleSave} disabled={saving} style={{
                 display: "flex", alignItems: "center", gap: 6, padding: "8px 20px", borderRadius: 8, border: "none", cursor: saving ? "wait" : "pointer",
                 background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg,
                 fontWeight: 700, fontSize: 12, fontFamily: "'Outfit',sans-serif",
@@ -440,9 +477,9 @@ export default function ProjectManager() {
               </div>
 
               {/* Section navigation pills */}
-              <div style={{ display: "flex", gap: 6, marginBottom: 24, flexWrap: "wrap" }}>
+              <div className="pm-pills" style={{ display: "flex", gap: 6, marginBottom: 24, flexWrap: "wrap" }}>
                 {SECTIONS.map(s => (
-                  <button key={s.id} onClick={() => setActiveSection(s.id)} style={{
+                  <button type="button" key={s.id} onClick={() => setActiveSection(s.id)} style={{
                     display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: "pointer",
                     fontFamily: "'Outfit',sans-serif", transition: "all 0.2s", border: `1px solid ${activeSection === s.id ? T.gold : T.border}`,
                     background: activeSection === s.id ? T.goldGlow : "transparent",
@@ -457,7 +494,7 @@ export default function ProjectManager() {
               {activeSection === "basic" && (
                 <Section title="Basic Information" sub="Project identity and classification">
                   <div className="chart-box" style={{ padding: 24 }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                    <div className="pm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                       <Input label="Project Name" value={form.name} onChange={v => set("name", v)} />
                       <Input label="Community" value={form.community} onChange={v => set("community", v)} />
                       <Select label="Status" value={form.status} onChange={v => set("status", v)} options={["Off-Plan", "Under Construction", "Ready", "Sold Out", "Launching"]} />
@@ -473,7 +510,7 @@ export default function ProjectManager() {
               {activeSection === "pricing" && (
                 <Section title="Pricing & Handover" sub="Financial details and timeline">
                   <div className="chart-box" style={{ padding: 24 }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+                    <div className="pm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
                       <Input label="Price From (AED)" value={form.priceFrom} onChange={v => set("priceFrom", v)} placeholder="1.8M" />
                       <Input label="Price/SqFt (AED)" value={form.pricePerSqft} onChange={v => set("pricePerSqft", v)} placeholder="2,333" />
                       <Input label="Size Range" value={form.sizeRange} onChange={v => set("sizeRange", v)} placeholder="750 - 2,200 sqft" />
@@ -488,7 +525,7 @@ export default function ProjectManager() {
               {/* ─── UNITS ─── */}
               {activeSection === "units" && (
                 <Section title="Unit Inventory" sub="Manage unit types, availability, and totals" action={
-                  <button onClick={addUnit} style={{
+                  <button type="button" onClick={addUnit} style={{
                     display: "flex", alignItems: "center", gap: 5, padding: "7px 16px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer",
                     fontFamily: "'Outfit',sans-serif", border: `1px solid rgba(0,191,165,0.25)`, background: "rgba(0,191,165,0.08)", color: T.teal,
                   }}>{I.plus} Add Unit Type</button>
@@ -541,7 +578,7 @@ export default function ProjectManager() {
                                   <span style={{ fontSize: 10, fontWeight: 700, color: soldPct >= 80 ? T.red : soldPct >= 50 ? T.gold : T.green }}>{soldPct}%</span>
                                 </div>
                               </div>
-                              <button onClick={() => removeUnit(i)} style={{
+                              <button type="button" onClick={() => removeUnit(i)} style={{
                                 width: 28, height: 28, borderRadius: 6, border: `1px solid rgba(239,68,68,0.2)`,
                                 background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer",
                                 display: "flex", alignItems: "center", justifyContent: "center",
@@ -559,7 +596,7 @@ export default function ProjectManager() {
               {activeSection === "contact" && (
                 <Section title="Contact & Media" sub="Inquiry channels and project assets">
                   <div className="chart-box" style={{ padding: 24 }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                    <div className="pm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                       <Input label="WhatsApp" value={form.whatsapp} onChange={v => set("whatsapp", v)} placeholder="+971..." />
                       <Input label="Email" value={form.email} onChange={v => set("email", v)} placeholder="sales@emaar.ae" />
                       <Input label="Phone" value={form.phone} onChange={v => set("phone", v)} placeholder="+971..." />
@@ -581,7 +618,7 @@ export default function ProjectManager() {
               {activeSection === "location" && (
                 <Section title="Location Data" sub="Geographic coordinates and area info">
                   <div className="chart-box" style={{ padding: 24 }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+                    <div className="pm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
                       <Input label="Latitude" value={form.lat} onChange={v => set("lat", v)} placeholder="25.xxxxx" />
                       <Input label="Longitude" value={form.lng} onChange={v => set("lng", v)} placeholder="55.xxxxx" />
                       <Input label="Area" value={form.area} onChange={v => set("area", v)} placeholder="Dubai Marina" />
@@ -593,7 +630,7 @@ export default function ProjectManager() {
               {/* Bottom Save */}
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
                 {hasChanges && <span style={{ fontSize: 11, color: T.gold, lineHeight: "40px" }}>You have unsaved changes</span>}
-                <button onClick={handleSave} disabled={saving} style={{
+                <button type="button" onClick={handleSave} disabled={saving} style={{
                   display: "flex", alignItems: "center", gap: 6, padding: "10px 28px", borderRadius: 10, border: "none", cursor: saving ? "wait" : "pointer",
                   background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg,
                   fontWeight: 800, fontSize: 13, fontFamily: "'Outfit',sans-serif",
