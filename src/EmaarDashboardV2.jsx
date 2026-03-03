@@ -4,7 +4,7 @@ import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "firebase/auth";
 import { collection, getDocs, orderBy, query, doc, getDoc, setDoc } from "firebase/firestore";
 
-import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel } from "./data";
+import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
 import LandingPage from "./LandingPage";
 
 /* ─── DATA ALIASES (for backward compat) ─── */
@@ -731,6 +731,7 @@ export default function EmaarDashboardV2() {
   const [projectFilter, setProjectFilter] = useState("All");
   const [liveProjects, setLiveProjects] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [roiYears, setRoiYears] = useState(5);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [expandedMega, setExpandedMega] = useState(null);
   const [compareList, setCompareList] = useState([]);
@@ -2633,6 +2634,145 @@ export default function EmaarDashboardV2() {
                 </>
                 </ProGate>
               )}
+
+              {/* Contact CTAs */}
+              {(() => {
+                const roi = communityROI[selectedProject_.community];
+                if (!roi) return null;
+                // Determine unit type for yield lookup
+                const isVilla = /villa/i.test(selectedProject_.type);
+                const isTH = /townhouse|th/i.test(selectedProject_.type);
+                const beds = selectedProject_.beds || "1-3";
+                const minBed = parseInt(beds);
+                let unitKey = "apt1";
+                if (isVilla) unitKey = "villa";
+                else if (isTH) unitKey = "th";
+                else if (minBed >= 3) unitKey = "apt3";
+                else if (minBed >= 2) unitKey = "apt2";
+                else unitKey = "apt1";
+                
+                const grossY = roi.grossYield[unitKey] || roi.grossYield.apt1 || roi.grossYield.th || roi.grossYield.villa;
+                const netY = roi.netYield[unitKey] || roi.netYield.apt1 || roi.netYield.th || roi.netYield.villa;
+                const estRent = roi.estRent[unitKey] || roi.estRent.apt1 || roi.estRent.th || roi.estRent.villa;
+                if (!grossY || !estRent) return null;
+
+                const price = selectedProject_.price;
+                const yrs = roiYears;
+                const annualAppreciation = roi.appreciation5yr / 5; // annualized rate
+                const appreciationPct = Math.round(annualAppreciation * yrs * 10) / 10;
+                const appreciationValue = Math.round(price * (1 + appreciationPct / 100));
+                const totalRentalIncome = Math.round(estRent * yrs);
+                const capitalGain = appreciationValue - price;
+                const totalROI = totalRentalIncome + capitalGain;
+                const payment = selectedProject_.payment || "80/20";
+                const downPct = parseInt(payment.split("/")[0]) / 100;
+                const downPayment = Math.round(price * downPct);
+                const roiOnCapital = Math.round((totalROI / downPayment) * 100);
+                const bankReturn = Math.round(price * (Math.pow(1 + roi.bankRate / 100, yrs) - 1));
+                const bankMultiplier = bankReturn > 0 ? (totalROI / bankReturn).toFixed(1) : "∞";
+                const svcChargeAnnual = Math.round(roi.serviceCharge * ((selectedProject_.sizeFrom + selectedProject_.sizeTo) / 2));
+
+                return (
+                  <div style={{ marginTop: 16, marginBottom: 16, background: `linear-gradient(135deg, rgba(16,185,129,0.08), rgba(212,168,67,0.06))`, borderRadius: 14, border: `1px solid rgba(16,185,129,0.2)`, padding: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+                      <div style={{ width: 4, height: 20, background: T.green, borderRadius: 2 }} />
+                      <span style={{ fontSize: 13, fontWeight: 800, color: T.green, letterSpacing: 1, textTransform: "uppercase" }}>Investor ROI Calculator</span>
+                      <span style={{ fontSize: 9, color: T.textMuted, fontStyle: "italic" }}>Research-backed</span>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 4, marginBottom: 14, flexWrap: "wrap" }}>
+                      {[1, 1.5, 2, 3, 4, 5].map(y => (
+                        <button key={y} type="button" onClick={() => setRoiYears(y)}
+                          style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${yrs === y ? T.green : T.border}`, background: yrs === y ? "rgba(16,185,129,0.15)" : T.surfaceAlt, color: yrs === y ? T.green : T.textSecondary, fontSize: 12, fontWeight: yrs === y ? 800 : 500, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}>
+                          {y === 1 ? "1 Year" : y === 1.5 ? "1.5 Yr" : `${y} Years`}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                      <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
+                        <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3 }}>PURCHASE PRICE</div>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces', serif" }}>AED {price.toLocaleString()}</div>
+                      </div>
+                      <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
+                        <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3 }}>EST. ANNUAL RENT</div>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: T.teal, fontFamily: "'Fraunces', serif" }}>AED {estRent.toLocaleString()}</div>
+                      </div>
+                      <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
+                        <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3 }}>GROSS YIELD</div>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: T.green, fontFamily: "'Fraunces', serif" }}>{grossY}%</div>
+                      </div>
+                      <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
+                        <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3 }}>NET YIELD (after fees)</div>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: T.green, fontFamily: "'Fraunces', serif" }}>{netY}%</div>
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.white, marginBottom: 8, marginTop: 4 }}>{yrs === 1 ? "1-YEAR" : yrs === 1.5 ? "1.5-YEAR" : `${yrs}-YEAR`} INVESTMENT PROJECTION</div>
+                    <div className="detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                      <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
+                        <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3 }}>CAPITAL APPRECIATION</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: T.green, fontFamily: "'Fraunces', serif" }}>+{appreciationPct}%</div>
+                        <div style={{ fontSize: 10, color: T.textSecondary }}>→ AED {appreciationValue.toLocaleString()}</div>
+                      </div>
+                      <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
+                        <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3 }}>TOTAL 5-YEAR ROI</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces', serif" }}>AED {totalROI.toLocaleString()}</div>
+                        <div style={{ fontSize: 10, color: T.textSecondary }}>Rent + Appreciation</div>
+                      </div>
+                      <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
+                        <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3 }}>PAYMENT PLAN LEVERAGE</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: T.blue, fontFamily: "'Fraunces', serif" }}>{payment}</div>
+                        <div style={{ fontSize: 10, color: T.textSecondary }}>Deploy only AED {downPayment.toLocaleString()}</div>
+                      </div>
+                      <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
+                        <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3 }}>ROI ON CAPITAL DEPLOYED</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: roiOnCapital > 200 ? T.green : T.gold, fontFamily: "'Fraunces', serif" }}>{roiOnCapital}%</div>
+                        <div style={{ fontSize: 10, color: T.textSecondary }}>on {Math.round(downPct * 100)}% down payment</div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+                      <div style={{ flex: 1, minWidth: 120, background: "rgba(212,168,67,0.1)", borderRadius: 10, padding: 10, textAlign: "center", border: `1px solid rgba(212,168,67,0.15)` }}>
+                        <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3 }}>vs BANK DEPOSIT ({roi.bankRate}%)</div>
+                        <div style={{ fontSize: 18, fontWeight: 900, color: T.gold, fontFamily: "'Fraunces', serif" }}>{bankMultiplier}x</div>
+                        <div style={{ fontSize: 10, color: T.textSecondary }}>better return</div>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 120, background: roi.goldenVisa ? "rgba(16,185,129,0.1)" : "rgba(255,255,255,0.03)", borderRadius: 10, padding: 10, textAlign: "center", border: `1px solid ${roi.goldenVisa ? "rgba(16,185,129,0.15)" : T.border}` }}>
+                        <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3 }}>GOLDEN VISA</div>
+                        <div style={{ fontSize: 18, fontWeight: 900, color: roi.goldenVisa ? T.green : T.textMuted, fontFamily: "'Fraunces', serif" }}>{roi.goldenVisa ? "✓ Yes" : "✗ No"}</div>
+                        <div style={{ fontSize: 10, color: T.textSecondary }}>{price >= 2000000 ? "10-Year Renewable" : "Below AED 2M"}</div>
+                      </div>
+                      {roi.occupancy && (
+                        <div style={{ flex: 1, minWidth: 120, background: "rgba(59,130,246,0.08)", borderRadius: 10, padding: 10, textAlign: "center", border: `1px solid rgba(59,130,246,0.15)` }}>
+                          <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3 }}>OCCUPANCY RATE</div>
+                          <div style={{ fontSize: 18, fontWeight: 900, color: T.blue, fontFamily: "'Fraunces', serif" }}>{roi.occupancy}%</div>
+                          <div style={{ fontSize: 10, color: T.textSecondary }}>{roi.avgDaysToLease ? `~${roi.avgDaysToLease}d to lease` : "Strong demand"}</div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
+                      <div style={{ flex: 1, minWidth: 100, background: T.surfaceAlt, borderRadius: 8, padding: 8, fontSize: 10 }}>
+                        <span style={{ color: T.textMuted }}>Service Charges: </span>
+                        <span style={{ color: T.white, fontWeight: 700 }}>~AED {svcChargeAnnual.toLocaleString()}/yr</span>
+                        <span style={{ color: T.textMuted }}> (AED {roi.serviceCharge}/sqft)</span>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 100, background: T.surfaceAlt, borderRadius: 8, padding: 8, fontSize: 10 }}>
+                        <span style={{ color: T.textMuted }}>YoY Growth: </span>
+                        <span style={{ color: T.green, fontWeight: 700 }}>+{roi.appreciationYoY}%</span>
+                        <span style={{ color: T.textMuted }}> | Risk: </span>
+                        <span style={{ color: roi.riskLevel === "Low" ? T.green : roi.riskLevel === "Medium" ? T.gold : T.orange, fontWeight: 700 }}>{roi.riskLevel}</span>
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: 10, color: T.textMuted, padding: "6px 8px", background: T.surfaceAlt, borderRadius: 8 }}>
+                      <span style={{ fontWeight: 700, color: T.textSecondary }}>Growth Driver: </span>{roi.capitalGrowthDriver}
+                    </div>
+                    <div style={{ fontSize: 8, color: T.textMuted, marginTop: 6, fontStyle: "italic" }}>Sources: {roi.source} · Estimates only — actual returns may vary. Consult a licensed advisor.</div>
+                  </div>
+                );
+              })()}
 
               {/* Contact CTAs */}
               {isPro ? (
