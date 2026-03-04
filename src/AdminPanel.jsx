@@ -1215,17 +1215,30 @@ export default function AdminPanel() {
                           <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Project Documents</div>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                             {[
-                              { key: "pdfBrochure", label: "Brochure PDF", placeholder: "Paste Google Drive PDF link" },
-                              { key: "pdfFloorPlan", label: "Floor Plan PDF", placeholder: "Paste floor plan PDF link" },
-                              { key: "pdfPaymentPlan", label: "Payment Plan PDF", placeholder: "Paste payment plan PDF link" },
-                              { key: "pdfFactSheet", label: "Fact Sheet PDF", placeholder: "Paste fact sheet PDF link" },
+                              { key: "pdfBrochure", label: "Brochure PDF" },
+                              { key: "pdfFloorPlan", label: "Floor Plan PDF" },
+                              { key: "pdfPaymentPlan", label: "Payment Plan PDF" },
+                              { key: "pdfFactSheet", label: "Fact Sheet PDF" },
                             ].map(doc => (
                               <div key={doc.key}>
                                 <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{doc.label}</label>
-                                <input type="text" placeholder={doc.placeholder} value={projectForm[doc.key] || liveProjects[p.id]?.[doc.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [doc.key]: e.target.value }))}
-                                  style={{ width: "100%", padding: "8px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, padding: "8px 12px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.12)", background: T.bg, color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                  {projectForm[doc.key + "_uploading"] ? "Uploading..." : (projectForm[doc.key] || liveProjects[p.id]?.[doc.key]) ? "Uploaded ✓" : "Upload PDF"}
+                                  <input type="file" accept=".pdf,image/*" style={{ display: "none" }} onChange={async e => {
+                                    const file = e.target.files[0]; if (!file) return;
+                                    setProjectForm(prev => ({ ...prev, [doc.key + "_uploading"]: true }));
+                                    const fd = new FormData();
+                                    fd.append("file", file);
+                                    fd.append("upload_preset", "dxb-analytics");
+                                    const res = await fetch("https://api.cloudinary.com/v1_1/dh9dd5ld0/auto/upload", { method: "POST", body: fd });
+                                    const data = await res.json();
+                                    setProjectForm(prev => ({ ...prev, [doc.key]: data.secure_url, [doc.key + "_uploading"]: false }));
+                                    notify(doc.label + " uploaded!");
+                                  }} />
+                                </label>
                                 {(projectForm[doc.key] || liveProjects[p.id]?.[doc.key]) && (
-                                  <a href={projectForm[doc.key] || liveProjects[p.id]?.[doc.key]} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", marginTop: 3, display: "block" }}>View PDF →</a>
+                                  <a href={projectForm[doc.key] || liveProjects[p.id]?.[doc.key]} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", marginTop: 3, display: "block" }}>View →</a>
                                 )}
                               </div>
                             ))}
