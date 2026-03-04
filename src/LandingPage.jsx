@@ -329,6 +329,65 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
+
+      {/* ROADMAP SECTION */}
+      <section className="landing-section" style={{ padding: "100px 40px", background: "linear-gradient(180deg, transparent, rgba(212,168,67,0.03))" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 60 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: T.gold, letterSpacing: 2, textTransform: "uppercase" }}>The Vision</span>
+            <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 36, fontWeight: 900, color: T.white, marginTop: 12 }}>The Bloomberg of Dubai Real Estate</h2>
+            <p style={{ fontSize: 15, color: T.textSecondary, marginTop: 12, maxWidth: 600, margin: "12px auto 0" }}>One platform. Every developer. Every community. Every transaction. Updated automatically. 24/7.</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+            {[
+              { phase: "Phase 1", status: "LIVE", color: "#10B981", title: "Emaar Properties", desc: "48 projects, full financials, yields, risk, competitors, stocks — complete intelligence module.", dot: "#10B981" },
+              { phase: "Phase 2", status: "Q3 2026", color: "#D4A843", title: "Top 10 Developers", desc: "DAMAC, Sobha, Meraas, ALDAR, Binghatti, Nakheel, Azizi, Tiger, Danube — all in one place.", dot: "#D4A843" },
+              { phase: "Phase 3", status: "2027", color: "#3B82F6", title: "Full Dubai Market", desc: "All 228+ developers, every community, every transaction type, live DLD data feeds.", dot: "#3B82F6" },
+            ].map((item, i) => (
+              <div key={i} style={{ background: "rgba(10,22,40,0.8)", borderRadius: 16, padding: 28, border: 1px solid rgba(212,168,67,0.1), position: "relative", overflow: "hidden" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: item.color, letterSpacing: 1 }}>{item.phase}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 10, background: ${item.dot}22, color: item.color, border: 1px solid 44 }}>{item.status}</span>
+                </div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", marginBottom: 8 }}>{item.title}</h3>
+                <p style={{ fontSize: 12, color: "#94A3B8", lineHeight: 1.6 }}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* COMING SOON DEVELOPERS */}
+      <section style={{ padding: "60px 40px", borderTop: "1px solid rgba(212,168,67,0.08)" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
+          <p style={{ fontSize: 12, fontWeight: 600, color: "#64748B", letterSpacing: 2, textTransform: "uppercase", marginBottom: 24 }}>Coming Soon — More Developers</p>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 12 }}>
+            {["DAMAC Properties", "Sobha Realty", "Meraas", "ALDAR", "Binghatti", "Nakheel", "Azizi", "Tiger Group", "Danube", "Dubai Holding"].map((dev, i) => (
+              <span key={i} style={{ fontSize: 13, color: "#64748B", padding: "8px 16px", borderRadius: 20, background: "rgba(10,22,40,0.8)", border: "1px solid rgba(212,168,67,0.08)", display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#D4A843", opacity: 0.4, display: "inline-block" }} />
+                {dev}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{ padding: "40px 40px", borderTop: "1px solid rgba(212,168,67,0.08)", background: "#0A1628" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <svg width="24" height="24" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke="#D4A843" strokeWidth="2"/><path d="M12 28V12h10l-6 8h8l-12 8z" fill="#D4A843"/></svg>
+            <span style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 800, color: "#D4A843" }}>DXB Analytics</span>
+          </div>
+          <p style={{ fontSize: 12, color: "#64748B" }}>© 2026 DXB Analytics by The Address Holding. Dubai, UAE.</p>
+          <div style={{ display: "flex", gap: 20 }}>
+            <a href="#features" style={{ fontSize: 12, color: "#64748B", textDecoration: "none" }}>Features</a>
+            <a href="#pricing" style={{ fontSize: 12, color: "#64748B", textDecoration: "none" }}>Pricing</a>
+            <a href="/" style={{ fontSize: 12, color: "#64748B", textDecoration: "none" }}>Dashboard</a>
+          </div>
+        </div>
+      </footer>
+
       {/* ─── FINAL CTA ─── */}
       <section className="landing-section" style={{ padding: "100px 40px", textAlign: "center", position: "relative", overflow: "hidden" }}>
         <div className="landing-hero-glow" style={{ top: "-100px" }} />
