@@ -36,6 +36,17 @@ const I = {
   check: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>,
   arrow: <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="18 15 12 9 6 15"/></svg>,
   bell: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+  projects: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>,
+  chart: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>,
+  yields: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+  whatsapp: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>,
+  email: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>,
+  phone: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
+  rocket: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg>,
+  team: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  trophy: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 22V8a6 6 0 0 0-6-6h16a6 6 0 0 0-6 6v14"/></svg>,
+  star: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  target: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
 };
 
 /* ─── CSS (exactly matching main dashboard design DNA) ─── */
@@ -55,6 +66,9 @@ select option { background: ${T.surface}; color: ${T.textPrimary}; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 .fade-up { animation: fadeUp 0.5s ease-out forwards; opacity: 0; }
+  @keyframes toastIn { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+  @keyframes toastOut { 0% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
+  .toast-notify { animation: toastIn 0.3s ease-out, toastOut 0.4s ease-in 2.4s forwards; }
 
 .kpi-card {
   background: linear-gradient(135deg, ${T.card} 0%, ${T.surfaceAlt} 100%);
@@ -186,7 +200,7 @@ function plainify(obj) {
 }
 
 /* ─── REUSABLE COMPONENTS (outside component to prevent re-mount on state change) ─── */
-const KPI = ({ label, value, sub, icon, color, delay = 0 }) => (
+const KPI = ({ label, value, sub, delay = 0 }) => (
   <div className="kpi-card fade-up" style={{ animationDelay: `${delay * 0.05}s` }}>
     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>{label}</div>
     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: color || T.gold, lineHeight: 1 }}>{value}</div>
@@ -552,7 +566,7 @@ export default function AdminPanel() {
       <style>{css}</style>
 
       {/* Toast */}
-      {toast && <div className="fade-up" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : T.red, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
+      {toast && <div key={toast} className="toast-notify" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : T.red, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
 
       {/* Mobile overlay */}
       <div className={`mobile-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
@@ -648,12 +662,12 @@ export default function AdminPanel() {
             <>
               <Section title="Platform Overview" sub="Real-time platform health & key metrics">
                 <div className="kpi-grid-6" style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12 }}>
-                  <KPI label="Total Users" value={stats.total} sub={`+${stats.today} today`} icon="👥" delay={1} />
-                  <KPI label="This Week" value={stats.thisWeek} sub={`${stats.thisMonth} this month`} icon="📊" delay={2} />
-                  <KPI label="Pro Trial" value={stats.proTrial} sub="Active trials" icon="⭐" color={T.gold} delay={3} />
-                  <KPI label="Free / Expired" value={stats.freeExpired} sub={`${stats.expired} expired`} icon="🔓" color={T.textMuted} delay={4} />
-                  <KPI label="Paid Users" value={stats.paid} sub={`${stats.pro} Pro · ${stats.enterprise} Ent`} icon="💎" color={T.teal} delay={5} />
-                  <KPI label="MRR" value={`AED ${mrr.toLocaleString()}`} sub={`ARR: AED ${arr.toLocaleString()}`} icon="💰" color={T.green} delay={6} />
+                  <KPI label="Total Users" value={stats.total} sub={`+${stats.today} today`} delay={1} />
+                  <KPI label="This Week" value={stats.thisWeek} sub={`${stats.thisMonth} this month`} delay={2} />
+                  <KPI label="Pro Trial" value={stats.proTrial} sub="Active trials" color={T.gold} delay={3} />
+                  <KPI label="Free / Expired" value={stats.freeExpired} sub={`${stats.expired} expired`} color={T.textMuted} delay={4} />
+                  <KPI label="Paid Users" value={stats.paid} sub={`${stats.pro} Pro · ${stats.enterprise} Ent`} color={T.teal} delay={5} />
+                  <KPI label="MRR" value={`AED ${mrr.toLocaleString()}`} sub={`ARR: AED ${arr.toLocaleString()}`} color={T.green} delay={6} />
                 </div>
               </Section>
 
@@ -806,10 +820,10 @@ export default function AdminPanel() {
             <>
               <Section title="Revenue Intelligence" sub="MRR, ARR, conversion metrics & projections">
                 <div className="kpi-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-                  <KPI label="Monthly Revenue" value={`AED ${mrr.toLocaleString()}`} sub={`${stats.pro} Pro · ${stats.enterprise} Enterprise`} icon="💰" color={T.green} delay={1} />
-                  <KPI label="Annual Revenue" value={`AED ${arr.toLocaleString()}`} sub="Projected annualized" icon="📈" color={T.teal} delay={2} />
-                  <KPI label="Projected MRR" value={`AED ${projectedMRR.toLocaleString()}`} sub={`30% trial conversion assumption`} icon="🎯" color={T.gold} delay={3} />
-                  <KPI label="Trial Conversion" value={`${trialConversion}%`} sub={`${stats.pro} converted · ${stats.expired} expired`} icon="🔄" color={T.blue} delay={4} />
+                  <KPI label="Monthly Revenue" value={`AED ${mrr.toLocaleString()}`} sub={`${stats.pro} Pro · ${stats.enterprise} Enterprise`} color={T.green} delay={1} />
+                  <KPI label="Annual Revenue" value={`AED ${arr.toLocaleString()}`} sub="Projected annualized" color={T.teal} delay={2} />
+                  <KPI label="Projected MRR" value={`AED ${projectedMRR.toLocaleString()}`} sub={`30% trial conversion assumption`} color={T.gold} delay={3} />
+                  <KPI label="Trial Conversion" value={`${trialConversion}%`} sub={`${stats.pro} converted · ${stats.expired} expired`} color={T.blue} delay={4} />
                 </div>
               </Section>
 
@@ -895,13 +909,13 @@ export default function AdminPanel() {
               {/* Sub-tab navigation */}
               <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
                 {[
-                  { id: "projects", label: "Projects", count: emaarProjects.length, icon: "🏗️" },
-                  { id: "communities", label: "Community ROI", count: Object.keys(defaultCommunityROI).length, icon: "📊" },
-                  { id: "yields", label: "Yield Table", count: emaarYields.length, icon: "💰" },
+                  { id: "projects", label: "Projects", count: emaarProjects.length, icon: I.projects },
+                  { id: "communities", label: "Community ROI", count: Object.keys(defaultCommunityROI).length, icon: I.chart },
+                  { id: "yields", label: "Yield Table", count: emaarYields.length, icon: I.yields },
                 ].map(st => (
                   <button type="button" key={st.id} onClick={() => { setDataSubTab(st.id); setEditingProject(null); setEditingCommunity(null); setEditingYield(null); }}
                     style={{ flex: 1, padding: "14px 16px", borderRadius: 12, border: `1px solid ${dataSubTab === st.id ? T.gold : T.border}`, background: dataSubTab === st.id ? T.goldGlow : T.surface, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all .2s" }}>
-                    <div style={{ fontSize: 20, marginBottom: 6 }}>{st.icon}</div>
+                    <div style={{ marginBottom: 6, color: dataSubTab === st.id ? T.gold : T.textMuted }}>{st.icon}</div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: dataSubTab === st.id ? T.gold : T.white }}>{st.label}</div>
                     <div style={{ fontSize: 11, color: T.textMuted }}>{st.count} items · {Object.keys(st.id === "projects" ? liveProjects : st.id === "communities" ? liveCommunityROI : liveYields).length} live overrides</div>
                   </button>
@@ -974,7 +988,7 @@ export default function AdminPanel() {
                         </div>
                         <button type="button" disabled={dataSaving} onClick={() => saveProjectData(p.id, projectForm)}
                           style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
-                          {dataSaving ? "Saving..." : "💾 Save to Firestore — Goes Live Instantly"}
+                          {dataSaving ? "Saving..." : "Save to Firestore — Goes Live Instantly"}
                         </button>
                       </div>
                     );
@@ -1006,7 +1020,7 @@ export default function AdminPanel() {
                             <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{merged.price ? `AED ${(merged.price / 1e6).toFixed(2)}M` : "TBA"}</span>
                             <span style={{ fontSize: 12, color: T.textPrimary }}>{merged.ppsf ? merged.ppsf.toLocaleString() : "—"}</span>
                             <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: merged.status === "Selling" ? "rgba(16,185,129,0.12)" : merged.status === "Upcoming" ? "rgba(212,168,67,0.12)" : "rgba(148,163,184,0.1)", color: merged.status === "Selling" ? T.green : merged.status === "Upcoming" ? T.gold : T.textMuted }}>{merged.status || "—"}</span>
-                            <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? "🟢 Live" : "📄 Default"}</span>
+                            <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? "● Live" : "○ Default"}</span>
                             <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>Edit →</span>
                           </div>
                         );
@@ -1107,7 +1121,7 @@ export default function AdminPanel() {
 
                         <button type="button" disabled={dataSaving} onClick={() => saveCommunityROI(key, communityForm)}
                           style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
-                          {dataSaving ? "Saving..." : "💾 Save Community ROI — Goes Live Instantly"}
+                          {dataSaving ? "Saving..." : "Save Community ROI — Goes Live Instantly"}
                         </button>
                       </div>
                     );
@@ -1127,7 +1141,7 @@ export default function AdminPanel() {
                               <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{comm?.name || key}</div>
                               <div style={{ fontSize: 11, color: T.textMuted }}>{key}</div>
                             </div>
-                            <span style={{ fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: hasOverride ? "rgba(16,185,129,0.12)" : "rgba(148,163,184,0.08)", color: hasOverride ? T.green : T.textMuted }}>{hasOverride ? "🟢 Live" : "Default"}</span>
+                            <span style={{ fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: hasOverride ? "rgba(16,185,129,0.12)" : "rgba(148,163,184,0.08)", color: hasOverride ? T.green : T.textMuted }}>{hasOverride ? "● Live" : "○ Default"}</span>
                           </div>
                           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
                             <div>
@@ -1199,7 +1213,7 @@ export default function AdminPanel() {
                         </div>
                         <button type="button" disabled={dataSaving} onClick={() => saveYieldData(yieldKey, yieldForm)}
                           style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
-                          {dataSaving ? "Saving..." : "💾 Save Yield Data"}
+                          {dataSaving ? "Saving..." : "Save Yield Data"}
                         </button>
                       </div>
                     );
@@ -1230,7 +1244,7 @@ export default function AdminPanel() {
                             <span style={{ fontSize: 12, fontWeight: 700, color: T.green }}>{merged.gross}%</span>
                             <span style={{ fontSize: 12, color: T.teal }}>{merged.net}%</span>
                             <span style={{ fontSize: 10, color: merged.demand === "Very High" ? T.gold : T.textSecondary }}>{merged.demand}</span>
-                            <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? "🟢" : "—"}</span>
+                            <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? "●" : "—"}</span>
                           </div>
                         );
                       })}
@@ -1259,17 +1273,17 @@ export default function AdminPanel() {
             <>
               <Section title="Lead Tracking" sub="WhatsApp, Email & Call inquiries from Pro users">
                 <div className="chart-box fade-up" style={{ padding: 40, textAlign: "center" }}>
-                  <div style={{ fontSize: 48, marginBottom: 16 }}>📞</div>
+                  <div style={{ marginBottom: 16, color: T.gold, opacity: 0.5 }}><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
                   <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.white, marginBottom: 8 }}>Lead Tracking — Coming Q3 2026</h3>
                   <p style={{ color: T.textSecondary, fontSize: 13, maxWidth: 520, margin: "0 auto 28px", lineHeight: 1.7 }}>
                     When Pro users click WhatsApp, Email, or Call buttons on project pages, each inquiry will be logged here automatically. You'll see which projects generate the most interest and track your lead pipeline.
                   </p>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, maxWidth: 600, margin: "0 auto" }}>
                     {[
-                      { icon: "💬", label: "WhatsApp Clicks", desc: "Auto-logged per project" },
-                      { icon: "📧", label: "Email Inquiries", desc: "Tracked with project context" },
-                      { icon: "📞", label: "Call Tracking", desc: "Click-to-call logging" },
-                      { icon: "💎", label: "Lead Valuation", desc: "AED value per lead pipeline" },
+                      { icon: I.whatsapp, label: "WhatsApp Clicks", desc: "Auto-logged per project" },
+                      { icon: I.email, label: "Email Inquiries", desc: "Tracked with project context" },
+                      { icon: I.phone, label: "Call Tracking", desc: "Click-to-call logging" },
+                      { icon: "◆", label: "Lead Valuation", desc: "AED value per lead pipeline" },
                     ].map((item, i) => (
                       <div key={i} className="fade-up" style={{ background: T.surfaceAlt, borderRadius: 10, padding: 16, border: `1px solid ${T.border}`, animationDelay: `${i * 0.06}s` }}>
                         <div style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</div>
@@ -1290,10 +1304,10 @@ export default function AdminPanel() {
             <>
               <Section title="Growth Analytics" sub="Platform growth metrics & milestone tracking">
                 <div className="kpi-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-                  <KPI label="Growth Rate" value={`${stats.total > 0 && stats.thisWeek > 0 ? Math.round((stats.thisWeek / stats.total) * 100) : 0}%`} sub="Week over week" icon="📈" color={T.green} delay={1} />
-                  <KPI label="ARPU" value={`AED ${stats.total > 0 ? Math.round(mrr / stats.total) : 0}`} sub="Average per user" icon="💵" delay={2} />
-                  <KPI label="Trial Rate" value={`${trialConversion}%`} sub="Trial → Paid conversion" icon="🔄" color={T.blue} delay={3} />
-                  <KPI label="Platform Health" value={stats.paid > 0 ? "Strong" : stats.proTrial > 0 ? "Growing" : "Early"} sub={stats.total > 10 ? "Scaling phase" : "Launch phase"} icon="💪" color={T.teal} delay={4} />
+                  <KPI label="Growth Rate" value={`${stats.total > 0 && stats.thisWeek > 0 ? Math.round((stats.thisWeek / stats.total) * 100) : 0}%`} sub="Week over week" color={T.green} delay={1} />
+                  <KPI label="ARPU" value={`AED ${stats.total > 0 ? Math.round(mrr / stats.total) : 0}`} sub="Average per user" delay={2} />
+                  <KPI label="Trial Rate" value={`${trialConversion}%`} sub="Trial → Paid conversion" color={T.blue} delay={3} />
+                  <KPI label="Platform Health" value={stats.paid > 0 ? "Strong" : stats.proTrial > 0 ? "Growing" : "Early"} sub={stats.total > 10 ? "Scaling phase" : "Launch phase"} color={T.teal} delay={4} />
                 </div>
               </Section>
 
@@ -1341,14 +1355,14 @@ export default function AdminPanel() {
               <Section title="Growth Milestones" sub="Track your progress towards key goals">
                 <div className="kpi-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
                   {[
-                    { label: "Platform Launch", target: 1, current: 1, icon: "🚀", date: "Mar 2026" },
-                    { label: "First 10 Users", target: 10, current: stats.total, icon: "👥" },
-                    { label: "First 50 Users", target: 50, current: stats.total, icon: "🎯" },
-                    { label: "First Paid User", target: 1, current: stats.paid, icon: "💰" },
-                    { label: "100 Users", target: 100, current: stats.total, icon: "📊" },
-                    { label: "AED 10K MRR", target: 10000, current: mrr, icon: "🏆" },
-                    { label: "500 Users", target: 500, current: stats.total, icon: "🌟" },
-                    { label: "AED 50K MRR", target: 50000, current: mrr, icon: "👑" },
+                    { label: "Platform Launch", target: 1, current: 1, icon: I.rocket, date: "Mar 2026" },
+                    { label: "First 10 Users", target: 10, current: stats.total, icon: I.team },
+                    { label: "First 50 Users", target: 50, current: stats.total, icon: I.target },
+                    { label: "First Paid User", target: 1, current: stats.paid, icon: I.revenue },
+                    { label: "100 Users", target: 100, current: stats.total, icon: I.users },
+                    { label: "AED 10K MRR", target: 10000, current: mrr, icon: I.trophy },
+                    { label: "500 Users", target: 500, current: stats.total, icon: I.star },
+                    { label: "AED 50K MRR", target: 50000, current: mrr, icon: I.trophy },
                   ].map((m, i) => {
                     const done = m.current >= m.target;
                     const pct = Math.min(Math.round((m.current / m.target) * 100), 100);

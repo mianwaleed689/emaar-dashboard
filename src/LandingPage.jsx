@@ -80,12 +80,19 @@ const landingCss = `
     .stats-grid { grid-template-columns: 1fr 1fr !important; }
     .hero-buttons { flex-direction: column !important; align-items: stretch !important; }
     .nav-links { display: none !important; }
+    .mobile-menu-btn { display: flex !important; }
+    .mobile-drawer { display: flex !important; }
     .landing-section { padding: 60px 16px !important; }
+  .mobile-menu-btn { display: none; align-items: center; justify-content: center; width: 40px; height: 40px; background: none; border: 1px solid ${T.border}; border-radius: 8px; cursor: pointer; color: ${T.textSecondary}; }
+  .mobile-drawer { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: ${T.bg}; z-index: 2000; flex-direction: column; padding: 80px 24px 24px; gap: 8px; }
+  .mobile-drawer a { color: ${T.textSecondary}; text-decoration: none; font-size: 18px; font-weight: 500; padding: 14px 0; border-bottom: 1px solid ${T.border}; font-family: 'Outfit', sans-serif; }
+  .mobile-drawer a:hover { color: ${T.gold}; }
   }
 `;
 
 export default function LandingPage({ onLoginClick, onSignUpClick }) {
   const [scrollY, setScrollY] = useState(0);
+  const [mobileMenu, setMobileMenu] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -94,14 +101,14 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
   }, []);
 
   const features = [
-    { icon: "📊", title: "Real-Time Analytics", desc: "Live financial data, 6 years of verified developer financials, EBITDA margins, revenue trends, and dividend history from official filings." },
-    { icon: "🏗️", title: "Project Intelligence", desc: "48+ Emaar projects with construction progress, unit availability, payment plans, price per sqft, and handover timelines." },
-    { icon: "📍", title: "Location Intelligence", desc: "Distance to Burj Khalifa, schools, hospitals, malls — with exact drive times for every community across Dubai." },
-    { icon: "📈", title: "Stock Market Tracker", desc: "30 publicly traded RE stocks across DFM, ADX, Tadawul & LSE with live prices, P/E ratios, and TradingView charts." },
-    { icon: "🏆", title: "Competitor Analysis", desc: "Top 10 developers ranked by sales, units, market share — with competitive edge analysis and market positioning." },
-    { icon: "💰", title: "Yield & ROI Data", desc: "Verified rental yields per community, unit type, gross/net returns, demand levels, and Golden Visa eligibility." },
-    { icon: "⚡", title: "3-Project Comparison", desc: "Compare any projects side-by-side on price, size, yield, handover, payment plan, and location — instant decisions." },
-    { icon: "🛡️", title: "Risk Assessment", desc: "9-factor risk analysis covering market, regulatory, supply, currency, liquidity, construction, geopolitical, and interest rate risks." },
+    { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>, title: "Real-Time Analytics", desc: "Live financial data, 6 years of verified developer financials, EBITDA margins, revenue trends, and dividend history from official filings." },
+    { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="6" x2="9" y2="6.01"/><line x1="15" y1="6" x2="15" y2="6.01"/><line x1="9" y1="10" x2="9" y2="10.01"/><line x1="15" y1="10" x2="15" y2="10.01"/><path d="M9 22v-4h6v4"/></svg>, title: "Project Intelligence", desc: "48+ Emaar projects with construction progress, unit availability, payment plans, price per sqft, and handover timelines." },
+    { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>, title: "Location Intelligence", desc: "Distance to Burj Khalifa, schools, hospitals, malls — with exact drive times for every community across Dubai." },
+    { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>, title: "Stock Market Tracker", desc: "30 publicly traded RE stocks across DFM, ADX, Tadawul & LSE with live prices, P/E ratios, and TradingView charts." },
+    { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 22V8a6 6 0 0 0-6-6h16a6 6 0 0 0-6 6v14"/></svg>, title: "Competitor Analysis", desc: "Top 10 developers ranked by sales, units, market share — with competitive edge analysis and market positioning." },
+    { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>, title: "Yield & ROI Data", desc: "Verified rental yields per community, unit type, gross/net returns, demand levels, and Golden Visa eligibility." },
+    { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>, title: "3-Project Comparison", desc: "Compare any projects side-by-side on price, size, yield, handover, payment plan, and location — instant decisions." },
+    { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, title: "Risk Assessment", desc: "9-factor risk analysis covering market, regulatory, supply, currency, liquidity, construction, geopolitical, and interest rate risks." },
   ];
 
   const plans = [
@@ -178,7 +185,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 800, animation: "fadeUp 0.8s ease-out" }}>
           <div style={{ display: "inline-block", padding: "6px 16px", borderRadius: 20, background: T.goldGlow, border: `1px solid ${T.border}`, marginBottom: 24 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: T.gold, letterSpacing: 1 }}>🚀 DUBAI'S FIRST REAL ESTATE INTELLIGENCE PLATFORM</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: T.gold, letterSpacing: 1 }}>DUBAI'S FIRST REAL ESTATE INTELLIGENCE PLATFORM</span>
           </div>
           
           <h1 className="hero-title" style={{ fontFamily: "'Fraunces', serif", fontSize: 52, fontWeight: 900, lineHeight: 1.1, marginBottom: 20 }}>
@@ -295,10 +302,10 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             {[
-              { icon: "🏢", title: "Real Estate Agents", desc: "Stop sending clients scattered PDFs. Share verified project data, location intelligence, and comparisons instantly from one link." },
-              { icon: "💼", title: "Property Investors", desc: "AED 2M+ decisions deserve verified data. Get yields, risk scores, financial trends, and ROI projections — not broker estimates." },
-              { icon: "🏗️", title: "Developers", desc: "Track your competition in real-time. See market share shifts, pricing trends, and buyer sentiment across Dubai's top developers." },
-              { icon: "🏦", title: "Banks & Institutions", desc: "Risk-assess AED billions in real estate exposure with verified market data, developer financials, and macro indicators." },
+              { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="6" x2="9" y2="6.01"/><line x1="15" y1="6" x2="15" y2="6.01"/><path d="M9 22v-4h6v4"/></svg>, title: "Real Estate Agents", desc: "Stop sending clients scattered PDFs. Share verified project data, location intelligence, and comparisons instantly from one link." },
+              { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>, title: "Property Investors", desc: "AED 2M+ decisions deserve verified data. Get yields, risk scores, financial trends, and ROI projections — not broker estimates." },
+              { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M2 20h20"/><path d="M5 20V8l7-5 7 5v12"/><path d="M9 20v-4h6v4"/></svg>, title: "Developers", desc: "Track your competition in real-time. See market share shifts, pricing trends, and buyer sentiment across Dubai's top developers." },
+              { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 21h18"/><path d="M3 7h18"/><path d="M5 21V7"/><path d="M19 21V7"/><path d="M9 21V7"/><path d="M15 21V7"/><path d="M12 3l9 4H3l9-4z"/></svg>, title: "Banks & Institutions", desc: "Risk-assess AED billions in real estate exposure with verified market data, developer financials, and macro indicators." },
             ].map((item, i) => (
               <div key={i} className="feature-card" style={{ background: T.surface, borderRadius: 14, padding: 24, border: `1px solid ${T.border}` }}>
                 <div style={{ fontSize: 28, marginBottom: 12 }}>{item.icon}</div>

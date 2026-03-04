@@ -52,6 +52,9 @@ select option { background: ${T.surface}; color: ${T.textPrimary}; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes glow { 0%, 100% { box-shadow: 0 0 12px rgba(212,168,67,0.1); } 50% { box-shadow: 0 0 24px rgba(212,168,67,0.25); } }
 .fade-up { animation: fadeUp 0.5s ease-out forwards; opacity: 0; }
+  @keyframes toastIn { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+  @keyframes toastOut { 0% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
+  .toast-notify { animation: toastIn 0.3s ease-out, toastOut 0.4s ease-in 2.4s forwards; }
 .slide-right { animation: slideRight 0.35s ease-out both; }
 
 .kpi-card {
@@ -176,7 +179,7 @@ const inputStyle = {
 };
 const labelStyle = { display: "block", fontSize: 9, fontWeight: 700, color: T.textMuted, marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" };
 
-const KPI = ({ label, value, sub, icon, color, delay = 0 }) => (
+const KPI = ({ label, value, sub, delay = 0 }) => (
   <div className="kpi-card fade-up" style={{ animationDelay: `${delay * 0.05}s` }}>
     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>{label}</div>
     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: color || T.gold, lineHeight: 1 }}>{value}</div>
@@ -387,7 +390,7 @@ export default function ProjectManager() {
       <style>{css}</style>
 
       {/* Toast */}
-      {toast && <div className="fade-up" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : T.red, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
+      {toast && <div key={toast} className="toast-notify" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : T.red, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
 
       {/* Mobile overlay */}
       <div className={`mobile-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
@@ -548,15 +551,15 @@ export default function ProjectManager() {
             <>
               <Section title="Project Portfolio" sub={`${projects.length} Emaar projects · ${communities.length} communities · Select to edit`}>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-                  <KPI label="Total Projects" value={projects.length} sub={`${projects.filter(p => p.status === "Under Construction").length} building · ${projects.filter(p => p.status === "Off-Plan").length} off-plan`} icon="🏗️" delay={1} />
-                  <KPI label="Communities" value={communities.length} sub={communities.slice(0, 3).join(" · ") + (communities.length > 3 ? ` +${communities.length - 3}` : "")} icon="📍" delay={2} />
-                  <KPI label="Total Units" value={totalUnits.toLocaleString()} sub={`${availUnits.toLocaleString()} available`} icon="🏠" color={T.teal} delay={3} />
-                  <KPI label="Avg Construction" value={`${avgProgress}%`} sub="Weighted average progress" icon="📊" color={avgProgress >= 50 ? T.green : T.gold} delay={4} />
+                  <KPI label="Total Projects" value={projects.length} sub={`${projects.filter(p => p.status === "Under Construction").length} building · ${projects.filter(p => p.status === "Off-Plan").length} off-plan`} delay={1} />
+                  <KPI label="Communities" value={communities.length} sub={communities.slice(0, 3).join(" · ") + (communities.length > 3 ? ` +${communities.length - 3}` : "")} delay={2} />
+                  <KPI label="Total Units" value={totalUnits.toLocaleString()} sub={`${availUnits.toLocaleString()} available`} color={T.teal} delay={3} />
+                  <KPI label="Avg Construction" value={`${avgProgress}%`} sub="Weighted average progress" color={avgProgress >= 50 ? T.green : T.gold} delay={4} />
                 </div>
               </Section>
 
               <div className="chart-box fade-up" style={{ padding: 48, textAlign: "center" }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
+                <div style={{ marginBottom: 16, color: T.gold, opacity: 0.6 }}><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
                 <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 700, color: T.white, marginBottom: 8 }}>Select a Project</h2>
                 <p style={{ color: T.textSecondary, fontSize: 13, maxWidth: 420, margin: "0 auto", lineHeight: 1.6 }}>
                   Click any project from the sidebar to edit its details — pricing, units, status, contact info, and location data.
@@ -643,16 +646,16 @@ export default function ProjectManager() {
                   {/* Summary KPIs */}
                   {form.units.length > 0 && (
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 16 }}>
-                      <KPI label="Total Units" value={form.units.reduce((s, u) => s + (Number(u.total) || 0), 0)} icon="🏠" color={T.white} delay={1} />
-                      <KPI label="Available" value={form.units.reduce((s, u) => s + (Number(u.available) || 0), 0)} icon="✅" color={T.green} delay={2} />
-                      <KPI label="Sold" value={form.units.reduce((s, u) => s + ((Number(u.total) || 0) - (Number(u.available) || 0)), 0)} icon="🔥" color={T.gold} delay={3} />
+                      <KPI label="Total Units" value={form.units.reduce((s, u) => s + (Number(u.total) || 0), 0)} color={T.white} delay={1} />
+                      <KPI label="Available" value={form.units.reduce((s, u) => s + (Number(u.available) || 0), 0)} color={T.green} delay={2} />
+                      <KPI label="Sold" value={form.units.reduce((s, u) => s + ((Number(u.total) || 0) - (Number(u.available) || 0)), 0)} color={T.gold} delay={3} />
                     </div>
                   )}
 
                   <div className="chart-box" style={{ padding: form.units.length === 0 ? 40 : 0, overflow: "hidden" }}>
                     {form.units.length === 0 ? (
                       <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>🏠</div>
+                        <div style={{ marginBottom: 12, opacity: 0.4, color: T.textMuted }}><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
                         <p style={{ color: T.textMuted, fontSize: 13 }}>No unit types added yet</p>
                         <p style={{ color: T.textMuted, fontSize: 11, marginTop: 4 }}>Click "+ Add Unit Type" to define inventory</p>
                       </div>
