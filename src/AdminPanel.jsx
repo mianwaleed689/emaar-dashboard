@@ -467,7 +467,7 @@ export default function AdminPanel() {
   };
 
   const deleteUser = async (uid) => {
-    const u = adminUsers.find(x => x.uid === uid);
+    const u = users.find(x => x.uid === uid);
     if (!window.confirm(`⚠️ DELETE USER: ${u?.name || u?.email || uid}\n\nThis will:\n• Permanently remove their account from Firestore\n• They will lose access to the dashboard\n• Their portfolio data will be lost\n• This action CANNOT be undone\n\nAre you sure?`)) return;
     try { await deleteDoc(doc(db, "users", uid)); notify("✅ User deleted"); fetchUsers(); } catch (e) { notify("❌ " + e.message); }
   };
