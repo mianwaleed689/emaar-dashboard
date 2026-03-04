@@ -8,6 +8,7 @@ import { collection, getDocs, orderBy, query, doc, getDoc, setDoc } from "fireba
 
 import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
 import LandingPage from "./LandingPage";
+import RoiCalculator from "./RoiCalculator";
 
 /* ─── DATA ALIASES (for backward compat) ─── */
 const financials = emaarFinancials;
@@ -2771,6 +2772,18 @@ export default function EmaarDashboardV2() {
                     </div>
                     <div style={{ marginTop: 8, fontSize: 9, color: T.textMuted }}>Risk: <span style={{ color: roi.riskLevel === "Low" ? T.green : roi.riskLevel === "Medium" ? T.gold : T.red }}>{roi.riskLevel}</span> · Occupancy: {roi.occupancy ? roi.occupancy + "%" : "N/A"}</div>
                   </div>
+                  </ProGate>
+                );
+              })()}
+
+
+              {/* ROI Calculator */}
+              {(() => {
+                const roi = communityROI[selectedProject_.community];
+                if (!roi) return null;
+                return (
+                  <ProGate isPro={isPro} message="Unlock ROI Calculator" onUpgrade={() => setShowUpgrade(true)}>
+                  <RoiCalculator project={selectedProject_} roi={roi} T={T} />
                   </ProGate>
                 );
               })()}
