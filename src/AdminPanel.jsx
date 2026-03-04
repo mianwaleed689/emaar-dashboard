@@ -1077,7 +1077,7 @@ export default function AdminPanel() {
                             <div key={f.key}>
                               <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
                               <input type="text" placeholder={f.placeholder} value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                                style={{ width: "100%", padding: "10px 12px", background: T.bg, border: 1px solid , borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                                style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
                             </div>
                           ))}
                         </div>
