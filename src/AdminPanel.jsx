@@ -254,6 +254,7 @@ export default function AdminPanel() {
   /* ─── DATA MANAGER STATE ─── */
   const [dataSubTab, setDataSubTab] = useState("projects"); // projects | communities | yields
   const [editingProject, setEditingProject] = useState(null);
+  const [auditLog, setAuditLog] = useState([]);
   const [editingCommunity, setEditingCommunity] = useState(null);
   const [editingYield, setEditingYield] = useState(null);
   const [liveProjects, setLiveProjects] = useState({});
@@ -442,6 +443,7 @@ export default function AdminPanel() {
       clean.updatedAt = new Date().toISOString();
       clean.updatedBy = adminUser?.email || "admin";
       await setDoc(doc(db, "projectData", projectId), clean, { merge: true });
+      try { await setDoc(doc(db, "auditLog", Date.now().toString()), { action: "project_update", projectId, changes: clean, changedBy: adminUser?.email, changedAt: new Date().toISOString() }); } catch(e) {}
       notify("✅ Project data saved");
       setEditingProject(null);
       fetchLiveData();
@@ -456,6 +458,7 @@ export default function AdminPanel() {
       clean.updatedAt = new Date().toISOString();
       clean.updatedBy = adminUser?.email || "admin";
       await setDoc(doc(db, "communityROI", communityKey), clean, { merge: true });
+      try { await setDoc(doc(db, "auditLog", Date.now().toString()), { action: "community_update", communityKey, changedBy: adminUser?.email, changedAt: new Date().toISOString() }); } catch(e) {}
       notify("✅ Community ROI saved");
       setEditingCommunity(null);
       fetchLiveData();
