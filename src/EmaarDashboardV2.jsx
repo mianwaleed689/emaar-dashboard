@@ -722,6 +722,9 @@ export default function EmaarDashboardV2() {
   const [authLoading, setAuthLoading] = useState(true);
   const [projectSearch, setProjectSearch] = useState("");
   const [projectFilter, setProjectFilter] = useState("All");
+  const [projectTier, setProjectTier] = useState("All");
+  const [projectHandover, setProjectHandover] = useState("All");
+  const [projectPriceMax, setProjectPriceMax] = useState(20);
   const [liveProjects, setLiveProjects] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
@@ -1489,7 +1492,10 @@ export default function EmaarDashboardV2() {
                 .filter(p => {
                   const matchSearch = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase());
                   const matchFilter = projectFilter === "All" || p.district === projectFilter || (projectFilter === "Branded" && p.branded);
-                  return matchSearch && matchFilter;
+                  const matchTier = projectTier === "All" || p.tier === projectTier;
+                  const matchHandover = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover));
+                  const matchPrice = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6;
+                  return matchSearch && matchFilter && matchTier && matchHandover && matchPrice;
                 })
                 .map((p, i) => {
                   const isLocked = !isPro && i >= 5;
