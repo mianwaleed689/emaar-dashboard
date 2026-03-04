@@ -522,6 +522,44 @@ export default function AdminPanel() {
     try { await deleteDoc(doc(db, "users", uid)); notify("✅ User deleted"); fetchUsers(); } catch (e) { notify("❌ " + e.message); }
   };
 
+  
+  const saveNewProject = async (form) => {
+    if (!form.name) { notify("Project name required"); return; }
+    setDataSaving(true);
+    try {
+      const newId = Date.now();
+      await setDoc(doc(db, "projects", String(newId)), { ...form, id: newId, createdAt: new Date().toISOString(), createdBy: adminUser?.email });
+      notify("New project added!");
+      setEditingProject(null);
+      setProjectForm({});
+      fetchLiveData();
+    } catch(e) { notify("Error: " + e.message); }
+    setDataSaving(false);
+  };
+
+  const importCSV = async (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const lines = ev.target.result.split("\n").filter(Boolean);
+      const headers = lines[0].split(",").map(h => h.trim());
+      const rows = lines.slice(1).map(l => {
+        const vals = l.split(",");
+        return headers.reduce((o, h, i) => ({ ...o, [h]: vals[i]?.trim() }), {});
+      });
+      let saved = 0;
+      for (const row of rows) {
+        if (row.id) {
+          await setDoc(doc(db, "projects", String(row.id)), row, { merge: true });
+          saved++;
+        }
+      }
+      notify(saved + " projects updated from CSV!");
+      fetchLiveData();
+    };
+    reader.readAsText(file);
+  };
+
   const exportCSV = () => {
     const headers = "Name,Email,Tier,Trial Status,Signed Up\n";
     const rows = users.map(u => `${u.name || ""},${u.email || ""},${u.tier || "free"},${u.trialEnd ? (new Date(u.trialEnd) > now ? "Active" : "Expired") : "—"},${u.createdAt || ""}`).join("\n");
@@ -1018,6 +1056,37 @@ export default function AdminPanel() {
 
                   {/* Editing form */}
                   {editingProject && (() => {
+                    if (editingProject === "new") return (
+                      <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: 1px solid 30 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.green }}>+ Add New Project</h3>
+                          <button type="button" onClick={() => setEditingProject(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: 1px solid , background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                          {[
+                            { key: "name", label: "Project Name", placeholder: "e.g. Golf Heights" },
+                            { key: "community", label: "Community", placeholder: "e.g. Dubai Hills Estate" },
+                            { key: "price", label: "Price (AED)", placeholder: "e.g. 2500000" },
+                            { key: "ppsf", label: "Price/sqft", placeholder: "e.g. 2200" },
+                            { key: "handover", label: "Handover", placeholder: "e.g. Q4 2027" },
+                            { key: "beds", label: "Bedrooms", placeholder: "e.g. 1-3 BR" },
+                            { key: "paymentPlan", label: "Payment Plan", placeholder: "e.g. 80/20" },
+                            { key: "type", label: "Type", placeholder: "e.g. Apartments" },
+                            { key: "status", label: "Status", placeholder: "e.g. Off-Plan" },
+                          ].map(f => (
+                            <div key={f.key}>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                              <input type="text" placeholder={f.placeholder} value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                style={{ width: "100%", padding: "10px 12px", background: T.bg, border: 1px solid , borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                            </div>
+                          ))}
+                        </div>
+                        <button type="button" disabled={dataSaving} onClick={() => saveNewProject(projectForm)}
+                          style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: linear-gradient(135deg, , #059669), color: T.white, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
+                          {dataSaving ? "Saving..." : "+ Add Project to Firestore"}
+                        </button>
+                      </div>
+                    );
                     const p = emaarProjects.find(x => x.id === editingProject);
                     if (!p) return null;
                     const merged = getMergedProject(p);
