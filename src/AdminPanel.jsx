@@ -587,8 +587,8 @@ export default function AdminPanel() {
             });
           } catch(e) { console.log("Price history error:", e); }
         }
-      if (clean.price) sendAlertsToAllUsers(projectId, "Price Updated", "AED " + Number(clean.price).toLocaleString(), "");
-      else if (clean.status) sendAlertsToAllUsers(projectId, "Status Updated", clean.status, "");
+      if (clean.price) sendAlertsToAllUsers(String(projectId), "Price Updated", "AED " + Number(clean.price).toLocaleString(), "");
+      else if (clean.status) sendAlertsToAllUsers(String(projectId), "Status Updated", clean.status, "");
       setEditingProject(null);
       fetchLiveData();
     } catch (e) { notify("❌ Error: " + e.message); }
