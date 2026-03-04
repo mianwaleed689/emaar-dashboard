@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, useRef } from "react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { auth, db } from "./firebase";
@@ -1038,9 +1040,9 @@ export default function EmaarDashboardV2() {
           {userTier === "admin" && (
             <>
               <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Admin</div>
-              <button type="button" className={`sidebar-btn ${tab === "Admin" ? "active" : ""}`} onClick={() => handleTabChange("Admin")}>
+              <button type="button" className={`sidebar-btn ${tab === "Admin" ? "active" : ""}`} onClick={() => window.location.href = "/admin"}>
                 {Icons.admin}
-                Users & Analytics
+                Admin Panel
               </button>
             </>
           )}
