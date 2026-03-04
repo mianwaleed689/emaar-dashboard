@@ -432,7 +432,7 @@ export default function AdminPanel() {
   };
 
   const resetProjectData = async (projectId) => {
-    if (!window.confirm("Reset to default data.js values? This removes all live overrides for this project.")) return;
+    if (!window.confirm(`⚠️ RESET PROJECT DATA: ${projectId}\n\nThis will:\n• Remove all live Firestore overrides for this project\n• Dashboard will revert to default data.js values\n• Any custom prices, units, or details you edited will be lost\n\nContinue?`)) return;
     try {
       await deleteDoc(doc(db, "projectData", projectId));
       notify("✅ Reset to defaults");
@@ -441,7 +441,7 @@ export default function AdminPanel() {
   };
 
   const resetCommunityROI = async (key) => {
-    if (!window.confirm("Reset this community ROI to defaults?")) return;
+    if (!window.confirm(`⚠️ RESET COMMUNITY ROI: ${key}\n\nThis will:\n• Remove all live yield/ROI overrides for this community\n• Dashboard will show default values from data.js\n• Any custom gross/net yield or rental data will be lost\n\nContinue?`)) return;
     try {
       await deleteDoc(doc(db, "communityROI", key));
       notify("✅ Reset to defaults");
@@ -456,7 +456,7 @@ export default function AdminPanel() {
   /* ─── ACTIONS ─── */
   const changeTier = async (uid, tier) => {
     const u = users.find(x => x.uid === uid);
-    if (!window.confirm(`Change ${u?.name || u?.email || uid} to "${tier}"?`)) return;
+    if (!window.confirm(`⚠️ CHANGE USER TIER\n\nUser: ${u?.name || u?.email || uid}\nCurrent: ${u?.tier || "free"}\nNew: ${tier}\n\nThis will:\n• Immediately change their access level\n• ${tier === "free" ? "They will lose Pro features and be limited to 5 projects" : tier === "pro" ? "They will get full access to all 48 projects" : tier === "enterprise" ? "They will get enterprise-level access" : "Update their plan"}\n\nContinue?`)) return;
     try {
       const data = { tier };
       if (tier === "pro_trial") { const end = new Date(); end.setDate(end.getDate() + 7); data.trialEnd = end.toISOString(); }
@@ -467,7 +467,8 @@ export default function AdminPanel() {
   };
 
   const deleteUser = async (uid) => {
-    if (!window.confirm("Delete this user permanently?")) return;
+    const u = adminUsers.find(x => x.uid === uid);
+    if (!window.confirm(`⚠️ DELETE USER: ${u?.name || u?.email || uid}\n\nThis will:\n• Permanently remove their account from Firestore\n• They will lose access to the dashboard\n• Their portfolio data will be lost\n• This action CANNOT be undone\n\nAre you sure?`)) return;
     try { await deleteDoc(doc(db, "users", uid)); notify("✅ User deleted"); fetchUsers(); } catch (e) { notify("❌ " + e.message); }
   };
 

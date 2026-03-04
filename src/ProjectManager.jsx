@@ -312,7 +312,7 @@ export default function ProjectManager({ embedded = false }) {
     setHasChanges(true);
   }
   function addUnit() { setForm(prev => ({ ...prev, units: [...prev.units, { type: "1BR", available: 0, total: 0 }] })); setHasChanges(true); }
-  function removeUnit(i) { if (!window.confirm("Remove this unit type?")) return; setForm(prev => ({ ...prev, units: prev.units.filter((_, x) => x !== i) })); setHasChanges(true); }
+  function removeUnit(i) { if (!window.confirm(`⚠️ REMOVE UNIT TYPE\n\nUnit: ${form.units[i]?.type || "Unit"} (${form.units[i]?.total || 0} total)\n\nThis will:\n• Remove this unit type from the project\n• Total and available counts will be lost\n• Save the project to apply changes\n\nContinue?`)) return; setForm(prev => ({ ...prev, units: prev.units.filter((_, x) => x !== i) })); setHasChanges(true); }
 
   /* ─── SAVE ─── */
   async function handleSave() {
@@ -513,7 +513,7 @@ export default function ProjectManager({ embedded = false }) {
                         <Select label={i === 0 ? "Type" : ""} value={u.type || ""} onChange={v => { const arr = [...form.units]; arr[i] = { ...arr[i], type: v }; set("units", arr); }} options={["Studio", "1BR", "2BR", "3BR", "4BR", "5BR", "Penthouse", "Duplex", "Villa", "Townhouse"]} />
                         <Input label={i === 0 ? "Total" : ""} value={u.total || ""} onChange={v => { const arr = [...form.units]; arr[i] = { ...arr[i], total: Number(v) }; set("units", arr); }} type="number" />
                         <Input label={i === 0 ? "Available" : ""} value={u.available || ""} onChange={v => { const arr = [...form.units]; arr[i] = { ...arr[i], available: Number(v) }; set("units", arr); }} type="number" />
-                        <button type="button" onClick={() => { const arr = form.units.filter((_, j) => j !== i); set("units", arr); }} style={{ padding: "6px 8px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, color: "#EF4444", cursor: "pointer", fontSize: 10 }}>{I.trash}</button>
+                        <button type="button" onClick={() => { const u = form.units[i]; if (!window.confirm(`⚠️ REMOVE UNIT TYPE\n\nUnit: ${u?.type || "Unit"} (${u?.total || 0} total)\n\nThis will remove this unit type. Save to apply.\n\nContinue?`)) return; const arr = form.units.filter((_, j) => j !== i); set("units", arr); }} style={{ padding: "6px 8px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, color: "#EF4444", cursor: "pointer", fontSize: 10 }}>{I.trash}</button>
                       </div>
                     ))}
                   </Section>

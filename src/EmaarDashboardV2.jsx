@@ -975,6 +975,9 @@ export default function EmaarDashboardV2() {
   };
 
   const removeFromPortfolio = (pid, ut) => {
+    const item = myPortfolio.find(h => h.projectId === pid && h.unitType === ut);
+    const projName = activeProjects.find(p => p.id === pid)?.name || pid;
+    if (!window.confirm(`⚠️ REMOVE FROM PORTFOLIO\n\nProperty: ${projName} (${ut})\n\nThis will:\n• Remove this investment from your portfolio tracker\n• Your ROI and allocation data for this property will be lost\n\nContinue?`)) return;
     savePortfolio(myPortfolio.filter(h => !(h.projectId === pid && h.unitType === ut)));
     notify("Removed from portfolio");
   };
@@ -1083,7 +1086,7 @@ export default function EmaarDashboardV2() {
   const handleChangeTier = async (userId, newTier) => {
     const user = adminUsers.find(u => u.id === userId);
     const userName = user ? (user.name || user.email) : userId;
-    if (!window.confirm(`Change ${userName} to "${newTier}"?`)) return;
+    if (!window.confirm(`⚠️ CHANGE USER TIER\n\nUser: ${userName}\nCurrent: ${user?.tier || "free"}\nNew: ${newTier}\n\nThis will:\n• Immediately change their access level\n• ${newTier === "free" ? "They will lose Pro features and be limited to 5 projects" : newTier === "pro" ? "They will get full access to all 48 projects and analytics" : newTier === "enterprise" ? "They will get enterprise-level access with priority support" : "Update their plan"}\n\nContinue?`)) return;
     try {
       await setDoc(doc(db, "users", userId), { tier: newTier }, { merge: true });
       setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, tier: newTier, status: newTier } : u));
