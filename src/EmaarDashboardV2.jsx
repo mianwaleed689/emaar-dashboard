@@ -6,6 +6,7 @@ import { collection, getDocs, orderBy, query, doc, getDoc, setDoc } from "fireba
 
 import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI, communityCoords, dubaiLandmarks } from "./data";
 import LandingPage from "./LandingPage";
+import { useI18n, LANGUAGES } from "./i18n";
 
 /* ─── DATA ALIASES (for backward compat) ─── */
 const financials = emaarFinancials;
@@ -738,6 +739,8 @@ const UpgradeModal = ({ show, onClose }) => {
 
 /* ─── MAIN DASHBOARD ─── */
 export default function EmaarDashboardV2() {
+  const { lang, setLang, t: i18t, dir, langInfo } = useI18n();
+  const [showLangPicker, setShowLangPicker] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState("");
   const [userName, setUserName] = useState("");
@@ -1107,7 +1110,7 @@ export default function EmaarDashboardV2() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit', sans-serif" }}>
+    <div dir={dir} style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit', sans-serif" }}>
       <style>{css}</style>
 
       {/* Toast notification */}
@@ -1132,7 +1135,7 @@ export default function EmaarDashboardV2() {
             </svg>
             <div>
               <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 800, color: T.gold }}>DXB Analytics</div>
-              <div style={{ fontSize: 9, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase" }}>Intelligence Platform</div>
+              <div style={{ fontSize: 9, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase" }}>{i18t("sidebar", "platform")}</div>
             </div>
           </div>
         </div>
@@ -1143,15 +1146,15 @@ export default function EmaarDashboardV2() {
           {visibleTabs.map(t => (
             <button type="button" key={t.key} className={`sidebar-btn ${tab === t.key ? "active" : ""}`} onClick={() => handleTabChange(t.key)}>
               {t.icon}
-              {t.key}
+              {i18t("tabs", t.key)}
             </button>
           ))}
           {userTier === "admin" && (
             <>
-              <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Admin</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>{i18t("sidebar", "admin")}</div>
               <a href="/admin" className="sidebar-btn" style={{ textDecoration: "none" }}>
                 {Icons.admin}
-                Admin Portal
+                {i18t("sidebar", "adminPortal")}
               </a>
             </>
           )}
@@ -1174,7 +1177,7 @@ export default function EmaarDashboardV2() {
           )}
           <button type="button" onClick={() => setShowLayoutSettings(true)} className="sidebar-btn" style={{ marginBottom: 8, width: "100%", justifyContent: "flex-start" }}>
             {Icons.admin}
-            Layout Settings
+            {i18t("sidebar", "layoutSettings")}
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 10, background: T.surfaceAlt }}>
             <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: T.bg }}>
@@ -1183,7 +1186,7 @@ export default function EmaarDashboardV2() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userName || user.split("@")[0]}</div>
               <div style={{ fontSize: 10, color: userTier === "pro_trial" ? T.gold : userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : T.textMuted }}>
-                {userTier === "admin" ? "Admin" : userTier === "pro_trial" ? "Pro Trial" : userTier === "pro" ? "Pro Plan" : userTier === "enterprise" ? "Enterprise" : "Free Plan"}
+                {userTier === "admin" ? "Admin" : userTier === "pro_trial" ? i18t("ui", "proTrial") : userTier === "pro" ? i18t("ui", "proPlan") : userTier === "enterprise" ? "Enterprise" : "Free Plan"}
               </div>
             </div>
             <button type="button" onClick={() => { setShowProfile(true); setProfileEdit({ name: userName || "" }); }} style={{ background: "none", border: `1px solid ${T.border}`, cursor: "pointer", color: T.gold, padding: "3px 8px", borderRadius: 6, fontSize: 10, fontWeight: 600, fontFamily: "'Outfit', sans-serif" }}>Profile</button>
@@ -1234,6 +1237,34 @@ export default function EmaarDashboardV2() {
           <button type="button" onClick={() => { alert("Notifications launching soon — you'll get alerts for price changes, new project launches, and construction milestones."); }} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: 8, cursor: "pointer", color: T.textSecondary, position: "relative" }} title="Notifications — Coming Soon">
             {Icons.bell}
           </button>
+          {/* Language Picker */}
+          <div style={{ position: "relative" }}>
+            <button type="button" onClick={() => setShowLangPicker(!showLangPicker)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: "6px 10px", cursor: "pointer", color: T.textSecondary, display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: "'Outfit',sans-serif", fontWeight: 600, transition: "all 0.2s" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = T.border} title={i18t("sections", "language")}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              {langInfo.name}
+            </button>
+            {showLangPicker && (
+              <>
+                <div style={{ position: "fixed", inset: 0, zIndex: 998 }} onClick={() => setShowLangPicker(false)} />
+                <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 280, maxHeight: 420, overflowY: "auto", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, boxShadow: "0 20px 60px rgba(0,0,0,0.5)", zIndex: 999, padding: 8 }}>
+                  <div style={{ padding: "8px 12px 6px", fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase" }}>{i18t("sections", "language")} — 20 {i18t("sections", "language")}s</div>
+                  {LANGUAGES.map(l => (
+                    <button type="button" key={l.code} onClick={() => { setLang(l.code); setShowLangPicker(false); }}
+                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 8, border: "none", background: lang === l.code ? T.goldGlow : "transparent", cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s", textAlign: "left" }}
+                      onMouseEnter={e => { if (lang !== l.code) e.currentTarget.style.background = T.surfaceAlt; }}
+                      onMouseLeave={e => { if (lang !== l.code) e.currentTarget.style.background = "transparent"; }}>
+                      <span style={{ fontSize: 18, width: 28, textAlign: "center" }}>{l.flag}</span>
+                      <span style={{ fontSize: 12, fontWeight: lang === l.code ? 700 : 500, color: lang === l.code ? T.gold : T.white }}>{l.name}</span>
+                      {l.dir === "rtl" && <span style={{ fontSize: 8, color: T.textMuted, marginLeft: "auto", padding: "2px 6px", borderRadius: 4, background: T.surfaceAlt }}>RTL</span>}
+                      {lang === l.code && <span style={{ marginLeft: "auto", color: T.gold }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      </span>}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -1534,7 +1565,7 @@ export default function EmaarDashboardV2() {
             <div className="filter-scroll" style={{ display: "flex", gap: 10, marginTop: 20, flexWrap: "wrap", alignItems: "center" }}>
               <div style={{ position: "relative", flex: "1 1 250px", maxWidth: 350 }}>
                 <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{Icons.search}</span>
-                <input value={projectSearch} onChange={e => setProjectSearch(e.target.value)} placeholder="Search projects..." style={{ width: "100%", padding: "10px 12px 10px 36px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none" }} />
+                <input value={projectSearch} onChange={e => setProjectSearch(e.target.value)} placeholder={i18t("ui", "search")} style={{ width: "100%", padding: "10px 12px 10px 36px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none" }} />
               </div>
               {["All", "DHE", "DCH", "EBF", "GPC", "ES", "TV", "RYM", "Branded"].map(f => (
                 <button type="button" key={f} onClick={() => setProjectFilter(f)} style={{ padding: "7px 14px", borderRadius: 8, border: `1px solid ${projectFilter === f ? T.gold : T.border}`, background: projectFilter === f ? T.goldGlow : "transparent", color: projectFilter === f ? T.gold : T.textSecondary, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}>{f}</button>
@@ -2509,7 +2540,7 @@ export default function EmaarDashboardV2() {
             <Section title="User Management" sub="All registered users · Real-time data from Firestore">
               <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
                 <KPI label="Total Users" value={adminUsers.length} sub="Registered accounts" delay={1} />
-                <KPI label="Pro Trial" value={adminUsers.filter(u => u.status === "pro_trial").length} sub="Active trials" delay={2} />
+                <KPI label=i18t("ui", "proTrial") value={adminUsers.filter(u => u.status === "pro_trial").length} sub="Active trials" delay={2} />
                 <KPI label="Free Users" value={adminUsers.filter(u => u.status === "free" || u.status === "expired").length} sub="Trial expired or free" delay={3} />
                 <KPI label="Pro / Paid" value={adminUsers.filter(u => u.tier === "pro" || u.tier === "enterprise").length} sub="Paying customers" delay={4} />
               </div>
@@ -2534,7 +2565,7 @@ export default function EmaarDashboardV2() {
                     <tbody>
                       {adminUsers.map((u, i) => {
                         const tierColor = u.tier === "pro" || u.tier === "enterprise" ? T.green : u.status === "pro_trial" ? T.gold : u.status === "expired" ? T.red : T.textMuted;
-                        const tierLabel = u.tier === "pro" ? "Pro" : u.tier === "enterprise" ? "Enterprise" : u.status === "pro_trial" ? "Pro Trial" : u.status === "expired" ? "Trial Expired" : "Free";
+                        const tierLabel = u.tier === "pro" ? "Pro" : u.tier === "enterprise" ? "Enterprise" : u.status === "pro_trial" ? i18t("ui", "proTrial") : u.status === "expired" ? "Trial Expired" : "Free";
                         const signedUp = u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—";
                         const timeSince = u.createdAt ? (() => {
                           const diff = Math.floor((new Date() - new Date(u.createdAt)) / (1000 * 60 * 60));
@@ -2623,13 +2654,13 @@ export default function EmaarDashboardV2() {
                   <PieChart>
                     <Pie data={[
                       { name: "Free", value: adminUsers.filter(u => u.tier === "free" || u.status === "expired").length || 0, color: T.textMuted },
-                      { name: "Pro Trial", value: adminUsers.filter(u => u.status === "pro_trial").length || 0, color: T.gold },
+                      { name: i18t("ui", "proTrial"), value: adminUsers.filter(u => u.status === "pro_trial").length || 0, color: T.gold },
                       { name: "Pro", value: adminUsers.filter(u => u.tier === "pro").length || 0, color: T.green },
                       { name: "Enterprise", value: adminUsers.filter(u => u.tier === "enterprise").length || 0, color: T.blue },
                     ].filter(d => d.value > 0)} cx="50%" cy="50%" outerRadius={90} innerRadius={50} dataKey="value" paddingAngle={3} label={({ name, value }) => `${name}: ${value}`}>
                       {[
                         { name: "Free", value: adminUsers.filter(u => u.tier === "free" || u.status === "expired").length || 0, color: T.textMuted },
-                        { name: "Pro Trial", value: adminUsers.filter(u => u.status === "pro_trial").length || 0, color: T.gold },
+                        { name: i18t("ui", "proTrial"), value: adminUsers.filter(u => u.status === "pro_trial").length || 0, color: T.gold },
                         { name: "Pro", value: adminUsers.filter(u => u.tier === "pro").length || 0, color: T.green },
                         { name: "Enterprise", value: adminUsers.filter(u => u.tier === "enterprise").length || 0, color: T.blue },
                       ].filter(d => d.value > 0).map((d, i) => <Cell key={i} fill={d.color} />)}
@@ -3358,7 +3389,7 @@ export default function EmaarDashboardV2() {
           </div>
           <div style={{ padding: "16px 28px 28px" }}>
             {showAddPortfolio === true ? <>
-              <input type="text" placeholder="Search projects..." onChange={e => setProjectSearch(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", marginBottom: 12 }} />
+              <input type="text" placeholder={i18t("ui", "search")} onChange={e => setProjectSearch(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", marginBottom: 12 }} />
               <div style={{ maxHeight: 320, overflow: "auto" }}>
                 {activeProjects.filter(p => !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase())).map(p => (
                   <div key={p.id} onClick={() => setShowAddPortfolio(p)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderRadius: 8, cursor: "pointer", transition: "background 0.2s", marginBottom: 2 }} onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
@@ -3482,7 +3513,7 @@ export default function EmaarDashboardV2() {
             <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Subscription</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-                <div><div style={{ fontSize: 10, color: T.textMuted }}>Plan</div><div style={{ fontSize: 14, fontWeight: 700, color: T.gold, fontFamily: "'Fraunces', serif" }}>{userTier === "admin" ? "Admin" : userTier === "pro" ? "Pro" : userTier === "pro_trial" ? "Pro Trial" : userTier === "enterprise" ? "Enterprise" : "Free"}</div></div>
+                <div><div style={{ fontSize: 10, color: T.textMuted }}>Plan</div><div style={{ fontSize: 14, fontWeight: 700, color: T.gold, fontFamily: "'Fraunces', serif" }}>{userTier === "admin" ? "Admin" : userTier === "pro" ? "Pro" : userTier === "pro_trial" ? i18t("ui", "proTrial") : userTier === "enterprise" ? "Enterprise" : "Free"}</div></div>
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Status</div><div style={{ fontSize: 14, fontWeight: 700, color: userTier === "free" ? T.blue : T.green }}>{userTier === "free" ? "Limited" : "Active"}</div></div>
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Access</div><div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{userTier === "free" ? "5 projects" : "All 48"}</div></div>
               </div>
@@ -3490,7 +3521,7 @@ export default function EmaarDashboardV2() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <button type="button" onClick={() => { setShowProfile(false); handleTabChange("Portfolio"); }} style={{ padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>\uD83D\uDCCA Portfolio</button>
-              <button type="button" onClick={() => { signOut(auth); setShowProfile(false); }} style={{ padding: "10px 0", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, color: "#EF4444", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Sign Out</button>
+              <button type="button" onClick={() => { signOut(auth); setShowProfile(false); }} style={{ padding: "10px 0", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, color: "#EF4444", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{i18t("ui", "signOut")}</button>
             </div>
           </div>
         </div>
@@ -3504,7 +3535,7 @@ export default function EmaarDashboardV2() {
             {/* Header */}
             <div style={{ padding: "20px 24px 16px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800, color: T.gold }}>Layout Settings</div>
+                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800, color: T.gold }}>{i18t("sidebar", "layoutSettings")}</div>
                 <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Show, hide, and reorder sidebar tabs</div>
               </div>
               <button type="button" onClick={() => setShowLayoutSettings(false)} style={{ background: "none", border: "none", color: T.textMuted, fontSize: 20, cursor: "pointer", padding: 4 }}>&times;</button>
@@ -3529,7 +3560,7 @@ export default function EmaarDashboardV2() {
 
                     {/* Icon & name */}
                     <div style={{ color: item.visible ? T.gold : T.textMuted, display: "flex", alignItems: "center" }}>{tabInfo.icon}</div>
-                    <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: item.visible ? T.white : T.textMuted }}>{item.key}</span>
+                    <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: item.visible ? T.white : T.textMuted }}>{i18t("tabs", item.key)}</span>
 
                     {/* Toggle */}
                     <button type="button" onClick={() => toggleTabVisibility(item.key)} style={{ width: 40, height: 22, borderRadius: 11, border: "none", background: item.visible ? T.gold : T.surfaceAlt, cursor: "pointer", position: "relative", transition: "background 0.2s" }}>
@@ -3542,8 +3573,8 @@ export default function EmaarDashboardV2() {
 
             {/* Footer */}
             <div style={{ padding: "12px 24px 20px", borderTop: `1px solid ${T.border}`, display: "flex", gap: 10 }}>
-              <button type="button" onClick={() => { saveSidebarLayout(defaultLayout); }} style={{ flex: 1, padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Reset to Default</button>
-              <button type="button" onClick={() => setShowLayoutSettings(false)} style={{ flex: 1, padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, border: "none", borderRadius: 8, color: T.bg, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Done</button>
+              <button type="button" onClick={() => { saveSidebarLayout(defaultLayout); }} style={{ flex: 1, padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{i18t("ui", "reset")}</button>
+              <button type="button" onClick={() => setShowLayoutSettings(false)} style={{ flex: 1, padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, border: "none", borderRadius: 8, color: T.bg, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{i18t("ui", "done")}</button>
             </div>
           </div>
         </div>
