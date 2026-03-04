@@ -1254,7 +1254,6 @@ export default function AdminPanel() {
                     <button type="button" onClick={() => { setEditingProject("new"); setProjectForm({}); }} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(16,185,129,0.4)",background:"rgba(16,185,129,0.08)",color:"#10B981",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>+ Add Project</button>
                     <button type="button" onClick={fetchLiveData} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(212,168,67,0.4)",background:"rgba(212,168,67,0.08)",color:"#D4A843",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>{I.refresh} Refresh</button>
                   </div>
-                  </div>
                 }>
                   {/* Search */}
                   <div style={{ position: "relative", maxWidth: 400, marginBottom: 16 }}>
