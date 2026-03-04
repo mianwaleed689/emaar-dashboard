@@ -432,6 +432,8 @@ export default function AdminPanel() {
 
   /* ─── DATA MANAGER ACTIONS ─── */
   const saveProjectData = async (projectId, data) => {
+    const errors = validateProjectData(data);
+    if (errors.length > 0) { notify("❌ " + errors[0]); return; }
     setDataSaving(true);
     try {
       const clean = {};
@@ -527,7 +529,8 @@ export default function AdminPanel() {
 
   
   const saveNewProject = async (form) => {
-    if (!form.name) { notify("Project name required"); return; }
+    const errors = validateProjectData(form, true);
+    if (errors.length > 0) { notify("❌ " + errors[0]); return; }
     setDataSaving(true);
     try {
       const newId = Date.now();
