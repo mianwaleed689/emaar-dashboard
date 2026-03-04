@@ -255,6 +255,9 @@ export default function AdminPanel() {
   /* ─── DATA MANAGER STATE ─── */
   const [dataSubTab, setDataSubTab] = useState("projects"); // projects | communities | yields
   const [editingProject, setEditingProject] = useState(null);
+  const [bulkSelected, setBulkSelected] = useState([]);
+  const [bulkEdit, setBulkEdit] = useState(false);
+  const [bulkForm, setBulkForm] = useState({});
   const [auditLog, setAuditLog] = useState([]);
   const [editingCommunity, setEditingCommunity] = useState(null);
   const [editingYield, setEditingYield] = useState(null);
@@ -474,6 +477,25 @@ export default function AdminPanel() {
     a.download = "emaar-projects-" + new Date().toISOString().slice(0,10) + ".csv";
     a.click();
     notify("Projects exported!");
+  };
+
+  
+  const saveBulkEdit = async () => {
+    if (bulkSelected.length === 0) { notify("No projects selected"); return; }
+    if (Object.keys(bulkForm).length === 0) { notify("No changes to apply"); return; }
+    setDataSaving(true);
+    try {
+      for (const id of bulkSelected) {
+        const clean = { ...bulkForm, updatedAt: new Date().toISOString(), updatedBy: adminUser?.email };
+        await setDoc(doc(db, "projectData", String(id)), clean, { merge: true });
+      }
+      notify(bulkSelected.length + " projects updated!");
+      setBulkSelected([]);
+      setBulkEdit(false);
+      setBulkForm({});
+      fetchLiveData();
+    } catch(e) { notify("Error: " + e.message); }
+    setDataSaving(false);
   };
 
   const validateProjectData = (data, isNew = false) => {
@@ -959,7 +981,8 @@ export default function AdminPanel() {
                     <div key={u.uid} className="fade-up" style={{ display: "grid", gridTemplateColumns: "40px 1.5fr 1.5fr 100px 120px 120px 140px", gap: 8, padding: "12px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", animationDelay: `${Math.min(i * 0.02, 0.5)}s`, transition: "background 0.15s" }}
                       onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <span style={{ fontSize: 11, color: T.textMuted }}>{i + 1}</span>
+                      <input type="checkbox" checked={bulkSelected.includes(p.id)} onChange={e => setBulkSelected(prev => e.target.checked ? [...prev, p.id] : prev.filter(x => x !== p.id))}
+                               style={{ cursor: "pointer", accentColor: T.gold }} />
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ width: 30, height: 30, borderRadius: 8, background: `linear-gradient(135deg, ${badge.color}30, ${badge.color}10)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 11, color: badge.color, flexShrink: 0 }}>
                           {(u.name || u.email || "?")[0].toUpperCase()}
@@ -1351,6 +1374,30 @@ export default function AdminPanel() {
                     );
                   })()}
 
+                  {/* Bulk Edit Bar */}
+                  {bulkSelected.length > 0 && (
+                    <div className="fade-up" style={{ padding: "14px 20px", marginBottom: 12, borderRadius: 10, background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.2)", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{bulkSelected.length} projects selected</span>
+                      {[
+                        { key: "status", label: "Status", options: ["Selling", "Upcoming", "Sold Out", "Ready"] },
+                        { key: "availability", label: "Availability", options: ["Available", "Sold Out", "Limited Units", "Coming Soon"] },
+                      ].map(f => (
+                        <select key={f.key} value={bulkForm[f.key] || ""} onChange={e => setBulkForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                          style={{ padding: "6px 10px", background: T.bg, border: "1px solid rgba(212,168,67,0.2)", borderRadius: 6, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>
+                          <option value="">Set {f.label}...</option>
+                          {f.options.map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      ))}
+                      <input type="number" placeholder="Set Price..." value={bulkForm.price || ""} onChange={e => setBulkForm(prev => ({ ...prev, price: e.target.value }))}
+                        style={{ padding: "6px 10px", background: T.bg, border: "1px solid rgba(212,168,67,0.2)", borderRadius: 6, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif", width: 120 }} />
+                      <button type="button" onClick={saveBulkEdit} disabled={dataSaving} style={{ padding: "6px 16px", borderRadius: 6, border: "none", background: T.gold, color: T.bg, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        Apply to All
+                      </button>
+                      <button type="button" onClick={() => { setBulkSelected([]); setBulkForm({}); }} style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid rgba(100,116,139,0.3)", background: "transparent", color: T.textSecondary, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        Clear
+                      </button>
+                    </div>
+                  )}
                   {/* Projects list */}
                   <div className="chart-box" style={{ padding: 0, overflow: "hidden" }}>
                     <div style={{ display: "grid", gridTemplateColumns: "40px 2fr 100px 110px 100px 80px 90px 80px", gap: 8, padding: "12px 20px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt }}>
@@ -1368,7 +1415,8 @@ export default function AdminPanel() {
                             onMouseEnter={e => { if (editingProject !== p.id) e.currentTarget.style.background = T.surfaceAlt; }}
                             onMouseLeave={e => { if (editingProject !== p.id) e.currentTarget.style.background = "transparent"; }}
                             onClick={() => { setEditingProject(p.id); setProjectForm(liveProjects[p.id] || {}); }}>
-                            <span style={{ fontSize: 11, color: T.textMuted }}>{i + 1}</span>
+                            <input type="checkbox" checked={bulkSelected.includes(p.id)} onChange={e => setBulkSelected(prev => e.target.checked ? [...prev, p.id] : prev.filter(x => x !== p.id))}
+                               style={{ cursor: "pointer", accentColor: T.gold }} />
                             <div>
                               <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</div>
                               <div style={{ fontSize: 10, color: T.textMuted }}>{merged.type} · {merged.beds || "—"}</div>
@@ -1593,7 +1641,8 @@ export default function AdminPanel() {
                             onMouseEnter={e => { if (editingYield !== i) e.currentTarget.style.background = T.surfaceAlt; }}
                             onMouseLeave={e => { if (editingYield !== i) e.currentTarget.style.background = "transparent"; }}
                             onClick={() => { setEditingYield(i); setYieldForm(liveYields[yieldKey] || {}); }}>
-                            <span style={{ fontSize: 11, color: T.textMuted }}>{i + 1}</span>
+                            <input type="checkbox" checked={bulkSelected.includes(p.id)} onChange={e => setBulkSelected(prev => e.target.checked ? [...prev, p.id] : prev.filter(x => x !== p.id))}
+                               style={{ cursor: "pointer", accentColor: T.gold }} />
                             <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{merged.unit}</span>
                             <span style={{ fontSize: 11, color: T.textSecondary }}>{merged.community}</span>
                             <span style={{ fontSize: 12, color: T.textPrimary }}>AED {(merged.rent / 1000).toFixed(0)}K</span>
