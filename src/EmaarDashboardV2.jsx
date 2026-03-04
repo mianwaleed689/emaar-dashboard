@@ -753,7 +753,9 @@ export default function EmaarDashboardV2() {
             const override = overrides[String(p.id)];
             return override ? { ...p, ...override } : p;
           });
-          setLiveProjects(merged);
+          const baseIds = new Set(emaarProjects.map(p => String(p.id)));
+          const newProjects = Object.entries(overrides).filter(([id]) => !baseIds.has(id)).map(([id, data]) => ({ id, ...data }));
+          setLiveProjects([...merged, ...newProjects]);
         }
       } catch (e) { console.log("Firestore not available, using static data"); }
       setProjectsLoading(false);
