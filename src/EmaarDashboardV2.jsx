@@ -748,16 +748,17 @@ export default function EmaarDashboardV2() {
         const snap = await getDocs(collection(db, "projectData"));
         if (snap.size > 0) {
           const overrides = {};
-          snap.forEach(d => { overrides[d.id] = d.data(); });
-          // Merge: start with base data.js array, overlay any Firestore overrides by project ID
+          snap.forEach(d => {
+            const numId = d.id.replace("project_", "");
+            overrides[numId] = d.data();
+          });
           const merged = emaarProjects.map(p => {
-            const override = overrides[String(p.id)] || overrides["project_" + p.id];
+            const override = overrides[String(p.id)];
             return override ? { ...p, ...override } : p;
           });
           setLiveProjects(overrides);
           const baseIds = new Set(emaarProjects.map(p => String(p.id)));
-          const basePrefixIds = new Set(emaarProjects.map(p => "project_" + p.id));
-          const newProjects = Object.entries(overrides).filter(([id]) => !baseIds.has(id) && !basePrefixIds.has(id)).map(([id, data]) => ({ id, ...data }));
+          const newProjects = Object.entries(overrides).filter(([id]) => !baseIds.has(id)).map(([id, data]) => ({ id, ...data }));
           setExtraProjects(newProjects);
         }
       } catch (e) { console.log("Firestore not available, using static data"); }
