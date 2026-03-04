@@ -644,6 +644,7 @@ export default function AdminPanel() {
   /* ─── TABS CONFIG ─── */
   const TABS = [
     { id: "overview", label: "Overview", icon: I.overview },
+    { id: "auditlog", label: "Audit Log", icon: I.overview },
     { id: "users", label: "Users", icon: I.users },
     { id: "revenue", label: "Revenue", icon: I.revenue },
     { id: "data", label: "Data Manager", icon: I.data },
