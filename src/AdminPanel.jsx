@@ -1032,6 +1032,10 @@ export default function AdminPanel() {
                       { key: "beds", label: "Bedrooms", type: "text", placeholder: "e.g. 1-3 BR" },
                       { key: "paymentPlan", label: "Payment Plan", type: "text", placeholder: "e.g. 80/20" },
                       { key: "dldPpsf", label: "DLD PPSF (AED)", type: "number", placeholder: "e.g. 2100" },
+                       { key: "availability", label: "Availability", type: "select", options: ["Available", "Sold Out", "Limited Units", "Coming Soon"] },
+                       { key: "unitsTotal", label: "Total Units", type: "number", placeholder: "e.g. 200" },
+                       { key: "unitsAvail", label: "Units Available", type: "number", placeholder: "e.g. 45" },
+                       { key: "notes", label: "Admin Notes", type: "text", placeholder: "Internal notes..." },
                     ];
                     return (
                       <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: `1px solid ${T.gold}30` }}>
