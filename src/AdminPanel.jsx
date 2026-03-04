@@ -1398,7 +1398,7 @@ export default function AdminPanel() {
                         </div>
                         
                           <div style={{ marginTop: 12, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
-                          <div style={{ fontSize: 11, fon{/* Price History Chart */}
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Project Documents</div>
                           {(() => {
                             const history = priceHistory[p.id];
                             if (!history) return (
