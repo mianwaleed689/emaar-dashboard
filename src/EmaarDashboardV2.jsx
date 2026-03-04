@@ -733,24 +733,31 @@ export default function EmaarDashboardV2() {
   const [stockSearch, setStockSearch] = useState("");
   const [selectedStockTv, setSelectedStockTv] = useState(null);
 
-  // Load projects from Firestore
+  // Load projects from Firestore (runs for ALL users — guests and logged-in)
   const [projectsLoading, setProjectsLoading] = useState(true);
   useEffect(() => {
     const loadProjects = async () => {
       setProjectsLoading(true);
       try {
-        const snap = await getDocs(query(collection(db, "projects"), orderBy("id")));
+        // Read from "projectData" — the same collection AdminPanel writes to
+        const snap = await getDocs(collection(db, "projectData"));
         if (snap.size > 0) {
-          setLiveProjects(snap.docs.map(d => d.data()));
+          const overrides = {};
+          snap.forEach(d => { overrides[d.id] = d.data(); });
+          // Merge: start with base data.js array, overlay any Firestore overrides by project ID
+          const merged = emaarProjects.map(p => {
+            const override = overrides[String(p.id)];
+            return override ? { ...p, ...override } : p;
+          });
+          setLiveProjects(merged);
         }
       } catch (e) { console.log("Firestore not available, using static data"); }
       setProjectsLoading(false);
     };
-    if (isLoggedIn) loadProjects();
-    else setProjectsLoading(false);
-  }, [isLoggedIn]);
+    loadProjects(); // Load for everyone — no isLoggedIn gate
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Use Firestore data if available, otherwise fall back to hardcoded
+  // Use merged Firestore+static data if available, otherwise pure static fallback
   const activeProjects = liveProjects || emaarProjects;
 
   // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
