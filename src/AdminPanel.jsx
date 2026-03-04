@@ -1466,7 +1466,6 @@ export default function AdminPanel() {
                                 </div>
                               </div>
                             );
-                        </div>
                           })()}
 
                         <button type="button" disabled={dataSaving} onClick={() => saveProjectData(p.id, projectForm)}
