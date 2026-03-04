@@ -347,7 +347,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
               <div key={i} style={{ background: "rgba(10,22,40,0.8)", borderRadius: 16, padding: 28, border: "1px solid rgba(212,168,67,0.1)", position: "relative", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                   <span style={{ fontSize: 11, fontWeight: 700, color: item.color, letterSpacing: 1 }}>{item.phase}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 10, background: ${item.dot}22, color: item.color, border: 1px solid 44 }}>{item.status}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 10, background: item.dot + "22", color: item.color, border: "1px solid " + item.dot }}>{item.status}</span>
                 </div>
                 <h3 style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", marginBottom: 8 }}>{item.title}</h3>
                 <p style={{ fontSize: 12, color: "#94A3B8", lineHeight: 1.6 }}>{item.desc}</p>
