@@ -1183,6 +1183,28 @@ export default function AdminPanel() {
                             style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
                           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>Tip: Upload to imgur.com or Google Drive (set to public) and paste the link here</div>
                         </div>
+                        
+                          <div style={{ marginTop: 12, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Project Documents</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                            {[
+                              { key: "pdfBrochure", label: "Brochure PDF", placeholder: "Paste Google Drive PDF link" },
+                              { key: "pdfFloorPlan", label: "Floor Plan PDF", placeholder: "Paste floor plan PDF link" },
+                              { key: "pdfPaymentPlan", label: "Payment Plan PDF", placeholder: "Paste payment plan PDF link" },
+                              { key: "pdfFactSheet", label: "Fact Sheet PDF", placeholder: "Paste fact sheet PDF link" },
+                            ].map(doc => (
+                              <div key={doc.key}>
+                                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{doc.label}</label>
+                                <input type="text" placeholder={doc.placeholder} value={projectForm[doc.key] || liveProjects[p.id]?.[doc.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [doc.key]: e.target.value }))}
+                                  style={{ width: "100%", padding: "8px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                                {(projectForm[doc.key] || liveProjects[p.id]?.[doc.key]) && (
+                                  <a href={projectForm[doc.key] || liveProjects[p.id]?.[doc.key]} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", marginTop: 3, display: "block" }}>View PDF →</a>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>Tip: Upload PDFs to Google Drive, set to public, paste the share link here</div>
+                        </div>
                         <button type="button" disabled={dataSaving} onClick={() => saveProjectData(p.id, projectForm)}
                           style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
                           {dataSaving ? "Saving..." : "Save to Firestore — Goes Live Instantly"}
