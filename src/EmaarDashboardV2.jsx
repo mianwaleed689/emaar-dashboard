@@ -2634,8 +2634,6 @@ export default function EmaarDashboardV2() {
             </Section>
           </>}
 
-        </div>
-
           </>}
 
         </div>

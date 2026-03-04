@@ -179,7 +179,7 @@ const inputStyle = {
 };
 const labelStyle = { display: "block", fontSize: 9, fontWeight: 700, color: T.textMuted, marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" };
 
-const KPI = ({ label, value, sub, delay = 0 }) => (
+const KPI = ({ label, value, sub, color, delay = 0 }) => (
   <div className="kpi-card fade-up" style={{ animationDelay: `${delay * 0.05}s` }}>
     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>{label}</div>
     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: color || T.gold, lineHeight: 1 }}>{value}</div>
