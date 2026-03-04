@@ -726,7 +726,8 @@ export default function EmaarDashboardV2() {
   const [projectTier, setProjectTier] = useState("All");
   const [projectHandover, setProjectHandover] = useState("All");
   const [projectPriceMax, setProjectPriceMax] = useState(20);
-  const [liveProjects, setLiveProjects] = useState(null);
+  const [liveProjects, setLiveProjects] = useState({});
+  const [extraProjects, setExtraProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [expandedMega, setExpandedMega] = useState(null);
@@ -753,9 +754,10 @@ export default function EmaarDashboardV2() {
             const override = overrides[String(p.id)];
             return override ? { ...p, ...override } : p;
           });
+          setLiveProjects(overrides);
           const baseIds = new Set(emaarProjects.map(p => String(p.id)));
           const newProjects = Object.entries(overrides).filter(([id]) => !baseIds.has(id)).map(([id, data]) => ({ id, ...data }));
-          setLiveProjects([...merged, ...newProjects]);
+          setExtraProjects(newProjects);
         }
       } catch (e) { console.log("Firestore not available, using static data"); }
       setProjectsLoading(false);
@@ -764,7 +766,7 @@ export default function EmaarDashboardV2() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Use merged Firestore+static data if available, otherwise pure static fallback
-  const activeProjects = liveProjects || emaarProjects;
+  const activeProjects = [...emaarProjects.map(p => { const ov = liveProjects[String(p.id)]; return ov ? { ...p, ...ov } : p; }), ...extraProjects];
 
   // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
   const getUnitEntries = (units) => {
