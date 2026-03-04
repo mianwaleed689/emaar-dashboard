@@ -884,7 +884,7 @@ export default function AdminPanel() {
                           <option value="pro">Pro</option>
                           <option value="enterprise">Enterprise</option>
                         </select>
-                        <button type="button" onClick={() => deleteUser(u.uid)} style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid rgba(239,68,68,0.2)`, background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{I.trash}</button>
+                        <button type="button" onClick={() => { if (window.confirm("Delete " + (u.displayName || u.email) + "? This cannot be undone.")) deleteUser(u.uid); }} style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid rgba(239,68,68,0.2)`, background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{I.trash}</button>
                       </div>
                     </div>
                   );
