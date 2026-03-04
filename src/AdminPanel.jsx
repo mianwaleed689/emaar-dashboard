@@ -1507,8 +1507,12 @@ export default function AdminPanel() {
                         <span key={h} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>{h}</span>
                       ))}
                     </div>
-                    {emaarProjects
-                      .filter(p => !dataSearch || p.name.toLowerCase().includes(dataSearch.toLowerCase()) || (p.community || "").toLowerCase().includes(dataSearch.toLowerCase()))
+                    {(() => {
+                        const baseIds = new Set(emaarProjects.map(p => String(p.id)));
+                        const firestoreOnly = Object.entries(liveProjects).filter(([id]) => !baseIds.has(id)).map(([id, data]) => ({ id, ...data }));
+                        return [...emaarProjects, ...firestoreOnly];
+                      })()
+                      .filter(p => !dataSearch || (p.name||"").toLowerCase().includes(dataSearch.toLowerCase()) || (p.community || "").toLowerCase().includes(dataSearch.toLowerCase()))
                       .map((p, i) => {
                         const merged = getMergedProject(p);
                         const hasOverride = !!liveProjects[p.id];
