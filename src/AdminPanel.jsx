@@ -981,7 +981,7 @@ export default function AdminPanel() {
                     <div key={u.uid} className="fade-up" style={{ display: "grid", gridTemplateColumns: "40px 1.5fr 1.5fr 100px 120px 120px 140px", gap: 8, padding: "12px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", animationDelay: `${Math.min(i * 0.02, 0.5)}s`, transition: "background 0.15s" }}
                       onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <input type="checkbox" checked={bulkSelected.includes(p.id)} onChange={e => setBulkSelected(prev => e.target.checked ? [...prev, p.id] : prev.filter(x => x !== p.id))}
+                            <span style={{ fontSize: 11, color: T.textMuted }}>{i + 1}</span>
                                style={{ cursor: "pointer", accentColor: T.gold }} />
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ width: 30, height: 30, borderRadius: 8, background: `linear-gradient(135deg, ${badge.color}30, ${badge.color}10)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 11, color: badge.color, flexShrink: 0 }}>
@@ -1641,8 +1641,8 @@ export default function AdminPanel() {
                             onMouseEnter={e => { if (editingYield !== i) e.currentTarget.style.background = T.surfaceAlt; }}
                             onMouseLeave={e => { if (editingYield !== i) e.currentTarget.style.background = "transparent"; }}
                             onClick={() => { setEditingYield(i); setYieldForm(liveYields[yieldKey] || {}); }}>
-                            <input type="checkbox" checked={bulkSelected.includes(p.id)} onChange={e => setBulkSelected(prev => e.target.checked ? [...prev, p.id] : prev.filter(x => x !== p.id))}
-                               style={{ cursor: "pointer", accentColor: T.gold }} />
+                            <span style={{ fontSize: 11, color: T.textMuted }}>{i + 1}</span>
+
                             <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{merged.unit}</span>
                             <span style={{ fontSize: 11, color: T.textSecondary }}>{merged.community}</span>
                             <span style={{ fontSize: 12, color: T.textPrimary }}>AED {(merged.rent / 1000).toFixed(0)}K</span>
