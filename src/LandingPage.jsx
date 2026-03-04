@@ -344,7 +344,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
               { phase: "Phase 2", status: "Q3 2026", color: "#D4A843", title: "Top 10 Developers", desc: "DAMAC, Sobha, Meraas, ALDAR, Binghatti, Nakheel, Azizi, Tiger, Danube — all in one place.", dot: "#D4A843" },
               { phase: "Phase 3", status: "2027", color: "#3B82F6", title: "Full Dubai Market", desc: "All 228+ developers, every community, every transaction type, live DLD data feeds.", dot: "#3B82F6" },
             ].map((item, i) => (
-              <div key={i} style={{ background: "rgba(10,22,40,0.8)", borderRadius: 16, padding: 28, border: 1px solid rgba(212,168,67,0.1), position: "relative", overflow: "hidden" }}>
+              <div key={i} style={{ background: "rgba(10,22,40,0.8)", borderRadius: 16, padding: 28, border: "1px solid rgba(212,168,67,0.1)", position: "relative", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                   <span style={{ fontSize: 11, fontWeight: 700, color: item.color, letterSpacing: 1 }}>{item.phase}</span>
                   <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 10, background: ${item.dot}22, color: item.color, border: 1px solid 44 }}>{item.status}</span>
