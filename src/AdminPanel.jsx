@@ -254,7 +254,7 @@ export default function AdminPanel() {
   const [showProfile, setShowProfile] = useState(false);
 
   /* ─── DATA MANAGER STATE ─── */
-  const [dataSubTab, setDataSubTab] = useState("projects"); // projects | communities | yields
+  const [dataSubTab, setDataSubTab] = useState("data"); // projects | communities | yields
   const [editingProject, setEditingProject] = useState(null);
   const [bulkSelected, setBulkSelected] = useState([]);
   const [priceHistory, setPriceHistory] = useState({});
@@ -792,6 +792,7 @@ export default function AdminPanel() {
     { id: "auditlog", label: "Audit Log", icon: I.overview },
     { id: "users", label: "Users", icon: I.users },
     { id: "revenue", label: "Revenue", icon: I.revenue },
+    { id: "data", label: "Data Manager", icon: I.data },
     { id: "projects", label: "Project Manager", icon: I.projects },
     { id: "leads", label: "Leads", icon: I.leads },
     { id: "verification", label: "Verification", icon: I.verify },
