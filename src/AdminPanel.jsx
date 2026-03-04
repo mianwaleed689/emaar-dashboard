@@ -1228,6 +1228,8 @@ export default function AdminPanel() {
                       { key: "beds", label: "Bedrooms", type: "text", placeholder: "e.g. 1-3 BR" },
                       { key: "paymentPlan", label: "Payment Plan", type: "text", placeholder: "e.g. 80/20" },
                       { key: "dldPpsf", label: "DLD PPSF (AED)", type: "number", placeholder: "e.g. 2100" },
+                       { key: "dataSource", label: "Data Source", type: "select", options: ["Emaar IR Report", "DLD Portal", "DXBinteract", "Manual Entry", "Agent Verified", "Market Research"] },
+                       { key: "lastVerified", label: "Last Verified Date", type: "text", placeholder: "e.g. Mar 2026" },
                        { key: "availability", label: "Availability", type: "select", options: ["Available", "Sold Out", "Limited Units", "Coming Soon"] },
                        { key: "unitsTotal", label: "Total Units", type: "number", placeholder: "e.g. 200" },
                        { key: "unitsAvail", label: "Units Available", type: "number", placeholder: "e.g. 45" },
