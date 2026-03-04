@@ -2540,7 +2540,7 @@ export default function EmaarDashboardV2() {
             <Section title="User Management" sub="All registered users · Real-time data from Firestore">
               <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
                 <KPI label="Total Users" value={adminUsers.length} sub="Registered accounts" delay={1} />
-                <KPI label=i18t("ui", "proTrial") value={adminUsers.filter(u => u.status === "pro_trial").length} sub="Active trials" delay={2} />
+                <KPI label={i18t("ui", "proTrial")} value={adminUsers.filter(u => u.status === "pro_trial").length} sub="Active trials" delay={2} />
                 <KPI label="Free Users" value={adminUsers.filter(u => u.status === "free" || u.status === "expired").length} sub="Trial expired or free" delay={3} />
                 <KPI label="Pro / Paid" value={adminUsers.filter(u => u.tier === "pro" || u.tier === "enterprise").length} sub="Paying customers" delay={4} />
               </div>
