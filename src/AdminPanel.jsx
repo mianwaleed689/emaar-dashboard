@@ -1469,8 +1469,8 @@ export default function AdminPanel() {
                             ))}
                           </div>
                           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>Tip: Upload PDFs to Google Drive, set to public, paste the share link here</div>
-                        </div>
                           {/* Price History Chart */}
+                        </div>
                           {(() => {
                             const history = priceHistory[p.id];
                             if (!history) return (
