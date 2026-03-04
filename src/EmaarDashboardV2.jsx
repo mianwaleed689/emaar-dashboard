@@ -1795,35 +1795,32 @@ export default function EmaarDashboardV2() {
                 {/* Target Price Visual */}
                 <div className="fade-up" style={{ background: T.card, borderRadius: 14, padding: 24, border: `1px solid ${T.border}` }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16 }}>Price Target Range (AED)</div>
-                  {/* Range bar */}
-                  <div style={{ position: "relative", height: 40, marginBottom: 20 }}>
-                    <div style={{ position: "absolute", top: 16, left: 0, right: 0, height: 8, borderRadius: 4, background: T.surfaceAlt }} />
-                    {/* Low marker */}
-                    <div style={{ position: "absolute", top: 12, left: `${((15.80 - 10) / 25) * 100}%`, transform: "translateX(-50%)" }}>
-                      <div style={{ width: 16, height: 16, borderRadius: "50%", background: T.red, border: "2px solid rgba(239,68,68,0.3)" }} />
-                      <div style={{ textAlign: "center", marginTop: 6, fontSize: 10, color: T.red, fontWeight: 700 }}>15.80</div>
-                      <div style={{ textAlign: "center", fontSize: 8, color: T.textMuted }}>Low</div>
-                    </div>
-                    {/* Current marker */}
-                    <div style={{ position: "absolute", top: 12, left: `${((stock.price - 10) / 25) * 100}%`, transform: "translateX(-50%)" }}>
-                      <div style={{ width: 16, height: 16, borderRadius: "50%", background: T.gold, border: "2px solid rgba(212,168,67,0.4)", boxShadow: `0 0 12px rgba(212,168,67,0.3)` }} />
-                      <div style={{ textAlign: "center", marginTop: 6, fontSize: 10, color: T.gold, fontWeight: 700 }}>{stock.price.toFixed(2)}</div>
-                      <div style={{ textAlign: "center", fontSize: 8, color: T.textMuted }}>Current</div>
-                    </div>
-                    {/* Avg target */}
-                    <div style={{ position: "absolute", top: 12, left: `${((19.94 - 10) / 25) * 100}%`, transform: "translateX(-50%)" }}>
-                      <div style={{ width: 16, height: 16, borderRadius: "50%", background: T.teal, border: "2px solid rgba(0,191,165,0.3)" }} />
-                      <div style={{ textAlign: "center", marginTop: 6, fontSize: 10, color: T.teal, fontWeight: 700 }}>19.94</div>
-                      <div style={{ textAlign: "center", fontSize: 8, color: T.textMuted }}>Avg Target</div>
-                    </div>
-                    {/* High target */}
-                    <div style={{ position: "absolute", top: 12, left: `${((30.00 - 10) / 25) * 100}%`, transform: "translateX(-50%)" }}>
-                      <div style={{ width: 16, height: 16, borderRadius: "50%", background: T.green, border: "2px solid rgba(16,185,129,0.3)" }} />
-                      <div style={{ textAlign: "center", marginTop: 6, fontSize: 10, color: T.green, fontWeight: 700 }}>30.00</div>
-                      <div style={{ textAlign: "center", fontSize: 8, color: T.textMuted }}>High</div>
+                  {/* Horizontal gradient bar with labels below */}
+                  <div style={{ position: "relative", marginBottom: 16 }}>
+                    {/* Track */}
+                    <div style={{ height: 10, borderRadius: 5, background: `linear-gradient(90deg, ${T.red}40, ${T.gold}60 ${((stock.price - 15.80) / (30 - 15.80) * 100).toFixed(0)}%, ${T.teal}60 ${((19.94 - 15.80) / (30 - 15.80) * 100).toFixed(0)}%, ${T.green}40)`, position: "relative" }}>
+                      {/* Current price marker */}
+                      <div style={{ position: "absolute", top: -3, left: `${((stock.price - 15.80) / (30 - 15.80) * 100).toFixed(1)}%`, transform: "translateX(-50%)", width: 16, height: 16, borderRadius: "50%", background: T.gold, border: `3px solid ${T.bg}`, boxShadow: `0 0 12px rgba(212,168,67,0.5)` }} />
+                      {/* Avg target marker */}
+                      <div style={{ position: "absolute", top: -3, left: `${((19.94 - 15.80) / (30 - 15.80) * 100).toFixed(1)}%`, transform: "translateX(-50%)", width: 16, height: 16, borderRadius: "50%", background: T.teal, border: `3px solid ${T.bg}`, boxShadow: `0 0 8px rgba(0,191,165,0.4)` }} />
                     </div>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 30 }}>
+                  {/* 4-column price cards */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
+                    {[
+                      { label: "Low Target", value: "15.80", color: T.red },
+                      { label: "Current Price", value: stock.price.toFixed(2), color: T.gold },
+                      { label: "Avg Target", value: "19.94", color: T.teal },
+                      { label: "High Target", value: "30.00", color: T.green },
+                    ].map((p, i) => (
+                      <div key={i} style={{ textAlign: "center", padding: "10px 6px", borderRadius: 10, background: T.surfaceAlt, borderTop: `2px solid ${p.color}` }}>
+                        <div style={{ fontSize: 8, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{p.label}</div>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: p.color }}>{p.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Upside + Consensus */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                     <div style={{ padding: "10px 12px", borderRadius: 10, background: T.surfaceAlt }}>
                       <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Potential Upside</div>
                       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.green }}>+{((19.94 / stock.price - 1) * 100).toFixed(1)}%</div>
