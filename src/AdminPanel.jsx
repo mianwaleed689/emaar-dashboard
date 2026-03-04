@@ -678,7 +678,7 @@ export default function AdminPanel() {
         {/* Top bar (matching dashboard) */}
         <header className="admin-topbar" style={{ position: "sticky", top: 0, zIndex: 20, height: 60, background: `${T.surface}ee`, backdropFilter: "blur(16px)", borderBottom: `1px solid ${T.border}`, padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <a href="/" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}`, color: T.textSecondary, textDecoration: "none", transition: "all 0.2s" }} title="Back to Dashboard"
+            <a href="/" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}`, color: T.textSecondary, textDecoration: "none", transition: "all 0.2s" }} title="Back to Dashboard" onClick={(e) => { e.preventDefault(); window.location.href = "/"; }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold; e.currentTarget.style.color = T.gold; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSecondary; }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -694,7 +694,7 @@ export default function AdminPanel() {
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 6 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, animation: "pulse 2s infinite" }} />
-              <span style={{ fontSize: 11, fontWeight: 600, color: T.green }}>Live</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: T.green }}>● LIVE</span>
             </div>
             <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}` }}>
               <span style={{ fontSize: 10, color: T.textMuted }}>MRR </span>
