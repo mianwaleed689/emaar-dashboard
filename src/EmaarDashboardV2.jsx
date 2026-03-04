@@ -572,16 +572,24 @@ const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this dat
   if (isPro) return children;
   return (
     <div style={{ position: "relative" }}>
-      <div style={{ filter: blur ? "blur(6px)" : "none", pointerEvents: "none", userSelect: "none", opacity: blur ? 0.5 : 1 }}>
+      <div style={{ filter: blur ? "blur(5px)" : "none", pointerEvents: "none", userSelect: "none", opacity: blur ? 0.45 : 1 }}>
         {children}
       </div>
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(4,9,15,0.6)", borderRadius: 12, backdropFilter: "blur(2px)", zIndex: 5 }}>
-        <div style={{ fontSize: 28, marginBottom: 8 }}>🔒</div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 4, textAlign: "center" }}>{message}</div>
-        <div style={{ fontSize: 11, color: T.textSecondary, marginBottom: 12, textAlign: "center", maxWidth: 260 }}>Get full access to all features with Pro</div>
-        <button type="button" onClick={onUpgrade} style={{ padding: "8px 24px", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}>
-          Upgrade to Pro — AED 99/mo
-        </button>
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(4,9,15,0.75)", borderRadius: 16, backdropFilter: "blur(4px)", zIndex: 5 }}>
+        <div style={{ background: T.surface, border: `1px solid ${T.gold}`, borderRadius: 16, padding: "28px 32px", textAlign: "center", maxWidth: 380, boxShadow: `0 20px 60px rgba(0,0,0,0.5), 0 0 30px ${T.gold}18` }}>
+          <div style={{ width: 48, height: 48, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}22, ${T.gold}08)`, border: `1px solid ${T.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, margin: "0 auto 12px" }}>🔒</div>
+          <div style={{ fontFamily: "'Fraunces', serif", fontSize: 17, fontWeight: 800, color: T.white, marginBottom: 6 }}>{message}</div>
+          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16, lineHeight: 1.6 }}>Join 500+ investors using DXB Analytics Pro to track the Dubai real estate market</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
+            {["✓ Full 6-year financial data", "✓ All 48 projects & analytics", "✓ Yields, ROI & stock tracker", "✓ Competitor intelligence"].map((f, i) => (
+              <div key={i} style={{ fontSize: 11, color: T.textSecondary, textAlign: "left", paddingLeft: 4 }}>{f}</div>
+            ))}
+          </div>
+          <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "11px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>
+            Unlock Pro — AED 99/mo →
+          </button>
+          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>7-day money-back guarantee · Cancel anytime</div>
+        </div>
       </div>
     </div>
   );
@@ -591,43 +599,66 @@ const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this dat
 const UpgradeModal = ({ show, onClose }) => {
   if (!show) return null;
   const plans = [
-    { name: "Pro", price: "99", features: ["All 48+ projects", "Full 6-year financials", "Yields & ROI data", "Stock market tracker", "Competitor analysis", "3-project comparison", "Location intelligence", "WhatsApp/Email inquiry"], popular: true },
-    { name: "Enterprise", price: "499", features: ["Everything in Pro", "PDF report generation ⏳", "API access ⏳", "Custom dashboards ⏳", "Multi-user accounts ⏳", "Developer-level data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Coming Q3 2026" },
+    { name: "Pro", price: "99", period: "month", features: ["All 48+ active projects", "Full 6-year financials & ratios", "Rental yields & ROI calculator", "30 RE stocks tracker", "Competitor intelligence", "3-project side-by-side compare", "Location & community deep-dives", "WhatsApp / Email inquiry"], popular: true, cta: "Start Pro Now →" },
+    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation ⏳", "API data access ⏳", "Custom dashboards ⏳", "Multi-user team accounts ⏳", "Developer-level raw data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Launching Q3 2026", cta: "Contact Sales →" },
   ];
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={onClose}>
-      <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 680, padding: 32, position: "relative" }} onClick={e => e.stopPropagation()}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={onClose}>
+      <div style={{ background: T.surface, borderRadius: 24, border: `1px solid ${T.border}`, width: "95%", maxWidth: 720, padding: 36, position: "relative", boxShadow: "0 40px 100px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
         <button type="button" onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-        
+
+        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div style={{ fontSize: 28, marginBottom: 8 }}>⭐</div>
-          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 900, color: T.white, marginBottom: 4 }}>Unlock Full Access</h2>
-          <p style={{ color: T.textSecondary, fontSize: 13 }}>Choose the plan that fits your needs</p>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "4px 14px", borderRadius: 20, background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}40`, marginBottom: 12 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, animation: "pulse 2s infinite", display: "inline-block" }} />
+            <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>500+ investors already using Pro</span>
+          </div>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 900, color: T.white, marginBottom: 6 }}>Unlock the Full Platform</h2>
+          <p style={{ color: T.textSecondary, fontSize: 13 }}>The most comprehensive Emaar & Dubai real estate intelligence platform</p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        {/* ROI bar */}
+        <div style={{ background: "rgba(16,185,129,0.08)", border: `1px solid ${T.green}30`, borderRadius: 12, padding: "12px 20px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
+          {[["📊", "AED 80.4B", "FY25 Sales tracked"], ["📈", "+40% YoY", "Revenue growth"], ["🏠", "48 Projects", "Full intelligence"], ["💰", "AED 155B", "Backlog visibility"]].map(([icon, val, label], i) => (
+            <div key={i} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 13 }}>{icon} <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: T.green }}>{val}</span></div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>{label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Plans */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
           {plans.map((plan, i) => (
-            <div key={i} style={{ background: T.surfaceAlt, borderRadius: 14, padding: 24, border: plan.popular ? `2px solid ${T.gold}` : `1px solid ${T.border}`, position: "relative" }}>
-              {plan.popular && <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", padding: "3px 12px", borderRadius: 10, background: T.gold, color: T.bg, fontSize: 10, fontWeight: 700 }}>RECOMMENDED</div>}
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: T.white, marginBottom: 4 }}>{plan.name}</h3>
+            <div key={i} style={{ background: T.surfaceAlt, borderRadius: 16, padding: 24, border: plan.popular ? `2px solid ${T.gold}` : `1px solid ${T.border}`, position: "relative" }}>
+              {plan.popular && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 16px", borderRadius: 20, background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, fontSize: 10, fontWeight: 800, letterSpacing: 0.5, whiteSpace: "nowrap" }}>⭐ MOST POPULAR</div>}
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: T.white, marginBottom: 4, marginTop: plan.popular ? 8 : 0 }}>{plan.name}</h3>
               <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 16 }}>
-                <span style={{ fontSize: 10, color: T.textMuted }}>AED</span>
-                <span style={{ fontFamily: "'Fraunces', serif", fontSize: 36, fontWeight: 900, color: plan.popular ? T.gold : T.white }}>{plan.price}</span>
-                <span style={{ fontSize: 12, color: T.textMuted }}>/month</span>
+                <span style={{ fontSize: 11, color: T.textMuted }}>AED</span>
+                <span style={{ fontFamily: "'Fraunces', serif", fontSize: 38, fontWeight: 900, color: plan.popular ? T.gold : T.white, lineHeight: 1 }}>{plan.price}</span>
+                <span style={{ fontSize: 12, color: T.textMuted }}>/{plan.period}</span>
               </div>
-              {plan.features.map((f, j) => (
-                <div key={j} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0", fontSize: 12, color: T.textSecondary }}>
-                  <span style={{ color: T.green, fontSize: 12 }}>✓</span>{f}
-                </div>
-              ))}
-              {plan.note && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8, fontStyle: "italic" }}>{plan.note}</div>}
-              <button type="button" onClick={() => { onClose(); window.dispatchEvent(new CustomEvent("dxb-checkout", { detail: plan })); }} style={{ width: "100%", marginTop: 16, padding: "10px 0", background: plan.popular ? `linear-gradient(135deg, ${T.gold}, ${T.goldLight})` : "transparent", color: plan.popular ? T.bg : T.gold, border: plan.popular ? "none" : `1px solid ${T.gold}`, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                {plan.popular ? "Get Pro Now" : "Contact Sales"}
+              <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
+                {plan.features.map((f, j) => (
+                  <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: f.includes("⏳") ? T.textMuted : T.textSecondary }}>
+                    <span style={{ color: f.includes("⏳") ? T.textMuted : T.green, fontSize: 11, marginTop: 1, flexShrink: 0 }}>✓</span>{f}
+                  </div>
+                ))}
+              </div>
+              {plan.note && <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 12, fontStyle: "italic" }}>{plan.note}</div>}
+              <button type="button" onClick={() => { onClose(); window.dispatchEvent(new CustomEvent("dxb-checkout", { detail: plan })); }}
+                style={{ width: "100%", padding: "12px 0", background: plan.popular ? `linear-gradient(135deg, ${T.gold}, #B8912F)` : "transparent", color: plan.popular ? T.bg : T.gold, border: plan.popular ? "none" : `1px solid ${T.gold}`, borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>
+                {plan.cta}
               </button>
             </div>
           ))}
         </div>
-        <p style={{ textAlign: "center", fontSize: 11, color: T.textMuted, marginTop: 16 }}>Secure payment · Cancel anytime · 7-day money-back guarantee</p>
+
+        <div style={{ textAlign: "center", display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
+          {["🔒 Secure payment", "↩ 7-day money-back", "⚡ Instant access", "❌ Cancel anytime"].map((t, i) => (
+            <span key={i} style={{ fontSize: 11, color: T.textMuted }}>{t}</span>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -1725,10 +1756,10 @@ export default function EmaarDashboardV2() {
 
             <Section title="Project Portfolio" sub="48 active projects · 10+ master communities · 2026–2030">
               <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
-                <KPI label="Total Projects" value="48" sub="18 under construction · 30 off-plan" delay={1} />
-                <KPI label="Branded Projects" value="10" sub="Address · Vida · Palace" delay={2} />
-                <KPI label="Avg Starting Price" value="AED 2.76M" sub="Range: 1.2M – 13.8M" delay={3} />
-                <KPI label="Avg Price/sqft" value="AED 2,570" sub="Across all tiers" delay={4} />
+                <KPI label="Total Projects" value="48" sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE — 18 under active construction and 30 in the off-plan/pre-launch phase across 10+ master communities.", source: "DXB Analytics Project Database", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned areas" }, { label: "Handover 2026", value: "7 projects", note: "Nearest deliveries" }, { label: "Handover 2029+", value: "26 projects", note: "Longest pipeline" }], trend: null })} />
+                <KPI label="Branded Projects" value="10" sub="Address · Vida · Palace" delay={2} onClick={() => setSelectedKPI({ label: "Branded Projects", value: "10", color: T.teal, description: "10 branded residences under Emaar's luxury hospitality labels — Address, Vida, and Palace. Branded units command 25–40% price premium over standard Emaar projects.", source: "Emaar Properties Portfolio 2025", sourceUrl: "https://www.emaar.com/en/investor-relations", items: [{ label: "Address Brand", value: "5 projects", note: "Ultra-luxury tier" }, { label: "Vida Brand", value: "3 projects", note: "Lifestyle tier" }, { label: "Palace Brand", value: "2 projects", note: "Heritage luxury" }, { label: "Price Premium", value: "25–40%", note: "vs standard Emaar" }, { label: "Resale Premium", value: "Strong", note: "Brand demand maintained" }], trend: null })} />
+                <KPI label="Avg Starting Price" value="AED 2.76M" sub="Range: 1.2M – 13.8M" delay={3} onClick={() => setSelectedKPI({ label: "Avg Starting Price", value: "AED 2.76M", color: T.blue, description: "Average entry price across the active Emaar project portfolio. Range spans from AED 1.2M (Emaar South 1BR) to AED 13.8M (The Oasis ultra-luxury villas).", source: "DXB Analytics · Emaar Price List 2025", sourceUrl: "https://www.emaar.com/en/investor-relations", items: [{ label: "Avg Starting Price", value: "AED 2.76M", note: "Portfolio average" }, { label: "Min Price", value: "AED 1.2M", note: "Emaar South 1BR" }, { label: "Max Price", value: "AED 13.8M", note: "The Oasis villas" }, { label: "Studio Entry", value: "AED 900K+", note: "Select communities" }, { label: "Villa Entry", value: "AED 3.5M+", note: "Dubai Hills / Valley" }], trend: [{ y: "2021", v: 1.8 }, { y: "2022", v: 2.1 }, { y: "2023", v: 2.3 }, { y: "2024", v: 2.55 }, { y: "2025", v: 2.76 }] })} />
+                <KPI label="Avg Price/sqft" value="AED 2,570" sub="Across all tiers" delay={4} onClick={() => setSelectedKPI({ label: "Avg Price/sqft", value: "AED 2,570", color: T.purple, description: "Average price per square foot across all active Emaar launches. Premium branded projects push the average higher vs affordable communities.", source: "DXB Analytics · DLD 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Portfolio Avg", value: "AED 2,570/sqft", note: "All projects" }, { label: "Branded Avg", value: "AED 3,500+/sqft", note: "Address / Palace" }, { label: "Standard Avg", value: "AED 1,900/sqft", note: "Emaar South / Valley" }, { label: "Downtown", value: "AED 2,800+/sqft", note: "Prime location premium" }, { label: "Creek Harbour", value: "AED 2,400/sqft", note: "Waterfront" }], trend: [{ y: "2021", v: 1450 }, { y: "2022", v: 1750 }, { y: "2023", v: 2100 }, { y: "2024", v: 2350 }, { y: "2025", v: 2570 }] })} />
               </div>
             </Section>
 
@@ -2046,10 +2077,10 @@ export default function EmaarDashboardV2() {
 
             {/* KPIs */}
             <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
-              <KPI label="Total Listed RE Stocks" value="30" sub="DFM · ADX · Tadawul · LSE" delay={1} />
-              <KPI label="UAE Stocks" value="18" sub="12 DFM · 6 ADX" delay={2} />
-              <KPI label="Saudi Stocks" value="10" sub="Tadawul Exchange" delay={3} />
-              <KPI label="International" value="1" sub="LSE (DarGlobal)" delay={4} />
+              <KPI label="Total Listed RE Stocks" value="30" sub="DFM · ADX · Tadawul · LSE" delay={1} onClick={() => setSelectedKPI({ label: "Listed RE Stocks", value: "30", color: T.gold, description: "30 publicly traded real estate companies across 4 exchanges — DFM, ADX, Tadawul, and LSE. Emaar is by far the largest by market cap.", source: "DXB Analytics · Exchange Data 2025", sourceUrl: "https://www.dfm.ae", items: [{ label: "DFM (Dubai)", value: "12 companies", note: "incl. Emaar, Emaar Dev" }, { label: "ADX (Abu Dhabi)", value: "6 companies", note: "incl. Aldar" }, { label: "Tadawul (KSA)", value: "10 companies", note: "incl. ROSHN, Dar Al Arkan" }, { label: "LSE (London)", value: "1 company", note: "DarGlobal" }, { label: "Largest by Mkt Cap", value: "Emaar PJSC", note: "AED 128B" }], trend: null })} />
+              <KPI label="UAE Stocks" value="18" sub="12 DFM · 6 ADX" delay={2} onClick={() => setSelectedKPI({ label: "UAE RE Stocks", value: "18", color: T.teal, description: "18 UAE-listed real estate stocks across DFM and ADX. DFM leads with 12 listings including Emaar, Emaar Development, and DAMAC.", source: "DFM · ADX 2025", sourceUrl: "https://www.dfm.ae", items: [{ label: "DFM Listings", value: "12 stocks", note: "Dubai Financial Market" }, { label: "ADX Listings", value: "6 stocks", note: "Abu Dhabi Securities" }, { label: "Largest DFM", value: "EMAAR", note: "AED 128.2B mkt cap" }, { label: "Largest ADX", value: "ALDAR", note: "Abu Dhabi's #1 dev" }, { label: "Avg Div Yield", value: "~5.2%", note: "UAE RE stocks" }], trend: null })} />
+              <KPI label="Saudi Stocks" value="10" sub="Tadawul Exchange" delay={3} onClick={() => setSelectedKPI({ label: "Saudi RE Stocks", value: "10", color: T.blue, description: "10 Saudi-listed real estate companies on Tadawul. The Saudi market is growing rapidly with ROSHN and Dar Al Arkan as the largest players.", source: "Tadawul Exchange 2025", sourceUrl: "https://www.saudiexchange.sa", items: [{ label: "Tadawul Listings", value: "10 stocks", note: "Saudi Exchange" }, { label: "Largest", value: "Dar Al Arkan", note: "SAR 16.6B mkt cap" }, { label: "Fastest Growing", value: "ROSHN", note: "Giga-project developer" }, { label: "Avg P/E", value: "~18×", note: "Saudi RE sector" }, { label: "Market Growth", value: "NEOM-driven", note: "Vision 2030 pipeline" }], trend: null })} />
+              <KPI label="International" value="1" sub="LSE (DarGlobal)" delay={4} onClick={() => setSelectedKPI({ label: "International Listed", value: "1 Stock", color: T.purple, description: "DarGlobal is the only GCC real estate developer listed on the London Stock Exchange (LSE). It develops properties in partnership with global luxury brands.", source: "LSE · DarGlobal 2025", sourceUrl: "https://www.londonstockexchange.com", items: [{ label: "Company", value: "DarGlobal", note: "LSE listed" }, { label: "Exchange", value: "London (LSE)", note: "International listing" }, { label: "Focus", value: "Luxury branded", note: "Trump, Aston Martin" }, { label: "Markets", value: "UAE, UK, KSA", note: "Multi-market" }, { label: "Status", value: "Small cap", note: "Growth stage" }], trend: null })} />
             </div>
 
             {/* Search & Filter */}
@@ -2181,10 +2212,25 @@ export default function EmaarDashboardV2() {
           {tab === "Admin" && userTier === "admin" && <>
             <Section title="User Management" sub="All registered users · Real-time data from Firestore">
               <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
-                <KPI label="Total Users" value={adminUsers.length} sub="Registered accounts" delay={1} />
-                <KPI label="Pro Trial" value={adminUsers.filter(u => u.status === "pro_trial").length} sub="Active trials" delay={2} />
-                <KPI label="Free Users" value={adminUsers.filter(u => u.status === "free" || u.status === "expired").length} sub="Trial expired or free" delay={3} />
-                <KPI label="Pro / Paid" value={adminUsers.filter(u => u.tier === "pro" || u.tier === "enterprise").length} sub="Paying customers" delay={4} />
+                <KPI label="Total Users" value={adminUsers.length} sub="Registered accounts" delay={1} onClick={() => setSelectedKPI({ label: "Total Users", value: `${adminUsers.length}`, color: T.gold, description: "Total registered users on DXB Analytics platform.", source: "Firebase Firestore — Live", sourceUrl: "#", items: [{ label: "Total Registered", value: `${adminUsers.length}`, note: "All time" }, { label: "Pro Trial", value: `${adminUsers.filter(u => u.status === "pro_trial").length}`, note: "Active trials" }, { label: "Free / Expired", value: `${adminUsers.filter(u => u.status === "free" || u.status === "expired").length}`, note: "Conversion targets" }, { label: "Paying Customers", value: `${adminUsers.filter(u => u.tier === "pro" || u.tier === "enterprise").length}`, note: "Revenue generating" }], trend: null })} />
+                <KPI label="Pro Trial" value={adminUsers.filter(u => u.status === "pro_trial").length} sub="Active trials" delay={2} onClick={() => setSelectedKPI({ label: "Pro Trial Users", value: `${adminUsers.filter(u => u.status === "pro_trial").length}`, color: T.gold, description: "Users currently in their Pro trial period. These are your hottest leads for conversion.", source: "Firebase Firestore — Live", sourceUrl: "#", items: [{ label: "Active Trials", value: `${adminUsers.filter(u => u.status === "pro_trial").length}`, note: "In trial now" }, { label: "Conversion Target", value: "AED 99/mo each", note: "Pro plan price" }, { label: "Pipeline Value", value: `AED ${adminUsers.filter(u => u.status === "pro_trial").length * 99}/mo`, note: "If all convert" }, { label: "Action", value: "Follow up now", note: "Before trial expires" }], trend: null })} />
+                <KPI label="Free Users" value={adminUsers.filter(u => u.status === "free" || u.status === "expired").length} sub="Trial expired or free" delay={3} onClick={() => setSelectedKPI({ label: "Free / Expired Users", value: `${adminUsers.filter(u => u.status === "free" || u.status === "expired").length}`, color: T.red, description: "Users on free plan or whose trial has expired. Re-engagement opportunity.", source: "Firebase Firestore — Live", sourceUrl: "#", items: [{ label: "Free Plan", value: `${adminUsers.filter(u => u.status === "free").length}`, note: "Never started trial" }, { label: "Trial Expired", value: `${adminUsers.filter(u => u.status === "expired").length}`, note: "Trial ended, didn't upgrade" }, { label: "Re-engage Value", value: `AED ${adminUsers.filter(u => u.status === "free" || u.status === "expired").length * 99}/mo`, note: "If all convert" }], trend: null })} />
+                <KPI label="Pro / Paid" value={adminUsers.filter(u => u.tier === "pro" || u.tier === "enterprise").length} sub="Paying customers" delay={4} onClick={() => setSelectedKPI({ label: "Paying Customers", value: `${adminUsers.filter(u => u.tier === "pro" || u.tier === "enterprise").length}`, color: T.green, description: "Active paying subscribers generating monthly recurring revenue.", source: "Firebase Firestore — Live", sourceUrl: "#", items: [{ label: "Pro Subscribers", value: `${adminUsers.filter(u => u.tier === "pro").length}`, note: "AED 99/mo each" }, { label: "Enterprise", value: `${adminUsers.filter(u => u.tier === "enterprise").length}`, note: "AED 499/mo each" }, { label: "Est. MRR", value: `AED ${adminUsers.filter(u => u.tier === "pro").length * 99 + adminUsers.filter(u => u.tier === "enterprise").length * 499}`, note: "Monthly recurring" }, { label: "Est. ARR", value: `AED ${(adminUsers.filter(u => u.tier === "pro").length * 99 + adminUsers.filter(u => u.tier === "enterprise").length * 499) * 12}`, note: "Annual recurring" }], trend: null })} />
+              </div>
+
+              {/* Analytics Summary Row */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 12 }}>
+                {[
+                  ["Conversion Rate", (() => { const total = adminUsers.length; const paid = adminUsers.filter(u => u.tier === "pro" || u.tier === "enterprise").length; return total > 0 ? `${((paid / total) * 100).toFixed(1)}%` : "0%"; })(), T.teal, "Paid / Total users"],
+                  ["Trial→Pro Rate", (() => { const trials = adminUsers.filter(u => u.status === "pro_trial" || u.tier === "pro").length; const paid = adminUsers.filter(u => u.tier === "pro").length; return trials > 0 ? `${((paid / trials) * 100).toFixed(1)}%` : "0%"; })(), T.gold, "Of trial starters"],
+                  ["Est. MRR", `AED ${adminUsers.filter(u => u.tier === "pro").length * 99 + adminUsers.filter(u => u.tier === "enterprise").length * 499}`, T.green, "Monthly recurring rev"],
+                ].map(([label, value, color, sub], i) => (
+                  <div key={i} style={{ background: T.surfaceAlt, borderRadius: 12, padding: "14px 16px", border: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{label}</div>
+                    <div style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 800, color }}>{value}</div>
+                    <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>{sub}</div>
+                  </div>
+                ))}
               </div>
             </Section>
 
