@@ -1174,7 +1174,7 @@ export default function AdminPanel() {
                             </div>
                           ))}
                         </div>
-                        <div style={{ marginTop: 16, padding: 16, borderRadius: 10, border: 1px solid , background: T.surfaceAlt }}>
+                        <div style={{ marginTop: 16, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
                           <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Project Image</div>
                           {(liveProjects[p.id]?.imageUrl) && (
                             <img src={liveProjects[p.id].imageUrl} alt="Project" style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 8, marginBottom: 10 }} />
