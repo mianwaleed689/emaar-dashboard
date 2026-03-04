@@ -1110,7 +1110,7 @@ export default function EmaarDashboardV2() {
   };
 
   return (
-    <div dir={dir} style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit', sans-serif" }}>
       <style>{css}</style>
 
       {/* Toast notification */}
@@ -1269,7 +1269,7 @@ export default function EmaarDashboardV2() {
       </header>
 
       {/* ─── MAIN CONTENT ─── */}
-      <main role="main" className="main-content" style={{ marginLeft: 240, paddingTop: 60, minHeight: "100vh" }}>
+      <main role="main" dir={dir} className="main-content" style={{ marginLeft: 240, paddingTop: 60, minHeight: "100vh" }}>
         {/* Trial / Free tier banner */}
         {userTier === "pro_trial" && trialDaysLeft > 0 && (
           <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: `linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.04))`, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
