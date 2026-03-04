@@ -257,6 +257,7 @@ export default function AdminPanel() {
   const [dataSubTab, setDataSubTab] = useState("projects"); // projects | communities | yields
   const [editingProject, setEditingProject] = useState(null);
   const [bulkSelected, setBulkSelected] = useState([]);
+  const [priceHistory, setPriceHistory] = useState({});
   const [bulkEdit, setBulkEdit] = useState(false);
   const [bulkForm, setBulkForm] = useState({});
   const [auditLog, setAuditLog] = useState([]);
@@ -532,6 +533,17 @@ export default function AdminPanel() {
     } catch(e) { console.log("Alert error:", e); }
   };
 
+  
+  const fetchPriceHistory = async (projectId) => {
+    try {
+      const { getDocs, collection: col, query, where, orderBy, limit } = await import("firebase/firestore");
+      const q = query(col(db, "priceHistory"), where("projectId", "==", String(projectId)), orderBy("recordedAt", "asc"), limit(24));
+      const snap = await getDocs(q);
+      const data = snap.docs.map(d => d.data());
+      setPriceHistory(prev => ({ ...prev, [projectId]: data }));
+    } catch(e) { console.log("fetchPriceHistory error:", e); }
+  };
+
   const validateProjectData = (data, isNew = false) => {
     const errors = [];
     if (isNew && !data.name) errors.push("Project name is required");
@@ -564,6 +576,17 @@ export default function AdminPanel() {
         await setDoc(doc(db, "auditLog", Date.now().toString()), { action: "project_update", projectId, changes: clean, diff, changedBy: adminUser?.email, changedAt: new Date().toISOString() });
       } catch(e) {}
       notify("✅ Project data saved");
+        if (clean.price) {
+          try {
+            await setDoc(doc(db, "priceHistory", projectId + "_" + Date.now()), {
+              projectId: String(projectId),
+              price: Number(clean.price),
+              ppsf: Number(clean.ppsf) || 0,
+              recordedAt: new Date().toISOString(),
+              recordedBy: adminUser?.email || "admin"
+            });
+          } catch(e) { console.log("Price history error:", e); }
+        }
       if (clean.price) sendAlertsToAllUsers(projectId, "Price Updated", "AED " + Number(clean.price).toLocaleString(), "");
       else if (clean.status) sendAlertsToAllUsers(projectId, "Status Updated", clean.status, "");
       setEditingProject(null);
