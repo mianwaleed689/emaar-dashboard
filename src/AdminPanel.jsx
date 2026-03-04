@@ -655,7 +655,6 @@ export default function AdminPanel() {
           <a href="/" className="sidebar-btn" style={{ textDecoration: "none" }}>
             {I.overview} <span>{i18t("sidebar", "dashboard")}</span>
           </a>
-          </a>
         </nav>
 
         {/* User info */}
