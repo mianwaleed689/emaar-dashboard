@@ -1399,44 +1399,6 @@ export default function AdminPanel() {
                         
                           <div style={{ marginTop: 12, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
                           <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Project Documents</div>
-                          {(() => {
-                            const history = priceHistory[p.id];
-                            if (!history) return (
-                              <div style={{ marginTop: 16, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt, textAlign: "center" }}>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Price History</div>
-                                <button type="button" onClick={() => fetchPriceHistory(p.id)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.3)", background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                                  Load Price History
-                                </button>
-                              </div>
-                            );
-                            if (history.length === 0) return (
-                              <div style={{ marginTop: 16, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Price History</div>
-                                <div style={{ fontSize: 11, color: T.textMuted }}>No price history yet. Save a price change to start tracking.</div>
-                              </div>
-                            );
-                            const max = Math.max(...history.map(h => h.price));
-                            const min = Math.min(...history.map(h => h.price));
-                            const range = max - min || 1;
-                            return (
-                              <div style={{ marginTop: 16, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Price History</div>
-                                <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 80 }}>
-                                  {history.map((h, i) => (
-                                    <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                                      <div style={{ fontSize: 8, color: T.textMuted }}>{Math.round(h.price/1000000*10)/10}M</div>
-                                      <div style={{ width: "100%", background: T.gold, borderRadius: 3, height: Math.max(4, ((h.price - min) / range) * 60 + 4) + "px", opacity: 0.7 + (i / history.length) * 0.3 }} />
-                                      <div style={{ fontSize: 7, color: T.textMuted }}>{new Date(h.recordedAt).toLocaleDateString("en-AE", { month: "short", day: "numeric" })}</div>
-                                    </div>
-                                  ))}
-                                </div>
-                                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-                                  <span style={{ fontSize: 10, color: T.textMuted }}>Low: AED {min.toLocaleString()}</span>
-                                  <span style={{ fontSize: 10, color: T.gold }}>High: AED {max.toLocaleString()}</span>
-                                </div>
-                              </div>
-                            );
-                          })()}
                           tWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Project Documents</div>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                             {[
@@ -1475,14 +1437,13 @@ export default function AdminPanel() {
                             const history = priceHistory[p.id];
                             if (!history) return (
                               <div style={{ marginTop: 16, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt, textAlign: "center" }}>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Price History</div>
-                                <button type="button" onClick={() => fetchPriceHistory(p.id)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.3)", background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Load Price History</button>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, marginBottom: 10 }}>Price History</div>
+                                <button type="button" onClick={() => fetchPriceHistory(p.id)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.3)", background: "transparent", color: T.gold, cursor: "pointer" }}>Load Price History</button>
                               </div>
                             );
                             if (history.length === 0) return (
-                              <div style={{ marginTop: 16, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Price History</div>
-                                <div style={{ fontSize: 11, color: T.textMuted }}>No price history yet. Save a price change to start tracking.</div>
+                              <div style={{ marginTop: 16, padding: 16, borderRadius: 10, background: T.surfaceAlt }}>
+                                <div style={{ fontSize: 11, color: T.textMuted }}>No price history yet.</div>
                               </div>
                             );
                             const max = Math.max(...history.map(h => h.price));
@@ -1490,7 +1451,7 @@ export default function AdminPanel() {
                             const range = max - min || 1;
                             return (
                               <div style={{ marginTop: 16, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Price History</div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, marginBottom: 12 }}>Price History</div>
                                 <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 80 }}>
                                   {history.map((h, i) => (
                                     <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
@@ -1507,6 +1468,7 @@ export default function AdminPanel() {
                               </div>
                             );
                           })()}
+
                         <button type="button" disabled={dataSaving} onClick={() => saveProjectData(p.id, projectForm)}
                           style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
                           {dataSaving ? "Saving..." : "Save to Firestore — Goes Live Instantly"}
