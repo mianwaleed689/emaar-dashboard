@@ -767,7 +767,7 @@ export default function EmaarDashboardV2() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Use merged Firestore+static data if available, otherwise pure static fallback
-  const activeProjects = [...emaarProjects.map(p => { const ov = liveProjects[String(p.id)]; return ov ? { ...p, ...ov } : p; }), ...extraProjects];
+  const activeProjects = [...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }), ...extraProjects];
 
   // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
   const getUnitEntries = (units) => {
