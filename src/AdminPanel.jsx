@@ -568,7 +568,7 @@ export default function AdminPanel() {
       });
       clean.updatedAt = new Date().toISOString();
       clean.updatedBy = adminUser?.email || "admin";
-      await setDoc(doc(db, "projectData", projectId), clean, { merge: true });
+      await setDoc(doc(db, "projectData", String(projectId)), clean, { merge: true });
       try {
         const oldDoc = liveProjects[projectId] || {};
         const diff = {};
@@ -578,8 +578,8 @@ export default function AdminPanel() {
       notify("✅ Project data saved");
         if (clean.price) {
           try {
-            await setDoc(doc(db, "priceHistory", projectId + "_" + Date.now()), {
-              projectId: String(projectId),
+            await setDoc(doc(db, "priceHistory", String(projectId) + "_" + Date.now()), {
+              projectId: String(projectId), pid: String(projectId),
               price: Number(clean.price),
               ppsf: Number(clean.ppsf) || 0,
               recordedAt: new Date().toISOString(),
