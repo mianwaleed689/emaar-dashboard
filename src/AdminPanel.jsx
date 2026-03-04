@@ -6,7 +6,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { auth, db } from "./firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
-import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI } from "./data";
 
 /* ─── THEME (exact dashboard match) ─── */
@@ -226,6 +226,7 @@ export default function AdminPanel() {
   const [users, setUsers] = useState([]);
   const [userSearch, setUserSearch] = useState("");
   const [tierFilter, setTierFilter] = useState("All");
+  // eslint-disable-next-line no-unused-vars
   const [sortBy, setSortBy] = useState("newest");
   const [toast, setToast] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);

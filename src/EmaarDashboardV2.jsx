@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "firebase/auth";
 import { collection, getDocs, orderBy, query, doc, getDoc, setDoc } from "firebase/firestore";
@@ -726,14 +726,6 @@ export default function EmaarDashboardV2() {
   );
 
   // Blur wrapper for free users
-  const BlurGate = ({ children, locked, message, compact }) => (
-    <div style={{ position: "relative" }}>
-      <div style={locked ? { filter: "blur(6px)", pointerEvents: "none", userSelect: "none" } : {}}>
-        {children}
-      </div>
-      {locked && <UpgradeOverlay message={message} compact={compact} />}
-    </div>
-  );
   const [tab, setTab] = useState("Overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [time, setTime] = useState(new Date());
@@ -972,7 +964,7 @@ export default function EmaarDashboardV2() {
     };
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
-  }, [showUpgrade, showStock, selectedProject, showCompare, selectedStockTv]);
+  }, [showUpgrade, showStock, selectedProject, showCompare, selectedStockTv, showCheckout, showProfile]);
 
   if (authLoading) {
     return (
@@ -2030,7 +2022,7 @@ export default function EmaarDashboardV2() {
                   </thead>
                   <tbody>
                     {communityProjects.map((c, i) => (
-                      <tr key={i} style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt} onMouseLeave={e => e.currentTarget.style.background = "transparent"} onClick={() => { const comm = emaarCommunities.find(x => x.name === c.full); if(comm) setSelectedCommunity(comm.name); }} style={{ cursor: "pointer" }}>
+                      <tr key={i} style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.2s", cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt} onMouseLeave={e => e.currentTarget.style.background = "transparent"} onClick={() => { const comm = emaarCommunities.find(x => x.name === c.full); if(comm) setSelectedCommunity(comm.name); }}>
                         <td style={{ padding: "12px 14px", color: T.white, fontWeight: 500 }}>{c.full}</td>
                         <td style={{ padding: "12px 14px", color: T.goldLight, fontFamily: "'Fraunces', serif", fontWeight: 600 }}>{c.projects}</td>
                         <td style={{ padding: "12px 14px", color: T.teal }}>{c.yield}</td>
