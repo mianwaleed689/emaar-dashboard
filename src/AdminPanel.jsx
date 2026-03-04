@@ -431,6 +431,18 @@ export default function AdminPanel() {
   ];
 
   /* ─── DATA MANAGER ACTIONS ─── */
+  
+  const validateProjectData = (data, isNew = false) => {
+    const errors = [];
+    if (isNew && !data.name) errors.push("Project name is required");
+    if (isNew && !data.community) errors.push("Community is required");
+    if (data.price && (isNaN(data.price) || Number(data.price) <= 0)) errors.push("Price must be a positive number");
+    if (data.ppsf && (isNaN(data.ppsf) || Number(data.ppsf) <= 0)) errors.push("Price per sqft must be positive");
+    if (data.unitsAvail && data.unitsTotal && Number(data.unitsAvail) > Number(data.unitsTotal)) errors.push("Available units cannot exceed total units");
+    if (data.construction && (Number(data.construction) < 0 || Number(data.construction) > 100)) errors.push("Construction must be 0-100");
+    return errors;
+  };
+
   const saveProjectData = async (projectId, data) => {
     const errors = validateProjectData(data);
     if (errors.length > 0) { notify("❌ " + errors[0]); return; }
