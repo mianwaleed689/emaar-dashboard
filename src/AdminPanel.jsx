@@ -1188,13 +1188,27 @@ export default function AdminPanel() {
                           ))}
                         </div>
                         <div style={{ marginTop: 16, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Project Image URL</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Project Image</div>
                           {(projectForm.imageUrl || liveProjects[p.id]?.imageUrl) && (
-                            <img src={projectForm.imageUrl || liveProjects[p.id].imageUrl} alt="Project" style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 8, marginBottom: 10 }} onError={e => e.target.style.display="none"} />
+                            <img src={projectForm.imageUrl || liveProjects[p.id]?.imageUrl} alt="Project" style={{ width: "100%", height: 140, objectFit: "cover", borderRadius: 8, marginBottom: 10 }} onError={e => e.target.style.display="none"} />
                           )}
-                          <input type="text" placeholder="Paste image URL (Google Drive, Imgur, etc.)" value={projectForm.imageUrl || liveProjects[p.id]?.imageUrl || ""} onChange={e => setProjectForm(prev => ({ ...prev, imageUrl: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>Tip: Upload to imgur.com or Google Drive (set to public) and paste the link here</div>
+                          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, padding: "10px 16px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.2)", background: T.bg, color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            {projectForm.imageUploading ? "Uploading..." : "Upload Project Image"}
+                            <input type="file" accept="image/*,video/*,.pdf" style={{ display: "none" }} onChange={async e => {
+                              const file = e.target.files[0]; if (!file) return;
+                              setProjectForm(prev => ({ ...prev, imageUploading: true }));
+                              const fd = new FormData();
+                              fd.append("file", file);
+                              fd.append("upload_preset", "dxb-analytics");
+                              fd.append("cloud_name", "dh9dd5ld0");
+                              const res = await fetch("https://api.cloudinary.com/v1_1/dh9dd5ld0/auto/upload", { method: "POST", body: fd });
+                              const data = await res.json();
+                              setProjectForm(prev => ({ ...prev, imageUrl: data.secure_url, imageUploading: false }));
+                              notify("Image uploaded!");
+                            }} />
+                          </label>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>Supports images, PDFs, videos up to 25MB</div>
                         </div>
                         
                           <div style={{ marginTop: 12, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
