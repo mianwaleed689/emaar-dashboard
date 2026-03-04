@@ -781,6 +781,18 @@ export default function EmaarDashboardV2() {
   const [tabLoading, setTabLoading] = useState(false);
   const setTab = (newTab) => { if (newTab === tab) return; setTabLoading(true); setTabRaw(newTab); setTimeout(() => setTabLoading(false), 180); };
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showLayoutSettings, setShowLayoutSettings] = useState(false);
+
+  // Layout settings — which tabs are visible and in what order
+  const defaultLayout = TABS.map(t => ({ key: t.key, visible: true }));
+  const [sidebarLayout, setSidebarLayout] = useState(() => {
+    try { const saved = JSON.parse(localStorage.getItem("dxb_sidebar_layout")); if (saved && saved.length) return saved; } catch {}
+    return defaultLayout;
+  });
+  const saveSidebarLayout = (layout) => { setSidebarLayout(layout); try { localStorage.setItem("dxb_sidebar_layout", JSON.stringify(layout)); } catch {} };
+  const visibleTabs = sidebarLayout.filter(l => l.visible).map(l => TABS.find(t => t.key === l.key)).filter(Boolean);
+  const moveTab = (idx, dir) => { const arr = [...sidebarLayout]; const swap = idx + dir; if (swap < 0 || swap >= arr.length) return; [arr[idx], arr[swap]] = [arr[swap], arr[idx]]; saveSidebarLayout(arr); };
+  const toggleTabVisibility = (key) => { saveSidebarLayout(sidebarLayout.map(l => l.key === key ? { ...l, visible: !l.visible } : l)); };
   const [time, setTime] = useState(new Date());
   const [authLoading, setAuthLoading] = useState(true);
   const [projectSearch, setProjectSearch] = useState("");
@@ -1125,7 +1137,7 @@ export default function EmaarDashboardV2() {
         {/* Navigation */}
         <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 3 }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px" }}>Emaar Properties</div>
-          {TABS.map(t => (
+          {visibleTabs.map(t => (
             <button type="button" key={t.key} className={`sidebar-btn ${tab === t.key ? "active" : ""}`} onClick={() => handleTabChange(t.key)}>
               {t.icon}
               {t.key}
@@ -1169,6 +1181,10 @@ export default function EmaarDashboardV2() {
               <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>Upgrade to Pro →</div>
             </div>
           )}
+          <button type="button" onClick={() => setShowLayoutSettings(true)} className="sidebar-btn" style={{ marginBottom: 8, width: "100%", justifyContent: "flex-start" }}>
+            {Icons.admin}
+            Layout Settings
+          </button>
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 10, background: T.surfaceAlt }}>
             <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: T.bg }}>
               {user.charAt(0).toUpperCase()}
@@ -3490,6 +3506,58 @@ export default function EmaarDashboardV2() {
       </div>}
 
       {/* Upgrade Modal */}
+      {/* ─── LAYOUT SETTINGS MODAL ─── */}
+      {showLayoutSettings && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 4000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowLayoutSettings(false)}>
+          <div className="fade-up" style={{ background: T.surface, borderRadius: 16, maxWidth: 440, width: "100%", border: `1px solid ${T.border}`, maxHeight: "85vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div style={{ padding: "20px 24px 16px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800, color: T.gold }}>Layout Settings</div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Show, hide, and reorder sidebar tabs</div>
+              </div>
+              <button type="button" onClick={() => setShowLayoutSettings(false)} style={{ background: "none", border: "none", color: T.textMuted, fontSize: 20, cursor: "pointer", padding: 4 }}>&times;</button>
+            </div>
+
+            {/* Tab list */}
+            <div style={{ padding: "16px 24px", overflowY: "auto", flex: 1 }}>
+              {sidebarLayout.map((item, idx) => {
+                const tabInfo = TABS.find(t => t.key === item.key);
+                if (!tabInfo) return null;
+                return (
+                  <div key={item.key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", marginBottom: 4, borderRadius: 10, background: item.visible ? T.surfaceAlt : "transparent", border: `1px solid ${item.visible ? T.border : "transparent"}`, transition: "all 0.2s", opacity: item.visible ? 1 : 0.45 }}>
+                    {/* Reorder arrows */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      <button type="button" onClick={() => moveTab(idx, -1)} disabled={idx === 0} style={{ background: "none", border: "none", color: idx === 0 ? T.border : T.textMuted, cursor: idx === 0 ? "default" : "pointer", padding: 0, lineHeight: 1 }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+                      </button>
+                      <button type="button" onClick={() => moveTab(idx, 1)} disabled={idx === sidebarLayout.length - 1} style={{ background: "none", border: "none", color: idx === sidebarLayout.length - 1 ? T.border : T.textMuted, cursor: idx === sidebarLayout.length - 1 ? "default" : "pointer", padding: 0, lineHeight: 1 }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+                      </button>
+                    </div>
+
+                    {/* Icon & name */}
+                    <div style={{ color: item.visible ? T.gold : T.textMuted, display: "flex", alignItems: "center" }}>{tabInfo.icon}</div>
+                    <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: item.visible ? T.white : T.textMuted }}>{item.key}</span>
+
+                    {/* Toggle */}
+                    <button type="button" onClick={() => toggleTabVisibility(item.key)} style={{ width: 40, height: 22, borderRadius: 11, border: "none", background: item.visible ? T.gold : T.surfaceAlt, cursor: "pointer", position: "relative", transition: "background 0.2s" }}>
+                      <div style={{ width: 16, height: 16, borderRadius: "50%", background: item.visible ? T.bg : T.textMuted, position: "absolute", top: 3, left: item.visible ? 21 : 3, transition: "left 0.2s" }} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: "12px 24px 20px", borderTop: `1px solid ${T.border}`, display: "flex", gap: 10 }}>
+              <button type="button" onClick={() => { saveSidebarLayout(defaultLayout); }} style={{ flex: 1, padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Reset to Default</button>
+              <button type="button" onClick={() => setShowLayoutSettings(false)} style={{ flex: 1, padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, border: "none", borderRadius: 8, color: T.bg, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <UpgradeModal show={showUpgrade} onClose={() => setShowUpgrade(false)} />
     </div>
   );
