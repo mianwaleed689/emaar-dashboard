@@ -460,6 +460,22 @@ export default function AdminPanel() {
     } catch(e) { notify("Error: " + e.message); }
   };
 
+  
+  const exportProjectsExcel = () => {
+    const headers = ["ID","Name","Community","Price","PPSF","Status","Handover","Type","Beds","Payment Plan","Construction %","Availability","Units Total","Units Available"];
+    const rows = emaarProjects.map(p => {
+      const m = getMergedProject(p);
+      return [p.id, p.name, p.community, m.price||"", m.ppsf||"", m.status||"", m.handover||"", m.type||"", m.beds||"", m.paymentPlan||"", m.construction||"", m.availability||"", m.unitsTotal||"", m.unitsAvail||""];
+    });
+    const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "emaar-projects-" + new Date().toISOString().slice(0,10) + ".csv";
+    a.click();
+    notify("Projects exported!");
+  };
+
   const validateProjectData = (data, isNew = false) => {
     const errors = [];
     if (isNew && !data.name) errors.push("Project name is required");
