@@ -448,6 +448,18 @@ export default function AdminPanel() {
     } catch(e) { notify("Upload error: " + e.message); }
   };
 
+  
+  const deleteProject = async (projectId) => {
+    if (!window.confirm("Delete this project? This cannot be undone.")) return;
+    try {
+      const { deleteDoc, doc: dDoc } = await import("firebase/firestore");
+      await deleteDoc(dDoc(db, "projectData", String(projectId)));
+      notify("Project deleted");
+      setEditingProject(null);
+      fetchLiveData();
+    } catch(e) { notify("Error: " + e.message); }
+  };
+
   const validateProjectData = (data, isNew = false) => {
     const errors = [];
     if (isNew && !data.name) errors.push("Project name is required");
@@ -1150,6 +1162,7 @@ export default function AdminPanel() {
                             {hasOverride && <span style={{ marginLeft: 8, fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 600 }}>LIVE DATA</span>}
                           </div>
                           <div style={{ display: "flex", gap: 8 }}>
+                            <button type="button" onClick={() => deleteProject(p.id)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>🗑 Delete Project</button>
                             {hasOverride && <button type="button" onClick={() => resetProjectData(p.id)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.3)`, background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Reset to Default</button>}
                             <button type="button" onClick={() => setEditingProject(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
                           </div>
