@@ -808,8 +808,8 @@ export default function EmaarDashboardV2() {
                 setTrialDaysLeft(daysLeft);
               }
             }
-            // Admin override
-            if (data.role === "admin") tier = "admin";
+            // Admin override — by role field OR by owner email
+            if (data.role === "admin" || firebaseUser.email === "mianwaleed689@gmail.com") tier = "admin";
             setUserTier(tier);
           } else {
             // Existing user without profile (e.g. your admin account) — treat as admin/pro
