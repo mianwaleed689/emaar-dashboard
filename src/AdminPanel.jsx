@@ -248,6 +248,7 @@ export default function AdminPanel() {
   const [sortBy, setSortBy] = useState("newest");
   const [toast, setToast] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   /* ─── DATA MANAGER STATE ─── */
   const [dataSubTab, setDataSubTab] = useState("projects"); // projects | communities | yields
@@ -613,15 +614,18 @@ export default function AdminPanel() {
         </nav>
 
         {/* User info */}
-        <div style={{ padding: "16px", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, color: T.bg }}>
-            {(adminUser?.displayName || adminUser?.email || "A")[0].toUpperCase()}
+        <div style={{ padding: "16px 12px", borderTop: `1px solid ${T.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 10, background: T.surfaceAlt }}>
+            <div style={{ width: 34, height: 34, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, color: T.bg }}>
+              {(adminUser?.displayName || adminUser?.email || "A")[0].toUpperCase()}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{adminUser?.displayName || adminUser?.email?.split("@")[0]}</div>
+              <div style={{ fontSize: 10, color: T.gold, fontWeight: 600 }}>{i18t("sidebar", "admin")}</div>
+            </div>
+            <button type="button" onClick={() => setShowProfile(true)} style={{ background: "none", border: `1px solid ${T.border}`, cursor: "pointer", color: T.gold, padding: "3px 8px", borderRadius: 6, fontSize: 10, fontWeight: 600, fontFamily: "'Outfit', sans-serif" }}>{i18t("ui", "profile")}</button>
+            <button type="button" onClick={() => signOut(auth)} title="Logout" style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", padding: 4 }}>{I.logout}</button>
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{adminUser?.displayName || adminUser?.email?.split("@")[0]}</div>
-            <div style={{ fontSize: 10, color: T.gold, fontWeight: 600 }}>Admin</div>
-          </div>
-          <button type="button" onClick={() => signOut(auth)} title="Logout" style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", padding: 4 }}>{I.logout}</button>
         </div>
       </aside>
 
@@ -1429,6 +1433,50 @@ export default function AdminPanel() {
 
         </div>
       </main>
+
+      {/* ─── PROFILE MODAL ─── */}
+      {showProfile && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowProfile(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, width: "100%", maxWidth: 400, padding: 32, boxShadow: "0 25px 80px rgba(0,0,0,0.5)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.gold }}>{i18t("ui", "profile")}</h3>
+              <button type="button" onClick={() => setShowProfile(false)} style={{ background: "none", border: "none", color: T.textMuted, fontSize: 20, cursor: "pointer" }}>&times;</button>
+            </div>
+            {/* Avatar */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, marginBottom: 24 }}>
+              <div style={{ width: 72, height: 72, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 28, color: T.bg }}>
+                {(adminUser?.displayName || adminUser?.email || "A")[0].toUpperCase()}
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: T.white }}>{adminUser?.displayName || adminUser?.email?.split("@")[0]}</div>
+                <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{adminUser?.email}</div>
+                <div style={{ display: "inline-block", marginTop: 8, padding: "4px 12px", borderRadius: 6, background: "rgba(212,168,67,0.12)", border: `1px solid ${T.gold}33`, fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 0.5 }}>{i18t("sidebar", "admin")}</div>
+              </div>
+            </div>
+            {/* Info rows */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 12px", borderRadius: 8, background: T.surfaceAlt }}>
+                <span style={{ fontSize: 12, color: T.textMuted }}>UID</span>
+                <span style={{ fontSize: 11, color: T.textSecondary, fontFamily: "monospace" }}>{adminUser?.uid?.slice(0, 16)}...</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 12px", borderRadius: 8, background: T.surfaceAlt }}>
+                <span style={{ fontSize: 12, color: T.textMuted }}>{i18t("ui", "email")}</span>
+                <span style={{ fontSize: 12, color: T.white }}>{adminUser?.email}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 12px", borderRadius: 8, background: T.surfaceAlt }}>
+                <span style={{ fontSize: 12, color: T.textMuted }}>Role</span>
+                <span style={{ fontSize: 12, color: T.gold, fontWeight: 600 }}>{i18t("sidebar", "admin")}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 12px", borderRadius: 8, background: T.surfaceAlt }}>
+                <span style={{ fontSize: 12, color: T.textMuted }}>Total Users</span>
+                <span style={{ fontSize: 12, color: T.white, fontWeight: 600 }}>{users.length}</span>
+              </div>
+            </div>
+            {/* Sign Out */}
+            <button type="button" onClick={() => { signOut(auth); setShowProfile(false); }} style={{ width: "100%", marginTop: 20, padding: "10px 0", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, color: "#EF4444", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{i18t("ui", "signOut")}</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

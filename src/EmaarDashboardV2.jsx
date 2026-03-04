@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { auth, db } from "./firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence, browserSessionPersistence } from "firebase/auth";
 import { collection, getDocs, orderBy, query, doc, getDoc, setDoc } from "firebase/firestore";
 
 import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI, communityCoords, dubaiLandmarks } from "./data";
@@ -483,12 +483,17 @@ const CustomTooltip = ({ active, payload, label }) => {
 const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
   const [mode, setMode] = useState(defaultMode); // "login" or "signup"
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => {
+    try { return localStorage.getItem("dxb_remember") === "true" ? (localStorage.getItem("dxb_email") || "") : ""; } catch { return ""; }
+  });
   const [pass, setPass] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [resetSent, setResetSent] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => {
+    try { return localStorage.getItem("dxb_remember") === "true"; } catch { return false; }
+  });
 
   const handleForgot = async () => {
     if (!email) { setError("Enter your email first, then click Forgot password"); return; }
@@ -507,6 +512,8 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     setLoading(true);
     setError("");
     try {
+      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+      try { localStorage.setItem("dxb_remember", rememberMe ? "true" : "false"); if (rememberMe) localStorage.setItem("dxb_email", email); else localStorage.removeItem("dxb_email"); } catch {}
       await signInWithEmailAndPassword(auth, email, pass);
       onLogin(email);
     } catch (err) {
@@ -628,7 +635,13 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             {resetSent && <div style={{ color: T.green, fontSize: 12, padding: "8px 12px", background: "rgba(16,185,129,0.08)", borderRadius: 8, border: "1px solid rgba(16,185,129,0.2)" }}>Password reset email sent! Check your inbox.</div>}
 
             {mode === "login" && (
-              <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 12, color: T.textSecondary }}>
+                  <div onClick={() => setRememberMe(!rememberMe)} style={{ width: 18, height: 18, borderRadius: 4, border: `1.5px solid ${rememberMe ? T.gold : T.border}`, background: rememberMe ? T.gold : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.2s" }}>
+                    {rememberMe && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.bg} strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                  </div>
+                  Remember me
+                </label>
                 <button onClick={handleForgot} type="button" style={{ background: "none", border: "none", color: T.gold, fontSize: 12, textDecoration: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Forgot password?</button>
               </div>
             )}
