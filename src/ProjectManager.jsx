@@ -276,7 +276,7 @@ export default function ProjectManager({ embedded = false }) {
     if (!isAdmin) return;
     (async () => {
       try {
-        const snap = await getDocs(collection(db, "projects"));
+        const snap = await getDocs(collection(db, "projectData"));
         const list = [];
         snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
         list.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
