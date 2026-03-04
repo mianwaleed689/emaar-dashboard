@@ -4,6 +4,7 @@
    ═══════════════════════════════════════════════════════════════ */
 import React, { useState, useEffect, useCallback } from "react";
 import { auth, db, storage } from "./firebase";
+import emailjs from "@emailjs/browser";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
@@ -498,6 +499,39 @@ export default function AdminPanel() {
     setDataSaving(false);
   };
 
+  
+  const sendAlertEmail = async (userEmail, userName, projectName, changeType, newValue, oldValue) => {
+    try {
+      await emailjs.send(
+        "service_da7nshv",
+        "template_gl1xqhy",
+        {
+          user_email: userEmail,
+          user_name: userName || "Subscriber",
+          project_name: projectName,
+          change_type: changeType,
+          new_value: String(newValue),
+          old_value: String(oldValue || "N/A"),
+          updated_at: new Date().toLocaleString("en-AE"),
+        },
+        "USkwUhp0csGCVDkdQ"
+      );
+      console.log("Alert sent to", userEmail);
+    } catch(e) { console.log("Email error:", e); }
+  };
+
+  const sendAlertsToAllUsers = async (projectName, changeType, newValue, oldValue) => {
+    try {
+      const { getDocs, collection: col } = await import("firebase/firestore");
+      const snap = await getDocs(col(db, "users"));
+      const proUsers = snap.docs.filter(d => d.data().plan === "pro" || d.data().plan === "Pro").map(d => d.data());
+      for (const user of proUsers) {
+        if (user.email) await sendAlertEmail(user.email, user.name || user.displayName, projectName, changeType, newValue, oldValue);
+      }
+      if (proUsers.length > 0) notify("Alerts sent to " + proUsers.length + " users!");
+    } catch(e) { console.log("Alert error:", e); }
+  };
+
   const validateProjectData = (data, isNew = false) => {
     const errors = [];
     if (isNew && !data.name) errors.push("Project name is required");
@@ -530,6 +564,8 @@ export default function AdminPanel() {
         await setDoc(doc(db, "auditLog", Date.now().toString()), { action: "project_update", projectId, changes: clean, diff, changedBy: adminUser?.email, changedAt: new Date().toISOString() });
       } catch(e) {}
       notify("✅ Project data saved");
+      if (clean.price) sendAlertsToAllUsers(projectId, "Price Updated", "AED " + Number(clean.price).toLocaleString(), "");
+      else if (clean.status) sendAlertsToAllUsers(projectId, "Status Updated", clean.status, "");
       setEditingProject(null);
       fetchLiveData();
     } catch (e) { notify("❌ Error: " + e.message); }
