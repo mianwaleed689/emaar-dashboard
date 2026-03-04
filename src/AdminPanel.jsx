@@ -9,6 +9,7 @@ import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from "firebase/fi
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI } from "./data";
 import ProjectManager from "./ProjectManager";
+import { useI18n, LANGUAGES } from "./i18n";
 
 /* ─── THEME (exact dashboard match) ─── */
 const T = {
@@ -234,6 +235,8 @@ const Chart = ({ title, sub, children }) => (
    MAIN COMPONENT
    ═══════════════════════════════════════ */
 export default function AdminPanel() {
+  const { lang, setLang, t: i18t, dir, langInfo } = useI18n();
+  const [showLangPicker, setShowLangPicker] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [adminUser, setAdminUser] = useState(null);
@@ -585,27 +588,27 @@ export default function AdminPanel() {
             </svg>
             <div>
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.gold }}>DXB Analytics</div>
-              <div style={{ fontSize: 9, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase" }}>Admin Console</div>
+              <div style={{ fontSize: 9, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase" }}>{i18t("sidebar", "adminConsole")}</div>
             </div>
           </a>
         </div>
 
         {/* Navigation */}
         <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 3, overflowY: "auto" }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px" }}>Platform</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px" }}>{i18t("sidebar", "platform")}</div>
           {TABS.map(t => (
             <button type="button" key={t.id} className={`sidebar-btn ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
               <span style={{ color: tab === t.id ? T.gold : T.textMuted, transition: "color 0.15s" }}>{t.icon}</span>
-              {t.label}
+              {i18t("adminTabs", t.id)}
             </button>
           ))}
 
-          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Quick Links</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>{i18t("sidebar", "quickLinks")}</div>
           <a href="/" className="sidebar-btn" style={{ textDecoration: "none" }}>
-            {I.overview} <span>Dashboard</span>
+            {I.overview} <span>{i18t("sidebar", "dashboard")}</span>
           </a>
           <a href="/landing" className="sidebar-btn" style={{ textDecoration: "none" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> <span>Landing Page</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> <span>{i18t("sidebar", "landingPage")}</span>
           </a>
         </nav>
 
@@ -623,7 +626,7 @@ export default function AdminPanel() {
       </aside>
 
       {/* ─── MAIN CONTENT ─── */}
-      <main className="admin-main" style={{ marginLeft: 240, minHeight: "100vh" }}>
+      <main dir={dir} className="admin-main" style={{ marginLeft: 240, minHeight: "100vh" }}>
         {/* Top bar (matching dashboard) */}
         <header className="admin-topbar" style={{ position: "sticky", top: 0, zIndex: 20, height: 60, background: `${T.surface}ee`, backdropFilter: "blur(16px)", borderBottom: `1px solid ${T.border}`, padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -636,7 +639,7 @@ export default function AdminPanel() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
             <div>
-              <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>Admin Console</h1>
+              <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>{i18t("sidebar", "adminConsole")}</h1>
               <p style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1 }}>{new Date().toLocaleDateString("en-AE", { weekday: "short", day: "numeric", month: "short", year: "numeric" })} · {stats.total} users</p>
             </div>
           </div>
@@ -652,6 +655,32 @@ export default function AdminPanel() {
             <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}` }}>
               <span style={{ fontSize: 10, color: T.textMuted }}>PAID </span>
               <span style={{ fontSize: 12, fontWeight: 700, color: T.teal }}>{stats.paid}</span>
+            </div>
+            {/* Language Picker */}
+            <div style={{ position: "relative" }}>
+              <button type="button" onClick={() => setShowLangPicker(!showLangPicker)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: "6px 10px", cursor: "pointer", color: T.textSecondary, display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: "'Outfit',sans-serif", fontWeight: 600, transition: "all 0.2s" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                {langInfo.name}
+              </button>
+              {showLangPicker && (
+                <>
+                  <div style={{ position: "fixed", inset: 0, zIndex: 998 }} onClick={() => setShowLangPicker(false)} />
+                  <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 280, maxHeight: 420, overflowY: "auto", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, boxShadow: "0 20px 60px rgba(0,0,0,0.5)", zIndex: 999, padding: 8 }}>
+                    <div style={{ padding: "8px 12px 6px", fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase" }}>{i18t("sections", "language")}</div>
+                    {LANGUAGES.map(l => (
+                      <button type="button" key={l.code} onClick={() => { setLang(l.code); setShowLangPicker(false); }}
+                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 8, border: "none", background: lang === l.code ? T.goldGlow : "transparent", cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s", textAlign: "left" }}
+                        onMouseEnter={e => { if (lang !== l.code) e.currentTarget.style.background = T.surfaceAlt; }}
+                        onMouseLeave={e => { if (lang !== l.code) e.currentTarget.style.background = "transparent"; }}>
+                        <span style={{ fontSize: 18, width: 28, textAlign: "center" }}>{l.flag}</span>
+                        <span style={{ fontSize: 12, fontWeight: lang === l.code ? 700 : 500, color: lang === l.code ? T.gold : T.white }}>{l.name}</span>
+                        {l.dir === "rtl" && <span style={{ fontSize: 8, color: T.textMuted, marginLeft: "auto", padding: "2px 6px", borderRadius: 4, background: T.surfaceAlt }}>RTL</span>}
+                        {lang === l.code && <span style={{ marginLeft: "auto", color: T.gold }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg></span>}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </header>
