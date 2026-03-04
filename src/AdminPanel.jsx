@@ -1082,7 +1082,7 @@ export default function AdminPanel() {
                           ))}
                         </div>
                         <button type="button" disabled={dataSaving} onClick={() => saveNewProject(projectForm)}
-                          style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: linear-gradient(135deg, , #059669), color: T.white, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
+                          style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #10B981, #059669)", color: "#FFFFFF", fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
                           {dataSaving ? "Saving..." : "+ Add Project to Firestore"}
                         </button>
                       </div>
