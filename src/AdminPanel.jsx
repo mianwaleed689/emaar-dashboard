@@ -1057,10 +1057,10 @@ export default function AdminPanel() {
                   {/* Editing form */}
                   {editingProject && (() => {
                     if (editingProject === "new") return (
-                      <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: 1px solid 30 }}>
+                      <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: "1px solid rgba(16,185,129,0.3)" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                           <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.green }}>+ Add New Project</h3>
-                          <button type="button" onClick={() => setEditingProject(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: 1px solid , background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                          <button type="button" onClick={() => setEditingProject(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(100,116,139,0.3)", background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
                         </div>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                           {[
