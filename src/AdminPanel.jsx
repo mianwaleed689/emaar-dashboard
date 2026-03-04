@@ -3,7 +3,8 @@
    Matching dashboard design DNA: sidebar nav, KPI cards, sections
    ═══════════════════════════════════════════════════════════════ */
 import React, { useState, useEffect, useCallback } from "react";
-import { auth, db } from "./firebase";
+import { auth, db, storage } from "./firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -432,6 +433,21 @@ export default function AdminPanel() {
 
   /* ─── DATA MANAGER ACTIONS ─── */
   
+  
+  const uploadProjectImage = async (projectId, file) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { notify("Image must be under 5MB"); return; }
+    notify("Uploading image...");
+    try {
+      const storageRef = ref(storage, "projects/" + projectId + "/" + file.name);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      await setDoc(doc(db, "projectData", String(projectId)), { imageUrl: url, updatedAt: new Date().toISOString(), updatedBy: adminUser?.email }, { merge: true });
+      notify("Image uploaded!");
+      fetchLiveData();
+    } catch(e) { notify("Upload error: " + e.message); }
+  };
+
   const validateProjectData = (data, isNew = false) => {
     const errors = [];
     if (isNew && !data.name) errors.push("Project name is required");
@@ -1157,6 +1173,17 @@ export default function AdminPanel() {
                               )}
                             </div>
                           ))}
+                        </div>
+                        <div style={{ marginTop: 16, padding: 16, borderRadius: 10, border: 1px solid , background: T.surfaceAlt }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Project Image</div>
+                          {(liveProjects[p.id]?.imageUrl) && (
+                            <img src={liveProjects[p.id].imageUrl} alt="Project" style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 8, marginBottom: 10 }} />
+                          )}
+                          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, padding: "10px 16px", borderRadius: 8, border: 1px solid , background: T.bg, color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            Upload Project Image (max 5MB)
+                            <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => uploadProjectImage(p.id, e.target.files[0])} />
+                          </label>
                         </div>
                         <button type="button" disabled={dataSaving} onClick={() => saveProjectData(p.id, projectForm)}
                           style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
