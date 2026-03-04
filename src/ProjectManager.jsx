@@ -228,8 +228,8 @@ const Select = ({ label, value, onChange, options }) => (
   </div>
 );
 
-export default function ProjectManager() {
-  const [isAdmin, setIsAdmin] = useState(false);
+export default function ProjectManager({ embedded = false }) {
+  const [isAdmin, setIsAdmin] = useState(embedded ? true : false);
   const [loading, setLoading] = useState(true);
   const [adminUser, setAdminUser] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -256,6 +256,7 @@ export default function ProjectManager() {
 
   /* ─── AUTH ─── */
   useEffect(() => {
+    if (embedded) { setLoading(false); return; }
     const unsub = onAuthStateChanged(auth, async (u) => {
       if (u) {
         setAdminUser(u);
@@ -268,7 +269,7 @@ export default function ProjectManager() {
       setLoading(false);
     });
     return () => unsub();
-  }, []);
+  }, [embedded]);
 
   /* ─── FETCH PROJECTS ─── */
   useEffect(() => {
@@ -383,7 +384,176 @@ export default function ProjectManager() {
   /* ─── RENDER (components defined at module level above) ─── */
 
   /* ═══════════════════════════════════════
-     RENDER
+     EMBEDDED MODE (inside AdminPanel tab)
+     ═══════════════════════════════════════ */
+  if (embedded) {
+    return (
+      <div style={{ fontFamily: "'Outfit',sans-serif", color: T.textPrimary }}>
+        <style>{css}</style>
+        {toast && <div key={toast} className="toast-notify" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("\u2705") ? T.green : T.red, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
+        <div style={{ display: "flex", gap: 0, minHeight: "calc(100vh - 140px)" }}>
+          {/* Left: Project List */}
+          <div style={{ width: 260, flexShrink: 0, background: T.surface, borderRight: `1px solid ${T.border}`, borderRadius: "12px 0 0 12px", display: "flex", flexDirection: "column" }}>
+            <div style={{ padding: "14px 12px 8px" }}>
+              <div style={{ position: "relative" }}>
+                <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</div>
+                <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search projects..."
+                  style={{ width: "100%", padding: "8px 10px 8px 32px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }}
+                  onFocus={e => { e.target.style.borderColor = T.gold; }} onBlur={e => { e.target.style.borderColor = T.border; }} />
+              </div>
+              <select value={communityFilter} onChange={e => setCommunityFilter(e.target.value)}
+                style={{ width: "100%", marginTop: 6, padding: "6px 8px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textSecondary, fontSize: 10, fontFamily: "'Outfit',sans-serif", outline: "none", cursor: "pointer", boxSizing: "border-box" }}>
+                <option value="all">All Communities</option>
+                {communities.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div style={{ padding: "4px 12px 6px", fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase" }}>{filtered.length} Projects</div>
+            <div style={{ flex: 1, overflowY: "auto", padding: "0 6px 12px" }}>
+              {filtered.map((p) => {
+                const active = selectedId === p.id;
+                const prog = Number(p.constructionProgress) || 0;
+                return (
+                  <div key={p.id} onClick={() => handleSelect(p.id)} style={{
+                    display: "flex", alignItems: "center", gap: 8, padding: "8px 8px", borderRadius: 8, cursor: "pointer",
+                    marginBottom: 1, transition: "all 0.15s",
+                    background: active ? T.goldGlow : "transparent",
+                    border: `1px solid ${active ? T.borderHover : "transparent"}`,
+                  }}
+                    onMouseEnter={e => { if (!active) { e.currentTarget.style.background = T.surfaceAlt; } }}
+                    onMouseLeave={e => { if (!active) { e.currentTarget.style.background = active ? T.goldGlow : "transparent"; } }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 6, flexShrink: 0, background: active ? `linear-gradient(135deg, ${T.gold}, ${T.goldDim})` : T.surfaceAlt, color: active ? T.bg : T.textMuted, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 10 }}>
+                      {(p.name || "?")[0]}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: active ? T.gold : T.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
+                      <div style={{ fontSize: 8, color: T.textMuted }}>{p.community}</div>
+                    </div>
+                    <div style={{ fontSize: 8, color: prog >= 80 ? T.green : prog > 0 ? T.gold : T.textMuted, fontWeight: 700 }}>{prog}%</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right: Content */}
+          <div style={{ flex: 1, padding: "20px 24px", overflowY: "auto" }}>
+            {/* Save button bar */}
+            {form && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>{form.name || "Untitled"}</h2>
+                  <p style={{ fontSize: 10, color: T.textMuted }}>{form.community} · <span style={{ color: form.status === "Under Construction" ? T.green : T.blue }}>{form.status}</span></p>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {hasChanges && <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.gold}30` }}><div style={{ width: 5, height: 5, borderRadius: "50%", background: T.gold }} /><span style={{ fontSize: 10, fontWeight: 600, color: T.gold }}>Unsaved</span></div>}
+                  <button type="button" onClick={handleSave} disabled={saving} style={{ display: "flex", alignItems: "center", gap: 4, padding: "7px 16px", borderRadius: 8, border: "none", cursor: saving ? "wait" : "pointer", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontWeight: 700, fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>
+                    {I.save} {saving ? "Saving..." : "Save"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!form ? (
+              <div style={{ textAlign: "center", padding: "48px 20px" }}>
+                <div style={{ marginBottom: 16, color: T.gold, opacity: 0.6 }}><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
+                <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.white, marginBottom: 8 }}>Select a Project</h2>
+                <p style={{ color: T.textSecondary, fontSize: 12, maxWidth: 360, margin: "0 auto", lineHeight: 1.6 }}>Click any project from the list to edit its details.</p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 24 }}>
+                  <KPI label="Total Projects" value={projects.length} delay={1} />
+                  <KPI label="Communities" value={communities.length} delay={2} />
+                  <KPI label="Total Units" value={totalUnits.toLocaleString()} color={T.teal} delay={3} />
+                  <KPI label="Avg Construction" value={`${avgProgress}%`} color={avgProgress >= 50 ? T.green : T.gold} delay={4} />
+                </div>
+              </div>
+            ) : (
+              /* Edit form — reuse the section nav + form from main render */
+              <div>
+                <div style={{ display: "flex", gap: 4, marginBottom: 16, flexWrap: "wrap" }}>
+                  {[{ id: "basic", label: "Basic Info" }, { id: "pricing", label: "Pricing" }, { id: "units", label: "Units" }, { id: "location", label: "Location" }, { id: "media", label: "Media" }].map(s => (
+                    <button type="button" key={s.id} onClick={() => setActiveSection(s.id)}
+                      style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${activeSection === s.id ? T.gold : T.border}`, background: activeSection === s.id ? T.goldGlow : "transparent", color: activeSection === s.id ? T.gold : T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.2s" }}>
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+
+                {activeSection === "basic" && (
+                  <Section title="Basic Information" sub="Core project details">
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                      <Input label="Project Name" value={form.name || ""} onChange={v => set("name", v)} placeholder="e.g. The Heights" />
+                      <Select label="Community" value={form.community || ""} onChange={v => set("community", v)} options={communities} />
+                      <Select label="Status" value={form.status || ""} onChange={v => set("status", v)} options={["Under Construction", "Off-Plan", "Completed"]} />
+                      <Select label="Type" value={form.type || ""} onChange={v => set("type", v)} options={["Apartments", "Villas", "Townhouses", "Penthouses", "Mixed"]} />
+                      <Input label="Construction Progress (%)" value={form.constructionProgress || ""} onChange={v => set("constructionProgress", v)} placeholder="0-100" type="number" />
+                      <Input label="Completion Year" value={form.completionYear || ""} onChange={v => set("completionYear", v)} placeholder="e.g. 2027" />
+                    </div>
+                    <div style={{ marginTop: 14 }}>
+                      <Input label="Description" value={form.description || ""} onChange={v => set("description", v)} placeholder="Project description..." rows={3} />
+                    </div>
+                  </Section>
+                )}
+
+                {activeSection === "pricing" && (
+                  <Section title="Pricing & Payment" sub="Price ranges and payment plans">
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                      <Input label="Start Price (AED)" value={form.startPrice || ""} onChange={v => set("startPrice", v)} placeholder="e.g. 1200000" type="number" />
+                      <Input label="Price per sqft (AED)" value={form.pricePerSqft || ""} onChange={v => set("pricePerSqft", v)} placeholder="e.g. 2100" type="number" />
+                    </div>
+                    <div style={{ marginTop: 14 }}>
+                      <Input label="Payment Plan" value={form.paymentPlan || ""} onChange={v => set("paymentPlan", v)} placeholder="e.g. 60/40, 80/20 post-handover" />
+                    </div>
+                  </Section>
+                )}
+
+                {activeSection === "units" && (
+                  <Section title="Unit Mix" sub="Available unit types and counts"
+                    action={<button type="button" onClick={() => { const u = Array.isArray(form.units) ? [...form.units] : []; u.push({ type: "Studio", total: 0, available: 0 }); set("units", u); }} style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${T.gold}40`, background: T.goldGlow, color: T.gold, fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>+ Add Unit</button>}>
+                    {(Array.isArray(form.units) ? form.units : []).map((u, i) => (
+                      <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr auto", gap: 10, marginBottom: 8, alignItems: "end" }}>
+                        <Select label={i === 0 ? "Type" : ""} value={u.type || ""} onChange={v => { const arr = [...form.units]; arr[i] = { ...arr[i], type: v }; set("units", arr); }} options={["Studio", "1BR", "2BR", "3BR", "4BR", "5BR", "Penthouse", "Duplex", "Villa", "Townhouse"]} />
+                        <Input label={i === 0 ? "Total" : ""} value={u.total || ""} onChange={v => { const arr = [...form.units]; arr[i] = { ...arr[i], total: Number(v) }; set("units", arr); }} type="number" />
+                        <Input label={i === 0 ? "Available" : ""} value={u.available || ""} onChange={v => { const arr = [...form.units]; arr[i] = { ...arr[i], available: Number(v) }; set("units", arr); }} type="number" />
+                        <button type="button" onClick={() => { const arr = form.units.filter((_, j) => j !== i); set("units", arr); }} style={{ padding: "6px 8px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, color: "#EF4444", cursor: "pointer", fontSize: 10 }}>{I.trash}</button>
+                      </div>
+                    ))}
+                  </Section>
+                )}
+
+                {activeSection === "location" && (
+                  <Section title="Location Details" sub="GPS coordinates and distances">
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                      <Input label="Latitude" value={form.gps?.lat || ""} onChange={v => set("gps", { ...form.gps, lat: Number(v) })} placeholder="e.g. 25.1234" type="number" />
+                      <Input label="Longitude" value={form.gps?.lng || ""} onChange={v => set("gps", { ...form.gps, lng: Number(v) })} placeholder="e.g. 55.1234" type="number" />
+                    </div>
+                  </Section>
+                )}
+
+                {activeSection === "media" && (
+                  <Section title="Media & Contact" sub="Images and inquiry details">
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                      <Input label="Image URL" value={form.imageUrl || ""} onChange={v => set("imageUrl", v)} placeholder="https://..." />
+                      <Input label="Brochure URL" value={form.brochureUrl || ""} onChange={v => set("brochureUrl", v)} placeholder="https://..." />
+                    </div>
+                  </Section>
+                )}
+
+                {/* Bottom save bar */}
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 20 }}>
+                  <button type="button" onClick={() => { setForm(null); setSelectedId(null); setHasChanges(false); }} style={{ padding: "8px 20px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontWeight: 600, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                  <button type="button" onClick={handleSave} disabled={saving} style={{ padding: "8px 24px", borderRadius: 8, border: "none", cursor: saving ? "wait" : "pointer", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontWeight: 700, fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>
+                    {I.save} {saving ? "Saving..." : "Save All Changes"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ═══════════════════════════════════════
+     FULL PAGE RENDER (standalone /manage)
      ═══════════════════════════════════════ */
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit',sans-serif", color: T.textPrimary }}>

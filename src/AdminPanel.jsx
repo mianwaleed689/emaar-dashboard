@@ -8,6 +8,7 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI } from "./data";
+import ProjectManager from "./ProjectManager";
 
 /* ─── THEME (exact dashboard match) ─── */
 const T = {
@@ -554,6 +555,7 @@ export default function AdminPanel() {
     { id: "users", label: "Users", icon: I.users },
     { id: "revenue", label: "Revenue", icon: I.revenue },
     { id: "data", label: "Data Manager", icon: I.data },
+    { id: "projects", label: "Project Manager", icon: I.projects },
     { id: "leads", label: "Leads", icon: I.leads },
     { id: "analytics", label: "Analytics", icon: I.analytics },
   ];
@@ -600,9 +602,6 @@ export default function AdminPanel() {
           <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Quick Links</div>
           <a href="/" className="sidebar-btn" style={{ textDecoration: "none" }}>
             {I.overview} <span>Dashboard</span>
-          </a>
-          <a href="/manage" className="sidebar-btn" style={{ textDecoration: "none" }}>
-            {I.leads} <span>Project Manager</span>
           </a>
           <a href="/landing" className="sidebar-btn" style={{ textDecoration: "none" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> <span>Landing Page</span>
@@ -1268,6 +1267,11 @@ export default function AdminPanel() {
               </div>
             </>
           )}
+
+          {/* ═══════════════════════════════════════
+             PROJECT MANAGER TAB (embedded)
+             ═══════════════════════════════════════ */}
+          {tab === "projects" && <ProjectManager embedded />}
 
           {/* ═══════════════════════════════════════
              LEADS TAB
