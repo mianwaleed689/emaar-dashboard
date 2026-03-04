@@ -1475,14 +1475,39 @@ export default function EmaarDashboardV2() {
             </Section>
 
             {/* Search & Filters */}
-            <div className="filter-scroll" style={{ display: "flex", gap: 10, marginTop: 20, flexWrap: "wrap", alignItems: "center" }}>
-              <div style={{ position: "relative", flex: "1 1 250px", maxWidth: 350 }}>
-                <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{Icons.search}</span>
-                <input value={projectSearch} onChange={e => setProjectSearch(e.target.value)} placeholder="Search projects..." style={{ width: "100%", padding: "10px 12px 10px 36px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none" }} />
+            <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ position: 'relative', flex: '1 1 250px', maxWidth: 350 }}>
+                  <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textMuted }}>{Icons.search}</span>
+                  <input value={projectSearch} onChange={e => setProjectSearch(e.target.value)} placeholder='Search projects or community...' style={{ width: '100%', padding: '10px 12px 10px 36px', background: T.surface, border: '1px solid '+T.border, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: 'Outfit, sans-serif', outline: 'none' }} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '1 1 200px', background: T.surface, border: '1px solid '+T.border, borderRadius: 10, padding: '8px 14px' }}>
+                  <span style={{ fontSize: 11, color: T.textMuted, whiteSpace: 'nowrap' }}>Max Price</span>
+                  <input type='range' min={1} max={20} step={0.5} value={projectPriceMax} onChange={e => setProjectPriceMax(Number(e.target.value))} style={{ flex: 1, accentColor: T.gold, cursor: 'pointer' }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: T.gold, whiteSpace: 'nowrap', minWidth: 60 }}>{projectPriceMax >= 20 ? 'Any' : 'AED '+projectPriceMax+'M'}</span>
+                </div>
+                {(projectSearch || projectFilter !== 'All' || projectTier !== 'All' || projectHandover !== 'All' || projectPriceMax < 20) && (
+                  <button type='button' onClick={() => { setProjectSearch(''); setProjectFilter('All'); setProjectTier('All'); setProjectHandover('All'); setProjectPriceMax(20); }} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: T.red, fontSize: 12, cursor: 'pointer' }}>Clear Filters</button>
+                )}
               </div>
-              {["All", "DHE", "DCH", "EBF", "GPC", "ES", "TV", "RYM", "Branded"].map(f => (
-                <button type="button" key={f} onClick={() => setProjectFilter(f)} style={{ padding: "7px 14px", borderRadius: 8, border: `1px solid ${projectFilter === f ? T.gold : T.border}`, background: projectFilter === f ? T.goldGlow : "transparent", color: projectFilter === f ? T.gold : T.textSecondary, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}>{f}</button>
-              ))}
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Area</span>
+                {['All','DHE','DCH','EBF','GPC','ES','TV','RYM','TO','BB','TH','Branded'].map(f => (
+                  <button type='button' key={f} onClick={() => setProjectFilter(f)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectFilter===f ? T.gold : T.border), background: projectFilter===f ? T.goldGlow : 'transparent', color: projectFilter===f ? T.gold : T.textSecondary, fontSize: 11, fontWeight: projectFilter===f ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{f}</button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Tier</span>
+                {['All','Affordable','Mid-Market','Mid-Premium','Premium','Luxury','Ultra-Luxury','Luxury Branded','Ultra-Lux Branded'].map(t => (
+                  <button type='button' key={t} onClick={() => setProjectTier(t)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectTier===t ? T.teal : T.border), background: projectTier===t ? 'rgba(0,191,165,0.1)' : 'transparent', color: projectTier===t ? T.teal : T.textSecondary, fontSize: 11, fontWeight: projectTier===t ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{t}</button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Handover</span>
+                {['All','2026','2027','2028','2029','2030+'].map(y => (
+                  <button type='button' key={y} onClick={() => setProjectHandover(y)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectHandover===y ? T.purple : T.border), background: projectHandover===y ? 'rgba(139,92,246,0.1)' : 'transparent', color: projectHandover===y ? T.purple : T.textSecondary, fontSize: 11, fontWeight: projectHandover===y ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{y}</button>
+                ))}
+              </div>
             </div>
 
             {/* Project Cards */}
