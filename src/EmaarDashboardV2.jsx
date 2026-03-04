@@ -763,6 +763,10 @@ export default function EmaarDashboardV2() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [profileEdit, setProfileEdit] = useState({ name: "" });
+  const [myVerification, setMyVerification] = useState(null);
+  const [showKycForm, setShowKycForm] = useState(false);
+  const [kycForm, setKycForm] = useState({ phone: "", nationality: "", dob: "", address: "", idDoc: false, selfieDoc: false, addressDoc: false });
+  const [kycSubmitting, setKycSubmitting] = useState(false);
   const [showCheckout, setShowCheckout] = useState(null);
   const [checkoutStep, setCheckoutStep] = useState(1);
   const [myPortfolio, setMyPortfolio] = useState([]);
@@ -936,6 +940,12 @@ export default function EmaarDashboardV2() {
             // Admin override
             if (data.role === "admin") tier = "admin";
             setUserTier(tier);
+            // Fetch verification status
+            try {
+              const vDoc = await getDoc(doc(db, "verifications", firebaseUser.uid));
+              if (vDoc.exists()) setMyVerification(vDoc.data());
+              else setMyVerification(null);
+            } catch { setMyVerification(null); }
           } else {
             // Existing user without profile (e.g. your admin account) — treat as admin/pro
             setUserTier("admin");
@@ -988,6 +998,40 @@ export default function EmaarDashboardV2() {
     setShowAddPortfolio(null);
     setPortfolioForm({ units: 1, investedAmount: "", purchaseDate: "", unitType: "1BR", notes: "" });
     notify("\u2705 Added to portfolio!");
+  };
+
+  /* ─── KYC SUBMISSION ─── */
+  const submitKyc = async () => {
+    if (!kycForm.phone.trim() || !kycForm.nationality.trim() || !kycForm.dob.trim()) {
+      notify("Please fill in all required fields");
+      return;
+    }
+    setKycSubmitting(true);
+    try {
+      const uid = auth.currentUser?.uid;
+      const verificationData = {
+        uid,
+        name: userName || user.split("@")[0],
+        email: user,
+        phone: kycForm.phone,
+        nationality: kycForm.nationality,
+        dob: kycForm.dob,
+        address: kycForm.address,
+        idDoc: kycForm.idDoc,
+        selfieDoc: kycForm.selfieDoc,
+        addressDoc: kycForm.addressDoc,
+        level: kycForm.idDoc && kycForm.selfieDoc && kycForm.addressDoc ? "intermediate" : "basic",
+        status: "pending",
+        submittedAt: new Date().toISOString(),
+      };
+      await setDoc(doc(db, "verifications", uid), verificationData);
+      setMyVerification(verificationData);
+      setShowKycForm(false);
+      notify("✅ Verification submitted! Under review.");
+    } catch (e) {
+      notify("❌ Submission failed: " + e.message);
+    }
+    setKycSubmitting(false);
   };
 
   const removeFromPortfolio = (pid, ut) => {
@@ -3531,6 +3575,90 @@ export default function EmaarDashboardV2() {
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Access</div><div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{userTier === "free" ? "5 projects" : "All 48"}</div></div>
               </div>
               {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "\u2B50 Upgrade to Pro \u2014 AED 99/mo"}</button>}
+            </div>
+            {/* ─── KYC VERIFICATION SECTION ─── */}
+            <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Identity Verification</div>
+              {!myVerification ? (
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(100,116,139,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>Not Verified</div>
+                      <div style={{ fontSize: 11, color: T.textMuted }}>Verify your identity for full access</div>
+                    </div>
+                  </div>
+                  {!showKycForm ? (
+                    <button type="button" onClick={() => setShowKycForm(true)} style={{ width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Start Verification</button>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                        <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>PHONE *</label><input value={kycForm.phone} onChange={e => setKycForm({...kycForm, phone: e.target.value})} placeholder="+971 50 XXX XXXX" style={{ width: "100%", padding: "8px 10px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} /></div>
+                        <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>NATIONALITY *</label><input value={kycForm.nationality} onChange={e => setKycForm({...kycForm, nationality: e.target.value})} placeholder="e.g. Pakistani" style={{ width: "100%", padding: "8px 10px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} /></div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                        <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>DATE OF BIRTH *</label><input type="date" value={kycForm.dob} onChange={e => setKycForm({...kycForm, dob: e.target.value})} style={{ width: "100%", padding: "8px 10px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} /></div>
+                        <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>ADDRESS</label><input value={kycForm.address} onChange={e => setKycForm({...kycForm, address: e.target.value})} placeholder="City, Country" style={{ width: "100%", padding: "8px 10px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} /></div>
+                      </div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginTop: 6 }}>Documents (check what you can provide)</div>
+                      {[
+                        { key: "idDoc", label: "Government ID", desc: "Passport, Emirates ID, or National ID" },
+                        { key: "selfieDoc", label: "Selfie with ID", desc: "Clear photo holding your ID" },
+                        { key: "addressDoc", label: "Proof of Address", desc: "Utility bill or bank statement" },
+                      ].map(d => (
+                        <label key={d.key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 8, background: kycForm[d.key] ? "rgba(16,185,129,0.06)" : "transparent", border: `1px solid ${kycForm[d.key] ? "rgba(16,185,129,0.2)" : T.border}`, cursor: "pointer" }}>
+                          <div onClick={() => setKycForm({...kycForm, [d.key]: !kycForm[d.key]})} style={{ width: 18, height: 18, borderRadius: 4, border: `1.5px solid ${kycForm[d.key] ? T.green : T.border}`, background: kycForm[d.key] ? T.green : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
+                            {kycForm[d.key] && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{d.label}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted }}>{d.desc}</div>
+                          </div>
+                        </label>
+                      ))}
+                      <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                        <button type="button" onClick={() => setShowKycForm(false)} style={{ flex: 1, padding: "10px 0", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                        <button type="button" onClick={submitKyc} disabled={kycSubmitting} style={{ flex: 2, padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif", opacity: kycSubmitting ? 0.6 : 1 }}>{kycSubmitting ? "Submitting..." : "Submit Verification"}</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : myVerification.status === "pending" ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(245,158,11,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.orange} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: T.orange }}>Verification Pending</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>Submitted {myVerification.submittedAt ? new Date(myVerification.submittedAt).toLocaleDateString() : ""} · Under admin review</div>
+                  </div>
+                </div>
+              ) : myVerification.status === "approved" ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(16,185,129,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="2" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: T.green }}>Verified</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>Level: {myVerification.verifiedLevel || myVerification.level || "Basic"} · Verified {myVerification.reviewedAt ? new Date(myVerification.reviewedAt).toLocaleDateString() : ""}</div>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(239,68,68,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.red} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: T.red }}>Verification Rejected</div>
+                      <div style={{ fontSize: 11, color: T.textMuted }}>{myVerification.rejectReason || "Please resubmit with correct documents"}</div>
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => { setMyVerification(null); setShowKycForm(true); }} style={{ width: "100%", padding: "8px 0", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, color: T.red, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Resubmit Verification</button>
+                </div>
+              )}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <button type="button" onClick={() => { setShowProfile(false); handleTabChange("Portfolio"); }} style={{ padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>\uD83D\uDCCA Portfolio</button>

@@ -48,6 +48,7 @@ const I = {
   team: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
   trophy: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 22V8a6 6 0 0 0-6-6h16a6 6 0 0 0-6 6v14"/></svg>,
   star: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  verify: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>,
   target: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
 };
 
@@ -264,6 +265,13 @@ export default function AdminPanel() {
   const [communityForm, setCommunityForm] = useState({});
   const [yieldForm, setYieldForm] = useState({});
 
+  /* ─── KYC VERIFICATION STATE ─── */
+  const [verifications, setVerifications] = useState([]);
+  const [verifyFilter, setVerifyFilter] = useState("all"); // all | pending | approved | rejected
+  const [verifySearch, setVerifySearch] = useState("");
+  const [reviewingUser, setReviewingUser] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+
   /* ─── ESCAPE KEY ─── */
   useEffect(() => {
     const handleKey = (e) => { if (e.key === "Escape") setSidebarOpen(false); };
@@ -323,6 +331,44 @@ export default function AdminPanel() {
   }, []);
 
   useEffect(() => { if (isAdmin) fetchLiveData(); }, [isAdmin, fetchLiveData]);
+
+  /* ─── FETCH KYC VERIFICATIONS ─── */
+  const fetchVerifications = useCallback(async () => {
+    try {
+      const snap = await getDocs(collection(db, "verifications"));
+      const list = [];
+      snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
+      list.sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
+      setVerifications(list);
+    } catch (e) { console.error("Fetch verifications:", e); }
+  }, []);
+
+  useEffect(() => { if (isAdmin) fetchVerifications(); }, [isAdmin, fetchVerifications]);
+
+  const approveVerification = async (v) => {
+    if (!window.confirm(`⚠️ APPROVE VERIFICATION\n\nUser: ${v.name || v.email}\nLevel: ${v.level || "Basic"}\n\nThis will:\n• Mark this user as verified\n• Update their profile with a verified badge\n• They can access verified-tier features\n\nContinue?`)) return;
+    try {
+      await setDoc(doc(db, "verifications", v.id), { status: "approved", reviewedAt: new Date().toISOString(), reviewedBy: adminUser?.email || "admin" }, { merge: true });
+      await setDoc(doc(db, "users", v.uid), { verified: true, verifiedLevel: v.level || "basic", verifiedAt: new Date().toISOString() }, { merge: true });
+      notify("✅ User verified successfully");
+      fetchVerifications();
+      fetchUsers();
+    } catch (e) { notify("❌ " + e.message); }
+  };
+
+  const rejectVerification = async (v) => {
+    if (!rejectReason.trim()) { notify("❌ Please enter a rejection reason"); return; }
+    if (!window.confirm(`⚠️ REJECT VERIFICATION\n\nUser: ${v.name || v.email}\nReason: ${rejectReason}\n\nThis will:\n• Reject their verification request\n• They will be notified to resubmit\n• Documents will be marked as rejected\n\nContinue?`)) return;
+    try {
+      await setDoc(doc(db, "verifications", v.id), { status: "rejected", rejectReason, reviewedAt: new Date().toISOString(), reviewedBy: adminUser?.email || "admin" }, { merge: true });
+      await setDoc(doc(db, "users", v.uid), { verified: false, verifiedLevel: null }, { merge: true });
+      notify("✅ Verification rejected");
+      setRejectReason("");
+      setReviewingUser(null);
+      fetchVerifications();
+      fetchUsers();
+    } catch (e) { notify("❌ " + e.message); }
+  };
 
   /* ─── USER STATS ─── */
   const now = new Date();
@@ -562,6 +608,7 @@ export default function AdminPanel() {
     { id: "data", label: "Data Manager", icon: I.data },
     { id: "projects", label: "Project Manager", icon: I.projects },
     { id: "leads", label: "Leads", icon: I.leads },
+    { id: "verification", label: "Verification", icon: I.verify },
     { id: "analytics", label: "Analytics", icon: I.analytics },
   ];
 
@@ -1337,6 +1384,219 @@ export default function AdminPanel() {
               </Section>
             </>
           )}
+
+          {/* ═══════════════════════════════════════
+             VERIFICATION TAB (Binance-style KYC)
+             ═══════════════════════════════════════ */}
+          {tab === "verification" && (() => {
+            const vPending = verifications.filter(v => v.status === "pending");
+            const vApproved = verifications.filter(v => v.status === "approved");
+            const vRejected = verifications.filter(v => v.status === "rejected");
+            const filtered = verifications.filter(v => {
+              if (verifyFilter !== "all" && v.status !== verifyFilter) return false;
+              if (verifySearch && !((v.name || "").toLowerCase().includes(verifySearch.toLowerCase()) || (v.email || "").toLowerCase().includes(verifySearch.toLowerCase()))) return false;
+              return true;
+            });
+            const statusColor = { pending: T.orange, approved: T.green, rejected: T.red };
+            const statusLabel = { pending: "Pending Review", approved: "Approved", rejected: "Rejected" };
+
+            return <>
+              <Section title="Identity Verification" sub="KYC document review · Binance-style verification">
+                <div className="kpi-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+                  <KPI label="Total Requests" value={verifications.length} sub="All submissions" delay={1} />
+                  <KPI label="Pending Review" value={vPending.length} sub="Awaiting your review" color={T.orange} delay={2} />
+                  <KPI label="Approved" value={vApproved.length} sub="Verified users" color={T.green} delay={3} />
+                  <KPI label="Rejected" value={vRejected.length} sub="Need resubmission" color={T.red} delay={4} />
+                </div>
+              </Section>
+
+              {/* Verification Levels Explainer */}
+              <Section title="Verification Levels" sub="3-tier identity verification system">
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+                  {[
+                    { level: "Basic", color: T.blue, icon: "1", features: ["Email verified", "Basic profile info", "Name & phone number", "View 10 projects"], badge: "Level 1" },
+                    { level: "Intermediate", color: T.gold, icon: "2", features: ["Government ID upload", "Selfie verification", "Proof of address", "Full project access + Analytics"], badge: "Level 2" },
+                    { level: "Advanced", color: T.green, icon: "3", features: ["Video call verification", "Bank statement / income proof", "Priority support", "Enterprise features + API access"], badge: "Level 3" },
+                  ].map((tier, i) => (
+                    <div key={i} className="fade-up" style={{ background: T.surfaceAlt, borderRadius: 14, padding: 24, border: `1px solid ${T.border}`, animationDelay: `${i * 0.08}s`, position: "relative", overflow: "hidden" }}>
+                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: tier.color }} />
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${tier.color}20`, border: `2px solid ${tier.color}`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 16, color: tier.color }}>{tier.icon}</div>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{tier.level}</div>
+                          <div style={{ fontSize: 10, color: tier.color, fontWeight: 600 }}>{tier.badge}</div>
+                        </div>
+                      </div>
+                      {tier.features.map((f, j) => (
+                        <div key={j} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0" }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={tier.color} strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span style={{ fontSize: 12, color: T.textSecondary }}>{f}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </Section>
+
+              {/* Verification Queue */}
+              <Section title="Verification Queue" sub={`${vPending.length} pending · ${filtered.length} total shown`}>
+                {/* Filters */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+                  {["all", "pending", "approved", "rejected"].map(f => (
+                    <button key={f} type="button" onClick={() => setVerifyFilter(f)}
+                      style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${verifyFilter === f ? T.gold : T.border}`, background: verifyFilter === f ? T.goldGlow : "transparent", color: verifyFilter === f ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textTransform: "capitalize" }}>
+                      {f} {f === "pending" && vPending.length > 0 ? `(${vPending.length})` : ""}
+                    </button>
+                  ))}
+                  <div style={{ flex: 1 }} />
+                  <div style={{ position: "relative" }}>
+                    <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</div>
+                    <input value={verifySearch} onChange={e => setVerifySearch(e.target.value)} placeholder="Search users..." style={{ padding: "8px 12px 8px 32px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", width: 200 }} />
+                  </div>
+                  <button type="button" onClick={fetchVerifications} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>{I.refresh} Refresh</button>
+                </div>
+
+                {/* Table */}
+                {filtered.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: 60 }}>
+                    <div style={{ color: T.gold, opacity: 0.3, marginBottom: 16 }}>{I.verify}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary, marginBottom: 6 }}>{verifications.length === 0 ? "No verification requests yet" : "No matching results"}</div>
+                    <div style={{ fontSize: 12, color: T.textMuted }}>{verifications.length === 0 ? "Users will submit verification documents from their dashboard profile" : "Try adjusting filters"}</div>
+                  </div>
+                ) : (
+                  <div style={{ borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                    {/* Header */}
+                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1.5fr", padding: "10px 16px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}` }}>
+                      {["User", "Level", "Status", "Submitted", "Actions"].map(h => (
+                        <span key={h} style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{h}</span>
+                      ))}
+                    </div>
+                    {/* Rows */}
+                    {filtered.map((v, i) => (
+                      <div key={v.id} className="fade-up" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1.5fr", padding: "12px 16px", borderBottom: `1px solid ${T.border}`, alignItems: "center", animationDelay: `${i * 0.03}s`, transition: "background 0.15s" }}
+                        onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        {/* User */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: "50%", background: `${statusColor[v.status] || T.blue}20`, border: `1.5px solid ${statusColor[v.status] || T.blue}`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12, color: statusColor[v.status] || T.blue }}>
+                            {(v.name || v.email || "?")[0].toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{v.name || "No name"}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted }}>{v.email || v.uid?.slice(0, 12)}</div>
+                          </div>
+                        </div>
+                        {/* Level */}
+                        <span style={{ fontSize: 12, fontWeight: 600, color: v.level === "advanced" ? T.green : v.level === "intermediate" ? T.gold : T.blue }}>{v.level || "Basic"}</span>
+                        {/* Status */}
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: statusColor[v.status] || T.textMuted, background: `${statusColor[v.status] || T.blue}15`, padding: "3px 10px", borderRadius: 6, width: "fit-content" }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: statusColor[v.status] || T.blue }} />
+                          {statusLabel[v.status] || v.status}
+                        </span>
+                        {/* Date */}
+                        <span style={{ fontSize: 11, color: T.textSecondary }}>{v.submittedAt ? new Date(v.submittedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short" }) : "—"}</span>
+                        {/* Actions */}
+                        <div style={{ display: "flex", gap: 6 }}>
+                          {v.status === "pending" && (
+                            <>
+                              <button type="button" onClick={() => approveVerification(v)} style={{ padding: "5px 12px", borderRadius: 6, border: "none", background: "rgba(16,185,129,0.15)", color: T.green, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Approve</button>
+                              <button type="button" onClick={() => setReviewingUser(v)} style={{ padding: "5px 12px", borderRadius: 6, border: "none", background: "rgba(239,68,68,0.1)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Reject</button>
+                            </>
+                          )}
+                          {v.status === "approved" && <span style={{ fontSize: 11, color: T.green, fontWeight: 600 }}>{I.check} Verified</span>}
+                          {v.status === "rejected" && <span style={{ fontSize: 11, color: T.textMuted }}>{v.rejectReason || "Rejected"}</span>}
+                          <button type="button" onClick={() => setReviewingUser(v)} style={{ padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Section>
+
+              {/* Review Modal */}
+              {reviewingUser && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => { setReviewingUser(null); setRejectReason(""); }}>
+                  <div onClick={e => e.stopPropagation()} style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, width: "100%", maxWidth: 600, maxHeight: "85vh", overflow: "auto", boxShadow: "0 30px 100px rgba(0,0,0,0.6)" }}>
+                    {/* Header */}
+                    <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: T.gold }}>Verification Review</h3>
+                        <p style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{reviewingUser.name || reviewingUser.email} · {statusLabel[reviewingUser.status]}</p>
+                      </div>
+                      <button type="button" onClick={() => { setReviewingUser(null); setRejectReason(""); }} style={{ background: "none", border: "none", color: T.textMuted, fontSize: 20, cursor: "pointer" }}>&times;</button>
+                    </div>
+                    {/* Content */}
+                    <div style={{ padding: 24 }}>
+                      {/* User Info */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+                        {[
+                          { label: "Full Name", value: reviewingUser.name || "—" },
+                          { label: "Email", value: reviewingUser.email || "—" },
+                          { label: "Phone", value: reviewingUser.phone || "—" },
+                          { label: "Nationality", value: reviewingUser.nationality || "—" },
+                          { label: "Verification Level", value: reviewingUser.level || "Basic" },
+                          { label: "Date of Birth", value: reviewingUser.dob || "—" },
+                          { label: "Address", value: reviewingUser.address || "—" },
+                          { label: "Submitted", value: reviewingUser.submittedAt ? new Date(reviewingUser.submittedAt).toLocaleString() : "—" },
+                        ].map((item, i) => (
+                          <div key={i} style={{ padding: "10px 12px", borderRadius: 8, background: T.surfaceAlt }}>
+                            <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{item.label}</div>
+                            <div style={{ fontSize: 13, color: T.white, fontWeight: 500 }}>{item.value}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Documents */}
+                      <div style={{ marginBottom: 20 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Submitted Documents</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                          {[
+                            { type: "Government ID", key: "idDoc", desc: "Passport, Emirates ID, or National ID" },
+                            { type: "Selfie", key: "selfieDoc", desc: "Photo holding ID document" },
+                            { type: "Proof of Address", key: "addressDoc", desc: "Utility bill or bank statement" },
+                          ].map((d, i) => (
+                            <div key={i} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 16, border: `1px solid ${T.border}`, textAlign: "center" }}>
+                              <div style={{ width: 48, height: 48, borderRadius: 10, background: reviewingUser[d.key] ? "rgba(16,185,129,0.12)" : "rgba(100,116,139,0.12)", margin: "0 auto 10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                {reviewingUser[d.key] ? (
+                                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg>
+                                ) : (
+                                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                                )}
+                              </div>
+                              <div style={{ fontSize: 12, fontWeight: 600, color: reviewingUser[d.key] ? T.white : T.textMuted }}>{d.type}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{reviewingUser[d.key] ? "Submitted" : "Not uploaded"}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Review History */}
+                      {reviewingUser.reviewedAt && (
+                        <div style={{ padding: "12px 16px", borderRadius: 10, background: `${statusColor[reviewingUser.status]}10`, border: `1px solid ${statusColor[reviewingUser.status]}25`, marginBottom: 20 }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: statusColor[reviewingUser.status] }}>{statusLabel[reviewingUser.status]} on {new Date(reviewingUser.reviewedAt).toLocaleDateString()}</div>
+                          {reviewingUser.reviewedBy && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Reviewed by: {reviewingUser.reviewedBy}</div>}
+                          {reviewingUser.rejectReason && <div style={{ fontSize: 12, color: T.textSecondary, marginTop: 6 }}>Reason: {reviewingUser.rejectReason}</div>}
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      {reviewingUser.status === "pending" && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                          <div>
+                            <label style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Rejection Reason (required to reject)</label>
+                            <input value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="e.g. Blurry document, name mismatch, expired ID..." style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                          </div>
+                          <div style={{ display: "flex", gap: 12 }}>
+                            <button type="button" onClick={() => approveVerification(reviewingUser)} style={{ flex: 1, padding: "12px 0", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.green}, #059669)`, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Approve Verification</button>
+                            <button type="button" onClick={() => rejectVerification(reviewingUser)} style={{ flex: 1, padding: "12px 0", borderRadius: 10, border: "none", background: "rgba(239,68,68,0.15)", color: T.red, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Reject</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>;
+          })()}
 
           {/* ═══════════════════════════════════════
              ANALYTICS TAB
