@@ -620,7 +620,7 @@ export default function AdminPanel() {
       <style>{css}</style>
 
       {/* Toast */}
-      {toast && <div key={toast} className="toast-notify" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : T.red, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
+      {toast && <div key={toast} className="toast-notify" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : T.red, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 99999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
 
       {/* Mobile overlay */}
       <div className={`mobile-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
@@ -712,8 +712,8 @@ export default function AdminPanel() {
               </button>
               {showLangPicker && (
                 <>
-                  <div style={{ position: "fixed", inset: 0, zIndex: 998 }} onClick={() => setShowLangPicker(false)} />
-                  <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 280, maxHeight: 420, overflowY: "auto", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, boxShadow: "0 20px 60px rgba(0,0,0,0.5)", zIndex: 999, padding: 8 }}>
+                  <div style={{ position: "fixed", inset: 0, zIndex: 99998 }} onClick={() => setShowLangPicker(false)} />
+                  <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 280, maxHeight: 420, overflowY: "auto", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, boxShadow: "0 20px 60px rgba(0,0,0,0.5)", zIndex: 9999, padding: 8 }}>
                     <div style={{ padding: "8px 12px 6px", fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase" }}>{i18t("sections", "language")}</div>
                     {LANGUAGES.map(l => (
                       <button type="button" key={l.code} onClick={() => { setLang(l.code); setShowLangPicker(false); }}
