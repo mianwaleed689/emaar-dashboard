@@ -501,7 +501,12 @@ export default function AdminPanel() {
       clean.updatedAt = new Date().toISOString();
       clean.updatedBy = adminUser?.email || "admin";
       await setDoc(doc(db, "projectData", projectId), clean, { merge: true });
-      try { await setDoc(doc(db, "auditLog", Date.now().toString()), { action: "project_update", projectId, changes: clean, changedBy: adminUser?.email, changedAt: new Date().toISOString() }); } catch(e) {}
+      try {
+        const oldDoc = liveProjects[projectId] || {};
+        const diff = {};
+        Object.keys(clean).forEach(k => { if (k !== "updatedAt" && k !== "updatedBy" && clean[k] !== oldDoc[k]) diff[k] = { old: oldDoc[k] ?? "—", new: clean[k] }; });
+        await setDoc(doc(db, "auditLog", Date.now().toString()), { action: "project_update", projectId, changes: clean, diff, changedBy: adminUser?.email, changedAt: new Date().toISOString() });
+      } catch(e) {}
       notify("✅ Project data saved");
       setEditingProject(null);
       fetchLiveData();
@@ -1052,7 +1057,18 @@ export default function AdminPanel() {
                     {auditLog.map((log, i) => (
                       <div key={log.id} style={{ display: "grid", gridTemplateColumns: "180px 1fr 150px 160px", gap: 8, padding: "12px 20px", borderBottom: "1px solid rgba(212,168,67,0.08)", alignItems: "center" }}>
                         <span style={{ fontSize: 11, color: T.textMuted }}>{log.changedAt ? new Date(log.changedAt).toLocaleString("en-AE") : "-"}</span>
+                        <div>
                         <span style={{ fontSize: 12, fontWeight: 600, color: T.gold }}>{log.action === "project_update" ? "Project Updated" : log.action === "community_update" ? "Community Updated" : log.action}</span>
+                        {log.diff && Object.keys(log.diff).length > 0 && (
+                          <div style={{ marginTop: 4 }}>
+                            {Object.entries(log.diff).map(([k, v]) => (
+                              <span key={k} style={{ fontSize: 10, color: T.textMuted, marginRight: 8 }}>
+                                {k}: <span style={{ color: "#EF4444" }}>{String(v.old)}</span> → <span style={{ color: "#10B981" }}>{String(v.new)}</span>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                         <span style={{ fontSize: 11, color: T.textSecondary }}>{log.changedBy || "-"}</span>
                         <span style={{ fontSize: 11, color: T.textSecondary }}>{log.projectId || log.communityKey || "-"}</span>
                       </div>
