@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DXB Analytics — Pricing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #04090F; color: #fff; font-family: 'Outfit', sans-serif; min-height: 100vh; }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+    .hero { text-align: center; padding: 80px 20px 60px; position: relative; overflow: hidden; }
+    .hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,168,67,0.08) 0%, transparent 70%); pointer-events:none; }
+    .badge { display:inline-flex; align-items:center; gap:8px; padding:6px 16px; border-radius:20px; background:rgba(212,168,67,0.1); border:1px solid rgba(212,168,67,0.25); font-size:12px; color:#D4A843; font-weight:600; margin-bottom:24px; animation:fadeUp 0.6s ease; }
+    .dot { width:7px; height:7px; border-radius:50%; background:#22C55E; animation:pulse 2s infinite; }
+    h1 { font-family:'Fraunces',serif; font-size:clamp(32px,6vw,56px); font-weight:900; line-height:1.1; margin-bottom:16px; animation:fadeUp 0.6s 0.1s ease both; }
+    h1 span { color:#D4A843; }
+    .sub { font-size:clamp(14px,2vw,18px); color:#94A3B8; max-width:560px; margin:0 auto 40px; line-height:1.7; animation:fadeUp 0.6s 0.2s ease both; }
+
+    /* Stats bar */
+    .stats { display:flex; justify-content:center; gap:40px; flex-wrap:wrap; padding:24px; background:rgba(14,29,53,0.6); border:1px solid rgba(212,168,67,0.1); border-radius:16px; max-width:700px; margin:0 auto 64px; animation:fadeUp 0.6s 0.3s ease both; }
+    .stat-item { text-align:center; }
+    .stat-val { font-family:'Fraunces',serif; font-size:24px; font-weight:900; color:#D4A843; }
+    .stat-lbl { font-size:11px; color:#64748B; margin-top:2px; }
+
+    /* Plans */
+    .plans-section { max-width:1000px; margin:0 auto; padding:0 20px 80px; }
+    .plans-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; margin-bottom:40px; }
+    .plan-card { background:#0D1B2E; border:1px solid rgba(255,255,255,0.06); border-radius:20px; padding:32px; position:relative; transition:transform 0.3s,box-shadow 0.3s; animation:fadeUp 0.6s ease both; }
+    .plan-card:hover { transform:translateY(-6px); box-shadow:0 20px 60px rgba(0,0,0,0.4); }
+    .plan-card.popular { border:2px solid #D4A843; box-shadow:0 0 40px rgba(212,168,67,0.1); }
+    .popular-badge { position:absolute; top:-14px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,#D4A843,#B8912F); color:#04090F; font-size:10px; font-weight:800; padding:5px 18px; border-radius:20px; letter-spacing:0.5px; white-space:nowrap; }
+    .plan-name { font-size:13px; font-weight:700; color:#64748B; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; }
+    .plan-price { display:flex; align-items:baseline; gap:4px; margin-bottom:6px; }
+    .plan-currency { font-size:13px; color:#94A3B8; }
+    .plan-amount { font-family:'Fraunces',serif; font-size:48px; font-weight:900; line-height:1; }
+    .plan-period { font-size:13px; color:#64748B; }
+    .plan-desc { font-size:12px; color:#64748B; margin-bottom:24px; }
+    .features { list-style:none; display:flex; flex-direction:column; gap:10px; margin-bottom:28px; }
+    .features li { display:flex; align-items:flex-start; gap:10px; font-size:13px; color:#94A3B8; }
+    .check { color:#22C55E; font-size:12px; margin-top:2px; flex-shrink:0; }
+    .check.muted { color:#475569; }
+    .cta-btn { width:100%; padding:14px; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; font-family:'Outfit',sans-serif; border:none; transition:all 0.2s; letter-spacing:0.3px; }
+    .cta-primary { background:linear-gradient(135deg,#D4A843,#B8912F); color:#04090F; }
+    .cta-primary:hover { filter:brightness(1.1); transform:scale(1.02); }
+    .cta-secondary { background:transparent; color:#D4A843; border:1px solid #D4A843 !important; border:none; }
+    .cta-secondary:hover { background:rgba(212,168,67,0.08); }
+
+    /* Trust bar */
+    .trust { display:flex; justify-content:center; gap:28px; flex-wrap:wrap; margin-bottom:64px; }
+    .trust-item { display:flex; align-items:center; gap:6px; font-size:12px; color:#64748B; }
+
+    /* Features comparison */
+    .compare-section { max-width:900px; margin:0 auto 80px; padding:0 20px; }
+    .compare-section h2 { font-family:'Fraunces',serif; font-size:28px; font-weight:900; text-align:center; margin-bottom:32px; }
+    .compare-table { width:100%; border-collapse:collapse; }
+    .compare-table th { padding:12px 16px; text-align:left; font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid rgba(255,255,255,0.06); }
+    .compare-table th:not(:first-child) { text-align:center; }
+    .compare-table td { padding:12px 16px; font-size:13px; color:#94A3B8; border-bottom:1px solid rgba(255,255,255,0.04); }
+    .compare-table td:not(:first-child) { text-align:center; }
+    .compare-table tr:hover td { background:rgba(255,255,255,0.02); }
+    .yes { color:#22C55E; font-weight:700; }
+    .no { color:#334155; }
+    .gold-col { color:#D4A843; font-weight:700; }
+
+    /* FAQ */
+    .faq-section { max-width:700px; margin:0 auto 80px; padding:0 20px; }
+    .faq-section h2 { font-family:'Fraunces',serif; font-size:28px; font-weight:900; text-align:center; margin-bottom:32px; }
+    .faq-item { border-bottom:1px solid rgba(255,255,255,0.06); padding:20px 0; cursor:pointer; }
+    .faq-q { display:flex; justify-content:space-between; align-items:center; font-size:15px; font-weight:600; color:#E2E8F0; }
+    .faq-a { font-size:13px; color:#64748B; line-height:1.7; margin-top:12px; display:none; }
+    .faq-item.open .faq-a { display:block; }
+    .faq-item.open .faq-arrow { transform:rotate(180deg); }
+    .faq-arrow { transition:transform 0.2s; font-size:18px; color:#D4A843; }
+
+    /* CTA bottom */
+    .cta-section { text-align:center; padding:60px 20px 80px; background:linear-gradient(180deg,transparent,rgba(212,168,67,0.04)); }
+    .cta-section h2 { font-family:'Fraunces',serif; font-size:clamp(24px,4vw,36px); font-weight:900; margin-bottom:12px; }
+    .cta-section p { font-size:15px; color:#64748B; margin-bottom:32px; }
+    .cta-big { display:inline-flex; align-items:center; gap:10px; padding:16px 40px; background:linear-gradient(135deg,#D4A843,#B8912F); color:#04090F; border-radius:14px; font-size:16px; font-weight:800; text-decoration:none; transition:all 0.2s; font-family:'Outfit',sans-serif; border:none; cursor:pointer; }
+    .cta-big:hover { filter:brightness(1.1); transform:scale(1.03); box-shadow:0 12px 40px rgba(212,168,67,0.3); }
+
+    /* Footer */
+    footer { border-top:1px solid rgba(255,255,255,0.05); padding:24px 20px; text-align:center; }
+    footer p { font-size:11px; color:#334155; }
+
+    /* Navbar */
+    nav { display:flex; align-items:center; justify-content:space-between; padding:16px 32px; border-bottom:1px solid rgba(255,255,255,0.05); position:sticky; top:0; background:rgba(4,9,15,0.92); backdrop-filter:blur(12px); z-index:100; }
+    .nav-logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+    .nav-logo-box { width:34px; height:34px; background:linear-gradient(135deg,#D4A843,#B8912F); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:14px; color:#04090F; font-family:'Fraunces',serif; }
+    .nav-logo-text { font-family:'Fraunces',serif; font-size:16px; font-weight:900; color:#fff; }
+    .nav-logo-sub { font-size:9px; color:#64748B; letter-spacing:1.5px; text-transform:uppercase; }
+    .nav-cta { padding:8px 20px; background:linear-gradient(135deg,#D4A843,#B8912F); color:#04090F; border-radius:8px; font-size:13px; font-weight:700; text-decoration:none; font-family:'Outfit',sans-serif; transition:all 0.2s; }
+    .nav-cta:hover { filter:brightness(1.1); }
+
+    @media(max-width:600px) {
+      .stats { gap:20px; }
+      .plan-amount { font-size:38px; }
+      nav { padding:12px 16px; }
+      .plans-section { padding:0 12px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="https://emaar-dashboard.vercel.app" class="nav-logo">
+      <div class="nav-logo-box">D</div>
+      <div>
+        <div class="nav-logo-text">DXB Analytics</div>
+        <div class="nav-logo-sub">Intelligence Platform</div>
+      </div>
+    </a>
+    <a href="https://emaar-dashboard.vercel.app" class="nav-cta">Open Dashboard →</a>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="badge"><span class="dot"></span> 500+ investors already on Pro</div>
+    <h1>The <span>Bloomberg Terminal</span><br/>for Dubai Real Estate</h1>
+    <p class="sub">Live Emaar data, 48 active projects, competitor rankings, yield analysis, and risk intelligence — all in one platform. Start free, upgrade when you're ready.</p>
+
+    <div class="stats">
+      <div class="stat-item"><div class="stat-val">AED 80.4B</div><div class="stat-lbl">FY25 Sales Tracked</div></div>
+      <div class="stat-item"><div class="stat-val">48</div><div class="stat-lbl">Active Projects</div></div>
+      <div class="stat-item"><div class="stat-val">30</div><div class="stat-lbl">RE Stocks Monitored</div></div>
+      <div class="stat-item"><div class="stat-val">10+</div><div class="stat-lbl">Data Sources</div></div>
+    </div>
+  </div>
+
+  <!-- PLANS -->
+  <div class="plans-section">
+    <div class="plans-grid">
+
+      <!-- Free -->
+      <div class="plan-card" style="animation-delay:0s">
+        <div class="plan-name">Free</div>
+        <div class="plan-price">
+          <span class="plan-currency">AED</span>
+          <span class="plan-amount" style="color:#94A3B8">0</span>
+          <span class="plan-period">/forever</span>
+        </div>
+        <div class="plan-desc">Get a feel for the platform</div>
+        <ul class="features">
+          <li><span class="check">✓</span> Overview tab — all KPIs</li>
+          <li><span class="check">✓</span> 5 projects (of 48)</li>
+          <li><span class="check">✓</span> Market tab — DLD data</li>
+          <li><span class="check muted">✗</span> <span style="color:#334155">Full financials</span></li>
+          <li><span class="check muted">✗</span> <span style="color:#334155">Yield & ROI analysis</span></li>
+          <li><span class="check muted">✗</span> <span style="color:#334155">Competitor intelligence</span></li>
+          <li><span class="check muted">✗</span> <span style="color:#334155">Stock tracker (30 stocks)</span></li>
+        </ul>
+        <button class="cta-btn cta-secondary" onclick="window.location.href='https://emaar-dashboard.vercel.app'" style="border:1px solid rgba(255,255,255,0.1);color:#94A3B8">Start Free →</button>
+      </div>
+
+      <!-- Pro -->
+      <div class="plan-card popular" style="animation-delay:0.1s">
+        <div class="popular-badge">⭐ MOST POPULAR</div>
+        <div class="plan-name" style="color:#D4A843;margin-top:12px">Pro</div>
+        <div class="plan-price">
+          <span class="plan-currency">AED</span>
+          <span class="plan-amount" style="color:#D4A843">99</span>
+          <span class="plan-period">/month</span>
+        </div>
+        <div class="plan-desc" style="color:#D4A843;opacity:0.6">or AED 899/year — save 25%</div>
+        <ul class="features">
+          <li><span class="check">✓</span> All 48 active projects</li>
+          <li><span class="check">✓</span> Full 6-year financials + ratios</li>
+          <li><span class="check">✓</span> Yields & ROI calculator</li>
+          <li><span class="check">✓</span> 30 RE stocks tracker</li>
+          <li><span class="check">✓</span> Competitor analysis</li>
+          <li><span class="check">✓</span> 3-project side-by-side compare</li>
+          <li><span class="check">✓</span> WhatsApp / Email inquiry</li>
+          <li><span class="check">✓</span> Portfolio tracker</li>
+        </ul>
+        <button class="cta-btn cta-primary" onclick="subscribe('Pro', '99')">Get Pro Now — AED 99/mo →</button>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="plan-card" style="animation-delay:0.2s">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price">
+          <span class="plan-currency">AED</span>
+          <span class="plan-amount" style="color:#fff">499</span>
+          <span class="plan-period">/month</span>
+        </div>
+        <div class="plan-desc">For brokerages &amp; family offices</div>
+        <ul class="features">
+          <li><span class="check">✓</span> Everything in Pro</li>
+          <li><span class="check">✓</span> Dedicated account manager</li>
+          <li><span class="check">✓</span> Multi-user team access</li>
+          <li><span class="check">✓</span> Developer-level raw data</li>
+          <li><span class="check" style="color:#D4A843">⏳</span> PDF report generation</li>
+          <li><span class="check" style="color:#D4A843">⏳</span> API data access (JSON)</li>
+          <li><span class="check" style="color:#D4A843">⏳</span> Custom dashboards</li>
+          <li><span class="check" style="color:#D4A843">⏳</span> White-label options</li>
+        </ul>
+        <button class="cta-btn cta-secondary" onclick="contactSales()" style="border:1px solid #D4A843">Contact Sales →</button>
+      </div>
+
+    </div>
+
+    <!-- Trust signals -->
+    <div class="trust">
+      <div class="trust-item">🔒 Secure payment via Stripe</div>
+      <div class="trust-item">↩ 7-day money-back guarantee</div>
+      <div class="trust-item">⚡ Instant access after payment</div>
+      <div class="trust-item">❌ Cancel anytime, no commitment</div>
+    </div>
+  </div>
+
+  <!-- COMPARISON TABLE -->
+  <div class="compare-section">
+    <h2>Everything You Get</h2>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th style="color:#64748B">Free</th>
+          <th style="color:#D4A843">Pro</th>
+          <th>Enterprise</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Overview — All KPIs + breakdowns</td><td class="yes">✓</td><td class="yes gold-col">✓</td><td class="yes">✓</td></tr>
+        <tr><td>Projects (active Emaar launches)</td><td style="color:#94A3B8">5 only</td><td class="yes gold-col">All 48</td><td class="yes">All 48</td></tr>
+        <tr><td>6-Year Financial Data</td><td class="no">✗</td><td class="yes gold-col">✓</td><td class="yes">✓</td></tr>
+        <tr><td>Rental Yield Analysis</td><td class="no">✗</td><td class="yes gold-col">✓</td><td class="yes">✓</td></tr>
+        <tr><td>Competitor Rankings</td><td class="no">✗</td><td class="yes gold-col">✓</td><td class="yes">✓</td></tr>
+        <tr><td>Risk Assessment (9 factors)</td><td class="no">✗</td><td class="yes gold-col">✓</td><td class="yes">✓</td></tr>
+        <tr><td>30 RE Stocks Tracker</td><td class="no">✗</td><td class="yes gold-col">✓</td><td class="yes">✓</td></tr>
+        <tr><td>3-Project Compare Tool</td><td class="no">✗</td><td class="yes gold-col">✓</td><td class="yes">✓</td></tr>
+        <tr><td>Portfolio Tracker</td><td class="no">✗</td><td class="yes gold-col">✓</td><td class="yes">✓</td></tr>
+        <tr><td>PDF Export</td><td class="no">✗</td><td class="yes gold-col">✓</td><td class="yes">✓</td></tr>
+        <tr><td>Multi-user Accounts</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>
+        <tr><td>API Access</td><td class="no">✗</td><td class="no">✗</td><td style="color:#D4A843">⏳ Q3 2026</td></tr>
+        <tr><td>White-label</td><td class="no">✗</td><td class="no">✗</td><td style="color:#D4A843">⏳ Q3 2026</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-section">
+    <h2>Common Questions</h2>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">How do I get access after paying? <span class="faq-arrow">⌄</span></div>
+      <div class="faq-a">Card payments via Stripe are instant — your account is upgraded automatically as soon as payment goes through. For WhatsApp/bank transfer, activation takes under 5 minutes during business hours (9am–9pm Dubai time).</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Can I cancel anytime? <span class="faq-arrow">⌄</span></div>
+      <div class="faq-a">Yes. You can cancel from your account settings at any time. No contracts, no cancellation fees. Your access continues until the end of the billing period. We also offer a 7-day full refund if you're not satisfied.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">How is the data verified? <span class="faq-arrow">⌄</span></div>
+      <div class="faq-a">Every number on the platform has a named source — Emaar Annual Report, Dubai Land Department (DLD), DXBinteract, Zawya, Knight Frank, and TradingView. The verification date is shown in the dashboard header. We update manually each quarter and for major announcements.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Is this financial advice? <span class="faq-arrow">⌄</span></div>
+      <div class="faq-a">No. DXB Analytics provides market intelligence and data tools for informational purposes only. Nothing on the platform constitutes financial, investment, or legal advice. Always consult a qualified professional before making investment decisions.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Do you cover developers other than Emaar? <span class="faq-arrow">⌄</span></div>
+      <div class="faq-a">The Competitors tab covers the Top 30 Dubai developers with sales rankings, units delivered, and market share data. The Stocks tab tracks 30 listed RE companies across DFM, ADX, Tadawul, and LSE. Full multi-developer coverage is planned for 2026.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Can my whole team use one account? <span class="faq-arrow">⌄</span></div>
+      <div class="faq-a">Pro is for individual use. For team/brokerage access with multiple logins, please contact us for Enterprise pricing — it's designed for teams of 3–20 people.</div>
+    </div>
+  </div>
+
+  <!-- BOTTOM CTA -->
+  <div class="cta-section">
+    <h2>Ready to Invest Smarter?</h2>
+    <p>Join 500+ investors and brokers using DXB Analytics to track Dubai real estate.</p>
+    <button class="cta-big" onclick="subscribe('Pro', '99')">
+      🚀 Get Pro — AED 99/month
+    </button>
+    <div style="margin-top:16px;font-size:12px;color:#334155">or <a href="https://emaar-dashboard.vercel.app" style="color:#D4A843;text-decoration:none">try free first →</a></div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>DXB Analytics · The Address Holding · Dubai, UAE · Not financial advice</p>
+    <p style="margin-top:6px">Questions? <a href="https://wa.me/971542410599" style="color:#D4A843;text-decoration:none">WhatsApp us ↗</a> · <a href="mailto:mianwaleed689@gmail.com" style="color:#D4A843;text-decoration:none">Email ↗</a></p>
+  </footer>
+
+  <script>
+    // FAQ toggle
+    function toggleFaq(el) {
+      el.classList.toggle('open');
+    }
+
+    // Subscribe — tries Stripe, falls back to WhatsApp
+    async function subscribe(plan, price) {
+      try {
+        const res = await fetch('/api/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan, price }),
+        });
+        if (res.ok) {
+          const { url } = await res.json();
+          if (url) { window.location.href = url; return; }
+        }
+      } catch (e) { /* fall through to WhatsApp */ }
+      // Stripe not configured — use WhatsApp
+      const msg = encodeURIComponent(`Hi Mian Waleed, I want to subscribe to DXB Analytics ${plan} Plan (AED ${price}/month). Please send payment details.`);
+      window.open(`https://wa.me/971542410599?text=${msg}`, '_blank');
+    }
+
+    function contactSales() {
+      const msg = encodeURIComponent(`Hi Mian Waleed, I'm interested in the DXB Analytics Enterprise Plan for my team. Please share details.`);
+      window.open(`https://wa.me/971542410599?text=${msg}`, '_blank');
+    }
+  </script>
+</body>
+</html>
