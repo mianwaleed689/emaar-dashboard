@@ -38,40 +38,124 @@ const I = {
   bell: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
 };
 
-/* ─── CSS (matching dashboard animations & scrollbar) ─── */
+/* ─── CSS (exactly matching main dashboard design DNA) ─── */
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:${T.bg};}
-::-webkit-scrollbar{width:5px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:rgba(212,168,67,0.15);border-radius:4px;}
-::-webkit-scrollbar-thumb:hover{background:rgba(212,168,67,0.3);}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-size: 14px; }
+body { background: ${T.bg}; color: ${T.textPrimary}; font-family: 'Outfit', sans-serif; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(212,168,67,0.2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(212,168,67,0.35); }
 * { scrollbar-width: thin; scrollbar-color: rgba(212,168,67,0.15) transparent; }
 select option { background: ${T.surface}; color: ${T.textPrimary}; }
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
-@keyframes spin{to{transform:rotate(360deg)}}
-.fade-up{animation:fadeUp 0.4s ease-out both;}
-.chart-box{background:${T.surface};border:1px solid ${T.border};border-radius:14px;padding:20px;transition:border-color 0.3s;}
-.chart-box:hover{border-color:${T.borderHover};}
-.admin-sidebar{transition:transform 0.3s ease;}
-@media(max-width:768px){
-  .admin-sidebar{position:fixed!important;z-index:200;transform:translateX(-100%);}
-  .admin-sidebar.open{transform:translateX(0);}
-  .admin-main{margin-left:0!important;}
-  .admin-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:199;}
-  .admin-overlay.open{display:block;}
-  .admin-mobile-btn{display:flex!important;}
-  .kpi-grid-4{grid-template-columns:1fr 1fr!important;}
-  .kpi-grid-6{grid-template-columns:1fr 1fr!important;}
-  .chart-grid-2{grid-template-columns:1fr!important;}
-  .chart-grid-3{grid-template-columns:1fr!important;}
-  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+.fade-up { animation: fadeUp 0.5s ease-out forwards; opacity: 0; }
+
+.kpi-card {
+  background: linear-gradient(135deg, ${T.card} 0%, ${T.surfaceAlt} 100%);
+  border: 1px solid ${T.border};
+  border-radius: 16px;
+  padding: 20px 16px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
-@media(max-width:480px){
-  .kpi-grid-4{grid-template-columns:1fr!important;}
-  .kpi-grid-6{grid-template-columns:1fr!important;}
+.kpi-card:hover {
+  border-color: ${T.borderHover};
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(212,168,67,0.1);
+}
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, ${T.gold}, transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.kpi-card:hover::before { opacity: 1; }
+
+.chart-box {
+  background: linear-gradient(180deg, ${T.card} 0%, rgba(4,9,15,0.95) 100%);
+  border: 1px solid ${T.border};
+  border-radius: 16px;
+  padding: 20px;
+  transition: border-color 0.3s;
+}
+.chart-box:hover { border-color: ${T.borderHover}; }
+
+.sidebar-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 16px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  color: ${T.textSecondary};
+  background: transparent;
+  text-align: left;
+  position: relative;
+}
+.sidebar-btn:hover { background: rgba(212,168,67,0.06); color: ${T.white}; }
+.sidebar-btn.active {
+  background: linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.04));
+  color: ${T.gold};
+  font-weight: 600;
+}
+.sidebar-btn.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: ${T.gold};
+  border-radius: 0 3px 3px 0;
+}
+
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 90;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.mobile-overlay.open { opacity: 1; pointer-events: auto; }
+
+@media (max-width: 768px) {
+  .admin-sidebar { transform: translateX(-100%); position: fixed !important; z-index: 100; }
+  .admin-sidebar.open { transform: translateX(0); }
+  .admin-main { margin-left: 0 !important; }
+  .admin-topbar { left: 0 !important; }
+  .admin-mobile-btn { display: flex !important; }
+  .kpi-grid-4 { grid-template-columns: 1fr 1fr !important; }
+  .kpi-grid-6 { grid-template-columns: 1fr 1fr !important; }
+  .chart-grid-2 { grid-template-columns: 1fr !important; }
+  .chart-grid-3 { grid-template-columns: 1fr !important; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .data-sub-tabs { flex-direction: column !important; }
+  .community-grid { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 480px) {
+  .kpi-grid-4 { grid-template-columns: 1fr !important; }
+  .kpi-grid-6 { grid-template-columns: 1fr !important; }
+  .edit-grid-3 { grid-template-columns: 1fr !important; }
 }
 `;
 
@@ -103,11 +187,10 @@ function plainify(obj) {
 
 /* ─── REUSABLE COMPONENTS (outside component to prevent re-mount on state change) ─── */
 const KPI = ({ label, value, sub, icon, color, delay = 0 }) => (
-  <div className="chart-box fade-up" style={{ animationDelay: `${delay * 0.05}s`, padding: "20px 20px 16px", position: "relative", overflow: "hidden" }}>
-    <div style={{ position: "absolute", top: 12, right: 14, fontSize: 10, padding: "3px 8px", borderRadius: 6, background: (color || T.gold) + "15", color: color || T.gold, fontWeight: 700 }}>{icon}</div>
-    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
+  <div className="kpi-card fade-up" style={{ animationDelay: `${delay * 0.05}s` }}>
+    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>{label}</div>
     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: color || T.gold, lineHeight: 1 }}>{value}</div>
-    {sub && <div style={{ fontSize: 11, color: T.green, marginTop: 6, fontWeight: 500 }}>{sub}</div>}
+    {sub && <div style={{ fontSize: 11, color: T.green, marginTop: 8, fontWeight: 500 }}>{sub}</div>}
   </div>
 );
 
@@ -427,17 +510,25 @@ export default function AdminPanel() {
   if (loading) return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
       <style>{css}</style>
-      <svg width="40" height="40" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" /><path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} /></svg>
+      <svg width="40" height="40" viewBox="0 0 40 40">
+        <rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" />
+        <path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} />
+      </svg>
+      <div style={{ color: T.gold, fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 700 }}>DXB Analytics</div>
       <div style={{ width: 24, height: 24, border: `2px solid ${T.border}`, borderTopColor: T.gold, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
     </div>
   );
 
   if (!isAdmin) return (
-    <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, fontFamily: "'Outfit',sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 20, fontFamily: "'Outfit',sans-serif" }}>
       <style>{css}</style>
-      <div style={{ width: 80, height: 80, borderRadius: 20, background: T.surface, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36 }}>🔒</div>
-      <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, color: T.white }}>Admin Access Only</h1>
-      <a href="/" style={{ color: T.gold, fontSize: 13, textDecoration: "none", padding: "8px 20px", border: `1px solid ${T.gold}`, borderRadius: 8, marginTop: 8 }}>← Back to Dashboard</a>
+      <svg width="48" height="48" viewBox="0 0 40 40">
+        <rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" />
+        <path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} />
+      </svg>
+      <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: T.white }}>Admin Access Required</h1>
+      <p style={{ color: T.textSecondary, fontSize: 13 }}>You don't have permission to access this page.</p>
+      <a href="/" style={{ color: T.gold, fontSize: 13, textDecoration: "none", padding: "10px 24px", border: `1px solid ${T.gold}`, borderRadius: 10, fontWeight: 600, transition: "all 0.2s" }}>← Back to Dashboard</a>
     </div>
   );
 
@@ -456,62 +547,53 @@ export default function AdminPanel() {
      RENDER
      ═══════════════════════════════════════ */
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit',sans-serif", color: T.textPrimary, display: "flex" }}>
+    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit',sans-serif", color: T.textPrimary }}>
       <style>{css}</style>
 
       {/* Toast */}
       {toast && <div className="fade-up" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : T.red, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
 
       {/* Mobile overlay */}
-      <div className={`admin-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
+      <div className={`mobile-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
 
-      {/* ─── SIDEBAR (matching dashboard) ─── */}
-      <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`} role="navigation" aria-label="Admin navigation" style={{ width: 220, height: "100vh", position: "sticky", top: 0, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", background: "rgba(10,22,40,0.4)", flexShrink: 0 }}>
+      {/* ─── SIDEBAR (matching dashboard exactly) ─── */}
+      <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`} style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 240, background: T.surface, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", zIndex: 100, transition: "transform 0.3s ease" }}>
         {/* Logo */}
-        <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, padding: "20px 20px 6px", textDecoration: "none" }}>
-          <svg width="28" height="28" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" /><path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} /></svg>
-          <div>
-            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 800, color: T.gold, lineHeight: 1 }}>DXB Analytics</div>
-            <div style={{ fontSize: 8, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginTop: 2 }}>ADMIN PANEL</div>
-          </div>
-        </a>
-
-        {/* Top Bar Info */}
-        <div style={{ padding: "12px 20px 16px", borderBottom: `1px solid ${T.border}` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: T.textSecondary }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, animation: "pulse 2s infinite" }} />
-            <span>{stats.total} users · {stats.paid} paid</span>
-          </div>
+        <div style={{ padding: "24px 20px 20px", borderBottom: `1px solid ${T.border}` }}>
+          <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+            <svg width="32" height="32" viewBox="0 0 40 40">
+              <rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" />
+              <path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} />
+            </svg>
+            <div>
+              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.gold }}>DXB Analytics</div>
+              <div style={{ fontSize: 9, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase" }}>Admin Console</div>
+            </div>
+          </a>
         </div>
 
-        {/* Nav */}
-        <nav style={{ flex: 1, padding: "12px 10px", overflowY: "auto" }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, padding: "8px 10px 10px", textTransform: "uppercase" }}>Platform</div>
+        {/* Navigation */}
+        <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 3, overflowY: "auto" }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px" }}>Platform</div>
           {TABS.map(t => (
-            <button type="button" key={t.id} onClick={() => setTab(t.id)} style={{
-              width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10,
-              border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: tab === t.id ? 600 : 400,
-              background: tab === t.id ? T.goldGlow : "transparent",
-              color: tab === t.id ? T.gold : T.textSecondary,
-              transition: "all 0.15s",
-            }}>
+            <button type="button" key={t.id} className={`sidebar-btn ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
               <span style={{ color: tab === t.id ? T.gold : T.textMuted, transition: "color 0.15s" }}>{t.icon}</span>
               {t.label}
             </button>
           ))}
 
-          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, padding: "20px 10px 10px", textTransform: "uppercase" }}>Quick Links</div>
-          <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, color: T.textSecondary, fontSize: 13, textDecoration: "none", transition: "all 0.15s" }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Quick Links</div>
+          <a href="/" className="sidebar-btn" style={{ textDecoration: "none" }}>
             {I.overview} <span>Dashboard</span>
           </a>
-          <a href="/manage" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, color: T.textSecondary, fontSize: 13, textDecoration: "none", transition: "all 0.15s" }}>
+          <a href="/manage" className="sidebar-btn" style={{ textDecoration: "none" }}>
             {I.leads} <span>Project Manager</span>
           </a>
         </nav>
 
-        {/* User Info */}
-        <div style={{ padding: "16px 16px", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, color: T.bg }}>
+        {/* User info */}
+        <div style={{ padding: "16px", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, color: T.bg }}>
             {(adminUser?.displayName || adminUser?.email || "A")[0].toUpperCase()}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -523,28 +605,35 @@ export default function AdminPanel() {
       </aside>
 
       {/* ─── MAIN CONTENT ─── */}
-      <main className="admin-main" role="main" style={{ flex: 1, height: "100vh", overflowY: "auto", overflowX: "hidden" }}>
-        {/* Top header bar */}
-        <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(4,9,15,0.9)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${T.border}`, padding: "0 32px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button type="button" className="admin-mobile-btn" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display: "none", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 8, background: T.surfaceAlt, border: "1px solid " + T.border, color: T.textSecondary, cursor: "pointer", marginRight: 8 }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-            <span style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Admin Console</span>
-            <span style={{ fontSize: 10, color: T.textMuted }}>·</span>
-            <span style={{ fontSize: 11, color: T.textSecondary }}>{new Date().toLocaleDateString("en", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</span>
-          </div>
+      <main className="admin-main" style={{ marginLeft: 240, minHeight: "100vh" }}>
+        {/* Top bar (matching dashboard) */}
+        <header className="admin-topbar" style={{ position: "sticky", top: 0, zIndex: 20, height: 60, background: `${T.surface}ee`, backdropFilter: "blur(16px)", borderBottom: `1px solid ${T.border}`, padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 8, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.15)" }}>
+            <button type="button" className="admin-mobile-btn" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display: "none", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}`, color: T.textSecondary, cursor: "pointer" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <div>
+              <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>Admin Console</h1>
+              <p style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1 }}>{new Date().toLocaleDateString("en-AE", { weekday: "short", day: "numeric", month: "short", year: "numeric" })} · {stats.total} users</p>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 6 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, animation: "pulse 2s infinite" }} />
               <span style={{ fontSize: 11, fontWeight: 600, color: T.green }}>Live</span>
             </div>
-            <div style={{ position: "relative", cursor: "pointer", color: T.textMuted }}>
-              {I.bell}
-              {stats.today > 0 && <div style={{ position: "absolute", top: -2, right: -2, width: 8, height: 8, borderRadius: "50%", background: T.red, border: `2px solid ${T.bg}` }} />}
+            <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}` }}>
+              <span style={{ fontSize: 10, color: T.textMuted }}>MRR </span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: T.gold, fontFamily: "'Fraunces',serif" }}>AED {mrr.toLocaleString()}</span>
+            </div>
+            <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}` }}>
+              <span style={{ fontSize: 10, color: T.textMuted }}>PAID </span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: T.teal }}>{stats.paid}</span>
             </div>
           </div>
         </header>
 
-        <div style={{ padding: "28px 32px 60px" }}>
+        <div style={{ padding: "28px 28px 60px" }}>
 
           {/* ═══════════════════════════════════════
              OVERVIEW TAB
