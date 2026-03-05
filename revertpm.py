@@ -1,0 +1,6 @@
+﻿f = open('src/ProjectManager.jsx', 'r', encoding='utf-8')
+c = f.read()
+f.close()
+c = c.replace('collection(db, "projectData")', 'collection(db, "projects")')
+open('src/ProjectManager.jsx', 'w', encoding='utf-8').write(c)
+print('Reverted!')

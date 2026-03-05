@@ -1,0 +1,5 @@
+﻿f = open('src/EmaarDashboardV2.jsx', 'r', encoding='utf-8')
+c = f.read()
+f.close()
+idx = c.find('projectData')
+print(repr(c[idx-100:idx+400]))
