@@ -19,8 +19,10 @@ export default function NotFound() {
       <p style={{ fontSize: 14, color: T.textMuted, maxWidth: 400, textAlign: "center", lineHeight: 1.7, marginBottom: 32 }}>
         The page you're looking for doesn't exist or has been moved. Let's get you back to the dashboard.
       </p>
-      <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 28px", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, borderRadius: 10, fontWeight: 700, fontSize: 14, textDecoration: "none", fontFamily: "'Outfit', sans-serif", transition: "transform 0.2s" }}
-        onMouseEnter={e => e.target.style.transform = "translateY(-2px)"} onMouseLeave={e => e.target.style.transform = "none"}>
+      {/* FIX: e.target → e.currentTarget so hover works on the <a> itself, not its children */}
+      <a href="/dashboard" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 28px", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, borderRadius: 10, fontWeight: 700, fontSize: 14, textDecoration: "none", fontFamily: "'Outfit', sans-serif", transition: "transform 0.2s" }}
+        onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
+        onMouseLeave={e => e.currentTarget.style.transform = "none"}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         Back to Dashboard
       </a>

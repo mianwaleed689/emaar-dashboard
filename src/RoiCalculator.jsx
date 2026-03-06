@@ -8,9 +8,7 @@ export default function RoiCalculator({ project, roi, T }) {
   const [customPrice, setCustomPrice] = useState(project?.price || 0);
 
   const bedKey = beds === '1BR' ? 'apt1' : beds === '2BR' ? 'apt2' : beds === '3BR' ? 'apt3' : 'th';
-  // eslint-disable-next-line no-unused-vars
   const grossYield = (roi?.grossYield?.[bedKey] || roi?.grossYield?.apt1 || roi?.grossYield?.th || 6) / 100;
-  // eslint-disable-next-line no-unused-vars
   const netYield = (roi?.netYield?.[bedKey] || roi?.netYield?.apt1 || roi?.netYield?.th || 5) / 100;
   const annualRent = roi?.estRent?.[bedKey] || roi?.estRent?.apt1 || roi?.estRent?.th || 100000;
   const appreciationYoY = (roi?.appreciationYoY || 12) / 100;
@@ -68,7 +66,7 @@ export default function RoiCalculator({ project, roi, T }) {
         </div>
       </div>
       <div style={{ background: colors.surface, borderRadius: 10, padding: 14, border: '1px solid rgba(59,130,246,0.15)' }}>
-        <div style={{ fontSize: 10, color: colors.blue, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Results � {years}-Year Projection</div>
+        <div style={{ fontSize: 10, color: colors.blue, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Results — {years}-Year Projection</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
           {[
             { label: 'Down Payment', value: fmt(downPayment), color: colors.textPrimary },
@@ -94,6 +92,16 @@ export default function RoiCalculator({ project, roi, T }) {
             <div style={{ fontSize: 9, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>Annualised Total Return</div>
             <div style={{ fontSize: 20, fontWeight: 900, color: colors.gold, fontFamily: 'Fraunces, serif' }}>{annualisedReturn}%</div>
             <div style={{ fontSize: 9, color: colors.textMuted }}>Per year (capital + rental)</div>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+          <div style={{ background: 'rgba(59,130,246,0.06)', borderRadius: 8, padding: '8px 12px', textAlign: 'center', border: '1px solid rgba(59,130,246,0.15)' }}>
+            <div style={{ fontSize: 9, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>Gross Yield</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: colors.blue, fontFamily: 'Fraunces, serif' }}>{(grossYield * 100).toFixed(1)}%</div>
+          </div>
+          <div style={{ background: 'rgba(59,130,246,0.06)', borderRadius: 8, padding: '8px 12px', textAlign: 'center', border: '1px solid rgba(59,130,246,0.15)' }}>
+            <div style={{ fontSize: 9, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>Net Yield</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: colors.blue, fontFamily: 'Fraunces, serif' }}>{(netYield * 100).toFixed(1)}%</div>
           </div>
         </div>
         <div style={{ marginTop: 8, fontSize: 9, color: colors.textMuted }}>Estimates based on community averages. Service charge: AED {serviceCharge}/sqft/yr. Not financial advice.</div>

@@ -52,13 +52,13 @@ export const emaarProjects = [
   { id:37, name:"Elora", community:"The Valley", district:"TV", type:"Townhouses", beds:"3-4", status:"Off-Plan", handover:"Q4 2026", price:1600000, sizeFrom:2111, sizeTo:2608, ppsf:758, payment:"80/20", construction:30, branded:false, brand:"—", tier:"Mid-Market" },
   { id:38, name:"Selvara", community:"Grand Polo Club", district:"GPC", type:"Villas", beds:"3-5", status:"Off-Plan", handover:"Q2 2029", price:5670000, sizeFrom:2948, sizeTo:5115, ppsf:1923, payment:"80/20", construction:10, branded:false, brand:"—", tier:"Ultra-Luxury" },
   { id:39, name:"Equestra", community:"Grand Polo Club", district:"GPC", type:"Townhouses", beds:"3-4", status:"Off-Plan", handover:"Q2 2029", price:3700000, sizeFrom:2176, sizeTo:2176, ppsf:1700, payment:"80/20", construction:5, branded:false, brand:"—", tier:"Luxury" },
-  { id:40, name:"Equiterra", community:"Grand Polo Club", district:"GPC", type:"Townhouses", beds:"3-4", status:"Off-Plan", handover:"Q2 2029", price:1450000, sizeFrom:2176, sizeTo:2176, ppsf:1933, payment:"80/20", construction:5, branded:false, brand:"—", tier:"Luxury" },
+  { id:40, name:"Equiterra", community:"Grand Polo Club", district:"GPC", type:"Townhouses", beds:"3-4", status:"Off-Plan", handover:"Q2 2029", price:4200000, sizeFrom:2176, sizeTo:2176, ppsf:1933, payment:"80/20", construction:5, branded:false, brand:"—", tier:"Luxury" },
   { id:41, name:"Chevalia Estate 2", community:"Grand Polo Club", district:"GPC", type:"Villas", beds:"4-5", status:"Off-Plan", handover:"Q4 2029", price:7800000, sizeFrom:3800, sizeTo:5400, ppsf:2000, payment:"80/20", construction:3, branded:false, brand:"—", tier:"Ultra-Luxury" },
   { id:42, name:"Selvara 3", community:"Grand Polo Club", district:"GPC", type:"Villas", beds:"3-5", status:"Off-Plan", handover:"Q2 2029", price:5670000, sizeFrom:2948, sizeTo:5115, ppsf:1923, payment:"80/20", construction:5, branded:false, brand:"—", tier:"Ultra-Luxury" },
   { id:43, name:"Selvara 4", community:"Grand Polo Club", district:"GPC", type:"Villas", beds:"3-5", status:"Off-Plan", handover:"Q2 2029", price:5670000, sizeFrom:2948, sizeTo:5115, ppsf:1923, payment:"80/20", construction:3, branded:false, brand:"—", tier:"Ultra-Luxury" },
   { id:44, name:"Aurea", community:"Rashid Yachts & Marina", district:"RYM", type:"Apartments", beds:"1-3", status:"Off-Plan", handover:"Q4 2029", price:1450000, sizeFrom:700, sizeTo:2500, ppsf:1933, payment:"10/70/20", construction:0, branded:false, brand:"—", tier:"Premium" },
   { id:45, name:"Baystar by Vida", community:"Rashid Yachts & Marina", district:"RYM", type:"Apartments", beds:"1-4", status:"Off-Plan", handover:"Q4 2029", price:1450000, sizeFrom:700, sizeTo:3000, ppsf:1933, payment:"80/20", construction:5, branded:true, brand:"Vida", tier:"Luxury Branded" },
-  { id:46, name:"Marèva 2", community:"The Oasis", district:"TO", type:"Villas", beds:"4-6", status:"Off-Plan", handover:"Q4 2029", price:1450000, sizeFrom:7200, sizeTo:12700, ppsf:1933, payment:"80/20", construction:5, branded:false, brand:"—", tier:"Ultra-Luxury" },
+  { id:46, name:"Marèva 2", community:"The Oasis", district:"TO", type:"Villas", beds:"4-6", status:"Off-Plan", handover:"Q4 2029", price:13900000, sizeFrom:7200, sizeTo:12700, ppsf:1933, payment:"80/20", construction:5, branded:false, brand:"—", tier:"Ultra-Luxury" },
   { id:47, name:"Avarra by Palace", community:"Business Bay", district:"BB", type:"Apts & PH", beds:"1-4", status:"Off-Plan", handover:"Q4 2029", price:4000000, sizeFrom:750, sizeTo:3500, ppsf:3500, payment:"80/20", construction:0, branded:true, brand:"Palace", tier:"Ultra-Lux Branded" },
   { id:48, name:"Greencrest Heights", community:"The Heights CW", district:"TH", type:"Townhouses", beds:"3-4", status:"Off-Plan", handover:"Q4 2029", price:1450000, sizeFrom:2200, sizeTo:3000, ppsf:1933, payment:"80/20", construction:3, branded:false, brand:"—", tier:"Mid-Premium" },
 ];
@@ -347,7 +347,7 @@ export const emaarRisks = [
   { factor:"Execution / Delivery", level:1, likelihood:1, impact:2, score:2, mitigation:"23-year record; 79,000+ units completed on schedule", assessment:"VERY LOW", color:T.green },
   { factor:"Regulatory Changes", level:1, likelihood:1, impact:2, score:2, mitigation:"DLD/RERA framework; transparent governance", assessment:"VERY LOW", color:T.green },
   { factor:"Currency (AED Peg)", level:1, likelihood:1, impact:2, score:2, mitigation:"USD peg since 1997; zero FX risk for USD investors", assessment:"VERY LOW", color:T.green },
-  { factor:"Liquidity / Exit Risk", level:1, likelihood:1, impact:1, score:1, mitigation:"DFM-listed; AED 150B+ market cap; deep secondary market", assessment:"VERY LOW", color:T.green },
+  { factor:"Liquidity / Exit Risk", level:1, likelihood:1, impact:1, score:1, mitigation:"DFM-listed; AED 143B market cap; deep secondary market", assessment:"VERY LOW", color:T.green },
 ];
 
 /* ─── DUBAI MARKET 2025 (from Excel PBI_DubaiMarket) ─── */

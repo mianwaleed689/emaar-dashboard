@@ -321,7 +321,7 @@ export default function ProjectManager({ embedded = false }) {
     try {
       const data = { ...form, lastUpdated: new Date().toISOString(), constructionProgress: Number(form.constructionProgress) || 0 };
       data.units = data.units.map(u => ({ type: u.type, available: Number(u.available) || 0, total: Number(u.total) || 0 }));
-      await setDoc(doc(db, "projects", selectedId), data, { merge: true });
+      await setDoc(doc(db, "projectData", selectedId), data, { merge: true });
       setProjects(prev => prev.map(p => p.id === selectedId ? { ...p, ...data } : p));
       setHasChanges(false);
       notify("✅ Project saved successfully!");
@@ -469,7 +469,7 @@ export default function ProjectManager({ embedded = false }) {
               /* Edit form — reuse the section nav + form from main render */
               <div>
                 <div style={{ display: "flex", gap: 4, marginBottom: 16, flexWrap: "wrap" }}>
-                  {[{ id: "basic", label: "Basic Info" }, { id: "pricing", label: "Pricing" }, { id: "units", label: "Units" }, { id: "location", label: "Location" }, { id: "media", label: "Media" }].map(s => (
+                  {[{ id: "basic", label: "Basic Info" }, { id: "pricing", label: "Pricing" }, { id: "units", label: "Units" }, { id: "location", label: "Location" }, { id: "media", label: "Media" }, { id: "contact", label: "Contact" }].map(s => (
                     <button type="button" key={s.id} onClick={() => setActiveSection(s.id)}
                       style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${activeSection === s.id ? T.gold : T.border}`, background: activeSection === s.id ? T.goldGlow : "transparent", color: activeSection === s.id ? T.gold : T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.2s" }}>
                       {s.label}
@@ -533,6 +533,17 @@ export default function ProjectManager({ embedded = false }) {
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                       <Input label="Image URL" value={form.imageUrl || ""} onChange={v => set("imageUrl", v)} placeholder="https://..." />
                       <Input label="Brochure URL" value={form.brochureUrl || ""} onChange={v => set("brochureUrl", v)} placeholder="https://..." />
+                    </div>
+                  </Section>
+                )}
+
+                {activeSection === "contact" && (
+                  <Section title="Contact & Inquiry" sub="WhatsApp, email and phone for this project">
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                      <Input label="WhatsApp" value={form.whatsapp || ""} onChange={v => set("whatsapp", v)} placeholder="+971..." />
+                      <Input label="Email" value={form.email || ""} onChange={v => set("email", v)} placeholder="sales@emaar.ae" />
+                      <Input label="Phone" value={form.phone || ""} onChange={v => set("phone", v)} placeholder="+971..." />
+                      <Input label="Developer Website" value={form.developerUrl || ""} onChange={v => set("developerUrl", v)} placeholder="https://..." />
                     </div>
                   </Section>
                 )}

@@ -52,6 +52,7 @@ const I = {
   star: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
   verify: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>,
   target: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+  edit: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
 };
 
 /* ─── CSS (exactly matching main dashboard design DNA) ─── */
@@ -634,7 +635,7 @@ export default function AdminPanel() {
     try {
       const { getDocs, collection: col } = await import("firebase/firestore");
       const snap = await getDocs(col(db, "users"));
-      const proUsers = snap.docs.filter(d => d.data().plan === "pro" || d.data().plan === "Pro").map(d => d.data());
+      const proUsers = snap.docs.filter(d => d.data().tier === "pro" || d.data().tier === "enterprise").map(d => d.data());
       for (const user of proUsers) {
         if (user.email) await sendAlertEmail(user.email, user.name || user.displayName, projectName, changeType, newValue, oldValue);
       }
@@ -828,7 +829,7 @@ export default function AdminPanel() {
     setEditUserLoading(true);
     try {
       const data = { ...editUserForm };
-      if (data.trialEnd) data.trialEnd = new Date(data.trialEnd).toISOString();
+      if (data.trialEnd) data.trialEnd = new Date(data.trialEnd + "T23:59:59+04:00").toISOString();
       await setDoc(doc(db, "users", editingUser.uid), data, { merge: true });
       notify("✅ User updated successfully");
       setEditingUser(null);
@@ -877,7 +878,7 @@ export default function AdminPanel() {
     setDataSaving(true);
     try {
       const newId = Date.now();
-      await setDoc(doc(db, "projects", String(newId)), { ...form, id: newId, createdAt: new Date().toISOString(), createdBy: adminUser?.email });
+      await setDoc(doc(db, "projectData", String(newId)), { ...form, id: newId, createdAt: new Date().toISOString(), createdBy: adminUser?.email });
       notify("New project added!");
       setEditingProject(null);
       setProjectForm({});
@@ -899,7 +900,7 @@ export default function AdminPanel() {
       let saved = 0;
       for (const row of rows) {
         if (row.id) {
-          await setDoc(doc(db, "projects", String(row.id)), row, { merge: true });
+          await setDoc(doc(db, "projectData", String(row.id)), row, { merge: true });
           saved++;
         }
       }
@@ -1483,13 +1484,6 @@ export default function AdminPanel() {
                       { event: "Dubai Market Report Q2", due: "2026-07-30", note: "DLD and DXBinteract" },
                       { event: "Emaar Q3 2026 Results", due: "2026-10-15", note: "Download from emaar.com/investor-relations" },
                       { event: "Emaar FY 2026 Results", due: "2027-02-15", note: "Annual results — biggest update of the year" },
-
-                      { event: "Emaar Q1 2026 Results", due: "2026-04-15", note: "Download from emaar.com/investor-relations" },
-                      { event: "Dubai Market Report Q1", due: "2026-04-30", note: "DLD and DXBinteract" },
-                      { event: "Emaar Q2 2026 Results", due: "2026-07-15", note: "Download from emaar.com/investor-relations" },
-                      { event: "Dubai Market Report Q2", due: "2026-07-30", note: "DLD and DXBinteract" },
-                      { event: "Emaar Q3 2026 Results", due: "2026-10-15", note: "Download from emaar.com/investor-relations" },
-                      { event: "Emaar FY 2026 Results", due: "2027-02-15", note: "Annual results — biggest update of the year" },
                     ].map((item, i) => {
                       const daysLeft = Math.ceil((new Date(item.due) - new Date()) / (1000 * 60 * 60 * 24));
                       const isUrgent = daysLeft <= 30;
@@ -1606,8 +1600,8 @@ export default function AdminPanel() {
                         <div style={{ fontSize: 18, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>AED {stats.total > 0 ? Math.round(mrr / stats.total) : 0}</div>
                       </div>
                       <div>
-                        <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>Lead Value</div>
-                        <div style={{ fontSize: 18, fontWeight: 800, color: T.teal, fontFamily: "'Fraunces',serif" }}>AED 125</div>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>Est. Lead Value</div>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: T.teal, fontFamily: "'Fraunces',serif" }}>~AED 2,400</div>
                         <div style={{ fontSize: 10, color: T.textMuted }}>Per inquiry avg</div>
                       </div>
                     </div>
@@ -2238,7 +2232,7 @@ export default function AdminPanel() {
                               {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short" }) : "—"}
                             </td>
                             <td style={{ padding: "10px 12px" }}>
-                              <a href={`https://wa.me/${lead.email ? "" : "971542410599"}?text=${encodeURIComponent(`Hi ${lead.name || ""}, following up on your interest in ${lead.project || "the property"}. Are you still looking?`)}`}
+                              <a href={`https://wa.me/971542410599?text=${encodeURIComponent(`Hi ${lead.name || ""}, following up on your interest in ${lead.project || "the property"}. Are you still looking?`)}`}
                                 target="_blank" rel="noreferrer"
                                 style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>
                                 Follow Up
@@ -2507,7 +2501,7 @@ export default function AdminPanel() {
                 <Chart title="Signup Sources (Estimated)">
                   <div style={{ padding: "20px 0" }}>
                     {[
-                      { label: "Direct (REMOVE_THIS_LINE)", pct: 65, color: T.gold },
+                      { label: "Direct / Unknown", pct: 65, color: T.gold },
                       { label: "Organic Search", pct: 20, color: T.teal },
                       { label: "Referral", pct: 10, color: T.blue },
                       { label: "Social Media", pct: 5, color: T.purple },
