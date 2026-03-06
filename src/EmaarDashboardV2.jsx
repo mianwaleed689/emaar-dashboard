@@ -1204,10 +1204,48 @@ export default function EmaarDashboardV2() {
               if (daysLeft <= 0) {
                 tier = "free";
                 setTrialDaysLeft(0);
-                // Update Firestore to reflect expired trial
                 await setDoc(doc(db, "users", firebaseUser.uid), { tier: "free" }, { merge: true });
+                // Send trial expired email (once only)
+                if (!data.emailSent_trialExpired) {
+                  try {
+                    await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+                      user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
+                      project_name: "DXB Analytics Platform",
+                      change_type: "⏰ Your Pro Trial Has Expired",
+                      new_value: "Your 7-day trial has ended. Upgrade now to keep full access to 48+ projects, yield data, ROI tools and more.",
+                      old_value: "Pro Trial", updated_at: new Date().toLocaleDateString("en-AE"),
+                    }, "USkwUhp0csGCVDkdQ");
+                    await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trialExpired: true }, { merge: true });
+                  } catch(e) {}
+                }
               } else {
                 setTrialDaysLeft(daysLeft);
+                // Send 3-day warning email (once only)
+                if (daysLeft <= 3 && !data.emailSent_trial3d) {
+                  try {
+                    await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+                      user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
+                      project_name: "DXB Analytics Platform",
+                      change_type: `⚠️ Your Trial Expires in ${daysLeft} Day${daysLeft !== 1 ? "s" : ""}`,
+                      new_value: `Only ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left on your Pro trial. Don't lose access — upgrade now to keep all features.`,
+                      old_value: "Pro Trial Active", updated_at: new Date().toLocaleDateString("en-AE"),
+                    }, "USkwUhp0csGCVDkdQ");
+                    await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial3d: true }, { merge: true });
+                  } catch(e) {}
+                }
+                // Send 1-day urgent warning (once only)
+                if (daysLeft <= 1 && !data.emailSent_trial1d) {
+                  try {
+                    await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+                      user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
+                      project_name: "DXB Analytics Platform",
+                      change_type: "🚨 Last Day of Your Pro Trial!",
+                      new_value: "Today is your last day. After midnight your account moves to Free and you lose access to 48 projects, community yields, ROI data and PDF reports.",
+                      old_value: "Pro Trial — Final Day", updated_at: new Date().toLocaleDateString("en-AE"),
+                    }, "USkwUhp0csGCVDkdQ");
+                    await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial1d: true }, { merge: true });
+                  } catch(e) {}
+                }
               }
             }
             // Admin override — by role field OR by owner email
@@ -1442,16 +1480,39 @@ export default function EmaarDashboardV2() {
   const fetchAdminUsers = fetchAdminUsersRef.current;
 
   const handleChangeTier = async (userId, newTier) => {
-    const user = adminUsers.find(u => u.id === userId);
-    const userName = user ? (user.name || user.email) : userId;
-    if (!window.confirm(`Change ${userName} to "${newTier}"?`)) return;
+    const u = adminUsers.find(u => u.id === userId);
+    const uName = u ? (u.name || u.email) : userId;
+    const uEmail = u?.email || "";
+    if (!window.confirm(`Change ${uName} to "${newTier}"?`)) return;
     try {
-      await setDoc(doc(db, "users", userId), { tier: newTier }, { merge: true });
+      const now = new Date();
+      const data = { tier: newTier };
+      if (newTier === "pro_trial") { const end = new Date(); end.setDate(end.getDate() + 7); data.trialEnd = end.toISOString(); }
+      await setDoc(doc(db, "users", userId), data, { merge: true });
       setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, tier: newTier, status: newTier } : u));
-      notify(`✅ ${userName} → ${newTier}`);
+      notify(`✅ ${uName} → ${newTier}`);
+      // Send tier change confirmation email
+      const tierMessages = {
+        free: { subject: "Your DXB Analytics plan has changed to Free", body: "Your account has been updated to the Free plan. You have access to 5 featured projects and basic market data." },
+        pro_trial: { subject: "Your 7-Day Pro Trial has been activated!", body: "Great news! Your Pro Trial has been activated. You now have full access to 48+ projects, community yields, ROI calculator, PDF reports and all Pro features for 7 days." },
+        pro: { subject: "Welcome to DXB Analytics Pro! ⭐", body: "Your account has been upgraded to the Pro Plan. You now have unlimited access to all 48+ projects, live yield data, ROI analysis, investment reports, and all Pro features." },
+        enterprise: { subject: "Welcome to DXB Analytics Enterprise! 🏢", body: "Your account has been upgraded to Enterprise. You have access to all platform features including custom reports, priority support, and full data access." },
+      };
+      const msg = tierMessages[newTier] || { subject: `Your plan changed to ${newTier}`, body: `Your DXB Analytics plan has been updated to ${newTier}.` };
+      if (uEmail) {
+        try {
+          await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+            user_email: uEmail, user_name: uName,
+            project_name: "DXB Analytics Platform",
+            change_type: msg.subject,
+            new_value: msg.body,
+            old_value: u?.tier || "free",
+            updated_at: now.toLocaleDateString("en-AE"),
+          }, "USkwUhp0csGCVDkdQ");
+        } catch(e) {}
+      }
     } catch (err) {
       notify("❌ Failed to update tier");
-      console.log("Failed to update tier:", err);
     }
   };
 
@@ -1606,16 +1667,31 @@ export default function EmaarDashboardV2() {
       {/* ─── MAIN CONTENT ─── */}
       <main role="main" id="main-content" className="main-content" style={{ marginLeft: 240, paddingTop: 60, minHeight: "100vh" }}>
         {/* Trial / Free tier banner */}
-        {userTier === "pro_trial" && trialDaysLeft > 0 && (
-          <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: `linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.04))`, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 16 }}>⭐</span>
-              <span style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>Pro Trial Active</span>
-              <span style={{ fontSize: 12, color: T.textSecondary }}>— {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining. Enjoying full access to all features.</span>
+        {userTier === "pro_trial" && trialDaysLeft > 0 && (() => {
+          const isUrgent = trialDaysLeft <= 1;
+          const isWarning = trialDaysLeft <= 3;
+          const bg = isUrgent ? "rgba(239,68,68,0.1)" : isWarning ? "rgba(245,158,11,0.1)" : "rgba(212,168,67,0.08)";
+          const border = isUrgent ? "rgba(239,68,68,0.35)" : isWarning ? "rgba(245,158,11,0.35)" : T.border;
+          const icon = isUrgent ? "🚨" : isWarning ? "⚠️" : "⭐";
+          const label = isUrgent ? "Last day of your trial!" : isWarning ? `Trial ending soon` : "Pro Trial Active";
+          const sub = isUrgent
+            ? "Your trial expires today. Upgrade now to keep full access."
+            : isWarning
+            ? `${trialDaysLeft} days left — don't lose your access to 48+ projects and yield data.`
+            : `${trialDaysLeft} day${trialDaysLeft !== 1 ? "s" : ""} remaining. Full Pro access active.`;
+          return (
+            <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 16 }}>{icon}</span>
+                <span style={{ fontSize: 13, color: isUrgent ? T.red : isWarning ? T.gold : T.white, fontWeight: 700 }}>{label}</span>
+                <span style={{ fontSize: 12, color: T.textSecondary }}>— {sub}</span>
+              </div>
+              <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: isUrgent ? T.red : T.gold, color: isUrgent ? "#fff" : T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>
+                {isUrgent ? "🔥 Upgrade Now" : "Upgrade to Pro"}
+              </button>
             </div>
-            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro</button>
-          </div>
-        )}
+          );
+        })()}
         {userTier === "free" && (
           <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -3913,26 +3989,38 @@ export default function EmaarDashboardV2() {
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, marginBottom: 12 }}>CHOOSE PAYMENT METHOD</div>
 
-                {/* Stripe Card */}
-                <div onClick={async () => {
-                  try {
-                    const res = await fetch("/api/create-checkout", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ plan: showCheckout.name, price: showCheckout.price, email: user }),
-                    });
-                    if (res.ok) { const { url } = await res.json(); if (url) { window.location.href = url; return; } }
-                    window.open(`https://wa.me/971542410599?text=${encodeURIComponent(`Hi, I want DXB Analytics ${showCheckout.name} Plan (AED ${showCheckout.price}/mo). Email: ${user}`)}`, "_blank");
-                    setCheckoutStep(3);
-                  } catch { window.open(`https://wa.me/971542410599?text=${encodeURIComponent(`Hi, I want DXB Analytics ${showCheckout.name} Plan (AED ${showCheckout.price}/mo). Email: ${user}`)}`, "_blank"); setCheckoutStep(3); }
-                }} style={{ padding: "16px", borderRadius: 12, background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.3)", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", transition: "all 0.2s", marginBottom: 8 }} onMouseEnter={e => e.currentTarget.style.borderColor = "#3B82F6"} onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(59,130,246,0.3)"}>
-                  <div style={{ fontSize: 24 }}>💳</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Credit / Debit Card</div>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>Visa · Mastercard · Amex — powered by Stripe</div>
-                  </div>
-                  <span style={{ fontSize: 9, padding: "3px 10px", borderRadius: 6, background: "rgba(34,197,94,0.12)", color: "#22C55E", fontWeight: 700, border: "1px solid rgba(34,197,94,0.2)" }}>RECOMMENDED</span>
-                </div>
+                {/* Stripe Payment Links */}
+                {(() => {
+                  // ─── STRIPE PAYMENT LINKS ───────────────────────────────
+                  // After creating links in stripe.com/payment-links, paste them here:
+                  const STRIPE_LINKS = {
+                    "Pro":        "PASTE_YOUR_PRO_STRIPE_LINK_HERE",
+                    "Enterprise": "PASTE_YOUR_ENTERPRISE_STRIPE_LINK_HERE",
+                  };
+                  const stripeUrl = STRIPE_LINKS[showCheckout.name];
+                  const finalUrl = stripeUrl && !stripeUrl.startsWith("PASTE")
+                    ? `${stripeUrl}?prefilled_email=${encodeURIComponent(user || "")}`
+                    : null;
+                  return (
+                    <div onClick={() => {
+                      if (finalUrl) {
+                        window.location.href = finalUrl;
+                      } else {
+                        window.open(`https://wa.me/971542410599?text=${encodeURIComponent(`Hi, I want DXB Analytics ${showCheckout.name} Plan (AED ${showCheckout.price}/mo). Email: ${user}`)}`, "_blank");
+                        setCheckoutStep(3);
+                      }
+                    }} style={{ padding: "16px", borderRadius: 12, background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.3)", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", transition: "all 0.2s", marginBottom: 8 }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = "#3B82F6"}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(59,130,246,0.3)"}>
+                      <div style={{ fontSize: 24 }}>💳</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Credit / Debit Card</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>Visa · Mastercard · Amex · Apple Pay — powered by Stripe</div>
+                      </div>
+                      <span style={{ fontSize: 9, padding: "3px 10px", borderRadius: 6, background: "rgba(34,197,94,0.12)", color: "#22C55E", fontWeight: 700, border: "1px solid rgba(34,197,94,0.2)" }}>RECOMMENDED</span>
+                    </div>
+                  );
+                })()}
 
                 {/* WhatsApp */}
                 <div onClick={() => { window.open(`https://wa.me/971542410599?text=${encodeURIComponent(`Hi Mian Waleed, I want to subscribe to DXB Analytics ${showCheckout.name} Plan (AED ${showCheckout.price}/mo). My email: ${user}`)}`, "_blank"); setCheckoutStep(3); }} style={{ padding: "16px", borderRadius: 12, background: "rgba(37,211,102,0.06)", border: "1px solid rgba(37,211,102,0.25)", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", transition: "all 0.2s", marginBottom: 8 }} onMouseEnter={e => e.currentTarget.style.borderColor = "#25D366"} onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(37,211,102,0.25)"}>
