@@ -6,7 +6,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { auth, db, storage } from "./firebase";
 import emailjs from "@emailjs/browser";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI } from "./data";
@@ -336,6 +336,13 @@ export default function AdminPanel() {
   const [users, setUsers] = useState([]);
   const [userSearch, setUserSearch] = useState("");
   const [tierFilter, setTierFilter] = useState("All");
+  const [expandedUser, setExpandedUser] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editUserForm, setEditUserForm] = useState({});
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [addUserForm, setAddUserForm] = useState({ name: "", email: "", password: "", phone: "", country: "", tier: "free", notes: "" });
+  const [addUserLoading, setAddUserLoading] = useState(false);
+  const [editUserLoading, setEditUserLoading] = useState(false);
   // eslint-disable-next-line no-unused-vars
   const [sortBy, setSortBy] = useState("newest");
   const [toast, setToast] = useState("");
@@ -754,8 +761,6 @@ export default function AdminPanel() {
 
   /* ─── ACTIONS ─── */
   const changeTier = async (uid, tier) => {
-    const u = users.find(x => x.uid === uid);
-    if (!window.confirm(`⚠️ CHANGE USER TIER\n\nUser: ${u?.name || u?.email || uid}\nCurrent: ${u?.tier || "free"}\nNew: ${tier}\n\nThis will:\n• Immediately change their access level\n• ${tier === "free" ? "They will lose Pro features and be limited to 5 projects" : tier === "pro" ? "They will get full access to all 48 projects" : tier === "enterprise" ? "They will get enterprise-level access" : "Update their plan"}\n\nContinue?`)) return;
     try {
       const data = { tier };
       if (tier === "pro_trial") { const end = new Date(); end.setDate(end.getDate() + 7); data.trialEnd = end.toISOString(); }
@@ -767,8 +772,102 @@ export default function AdminPanel() {
 
   const deleteUser = async (uid) => {
     const u = users.find(x => x.uid === uid);
-    if (!window.confirm(`⚠️ DELETE USER: ${u?.name || u?.email || uid}\n\nThis will:\n• Permanently remove their account from Firestore\n• They will lose access to the dashboard\n• Their portfolio data will be lost\n• This action CANNOT be undone\n\nAre you sure?`)) return;
-    try { await deleteDoc(doc(db, "users", uid)); notify("✅ User deleted"); fetchUsers(); } catch (e) { notify("❌ " + e.message); }
+    if (!window.confirm(`DELETE USER: ${u?.name || u?.email}\n\nThis permanently removes them from the database and revokes all access.\n\nContinue?`)) return;
+    try {
+      await deleteDoc(doc(db, "users", uid));
+      try { await deleteDoc(doc(db, "watchlists", uid)); } catch(e) {}
+      notify("✅ User deleted");
+      setExpandedUser(null);
+      fetchUsers();
+    } catch (e) { notify("❌ " + e.message); }
+  };
+
+  const suspendUser = async (uid) => {
+    const u = users.find(x => x.uid === uid);
+    const isSuspended = u?.suspended;
+    if (!window.confirm(`${isSuspended ? "UNSUSPEND" : "SUSPEND"} user: ${u?.name || u?.email}?\n\n${isSuspended ? "They will regain full dashboard access." : "They will be blocked from the dashboard immediately."}`)) return;
+    try {
+      await setDoc(doc(db, "users", uid), { suspended: !isSuspended, suspendedAt: isSuspended ? null : new Date().toISOString() }, { merge: true });
+      notify(`✅ User ${isSuspended ? "unsuspended" : "suspended"}`);
+      fetchUsers();
+    } catch (e) { notify("❌ " + e.message); }
+  };
+
+  const sendResetEmail = async (email) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      notify(`✅ Password reset email sent to ${email}`);
+    } catch (e) { notify("❌ Failed to send reset email"); }
+  };
+
+  const extendTrial = async (uid, days) => {
+    try {
+      const end = new Date();
+      end.setDate(end.getDate() + days);
+      await setDoc(doc(db, "users", uid), { tier: "pro_trial", trialEnd: end.toISOString() }, { merge: true });
+      notify(`✅ Trial extended by ${days} days`);
+      fetchUsers();
+    } catch (e) { notify("❌ " + e.message); }
+  };
+
+  const openEditUser = (u) => {
+    setEditingUser(u);
+    setEditUserForm({
+      name: u.name || "",
+      phone: u.phone || "",
+      country: u.country || "",
+      tier: u.tier || "free",
+      trialEnd: u.trialEnd ? u.trialEnd.slice(0, 10) : "",
+      notes: u.notes || "",
+      role: u.role || "user",
+    });
+  };
+
+  const saveEditUser = async () => {
+    if (!editingUser) return;
+    setEditUserLoading(true);
+    try {
+      const data = { ...editUserForm };
+      if (data.trialEnd) data.trialEnd = new Date(data.trialEnd).toISOString();
+      await setDoc(doc(db, "users", editingUser.uid), data, { merge: true });
+      notify("✅ User updated successfully");
+      setEditingUser(null);
+      fetchUsers();
+    } catch (e) { notify("❌ " + e.message); }
+    setEditUserLoading(false);
+  };
+
+  const addUserManually = async () => {
+    if (!addUserForm.name.trim()) { notify("❌ Name is required"); return; }
+    if (!addUserForm.email.trim()) { notify("❌ Email is required"); return; }
+    if (!addUserForm.password || addUserForm.password.length < 6) { notify("❌ Password must be at least 6 characters"); return; }
+    setAddUserLoading(true);
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, addUserForm.email.trim(), addUserForm.password);
+      const now = new Date();
+      const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      await setDoc(doc(db, "users", cred.user.uid), {
+        name: addUserForm.name.trim(),
+        email: addUserForm.email.trim(),
+        phone: addUserForm.phone.trim(),
+        country: addUserForm.country.trim(),
+        tier: addUserForm.tier,
+        notes: addUserForm.notes.trim(),
+        createdAt: now.toISOString(),
+        trialEnd: addUserForm.tier === "pro_trial" ? trialEnd.toISOString() : null,
+        role: "user",
+        createdByAdmin: adminUser?.email,
+        provider: "admin",
+      });
+      notify(`✅ User "${addUserForm.name}" created successfully`);
+      setShowAddUser(false);
+      setAddUserForm({ name: "", email: "", password: "", phone: "", country: "", tier: "free", notes: "" });
+      fetchUsers();
+    } catch (e) {
+      const msgs = { "auth/email-already-in-use": "❌ Email already registered", "auth/invalid-email": "❌ Invalid email address", "auth/weak-password": "❌ Password too weak" };
+      notify(msgs[e.code] || "❌ " + e.message);
+    }
+    setAddUserLoading(false);
   };
 
   
@@ -823,13 +922,14 @@ export default function AdminPanel() {
   /* ─── FILTERED USERS ─── */
   const filteredUsers = users
     .filter(u => {
-      const ms = !userSearch || (u.name || "").toLowerCase().includes(userSearch.toLowerCase()) || (u.email || "").toLowerCase().includes(userSearch.toLowerCase());
+      const ms = !userSearch || (u.name || "").toLowerCase().includes(userSearch.toLowerCase()) || (u.email || "").toLowerCase().includes(userSearch.toLowerCase()) || (u.phone || "").toLowerCase().includes(userSearch.toLowerCase());
       let mt = true;
       if (tierFilter === "Free") mt = u.tier === "free" || !u.tier;
       else if (tierFilter === "Pro Trial") mt = u.tier === "pro_trial" && (!u.trialEnd || new Date(u.trialEnd) > now);
       else if (tierFilter === "Pro") mt = u.tier === "pro";
       else if (tierFilter === "Enterprise") mt = u.tier === "enterprise";
       else if (tierFilter === "Expired") mt = u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) <= now;
+      else if (tierFilter === "Suspended") mt = !!u.suspended;
       return ms && mt;
     })
     .sort((a, b) => {
@@ -1098,24 +1198,157 @@ export default function AdminPanel() {
             </>
           )}
 
+          )}
+
           {/* ═══════════════════════════════════════
              USERS TAB
              ═══════════════════════════════════════ */}
           {tab === "users" && (
-            <Section title={`All Users (${users.length})`} sub="Manage tiers, view signups, monitor trials" action={
+            <>
+            {/* ── ADD USER MODAL ── */}
+            {showAddUser && (
+              <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+                <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 28, width: "100%", maxWidth: 520, maxHeight: "90vh", overflowY: "auto" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                    <div>
+                      <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold, margin: 0 }}>Add User Manually</h3>
+                      <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>Create a new account directly from admin</p>
+                    </div>
+                    <button type="button" onClick={() => setShowAddUser(false)} style={{ background: "none", border: "none", color: T.textMuted, fontSize: 20, cursor: "pointer", padding: 4 }}>✕</button>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                    {[
+                      { label: "Full Name *", key: "name", type: "text", placeholder: "John Smith", full: true },
+                      { label: "Email Address *", key: "email", type: "email", placeholder: "john@company.com", full: true },
+                      { label: "Password *", key: "password", type: "password", placeholder: "Min 6 characters", full: true },
+                      { label: "Phone", key: "phone", type: "tel", placeholder: "+971 50 000 0000" },
+                      { label: "Country", key: "country", type: "text", placeholder: "UAE" },
+                    ].map(f => (
+                      <div key={f.key} style={{ gridColumn: f.full ? "1 / -1" : "auto" }}>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>{f.label}</label>
+                        <input type={f.type} placeholder={f.placeholder} value={addUserForm[f.key]} onChange={e => setAddUserForm(p => ({ ...p, [f.key]: e.target.value }))}
+                          style={{ width: "100%", padding: "9px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                      </div>
+                    ))}
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Access Tier</label>
+                      <select value={addUserForm.tier} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))}
+                        style={{ width: "100%", padding: "9px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" }}>
+                        <option value="free">Free</option>
+                        <option value="pro_trial">Pro Trial (7 days)</option>
+                        <option value="pro">Pro</option>
+                        <option value="enterprise">Enterprise</option>
+                      </select>
+                    </div>
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Admin Notes</label>
+                      <textarea placeholder="Internal notes about this user..." value={addUserForm.notes} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))}
+                        style={{ width: "100%", padding: "9px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", minHeight: 60, resize: "vertical", boxSizing: "border-box" }} />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+                    <button type="button" onClick={() => setShowAddUser(false)} style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                    <button type="button" onClick={addUserManually} disabled={addUserLoading} style={{ flex: 2, padding: "10px 0", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 13, fontWeight: 700, cursor: addUserLoading ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: addUserLoading ? 0.7 : 1 }}>
+                      {addUserLoading ? "Creating..." : "✅ Create User"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── EDIT USER MODAL ── */}
+            {editingUser && (
+              <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+                <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 28, width: "100%", maxWidth: 520, maxHeight: "90vh", overflowY: "auto" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                    <div>
+                      <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold, margin: 0 }}>Edit User</h3>
+                      <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{editingUser.email}</p>
+                    </div>
+                    <button type="button" onClick={() => setEditingUser(null)} style={{ background: "none", border: "none", color: T.textMuted, fontSize: 20, cursor: "pointer", padding: 4 }}>✕</button>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                    {[
+                      { label: "Full Name", key: "name", type: "text", placeholder: "Full name", full: true },
+                      { label: "Phone", key: "phone", type: "tel", placeholder: "+971 50 000 0000" },
+                      { label: "Country", key: "country", type: "text", placeholder: "UAE" },
+                    ].map(f => (
+                      <div key={f.key} style={{ gridColumn: f.full ? "1 / -1" : "auto" }}>
+                        <label style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>{f.label}</label>
+                        <input type={f.type} placeholder={f.placeholder} value={editUserForm[f.key] || ""} onChange={e => setEditUserForm(p => ({ ...p, [f.key]: e.target.value }))}
+                          style={{ width: "100%", padding: "9px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                      </div>
+                    ))}
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Access Tier</label>
+                      <select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))}
+                        style={{ width: "100%", padding: "9px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" }}>
+                        <option value="free">Free</option>
+                        <option value="pro_trial">Pro Trial</option>
+                        <option value="pro">Pro</option>
+                        <option value="enterprise">Enterprise</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Trial End Date</label>
+                      <input type="date" value={editUserForm.trialEnd || ""} onChange={e => setEditUserForm(p => ({ ...p, trialEnd: e.target.value }))}
+                        style={{ width: "100%", padding: "9px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Role</label>
+                      <select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))}
+                        style={{ width: "100%", padding: "9px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" }}>
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Admin Notes</label>
+                      <textarea placeholder="Internal notes about this user..." value={editUserForm.notes || ""} onChange={e => setEditUserForm(p => ({ ...p, notes: e.target.value }))}
+                        style={{ width: "100%", padding: "9px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", minHeight: 60, resize: "vertical", boxSizing: "border-box" }} />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+                    <button type="button" onClick={() => setEditingUser(null)} style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                    <button type="button" onClick={saveEditUser} disabled={editUserLoading} style={{ flex: 2, padding: "10px 0", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 13, fontWeight: 700, cursor: editUserLoading ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: editUserLoading ? 0.7 : 1 }}>
+                      {editUserLoading ? "Saving..." : "💾 Save Changes"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <Section title={`All Users (${users.length})`} sub="Full user management — add, edit, suspend, delete" action={
               <div style={{ display: "flex", gap: 8 }}>
                 <button type="button" onClick={exportCSV} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} CSV</button>
-                <button type="button" onClick={fetchUsers} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
+                <button type="button" onClick={fetchUsers} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
+                <button type="button" onClick={() => setShowAddUser(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700 }}>+ Add User</button>
               </div>
             }>
+              {/* Stats Row */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10, marginBottom: 16 }}>
+                {[
+                  { label: "Total", value: users.length, color: T.gold },
+                  { label: "Pro", value: users.filter(u => u.tier === "pro").length, color: "#10B981" },
+                  { label: "Trial", value: users.filter(u => u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) > new Date()).length, color: "#3B82F6" },
+                  { label: "Free", value: users.filter(u => !u.tier || u.tier === "free").length, color: T.textMuted },
+                  { label: "Suspended", value: users.filter(u => u.suspended).length, color: T.red },
+                ].map(s => (
+                  <div key={s.label} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "10px 14px", textAlign: "center", border: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: s.color, fontFamily: "'Fraunces',serif" }}>{s.value}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 2 }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
               {/* Filters */}
               <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
                 <div style={{ position: "relative", flex: "1 1 250px", maxWidth: 350 }}>
                   <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</span>
-                  <input value={userSearch} onChange={e => setUserSearch(e.target.value)} placeholder="Search name or email..."
+                  <input value={userSearch} onChange={e => setUserSearch(e.target.value)} placeholder="Search name, email, phone..."
                     style={{ width: "100%", padding: "10px 12px 10px 36px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
                 </div>
-                {["All", "Free", "Pro Trial", "Pro", "Enterprise", "Expired"].map(f => (
+                {["All", "Free", "Pro Trial", "Pro", "Enterprise", "Suspended", "Expired"].map(f => (
                   <button type="button" key={f} onClick={() => setTierFilter(f)} style={{
                     padding: "7px 14px", borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.2s",
                     border: `1px solid ${tierFilter === f ? T.gold : T.border}`,
@@ -1127,61 +1360,111 @@ export default function AdminPanel() {
 
               {/* Users Table */}
               <div className="chart-box" style={{ padding: 0, overflow: "hidden" }}>
-                {/* Header */}
-                <div style={{ display: "grid", gridTemplateColumns: "40px 1.5fr 1.5fr 100px 120px 120px 140px", gap: 8, padding: "12px 20px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt }}>
-                  {["#", "User", "Email", "Tier", "Trial", "Signed Up", "Actions"].map(h => (
+                <div style={{ display: "grid", gridTemplateColumns: "32px 1.8fr 1.5fr 90px 100px 90px 1fr", gap: 8, padding: "10px 16px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt }}>
+                  {["#", "User", "Email", "Tier", "Trial", "Joined", "Actions"].map(h => (
                     <span key={h} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>{h}</span>
                   ))}
                 </div>
-                {/* Rows */}
+
                 {filteredUsers.length === 0 ? (
                   <div style={{ textAlign: "center", padding: 40, color: T.textMuted, fontSize: 13 }}>No users found</div>
                 ) : filteredUsers.map((u, i) => {
                   const badge = tierBadge(u);
                   const days = trialDaysLeft(u);
+                  const isExpanded = expandedUser === u.uid;
                   return (
-                    <div key={u.uid} className="fade-up" style={{ display: "grid", gridTemplateColumns: "40px 1.5fr 1.5fr 100px 120px 120px 140px", gap: 8, padding: "12px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", animationDelay: `${Math.min(i * 0.02, 0.5)}s`, transition: "background 0.15s" }}
-                      onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                            <span style={{ fontSize: 11, color: T.textMuted }}>{i + 1}</span>
-                               style={{ cursor: "pointer", accentColor: T.gold }} />
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ width: 30, height: 30, borderRadius: 8, background: `linear-gradient(135deg, ${badge.color}30, ${badge.color}10)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 11, color: badge.color, flexShrink: 0 }}>
-                          {(u.name || u.email || "?")[0].toUpperCase()}
-                        </div>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.name || u.email?.split("@")[0]}</span>
-                      </div>
-                      <span style={{ fontSize: 12, color: T.textSecondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</span>
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 6, background: badge.bg, color: badge.color, textAlign: "center" }}>{badge.label}</span>
-                      <div>
-                        {days !== null ? (
-                          <div>
-                            <div style={{ width: "100%", height: 4, borderRadius: 2, background: T.surfaceAlt }}>
-                              <div style={{ width: `${(days / 7) * 100}%`, height: "100%", borderRadius: 2, background: days > 3 ? T.green : days > 0 ? T.gold : T.red, transition: "width 0.3s" }} />
-                            </div>
-                            <span style={{ fontSize: 10, color: days > 0 ? T.green : T.red, fontWeight: 600, marginTop: 2, display: "block" }}>{days > 0 ? `${days}d left` : "Expired"}</span>
+                    <div key={u.uid}>
+                      {/* Main Row */}
+                      <div style={{ display: "grid", gridTemplateColumns: "32px 1.8fr 1.5fr 90px 100px 90px 1fr", gap: 8, padding: "11px 16px", borderBottom: `1px solid ${T.border}`, alignItems: "center", transition: "background 0.15s", background: u.suspended ? "rgba(239,68,68,0.04)" : "transparent", opacity: u.suspended ? 0.75 : 1 }}
+                        onMouseEnter={e => e.currentTarget.style.background = u.suspended ? "rgba(239,68,68,0.07)" : T.surfaceAlt}
+                        onMouseLeave={e => e.currentTarget.style.background = u.suspended ? "rgba(239,68,68,0.04)" : "transparent"}>
+                        <span style={{ fontSize: 11, color: T.textMuted }}>{i + 1}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                          <div style={{ width: 28, height: 28, borderRadius: 8, background: `linear-gradient(135deg, ${badge.color}30, ${badge.color}10)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 11, color: badge.color, flexShrink: 0 }}>
+                            {(u.name || u.email || "?")[0].toUpperCase()}
                           </div>
-                        ) : <span style={{ fontSize: 11, color: T.textMuted }}>—</span>}
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: u.suspended ? T.red : T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {u.name || u.email?.split("@")[0]}
+                              {u.suspended && <span style={{ fontSize: 9, color: T.red, fontWeight: 700, marginLeft: 5, background: "rgba(239,68,68,0.1)", padding: "1px 5px", borderRadius: 4 }}>SUSPENDED</span>}
+                              {u.role === "admin" && <span style={{ fontSize: 9, color: T.gold, fontWeight: 700, marginLeft: 5, background: "rgba(212,168,67,0.1)", padding: "1px 5px", borderRadius: 4 }}>ADMIN</span>}
+                            </div>
+                            {u.phone && <div style={{ fontSize: 10, color: T.textMuted }}>{u.phone}</div>}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: 11, color: T.textSecondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: badge.bg, color: badge.color, textAlign: "center" }}>{badge.label}</span>
+                        <div>
+                          {days !== null ? (
+                            <div>
+                              <div style={{ width: "100%", height: 3, borderRadius: 2, background: T.surfaceAlt }}>
+                                <div style={{ width: `${Math.min((days / 7) * 100, 100)}%`, height: "100%", borderRadius: 2, background: days > 3 ? T.green : days > 0 ? T.gold : T.red }} />
+                              </div>
+                              <span style={{ fontSize: 10, color: days > 0 ? T.green : T.red, fontWeight: 600, marginTop: 2, display: "block" }}>{days > 0 ? `${days}d left` : "Expired"}</span>
+                            </div>
+                          ) : <span style={{ fontSize: 11, color: T.textMuted }}>—</span>}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 11, color: T.textSecondary }}>{(() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "short" }); } catch { return "—"; } })()}</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>{timeSince(u.createdAt)}</div>
+                        </div>
+                        {/* Actions */}
+                        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                          {/* Expand */}
+                          <button type="button" title="View full profile" onClick={() => setExpandedUser(isExpanded ? null : u.uid)} style={{ width: 26, height: 26, borderRadius: 6, border: `1px solid ${isExpanded ? T.gold : T.border}`, background: isExpanded ? T.goldGlow : "transparent", color: isExpanded ? T.gold : T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>▾</button>
+                          {/* Edit */}
+                          <button type="button" title="Edit user" onClick={() => openEditUser(u)} style={{ width: 26, height: 26, borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{I.edit}</button>
+                          {/* Reset Password */}
+                          <button type="button" title="Send password reset" onClick={() => sendResetEmail(u.email)} style={{ width: 26, height: 26, borderRadius: 6, border: `1px solid rgba(59,130,246,0.3)`, background: "rgba(59,130,246,0.06)", color: "#3B82F6", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11 }}>🔑</button>
+                          {/* Suspend */}
+                          <button type="button" title={u.suspended ? "Unsuspend user" : "Suspend user"} onClick={() => suspendUser(u.uid)} style={{ width: 26, height: 26, borderRadius: 6, border: `1px solid ${u.suspended ? "rgba(16,185,129,0.3)" : "rgba(245,158,11,0.3)"}`, background: u.suspended ? "rgba(16,185,129,0.06)" : "rgba(245,158,11,0.06)", color: u.suspended ? T.green : T.gold, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11 }}>{u.suspended ? "✅" : "⏸"}</button>
+                          {/* Delete */}
+                          <button type="button" title="Delete user" onClick={() => deleteUser(u.uid)} style={{ width: 26, height: 26, borderRadius: 6, border: `1px solid rgba(239,68,68,0.2)`, background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{I.trash}</button>
+                        </div>
                       </div>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 500, color: T.white }}>{(() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }); } catch { return "—"; } })()}</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>{timeSince(u.createdAt)}</div>
-                      </div>
-                      <div style={{ display: "flex", gap: 4 }}>
-                        <select value={u.tier || "free"} onChange={e => changeTier(u.uid, e.target.value)}
-                          style={{ padding: "4px 6px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 10, fontFamily: "'Outfit',sans-serif", cursor: "pointer", flex: 1 }}>
-                          <option value="free">Free</option>
-                          <option value="pro_trial">Trial</option>
-                          <option value="pro">Pro</option>
-                          <option value="enterprise">Enterprise</option>
-                        </select>
-                        <button type="button" onClick={() => { if (window.confirm("Delete " + (u.displayName || u.email) + "? This cannot be undone.")) deleteUser(u.uid); }} style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid rgba(239,68,68,0.2)`, background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{I.trash}</button>
-                      </div>
+
+                      {/* Expanded Profile Panel */}
+                      {isExpanded && (
+                        <div style={{ background: "rgba(212,168,67,0.03)", borderBottom: `1px solid ${T.border}`, padding: "16px 20px 20px 60px" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 16 }}>
+                            {[
+                              { label: "UID", value: u.uid?.slice(0, 12) + "..." },
+                              { label: "Phone", value: u.phone || "—" },
+                              { label: "Country", value: u.country || "—" },
+                              { label: "Provider", value: u.provider || "email" },
+                              { label: "Email Verified", value: u.emailVerified ? "✅ Yes" : "❌ No" },
+                              { label: "Role", value: u.role || "user" },
+                              { label: "Created By", value: u.createdByAdmin ? `Admin (${u.createdByAdmin})` : "Self-signup" },
+                              { label: "Trial End", value: u.trialEnd ? new Date(u.trialEnd).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }) : "—" },
+                            ].map(f => (
+                              <div key={f.label} style={{ background: T.surfaceAlt, borderRadius: 8, padding: "10px 12px", border: `1px solid ${T.border}` }}>
+                                <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{f.label}</div>
+                                <div style={{ fontSize: 12, color: T.textPrimary, fontWeight: 500 }}>{f.value}</div>
+                              </div>
+                            ))}
+                          </div>
+                          {u.notes && (
+                            <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "10px 14px", border: `1px solid ${T.border}`, marginBottom: 14 }}>
+                              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>Admin Notes</div>
+                              <div style={{ fontSize: 12, color: T.textSecondary }}>{u.notes}</div>
+                            </div>
+                          )}
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            <span style={{ fontSize: 11, color: T.textMuted, alignSelf: "center", fontWeight: 600 }}>Quick Actions:</span>
+                            <button type="button" onClick={() => extendTrial(u.uid, 7)} style={{ padding: "5px 12px", borderRadius: 6, border: `1px solid rgba(59,130,246,0.3)`, background: "rgba(59,130,246,0.06)", color: "#3B82F6", fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>+7 Days Trial</button>
+                            <button type="button" onClick={() => extendTrial(u.uid, 30)} style={{ padding: "5px 12px", borderRadius: 6, border: `1px solid rgba(59,130,246,0.3)`, background: "rgba(59,130,246,0.06)", color: "#3B82F6", fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>+30 Days Trial</button>
+                            <button type="button" onClick={() => changeTier(u.uid, "pro")} style={{ padding: "5px 12px", borderRadius: 6, border: `1px solid rgba(16,185,129,0.3)`, background: "rgba(16,185,129,0.06)", color: T.green, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Upgrade → Pro</button>
+                            <button type="button" onClick={() => changeTier(u.uid, "enterprise")} style={{ padding: "5px 12px", borderRadius: 6, border: `1px solid rgba(212,168,67,0.3)`, background: T.goldGlow, color: T.gold, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Upgrade → Enterprise</button>
+                            <button type="button" onClick={() => changeTier(u.uid, "free")} style={{ padding: "5px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Downgrade → Free</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
             </Section>
+            </>
           )}
 
           {/* ═══════════════════════════════════════
@@ -1194,6 +1477,13 @@ export default function AdminPanel() {
                     <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold, marginBottom: 4 }}>Upcoming Data Updates</h3>
                     <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 20 }}>Scheduled Emaar results and market data refresh dates</p>
                     {[
+                      { event: "Emaar Q1 2026 Results", due: "2026-04-15", note: "Download from emaar.com/investor-relations" },
+                      { event: "Dubai Market Report Q1", due: "2026-04-30", note: "DLD and DXBinteract" },
+                      { event: "Emaar Q2 2026 Results", due: "2026-07-15", note: "Download from emaar.com/investor-relations" },
+                      { event: "Dubai Market Report Q2", due: "2026-07-30", note: "DLD and DXBinteract" },
+                      { event: "Emaar Q3 2026 Results", due: "2026-10-15", note: "Download from emaar.com/investor-relations" },
+                      { event: "Emaar FY 2026 Results", due: "2027-02-15", note: "Annual results — biggest update of the year" },
+
                       { event: "Emaar Q1 2026 Results", due: "2026-04-15", note: "Download from emaar.com/investor-relations" },
                       { event: "Dubai Market Report Q1", due: "2026-04-30", note: "DLD and DXBinteract" },
                       { event: "Emaar Q2 2026 Results", due: "2026-07-15", note: "Download from emaar.com/investor-relations" },
