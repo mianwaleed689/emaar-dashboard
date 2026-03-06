@@ -787,7 +787,14 @@ export default function AdminPanel() {
     const u = users.find(x => x.uid === uid);
     if (!window.confirm(`DELETE USER: ${u?.name || u?.email}\n\nThis permanently removes them from the database and revokes all access.\n\nContinue?`)) return;
     try {
-      await deleteDoc(doc(db, "users", uid));
+      const idToken = await auth.currentUser.getIdToken();
+      const res = await fetch("/api/admin-delete-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ uid }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete user");
       try { await deleteDoc(doc(db, "watchlists", uid)); } catch(e) {}
       notify("✅ User deleted");
       setExpandedUser(null);
@@ -856,22 +863,25 @@ export default function AdminPanel() {
     if (!addUserForm.password || addUserForm.password.length < 6) { notify("❌ Password must be at least 6 characters"); return; }
     setAddUserLoading(true);
     try {
-      const cred = await createUserWithEmailAndPassword(auth, addUserForm.email.trim(), addUserForm.password);
+      const idToken = await auth.currentUser.getIdToken();
       const now = new Date();
       const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-      await setDoc(doc(db, "users", cred.user.uid), {
-        name: addUserForm.name.trim(),
-        email: addUserForm.email.trim(),
-        phone: addUserForm.phone.trim(),
-        country: addUserForm.country.trim(),
-        tier: addUserForm.tier,
-        notes: addUserForm.notes.trim(),
-        createdAt: now.toISOString(),
-        trialEnd: addUserForm.tier === "pro_trial" ? trialEnd.toISOString() : null,
-        role: "user",
-        createdByAdmin: adminUser?.email,
-        provider: "admin",
+      const res = await fetch("/api/admin-create-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({
+          email: addUserForm.email.trim(),
+          password: addUserForm.password,
+          name: addUserForm.name.trim(),
+          tier: addUserForm.tier,
+          phone: addUserForm.phone.trim(),
+          country: addUserForm.country.trim(),
+          notes: addUserForm.notes.trim(),
+          trialEnd: addUserForm.tier === "pro_trial" ? trialEnd.toISOString() : null,
+        }),
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create user");
       notify(`✅ User "${addUserForm.name}" created successfully`);
       setShowAddUser(false);
       setAddUserForm({ name: "", email: "", password: "", phone: "", country: "", tier: "free", notes: "" });
