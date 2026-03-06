@@ -237,6 +237,95 @@ const Chart = ({ title, sub, children }) => (
 /* ═══════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════ */
+/* ─── NOTIFICATIONS TAB COMPONENT ─── */
+function NotificationsTab({ T, notify, adminUser }) {
+  const [notifForm, setNotifForm] = useState({ title: "", message: "", icon: "📢", target: "all" });
+  const [notifSending, setNotifSending] = useState(false);
+  const [sentNotifs, setSentNotifs] = useState([]);
+
+  useEffect(() => {
+    getDocs(collection(db, "notifications")).then(snap => {
+      const list = [];
+      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      setSentNotifs(list.slice(0, 20));
+    }).catch(() => {});
+  }, []);
+
+  const sendNotification = async () => {
+    if (!notifForm.title || !notifForm.message) { notify("❌ Title and message required"); return; }
+    setNotifSending(true);
+    try {
+      const id = `notif_${Date.now()}`;
+      await setDoc(doc(db, "notifications", id), {
+        ...notifForm, userId: notifForm.target, read: false,
+        createdAt: new Date().toISOString(), sentBy: adminUser?.email || "admin"
+      });
+      notify("✅ Notification sent to all users!");
+      setNotifForm({ title: "", message: "", icon: "📢", target: "all" });
+      setSentNotifs(prev => [{ id, ...notifForm, createdAt: new Date().toISOString() }, ...prev]);
+    } catch (e) { notify("❌ " + e.message); }
+    setNotifSending(false);
+  };
+
+  const ICONS = ["📢","🏙️","💰","📈","⚠️","🔥","✅","🎉","📋","🏗️"];
+
+  return (
+    <Section title="Send Notification" sub="Broadcast alerts to all users on the dashboard">
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+        <div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ display: "block", fontSize: 11, color: T.textMuted, marginBottom: 6, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Icon</label>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {ICONS.map(ic => (
+                <button key={ic} type="button" onClick={() => setNotifForm(p => ({ ...p, icon: ic }))} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${notifForm.icon === ic ? T.gold : T.border}`, background: notifForm.icon === ic ? T.goldGlow : T.surfaceAlt, cursor: "pointer", fontSize: 18 }}>{ic}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ display: "block", fontSize: 11, color: T.textMuted, marginBottom: 6, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Title</label>
+            <input type="text" value={notifForm.title} onChange={e => setNotifForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g. New project launched in Downtown" style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ display: "block", fontSize: 11, color: T.textMuted, marginBottom: 6, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Message</label>
+            <textarea value={notifForm.message} onChange={e => setNotifForm(p => ({ ...p, message: e.target.value }))} placeholder="e.g. Creek Waters III is now available. Starting from AED 1.2M." rows={3} style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
+          </div>
+          <div style={{ padding: 14, borderRadius: 10, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, marginBottom: 14 }}>
+            <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6, fontWeight: 600, textTransform: "uppercase" }}>Preview</div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <span style={{ fontSize: 20 }}>{notifForm.icon}</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>{notifForm.title || "Title here"}</div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{notifForm.message || "Message here..."}</div>
+              </div>
+            </div>
+          </div>
+          <button type="button" onClick={sendNotification} disabled={notifSending} style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontWeight: 700, fontSize: 13, cursor: notifSending ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
+            {notifSending ? "Sending..." : "📢 Send to All Users"}
+          </button>
+        </div>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: T.textSecondary, marginBottom: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Recent Sent</div>
+          {sentNotifs.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 40, color: T.textMuted, fontSize: 12 }}>No notifications sent yet</div>
+          ) : sentNotifs.map((n) => (
+            <div key={n.id} style={{ padding: "10px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, marginBottom: 8 }}>
+              <div style={{ display: "flex", gap: 8 }}>
+                <span style={{ fontSize: 16 }}>{n.icon || "📢"}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>{n.title}</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{n.message}</div>
+                  <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{n.createdAt ? new Date(n.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Section>
+  );
+}
+
 export default function AdminPanel() {
   const { lang, setLang, t: i18t, dir, langInfo } = useI18n();
   const [showLangPicker, setShowLangPicker] = useState(false);
@@ -1878,100 +1967,7 @@ export default function AdminPanel() {
           {/* ═══════════════════════════════════════
              NOTIFICATIONS TAB
              ═══════════════════════════════════════ */}
-          {tab === "notifications" && (() => {
-            const [notifForm, setNotifForm] = React.useState({ title: "", message: "", icon: "📢", target: "all" });
-            const [notifSending, setNotifSending] = React.useState(false);
-            const [sentNotifs, setSentNotifs] = React.useState([]);
-
-            React.useEffect(() => {
-              getDocs(collection(db, "notifications")).then(snap => {
-                const list = [];
-                snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-                list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-                setSentNotifs(list.slice(0, 20));
-              }).catch(() => {});
-            }, []);
-
-            const sendNotification = async () => {
-              if (!notifForm.title || !notifForm.message) { notify("❌ Title and message required"); return; }
-              setNotifSending(true);
-              try {
-                const id = `notif_${Date.now()}`;
-                await setDoc(doc(db, "notifications", id), {
-                  ...notifForm,
-                  userId: notifForm.target,
-                  read: false,
-                  createdAt: new Date().toISOString(),
-                  sentBy: adminUser?.email || "admin"
-                });
-                notify("✅ Notification sent to all users!");
-                setNotifForm({ title: "", message: "", icon: "📢", target: "all" });
-                setSentNotifs(prev => [{ id, ...notifForm, createdAt: new Date().toISOString() }, ...prev]);
-              } catch (e) { notify("❌ " + e.message); }
-              setNotifSending(false);
-            };
-
-            return (
-              <>
-                <Section title="Send Notification" sub="Broadcast alerts to all users on the dashboard">
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                    <div>
-                      {[
-                        { label: "Icon", type: "select", key: "icon", options: ["📢","🏙️","💰","📈","⚠️","🔥","✅","🎉","📋","🏗️"].map(e => ({ value: e, label: e })) },
-                        { label: "Title", type: "text", key: "title", placeholder: "e.g. New project launched in Downtown" },
-                        { label: "Message", type: "textarea", key: "message", placeholder: "e.g. Creek Waters III is now available. Starting from AED 1.2M." },
-                      ].map((f, i) => (
-                        <div key={i} style={{ marginBottom: 14 }}>
-                          <label style={{ display: "block", fontSize: 11, color: T.textMuted, marginBottom: 6, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{f.label}</label>
-                          {f.type === "select" ? (
-                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                              {f.options.map(o => (
-                                <button key={o.value} type="button" onClick={() => setNotifForm(p => ({ ...p, [f.key]: o.value }))} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${notifForm[f.key] === o.value ? T.gold : T.border}`, background: notifForm[f.key] === o.value ? T.goldGlow : T.surfaceAlt, cursor: "pointer", fontSize: 18 }}>{o.label}</button>
-                              ))}
-                            </div>
-                          ) : f.type === "textarea" ? (
-                            <textarea value={notifForm[f.key]} onChange={e => setNotifForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} rows={3} style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
-                          ) : (
-                            <input type="text" value={notifForm[f.key]} onChange={e => setNotifForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                          )}
-                        </div>
-                      ))}
-                      <div style={{ padding: 14, borderRadius: 10, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, marginBottom: 14 }}>
-                        <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6, fontWeight: 600, textTransform: "uppercase" }}>Preview</div>
-                        <div style={{ display: "flex", gap: 10 }}>
-                          <span style={{ fontSize: 20 }}>{notifForm.icon}</span>
-                          <div>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>{notifForm.title || "Title here"}</div>
-                            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{notifForm.message || "Message here..."}</div>
-                          </div>
-                        </div>
-                      </div>
-                      <button type="button" onClick={sendNotification} disabled={notifSending} style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontWeight: 700, fontSize: 13, cursor: notifSending ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                        {notifSending ? "Sending..." : "📢 Send to All Users"}
-                      </button>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: T.textSecondary, marginBottom: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Recent Sent</div>
-                      {sentNotifs.length === 0 ? (
-                        <div style={{ textAlign: "center", padding: 40, color: T.textMuted, fontSize: 12 }}>No notifications sent yet</div>
-                      ) : sentNotifs.map((n, i) => (
-                        <div key={n.id} style={{ padding: "10px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, marginBottom: 8 }}>
-                          <div style={{ display: "flex", gap: 8 }}>
-                            <span style={{ fontSize: 16 }}>{n.icon || "📢"}</span>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>{n.title}</div>
-                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{n.message}</div>
-                              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{n.createdAt ? new Date(n.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}</div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </Section>
-              </>
-            );
-          })()}
+          {tab === "notifications" && <NotificationsTab T={T} notify={notify} adminUser={adminUser} />}
 
           {/* ═══════════════════════════════════════
              VERIFICATION TAB (Binance-style KYC)
