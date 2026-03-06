@@ -462,6 +462,18 @@ export default function AdminPanel() {
 
   useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin, fetchLeads]);
 
+  const fetchAuditLog = useCallback(async () => {
+    try {
+      const snap = await getDocs(collection(db, "auditLog"));
+      const list = [];
+      snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
+      list.sort((a, b) => new Date(b.changedAt || 0) - new Date(a.changedAt || 0));
+      setAuditLog(list.slice(0, 50));
+    } catch (e) { console.error("Fetch audit log:", e); }
+  }, []);
+
+  useEffect(() => { if (isAdmin) fetchAuditLog(); }, [isAdmin, fetchAuditLog]);
+
   const approveVerification = async (v) => {
     if (!window.confirm(`⚠️ APPROVE VERIFICATION\n\nUser: ${v.name || v.email}\nLevel: ${v.level || "Basic"}\n\nThis will:\n• Mark this user as verified\n• Update their profile with a verified badge\n• They can access verified-tier features\n\nContinue?`)) return;
     try {
