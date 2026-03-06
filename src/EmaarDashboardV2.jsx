@@ -2895,8 +2895,8 @@ export default function EmaarDashboardV2() {
                 <button type="button" onClick={async () => {
                   try {
                     await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-                      user_email: userProfile?.email || "visitor@dxbanalytics.com",
-                      user_name: userProfile?.name || userProfile?.displayName || "Visitor",
+                      user_email: user || "visitor@dxbanalytics.com",
+                      user_name: userName || (user ? user.split("@")[0] : "Visitor"),
                       project_name: selectedProject_.name,
                       change_type: "Inquiry",
                       new_value: `${selectedProject_.community} — Starting AED ${selectedProject_.price ? (selectedProject_.price/1000000).toFixed(1) + "M" : "TBD"}`,
