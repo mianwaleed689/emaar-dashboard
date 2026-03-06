@@ -51,6 +51,7 @@ const TABS = [
   { key: "Competitors", icon: Icons.competitors },
   { key: "Yields", icon: Icons.yields },
   { key: "Mortgage", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
+  { key: "Map", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg> },
   { key: "Risk", icon: Icons.risk },
   { key: "Stocks", icon: Icons.stocks },
   { key: "Market", icon: Icons.market },
@@ -446,6 +447,18 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         trialEnd: trialEnd.toISOString(),
         role: "user",
       });
+      // Send welcome email via EmailJS
+      try {
+        await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+          user_email: email,
+          user_name: name.trim() || email.split("@")[0],
+          project_name: "DXB Analytics Platform",
+          change_type: "Welcome to DXB Analytics! 🎉",
+          new_value: "Your 7-day Pro Trial is now active. Explore 48+ Emaar projects, yields, ROI data, mortgage calculator and more.",
+          old_value: "New Account",
+          updated_at: now.toLocaleDateString("en-AE", { day: "2-digit", month: "long", year: "numeric" }),
+        }, "USkwUhp0csGCVDkdQ");
+      } catch (emailErr) { console.log("Welcome email error:", emailErr); }
       onLogin(email);
     } catch (err) {
       if (err.code === "auth/email-already-in-use") {
@@ -2325,6 +2338,132 @@ export default function EmaarDashboardV2() {
             );
           })()}
 
+          {/* ─── MAP / COMMUNITIES TAB ─── */}
+          {tab === "Map" && (() => {
+            const communityStats = emaarCommunities.map(c => {
+              const cProjects = activeProjects.filter(p => p.community === c.name);
+              const roi = (liveCommunityROI && liveCommunityROI[c.name]) || communityROI[c.name] || {};
+              return {
+                ...c,
+                projectCount: cProjects.length,
+                avgYield: roi.grossYield || c.yield || "6-8",
+                appreciation: roi.appreciation || "35-45",
+                pricePerSqft: roi.pricePerSqft || c.priceRange || "1,800-2,400",
+                avgRent: roi.avgRent || "90K-150K",
+                score: roi.investmentScore || c.score || Math.floor(70 + Math.random() * 25),
+              };
+            }).sort((a, b) => b.score - a.score);
+
+            const [selectedComm, setSelectedComm] = React.useState(null);
+            const sc = selectedComm ? communityStats.find(c => c.name === selectedComm) : null;
+
+            const scoreColor = (s) => s >= 90 ? T.green : s >= 75 ? T.gold : s >= 60 ? T.blue : T.textMuted;
+
+            return (
+              <>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+                  <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+                    <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 4 }}>Community Investment Heatmap</h3>
+                    <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Click any community to see detailed analytics</p>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
+                      {communityStats.map((c, i) => (
+                        <div key={c.name} onClick={() => setSelectedComm(c.name === selectedComm ? null : c.name)}
+                          style={{ padding: "12px 10px", borderRadius: 10, border: `2px solid ${selectedComm === c.name ? T.gold : "transparent"}`, background: `rgba(${c.score >= 90 ? "16,185,129" : c.score >= 75 ? "212,168,67" : c.score >= 60 ? "59,130,246" : "100,116,139"},${0.04 + (c.score - 60) / 200})`, cursor: "pointer", transition: "all 0.2s", position: "relative" }}
+                          onMouseEnter={e => e.currentTarget.style.transform = "scale(1.02)"}
+                          onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.white, marginBottom: 4, lineHeight: 1.2 }}>{c.name}</div>
+                          <div style={{ fontSize: 18, fontWeight: 900, color: scoreColor(c.score), fontFamily: "'Fraunces',serif" }}>{c.score}</div>
+                          <div style={{ fontSize: 9, color: T.textMuted }}>Score</div>
+                          <div style={{ position: "absolute", top: 8, right: 8, fontSize: 9, fontWeight: 700, color: scoreColor(c.score) }}>{c.avgYield}%</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", gap: 16, marginTop: 14, flexWrap: "wrap" }}>
+                      {[["Elite (90+)", T.green], ["Strong (75-89)", T.gold], ["Good (60-74)", T.blue]].map(([l, c]) => (
+                        <div key={l} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                          <div style={{ width: 10, height: 10, borderRadius: 2, background: c }} />
+                          <span style={{ fontSize: 10, color: T.textMuted }}>{l}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Right panel — selected community detail or top list */}
+                  <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20, overflowY: "auto", maxHeight: 480 }}>
+                    {sc ? (
+                      <>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                          <div>
+                            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{sc.name}</h3>
+                            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{communityIntel[sc.name]?.tagline || "Premium Dubai community"}</p>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <div style={{ fontSize: 28, fontWeight: 900, color: scoreColor(sc.score), fontFamily: "'Fraunces',serif" }}>{sc.score}</div>
+                            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>Investment Score</div>
+                          </div>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+                          {[
+                            ["Gross Yield", sc.avgYield + "%", T.green],
+                            ["5Y Appreciation", sc.appreciation + "%", T.gold],
+                            ["Price / sqft", "AED " + sc.pricePerSqft, T.blue],
+                            ["Active Projects", sc.projectCount, T.teal],
+                            ["Avg Annual Rent", "AED " + sc.avgRent, T.purple],
+                            ["Occupancy", (communityROI[sc.name]?.occupancy || "88") + "%", T.green],
+                          ].map(([l, v, c]) => (
+                            <div key={l} style={{ background: T.card, borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
+                              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>{l}</div>
+                              <div style={{ fontSize: 15, fontWeight: 700, color: c }}>{v}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <p style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.7, marginBottom: 14 }}>
+                          {communityIntel[sc.name]?.notes || `${sc.name} is one of Dubai's premier residential communities, offering a blend of luxury living and strong investment returns. The community benefits from excellent infrastructure, world-class amenities, and consistent demand from both local and international investors.`}
+                        </p>
+                        <button type="button" onClick={() => { setTab("Projects"); setTimeout(() => setSelectedComm(null), 100); }} style={{ width: "100%", padding: "10px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          View {sc.projectCount} Project{sc.projectCount !== 1 ? "s" : ""} in {sc.name} →
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>Top Communities by Investment Score</h3>
+                        {communityStats.slice(0, 8).map((c, i) => (
+                          <div key={c.name} onClick={() => setSelectedComm(c.name)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, marginBottom: 6, cursor: "pointer", transition: "background 0.2s" }}
+                            onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <div style={{ width: 28, height: 28, borderRadius: "50%", background: T.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: T.gold, flexShrink: 0 }}>#{i + 1}</div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{c.name}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>{c.projectCount} projects · AED {c.pricePerSqft}/sqft</div>
+                            </div>
+                            <div style={{ textAlign: "right" }}>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: scoreColor(c.score) }}>{c.score}</div>
+                              <div style={{ fontSize: 10, color: T.green }}>{c.avgYield}% yield</div>
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Community comparison bar chart */}
+                <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+                  <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>Yield Comparison Across Communities</h3>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={communityStats.slice(0, 10).map(c => ({ name: c.name.replace(" by Emaar", "").substring(0, 15), yield: parseFloat(String(c.avgYield).split("-")[0]) || 6, score: c.score }))}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                      <XAxis dataKey="name" tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} unit="%" />
+                      <Tooltip content={({ active, payload }) => active && payload?.length ? <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 12px" }}><div style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>{payload[0]?.payload?.name}</div><div style={{ fontSize: 11, color: T.textSecondary }}>Yield: {payload[0]?.value}%</div></div> : null} />
+                      <Bar dataKey="yield" fill={T.gold} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </>
+            );
+          })()}
+
           {/* ─── RISK TAB ─── */}
           {tab === "Risk" && <>
             <Section title="9-Factor Risk Assessment" sub="Overall: LOW-MODERATE · Investment Grade · BBB+/Baa1/BBB">
@@ -3177,6 +3316,130 @@ export default function EmaarDashboardV2() {
                 <button type="button" onClick={() => setShowUpgrade(true)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "rgba(0,191,165,0.1)", borderRadius: 12, color: "rgba(0,191,165,0.5)", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 Call</button>
               </div>
               )}
+
+              {/* ─── PDF REPORT BUTTON ─── */}
+              <button type="button" onClick={() => {
+                const p = selectedProject_;
+                const roiData = (liveCommunityROI && liveCommunityROI[p.community]) || communityROI[p.community] || {};
+                const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${p.name} — Investment Report</title>
+                <style>
+                  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
+                  *{margin:0;padding:0;box-sizing:border-box}
+                  body{font-family:'Inter',sans-serif;background:#fff;color:#111;padding:0}
+                  .cover{background:linear-gradient(135deg,#04090F 0%,#0A1628 60%,#0E1D35 100%);color:#fff;padding:48px 48px 40px;min-height:220px;position:relative}
+                  .cover h1{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:#D4A843;margin-bottom:6px}
+                  .cover .sub{color:#94A3B8;font-size:14px;margin-bottom:24px}
+                  .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid rgba(212,168,67,0.4);color:#D4A843;margin-right:8px}
+                  .logo{font-family:'Playfair Display',serif;font-size:13px;color:#D4A843;letter-spacing:2px;text-transform:uppercase;opacity:0.8;position:absolute;top:28px;right:48px}
+                  .date{color:#64748B;font-size:11px;position:absolute;bottom:20px;right:48px}
+                  .body{padding:36px 48px}
+                  .section{margin-bottom:28px}
+                  .section-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#94A3B8;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #f0f0f0}
+                  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:0}
+                  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+                  .card{border:1px solid #e8e8e8;border-radius:10px;padding:16px}
+                  .card-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#94A3B8;margin-bottom:6px;font-weight:600}
+                  .card-value{font-size:20px;font-weight:700;color:#D4A843;margin-bottom:2px}
+                  .card-note{font-size:11px;color:#64748B}
+                  .highlight{background:linear-gradient(135deg,#fffbf0,#fff8e1);border:1px solid #D4A843;border-radius:10px;padding:20px}
+                  .highlight h3{font-family:'Playfair Display',serif;font-size:16px;color:#B8912F;margin-bottom:8px}
+                  .highlight p{font-size:12px;color:#555;line-height:1.7}
+                  .row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f0f0f0;font-size:12px}
+                  .row:last-child{border-bottom:none}
+                  .row-label{color:#555}
+                  .row-value{font-weight:600;color:#111}
+                  .footer{margin-top:40px;padding:20px 48px;background:#f8f9fa;border-top:1px solid #e8e8e8;display:flex;justify-content:space-between;align-items:center}
+                  .footer-brand{font-family:'Playfair Display',serif;font-size:14px;color:#D4A843;letter-spacing:1px}
+                  .footer-note{font-size:10px;color:#94A3B8;max-width:400px;line-height:1.5}
+                  @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+                </style></head><body>
+                <div class="cover">
+                  <div class="logo">DXB Analytics</div>
+                  <p class="sub">${p.community} · ${p.district || "Dubai"} · ${p.type || "Residential"}</p>
+                  <h1>${p.name}</h1>
+                  <div style="margin-top:16px">
+                    <span class="badge">${p.status || "Off-Plan"}</span>
+                    ${p.branded ? `<span class="badge">${p.brand || "Branded"}</span>` : ""}
+                    ${p.tier ? `<span class="badge">${p.tier}</span>` : ""}
+                  </div>
+                  <p class="date">Generated: ${new Date().toLocaleDateString("en-AE",{day:"2-digit",month:"long",year:"numeric"})}</p>
+                </div>
+
+                <div class="body">
+                  <div class="section">
+                    <div class="section-title">Key Investment Metrics</div>
+                    <div class="grid4">
+                      <div class="card"><div class="card-label">Starting Price</div><div class="card-value">${p.price ? "AED "+((p.price/1e6).toFixed(2))+"M" : "TBD"}</div><div class="card-note">From</div></div>
+                      <div class="card"><div class="card-label">Handover</div><div class="card-value" style="font-size:16px">${p.handover || "TBD"}</div><div class="card-note">Completion</div></div>
+                      <div class="card"><div class="card-label">Construction</div><div class="card-value">${p.constructionProgress || 0}%</div><div class="card-note">Progress</div></div>
+                      <div class="card"><div class="card-label">Gross Yield</div><div class="card-value">${roiData.grossYield || "6-8"}%</div><div class="card-note">Estimated p.a.</div></div>
+                    </div>
+                  </div>
+
+                  <div class="section">
+                    <div class="section-title">Community ROI Analysis — ${p.community}</div>
+                    <div class="grid2">
+                      <div>
+                        ${[
+                          ["Gross Yield", (roiData.grossYield||"6-8")+"%"],
+                          ["Net Yield (after fees)", (roiData.netYield||"4-6")+"%"],
+                          ["5-Year Capital Appreciation", (roiData.appreciation||"35-45")+"%"],
+                          ["Avg Price/sqft", "AED "+(roiData.pricePerSqft||"1,800-2,400")],
+                          ["Avg Annual Rent", "AED "+(roiData.avgRent||"90,000-150,000")],
+                          ["Occupancy Rate", (roiData.occupancy||"88")+"%"],
+                        ].map(([l,v]) => `<div class="row"><span class="row-label">${l}</span><span class="row-value">${v}</span></div>`).join("")}
+                      </div>
+                      <div class="highlight">
+                        <h3>Why ${p.community}?</h3>
+                        <p>${(communityIntel[p.community]?.tagline) || "One of Dubai's most sought-after investment communities, offering strong capital appreciation and consistent rental demand."}</p>
+                        <p style="margin-top:10px">${(communityIntel[p.community]?.notes) || "Strong fundamentals with infrastructure, schools, retail, and transport connectivity making it a preferred choice for investors and end-users."}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  ${Array.isArray(p.units) && p.units.length > 0 ? `
+                  <div class="section">
+                    <div class="section-title">Unit Mix & Availability</div>
+                    <div class="grid4">
+                      ${p.units.map(u => `<div class="card"><div class="card-label">${u.type}</div><div class="card-value" style="font-size:16px">${u.available}/${u.total}</div><div class="card-note">Available</div></div>`).join("")}
+                    </div>
+                  </div>` : ""}
+
+                  <div class="section">
+                    <div class="section-title">Investment Summary</div>
+                    <div class="highlight">
+                      <h3>DXB Analytics Assessment</h3>
+                      <p>${p.name} by Emaar Properties is a ${p.status === "Completed" ? "completed" : "under-development"} project in ${p.community}, Dubai. ${p.branded ? `As a branded residence (${p.brand}), it commands premium pricing and exceptional rental premiums typically 20-35% above comparable non-branded units. ` : ""}With Dubai's real estate market growing consistently, ${p.community} has delivered strong investor returns. The project's ${p.handover ? `expected handover in ${p.handover}` : "upcoming handover"} aligns with Dubai's infrastructure growth cycle.</p>
+                    </div>
+                  </div>
+
+                  <div class="section">
+                    <div class="section-title">Available Documents</div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap">
+                      ${p.brochureUrl ? `<a href="${p.brochureUrl}" target="_blank" style="padding:8px 16px;background:#fff;border:1px solid #D4A843;border-radius:8px;color:#D4A843;font-size:12px;font-weight:600;text-decoration:none">📄 Brochure PDF</a>` : ""}
+                      ${p.floorPlanUrl ? `<a href="${p.floorPlanUrl}" target="_blank" style="padding:8px 16px;background:#fff;border:1px solid #D4A843;border-radius:8px;color:#D4A843;font-size:12px;font-weight:600;text-decoration:none">📐 Floor Plan</a>` : ""}
+                      ${p.paymentPlanUrl ? `<a href="${p.paymentPlanUrl}" target="_blank" style="padding:8px 16px;background:#fff;border:1px solid #D4A843;border-radius:8px;color:#D4A843;font-size:12px;font-weight:600;text-decoration:none">💳 Payment Plan</a>` : ""}
+                      ${!p.brochureUrl && !p.floorPlanUrl && !p.paymentPlanUrl ? `<span style="color:#94A3B8;font-size:12px">Contact us to receive full documentation package.</span>` : ""}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="footer">
+                  <div>
+                    <div class="footer-brand">DXB ANALYTICS</div>
+                    <div style="font-size:10px;color:#94A3B8;margin-top:2px">Dubai Real Estate Intelligence Platform</div>
+                  </div>
+                  <div class="footer-note">This report is generated for informational purposes only. All projections are estimates based on market data. DXB Analytics does not provide financial advice. Please conduct independent due diligence before making investment decisions.</div>
+                </div>
+                <script>window.onload=()=>window.print();</script>
+                </body></html>`;
+                const w = window.open("", "_blank");
+                w.document.write(reportHtml);
+                w.document.close();
+              }} style={{ marginTop: 10, width: "100%", padding: "11px 0", background: "rgba(212,168,67,0.08)", border: `1px solid rgba(212,168,67,0.3)`, borderRadius: 12, color: T.gold, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download Investment Report (PDF)
+              </button>
             </div>
           </div>
         </div>
