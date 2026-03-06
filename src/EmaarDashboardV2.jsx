@@ -705,6 +705,130 @@ function useFocusTrap(active) {
   return ref;
 }
 
+/* ─── COMMUNITY MAP TAB COMPONENT ─── */
+function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
+  const [selectedComm, setSelectedComm] = useState(null);
+
+  const communityStats = emaarCommunities.map(c => {
+    const cProjects = activeProjects.filter(p => p.community === c.name);
+    const roi = (liveCommunityROI && liveCommunityROI[c.name]) || communityROI[c.name] || {};
+    return {
+      ...c,
+      projectCount: cProjects.length,
+      avgYield: roi.grossYield || c.yield || "6-8",
+      appreciation: roi.appreciation || "35-45",
+      pricePerSqft: roi.pricePerSqft || c.priceRange || "1,800-2,400",
+      avgRent: roi.avgRent || "90K-150K",
+      score: roi.investmentScore || c.score || 75,
+    };
+  }).sort((a, b) => b.score - a.score);
+
+  const sc = selectedComm ? communityStats.find(c => c.name === selectedComm) : null;
+  const scoreColor = (s) => s >= 90 ? T.green : s >= 75 ? T.gold : s >= 60 ? T.blue : T.textMuted;
+
+  return (
+    <>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 4 }}>Community Investment Heatmap</h3>
+          <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Click any community to see detailed analytics</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
+            {communityStats.map((c) => (
+              <div key={c.name} onClick={() => setSelectedComm(c.name === selectedComm ? null : c.name)}
+                style={{ padding: "12px 10px", borderRadius: 10, border: `2px solid ${selectedComm === c.name ? T.gold : "transparent"}`, background: `rgba(${c.score >= 90 ? "16,185,129" : c.score >= 75 ? "212,168,67" : c.score >= 60 ? "59,130,246" : "100,116,139"},${0.04 + (c.score - 60) / 200})`, cursor: "pointer", transition: "all 0.2s", position: "relative" }}
+                onMouseEnter={e => e.currentTarget.style.transform = "scale(1.02)"}
+                onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: T.white, marginBottom: 4, lineHeight: 1.2 }}>{c.name}</div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: scoreColor(c.score), fontFamily: "'Fraunces',serif" }}>{c.score}</div>
+                <div style={{ fontSize: 9, color: T.textMuted }}>Score</div>
+                <div style={{ position: "absolute", top: 8, right: 8, fontSize: 9, fontWeight: 700, color: scoreColor(c.score) }}>{c.avgYield}%</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 16, marginTop: 14, flexWrap: "wrap" }}>
+            {[["Elite (90+)", T.green], ["Strong (75-89)", T.gold], ["Good (60-74)", T.blue]].map(([l, col]) => (
+              <div key={l} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 2, background: col }} />
+                <span style={{ fontSize: 10, color: T.textMuted }}>{l}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20, overflowY: "auto", maxHeight: 480 }}>
+          {sc ? (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                <div>
+                  <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{sc.name}</h3>
+                  <p style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{communityIntel[sc.name]?.tagline || "Premium Dubai community"}</p>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 28, fontWeight: 900, color: scoreColor(sc.score), fontFamily: "'Fraunces',serif" }}>{sc.score}</div>
+                  <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>Investment Score</div>
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+                {[
+                  ["Gross Yield", sc.avgYield + "%", T.green],
+                  ["5Y Appreciation", sc.appreciation + "%", T.gold],
+                  ["Price / sqft", "AED " + sc.pricePerSqft, T.blue],
+                  ["Active Projects", sc.projectCount, T.teal],
+                  ["Avg Annual Rent", "AED " + sc.avgRent, T.purple],
+                  ["Occupancy", (communityROI[sc.name]?.occupancy || "88") + "%", T.green],
+                ].map(([l, v, col]) => (
+                  <div key={l} style={{ background: T.card, borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>{l}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: col }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.7, marginBottom: 14 }}>
+                {communityIntel[sc.name]?.notes || `${sc.name} is one of Dubai's premier residential communities, offering strong returns and consistent demand from global investors.`}
+              </p>
+              <button type="button" onClick={() => setTab("Projects")} style={{ width: "100%", padding: "10px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                View {sc.projectCount} Project{sc.projectCount !== 1 ? "s" : ""} in {sc.name} →
+              </button>
+            </>
+          ) : (
+            <>
+              <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>Top Communities by Investment Score</h3>
+              {communityStats.slice(0, 8).map((c, i) => (
+                <div key={c.name} onClick={() => setSelectedComm(c.name)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, marginBottom: 6, cursor: "pointer", transition: "background 0.2s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: T.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: T.gold, flexShrink: 0 }}>#{i + 1}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{c.name}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>{c.projectCount} projects · AED {c.pricePerSqft}/sqft</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: scoreColor(c.score) }}>{c.score}</div>
+                    <div style={{ fontSize: 10, color: T.green }}>{c.avgYield}% yield</div>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      </div>
+
+      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>Yield Comparison Across Communities</h3>
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={communityStats.slice(0, 10).map(c => ({ name: c.name.replace(" by Emaar", "").substring(0, 14), yield: parseFloat(String(c.avgYield).split("-")[0]) || 6 }))}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+            <XAxis dataKey="name" tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} unit="%" />
+            <Tooltip content={({ active, payload }) => active && payload?.length ? <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 12px" }}><div style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>{payload[0]?.payload?.name}</div><div style={{ fontSize: 11, color: T.textSecondary }}>Yield: {payload[0]?.value}%</div></div> : null} />
+            <Bar dataKey="yield" fill={T.gold} radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </>
+  );
+}
+
 export default function EmaarDashboardV2() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState("");
@@ -2339,130 +2463,7 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── MAP / COMMUNITIES TAB ─── */}
-          {tab === "Map" && (() => {
-            const communityStats = emaarCommunities.map(c => {
-              const cProjects = activeProjects.filter(p => p.community === c.name);
-              const roi = (liveCommunityROI && liveCommunityROI[c.name]) || communityROI[c.name] || {};
-              return {
-                ...c,
-                projectCount: cProjects.length,
-                avgYield: roi.grossYield || c.yield || "6-8",
-                appreciation: roi.appreciation || "35-45",
-                pricePerSqft: roi.pricePerSqft || c.priceRange || "1,800-2,400",
-                avgRent: roi.avgRent || "90K-150K",
-                score: roi.investmentScore || c.score || Math.floor(70 + Math.random() * 25),
-              };
-            }).sort((a, b) => b.score - a.score);
-
-            const [selectedComm, setSelectedComm] = React.useState(null);
-            const sc = selectedComm ? communityStats.find(c => c.name === selectedComm) : null;
-
-            const scoreColor = (s) => s >= 90 ? T.green : s >= 75 ? T.gold : s >= 60 ? T.blue : T.textMuted;
-
-            return (
-              <>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
-                  <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
-                    <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 4 }}>Community Investment Heatmap</h3>
-                    <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Click any community to see detailed analytics</p>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
-                      {communityStats.map((c, i) => (
-                        <div key={c.name} onClick={() => setSelectedComm(c.name === selectedComm ? null : c.name)}
-                          style={{ padding: "12px 10px", borderRadius: 10, border: `2px solid ${selectedComm === c.name ? T.gold : "transparent"}`, background: `rgba(${c.score >= 90 ? "16,185,129" : c.score >= 75 ? "212,168,67" : c.score >= 60 ? "59,130,246" : "100,116,139"},${0.04 + (c.score - 60) / 200})`, cursor: "pointer", transition: "all 0.2s", position: "relative" }}
-                          onMouseEnter={e => e.currentTarget.style.transform = "scale(1.02)"}
-                          onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: T.white, marginBottom: 4, lineHeight: 1.2 }}>{c.name}</div>
-                          <div style={{ fontSize: 18, fontWeight: 900, color: scoreColor(c.score), fontFamily: "'Fraunces',serif" }}>{c.score}</div>
-                          <div style={{ fontSize: 9, color: T.textMuted }}>Score</div>
-                          <div style={{ position: "absolute", top: 8, right: 8, fontSize: 9, fontWeight: 700, color: scoreColor(c.score) }}>{c.avgYield}%</div>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ display: "flex", gap: 16, marginTop: 14, flexWrap: "wrap" }}>
-                      {[["Elite (90+)", T.green], ["Strong (75-89)", T.gold], ["Good (60-74)", T.blue]].map(([l, c]) => (
-                        <div key={l} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                          <div style={{ width: 10, height: 10, borderRadius: 2, background: c }} />
-                          <span style={{ fontSize: 10, color: T.textMuted }}>{l}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Right panel — selected community detail or top list */}
-                  <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20, overflowY: "auto", maxHeight: 480 }}>
-                    {sc ? (
-                      <>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-                          <div>
-                            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{sc.name}</h3>
-                            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{communityIntel[sc.name]?.tagline || "Premium Dubai community"}</p>
-                          </div>
-                          <div style={{ textAlign: "right" }}>
-                            <div style={{ fontSize: 28, fontWeight: 900, color: scoreColor(sc.score), fontFamily: "'Fraunces',serif" }}>{sc.score}</div>
-                            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>Investment Score</div>
-                          </div>
-                        </div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-                          {[
-                            ["Gross Yield", sc.avgYield + "%", T.green],
-                            ["5Y Appreciation", sc.appreciation + "%", T.gold],
-                            ["Price / sqft", "AED " + sc.pricePerSqft, T.blue],
-                            ["Active Projects", sc.projectCount, T.teal],
-                            ["Avg Annual Rent", "AED " + sc.avgRent, T.purple],
-                            ["Occupancy", (communityROI[sc.name]?.occupancy || "88") + "%", T.green],
-                          ].map(([l, v, c]) => (
-                            <div key={l} style={{ background: T.card, borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
-                              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>{l}</div>
-                              <div style={{ fontSize: 15, fontWeight: 700, color: c }}>{v}</div>
-                            </div>
-                          ))}
-                        </div>
-                        <p style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.7, marginBottom: 14 }}>
-                          {communityIntel[sc.name]?.notes || `${sc.name} is one of Dubai's premier residential communities, offering a blend of luxury living and strong investment returns. The community benefits from excellent infrastructure, world-class amenities, and consistent demand from both local and international investors.`}
-                        </p>
-                        <button type="button" onClick={() => { setTab("Projects"); setTimeout(() => setSelectedComm(null), 100); }} style={{ width: "100%", padding: "10px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                          View {sc.projectCount} Project{sc.projectCount !== 1 ? "s" : ""} in {sc.name} →
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>Top Communities by Investment Score</h3>
-                        {communityStats.slice(0, 8).map((c, i) => (
-                          <div key={c.name} onClick={() => setSelectedComm(c.name)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, marginBottom: 6, cursor: "pointer", transition: "background 0.2s" }}
-                            onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
-                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                            <div style={{ width: 28, height: 28, borderRadius: "50%", background: T.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: T.gold, flexShrink: 0 }}>#{i + 1}</div>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{c.name}</div>
-                              <div style={{ fontSize: 10, color: T.textMuted }}>{c.projectCount} projects · AED {c.pricePerSqft}/sqft</div>
-                            </div>
-                            <div style={{ textAlign: "right" }}>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: scoreColor(c.score) }}>{c.score}</div>
-                              <div style={{ fontSize: 10, color: T.green }}>{c.avgYield}% yield</div>
-                            </div>
-                          </div>
-                        ))}
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Community comparison bar chart */}
-                <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
-                  <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>Yield Comparison Across Communities</h3>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={communityStats.slice(0, 10).map(c => ({ name: c.name.replace(" by Emaar", "").substring(0, 15), yield: parseFloat(String(c.avgYield).split("-")[0]) || 6, score: c.score }))}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                      <XAxis dataKey="name" tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} unit="%" />
-                      <Tooltip content={({ active, payload }) => active && payload?.length ? <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 12px" }}><div style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>{payload[0]?.payload?.name}</div><div style={{ fontSize: 11, color: T.textSecondary }}>Yield: {payload[0]?.value}%</div></div> : null} />
-                      <Bar dataKey="yield" fill={T.gold} radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </>
-            );
-          })()}
+          {tab === "Map" && <CommunityMapTab activeProjects={activeProjects} liveCommunityROI={liveCommunityROI} setTab={setTab} />}
 
           {/* ─── RISK TAB ─── */}
           {tab === "Risk" && <>
