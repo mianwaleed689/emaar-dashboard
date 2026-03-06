@@ -9,6 +9,8 @@ import ProjectManager from "./ProjectManager";
 import LandingPage from "./LandingPage";
 import ErrorBoundary from "./ErrorBoundary";
 import NotFound from "./NotFound";
+import Terms from "./Terms";
+import Privacy from "./Privacy";
 import { I18nProvider } from "./i18n";
 
 const Spinner = () => (
@@ -94,6 +96,8 @@ function App() {
                 <ProjectManager />
               </AuthGuard>
             } />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
