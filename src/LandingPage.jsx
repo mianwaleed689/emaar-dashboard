@@ -94,6 +94,13 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
   const [scrollY, setScrollY] = useState(0);
   const [mobileMenu, setMobileMenu] = useState(false);
 
+  // Close mobile menu on resize to desktop
+  useEffect(() => {
+    const handleResize = () => { if (window.innerWidth > 768) setMobileMenu(false); };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
@@ -176,7 +183,32 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           <button onClick={onLoginClick} className="cta-btn-outline" style={{ padding: "8px 20px", fontSize: 13 }}>Login</button>
           <button onClick={onSignUpClick} className="cta-btn" style={{ padding: "8px 20px", fontSize: 13 }}>Get Started</button>
         </div>
+        {/* Hamburger — mobile only */}
+        <button
+          type="button"
+          className="mobile-menu-btn"
+          onClick={() => setMobileMenu(m => !m)}
+          aria-label={mobileMenu ? "Close menu" : "Open menu"}
+          aria-expanded={mobileMenu}
+        >
+          {mobileMenu
+            ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          }
+        </button>
       </nav>
+
+      {/* ─── MOBILE DRAWER ─── */}
+      <div className="mobile-drawer" style={{ display: mobileMenu ? "flex" : "none" }}>
+        <button type="button" onClick={() => setMobileMenu(false)} style={{ position: "absolute", top: 20, right: 20, background: "none", border: "none", color: T.textSecondary, cursor: "pointer", padding: 8 }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <a href="#features" onClick={() => setMobileMenu(false)}>Features</a>
+        <a href="#pricing" onClick={() => setMobileMenu(false)}>Pricing</a>
+        <a href="#stats" onClick={() => setMobileMenu(false)}>Data</a>
+        <button onClick={() => { setMobileMenu(false); onLoginClick(); }} className="cta-btn-outline" style={{ marginTop: 16, justifyContent: "center" }}>Login</button>
+        <button onClick={() => { setMobileMenu(false); onSignUpClick("free"); }} className="cta-btn" style={{ marginTop: 8, justifyContent: "center" }}>Get Started Free</button>
+      </div>
 
       {/* ─── HERO SECTION ─── */}
       <section style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "120px 40px 80px", overflow: "hidden" }}>
@@ -283,7 +315,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                     </div>
                   ))}
                 </div>
-                <button onClick={onSignUpClick} className={plan.popular ? "cta-btn" : "cta-btn-outline"} style={{ width: "100%", justifyContent: "center", padding: "12px 0" }}>
+                <button onClick={() => onSignUpClick(plan.name.toLowerCase())} className={plan.popular ? "cta-btn" : "cta-btn-outline"} style={{ width: "100%", justifyContent: "center", padding: "12px 0" }}>
                   {plan.cta}
                 </button>
                 {plan.note && <p style={{ fontSize: 10, color: T.textMuted, marginTop: 12, textAlign: "center" }}>{plan.note}</p>}

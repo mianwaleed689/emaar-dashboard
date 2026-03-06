@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 
 export default function RoiCalculator({ project, roi, T }) {
   const colors = T;
@@ -8,7 +8,9 @@ export default function RoiCalculator({ project, roi, T }) {
   const [customPrice, setCustomPrice] = useState(project?.price || 0);
 
   const bedKey = beds === '1BR' ? 'apt1' : beds === '2BR' ? 'apt2' : beds === '3BR' ? 'apt3' : 'th';
+  // eslint-disable-next-line no-unused-vars
   const grossYield = (roi?.grossYield?.[bedKey] || roi?.grossYield?.apt1 || roi?.grossYield?.th || 6) / 100;
+  // eslint-disable-next-line no-unused-vars
   const netYield = (roi?.netYield?.[bedKey] || roi?.netYield?.apt1 || roi?.netYield?.th || 5) / 100;
   const annualRent = roi?.estRent?.[bedKey] || roi?.estRent?.apt1 || roi?.estRent?.th || 100000;
   const appreciationYoY = (roi?.appreciationYoY || 12) / 100;
@@ -66,7 +68,7 @@ export default function RoiCalculator({ project, roi, T }) {
         </div>
       </div>
       <div style={{ background: colors.surface, borderRadius: 10, padding: 14, border: '1px solid rgba(59,130,246,0.15)' }}>
-        <div style={{ fontSize: 10, color: colors.blue, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Results — {years}-Year Projection</div>
+        <div style={{ fontSize: 10, color: colors.blue, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Results � {years}-Year Projection</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
           {[
             { label: 'Down Payment', value: fmt(downPayment), color: colors.textPrimary },

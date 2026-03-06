@@ -258,9 +258,9 @@ export default function AdminPanel() {
   const [editingProject, setEditingProject] = useState(null);
   const [bulkSelected, setBulkSelected] = useState([]);
   const [priceHistory, setPriceHistory] = useState({});
-  const [bulkEdit, setBulkEdit] = useState(false);
+  const [, setBulkEdit] = useState(false);
   const [bulkForm, setBulkForm] = useState({});
-  const [auditLog, setAuditLog] = useState([]);
+  const [auditLog, setAuditLog] = useState([]); // eslint-disable-line no-unused-vars
   const [editingCommunity, setEditingCommunity] = useState(null);
   const [editingYield, setEditingYield] = useState(null);
   const [liveProjects, setLiveProjects] = useState({});
@@ -439,6 +439,7 @@ export default function AdminPanel() {
   /* ─── DATA MANAGER ACTIONS ─── */
   
   
+  // eslint-disable-next-line no-unused-vars
   const uploadProjectImage = async (projectId, file) => {
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) { notify("Image must be under 5MB"); return; }

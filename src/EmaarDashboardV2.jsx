@@ -1,10 +1,10 @@
 
 
 import React, { useState, useEffect, useRef } from "react";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "firebase/auth";
-import { collection, getDocs, orderBy, query, doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc } from "firebase/firestore";
 
 import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
 import LandingPage from "./LandingPage";
@@ -300,6 +300,7 @@ const KPI = ({ label, value, sub, icon, delay = 0, onClick }) => {
   return (
     <div
       className={`kpi-card fade-up delay-${delay}`}
+      title={isClickable ? `Click to view ${label} breakdown` : label}
       onClick={onClick}
       onMouseEnter={() => isClickable && setHovered(true)}
       onMouseLeave={() => isClickable && setHovered(false)}
@@ -668,6 +669,27 @@ const UpgradeModal = ({ show, onClose }) => {
 };
 
 /* ─── MAIN DASHBOARD ─── */
+// Focus trap hook for modals
+function useFocusTrap(active) {
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    if (!active || !ref.current) return;
+    const el = ref.current;
+    const focusable = el.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const handler = (e) => {
+      if (e.key !== 'Tab') return;
+      if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last?.focus(); } }
+      else { if (document.activeElement === last) { e.preventDefault(); first?.focus(); } }
+    };
+    el.addEventListener('keydown', handler);
+    first?.focus();
+    return () => el.removeEventListener('keydown', handler);
+  }, [active]);
+  return ref;
+}
+
 export default function EmaarDashboardV2() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState("");
@@ -708,6 +730,7 @@ export default function EmaarDashboardV2() {
   );
 
   // Blur wrapper for free users
+  // eslint-disable-next-line no-unused-vars
   const BlurGate = ({ children, locked, message, compact }) => (
     <div style={{ position: "relative" }}>
       <div style={locked ? { filter: "blur(6px)", pointerEvents: "none", userSelect: "none" } : {}}>
@@ -718,6 +741,9 @@ export default function EmaarDashboardV2() {
   );
   const [tab, setTab] = useState("Overview");
   const [selectedKPI, setSelectedKPI] = useState(null);
+  const [breadcrumb, setBreadcrumb] = useState([]); // [{label, action}]
+  const [projectPage, setProjectPage] = useState(1);
+  const PROJECTS_PER_PAGE = 12;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [time, setTime] = useState(new Date());
   const [authLoading, setAuthLoading] = useState(true);
@@ -752,6 +778,7 @@ export default function EmaarDashboardV2() {
             const numId = d.id.replace("project_", "");
             overrides[numId] = d.data();
           });
+          // eslint-disable-next-line no-unused-vars
           const merged = emaarProjects.map(p => {
             const override = overrides[String(p.id)];
             return override ? { ...p, ...override } : p;
@@ -940,7 +967,7 @@ export default function EmaarDashboardV2() {
     };
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
-  }, [showUpgrade, showStock, selectedProject, showCompare, selectedStockTv]);
+  }, [showUpgrade, showStock, selectedProject, showCompare, selectedStockTv, showCheckout, showProfile, selectedKPI]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (authLoading) {
     return (
@@ -1018,6 +1045,9 @@ export default function EmaarDashboardV2() {
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit', sans-serif" }}>
       <style>{css}</style>
 
+      {/* Skip to content - accessibility */}
+      <a href="#main-content" style={{ position: "absolute", top: -40, left: 0, background: T.gold, color: T.bg, padding: "8px 16px", borderRadius: "0 0 8px 0", fontWeight: 700, fontSize: 13, zIndex: 99999, transition: "top 0.2s" }} onFocus={e => e.target.style.top = "0"} onBlur={e => e.target.style.top = "-40px"}>Skip to content</a>
+
       {/* Toast notification */}
       {toast && <div className="fade-up" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : toast.includes("❌") ? T.red : T.gold, color: "#fff", fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)", fontFamily: "'Outfit', sans-serif" }}>{toast}</div>}
 
@@ -1046,14 +1076,16 @@ export default function EmaarDashboardV2() {
         </div>
 
         {/* Navigation */}
-        <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 3 }}>
+        <nav role="navigation" aria-label="Main navigation" style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 3 }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px" }}>Emaar Properties</div>
+          <div role="tablist" aria-label="Dashboard sections" style={{ display: "contents" }}>
           {TABS.map(t => (
-            <button type="button" key={t.key} className={`sidebar-btn ${tab === t.key ? "active" : ""}`} onClick={() => handleTabChange(t.key)}>
+            <button type="button" role="tab" aria-selected={tab === t.key} key={t.key} className={`sidebar-btn ${tab === t.key ? "active" : ""}`} onClick={() => handleTabChange(t.key)}>
               {t.icon}
               {t.key}
             </button>
           ))}
+          </div>
           {userTier === "admin" && (
             <>
               <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Admin</div>
@@ -1145,7 +1177,7 @@ export default function EmaarDashboardV2() {
       </header>
 
       {/* ─── MAIN CONTENT ─── */}
-      <main role="main" className="main-content" style={{ marginLeft: 240, paddingTop: 60, minHeight: "100vh" }}>
+      <main role="main" id="main-content" className="main-content" style={{ marginLeft: 240, paddingTop: 60, minHeight: "100vh" }}>
         {/* Trial / Free tier banner */}
         {userTier === "pro_trial" && trialDaysLeft > 0 && (
           <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: `linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.04))`, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
@@ -1218,7 +1250,7 @@ export default function EmaarDashboardV2() {
             </div>
 
             <Section title="Key Performance" sub="FY 2025 — All-Time Records Across Every Metric · Source: Emaar Annual Report 2025">
-              <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
+              <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Property Sales" value="AED 80.4B" sub="+16% YoY · USD 21.9B" delay={1} onClick={() => setSelectedKPI({ label: "Property Sales", value: "AED 80.4B", color: T.gold, description: "Total off-plan and ready property sales contracted in FY2025. Includes UAE and international markets.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations", items: [{ label: "FY2025 Sales", value: "AED 80.4B", note: "All-time record" }, { label: "FY2024 Sales", value: "AED 69.3B", note: "+16% YoY" }, { label: "FY2023 Sales", value: "AED 52.7B", note: "+31% YoY" }, { label: "Int'l Sales", value: "AED 9.3B", note: "+124% YoY" }, { label: "UAE Market Share", value: "~30%", note: "Largest by value" }, { label: "Units Booked", value: "12,000+", note: "FY2025 estimate" }], trend: [{ y: "2020", v: 21.5 }, { y: "2021", v: 26.2 }, { y: "2022", v: 33.5 }, { y: "2023", v: 52.7 }, { y: "2024", v: 69.3 }, { y: "2025", v: 80.4 }] })} />
                 <KPI label="Revenue" value="AED 49.6B" sub="+40% YoY · USD 13.5B" delay={2} onClick={() => setSelectedKPI({ label: "Revenue", value: "AED 49.6B", color: T.teal, description: "Total recognized revenue across property development, malls, hospitality, and international operations.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations", items: [{ label: "UAE Dev Revenue", value: "AED 36.4B", note: "73% of total" }, { label: "Malls & Retail", value: "AED 6.3B", note: "+13% YoY" }, { label: "Hospitality", value: "AED 4.2B", note: "+12% YoY" }, { label: "International", value: "AED 2.6B", note: "+124% YoY" }, { label: "Revenue CAGR", value: "27.2%", note: "5-year 2020–2025" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: 49.6 }] })} />
                 <KPI label="Net Profit" value="AED 25.7B" sub="+36% YoY · USD 7.0B" delay={3} onClick={() => setSelectedKPI({ label: "Net Profit", value: "AED 25.7B", color: T.green, description: "Net profit before minority interest. Includes recurring revenue from Emaar Malls and hospitality.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations", items: [{ label: "Net Margin", value: "51.8%", note: "Industry-leading" }, { label: "EPS FY2025", value: "AED 2.00", note: "+31% YoY" }, { label: "Q4 2025 Profit", value: "AED 7.3B", note: "Strongest quarter" }, { label: "5yr Profit CAGR", value: "57.1%", note: "2020–2025" }, { label: "Tax Rate", value: "~9%", note: "UAE Corporate Tax" }], trend: [{ y: "2020", v: 2.6 }, { y: "2021", v: 4.1 }, { y: "2022", v: 6.2 }, { y: "2023", v: 12.6 }, { y: "2024", v: 18.9 }, { y: "2025", v: 25.7 }] })} />
@@ -1309,7 +1341,7 @@ export default function EmaarDashboardV2() {
           {/* ─── FINANCIALS TAB ─── */}
           {tab === "Financials" && <>
             <Section title="Financial Performance" sub="6-year trend · 2020–2025 · All figures in AED Billions">
-              <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
+              <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Revenue CAGR" value="27.2%" sub="2020-2025 · 5-year" delay={1} onClick={() => setSelectedKPI({ label: "Revenue CAGR", value: "27.2%", color: T.gold, description: "Compound Annual Growth Rate of revenue from AED 14.6B in 2020 to AED 49.6B in 2025 — one of the highest CAGRs among global real estate developers.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations", items: [{ label: "2020 Revenue", value: "AED 14.6B", note: "Base year" }, { label: "2025 Revenue", value: "AED 49.6B", note: "+240% total growth" }, { label: "CAGR", value: "27.2%", note: "5-year compounded" }, { label: "vs GCC Average", value: "~8–10%", note: "Sector benchmark" }, { label: "YoY 2025", value: "+40%", note: "Strongest single year" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: 49.6 }] })} />
                 <KPI label="Profit CAGR" value="57.1%" sub="2020-2025 · 5-year" delay={2} onClick={() => setSelectedKPI({ label: "Profit CAGR", value: "57.1%", color: T.green, description: "Net profit grew from AED 2.6B in 2020 to AED 25.7B in 2025 — a 57.1% CAGR driven by margin expansion and operating leverage.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations", items: [{ label: "2020 Net Profit", value: "AED 2.6B", note: "Base year" }, { label: "2025 Net Profit", value: "AED 25.7B", note: "+888% total growth" }, { label: "CAGR", value: "57.1%", note: "5-year compounded" }, { label: "Net Margin 2020", value: "17.8%", note: "Starting margin" }, { label: "Net Margin 2025", value: "51.8%", note: "+34pp expansion" }], trend: [{ y: "2020", v: 2.6 }, { y: "2021", v: 4.1 }, { y: "2022", v: 6.2 }, { y: "2023", v: 12.6 }, { y: "2024", v: 18.9 }, { y: "2025", v: 25.7 }] })} />
                 <KPI label="Gross Margin" value="57.5%" sub="Industry-leading" delay={3} onClick={() => setSelectedKPI({ label: "Gross Margin", value: "57.5%", color: T.teal, description: "Gross profit margin of 57.5% — significantly above the global real estate developer average of 25–35%. Driven by land cost advantage and premium brand pricing.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations", items: [{ label: "Gross Margin", value: "57.5%", note: "FY2025" }, { label: "Gross Profit", value: "AED 28.5B", note: "On AED 49.6B revenue" }, { label: "GCC Dev Avg", value: "~30–35%", note: "Industry benchmark" }, { label: "vs DAMAC", value: "~45%", note: "Nearest competitor" }, { label: "Land Cost Basis", value: "AED 5–15/sqft", note: "Historical acquisition" }], trend: [{ y: "2020", v: 42 }, { y: "2021", v: 45 }, { y: "2022", v: 50 }, { y: "2023", v: 54 }, { y: "2024", v: 56 }, { y: "2025", v: 57.5 }] })} />
@@ -1320,7 +1352,7 @@ export default function EmaarDashboardV2() {
             <ProGate isPro={isPro} message="Unlock 6 Years of Financial Data" onUpgrade={() => setShowUpgrade(true)}>
             <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 20 }}>
               <Chart title="Revenue vs Property Sales (AED B)">
-                <ResponsiveContainer width="100%" height={280}>
+                <ResponsiveContainer width="100%" height={typeof window !== "undefined" && window.innerWidth < 480 ? 180 : 280}>
                   <ComposedChart data={financials}>
                     <defs>
                       <linearGradient id="gSales" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={T.gold} stopOpacity={0.2} /><stop offset="100%" stopColor={T.gold} stopOpacity={0} /></linearGradient>
@@ -1336,7 +1368,7 @@ export default function EmaarDashboardV2() {
               </Chart>
 
               <Chart title="Profitability Trend (AED B)">
-                <ResponsiveContainer width="100%" height={280}>
+                <ResponsiveContainer width="100%" height={typeof window !== "undefined" && window.innerWidth < 480 ? 180 : 280}>
                   <AreaChart data={financials}>
                     <defs>
                       <linearGradient id="gNP" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={T.teal} stopOpacity={0.2} /><stop offset="100%" stopColor={T.teal} stopOpacity={0} /></linearGradient>
@@ -1356,7 +1388,7 @@ export default function EmaarDashboardV2() {
 
             <Section title="Margin Analysis" sub="Profitability margins over 6 years">
               <Chart title="Margin Trends (%)">
-                <ResponsiveContainer width="100%" height={280}>
+                <ResponsiveContainer width="100%" height={typeof window !== "undefined" && window.innerWidth < 480 ? 180 : 280}>
                   <LineChart data={financials}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                     <XAxis dataKey="year" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -1404,7 +1436,7 @@ export default function EmaarDashboardV2() {
             </Section>
 
             <Section title="Per-Share Metrics" sub="Dividend and earnings growth">
-              <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 12 }}>
+              <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 12 }}>
                 <KPI label="EPS (2025)" value="AED 2.00" sub="+31% YoY" delay={1} />
                 <KPI label="DPS (2025)" value="AED 1.00" sub="100% of share capital" delay={2} />
                 <KPI label="EPS CAGR" value="52.8%" sub="5-year · 2020-2025" delay={3} />
@@ -1473,7 +1505,7 @@ export default function EmaarDashboardV2() {
           {/* ─── PROJECTS TAB (48 Projects from Excel) ─── */}
           {tab === "Projects" && <>
             <Section title={`${activeProjects.length} Active Projects`} sub="Complete Emaar off-plan portfolio · 2026–2030 · Search & filter">
-              <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
+              <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE.", source: "DXB Analytics", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "10", note: "Address, Vida, Palace" }], trend: null })} />
                 <KPI label="Communities" value="11" sub="DHE · DCH · EBF · GPC + 7 more" delay={2} />
                 <KPI label="Branded" value={`${activeProjects.filter(p=>p.branded).length}`} sub="Address · Vida · Palace · Bristol" delay={3} />
@@ -1749,7 +1781,7 @@ export default function EmaarDashboardV2() {
             {/* MY INVESTMENTS TRACKER */}
             <Section title="My Investments" sub={myPortfolio.length > 0 ? `${myPortfolio.length} holdings` : "Track your Emaar investments"}>
               {myPortfolio.length > 0 ? <>
-                <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
+                <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                   <KPI label="Total Invested" value={`AED ${(myPortfolio.reduce((s,h) => s+(h.investedAmount||0), 0)/1e6).toFixed(2)}M`} sub={`${myPortfolio.length} holdings`} delay={1} />
                   <KPI label="Projected Value" value={`AED ${(myPortfolio.reduce((s,h) => { const p = activeProjects.find(x => x.id === h.projectId); const ppsf = p ? p.ppsf : 2500; const appr = ppsf > 2500 ? 1.15 : ppsf > 2000 ? 1.20 : 1.25; return s + (h.investedAmount||0) * appr; }, 0)/1e6).toFixed(2)}M`} sub="15-25% appreciation" delay={2} />
                   <KPI label="Avg Yield" value={`${(myPortfolio.reduce((s,h) => { const p = activeProjects.find(x => x.id === h.projectId); const comm = p ? emaarCommunities.find(c => c.name === p.community) : null; return s + (comm ? comm.avgYield : 5); }, 0) / (myPortfolio.length || 1)).toFixed(1)}%`} sub="Across portfolio" delay={3} />
@@ -1802,7 +1834,7 @@ export default function EmaarDashboardV2() {
             </Section>
 
             <Section title="Project Portfolio" sub="48 active projects · 10+ master communities · 2026–2030">
-              <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
+              <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE — 18 under active construction and 30 in the off-plan/pre-launch phase across 10+ master communities.", source: "DXB Analytics Project Database", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned areas" }, { label: "Handover 2026", value: "7 projects", note: "Nearest deliveries" }, { label: "Handover 2029+", value: "26 projects", note: "Longest pipeline" }], trend: null })} />
                 <KPI label="Branded Projects" value="10" sub="Address · Vida · Palace" delay={2} onClick={() => setSelectedKPI({ label: "Branded Projects", value: "10", color: T.teal, description: "10 branded residences under Emaar's luxury hospitality labels — Address, Vida, and Palace. Branded units command 25–40% price premium over standard Emaar projects.", source: "Emaar Properties Portfolio 2025", sourceUrl: "https://www.emaar.com/en/investor-relations", items: [{ label: "Address Brand", value: "5 projects", note: "Ultra-luxury tier" }, { label: "Vida Brand", value: "3 projects", note: "Lifestyle tier" }, { label: "Palace Brand", value: "2 projects", note: "Heritage luxury" }, { label: "Price Premium", value: "25–40%", note: "vs standard Emaar" }, { label: "Resale Premium", value: "Strong", note: "Brand demand maintained" }], trend: null })} />
                 <KPI label="Avg Starting Price" value="AED 2.76M" sub="Range: 1.2M – 13.8M" delay={3} onClick={() => setSelectedKPI({ label: "Avg Starting Price", value: "AED 2.76M", color: T.blue, description: "Average entry price across the active Emaar project portfolio. Range spans from AED 1.2M (Emaar South 1BR) to AED 13.8M (The Oasis ultra-luxury villas).", source: "DXB Analytics · Emaar Price List 2025", sourceUrl: "https://www.emaar.com/en/investor-relations", items: [{ label: "Avg Starting Price", value: "AED 2.76M", note: "Portfolio average" }, { label: "Min Price", value: "AED 1.2M", note: "Emaar South 1BR" }, { label: "Max Price", value: "AED 13.8M", note: "The Oasis villas" }, { label: "Studio Entry", value: "AED 900K+", note: "Select communities" }, { label: "Villa Entry", value: "AED 3.5M+", note: "Dubai Hills / Valley" }], trend: [{ y: "2021", v: 1.8 }, { y: "2022", v: 2.1 }, { y: "2023", v: 2.3 }, { y: "2024", v: 2.55 }, { y: "2025", v: 2.76 }] })} />
@@ -1850,7 +1882,7 @@ export default function EmaarDashboardV2() {
                   </thead>
                   <tbody>
                     {communityProjects.map((c, i) => (
-                      <tr key={i} style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt} onMouseLeave={e => e.currentTarget.style.background = "transparent"} onClick={() => { const comm = emaarCommunities.find(x => x.name === c.full); if(comm) setSelectedCommunity(comm.name); }} style={{ cursor: "pointer" }}>
+                      <tr key={i} style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.2s", cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt} onMouseLeave={e => e.currentTarget.style.background = "transparent"} onClick={() => { const comm = emaarCommunities.find(x => x.name === c.full); if(comm) setSelectedCommunity(comm.name); }}>
                         <td style={{ padding: "12px 14px", color: T.white, fontWeight: 500 }}>{c.full}</td>
                         <td style={{ padding: "12px 14px", color: T.goldLight, fontFamily: "'Fraunces', serif", fontWeight: 600 }}>{c.projects}</td>
                         <td style={{ padding: "12px 14px", color: T.teal }}>{c.yield}</td>
@@ -1886,7 +1918,7 @@ export default function EmaarDashboardV2() {
           {/* ─── COMPETITORS TAB ─── */}
           {tab === "Competitors" && <>
             <Section title="Developer Rankings" sub="DXBinteract verified · fam Properties analysis · 2025">
-              <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
+              <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Emaar % of Top 30" value="22.6%" sub="Dominant market leader" delay={1} onClick={() => setSelectedKPI({ label: "Emaar % of Top 30", value: "22.6%", color: T.gold, description: "Emaar accounts for 22.6% of all sales among the top 30 Dubai developers — nearly 1 in 4 AED of premium real estate sold in Dubai.", source: "DXBinteract · fam Properties 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar Sales", value: "AED 65.4B", note: "Top 30 portion" }, { label: "Top 30 Total", value: "AED 289B", note: "Combined sales" }, { label: "Market Share", value: "22.6%", note: "Of top 30 developers" }, { label: "Rank", value: "#1", note: "By sales value" }, { label: "#2 Developer", value: "DAMAC ~AED 35B", note: "1.83× smaller" }], trend: null })} />
                 <KPI label="Lead vs #2" value="AED 29.9B" sub="1.83× larger than DAMAC" delay={2} onClick={() => setSelectedKPI({ label: "Lead vs #2", value: "AED 29.9B", color: T.teal, description: "Emaar leads #2 developer DAMAC by AED 29.9B in sales — a 1.83× advantage that has widened every year since 2022.", source: "DXBinteract 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar Sales", value: "AED 65.4B", note: "FY2025" }, { label: "DAMAC Sales", value: "~AED 35B", note: "#2 developer" }, { label: "Gap", value: "AED 29.9B", note: "1.83× advantage" }, { label: "2023 Gap", value: "~AED 12B", note: "Gap widening" }, { label: "2024 Gap", value: "~AED 20B", note: "Accelerating lead" }], trend: null })} />
                 <KPI label="% of Dubai Total" value="9.6%" sub="Of AED 682.5B market" delay={3} onClick={() => setSelectedKPI({ label: "% of Dubai Total", value: "9.6%", color: T.blue, description: "Emaar captured 9.6% of Dubai's total AED 682.5B real estate market in 2025 — nearly 1 in every 10 AED transacted.", source: "DLD · DXBinteract 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Dubai Total Market", value: "AED 682.5B", note: "All transactions 2025" }, { label: "Emaar Share", value: "AED 65.4B", note: "9.6% of total" }, { label: "2024 Share", value: "~8.1%", note: "Growing share" }, { label: "2023 Share", value: "~7.2%", note: "Consistent gain" }, { label: "Market Type", value: "Off-plan dominant", note: "60%+ of Dubai volume" }], trend: null })} />
@@ -2013,7 +2045,7 @@ export default function EmaarDashboardV2() {
               </Chart>
             </Section>
 
-            <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
+            <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
               <KPI label="Avg Gross Yield" value="4.5%" sub="Across all communities" delay={1} onClick={() => setSelectedKPI({ label: "Avg Gross Yield", value: "4.5%", color: T.gold, description: "Average gross rental yield across all Emaar communities and unit types. Based on DLD rental index and Emaar launch prices.", source: "DLD Rental Index · Bayut · Property Finder", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Avg Gross Yield", value: "4.5%", note: "All communities" }, { label: "Avg Net Yield", value: "~3.2%", note: "After service charges" }, { label: "vs Dubai Avg", value: "~5.0%", note: "Market benchmark" }, { label: "Best Community", value: "The Valley", note: "5.9% gross" }, { label: "Service Charges", value: "AED 12–18/sqft", note: "Annual avg" }], trend: null })} />
               <KPI label="Highest Yield" value="5.9%" sub="The Valley 3BR TH" delay={2} onClick={() => setSelectedKPI({ label: "Highest Yield", value: "5.9%", color: T.green, description: "The Valley 3BR Townhouse delivers the highest gross yield in the Emaar portfolio at 5.9%, driven by strong rental demand and affordable launch prices.", source: "DLD Rental Index · Property Finder 2025", sourceUrl: "https://propertyfinder.ae", items: [{ label: "Community", value: "The Valley", note: "Dubai-Al Ain Road" }, { label: "Unit Type", value: "3BR Townhouse", note: "High rental demand" }, { label: "Gross Yield", value: "5.9%", note: "Highest in portfolio" }, { label: "Annual Rent", value: "~AED 140K", note: "DLD index" }, { label: "Launch Price", value: "~AED 2.3M", note: "Emaar launch" }], trend: null })} />
               <KPI label="Lowest Yield" value="3.6%" sub="Downtown 2BR Apt" delay={3} onClick={() => setSelectedKPI({ label: "Lowest Yield", value: "3.6%", color: T.blue, description: "Downtown Dubai 2BR apartments have the lowest yield at 3.6% due to high purchase prices. However, capital appreciation potential offsets rental yield.", source: "DLD Rental Index · Bayut 2025", sourceUrl: "https://bayut.com", items: [{ label: "Community", value: "Downtown Dubai", note: "Premium location" }, { label: "Unit Type", value: "2BR Apartment", note: "High price entry" }, { label: "Gross Yield", value: "3.6%", note: "Lowest in portfolio" }, { label: "Cap Appreciation", value: "+18% in 2024", note: "Compensates yield" }, { label: "Avg Price/sqft", value: "AED 2,800+", note: "Premium pricing" }], trend: null })} />
@@ -2123,7 +2155,7 @@ export default function EmaarDashboardV2() {
             </div>
 
             {/* KPIs */}
-            <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+            <div className="kpi-grid" style={{ display: "grid", gap: 12, marginBottom: 20 }}>
               <KPI label="Total Listed RE Stocks" value="30" sub="DFM · ADX · Tadawul · LSE" delay={1} onClick={() => setSelectedKPI({ label: "Listed RE Stocks", value: "30", color: T.gold, description: "30 publicly traded real estate companies across 4 exchanges — DFM, ADX, Tadawul, and LSE. Emaar is by far the largest by market cap.", source: "DXB Analytics · Exchange Data 2025", sourceUrl: "https://www.dfm.ae", items: [{ label: "DFM (Dubai)", value: "12 companies", note: "incl. Emaar, Emaar Dev" }, { label: "ADX (Abu Dhabi)", value: "6 companies", note: "incl. Aldar" }, { label: "Tadawul (KSA)", value: "10 companies", note: "incl. ROSHN, Dar Al Arkan" }, { label: "LSE (London)", value: "1 company", note: "DarGlobal" }, { label: "Largest by Mkt Cap", value: "Emaar PJSC", note: "AED 128B" }], trend: null })} />
               <KPI label="UAE Stocks" value="18" sub="12 DFM · 6 ADX" delay={2} onClick={() => setSelectedKPI({ label: "UAE RE Stocks", value: "18", color: T.teal, description: "18 UAE-listed real estate stocks across DFM and ADX. DFM leads with 12 listings including Emaar, Emaar Development, and DAMAC.", source: "DFM · ADX 2025", sourceUrl: "https://www.dfm.ae", items: [{ label: "DFM Listings", value: "12 stocks", note: "Dubai Financial Market" }, { label: "ADX Listings", value: "6 stocks", note: "Abu Dhabi Securities" }, { label: "Largest DFM", value: "EMAAR", note: "AED 128.2B mkt cap" }, { label: "Largest ADX", value: "ALDAR", note: "Abu Dhabi's #1 dev" }, { label: "Avg Div Yield", value: "~5.2%", note: "UAE RE stocks" }], trend: null })} />
               <KPI label="Saudi Stocks" value="10" sub="Tadawul Exchange" delay={3} onClick={() => setSelectedKPI({ label: "Saudi RE Stocks", value: "10", color: T.blue, description: "10 Saudi-listed real estate companies on Tadawul. The Saudi market is growing rapidly with ROSHN and Dar Al Arkan as the largest players.", source: "Tadawul Exchange 2025", sourceUrl: "https://www.saudiexchange.sa", items: [{ label: "Tadawul Listings", value: "10 stocks", note: "Saudi Exchange" }, { label: "Largest", value: "Dar Al Arkan", note: "SAR 16.6B mkt cap" }, { label: "Fastest Growing", value: "ROSHN", note: "Giga-project developer" }, { label: "Avg P/E", value: "~18×", note: "Saudi RE sector" }, { label: "Market Growth", value: "NEOM-driven", note: "Vision 2030 pipeline" }], trend: null })} />
@@ -2216,7 +2248,7 @@ export default function EmaarDashboardV2() {
             </Section>
 
             <Chart title="Dubai Total Sales Value Growth (AED B)" style={{ marginTop: 20 }}>
-              <ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={typeof window !== "undefined" && window.innerWidth < 480 ? 180 : 280}>
                 <BarChart data={dubaiSalesHistory}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                   <XAxis dataKey="year" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -2258,7 +2290,7 @@ export default function EmaarDashboardV2() {
           {/* ─── ADMIN TAB ─── */}
           {tab === "Admin" && userTier === "admin" && <>
             <Section title="User Management" sub="All registered users · Real-time data from Firestore">
-              <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16 }}>
+              <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Total Users" value={adminUsers.length} sub="Registered accounts" delay={1} onClick={() => setSelectedKPI({ label: "Total Users", value: `${adminUsers.length}`, color: T.gold, description: "Total registered users on DXB Analytics platform.", source: "Firebase Firestore — Live", sourceUrl: "#", items: [{ label: "Total Registered", value: `${adminUsers.length}`, note: "All time" }, { label: "Pro Trial", value: `${adminUsers.filter(u => u.status === "pro_trial").length}`, note: "Active trials" }, { label: "Free / Expired", value: `${adminUsers.filter(u => u.status === "free" || u.status === "expired").length}`, note: "Conversion targets" }, { label: "Paying Customers", value: `${adminUsers.filter(u => u.tier === "pro" || u.tier === "enterprise").length}`, note: "Revenue generating" }], trend: null })} />
                 <KPI label="Pro Trial" value={adminUsers.filter(u => u.status === "pro_trial").length} sub="Active trials" delay={2} onClick={() => setSelectedKPI({ label: "Pro Trial Users", value: `${adminUsers.filter(u => u.status === "pro_trial").length}`, color: T.gold, description: "Users currently in their Pro trial period. These are your hottest leads for conversion.", source: "Firebase Firestore — Live", sourceUrl: "#", items: [{ label: "Active Trials", value: `${adminUsers.filter(u => u.status === "pro_trial").length}`, note: "In trial now" }, { label: "Conversion Target", value: "AED 99/mo each", note: "Pro plan price" }, { label: "Pipeline Value", value: `AED ${adminUsers.filter(u => u.status === "pro_trial").length * 99}/mo`, note: "If all convert" }, { label: "Action", value: "Follow up now", note: "Before trial expires" }], trend: null })} />
                 <KPI label="Free Users" value={adminUsers.filter(u => u.status === "free" || u.status === "expired").length} sub="Trial expired or free" delay={3} onClick={() => setSelectedKPI({ label: "Free / Expired Users", value: `${adminUsers.filter(u => u.status === "free" || u.status === "expired").length}`, color: T.red, description: "Users on free plan or whose trial has expired. Re-engagement opportunity.", source: "Firebase Firestore — Live", sourceUrl: "#", items: [{ label: "Free Plan", value: `${adminUsers.filter(u => u.status === "free").length}`, note: "Never started trial" }, { label: "Trial Expired", value: `${adminUsers.filter(u => u.status === "expired").length}`, note: "Trial ended, didn't upgrade" }, { label: "Re-engage Value", value: `AED ${adminUsers.filter(u => u.status === "free" || u.status === "expired").length * 99}/mo`, note: "If all convert" }], trend: null })} />
@@ -2544,7 +2576,7 @@ export default function EmaarDashboardV2() {
                     <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 10 }}>PROJECTS IN {selectedCommunity.toUpperCase()} ({commProjects.length})</div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
                       {commProjects.map((p, pi) => (
-                        <div key={pi} style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, cursor: "pointer" }} onClick={() => { setSelectedCommunity(null); setSelectedProject(activeProjects.find(x => x.id === p.id) || p); }}>
+                        <div key={pi} style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, cursor: "pointer" }} onClick={() => { const proj = activeProjects.find(x => x.id === p.id) || p; setBreadcrumb([{ label: selectedCommunity, action: () => { setSelectedProject(null); setBreadcrumb([]); } }]); setSelectedCommunity(null); setSelectedProject(proj); }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{p.name}</div>
                           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{p.type} &middot; {p.beds} beds &middot; {p.status}</div>
                           <div style={{ fontSize: 11, fontWeight: 600, color: T.white, marginTop: 4 }}>{p.price ? `AED ${(p.price/1e6).toFixed(2)}M` : "TBD"}</div>
@@ -2565,6 +2597,17 @@ export default function EmaarDashboardV2() {
         );
       })()}
 
+            {breadcrumb.length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 0 4px", marginBottom: 4 }}>
+                {breadcrumb.map((b, i) => (
+                  <React.Fragment key={i}>
+                    <button type="button" onClick={b.action} style={{ background: "none", border: "none", color: T.gold, fontSize: 12, cursor: "pointer", padding: 0, fontFamily: "'Outfit', sans-serif", fontWeight: 600 }}>{b.label}</button>
+                    <span style={{ color: T.textMuted, fontSize: 12 }}>›</span>
+                  </React.Fragment>
+                ))}
+                <span style={{ fontSize: 12, color: T.textSecondary }}>{selectedProject?.name}</span>
+              </div>
+            )}
             {selectedProject && (() => {
         /* Resolve: if selectedProject is an ID (number/string), find the full object */
         const _sp = (typeof selectedProject === "number" || typeof selectedProject === "string" || !selectedProject.name)
@@ -2578,7 +2621,7 @@ export default function EmaarDashboardV2() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setSelectedProject(null)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 820, maxHeight: "92vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
             {/* Close */}
-            <button type="button" onClick={() => setSelectedProject(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             
             {/* Image */}
             {selectedProject_.imageUrl && (
@@ -2828,7 +2871,7 @@ export default function EmaarDashboardV2() {
 
       {/* ─── COMPARE MODAL ─── */}
       {showCompare && compareList.length >= 2 && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowCompare(false)}>
+        <div role="dialog" aria-modal="true" aria-label="Project comparison" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowCompare(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}`, width: "95%", maxWidth: 900, maxHeight: "90vh", overflowY: "auto", padding: 28 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: T.gold, margin: 0 }}>⚖️ Project Comparison</h2>
@@ -2939,7 +2982,7 @@ export default function EmaarDashboardV2() {
 
       {/* ─── STOCK MODAL ─── */}
       {showStock && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 4000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowStock(false)}>
+        <div role="dialog" aria-modal="true" aria-label="Stock details" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 4000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowStock(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 960, maxHeight: "92vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
             <button type="button" onClick={() => setShowStock(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
 
@@ -3098,7 +3141,7 @@ export default function EmaarDashboardV2() {
       </div>}
 
       {/* CHECKOUT PAYMENT MODAL */}
-      {showCheckout && <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.95)", zIndex: 3100, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)" }} onClick={() => { setShowCheckout(null); setCheckoutStep(1); }}>
+      {showCheckout && <div role="dialog" aria-modal="true" aria-label="Upgrade checkout" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.95)", zIndex: 3100, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)" }} onClick={() => { setShowCheckout(null); setCheckoutStep(1); }}>
         <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 480, position: "relative", overflow: "hidden" }} onClick={e => e.stopPropagation()}>
           <button type="button" onClick={() => { setShowCheckout(null); setCheckoutStep(1); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"\u2715"}</button>
           <div style={{ padding: "24px 28px 16px", borderBottom: `1px solid ${T.border}` }}>
@@ -3173,7 +3216,7 @@ export default function EmaarDashboardV2() {
       </div>}
 
       {/* USER PROFILE MODAL */}
-      {showProfile && <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowProfile(false)}>
+      {showProfile && <div role="dialog" aria-modal="true" aria-label="User profile" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowProfile(false)}>
         <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 560, maxHeight: "90vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
           <button type="button" onClick={() => setShowProfile(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>\u2715</button>
           <div style={{ padding: "32px 28px 20px", background: `linear-gradient(135deg, rgba(212,168,67,0.08), rgba(14,29,53,0.6))`, borderBottom: `1px solid ${T.border}` }}>
@@ -3214,7 +3257,7 @@ export default function EmaarDashboardV2() {
 
       {/* ─── KPI DETAIL MODAL ─── */}
       {selectedKPI && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)", padding: 16 }} onClick={() => setSelectedKPI(null)}>
+        <div role="dialog" aria-modal="true" aria-label={`${selectedKPI?.label} details`} style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)", padding: 16 }} onClick={() => setSelectedKPI(null)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${selectedKPI.color || T.gold}`, width: "95%", maxWidth: 640, maxHeight: "88vh", overflowY: "auto", position: "relative", boxShadow: `0 24px 80px rgba(0,0,0,0.6), 0 0 40px ${selectedKPI.color || T.gold}22` }} onClick={e => e.stopPropagation()}>
             <button type="button" onClick={() => setSelectedKPI(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             <div style={{ padding: 28 }}>
