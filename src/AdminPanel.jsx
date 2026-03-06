@@ -258,9 +258,9 @@ export default function AdminPanel() {
   const [editingProject, setEditingProject] = useState(null);
   const [bulkSelected, setBulkSelected] = useState([]);
   const [priceHistory, setPriceHistory] = useState({});
-  const [, setBulkEdit] = useState(false);
+  const [bulkEdit, setBulkEdit] = useState(false);
   const [bulkForm, setBulkForm] = useState({});
-  const [auditLog, setAuditLog] = useState([]); // eslint-disable-line no-unused-vars
+  const [auditLog, setAuditLog] = useState([]);
   const [editingCommunity, setEditingCommunity] = useState(null);
   const [editingYield, setEditingYield] = useState(null);
   const [liveProjects, setLiveProjects] = useState({});
@@ -274,6 +274,7 @@ export default function AdminPanel() {
 
   /* ─── KYC VERIFICATION STATE ─── */
   const [verifications, setVerifications] = useState([]);
+  const [leads, setLeads] = useState([]);
   const [verifyFilter, setVerifyFilter] = useState("all"); // all | pending | approved | rejected
   const [verifySearch, setVerifySearch] = useState("");
   const [reviewingUser, setReviewingUser] = useState(null);
@@ -351,6 +352,18 @@ export default function AdminPanel() {
   }, []);
 
   useEffect(() => { if (isAdmin) fetchVerifications(); }, [isAdmin, fetchVerifications]);
+
+  const fetchLeads = useCallback(async () => {
+    try {
+      const snap = await getDocs(collection(db, "leads"));
+      const list = [];
+      snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
+      list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      setLeads(list);
+    } catch (e) { console.error("Fetch leads:", e); }
+  }, []);
+
+  useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin, fetchLeads]);
 
   const approveVerification = async (v) => {
     if (!window.confirm(`⚠️ APPROVE VERIFICATION\n\nUser: ${v.name || v.email}\nLevel: ${v.level || "Basic"}\n\nThis will:\n• Mark this user as verified\n• Update their profile with a verified badge\n• They can access verified-tier features\n\nContinue?`)) return;
@@ -439,7 +452,6 @@ export default function AdminPanel() {
   /* ─── DATA MANAGER ACTIONS ─── */
   
   
-  // eslint-disable-next-line no-unused-vars
   const uploadProjectImage = async (projectId, file) => {
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) { notify("Image must be under 5MB"); return; }
@@ -1789,28 +1801,75 @@ export default function AdminPanel() {
              ═══════════════════════════════════════ */}
           {tab === "leads" && (
             <>
-              <Section title="Lead Tracking" sub="WhatsApp, Email & Call inquiries from Pro users">
-                <div className="chart-box fade-up" style={{ padding: 40, textAlign: "center" }}>
-                  <div style={{ marginBottom: 16, color: T.gold, opacity: 0.5 }}><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
-                  <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.white, marginBottom: 8 }}>Lead Tracking — Coming Q3 2026</h3>
-                  <p style={{ color: T.textSecondary, fontSize: 13, maxWidth: 520, margin: "0 auto 28px", lineHeight: 1.7 }}>
-                    When Pro users click WhatsApp, Email, or Call buttons on project pages, each inquiry will be logged here automatically. You'll see which projects generate the most interest and track your lead pipeline.
-                  </p>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, maxWidth: 600, margin: "0 auto" }}>
-                    {[
-                      { icon: I.whatsapp, label: "WhatsApp Clicks", desc: "Auto-logged per project" },
-                      { icon: I.email, label: "Email Inquiries", desc: "Tracked with project context" },
-                      { icon: I.phone, label: "Call Tracking", desc: "Click-to-call logging" },
-                      { icon: "◆", label: "Lead Valuation", desc: "AED value per lead pipeline" },
-                    ].map((item, i) => (
-                      <div key={i} className="fade-up" style={{ background: T.surfaceAlt, borderRadius: 10, padding: 16, border: `1px solid ${T.border}`, animationDelay: `${i * 0.06}s` }}>
-                        <div style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: T.textPrimary, marginBottom: 4 }}>{item.label}</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>{item.desc}</div>
-                      </div>
-                    ))}
-                  </div>
+              <Section title={`Lead Tracking (${leads.length})`} sub="WhatsApp, Email & Call inquiries — auto-logged from dashboard"
+                action={<button type="button" onClick={fetchLeads} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>{I.refresh} Refresh</button>}>
+                <div className="kpi-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
+                  <KPI label="Total Leads" value={leads.length} sub="All time" color={T.gold} delay={1} />
+                  <KPI label="WhatsApp" value={leads.filter(l => l.source === "WhatsApp").length} sub="Clicks" color={T.green} delay={2} />
+                  <KPI label="Email" value={leads.filter(l => l.source === "Email Inquiry").length} sub="Inquiries" color={T.blue} delay={3} />
+                  <KPI label="This Week" value={leads.filter(l => { const d = new Date(l.createdAt); const now = new Date(); return (now - d) < 7 * 24 * 60 * 60 * 1000; }).length} sub="7 days" color={T.teal} delay={4} />
                 </div>
+                {leads.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: 60, color: T.textMuted }}>
+                    <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.3 }}>📭</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary, marginBottom: 8 }}>No leads yet</div>
+                    <div style={{ fontSize: 12, color: T.textMuted }}>Leads are captured when Pro users click WhatsApp or Email on any project.</div>
+                  </div>
+                ) : (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ borderBottom: `2px solid ${T.border}` }}>
+                          {["Name", "Email", "Project", "Community", "Source", "Status", "Date", "Action"].map(h => (
+                            <th key={h} style={{ padding: "10px 12px", textAlign: "left", color: T.gold, fontWeight: 600, fontSize: 10, letterSpacing: 0.5, textTransform: "uppercase" }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {leads.map((lead, i) => (
+                          <tr key={lead.id} style={{ borderBottom: `1px solid ${T.border}` }}
+                            onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <td style={{ padding: "10px 12px", color: T.white, fontWeight: 600 }}>{lead.name || "—"}</td>
+                            <td style={{ padding: "10px 12px", color: T.textSecondary }}>{lead.email || "—"}</td>
+                            <td style={{ padding: "10px 12px", color: T.gold }}>{lead.project || "—"}</td>
+                            <td style={{ padding: "10px 12px", color: T.textSecondary }}>{lead.community || "—"}</td>
+                            <td style={{ padding: "10px 12px" }}>
+                              <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6,
+                                background: lead.source === "WhatsApp" ? "rgba(37,211,102,0.15)" : "rgba(59,130,246,0.12)",
+                                color: lead.source === "WhatsApp" ? T.green : T.blue }}>
+                                {lead.source || "—"}
+                              </span>
+                            </td>
+                            <td style={{ padding: "10px 12px" }}>
+                              <select value={lead.status || "New"}
+                                onChange={async e => {
+                                  await setDoc(doc(db, "leads", lead.id), { status: e.target.value }, { merge: true });
+                                  fetchLeads();
+                                }}
+                                style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, color: lead.status === "Converted" ? T.green : lead.status === "Contacted" ? T.gold : T.blue, borderRadius: 6, padding: "3px 8px", fontSize: 10, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                <option>New</option>
+                                <option>Contacted</option>
+                                <option>Converted</option>
+                                <option>Lost</option>
+                              </select>
+                            </td>
+                            <td style={{ padding: "10px 12px", color: T.textMuted, fontSize: 10 }}>
+                              {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short" }) : "—"}
+                            </td>
+                            <td style={{ padding: "10px 12px" }}>
+                              <a href={`https://wa.me/${lead.email ? "" : "971542410599"}?text=${encodeURIComponent(`Hi ${lead.name || ""}, following up on your interest in ${lead.project || "the property"}. Are you still looking?`)}`}
+                                target="_blank" rel="noreferrer"
+                                style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>
+                                Follow Up
+                              </a>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </Section>
             </>
           )}
