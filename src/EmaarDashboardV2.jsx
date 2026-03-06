@@ -696,9 +696,9 @@ export default function EmaarDashboardV2() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState("");
   const [userName, setUserName] = useState("");
-  const [userTier, setUserTier] = useState("free"); // "free", "pro_trial", "pro", "enterprise", "admin"
+  const [userTier, setUserTier] = useState("free");
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
-  const [showLogin, setShowLogin] = useState(false); // false, "login", or "signup"
+  const [showLogin, setShowLogin] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [profileEdit, setProfileEdit] = useState({ name: "" });
@@ -707,6 +707,19 @@ export default function EmaarDashboardV2() {
   const [myPortfolio, setMyPortfolio] = useState([]);
   const [showAddPortfolio, setShowAddPortfolio] = useState(null);
   const [portfolioForm, setPortfolioForm] = useState({ units: 1, investedAmount: "", purchaseDate: "", unitType: "1BR", notes: "" });
+
+  // Watchlist
+  const [watchlist, setWatchlist] = useState([]);
+  const [showWatchlist, setShowWatchlist] = useState(false);
+
+  // Notifications
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Onboarding
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState(0);
 
   useEffect(() => {
     const handler = (e) => { setShowCheckout(e.detail); setCheckoutStep(1); };
@@ -923,6 +936,71 @@ export default function EmaarDashboardV2() {
     loadPortfolio();
   }, [isLoggedIn]);
 
+  // WATCHLIST FUNCTIONS
+  useEffect(() => {
+    if (!isLoggedIn || !auth.currentUser) return;
+    const loadWatchlist = async () => {
+      try {
+        const snap = await getDoc(doc(db, "watchlists", auth.currentUser.uid));
+        if (snap.exists()) setWatchlist(snap.data().projects || []);
+      } catch (e) { console.log("Watchlist load error:", e); }
+    };
+    loadWatchlist();
+  }, [isLoggedIn]);
+
+  const toggleWatchlist = async (project) => {
+    if (!isLoggedIn) { setShowLogin("login"); return; }
+    const isWatched = watchlist.find(p => p.id === project.id);
+    const updated = isWatched ? watchlist.filter(p => p.id !== project.id) : [...watchlist, { id: project.id, name: project.name, community: project.community, price: project.price, addedAt: new Date().toISOString() }];
+    setWatchlist(updated);
+    if (auth.currentUser) {
+      try { await setDoc(doc(db, "watchlists", auth.currentUser.uid), { projects: updated, updatedAt: new Date().toISOString() }); } catch (e) {}
+    }
+    notify(isWatched ? `Removed ${project.name} from watchlist` : `⭐ ${project.name} added to watchlist`);
+  };
+
+  // NOTIFICATIONS
+  useEffect(() => {
+    if (!isLoggedIn || !auth.currentUser) return;
+    const loadNotifications = async () => {
+      try {
+        const snap = await getDocs(collection(db, "notifications"));
+        const userNotifs = [];
+        snap.forEach(d => {
+          const data = d.data();
+          if (data.userId === auth.currentUser.uid || data.userId === "all") {
+            userNotifs.push({ id: d.id, ...data });
+          }
+        });
+        userNotifs.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        setNotifications(userNotifs.slice(0, 20));
+        setUnreadCount(userNotifs.filter(n => !n.read).length);
+      } catch (e) {}
+    };
+    loadNotifications();
+  }, [isLoggedIn]);
+
+  const markNotifRead = async (id) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    setUnreadCount(prev => Math.max(0, prev - 1));
+    try { await setDoc(doc(db, "notifications", id), { read: true }, { merge: true }); } catch (e) {}
+  };
+
+  // ONBOARDING - show for new users on first login
+  useEffect(() => {
+    if (isLoggedIn && userName !== undefined) {
+      const key = `dxb_onboarded_${user}`;
+      if (!localStorage.getItem(key)) {
+        setTimeout(() => setShowOnboarding(true), 1000);
+      }
+    }
+  }, [isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const completeOnboarding = () => {
+    localStorage.setItem(`dxb_onboarded_${user}`, "1");
+    setShowOnboarding(false);
+  };
+
   const savePortfolio = async (holdings) => {
     setMyPortfolio(holdings);
     if (auth.currentUser) {
@@ -992,6 +1070,8 @@ export default function EmaarDashboardV2() {
         if (showCheckout) { setShowCheckout(null); setCheckoutStep(1); }
         else if (showProfile) setShowProfile(false);
         else if (showUpgrade) setShowUpgrade(false);
+        else if (showNotifications) setShowNotifications(false);
+        else if (showWatchlist) setShowWatchlist(false);
         else if (showStock) setShowStock(false);
         else if (selectedProject) setSelectedProject(null);
         else if (showCompare) setShowCompare(false);
@@ -1204,8 +1284,12 @@ export default function EmaarDashboardV2() {
             <span style={{ fontSize: 10, color: T.textMuted }}>H/L </span>
             <span style={{ fontSize: 11, fontWeight: 600, color: T.textPrimary }}>{stock.dayHigh} / {stock.dayLow}</span>
           </div>}
-          <button type="button" onClick={() => { alert("Notifications launching soon — you'll get alerts for price changes, new project launches, and construction milestones."); }} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: 8, cursor: "pointer", color: T.textSecondary, position: "relative" }} title="Notifications — Coming Soon">
+          <button type="button" onClick={() => setShowWatchlist(true)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: watchlist.length > 0 ? T.gold : T.textSecondary, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} title="My Watchlist">
+            ☆ {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
+          </button>
+          <button type="button" onClick={() => setShowNotifications(v => !v)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: 8, cursor: "pointer", color: T.textSecondary, position: "relative" }} title="Notifications">
             {Icons.bell}
+            {unreadCount > 0 && <span style={{ position: "absolute", top: 4, right: 4, width: 8, height: 8, borderRadius: "50%", background: T.red, border: `2px solid ${T.bg}` }} />}
           </button>
         </div>
       </header>
@@ -1682,6 +1766,9 @@ export default function EmaarDashboardV2() {
                     <button type="button" onClick={() => setShowUpgrade(true)} style={{ flex: 1, padding: "8px 0", background: "rgba(212,168,67,0.1)", borderRadius: 8, color: "rgba(212,168,67,0.5)", fontSize: 11, fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🔒 Email</button>
                     <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "8px 10px", background: "rgba(0,191,165,0.1)", borderRadius: 8, color: "rgba(0,191,165,0.5)", fontSize: 11, fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer" }}>🔒</button>
                     </>)}
+                    <button type="button" onClick={(e) => { e.stopPropagation(); toggleWatchlist(p); }} style={{ padding: "8px 10px", background: watchlist.find(w => w.id === p.id) ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${watchlist.find(w => w.id === p.id) ? T.gold : T.border}`, borderRadius: 8, color: watchlist.find(w => w.id === p.id) ? T.gold : T.textMuted, fontSize: 14, cursor: "pointer" }} title={watchlist.find(w => w.id === p.id) ? "Remove from watchlist" : "Add to watchlist"}>
+                      {watchlist.find(w => w.id === p.id) ? "★" : "☆"}
+                    </button>
                     <button type="button" onClick={(e) => { e.stopPropagation(); isPro ? toggleCompare(p) : setShowUpgrade(true); }} style={{ padding: "8px 10px", background: !isPro ? "rgba(212,168,67,0.05)" : compareList.find(x=>x.id===p.id) ? T.goldGlow : T.surfaceAlt, border: `1px solid ${!isPro ? T.border : compareList.find(x=>x.id===p.id) ? T.gold : T.border}`, borderRadius: 8, color: !isPro ? T.textMuted : compareList.find(x=>x.id===p.id) ? T.gold : T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
                       {!isPro ? "🔒" : compareList.find(x=>x.id===p.id) ? "✓" : "⊕"}
                     </button>
@@ -3544,6 +3631,153 @@ export default function EmaarDashboardV2() {
           </div>
         </div>
       )}
+
+      {/* ─── NOTIFICATIONS PANEL ─── */}
+      {showNotifications && (
+        <div style={{ position: "fixed", top: 60, right: 16, width: 360, maxHeight: 480, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, boxShadow: "0 20px 60px rgba(0,0,0,0.6)", zIndex: 4000, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white }}>Notifications</div>
+              {unreadCount > 0 && <div style={{ fontSize: 11, color: T.gold }}>{unreadCount} unread</div>}
+            </div>
+            <button type="button" onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>✕</button>
+          </div>
+          <div style={{ overflowY: "auto", flex: 1 }}>
+            {notifications.length === 0 ? (
+              <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>🔔</div>
+                <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 4 }}>No notifications yet</div>
+                <div style={{ fontSize: 11 }}>You'll get alerts for price changes, new launches & construction updates.</div>
+              </div>
+            ) : notifications.map((n, i) => (
+              <div key={n.id} onClick={() => markNotifRead(n.id)} style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", background: n.read ? "transparent" : "rgba(212,168,67,0.04)", transition: "background 0.2s" }}
+                onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                onMouseLeave={e => e.currentTarget.style.background = n.read ? "transparent" : "rgba(212,168,67,0.04)"}>
+                <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>{n.icon || "📢"}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: n.read ? 400 : 700, color: n.read ? T.textSecondary : T.white, marginBottom: 3 }}>{n.title || "Update"}</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>{n.message}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 5 }}>{n.createdAt ? new Date(n.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}</div>
+                  </div>
+                  {!n.read && <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.gold, flexShrink: 0, marginTop: 4 }} />}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ─── WATCHLIST PANEL ─── */}
+      {showWatchlist && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 3500, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowWatchlist(false)}>
+          <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "min(640px,95vw)", maxHeight: "80vh", overflow: "hidden", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>⭐ My Watchlist</div>
+                <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{watchlist.length} project{watchlist.length !== 1 ? "s" : ""} saved</div>
+              </div>
+              <button type="button" onClick={() => setShowWatchlist(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>✕</button>
+            </div>
+            <div style={{ overflowY: "auto", padding: 20, flex: 1 }}>
+              {watchlist.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "48px 20px", color: T.textMuted }}>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>☆</div>
+                  <div style={{ fontSize: 14, color: T.textSecondary, marginBottom: 8 }}>No projects saved yet</div>
+                  <div style={{ fontSize: 12 }}>Click the ☆ star on any project card to add it here.</div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {watchlist.map((w, i) => {
+                    const liveP = activeProjects.find(p => p.id === w.id);
+                    const currentPrice = liveP?.price || w.price;
+                    const priceChanged = liveP && w.price && liveP.price !== w.price;
+                    return (
+                      <div key={w.id} style={{ background: T.card, borderRadius: 12, border: `1px solid ${T.border}`, padding: "14px 16px", display: "flex", alignItems: "center", gap: 14, cursor: "pointer", transition: "all 0.2s" }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor = T.gold}
+                        onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
+                        onClick={() => { setSelectedProject(liveP || w); setShowWatchlist(false); }}>
+                        {liveP?.imageUrl && <img src={liveP.imageUrl} alt="" style={{ width: 56, height: 56, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} onError={e => e.target.style.display="none"} />}
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 3 }}>{w.name}</div>
+                          <div style={{ fontSize: 11, color: T.textMuted }}>{w.community}</div>
+                          {priceChanged && <div style={{ fontSize: 10, color: liveP.price > w.price ? T.red : T.green, marginTop: 4, fontWeight: 600 }}>{liveP.price > w.price ? "↑" : "↓"} Price changed since you saved this</div>}
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {currentPrice ? (currentPrice / 1e6).toFixed(2) + "M" : "—"}</div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Starting from</div>
+                        </div>
+                        <button type="button" onClick={e => { e.stopPropagation(); toggleWatchlist(w); }} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, color: "#EF4444", padding: "4px 8px", cursor: "pointer", fontSize: 11, flexShrink: 0 }}>Remove</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── ONBOARDING MODAL ─── */}
+      {showOnboarding && (() => {
+        const steps = [
+          {
+            icon: "🏙️",
+            title: `Welcome to DXB Analytics, ${userName || "Investor"}!`,
+            body: "You now have access to Dubai's most comprehensive real estate intelligence platform. Let us show you around in 30 seconds.",
+            cta: "Let's Go →"
+          },
+          {
+            icon: "🔍",
+            title: "Browse 48+ Emaar Projects",
+            body: "Go to the Projects tab to explore every active development. Filter by community, tier, handover year, or price range. Click any card for full details, documents, and ROI analysis.",
+            cta: "Next →"
+          },
+          {
+            icon: "⭐",
+            title: "Build Your Watchlist",
+            body: "See the ☆ star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
+            cta: "Next →"
+          },
+          {
+            icon: "📊",
+            title: "Yields, ROI & Mortgage",
+            body: "Use the Yields tab for rental returns by community. The Mortgage tab calculates your monthly payment + all UAE transaction costs instantly.",
+            cta: "Next →"
+          },
+          {
+            icon: "🚀",
+            title: "You're All Set!",
+            body: userTier === "free" ? "You're on the Free plan. Upgrade to Pro for compare mode, full project details, PDF reports, and portfolio tracking — from AED 99/month." : "You have full Pro access. Explore everything — compare projects, track your portfolio, and download reports.",
+            cta: userTier === "free" ? "Explore Free Features" : "Start Exploring"
+          },
+        ];
+        const step = steps[onboardingStep];
+        return (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(16px)" }}>
+            <div style={{ background: T.surface, borderRadius: 24, border: `1px solid rgba(212,168,67,0.3)`, width: "min(480px,94vw)", padding: "40px 36px", textAlign: "center", position: "relative", boxShadow: "0 40px 100px rgba(0,0,0,0.7)" }}>
+              {/* Progress dots */}
+              <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28 }}>
+                {steps.map((_, i) => (
+                  <div key={i} style={{ width: i === onboardingStep ? 20 : 8, height: 8, borderRadius: 4, background: i === onboardingStep ? T.gold : T.border, transition: "all 0.3s" }} />
+                ))}
+              </div>
+              <div style={{ fontSize: 52, marginBottom: 16 }}>{step.icon}</div>
+              <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 14, lineHeight: 1.3 }}>{step.title}</h2>
+              <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, marginBottom: 32 }}>{step.body}</p>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                {onboardingStep > 0 && (
+                  <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "12px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>← Back</button>
+                )}
+                <button type="button" onClick={() => { if (onboardingStep < steps.length - 1) { setOnboardingStep(s => s + 1); } else { completeOnboarding(); } }} style={{ padding: "12px 28px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                  {step.cta}
+                </button>
+              </div>
+              <button type="button" onClick={completeOnboarding} style={{ marginTop: 16, background: "none", border: "none", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Skip tour</button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Upgrade Modal */}
       <UpgradeModal show={showUpgrade} onClose={() => setShowUpgrade(false)} />
