@@ -755,6 +755,8 @@ export default function EmaarDashboardV2() {
   const [projectPriceMax, setProjectPriceMax] = useState(20);
   const [liveProjects, setLiveProjects] = useState({});
   const [extraProjects, setExtraProjects] = useState([]);
+  const [liveYields, setLiveYields] = useState([]);
+  const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [expandedMega, setExpandedMega] = useState(null);
@@ -772,9 +774,11 @@ export default function EmaarDashboardV2() {
       setProjectsLoading(true);
       try {
         // Read from "projectData" (edits to existing) AND "projects" (new projects from admin)
-        const [pdSnap, npSnap] = await Promise.all([
+        const [pdSnap, npSnap, yieldSnap, roiSnap] = await Promise.all([
           getDocs(collection(db, "projectData")),
           getDocs(collection(db, "projects")),
+          getDocs(collection(db, "yieldData")),
+          getDocs(collection(db, "communityROI")),
         ]);
         const overrides = {};
         pdSnap.forEach(d => {
@@ -795,6 +799,25 @@ export default function EmaarDashboardV2() {
         const seen = new Set(extraFromOverrides.map(p => String(p.id)));
         const combined = [...extraFromOverrides, ...extraFromNew.filter(p => !seen.has(String(p.id)))];
         setExtraProjects(combined);
+
+        // Load live yield data (merges with static emaarYields)
+        if (yieldSnap.size > 0) {
+          const yieldOverrides = {};
+          yieldSnap.forEach(d => { yieldOverrides[d.id] = d.data(); });
+          const mergedYields = emaarYields.map(y => {
+            const key = `${y.community}_${y.unit}`;
+            const ov = yieldOverrides[key];
+            return ov ? { ...y, ...ov } : y;
+          }).map(y => ({ label: y.unit, community: y.community, rent: (y.rent||0)/1000, price: (y.price||0)/1000, gross: y.gross, net: y.net, demand: y.demand === "Very High" ? "V.High" : y.demand === "Moderate-High" ? "High" : y.demand, visa: y.visa }));
+          setLiveYields(mergedYields);
+        }
+
+        // Load live communityROI (merges with static)
+        if (roiSnap.size > 0) {
+          const roiOverrides = {};
+          roiSnap.forEach(d => { roiOverrides[d.id] = d.data(); });
+          setLiveCommunityROI(roiOverrides);
+        }
       } catch (e) { console.log("Firestore not available, using static data"); }
       setProjectsLoading(false);
     };
@@ -2029,7 +2052,7 @@ export default function EmaarDashboardV2() {
             <Section title="Rental Yield Analysis" sub="DLD Rental Index, Bayut, Property Finder · Launch prices">
               <Chart title="Gross Yield by Community & Unit Type (%)" style={{ marginTop: 16 }}>
                 <ResponsiveContainer width="100%" height={320}>
-                  <BarChart data={yields}>
+                  <BarChart data={liveYields.length > 0 ? liveYields : yields}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                     <XAxis dataKey="label" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} angle={-30} textAnchor="end" height={50} />
                     <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 7]} />
@@ -2045,7 +2068,7 @@ export default function EmaarDashboardV2() {
                       );
                     }} />
                     <Bar dataKey="gross" name="Gross Yield %" radius={[6, 6, 0, 0]} barSize={30}>
-                      {yields.map((y, i) => <Cell key={i} fill={y.demand === "V.High" ? T.gold : y.demand === "High" ? T.teal : T.blue} />)}
+                      {(liveYields.length > 0 ? liveYields : yields).map((y, i) => <Cell key={i} fill={y.demand === "V.High" ? T.gold : y.demand === "High" ? T.teal : T.blue} />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -2070,7 +2093,7 @@ export default function EmaarDashboardV2() {
                     </tr>
                   </thead>
                   <tbody>
-                    {yields.map((y, i) => (
+                    {(liveYields.length > 0 ? liveYields : yields).map((y, i) => (
                       <tr key={i} style={{ borderBottom: `1px solid ${T.border}` }} onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                         <td style={{ padding: "10px 10px", color: T.white, fontWeight: 500, fontSize: 12 }}>{y.community}</td>
                         <td style={{ padding: "10px 10px", color: T.textSecondary, fontSize: 12 }}>{y.label}</td>
@@ -2784,7 +2807,7 @@ export default function EmaarDashboardV2() {
 
               {/* ROI Estimate */}
               {(() => {
-                const roi = communityROI[selectedProject_.community];
+                const roi = liveCommunityROI[selectedProject_.community] || communityROI[selectedProject_.community];
                 if (!roi) return null;
                 const price = selectedProject_.price || 0;
                 const gross = roi.grossYield?.apt1 || roi.grossYield?.th || roi.grossYield?.villa || 0;
@@ -2835,12 +2858,32 @@ export default function EmaarDashboardV2() {
 
               {/* ROI Calculator */}
               {(() => {
-                const roi = communityROI[selectedProject_.community];
+                const roi = liveCommunityROI[selectedProject_.community] || communityROI[selectedProject_.community];
                 if (!roi) return null;
                 return (
                   <ProGate isPro={isPro} message="Unlock ROI Calculator" onUpgrade={() => setShowUpgrade(true)}>
                   <RoiCalculator project={selectedProject_} roi={roi} T={T} />
                   </ProGate>
+                );
+              })()}
+
+              {/* Price History */}
+              {(() => {
+                const ph = selectedProject_.priceHistory;
+                if (!ph || !Array.isArray(ph) || ph.length < 2) return null;
+                return (
+                  <div style={{ marginBottom: 16 }}>
+                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>📈 Price History</h3>
+                    <ResponsiveContainer width="100%" height={140}>
+                      <AreaChart data={ph}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                        <XAxis dataKey="date" tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000000).toFixed(1)}M`} />
+                        <Tooltip formatter={v => [`AED ${Number(v).toLocaleString()}`, "Price"]} contentStyle={{ background: T.surface, border: `1px solid ${T.gold}`, borderRadius: 8, fontSize: 11 }} />
+                        <Area type="monotone" dataKey="price" stroke={T.gold} fill="rgba(212,168,67,0.1)" strokeWidth={2} dot={{ r: 3, fill: T.gold }} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
                 );
               })()}
 
@@ -2888,6 +2931,7 @@ export default function EmaarDashboardV2() {
               {isPro ? (
               <div style={{ display: "flex", gap: 8 }}>
                 <a href={whatsappLink(selectedProject_.name, selectedProject_.community)} target="_blank" rel="noopener noreferrer"
+                  onClick={async () => { try { await setDoc(doc(db, "leads", Date.now().toString()), { name: userName || (user ? user.split("@")[0] : "Visitor"), email: user || "", project: selectedProject_.name, community: selectedProject_.community, source: "WhatsApp", status: "New", createdAt: new Date().toISOString() }); } catch(e) {} }}
                   style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "#25D366", borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                   WhatsApp
@@ -2903,6 +2947,18 @@ export default function EmaarDashboardV2() {
                       old_value: "N/A",
                       updated_at: new Date().toLocaleString("en-AE"),
                     }, "USkwUhp0csGCVDkdQ");
+                    // Save lead to Firestore for admin panel
+                    try {
+                      await setDoc(doc(db, "leads", Date.now().toString()), {
+                        name: userName || (user ? user.split("@")[0] : "Visitor"),
+                        email: user || "",
+                        project: selectedProject_.name,
+                        community: selectedProject_.community,
+                        source: "Email Inquiry",
+                        status: "New",
+                        createdAt: new Date().toISOString(),
+                      });
+                    } catch(le) { console.log("Lead save error:", le); }
                     alert("✅ Inquiry sent! We'll get back to you shortly.");
                   } catch(e) {
                     window.location.href = `mailto:mianwaleed689@gmail.com?subject=Inquiry: ${selectedProject_.name}&body=Hi, I'm interested in ${selectedProject_.name} at ${selectedProject_.community}.`;
