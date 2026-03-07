@@ -1368,6 +1368,7 @@ export default function EmaarDashboardV2() {
   const [extraProjects, setExtraProjects] = useState([]);
   const [liveYields, setLiveYields] = useState([]);
   const [emaarStockPrice, setEmaarStockPrice] = useState(null);
+  const [tabSettings, setTabSettings] = useState({});
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
@@ -1590,6 +1591,17 @@ export default function EmaarDashboardV2() {
       setAuthLoading(false);
     });
     return () => unsubscribe();
+  }, []);
+
+  // TAB SETTINGS — load from Firestore on mount
+  useEffect(() => {
+    const loadTabSettings = async () => {
+      try {
+        const snap = await getDoc(doc(db, "platformSettings", "tabs"));
+        if (snap.exists()) setTabSettings(snap.data());
+      } catch(e) {}
+    };
+    loadTabSettings();
   }, []);
 
   // PORTFOLIO FUNCTIONS
@@ -1936,12 +1948,29 @@ export default function EmaarDashboardV2() {
         <nav role="navigation" aria-label="Main navigation" style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 3, overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px", flexShrink: 0 }}>Emaar Properties</div>
           <div role="tablist" aria-label="Dashboard sections" style={{ display: "contents" }}>
-          {TABS.map(t => (
-            <button type="button" role="tab" aria-selected={tab === t.key} key={t.key} className={`sidebar-btn ${tab === t.key ? "active" : ""}`} onClick={() => handleTabChange(t.key)}>
-              {t.icon}
-              {t.key}
-            </button>
-          ))}
+          {TABS.filter(t => {
+            const s = tabSettings[t.key];
+            if (s && s.visible === false) return false;
+            return true;
+          }).map(t => {
+            const s = tabSettings[t.key] || {};
+            const minTier = s.minTier || "free";
+            const tierOrder = { free: 0, pro: 1, enterprise: 2 };
+            const userTierOrder = tierOrder[userTier] ?? (userTier === "admin" ? 3 : userTier === "pro_trial" ? 1 : 0);
+            const isLocked = tierOrder[minTier] > userTierOrder && userTier !== "admin";
+            return (
+              <button type="button" role="tab" aria-selected={tab === t.key} key={t.key}
+                className={`sidebar-btn ${tab === t.key ? "active" : ""}`}
+                onClick={() => isLocked ? setShowUpgrade(true) : handleTabChange(t.key)}
+                style={isLocked ? { opacity: 0.55 } : {}}
+                title={isLocked ? `Requires ${minTier} plan` : t.key}
+              >
+                {t.icon}
+                {t.key}
+                {isLocked && <span style={{ marginLeft: "auto", fontSize: 9, color: minTier === "enterprise" ? "#8B5CF6" : "#D4A843", fontWeight: 700, letterSpacing: 0.5 }}>{minTier === "enterprise" ? "ENT" : "PRO"}</span>}
+              </button>
+            );
+          })}
           </div>
           {userTier === "admin" && (
             <>

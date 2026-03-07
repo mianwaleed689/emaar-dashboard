@@ -333,6 +333,8 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [adminUser, setAdminUser] = useState(null);
   const [tab, setTab] = useState("overview");
+  const [tabSettings, setTabSettings] = useState({});
+  const [tabSettingsSaving, setTabSettingsSaving] = useState(false);
   const [users, setUsers] = useState([]);
   const [userSearch, setUserSearch] = useState("");
   const [tierFilter, setTierFilter] = useState("All");
@@ -1004,6 +1006,7 @@ export default function AdminPanel() {
     { id: "verification", label: "Verification", icon: I.verify },
     { id: "analytics", label: "Analytics", icon: I.analytics },
     { id: "digest", label: "Email Digest", icon: I.bell },
+    { id: "tabcontrol", label: "Tab Control", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="18" height="4" rx="1"/><line x1="7" y1="5" x2="7" y2="5"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="7" y1="19" x2="7" y2="19"/></svg> },
   ];
 
   /* ═══════════════════════════════════════
@@ -2889,6 +2892,197 @@ export default function AdminPanel() {
                 </div>
               </Section>
             </>
+            );
+          })()}
+
+          {tab === "tabcontrol" && (() => {
+            const ALL_TABS = [
+              "Overview", "Financials", "Projects", "Handover", "Launch Calendar",
+              "Neighbourhoods", "Service Charges", "STR vs LTR", "Developer Health",
+              "DLD Volumes", "DXB Estimate", "Portfolio", "Competitors", "Yields",
+              "Mortgage", "Map", "Risk", "Market", "Currency", "Golden Visa", "Flip"
+            ];
+
+            const TIERS = ["free", "pro", "enterprise"];
+            const TIER_COLORS = { free: T.textSecondary, pro: T.gold, enterprise: T.purple };
+            const TIER_LABELS = { free: "Free", pro: "Pro", enterprise: "Enterprise" };
+
+            const getTabSetting = (tabKey) => tabSettings[tabKey] || { visible: true, minTier: "free" };
+
+            const updateTabSetting = async (tabKey, field, value) => {
+              const current = getTabSetting(tabKey);
+              const updated = { ...tabSettings, [tabKey]: { ...current, [field]: value } };
+              setTabSettings(updated);
+              setTabSettingsSaving(true);
+              try {
+                await setDoc(doc(db, "platformSettings", "tabs"), updated);
+              } catch(e) { console.error("Failed to save tab settings", e); }
+              setTimeout(() => setTabSettingsSaving(false), 800);
+            };
+
+            const hiddenCount = ALL_TABS.filter(t => !getTabSetting(t).visible).length;
+            const proCount = ALL_TABS.filter(t => getTabSetting(t).minTier === "pro").length;
+            const entCount = ALL_TABS.filter(t => getTabSetting(t).minTier === "enterprise").length;
+
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+                {/* Header */}
+                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                    <div>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Tab Control</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Toggle visibility and access tier for each dashboard tab · Saved to Firestore instantly</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      {tabSettingsSaving && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: T.green }}>
+                          <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, animation: "pulse 1s infinite" }} />
+                          Saving…
+                        </div>
+                      )}
+                      <div style={{ fontSize: 11, color: T.textMuted, padding: "6px 12px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                        {hiddenCount} hidden · {proCount} Pro-locked · {entCount} Enterprise-locked
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Legend */}
+                  <div style={{ display: "flex", gap: 16, marginTop: 16, flexWrap: "wrap" }}>
+                    {[
+                      { color: T.green, label: "Visible to all" },
+                      { color: T.textMuted, label: "Hidden for all" },
+                      { color: T.gold, label: "Pro+ required" },
+                      { color: T.purple, label: "Enterprise only" },
+                    ].map(({ color, label }) => (
+                      <div key={label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: color }} />
+                        <span style={{ fontSize: 11, color: T.textMuted }}>{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tab rows */}
+                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                  <div style={{ padding: "12px 20px", borderBottom: `1px solid ${T.border}`, display: "grid", gridTemplateColumns: "1fr 100px 200px", gap: 12 }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Tab Name</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, textAlign: "center" }}>Visible</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, textAlign: "center" }}>Min. Tier Required</span>
+                  </div>
+                  {ALL_TABS.map((tabKey, i) => {
+                    const setting = getTabSetting(tabKey);
+                    const isVisible = setting.visible !== false;
+                    const minTier = setting.minTier || "free";
+                    return (
+                      <div key={tabKey} style={{
+                        display: "grid", gridTemplateColumns: "1fr 100px 200px", gap: 12,
+                        padding: "14px 20px",
+                        borderBottom: i < ALL_TABS.length - 1 ? `1px solid ${T.border}` : "none",
+                        background: isVisible ? "transparent" : "rgba(255,255,255,0.015)",
+                        transition: "background 0.2s",
+                        alignItems: "center"
+                      }}>
+                        {/* Tab name */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{
+                            width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
+                            background: !isVisible ? T.textMuted : minTier === "enterprise" ? T.purple : minTier === "pro" ? T.gold : T.green
+                          }} />
+                          <span style={{ fontSize: 13, fontWeight: 600, color: isVisible ? T.white : T.textMuted }}>{tabKey}</span>
+                        </div>
+
+                        {/* Toggle */}
+                        <div style={{ display: "flex", justifyContent: "center" }}>
+                          <button
+                            type="button"
+                            onClick={() => updateTabSetting(tabKey, "visible", !isVisible)}
+                            style={{
+                              width: 44, height: 24, borderRadius: 12,
+                              background: isVisible ? T.green : "rgba(255,255,255,0.1)",
+                              border: "none", cursor: "pointer", position: "relative", transition: "background 0.2s"
+                            }}
+                          >
+                            <div style={{
+                              position: "absolute", top: 3,
+                              left: isVisible ? 23 : 3,
+                              width: 18, height: 18, borderRadius: "50%",
+                              background: T.white, transition: "left 0.2s",
+                              boxShadow: "0 1px 4px rgba(0,0,0,0.3)"
+                            }} />
+                          </button>
+                        </div>
+
+                        {/* Tier selector */}
+                        <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
+                          {TIERS.map(tier => (
+                            <button
+                              key={tier}
+                              type="button"
+                              onClick={() => updateTabSetting(tabKey, "minTier", tier)}
+                              style={{
+                                padding: "4px 10px", borderRadius: 6, fontSize: 10, fontWeight: 600,
+                                cursor: "pointer", border: `1px solid ${minTier === tier ? TIER_COLORS[tier] : T.border}`,
+                                background: minTier === tier ? `${TIER_COLORS[tier]}18` : T.surfaceAlt,
+                                color: minTier === tier ? TIER_COLORS[tier] : T.textMuted,
+                                transition: "all 0.15s", fontFamily: "'Outfit', sans-serif"
+                              }}
+                            >{TIER_LABELS[tier]}</button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Quick actions */}
+                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 12 }}>Quick Actions</div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {[
+                      { label: "Show All Tabs", action: async () => {
+                          const updated = {};
+                          ALL_TABS.forEach(t => { updated[t] = { ...getTabSetting(t), visible: true }; });
+                          setTabSettings(updated);
+                          setTabSettingsSaving(true);
+                          await setDoc(doc(db, "platformSettings", "tabs"), updated);
+                          setTimeout(() => setTabSettingsSaving(false), 800);
+                        }, color: T.green },
+                      { label: "Lock All to Pro+", action: async () => {
+                          const updated = {};
+                          ALL_TABS.forEach(t => {
+                            if (!["Overview","Projects","Handover"].includes(t))
+                              updated[t] = { ...getTabSetting(t), minTier: "pro" };
+                          });
+                          const final = { ...tabSettings, ...updated };
+                          setTabSettings(final);
+                          setTabSettingsSaving(true);
+                          await setDoc(doc(db, "platformSettings", "tabs"), final);
+                          setTimeout(() => setTabSettingsSaving(false), 800);
+                        }, color: T.gold },
+                      { label: "Reset All to Default", action: async () => {
+                          const updated = {};
+                          ALL_TABS.forEach(t => { updated[t] = { visible: true, minTier: "free" }; });
+                          setTabSettings(updated);
+                          setTabSettingsSaving(true);
+                          await setDoc(doc(db, "platformSettings", "tabs"), updated);
+                          setTimeout(() => setTabSettingsSaving(false), 800);
+                        }, color: T.textMuted },
+                    ].map(({ label, action, color }) => (
+                      <button key={label} type="button" onClick={action} style={{
+                        padding: "8px 16px", borderRadius: 8, fontSize: 11, fontWeight: 600,
+                        cursor: "pointer", border: `1px solid ${color}40`,
+                        background: `${color}10`, color,
+                        fontFamily: "'Outfit', sans-serif", transition: "all 0.15s"
+                      }}>{label}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ fontSize: 11, color: T.textMuted, padding: "10px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
+                  💡 Changes take effect immediately for all users. Hidden tabs are invisible in the sidebar. Tier-locked tabs show an upgrade prompt to free users.
+                </div>
+              </div>
             );
           })()}
 
