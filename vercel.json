@@ -7,6 +7,9 @@
   ],
   "rewrites": [
     { "source": "/dubai-rental-yields-2025", "destination": "/dubai-rental-yields-2025.html" },
-    { "source": "/dubai-real-estate-investment-2025", "destination": "/dubai-real-estate-investment-2025.html" }
+    { "source": "/dubai-real-estate-investment-2025", "destination": "/dubai-real-estate-investment-2025.html" },
+    { "source": "/terms", "destination": "/terms.html" },
+    { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/refund", "destination": "/refund.html" }
   ]
 }
