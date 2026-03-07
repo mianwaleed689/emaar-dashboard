@@ -1519,10 +1519,12 @@ export default function EmaarDashboardV2() {
 
     // ── Load Price Alerts for logged-in user ──
     if (isLoggedIn && user) {
-      try {
-        const alertSnap = await getDoc(doc(db, "priceAlerts", user));
-        if (alertSnap.exists()) setMyAlerts(alertSnap.data().alerts || []);
-      } catch(e) {}
+      (async () => {
+        try {
+          const alertSnap = await getDoc(doc(db, "priceAlerts", user));
+          if (alertSnap.exists()) setMyAlerts(alertSnap.data().alerts || []);
+        } catch(e) {}
+      })();
     }
 
     // ── Load AI Insights (weekly cache in Firestore) ──
