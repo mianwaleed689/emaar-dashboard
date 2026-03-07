@@ -1312,6 +1312,25 @@ const DataBadge = ({ source, date, type = "dld" }) => {
 };
 
 const TabSources = ({ sources }) => (
+  <div style={{
+    marginTop: 28,
+    padding: "12px 16px",
+    background: "rgba(255,255,255,0.025)",
+    border: "1px solid rgba(255,255,255,0.07)",
+    borderRadius: 12,
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 10,
+    flexWrap: "wrap"
+  }}>
+    <span style={{
+      fontSize: 9,
+      fontWeight: 700,
+      color: "rgba(212,168,67,0.7)",
+      letterSpacing: 1.2,
+      textTransform: "uppercase",
+      paddingTop: 2,
+      flexShrink: 0
     }}>Sources</span>
     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
       {sources.map((s, i) => (

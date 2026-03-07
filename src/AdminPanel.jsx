@@ -490,7 +490,7 @@ export default function AdminPanel() {
 
   useEffect(() => { if (isAdmin) fetchAuditLog(); }, [isAdmin, fetchAuditLog]);
 
- = async (v) => {
+  const approveVerification = async (v) => {
     if (!window.confirm(`⚠️ APPROVE VERIFICATION\n\nUser: ${v.name || v.email}\nLevel: ${v.level || "Basic"}\n\nThis will:\n• Mark this user as verified\n• Update their profile with a verified badge\n• They can access verified-tier features\n\nContinue?`)) return;
     try {
       await setDoc(doc(db, "verifications", v.id), { status: "approved", reviewedAt: new Date().toISOString(), reviewedBy: adminUser?.email || "admin" }, { merge: true });
