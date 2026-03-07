@@ -2242,11 +2242,6 @@ export default function AdminPanel() {
           )}
 
           {/* ═══════════════════════════════════════
-             PROJECT MANAGER TAB (embedded)
-             ═══════════════════════════════════════ */}
-          {tab === "projects" && <ProjectManager embedded />}
-
-          {/* ═══════════════════════════════════════
              LEADS TAB
              ═══════════════════════════════════════ */}
           {tab === "leads" && (
