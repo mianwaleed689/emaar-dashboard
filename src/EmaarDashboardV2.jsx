@@ -4276,17 +4276,30 @@ export default function EmaarDashboardV2() {
               const [selectedProjectId, setSelectedProjectId] = React.useState("");
               const [propPrice, setPropPrice] = React.useState(2000000);
               const [downPct, setDownPct] = React.useState(20);
-              const [rate, setRate] = React.useState(4.99); // EIBOR 3M + avg 1.52% spread
-              const [liveEibor, setLiveEibor] = React.useState(null);
+              // EIBOR rates — updated from CBUAE (Feb 27, 2026)
+              const EIBOR_RATES = { on: 3.473, "1w": 3.577, "1m": 3.635, "3m": 3.593, "6m": 3.676, "1y": 3.674, asOf: "27 Feb 2026" };
+              const BANK_SPREAD = 1.50; // typical UAE bank spread over 3M EIBOR
+              const [rate, setRate] = React.useState(parseFloat((EIBOR_RATES["3m"] + BANK_SPREAD).toFixed(2)));
+              const [liveEibor, setLiveEibor] = React.useState(EIBOR_RATES);
+              const [eiborSource, setEiborSource] = React.useState("CBUAE · " + EIBOR_RATES.asOf);
               React.useEffect(() => {
-                // Fetch live EIBOR from UAE Central Bank proxy
-                fetch("https://v6.exchangerate-api.com/v6/60dc1d50c587d667a41d415d/latest/AED")
+                // Try UAE Central Bank live data endpoint
+                fetch("https://centralbank.ae/umbraco/Surface/Eibor/GetEiborData")
                   .then(r => r.json())
                   .then(data => {
-                    // API is live - set EIBOR indicator as live
-                    setLiveEibor(true);
+                    if (data && data.length > 0) {
+                      const latest = data[0];
+                      const e3m = parseFloat(latest.ThreeMonths || latest["3M"] || EIBOR_RATES["3m"]);
+                      const e1m = parseFloat(latest.OneMonth || latest["1M"] || EIBOR_RATES["1m"]);
+                      const e6m = parseFloat(latest.SixMonths || latest["6M"] || EIBOR_RATES["6m"]);
+                      const e1y = parseFloat(latest.OneYear || latest["1Y"] || EIBOR_RATES["1y"]);
+                      const rates = { "1m": e1m, "3m": e3m, "6m": e6m, "1y": e1y, asOf: "Live · CBUAE" };
+                      setLiveEibor(rates);
+                      setEiborSource("Live · UAE Central Bank");
+                      setRate(parseFloat((e3m + BANK_SPREAD).toFixed(2)));
+                    }
                   })
-                  .catch(() => setLiveEibor(false));
+                  .catch(() => {}); // use hardcoded fallback silently
               }, []); // eslint-disable-line react-hooks/exhaustive-deps
               const [years, setYears] = React.useState(25);
               const [isUAENational, setIsUAENational] = React.useState(false);
@@ -4359,6 +4372,36 @@ export default function EmaarDashboardV2() {
 
               return (
                 <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+                  {/* EIBOR Live Rate Card */}
+                  <div style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(59,130,246,0.08) 100%)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 16, padding: "18px 22px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 6px #10B981" }} />
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "#10B981", letterSpacing: 1, textTransform: "uppercase" }}>EIBOR · {eiborSource}</span>
+                        </div>
+                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Emirates Interbank Offered Rate · UAE Central Bank benchmark</div>
+                        <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                          {[["1M", liveEibor?.["1m"]], ["3M", liveEibor?.["3m"]], ["6M", liveEibor?.["6m"]], ["1Y", liveEibor?.["1y"]]].map(([label, val]) => (
+                            <div key={label} style={{ textAlign: "center" }}>
+                              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 2 }}>{label}</div>
+                              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: label === "3M" ? "#10B981" : T.white }}>{val ? val.toFixed(3) : "—"}%</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 12, padding: "12px 16px", textAlign: "center", minWidth: 140 }}>
+                        <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>3M EIBOR + {BANK_SPREAD}% spread</div>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: "#10B981" }}>{(liveEibor?.["3m"] + BANK_SPREAD).toFixed(2)}%</div>
+                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>Typical variable rate</div>
+                        <button type="button" onClick={() => setRate(parseFloat((liveEibor?.["3m"] + BANK_SPREAD).toFixed(2)))}
+                          style={{ marginTop: 8, padding: "4px 12px", borderRadius: 6, background: "rgba(16,185,129,0.2)", border: "1px solid rgba(16,185,129,0.3)", color: "#10B981", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          Apply to Calculator ↓
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
                   {/* Project picker */}
                   <div style={{ background: T.surface, borderRadius: 16, border: "1px solid " + T.border, padding: 20 }}>
@@ -4452,7 +4495,7 @@ export default function EmaarDashboardV2() {
                 </Section>
               )}
 
-              <TabSources sources={[{ label: "CBUAE — UAE Base Rate", url: "https://www.cbuae.gov.ae" }, { label: "EIBOR 3M: 3.47% (Dec 2025)" }, { label: "DLD Fee Schedule (4%)", url: "https://dubailand.gov.ae" }, { label: "UAE Mortgage Law (No. 14 of 2008)" }, { label: "Property Finder Mortgage Rates", url: "https://www.propertyfinder.ae" }]} />
+              <TabSources sources={[{ label: "CBUAE — UAE Base Rate", url: "https://www.cbuae.gov.ae" }, { label: "EIBOR 3M: 3.593% (Feb 2026) · CBUAE", url: "https://www.centralbank.ae/en/forex-eibor/eibor-rates/" }, { label: "DLD Fee Schedule (4%)", url: "https://dubailand.gov.ae" }, { label: "UAE Mortgage Law (No. 14 of 2008)" }, { label: "Property Finder Mortgage Rates", url: "https://www.propertyfinder.ae" }]} />
               </>
             );
           })()}
