@@ -16,7 +16,7 @@ const landingCss = `
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: ${T.bg}; overflow-x: hidden; }
   
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); pointer-events: none; } to { opacity: 1; transform: translateY(0); pointer-events: auto; } }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
   @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
@@ -216,7 +216,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         <div className="landing-hero-glow" />
         <div className="landing-grid-bg" />
         
-        <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 800, animation: "fadeUp 0.8s ease-out" }}>
+        <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 800, animation: "fadeUp 0.8s ease-out forwards", pointerEvents: "auto" }}>
           <div style={{ display: "inline-block", padding: "6px 16px", borderRadius: 20, background: T.goldGlow, border: `1px solid ${T.border}`, marginBottom: 24 }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: T.gold, letterSpacing: 1 }}>DUBAI'S FIRST REAL ESTATE INTELLIGENCE PLATFORM</span>
           </div>
