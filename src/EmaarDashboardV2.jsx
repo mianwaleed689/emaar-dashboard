@@ -1367,6 +1367,14 @@ export default function EmaarDashboardV2() {
   const [liveProjects, setLiveProjects] = useState({});
   const [extraProjects, setExtraProjects] = useState([]);
   const [liveYields, setLiveYields] = useState([]);
+  const [liveDevHealth, setLiveDevHealth] = useState([]);
+  const [liveDLDVolumes, setLiveDLDVolumes] = useState([]);
+  const [liveSTRData, setLiveSTRData] = useState([]);
+  const [liveServiceCharges, setLiveServiceCharges] = useState([]);
+  const [liveCompetitors, setLiveCompetitors] = useState([]);
+  const [liveMortgageRates, setLiveMortgageRates] = useState([]);
+  const [liveNeighbourhoods, setLiveNeighbourhoods] = useState([]);
+  const [liveMarketData, setLiveMarketData] = useState([]);
   const [emaarStockPrice, setEmaarStockPrice] = useState(null);
   const [tabSettings, setTabSettings] = useState({});
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
@@ -1448,6 +1456,26 @@ export default function EmaarDashboardV2() {
           roiSnap.forEach(d => { roiOverrides[d.id] = d.data(); });
           setLiveCommunityROI(roiOverrides);
         }
+
+        // ── Load all tabData collections (set by admin Tab Control) ──
+        const tabCollections = [
+          { key: "developerHealth", setter: setLiveDevHealth },
+          { key: "dldVolumes",      setter: setLiveDLDVolumes },
+          { key: "strLtrData",      setter: setLiveSTRData },
+          { key: "serviceCharges",  setter: setLiveServiceCharges },
+          { key: "competitorData",  setter: setLiveCompetitors },
+          { key: "mortgageRates",   setter: setLiveMortgageRates },
+          { key: "neighbourhoodScores", setter: setLiveNeighbourhoods },
+          { key: "marketData",      setter: setLiveMarketData },
+        ];
+        await Promise.all(tabCollections.map(async ({ key, setter }) => {
+          try {
+            const snap = await getDoc(doc(db, "tabData", key));
+            if (snap.exists() && snap.data().rows?.length > 0) {
+              setter(snap.data().rows);
+            }
+          } catch(e) {}
+        }));
       } catch (e) { console.log("Firestore not available, using static data"); }
       setProjectsLoading(false);
     };
@@ -3282,7 +3310,7 @@ export default function EmaarDashboardV2() {
 
           {/* ─── STR VS LTR YIELD TAB ─── */}
           {tab === "STR vs LTR" && (() => {
-            const strData = [
+            const strDataStatic = [
               // Source: DTCM Dubai 2025, Property Monitor, DLD Rental Index, industry estimates
               // Dubai STR avg gross: ~8% | LTR avg: 6.9% | DTCM permit: AED 1,520/yr | Mgmt: 15–20%
               { community: "Emaar Beachfront", ltr: 6.8, str: 9.8, strOcc: 76, avgNight: 780, units: 42, demand: "Very High", notes: "Beachfront access drives strong STR demand. DLD data shows consistent high rental values. Winter peak season Oct–Apr essential for returns." },
@@ -3293,6 +3321,18 @@ export default function EmaarDashboardV2() {
               { community: "The Valley", ltr: 6.4, str: 6.9, strOcc: 55, avgNight: 420, units: 6, demand: "Low-Mod", notes: "Young community maturing. Affordable entry prices (avg AED 1.72M). LTR yield competitive at 6.4% as infrastructure grows. STR limited by distance from tourist zones." },
               { community: "The Oasis", ltr: 4.8, str: 8.4, strOcc: 65, avgNight: 1150, units: 12, demand: "High", notes: "Ultra-luxury lagoon villas. HNWI short-stay market. Limited supply drives strong nightly rates. LTR yield modest vs purchase price (AED 4M+), but STR ROI compelling." },
             ];
+            const strData = liveSTRData.length > 0
+              ? liveSTRData.map(d => ({
+                  community: d.community,
+                  ltr: parseFloat(d.ltrYield) || 0,
+                  str: parseFloat(d.strYield) || 0,
+                  strOcc: parseInt(d.occupancy) || 0,
+                  avgNight: parseInt(d.avgNightly) || 0,
+                  units: 0,
+                  demand: d.verdict || "—",
+                  notes: d.verdict || ""
+                }))
+              : strDataStatic;
             const filtered = strCommunity === "All" ? strData : strData.filter(d => d.community === strCommunity);
             const maxStr = Math.max(...strData.map(d => d.str));
             return (
@@ -3393,7 +3433,19 @@ export default function EmaarDashboardV2() {
 
           {/* ─── DEVELOPER HEALTH SCORE TAB ─── */}
           {tab === "Developer Health" && (() => {
-            const devData = [
+            const devData = liveDevHealth.length > 0
+              ? liveDevHealth.map(d => ({
+                  name: d.developer || d.name || "Unknown",
+                  revenue: parseFloat(d.revenue) || 0,
+                  profit: parseFloat(d.profit) || 0,
+                  backlog: parseFloat(d.backlog) || 0,
+                  score: parseFloat(d.score) || 50,
+                  ticker: d.developer || d.name || "",
+                  deliveries: 0, projects: 0, debtEquity: 0, cashFlow: 0,
+                  margin: 0, deliveryRecord: 0, listed: false,
+                  color: T.gold, notes: d.rating || "",
+                }))
+              : [
               { name: "Emaar Properties", ticker: "EMAAR", revenue: 49.6, profit: 25.7, backlog: 155, deliveries: 11000, projects: 48, debtEquity: 0.11, cashFlow: 30.5, margin: 52, deliveryRecord: 96, score: 95, color: T.gold, listed: true, notes: "AED 80.4B property sales in 2025 — highest ever. Revenue up 40%, net profit up 36%. AED 155B backlog = 3–4yr revenue visibility. S&P BBB+, Moody's Baa1." },
               { name: "DAMAC Properties", ticker: "DAMAC", revenue: 21.8, profit: 7.6, backlog: 65, deliveries: 7400, projects: 38, debtEquity: 0.38, cashFlow: 8.4, margin: 35, deliveryRecord: 79, score: 72, color: "#3B82F6", listed: false, notes: "AED 32B estimated FY2025 sales. Went private 2025. Aggressive branded-luxury pipeline. DAMAC Lagoons, Hills 2 driving volume. Chelsea FC sponsorship deal secured." },
               { name: "Nakheel / Dubai Holding", ticker: "NAKHEEL", revenue: 17.2, profit: 6.8, backlog: 48, deliveries: 4600, projects: 24, debtEquity: 0.22, cashFlow: 7.4, margin: 40, deliveryRecord: 83, score: 79, color: "#10B981", listed: false, notes: "State-owned. AED 13B in sales by Aug 2025. Palm Jumeirah, Dubai Islands, Palm Jebel Ali. Part of Dubai Holding since Mar 2024. Government-backed balance sheet." },
@@ -3494,7 +3546,7 @@ export default function EmaarDashboardV2() {
 
           {/* ─── DLD TRANSACTION VOLUMES TAB ─── */}
           {tab === "DLD Volumes" && (() => {
-            const dldData = [
+            const dldDataStatic = [
               // Source: Dubai Land Department FY2025 official data via DXB Interact & Gulf News Jan 2026
               // Total Dubai market: 214,912 sales transactions, AED 682.5B value
               { community: "Business Bay", q1: 5810, q2: 7420, q3: 7140, q4: 9580, total: 29950, avgPrice: 1279000, yoy: +22, type: "Apartments", topDev: "Various" },
@@ -3508,6 +3560,17 @@ export default function EmaarDashboardV2() {
               { community: "Arabian Ranches III", q1: 240, q2: 310, q3: 280, q4: 370, total: 1200, avgPrice: 2540000, yoy: +18, type: "Townhouses", topDev: "Emaar" },
               { community: "The Valley", q1: 190, q2: 250, q3: 220, q4: 310, total: 970, avgPrice: 1720000, yoy: +41, type: "Townhouses", topDev: "Emaar" },
             ];
+            const dldData = liveDLDVolumes.length > 0
+              ? liveDLDVolumes.map(d => ({
+                  community: d.community,
+                  total: parseInt(d.deals) || 0,
+                  avgPrice: parseInt(d.avgPrice) || 0,
+                  yoy: parseFloat(d.yoyChange) || 0,
+                  q1: Math.round((parseInt(d.deals)||0)*0.22), q2: Math.round((parseInt(d.deals)||0)*0.26),
+                  q3: Math.round((parseInt(d.deals)||0)*0.25), q4: Math.round((parseInt(d.deals)||0)*0.27),
+                  type: "Mixed", topDev: "Various"
+                }))
+              : dldDataStatic;
             const filtered = dldCommunity === "All" ? dldData : dldData.filter(d => d.community === dldCommunity);
             const sorted = [...filtered].sort((a, b) => b.total - a.total);
             const maxTotal = Math.max(...dldData.map(d => d.total));
@@ -4037,7 +4100,7 @@ export default function EmaarDashboardV2() {
 
           {/* ─── NEIGHBOURHOODS TAB ─── */}
           {tab === "Neighbourhoods" && (() => {
-            const neighbourhoods = [
+            const neighbourhoodsStatic = [
               { name: "Dubai Hills Estate", maturity: 88, rentalDemand: 94, strPotential: 72, infrastructure: 95, schools: 92, transport: 78, retail: 90, appreciation: 82, serviceCharge: 18, visa: true, type: "Master-planned suburb", tagline: "Dubai's most complete community", color: "#10B981" },
               { name: "Dubai Creek Harbour", maturity: 65, rentalDemand: 85, strPotential: 88, infrastructure: 82, schools: 60, transport: 72, retail: 75, appreciation: 90, serviceCharge: 22, visa: true, type: "Waterfront district", tagline: "The new Downtown — cheaper entry", color: T.gold },
               { name: "Emaar Beachfront", maturity: 70, rentalDemand: 92, strPotential: 96, infrastructure: 85, schools: 45, transport: 68, retail: 72, appreciation: 85, serviceCharge: 28, visa: true, type: "Beachfront enclave", tagline: "Highest STR yields in portfolio", color: "#3B82F6" },
@@ -4046,6 +4109,22 @@ export default function EmaarDashboardV2() {
               { name: "The Valley", maturity: 45, rentalDemand: 65, strPotential: 48, infrastructure: 60, schools: 72, transport: 52, retail: 58, appreciation: 82, serviceCharge: 12, visa: false, type: "Emerging suburb", tagline: "High upside, early stage", color: "#06B6D4" },
               { name: "The Oasis", maturity: 30, rentalDemand: 72, strPotential: 65, infrastructure: 55, schools: 40, transport: 48, retail: 45, appreciation: 95, serviceCharge: 20, visa: true, type: "Ultra-luxury", tagline: "Highest appreciation potential", color: "#EF4444" },
             ];
+            const neighbourhoods = liveNeighbourhoods.length > 0
+              ? liveNeighbourhoods.map(d => ({
+                  name: d.community,
+                  maturity: 70,
+                  rentalDemand: parseInt(d.rentalDemand) || 80,
+                  strPotential: 70,
+                  infrastructure: parseInt(d.infraRating?.replace('/5','') || 3) * 20,
+                  schools: 70, transport: 75, retail: 70,
+                  appreciation: parseInt(d.priceGrowth) || 70,
+                  serviceCharge: 18,
+                  visa: true,
+                  type: d.recommended || "Mixed",
+                  tagline: d.recommended || "",
+                  color: T.gold
+                }))
+              : neighbourhoodsStatic;
             const scoreBar = (val, color) => (
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.surfaceAlt, overflow: "hidden" }}>
@@ -4123,7 +4202,7 @@ export default function EmaarDashboardV2() {
 
           {/* ─── SERVICE CHARGES TAB ─── */}
           {tab === "Service Charges" && (() => {
-            const scData = [
+            const scDataStatic = [
               { community: "Downtown Dubai", type: "Apartment", low: 28, high: 38, avg: 32, rera: true, notes: "Burj Khalifa zone highest at AED 38. Older towers closer to AED 28." },
               { community: "Emaar Beachfront", type: "Apartment", low: 24, high: 32, avg: 28, rera: true, notes: "Sea-facing units attract premium SC due to beach maintenance." },
               { community: "Dubai Creek Harbour", type: "Apartment", low: 18, high: 26, avg: 22, rera: true, notes: "New builds with efficient infrastructure. SC expected to rise as community matures." },
@@ -4135,6 +4214,17 @@ export default function EmaarDashboardV2() {
               { community: "Address Residences", type: "Branded Apt", low: 38, high: 55, avg: 46, rera: true, notes: "Branded residences command highest SC. Hotel services included in fee." },
               { community: "Vida Residences", type: "Branded Apt", low: 30, high: 42, avg: 36, rera: true, notes: "Vida brand properties. Includes access to hotel amenities." },
             ];
+            const scData = liveServiceCharges.length > 0
+              ? liveServiceCharges.map(d => ({
+                  community: d.community,
+                  type: "Apartment",
+                  low: parseFloat(d.chargePerSqft) * 0.85 || 0,
+                  high: parseFloat(d.chargePerSqft) * 1.15 || 0,
+                  avg: parseFloat(d.chargePerSqft) || 0,
+                  rera: true,
+                  notes: `${d.community} · AED ${d.totalFor1BR || 0}/yr for 1BR · AED ${d.totalFor2BR || 0}/yr for 2BR`
+                }))
+              : scDataStatic;
             const maxSC = Math.max(...scData.map(d => d.high));
             const sorted = [...scData].sort((a, b) => scSort === "avg" ? b.avg - a.avg : scSort === "community" ? a.community.localeCompare(b.community) : b.high - a.high);
             return (
@@ -4963,7 +5053,7 @@ export default function EmaarDashboardV2() {
           {tab === "Market" && <>
             <Section title="Dubai Real Estate — 2025" sub="Official DLD Data · 5th Consecutive Record Year">
               <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 16 }}>
-                {dubaiMarket.map((m, i) => <KPI key={i} label={m.metric} value={m.val2025} sub={m.yoy} delay={Math.min(i + 1, 8)} onClick={() => setSelectedKPI({ label: m.metric, value: m.val2025, color: T.gold, description: `${m.metric} — Official DLD data for 2025. Dubai's 5th consecutive record year.`, source: "Dubai Land Department 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "2025 Value", value: m.val2025, note: "Record year" }, { label: "YoY Change", value: m.yoy, note: "vs 2024" }, { label: "2024 Value", value: m.val2024 || "—", note: "Prior year" }], trend: null })} />)}
+                {(liveMarketData.length > 0 ? liveMarketData.map(d => ({ metric: d.metric, val2025: d.value, yoy: d.change, val2024: "" })) : dubaiMarket).map((m, i) => <KPI key={i} label={m.metric} value={m.val2025} sub={m.yoy} delay={Math.min(i + 1, 8)} onClick={() => setSelectedKPI({ label: m.metric, value: m.val2025, color: T.gold, description: `${m.metric} — Official DLD data for 2025. Dubai's 5th consecutive record year.`, source: "Dubai Land Department 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "2025 Value", value: m.val2025, note: "Record year" }, { label: "YoY Change", value: m.yoy, note: "vs 2024" }, { label: "2024 Value", value: m.val2024 || "—", note: "Prior year" }], trend: null })} />)}
               </div>
             </Section>
 
