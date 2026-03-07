@@ -3129,11 +3129,19 @@ export default function EmaarDashboardV2() {
               const eligible = propPrice >= THRESHOLD;
               const gap = Math.max(0, THRESHOLD - propPrice);
 
-              const govFees = Math.round(propPrice * 0.04 + 580 + 4020 + 2000);
-              const visaFee = 3780 + 1220;
+              // Nationality actually changes real numbers:
+              // UAE/GCC nationals: 15% min down payment (vs 20% for expats)
+              // UAE nationals: already have residency — visa not needed
+              const minDownPct = (nationality === "uae" || nationality === "gcc") ? 15 : 20;
+              const isAlreadyResident = nationality === "uae";
+              const dldExemption = nationality === "uae"; // UAE nationals get DLD fee discounts on select projects
+
+              const govFees = Math.round(propPrice * (dldExemption ? 0.02 : 0.04) + 580 + 4020 + 2000);
+              const visaFee = isAlreadyResident ? 0 : 3780 + 1220;
+              const downPayment = Math.round(propPrice * (minDownPct / 100));
               const totalUpfront = paymentPlan === "cash"
                 ? propPrice + govFees + visaFee
-                : Math.round(propPrice * 0.20) + govFees + visaFee;
+                : downPayment + govFees + visaFee;
 
               const qualifyingProjects = activeProjects.filter(p => (p.price || 0) >= THRESHOLD).sort((a, b) => (a.price || 0) - (b.price || 0));
               const nearProjects = activeProjects.filter(p => { const pr = p.price || 0; return pr >= 1500000 && pr < THRESHOLD; }).sort((a, b) => (a.price || 0) - (b.price || 0));
@@ -3190,7 +3198,13 @@ export default function EmaarDashboardV2() {
                               <button key={v} type="button" onClick={() => setPaymentPlan(v)} style={{ flex: 1, padding: "9px 0", borderRadius: 8, border: "1px solid " + (paymentPlan === v ? T.gold : T.border), background: paymentPlan === v ? "rgba(212,168,67,0.12)" : T.surfaceAlt, color: paymentPlan === v ? T.gold : T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>{l}</button>
                             ))}
                           </div>
-                          {paymentPlan === "mortgage" && <div style={{ marginTop: 8, padding: "8px 12px", borderRadius: 8, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)", fontSize: 11, color: T.blue }}>Note: For mortgage purchases, the property must be fully paid off (title deed clear) for Golden Visa eligibility.</div>}
+                          {paymentPlan === "mortgage" && (
+                            <div style={{ marginTop: 8, padding: "8px 12px", borderRadius: 8, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)", fontSize: 11, color: T.blue }}>
+                              {nationality === "uae" || nationality === "gcc"
+                                ? "UAE/GCC nationals: minimum " + minDownPct + "% down payment required by UAE Central Bank rules."
+                                : "Expats: minimum 20% down payment. Property must be fully paid off (title deed clear) for Golden Visa eligibility."}
+                            </div>
+                          )}
                         </div>
 
                         <div>
@@ -3206,10 +3220,14 @@ export default function EmaarDashboardV2() {
                       {/* Result card */}
                       <div style={{ background: eligible ? "linear-gradient(135deg,rgba(16,185,129,0.1),rgba(16,185,129,0.04))" : "linear-gradient(135deg,rgba(239,68,68,0.1),rgba(239,68,68,0.04))", borderRadius: 14, border: "1px solid " + (eligible ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"), padding: 20 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                          <div style={{ fontSize: 28 }}>{eligible ? "✅" : "❌"}</div>
+                          <div style={{ fontSize: 28 }}>{isAlreadyResident ? "🇦🇪" : eligible ? "✅" : "❌"}</div>
                           <div>
-                            <div style={{ fontSize: 15, fontWeight: 700, color: eligible ? T.green : "#EF4444" }}>{eligible ? "You Qualify for the Golden Visa!" : "Not Eligible Yet"}</div>
-                            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{eligible ? "Your investment meets the AED 2M threshold" : "AED " + gap.toLocaleString() + " more needed to qualify"}</div>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: isAlreadyResident ? T.gold : eligible ? T.green : "#EF4444" }}>
+                              {isAlreadyResident ? "You Already Have UAE Residency" : eligible ? "You Qualify for the Golden Visa!" : "Not Eligible Yet"}
+                            </div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
+                              {isAlreadyResident ? "As a UAE National, you can still use this investment to sponsor family members for Golden Visa" : eligible ? "Your investment meets the AED 2M threshold" : "AED " + gap.toLocaleString() + " more needed to qualify"}
+                            </div>
                           </div>
                         </div>
 
@@ -3228,11 +3246,11 @@ export default function EmaarDashboardV2() {
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                           {[
                             ["Property Value", "AED " + propPrice.toLocaleString(), eligible ? T.green : T.gold],
-                            ["Threshold", "AED 2,000,000", T.textPrimary],
-                            ["DLD Fees (4%)", "AED " + Math.round(propPrice * 0.04).toLocaleString(), T.textSecondary],
-                            ["Gov + Visa Fees", "AED " + (govFees - Math.round(propPrice * 0.04) + visaFee).toLocaleString(), T.textSecondary],
+                            ["Min Down Payment", minDownPct + "% = AED " + downPayment.toLocaleString(), T.teal],
+                            ["DLD Fees", (dldExemption ? "2%" : "4%") + " = AED " + Math.round(propPrice * (dldExemption ? 0.02 : 0.04)).toLocaleString(), T.textSecondary],
+                            ["Visa Fees", isAlreadyResident ? "Not required" : "AED " + visaFee.toLocaleString(), isAlreadyResident ? T.textMuted : T.textSecondary],
                             ["Total Day-1 Cost", "AED " + totalUpfront.toLocaleString(), T.gold],
-                            ["Visa Duration", "10 Years", T.teal],
+                            ["Visa Duration", isAlreadyResident ? "N/A (citizen)" : "10 Years", T.teal],
                           ].map(([l, v, c]) => (
                             <div key={l} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: "10px 12px" }}>
                               <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 3 }}>{l}</div>
