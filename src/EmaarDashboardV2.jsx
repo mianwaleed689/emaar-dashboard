@@ -3604,7 +3604,7 @@ export default function EmaarDashboardV2() {
                   const fetchBayutListings = async () => {
                     setBayutLoading(true); setBayutError(false);
                     try {
-                      const cacheKey = "bayut_" + community.replace(/ /g, "_").toLowerCase() + "_" + propType + "_" + beds;
+                      const cacheKey = "bayut2_" + community.replace(/ /g, "_").toLowerCase() + "_" + propType + "_" + beds;
                       try {
                         const cacheRef = doc(db, "bayutCache", cacheKey);
                         const cacheSnap = await getDoc(cacheRef);
@@ -3615,7 +3615,9 @@ export default function EmaarDashboardV2() {
                         }
                       } catch(cacheErr) {}
                       const bedsParam = beds === "Studio" ? "0" : beds.replace("BR","");
-                      const url = `https://unofficial-bayut-api.p.rapidapi.com/search?locationExternalIDs=5002&purpose=for-sale&categoryExternalID=${propType === "Apartment" ? "4" : "16"}&bathsMin=1&lang=en&sort=price-asc&page=0&hitsPerPage=6&roomsMin=${bedsParam}&roomsMax=${bedsParam}`;
+                      // Use Bayut search endpoint with community name query
+                      const searchQuery = encodeURIComponent(community);
+                      const url = `https://unofficial-bayut-api.p.rapidapi.com/search?query=${searchQuery}&purpose=for-sale&categoryExternalID=${propType === "Apartment" ? "4" : "16"}&lang=en&sort=price-asc&page=0&hitsPerPage=6&roomsMin=${bedsParam}&roomsMax=${bedsParam}`;
                       const res = await fetch(url, {
                         headers: {
                           "x-rapidapi-key": "420de140camsh35f3baf70380d11p1e0c92jsn00005ba30591",
@@ -3623,15 +3625,17 @@ export default function EmaarDashboardV2() {
                         }
                       });
                       const data = await res.json();
-                      const listings = (data?.hits || []).slice(0, 6).map(h => ({
-                        id: h.externalID,
+                      // Handle both hits array and direct results
+                      const rawListings = data?.hits || data?.properties || data?.results || [];
+                      const listings = rawListings.slice(0, 6).map(h => ({
+                        id: h.externalID || h.id || Math.random(),
                         price: h.price,
-                        area: h.area,
-                        ppsf: h.area > 0 ? Math.round(h.price / h.area) : 0,
-                        beds: h.rooms,
-                        baths: h.baths,
-                        location: h.location?.[2]?.name || community,
-                        url: `https://www.bayut.com/property/details-${h.externalID}.html`,
+                        area: h.area || h.size,
+                        ppsf: (h.area || h.size) > 0 ? Math.round(h.price / (h.area || h.size)) : 0,
+                        beds: h.rooms || h.bedrooms,
+                        baths: h.baths || h.bathrooms,
+                        location: h.location?.[2]?.name || h.location?.[1]?.name || community,
+                        url: `https://www.bayut.com/property/details-${h.externalID || h.id}.html`,
                       }));
                       setBayutListings(listings);
                       try {
