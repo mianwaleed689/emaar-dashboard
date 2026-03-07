@@ -1057,7 +1057,7 @@ export default function EmaarDashboardV2() {
   const [myPortfolio, setMyPortfolio] = useState([]);
   const [showAddPortfolio, setShowAddPortfolio] = useState(null);
   const [portfolioForm, setPortfolioForm] = useState({ units: 1, investedAmount: "", purchaseDate: "", unitType: "1BR", notes: "" });
-  const [editHoldingIdx, setEditHoldingIdx] = useState(null);
+  const [editHoldingIdx, setEditHoldingIdx] = React.useState(null);
 
   // Watchlist
   const [watchlist, setWatchlist] = useState([]);
@@ -1067,6 +1067,11 @@ export default function EmaarDashboardV2() {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Price Alerts
+  const [myAlerts, setMyAlerts] = React.useState([]);
+  const [showSetAlert, setShowSetAlert] = React.useState(null);
+  const [alertForm, setAlertForm] = React.useState({ type: "price_below", value: "" });
 
   // Onboarding
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -1348,6 +1353,53 @@ export default function EmaarDashboardV2() {
     notify(isWatched ? `Removed ${project.name} from watchlist` : `⭐ ${project.name} added to watchlist`);
   };
 
+  // PRICE ALERTS - Load from Firestore
+  React.useEffect(() => {
+    if (!isLoggedIn || !auth.currentUser) return;
+    getDoc(doc(db, "priceAlerts", auth.currentUser.uid)).then(snap => {
+      if (snap.exists()) setMyAlerts(snap.data().alerts || []);
+    }).catch(() => {});
+  }, [isLoggedIn]);
+
+  const saveAlerts = async (alerts) => {
+    setMyAlerts(alerts);
+    if (auth.currentUser) {
+      try { await setDoc(doc(db, "priceAlerts", auth.currentUser.uid), { alerts, updatedAt: new Date().toISOString() }); } catch(e) {}
+    }
+  };
+
+  const addAlert = () => {
+    if (!showSetAlert || !alertForm.value) return;
+    const p = showSetAlert;
+    const newAlert = { id: Date.now().toString(), projectId: p.id, projectName: p.name, community: p.community, type: alertForm.type, value: Number(alertForm.value), createdAt: new Date().toISOString(), triggered: false };
+    saveAlerts([...myAlerts, newAlert]);
+    setShowSetAlert(null);
+    setAlertForm({ type: "price_below", value: "" });
+    notify("Alert set for " + p.name);
+  };
+
+  const removeAlert = (id) => { saveAlerts(myAlerts.filter(a => a.id !== id)); notify("Alert removed"); };
+
+  // Check alerts vs live data on load
+  React.useEffect(() => {
+    if (!myAlerts.length || !activeProjects.length) return;
+    const hits = myAlerts.filter(a => {
+      if (a.triggered) return false;
+      const p = activeProjects.find(x => x.id === a.projectId);
+      if (!p) return false;
+      const comm = emaarCommunities.find(c => c.name === p.community);
+      if (a.type === "price_below" && p.price && p.price <= a.value) return true;
+      if (a.type === "price_above" && p.price && p.price >= a.value) return true;
+      if (a.type === "yield_above" && comm && comm.avgYield >= a.value) return true;
+      if (a.type === "construction_above" && p.construction >= a.value) return true;
+      return false;
+    });
+    if (hits.length) {
+      saveAlerts(myAlerts.map(a => hits.find(h => h.id === a.id) ? { ...a, triggered: true } : a));
+      hits.forEach(a => notify("Alert triggered: " + a.projectName));
+    }
+  }, [myAlerts, activeProjects]);
+
   // NOTIFICATIONS
   useEffect(() => {
     if (!isLoggedIn || !auth.currentUser) return;
@@ -1399,22 +1451,17 @@ export default function EmaarDashboardV2() {
 
   const addToPortfolio = () => {
     if (!showAddPortfolio || !portfolioForm.investedAmount) return;
+    const existing = myPortfolio.find(h => h.projectId === showAddPortfolio.id && h.unitType === portfolioForm.unitType);
     let updated;
-    if (editHoldingIdx !== null) {
-      updated = myPortfolio.map((h, idx) => idx === editHoldingIdx ? { ...h, units: portfolioForm.units, investedAmount: Number(portfolioForm.investedAmount), purchaseDate: portfolioForm.purchaseDate || h.purchaseDate, unitType: portfolioForm.unitType, notes: portfolioForm.notes } : h);
-      setEditHoldingIdx(null);
-      notify("\u2705 Investment updated!");
+    if (existing) {
+      updated = myPortfolio.map(h => h.projectId === showAddPortfolio.id && h.unitType === portfolioForm.unitType ? { ...h, units: h.units + portfolioForm.units, investedAmount: h.investedAmount + Number(portfolioForm.investedAmount) } : h);
     } else {
-      const existing = myPortfolio.find(h => h.projectId === showAddPortfolio.id && h.unitType === portfolioForm.unitType);
-      if (existing)
-        updated = myPortfolio.map(h => h.projectId === showAddPortfolio.id && h.unitType === portfolioForm.unitType ? { ...h, units: h.units + portfolioForm.units, investedAmount: h.investedAmount + Number(portfolioForm.investedAmount) } : h);
-      else
-        updated = [...myPortfolio, { projectId: showAddPortfolio.id, units: portfolioForm.units, investedAmount: Number(portfolioForm.investedAmount), purchaseDate: portfolioForm.purchaseDate || new Date().toISOString().slice(0,10), unitType: portfolioForm.unitType, notes: portfolioForm.notes }];
-      notify("\u2705 Added to portfolio!");
+      updated = [...myPortfolio, { projectId: showAddPortfolio.id, units: portfolioForm.units, investedAmount: Number(portfolioForm.investedAmount), purchaseDate: portfolioForm.purchaseDate || new Date().toISOString().slice(0,10), unitType: portfolioForm.unitType, notes: portfolioForm.notes }];
     }
     savePortfolio(updated);
     setShowAddPortfolio(null);
     setPortfolioForm({ units: 1, investedAmount: "", purchaseDate: "", unitType: "1BR", notes: "" });
+    notify("\u2705 Added to portfolio!");
   };
 
   const removeFromPortfolio = (pid, ut) => {
@@ -2215,6 +2262,9 @@ export default function EmaarDashboardV2() {
                     <button type="button" onClick={(e) => { e.stopPropagation(); isPro ? toggleCompare(p) : setShowUpgrade(true); }} style={{ padding: "8px 10px", background: !isPro ? "rgba(212,168,67,0.05)" : compareList.find(x=>x.id===p.id) ? T.goldGlow : T.surfaceAlt, border: `1px solid ${!isPro ? T.border : compareList.find(x=>x.id===p.id) ? T.gold : T.border}`, borderRadius: 8, color: !isPro ? T.textMuted : compareList.find(x=>x.id===p.id) ? T.gold : T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
                       {!isPro ? "🔒" : compareList.find(x=>x.id===p.id) ? "✓" : "⊕"}
                     </button>
+                    <button type="button" title={myAlerts.find(a => a.projectId === p.id && !a.triggered) ? "Alert active" : "Set Price Alert"} onClick={(e) => { e.stopPropagation(); if (!isPro) { setShowUpgrade(true); return; } setShowSetAlert(p); setAlertForm({ type: "price_below", value: p.price ? p.price.toString() : "" }); }} style={{ padding: "8px 10px", background: myAlerts.find(a => a.projectId === p.id && !a.triggered) ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${myAlerts.find(a => a.projectId === p.id && !a.triggered) ? T.gold : T.border}`, borderRadius: 8, color: myAlerts.find(a => a.projectId === p.id && !a.triggered) ? T.gold : T.textMuted, fontSize: 13, cursor: "pointer" }}>
+                      {myAlerts.find(a => a.projectId === p.id && !a.triggered) ? "🔔" : "🔕"}
+                    </button>
                   </div>
                   </div>{/* end padding wrapper */}
                 </div>
@@ -2343,203 +2393,57 @@ export default function EmaarDashboardV2() {
           {tab === "Portfolio" && <>
 
             {/* MY INVESTMENTS TRACKER */}
-            <Section title="My Investments" sub={myPortfolio.length > 0 ? `${myPortfolio.length} holding${myPortfolio.length > 1 ? "s" : ""}` : "Track your Emaar investments"}>
-              {myPortfolio.length > 0 ? (() => {
-                const COLORS = [T.gold, T.teal, T.blue, "#A78BFA", "#F472B6", "#34D399", "#FB923C", "#60A5FA"];
-                const totalInvested = myPortfolio.reduce((s,h) => s+(h.investedAmount||0), 0);
-                const totalProjected = myPortfolio.reduce((s,h) => {
-                  const p = activeProjects.find(x => x.id === h.projectId);
-                  const ppsf = p ? p.ppsf : 2500;
-                  const appr = ppsf > 2500 ? 1.15 : ppsf > 2000 ? 1.20 : 1.25;
-                  return s + (h.investedAmount||0) * appr;
-                }, 0);
-                const totalGain = totalProjected - totalInvested;
-                const totalUnits = myPortfolio.reduce((s,h) => s+(h.units||0), 0);
-                const weightedYield = myPortfolio.reduce((s,h) => {
-                  const p = activeProjects.find(x => x.id === h.projectId);
-                  const comm = p ? emaarCommunities.find(c => c.name === p.community) : null;
-                  return s + (comm ? comm.avgYield : 5) * (h.investedAmount||0);
-                }, 0) / (totalInvested || 1);
-                const totalAnnualRent = myPortfolio.reduce((s,h) => {
-                  const p = activeProjects.find(x => x.id === h.projectId);
-                  const comm = p ? emaarCommunities.find(c => c.name === p.community) : null;
-                  const yld = comm ? comm.avgYield : 5;
-                  return s + (h.investedAmount||0) * (yld/100) * (h.units||1);
-                }, 0);
-
-                // Allocation by community
-                const byComm = {};
-                myPortfolio.forEach(h => {
-                  const p = activeProjects.find(x => x.id === h.projectId);
-                  if (!p) return;
-                  byComm[p.community] = (byComm[p.community]||0) + (h.investedAmount||0);
-                });
-                const pieData = Object.entries(byComm).map(([name, val]) => ({ name, value: val }));
-
-                const exportPortfolioPDF = () => {
-                  const rows = myPortfolio.map(h => {
+            <Section title="My Investments" sub={myPortfolio.length > 0 ? `${myPortfolio.length} holdings` : "Track your Emaar investments"}>
+              {myPortfolio.length > 0 ? <>
+                <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
+                  <KPI label="Total Invested" value={`AED ${(myPortfolio.reduce((s,h) => s+(h.investedAmount||0), 0)/1e6).toFixed(2)}M`} sub={`${myPortfolio.length} holdings`} delay={1} />
+                  <KPI label="Projected Value" value={`AED ${(myPortfolio.reduce((s,h) => { const p = activeProjects.find(x => x.id === h.projectId); const ppsf = p ? p.ppsf : 2500; const appr = ppsf > 2500 ? 1.15 : ppsf > 2000 ? 1.20 : 1.25; return s + (h.investedAmount||0) * appr; }, 0)/1e6).toFixed(2)}M`} sub="15-25% appreciation" delay={2} />
+                  <KPI label="Avg Yield" value={`${(myPortfolio.reduce((s,h) => { const p = activeProjects.find(x => x.id === h.projectId); const comm = p ? emaarCommunities.find(c => c.name === p.community) : null; return s + (comm ? comm.avgYield : 5); }, 0) / (myPortfolio.length || 1)).toFixed(1)}%`} sub="Across portfolio" delay={3} />
+                  <KPI label="Total Units" value={myPortfolio.reduce((s,h) => s+(h.units||0), 0)} sub="Properties" delay={4} />
+                </div>
+                <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
+                  <button type="button" onClick={() => setShowAddPortfolio(true)} style={{ padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>+ Add Investment</button>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, marginTop: 12 }}>
+                  {myPortfolio.map((h, i) => {
                     const p = activeProjects.find(x => x.id === h.projectId);
-                    if (!p) return "";
+                    if (!p) return null;
                     const appr = p.ppsf > 2500 ? 1.15 : p.ppsf > 2000 ? 1.20 : 1.25;
-                    const proj = (h.investedAmount * appr / 1e6).toFixed(2);
-                    const gain = ((appr-1)*100).toFixed(0);
-                    return "<tr><td>" + p.name + "</td><td>" + p.community + "</td><td>" + h.unitType + "</td><td>" + h.units + "</td><td>AED " + (h.investedAmount/1e6).toFixed(2) + "M</td><td>AED " + proj + "M</td><td>+" + gain + "%</td><td>" + p.handover + "</td></tr>";
-                  }).join("");
-                  const w = window.open("","_blank");
-                  w.document.write("<html><head><title>DXB Analytics - My Portfolio</title><style>body{font-family:Georgia,serif;background:#fff;color:#111;padding:40px}h1{font-size:26px;color:#1a1a1a}h2{font-size:14px;color:#666;font-weight:normal;margin-top:4px}table{width:100%;border-collapse:collapse;margin-top:24px}th{background:#D4A843;color:#fff;padding:10px 12px;text-align:left;font-size:11px;letter-spacing:1px}td{padding:10px 12px;border-bottom:1px solid #e8e8e8;font-size:12px}.summary{display:flex;gap:24px;margin:24px 0;flex-wrap:wrap}.stat{background:#f8f8f8;border-radius:8px;padding:16px 20px}.stat-label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px}.stat-value{font-size:22px;font-weight:700;color:#D4A843;margin-top:4px}.footer{margin-top:32px;font-size:10px;color:#aaa;border-top:1px solid #e8e8e8;padding-top:12px}</style></head><body>");
-                  w.document.write("<h1>My Investment Portfolio</h1><h2>DXB Analytics · " + new Date().toLocaleDateString("en-GB", {day:"numeric",month:"long",year:"numeric"}) + "</h2>");
-                  w.document.write("<div class='summary'><div class='stat'><div class='stat-label'>Total Invested</div><div class='stat-value'>AED " + (totalInvested/1e6).toFixed(2) + "M</div></div><div class='stat'><div class='stat-label'>Projected Value</div><div class='stat-value'>AED " + (totalProjected/1e6).toFixed(2) + "M</div></div><div class='stat'><div class='stat-label'>Total Gain</div><div class='stat-value'>+AED " + (totalGain/1e6).toFixed(2) + "M</div></div><div class='stat'><div class='stat-label'>Weighted Yield</div><div class='stat-value'>" + weightedYield.toFixed(1) + "%</div></div><div class='stat'><div class='stat-label'>Annual Rent Est.</div><div class='stat-value'>AED " + (totalAnnualRent/1e3).toFixed(0) + "K</div></div></div>");
-                  w.document.write("<table><thead><tr><th>Project</th><th>Community</th><th>Type</th><th>Units</th><th>Invested</th><th>Projected</th><th>Gain</th><th>Handover</th></tr></thead><tbody>" + rows + "</tbody></table>");
-                  w.document.write("<div class='footer'>Generated by DXB Analytics · dxb-analytics.vercel.app · Projections are estimates based on historical appreciation. Not financial advice.</div></body></html>");
-                  w.document.close(); w.print();
-                };
-
-                return <>
-                  {/* KPI Summary Row */}
-                  <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                    <KPI label="Total Invested" value={"AED " + (totalInvested/1e6).toFixed(2) + "M"} sub={totalUnits + " unit" + (totalUnits>1?"s":"")} delay={1} />
-                    <KPI label="Projected Value" value={"AED " + (totalProjected/1e6).toFixed(2) + "M"} sub={"+" + ((totalGain/totalInvested)*100).toFixed(1) + "% appreciation"} delay={2} />
-                    <KPI label="Total Gain" value={"+" + (totalGain/1e6).toFixed(2) + "M"} sub="AED · At handover" delay={3} />
-                    <KPI label="Weighted Yield" value={weightedYield.toFixed(1) + "%"} sub="Est. annual rental yield" delay={4} />
-                    <KPI label="Annual Rent Est." value={"AED " + (totalAnnualRent/1e3).toFixed(0) + "K"} sub="Gross rental income" delay={5} />
-                    <KPI label="Holdings" value={myPortfolio.length} sub={myPortfolio.length + " project" + (myPortfolio.length>1?"s":"")} delay={6} />
-                  </div>
-
-                  {/* Charts Row */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr", gap: 16, marginTop: 20 }}>
-                    {/* Allocation Donut */}
-                    <div className="chart-box" style={{ padding: 20 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>Allocation by Community</div>
-                      <ResponsiveContainer width="100%" height={180}>
-                        <PieChart>
-                          <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value" stroke="none">
-                            {pieData.map((_, idx) => <Cell key={idx} fill={COLORS[idx % COLORS.length]} />)}
-                          </Pie>
-                          <Tooltip formatter={(v) => "AED " + (v/1e6).toFixed(2) + "M"} contentStyle={{ background: T.surface, border: "1px solid " + T.border, borderRadius: 8, fontSize: 11 }} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
-                        {pieData.map((d, idx) => (
-                          <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 10 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS[idx % COLORS.length], flexShrink: 0 }} />
-                              <span style={{ color: T.textSecondary }}>{d.name}</span>
-                            </div>
-                            <span style={{ color: T.white, fontWeight: 700 }}>{((d.value/totalInvested)*100).toFixed(0)}%</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Handover Timeline */}
-                    <div className="chart-box" style={{ padding: 20 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>Handover Timeline</div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                        {[...myPortfolio].sort((a,b) => {
-                          const pa = activeProjects.find(x=>x.id===a.projectId);
-                          const pb = activeProjects.find(x=>x.id===b.projectId);
-                          return (pa?.handover||"").localeCompare(pb?.handover||"");
-                        }).map((h, idx) => {
-                          const p = activeProjects.find(x => x.id === h.projectId);
-                          if (!p) return null;
-                          const cd = getHandoverCountdown(p.handover);
-                          const totalMonths = 60;
-                          const pct = cd ? Math.max(5, Math.min(100, 100 - (cd.months||0)/totalMonths*100)) : 100;
-                          const barColor = cd ? (cd.passed ? "#10B981" : cd.urgent ? "#EF4444" : cd.months<=12 ? T.gold : T.teal) : "#10B981";
-                          return (
-                            <div key={idx}>
-                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, fontSize: 10 }}>
-                                <span style={{ color: T.white, fontWeight: 600 }}>{p.name}</span>
-                                <span style={{ color: cd ? (cd.passed ? "#10B981" : cd.color) : "#10B981", fontWeight: 700 }}>{p.handover} {cd ? (cd.passed ? "✓" : "⏱ "+cd.label) : ""}</span>
-                              </div>
-                              <div style={{ height: 6, borderRadius: 3, background: T.surfaceAlt }}>
-                                <div style={{ height: "100%", borderRadius: 3, background: barColor, width: pct+"%", transition: "width 0.6s ease" }} />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Bar */}
-                  <div style={{ marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>{myPortfolio.length} investment{myPortfolio.length>1?"s":""} · AED {(totalInvested/1e6).toFixed(2)}M total</div>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button type="button" onClick={exportPortfolioPDF} style={{ padding: "8px 16px", background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Export PDF</button>
-                      <button type="button" onClick={() => setShowAddPortfolio(true)} style={{ padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>+ Add Investment</button>
-                    </div>
-                  </div>
-
-                  {/* Holdings Cards */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, marginTop: 12 }}>
-                    {myPortfolio.map((h, i) => {
-                      const p = activeProjects.find(x => x.id === h.projectId);
-                      if (!p) return null;
-                      const appr = p.ppsf > 2500 ? 1.15 : p.ppsf > 2000 ? 1.20 : 1.25;
-                      const projected = h.investedAmount * appr;
-                      const gainAmt = projected - h.investedAmount;
-                      const gainPct = ((appr - 1) * 100).toFixed(0);
-                      const comm = emaarCommunities.find(c => c.name === p.community);
-                      const yld = comm ? comm.avgYield : 5;
-                      const annualRent = h.investedAmount * (yld/100);
-                      const cd = getHandoverCountdown(p.handover);
-                      return (
-                        <div key={i} className="chart-box fade-up" style={{ padding: 16, animationDelay: `${i*0.03}s`, position: "relative" }}>
-                          {/* Edit button */}
-                          <button type="button" onClick={() => { setEditHoldingIdx(i); setShowAddPortfolio(p); setPortfolioForm({ units: h.units, investedAmount: h.investedAmount.toString(), purchaseDate: h.purchaseDate||"", unitType: h.unitType, notes: h.notes||"" }); }} style={{ position: "absolute", top: 12, right: 12, background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 6, color: T.textMuted, fontSize: 10, padding: "3px 8px", cursor: "pointer" }}>Edit</button>
-
-                          <div style={{ marginBottom: 10, paddingRight: 48 }}>
+                    const projected = h.investedAmount * appr;
+                    const gain = ((appr - 1) * 100).toFixed(0);
+                    return (
+                      <div key={i} className="chart-box fade-up" style={{ padding: 16, animationDelay: `${i*0.03}s` }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                          <div>
                             <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 700, color: T.white }}>{p.name}</div>
-                            <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{p.community} · {h.unitType} · {h.units} unit{h.units>1?"s":""}</div>
-                          </div>
-
-                          {/* Main metrics grid */}
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
-                            <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
-                              <div style={{ fontSize: 9, color: T.textMuted }}>INVESTED</div>
-                              <div style={{ fontSize: 14, fontWeight: 700, color: T.gold }}>AED {(h.investedAmount/1e6).toFixed(2)}M</div>
-                            </div>
-                            <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
-                              <div style={{ fontSize: 9, color: T.textMuted }}>PROJECTED VALUE</div>
-                              <div style={{ fontSize: 14, fontWeight: 700, color: T.green }}>AED {(projected/1e6).toFixed(2)}M</div>
-                            </div>
-                            <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
-                              <div style={{ fontSize: 9, color: T.textMuted }}>CAPITAL GAIN</div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: T.green }}>+AED {(gainAmt/1e3).toFixed(0)}K <span style={{ fontSize: 10, color: T.green }}>(+{gainPct}%)</span></div>
-                            </div>
-                            <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
-                              <div style={{ fontSize: 9, color: T.textMuted }}>ANNUAL RENT EST.</div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: T.teal }}>AED {(annualRent/1e3).toFixed(0)}K <span style={{ fontSize: 10, color: T.textMuted }}>{yld}% yield</span></div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                              <span style={{ fontSize: 10, color: T.textMuted }}>{p.community} · {h.unitType} · {h.units} unit{h.units > 1 ? "s" : ""}</span>
+                              {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 4, fontWeight: 600 }}>{getLinkLabel(p.emaarUrl)}</a>}
                             </div>
                           </div>
-
-                          {/* Tags */}
-                          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
-                            <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: T.surfaceAlt, color: T.textMuted }}>{p.handover}</span>
-                            {cd && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, background: cd.passed ? "rgba(16,185,129,0.1)" : cd.urgent ? "rgba(239,68,68,0.1)" : "rgba(212,168,67,0.08)" }}>{cd.passed ? "✓ Ready" : "⏱ " + cd.label}</span>}
-                            <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: T.surfaceAlt, color: T.textMuted }}>AED {p.ppsf}/sqft</span>
-                            {p.branded && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "rgba(212,168,67,0.12)", color: T.gold }}>{p.brand}</span>}
-                          </div>
-
-                          {/* Construction bar */}
-                          {p.construction > 0 && <div style={{ marginBottom: 8 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: T.textMuted, marginBottom: 3 }}><span>Construction</span><span>{p.construction}%</span></div>
-                            <div style={{ height: 4, borderRadius: 2, background: T.surfaceAlt }}>
-                              <div style={{ height: "100%", borderRadius: 2, background: p.construction >= 70 ? T.green : p.construction >= 30 ? T.gold : T.teal, width: p.construction+"%" }} />
-                            </div>
-                          </div>}
-
-                          {h.notes && <div style={{ fontSize: 10, color: T.textMuted, fontStyle: "italic", marginBottom: 8 }}>{h.notes}</div>}
-                          {h.purchaseDate && <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 8 }}>Purchased: {new Date(h.purchaseDate).toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" })}</div>}
-
-                          <button type="button" onClick={() => removeFromPortfolio(h.projectId, h.unitType)} style={{ background: "none", border: "none", color: "rgba(239,68,68,0.5)", fontSize: 10, cursor: "pointer", padding: 0 }}>Remove</button>
+                          <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 700 }}>+{gain}%</span>
                         </div>
-                      );
-                    })}
-                  </div>
-                </>;
-              })() : <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+                          <div><div style={{ fontSize: 9, color: T.textMuted }}>INVESTED</div><div style={{ fontSize: 14, fontWeight: 700, color: T.gold }}>AED {(h.investedAmount/1e6).toFixed(2)}M</div></div>
+                          <div><div style={{ fontSize: 9, color: T.textMuted }}>PROJECTED</div><div style={{ fontSize: 14, fontWeight: 700, color: T.green }}>AED {(projected/1e6).toFixed(2)}M</div></div>
+                        </div>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+                          <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: T.surfaceAlt, color: T.textMuted }}>{p.handover}</span>
+                          {(() => { const cd = getHandoverCountdown(p.handover); return cd ? <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, background: cd.passed ? "rgba(16,185,129,0.1)" : cd.urgent ? "rgba(239,68,68,0.1)" : "rgba(212,168,67,0.08)" }}>{cd.passed ? "\u2713 Ready" : "\u23F1 " + cd.label}</span> : null; })()}
+                          <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: T.surfaceAlt, color: T.textMuted }}>AED {p.ppsf}/sqft</span>
+                          {p.branded && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "rgba(212,168,67,0.12)", color: T.gold }}>{p.brand}</span>}
+                        </div>
+                        {h.notes && <div style={{ fontSize: 10, color: T.textMuted, fontStyle: "italic", marginBottom: 6 }}>{h.notes}</div>}
+                        {p.construction > 0 && <div style={{ marginBottom: 6 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: T.textMuted, marginBottom: 3 }}><span>Construction</span><span>{p.construction}%</span></div>
+                          <div style={{ height: 4, borderRadius: 2, background: T.surfaceAlt }}><div style={{ height: "100%", borderRadius: 2, background: T.teal, width: `${p.construction}%` }} /></div>
+                        </div>}
+                        <button type="button" onClick={() => removeFromPortfolio(h.projectId, h.unitType)} style={{ marginTop: 4, background: "none", border: "none", color: T.textMuted, fontSize: 10, cursor: "pointer", padding: 0 }}>Remove</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </> : <div style={{ textAlign: "center", padding: "40px 20px" }}>
                 <div style={{ fontSize: 48, marginBottom: 12 }}>📊</div>
                 <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800, color: T.white, marginBottom: 8 }}>Start Tracking Your Investments</div>
                 <div style={{ fontSize: 12, color: T.textMuted, maxWidth: 360, margin: "0 auto 16px", lineHeight: 1.6 }}>Add your Emaar property investments to track performance, projected returns, and portfolio allocation.</div>
@@ -4146,9 +4050,9 @@ export default function EmaarDashboardV2() {
       {/* ADD INVESTMENT MODAL */}
       {showAddPortfolio && <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowAddPortfolio(null)}>
         <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 520, maxHeight: "90vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={() => { setShowAddPortfolio(null); setEditHoldingIdx(null); setPortfolioForm({ units: 1, investedAmount: "", purchaseDate: "", unitType: "1BR", notes: "" }); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"\u2715"}</button>
+          <button type="button" onClick={() => setShowAddPortfolio(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"\u2715"}</button>
           <div style={{ padding: "24px 28px 16px", borderBottom: `1px solid ${T.border}` }}>
-            <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{typeof showAddPortfolio === "object" ? (editHoldingIdx !== null ? "Edit Investment" : "Investment Details") : "Select Project"}</h2>
+            <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{typeof showAddPortfolio === "object" ? "Investment Details" : "Select Project"}</h2>
             <p style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{typeof showAddPortfolio === "object" ? showAddPortfolio.name + " \u00b7 " + showAddPortfolio.community : "Choose from 48 Emaar projects"}</p>
           </div>
           <div style={{ padding: "16px 28px 28px" }}>
@@ -4201,14 +4105,55 @@ export default function EmaarDashboardV2() {
               </div>
               <div style={{ display: "flex", gap: 10 }}>
                 <button type="button" onClick={() => setShowAddPortfolio(true)} style={{ flex: 1, padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{"\u2190 Back"}</button>
-                <button type="button" onClick={addToPortfolio} style={{ flex: 2, padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{editHoldingIdx !== null ? "Save Changes" : "Add to Portfolio"}</button>
+                <button type="button" onClick={addToPortfolio} style={{ flex: 2, padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Add to Portfolio</button>
               </div>
             </>}
           </div>
         </div>
       </div>}
 
-      {/* CHECKOUT PAYMENT MODAL */}
+      {/* SET ALERT MODAL */}
+      {showSetAlert && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowSetAlert(null)}>
+          <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "min(440px,95vw)", padding: "28px 28px 24px", position: "relative" }} onClick={e => e.stopPropagation()}>
+            <button type="button" onClick={() => setShowSetAlert(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Price Alert</div>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{showSetAlert.name}</div>
+              <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{showSetAlert.community} · {showSetAlert.type}</div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, fontWeight: 600 }}>ALERT TYPE</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  {[["price_below","Price drops below",""], ["price_above","Price rises above",""], ["yield_above","Yield crosses",""], ["construction_above","Construction hits",""]].map(([val, label]) => (
+                    <button key={val} type="button" onClick={() => setAlertForm(f => ({ ...f, type: val, value: val === "yield_above" ? "7" : val === "construction_above" ? "80" : (showSetAlert.price||"").toString() }))} style={{ padding: "10px 12px", borderRadius: 10, border: `1px solid ${alertForm.type === val ? T.gold : T.border}`, background: alertForm.type === val ? "rgba(212,168,67,0.12)" : T.surfaceAlt, color: alertForm.type === val ? T.gold : T.textSecondary, fontSize: 11, fontWeight: alertForm.type === val ? 700 : 400, cursor: "pointer", textAlign: "left", fontFamily: "'Outfit', sans-serif" }}>{label}</button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, fontWeight: 600 }}>{alertForm.type === "yield_above" ? "YIELD THRESHOLD (%)" : alertForm.type === "construction_above" ? "CONSTRUCTION % TARGET" : "PRICE TARGET (AED)"}</div>
+                <input type="number" value={alertForm.value} onChange={e => setAlertForm(f => ({ ...f, value: e.target.value }))} placeholder={alertForm.type === "yield_above" ? "e.g. 7" : alertForm.type === "construction_above" ? "e.g. 80" : showSetAlert.price ? showSetAlert.price.toString() : "Enter amount"} style={{ width: "100%", padding: "12px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 14, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }} />
+                {alertForm.type.includes("price") && alertForm.value && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>AED {(Number(alertForm.value)/1e6).toFixed(2)}M {alertForm.type === "price_below" ? "below" : "above"} current AED {(showSetAlert.price/1e6).toFixed(2)}M</div>}
+              </div>
+              {myAlerts.filter(a => a.projectId === showSetAlert.id).length > 0 && (
+                <div style={{ padding: "10px 12px", background: "rgba(212,168,67,0.06)", borderRadius: 8, border: "1px solid rgba(212,168,67,0.2)" }}>
+                  <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, marginBottom: 6 }}>EXISTING ALERTS</div>
+                  {myAlerts.filter(a => a.projectId === showSetAlert.id).map(a => (
+                    <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, color: T.textMuted, marginBottom: 3 }}>
+                      <span>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "✓ Triggered" : "⏳ Watching"}</span>
+                      <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: "rgba(239,68,68,0.6)", cursor: "pointer", fontSize: 12, padding: 0 }}>Remove</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button type="button" onClick={addAlert} disabled={!alertForm.value} style={{ width: "100%", padding: "13px 0", background: alertForm.value ? `linear-gradient(135deg, ${T.gold}, #B8912F)` : T.surfaceAlt, color: alertForm.value ? T.bg : T.textMuted, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: alertForm.value ? "pointer" : "not-allowed", fontFamily: "'Outfit', sans-serif" }}>Set Alert</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CHECKOUT PAYMENT MODAL */}}
       {showCheckout && <div role="dialog" aria-modal="true" aria-label="Upgrade checkout" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.95)", zIndex: 3100, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)" }} onClick={() => { setShowCheckout(null); setCheckoutStep(1); }}>
         <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 480, position: "relative", overflow: "hidden" }} onClick={e => e.stopPropagation()}>
           <button type="button" onClick={() => { setShowCheckout(null); setCheckoutStep(1); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"\u2715"}</button>
@@ -4409,11 +4354,27 @@ export default function EmaarDashboardV2() {
             <button type="button" onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>✕</button>
           </div>
           <div style={{ overflowY: "auto", flex: 1 }}>
+            {isPro && myAlerts.filter(a => !a.triggered).length > 0 && (
+              <div style={{ padding: "10px 16px", borderBottom: `1px solid ${T.border}`, background: "rgba(212,168,67,0.04)" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Active Alerts ({myAlerts.filter(a => !a.triggered).length})</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {myAlerts.map(a => (
+                    <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: a.triggered ? "rgba(16,185,129,0.08)" : T.surfaceAlt, borderRadius: 8, padding: "8px 10px", border: `1px solid ${a.triggered ? "rgba(16,185,129,0.2)" : T.border}` }}>
+                      <div>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: a.triggered ? "#10B981" : T.white }}>{a.projectName}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "✓ Triggered" : "⏳ Watching"}</div>
+                      </div>
+                      <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "0 4px" }}>×</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {notifications.length === 0 ? (
               <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
                 <div style={{ fontSize: 32, marginBottom: 8 }}>🔔</div>
                 <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 4 }}>No notifications yet</div>
-                <div style={{ fontSize: 11 }}>You'll get alerts for price changes, new launches & construction updates.</div>
+                <div style={{ fontSize: 11 }}>Set alerts on project cards 🔕 to get notified of price changes.</div>
               </div>
             ) : notifications.map((n, i) => (
               <div key={n.id} onClick={() => markNotifRead(n.id)} style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", background: n.read ? "transparent" : "rgba(212,168,67,0.04)", transition: "background 0.2s" }}
