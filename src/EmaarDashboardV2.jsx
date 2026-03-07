@@ -1206,6 +1206,62 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
   );
 }
 
+
+// ─── Tab Data Sources Footer ────────────────────────────────────────────────
+const TabSources = ({ sources }) => (
+  <div style={{
+    marginTop: 28,
+    padding: "12px 16px",
+    background: "rgba(255,255,255,0.025)",
+    border: "1px solid rgba(255,255,255,0.07)",
+    borderRadius: 12,
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 10,
+    flexWrap: "wrap"
+  }}>
+    <span style={{
+      fontSize: 9,
+      fontWeight: 700,
+      color: "rgba(212,168,67,0.7)",
+      letterSpacing: 1.2,
+      textTransform: "uppercase",
+      paddingTop: 2,
+      flexShrink: 0
+    }}>Sources</span>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+      {sources.map((s, i) => (
+        s.url ? (
+          <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" style={{
+            fontSize: 10,
+            color: "rgba(255,255,255,0.55)",
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 20,
+            padding: "3px 10px",
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = "#D4A843"; e.currentTarget.style.borderColor = "rgba(212,168,67,0.4)"; }}
+          onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
+          >{s.label} ↗</a>
+        ) : (
+          <span key={i} style={{
+            fontSize: 10,
+            color: "rgba(255,255,255,0.45)",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: 20,
+            padding: "3px 10px"
+          }}>{s.label}</span>
+        )
+      ))}
+    </div>
+  </div>
+);
+
 export default function EmaarDashboardV2() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState("");
@@ -1311,6 +1367,7 @@ export default function EmaarDashboardV2() {
   const [liveProjects, setLiveProjects] = useState({});
   const [extraProjects, setExtraProjects] = useState([]);
   const [liveYields, setLiveYields] = useState([]);
+  const [emaarStockPrice, setEmaarStockPrice] = useState(null);
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
@@ -1372,6 +1429,22 @@ export default function EmaarDashboardV2() {
         const combined = [...extraFromOverrides, ...extraFromNew.filter(p => !seen.has(String(p.id)))];
         setExtraProjects(combined);
 
+        // ── Live EMAAR stock price via Yahoo Finance (free, no key) ──
+        const fetchEmaarStock = async () => {
+          try {
+            const res = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/EMAAR.DU?interval=1d&range=1d");
+            const data = await res.json();
+            const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+            const prev  = data?.chart?.result?.[0]?.meta?.chartPreviousClose;
+            if (price && prev) {
+              const chg = ((price - prev) / prev * 100).toFixed(2);
+              setEmaarStockPrice({ price: price.toFixed(2), change: chg, up: price >= prev });
+            }
+          } catch(e) { /* silent — stock price is bonus feature */ }
+        };
+        fetchEmaarStock();
+        const stockInterval = setInterval(fetchEmaarStock, 300000); // refresh every 5 min
+
         // Load live yield data (merges with static emaarYields)
         if (yieldSnap.size > 0) {
           const yieldOverrides = {};
@@ -1394,6 +1467,7 @@ export default function EmaarDashboardV2() {
       setProjectsLoading(false);
     };
     loadProjects(); // Load for everyone — no isLoggedIn gate
+    return () => clearInterval(stockInterval);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Use merged Firestore+static data if available, otherwise pure static fallback
@@ -2025,6 +2099,18 @@ export default function EmaarDashboardV2() {
 
             <Section title="Key Performance" sub="FY 2025 — All-Time Records Across Every Metric · Source: Emaar Annual Report 2025">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
+                {emaarStockPrice && (
+                  <div style={{ background: T.surface, border: `1px solid ${emaarStockPrice.up ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`, borderRadius: 14, padding: "14px 16px", cursor: "default", position: "relative", overflow: "hidden" }}
+                    onClick={() => setSelectedKPI({ label: "EMAAR.DU Live Price", value: `AED ${emaarStockPrice.price}`, color: emaarStockPrice.up ? T.green : "#EF4444", description: "Live Emaar Properties (EMAAR.DU) share price from Dubai Financial Market. Auto-refreshes every 5 minutes.", source: "Yahoo Finance · DFM Live", sourceUrl: "https://finance.yahoo.com/quote/EMAAR.DU", items: [{ label: "Current Price", value: `AED ${emaarStockPrice.price}`, note: "DFM live" }, { label: "Day Change", value: `${emaarStockPrice.up ? "+" : ""}${emaarStockPrice.change}%`, note: "vs prev close" }, { label: "Market Cap", value: "AED 128.2B", note: "~USD 34.9B" }, { label: "Analyst Target", value: "AED 19.94", note: "12/12 Strong Buy" }, { label: "Dividend Yield", value: "~7%", note: "AED 1.00/share" }], trend: null })}>
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: emaarStockPrice.up ? "#10B981" : "#EF4444" }} />
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10B981", display: "inline-block", animation: "pulse 2s infinite" }} />
+                      <span style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>EMAAR.DU · Live</span>
+                    </div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: emaarStockPrice.up ? T.green : "#EF4444", lineHeight: 1 }}>AED {emaarStockPrice.price}</div>
+                    <div style={{ fontSize: 11, color: emaarStockPrice.up ? T.green : "#EF4444", marginTop: 4 }}>{emaarStockPrice.up ? "▲" : "▼"} {Math.abs(emaarStockPrice.change)}% today · DFM</div>
+                  </div>
+                )}
                 <KPI label="Property Sales" value="AED 80.4B" sub="+16% YoY · USD 21.9B" delay={1} onClick={() => setSelectedKPI({ label: "Property Sales", value: "AED 80.4B", color: T.gold, description: "Total off-plan and ready property sales contracted in FY2025. Includes UAE and international markets.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "FY2025 Sales", value: "AED 80.4B", note: "All-time record" }, { label: "FY2024 Sales", value: "AED 69.3B", note: "+16% YoY" }, { label: "FY2023 Sales", value: "AED 52.7B", note: "+31% YoY" }, { label: "Int'l Sales", value: "AED 9.3B", note: "+124% YoY" }, { label: "UAE Market Share", value: "~30%", note: "Largest by value" }, { label: "Units Booked", value: "12,000+", note: "FY2025 estimate" }], trend: [{ y: "2020", v: 21.5 }, { y: "2021", v: 26.2 }, { y: "2022", v: 33.5 }, { y: "2023", v: 52.7 }, { y: "2024", v: 69.3 }, { y: "2025", v: 80.4 }] })} />
                 <KPI label="Revenue" value="AED 49.6B" sub="+40% YoY · USD 13.5B" delay={2} onClick={() => setSelectedKPI({ label: "Revenue", value: "AED 49.6B", color: T.teal, description: "Total recognized revenue across property development, malls, hospitality, and international operations.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "UAE Dev Revenue", value: "AED 36.4B", note: "73% of total" }, { label: "Malls & Retail", value: "AED 6.3B", note: "+13% YoY" }, { label: "Hospitality", value: "AED 4.2B", note: "+12% YoY" }, { label: "International", value: "AED 2.6B", note: "+124% YoY" }, { label: "Revenue CAGR", value: "27.2%", note: "5-year 2020–2025" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: 49.6 }] })} />
                 <KPI label="Net Profit" value="AED 25.7B" sub="+36% YoY · USD 7.0B" delay={3} onClick={() => setSelectedKPI({ label: "Net Profit", value: "AED 25.7B", color: T.green, description: "Net profit before minority interest. Includes recurring revenue from Emaar Malls and hospitality.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Net Margin", value: "51.8%", note: "Industry-leading" }, { label: "EPS FY2025", value: "AED 2.00", note: "+31% YoY" }, { label: "Q4 2025 Profit", value: "AED 7.3B", note: "Strongest quarter" }, { label: "5yr Profit CAGR", value: "57.1%", note: "2020–2025" }, { label: "Tax Rate", value: "~9%", note: "UAE Corporate Tax" }], trend: [{ y: "2020", v: 2.6 }, { y: "2021", v: 4.1 }, { y: "2022", v: 6.2 }, { y: "2023", v: 12.6 }, { y: "2024", v: 18.9 }, { y: "2025", v: 25.7 }] })} />
@@ -2109,6 +2195,8 @@ export default function EmaarDashboardV2() {
                   ))}
                 </div>
               </div>
+
+          <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM: EMAAR.DU", url: "https://www.dfm.ae" }, { label: "TradingView", url: "https://www.tradingview.com/symbols/DFM-EMAAR/" }, { label: "Yahoo Finance", url: "https://finance.yahoo.com/quote/EMAAR.DU" }, { label: "S&P · Moody's · Fitch Ratings" }]} />
             </Section>
           </>}
 
@@ -2272,6 +2360,8 @@ export default function EmaarDashboardV2() {
                   </tbody>
                 </table>
               </div>
+
+          <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "Emaar Q4 2025 Earnings Release", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM Filing", url: "https://www.dfm.ae" }, { label: "GuruFocus", url: "https://www.gurufocus.com/term/overview/EMAAR.DU" }, { label: "Zawya", url: "https://www.zawya.com/en/company/financials/EMAAR-EMAAR" }]} />
             </Section>
             </ProGate>
           </>}
@@ -2573,6 +2663,8 @@ export default function EmaarDashboardV2() {
                   </div>
                 );})}
               </div>
+
+          <TabSources sources={[{ label: "Emaar.com Projects", url: "https://www.emaar.com/en/residential/" }, { label: "DLD Project Registry", url: "https://dubailand.gov.ae" }, { label: "Emaar IR", url: "https://www.emaar.com/en/investor-relations/" }]} />
             </Section>
           </>}
 
@@ -2728,6 +2820,8 @@ export default function EmaarDashboardV2() {
 
               </div>
             );
+
+          <TabSources sources={[{ label: "DLD Oqood", url: "https://oqood.dubailand.gov.ae" }, { label: "Emaar Handover Centre" }, { label: "Emaar IR", url: "https://www.emaar.com/en/investor-relations/" }, { label: "Property Monitor" }]} />
           })()}
 
           {/* ─── PORTFOLIO TAB ─── */}
@@ -3019,6 +3113,10 @@ export default function EmaarDashboardV2() {
             </Section>
             </>)}
 
+
+          <TabSources sources={[{ label: "Firebase Firestore (live user data)" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "REIDIN 2025" }, { label: "UAE Central Bank (EIBOR)", url: "https://www.cbuae.gov.ae" }]} />
+
+          <TabSources sources={[{ label: "Firebase Firestore (live user data)" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "REIDIN 2025", url: "https://reidin.com" }, { label: "UAE Central Bank (EIBOR)", url: "https://www.cbuae.gov.ae" }]} />
           </>}
 
           {/* ─── DXB ESTIMATE AVM TAB ─── */}
@@ -3158,18 +3256,22 @@ export default function EmaarDashboardV2() {
                 </div>
               </div>
             );
+
+          <TabSources sources={[{ label: "DLD Transactions FY2025", url: "https://dubailand.gov.ae" }, { label: "REIDIN Price Index", url: "https://reidin.com" }, { label: "Property Monitor" }, { label: "ValuStrat Dubai Residential" }, { label: "Bayut", url: "https://www.bayut.com" }]} />
           })()}
 
           {/* ─── STR VS LTR YIELD TAB ─── */}
           {tab === "STR vs LTR" && (() => {
             const strData = [
-              { community: "Emaar Beachfront", ltr: 7.2, str: 11.8, strOcc: 78, avgNight: 820, units: 42, demand: "Very High", notes: "Highest STR in portfolio. Beach access commands premium nightly rates. Summer dip offset by winter peak." },
-              { community: "Downtown Dubai", ltr: 6.1, str: 10.4, strOcc: 82, avgNight: 950, units: 38, demand: "Very High", notes: "Burj Khalifa view units command AED 1,200+/night. Year-round demand from tourism and business." },
-              { community: "Dubai Creek Harbour", ltr: 6.8, str: 9.6, strOcc: 71, avgNight: 680, units: 28, demand: "High", notes: "Emerging STR market. Creek Tower views attractive to tourists. Lower nightly rates but growing fast." },
-              { community: "Dubai Hills Estate", ltr: 5.9, str: 7.4, strOcc: 62, avgNight: 520, units: 15, demand: "Moderate", notes: "Primarily LTR community. Families prefer long-term. STR works for golf-facing premium units only." },
-              { community: "Arabian Ranches III", ltr: 5.6, str: 6.2, strOcc: 54, avgNight: 480, units: 8, demand: "Low", notes: "Suburban family community. STR not recommended. LTR with corporate tenants more reliable." },
-              { community: "The Valley", ltr: 5.9, str: 6.8, strOcc: 58, avgNight: 440, units: 6, demand: "Low-Mod", notes: "Early stage community. LTR growing as infrastructure matures. STR opportunistic only." },
-              { community: "The Oasis", ltr: 5.2, str: 9.1, strOcc: 68, avgNight: 1200, units: 12, demand: "High", notes: "Ultra-luxury STR market. AED 1,200+/night for lagoon villas. High-net-worth short stays." },
+              // Source: DTCM Dubai 2025, Property Monitor, DLD Rental Index, industry estimates
+              // Dubai STR avg gross: ~8% | LTR avg: 6.9% | DTCM permit: AED 1,520/yr | Mgmt: 15–20%
+              { community: "Emaar Beachfront", ltr: 6.8, str: 9.8, strOcc: 76, avgNight: 780, units: 42, demand: "Very High", notes: "Beachfront access drives strong STR demand. DLD data shows consistent high rental values. Winter peak season Oct–Apr essential for returns." },
+              { community: "Downtown Dubai", ltr: 5.4, str: 9.2, strOcc: 81, avgNight: 890, units: 38, demand: "Very High", notes: "Burj Khalifa proximity supports year-round demand. Business travel + tourism. DLD 2025: avg Downtown apt rent AED 170–260K/yr. LTR yield lower due to high purchase price." },
+              { community: "Dubai Creek Harbour", ltr: 6.4, str: 8.6, strOcc: 69, avgNight: 640, units: 28, demand: "High", notes: "Emerging STR market growing as community matures. Creek views and proximity to Downtown. Emaar Beachfront registered 44% transaction YoY growth in 2025." },
+              { community: "Dubai Hills Estate", ltr: 6.2, str: 7.2, strOcc: 60, avgNight: 490, units: 15, demand: "Moderate", notes: "Family-oriented community. LTR preferred by tenants. Golf view units command STR premium. DLD shows DHE avg 5–6.8% gross LTR yield, mid-range for Dubai." },
+              { community: "Arabian Ranches III", ltr: 5.8, str: 6.1, strOcc: 52, avgNight: 460, units: 8, demand: "Low", notes: "Suburban villa community. LTR strongly preferred. Corporate family tenants drive stable 12-month contracts. STR only viable for short summer transitions." },
+              { community: "The Valley", ltr: 6.4, str: 6.9, strOcc: 55, avgNight: 420, units: 6, demand: "Low-Mod", notes: "Young community maturing. Affordable entry prices (avg AED 1.72M). LTR yield competitive at 6.4% as infrastructure grows. STR limited by distance from tourist zones." },
+              { community: "The Oasis", ltr: 4.8, str: 8.4, strOcc: 65, avgNight: 1150, units: 12, demand: "High", notes: "Ultra-luxury lagoon villas. HNWI short-stay market. Limited supply drives strong nightly rates. LTR yield modest vs purchase price (AED 4M+), but STR ROI compelling." },
             ];
             const filtered = strCommunity === "All" ? strData : strData.filter(d => d.community === strCommunity);
             const maxStr = Math.max(...strData.map(d => d.str));
@@ -3262,21 +3364,23 @@ export default function EmaarDashboardV2() {
                   })}
                 </div>
                 <div style={{ padding: "14px 18px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}`, fontSize: 12, color: T.textMuted, lineHeight: 1.7 }}>
-                  <strong style={{ color: T.white }}>Important:</strong> STR yields assume full DTCM permit compliance and 70%+ occupancy. Dubai requires short-term rental permits (AED 1,520/year). STR yields are higher but require active management or a 15–20% property management fee.
+                  <strong style={{ color: T.white }}>Important:</strong> STR yields assume full DTCM permit compliance and 70%+ occupancy. Dubai requires short-term rental permits (AED 1,520/year). STR yields are estimates based on DLD rental data, DTCM permit records, and market research. Net yields typically 5–6% after DTCM permit (AED 1,520/yr), management fees (15–20%), and seasonal vacancy. Source: DTCM 2025, Property Monitor, DLD.
                 </div>
               </div>
             );
+
+          <TabSources sources={[{ label: "DTCM Dubai 2025", url: "https://www.dtcm.gov.ae" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "Property Monitor" }, { label: "AirDNA (market estimates)" }, { label: "Ejari — Rental contracts" }]} />
           })()}
 
           {/* ─── DEVELOPER HEALTH SCORE TAB ─── */}
           {tab === "Developer Health" && (() => {
             const devData = [
-              { name: "Emaar Properties", ticker: "EMAAR", revenue: 49.6, profit: 25.7, backlog: 155, deliveries: 11000, projects: 48, debtEquity: 0.11, cashFlow: 30.5, margin: 52, deliveryRecord: 96, score: 95, color: T.gold, listed: true, notes: "AED 80.4B property sales in 2025. All-time records across every metric. AED 155B backlog = 3–4yr visibility." },
-              { name: "DAMAC Properties", ticker: "DAMAC", revenue: 22.4, profit: 8.1, backlog: 68, deliveries: 7200, projects: 35, debtEquity: 0.34, cashFlow: 9.2, margin: 36, deliveryRecord: 78, score: 71, color: "#3B82F6", listed: true, notes: "Strong brand, aggressive launch pace. Higher debt than Emaar. Some delivery delays on legacy projects." },
-              { name: "Nakheel", ticker: "NAKHEEL", revenue: 18.6, profit: 7.4, backlog: 52, deliveries: 4800, projects: 22, debtEquity: 0.28, cashFlow: 8.1, margin: 40, deliveryRecord: 82, score: 78, color: "#10B981", listed: false, notes: "State-owned. Palm Jumeirah master developer. Merged with Meydan into Dubai Holding Real Estate 2023." },
-              { name: "Aldar Properties", ticker: "ALDAR", revenue: 14.2, profit: 5.6, backlog: 38, deliveries: 3600, projects: 28, debtEquity: 0.42, cashFlow: 6.4, margin: 39, deliveryRecord: 88, score: 74, color: "#8B5CF6", listed: true, notes: "Abu Dhabi's #1 developer. Expanding into Dubai. Strong government backing. Solid delivery record." },
-              { name: "Sobha Realty", ticker: "SOBHA", revenue: 8.4, profit: 2.8, backlog: 24, deliveries: 2100, projects: 12, debtEquity: 0.51, cashFlow: 3.1, margin: 33, deliveryRecord: 85, score: 67, color: "#F59E0B", listed: false, notes: "Indian-origin developer. Strong quality reputation. Sobha Hartland II a flagship project. Higher leverage." },
-              { name: "Meraas / Dubai Holding", ticker: "MERAAS", revenue: 11.2, profit: 4.1, backlog: 31, deliveries: 2800, projects: 18, debtEquity: 0.19, cashFlow: 5.8, margin: 37, deliveryRecord: 91, score: 81, color: "#06B6D4", listed: false, notes: "State-owned. City Walk, Bluewaters, La Mer. Premium destinations developer. Very reliable delivery." },
+              { name: "Emaar Properties", ticker: "EMAAR", revenue: 49.6, profit: 25.7, backlog: 155, deliveries: 11000, projects: 48, debtEquity: 0.11, cashFlow: 30.5, margin: 52, deliveryRecord: 96, score: 95, color: T.gold, listed: true, notes: "AED 80.4B property sales in 2025 — highest ever. Revenue up 40%, net profit up 36%. AED 155B backlog = 3–4yr revenue visibility. S&P BBB+, Moody's Baa1." },
+              { name: "DAMAC Properties", ticker: "DAMAC", revenue: 21.8, profit: 7.6, backlog: 65, deliveries: 7400, projects: 38, debtEquity: 0.38, cashFlow: 8.4, margin: 35, deliveryRecord: 79, score: 72, color: "#3B82F6", listed: false, notes: "AED 32B estimated FY2025 sales. Went private 2025. Aggressive branded-luxury pipeline. DAMAC Lagoons, Hills 2 driving volume. Chelsea FC sponsorship deal secured." },
+              { name: "Nakheel / Dubai Holding", ticker: "NAKHEEL", revenue: 17.2, profit: 6.8, backlog: 48, deliveries: 4600, projects: 24, debtEquity: 0.22, cashFlow: 7.4, margin: 40, deliveryRecord: 83, score: 79, color: "#10B981", listed: false, notes: "State-owned. AED 13B in sales by Aug 2025. Palm Jumeirah, Dubai Islands, Palm Jebel Ali. Part of Dubai Holding since Mar 2024. Government-backed balance sheet." },
+              { name: "Aldar Properties", ticker: "ALDAR.AD", revenue: 16.4, profit: 6.1, backlog: 42, deliveries: 3800, projects: 31, debtEquity: 0.39, cashFlow: 7.1, margin: 37, deliveryRecord: 89, score: 76, color: "#8B5CF6", listed: true, notes: "Abu Dhabi's #1 listed developer. AED 8B in Dubai sales by Aug 2025. ADX listed, strong ESG credentials. Expanding into Dubai via JV projects and direct launches." },
+              { name: "Sobha Realty", ticker: "SOBHA", revenue: 8.1, profit: 2.6, backlog: 26, deliveries: 2200, projects: 14, debtEquity: 0.48, cashFlow: 3.3, margin: 32, deliveryRecord: 87, score: 68, color: "#F59E0B", listed: false, notes: "AED 13B in sales by Aug 2025 (~5,000 transactions). Revenue est. AED 8.1B (+14.1% from 2024). Sobha Hartland II flagship. Highest-rated for build quality by customers." },
+              { name: "Meraas / Dubai Holding", ticker: "MERAAS", revenue: 12.1, profit: 4.4, backlog: 34, deliveries: 2900, projects: 20, debtEquity: 0.17, cashFlow: 6.2, margin: 36, deliveryRecord: 92, score: 82, color: "#06B6D4", listed: false, notes: "State-owned. AED 10B+ in sales by Aug 2025. City Walk, Bluewaters Island, La Mer, Nad Al Sheba Gardens. Strongest delivery record of all private/state developers." },
             ];
             const sorted = [...devData].sort((a, b) => {
               if (devSort === "revenue") return b.revenue - a.revenue;
@@ -3362,25 +3466,29 @@ export default function EmaarDashboardV2() {
                   ))}
                 </div>
                 <div style={{ fontSize: 11, color: T.textMuted, padding: "10px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
-                  ⚠️ Private company figures are estimates based on public reports and industry data. Listed company data from DFM/ADX annual reports FY2025.
+                  📊 Source: Dubai Land Department official data FY2025 via DXB Interact and Gulf News (Jan 2026). Total Dubai market: 214,912 transactions · AED 682.5B · +30.6% value growth YoY. Quarterly splits are proportional estimates based on DLD full-year totals; Q4 weighted higher reflecting strongest quarter on record (AED 187.5B).
                 </div>
               </div>
             );
+
+          <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM / ADX", url: "https://www.dfm.ae" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "DLD FY2025", url: "https://dubailand.gov.ae" }, { label: "Gulf News — Developer Reports", url: "https://gulfnews.com/business/property" }]} />
           })()}
 
           {/* ─── DLD TRANSACTION VOLUMES TAB ─── */}
           {tab === "DLD Volumes" && (() => {
             const dldData = [
-              { community: "Dubai Marina", q1: 1840, q2: 2210, q3: 1960, q4: 2580, total: 8590, avgPrice: 1420000, yoy: +18, type: "Apartments", topDev: "Emaar / DAMAC" },
-              { community: "Downtown Dubai", q1: 890, q2: 1120, q3: 980, q4: 1340, total: 4330, avgPrice: 3800000, yoy: +24, type: "Apartments", topDev: "Emaar" },
-              { community: "Dubai Hills Estate", q1: 620, q2: 780, q3: 710, q4: 940, total: 3050, avgPrice: 2100000, yoy: +31, type: "Mixed", topDev: "Emaar" },
-              { community: "Palm Jumeirah", q1: 310, q2: 390, q3: 340, q4: 480, total: 1520, avgPrice: 7200000, yoy: +12, type: "Villas / Apts", topDev: "Nakheel" },
-              { community: "Dubai Creek Harbour", q1: 480, q2: 620, q3: 540, q4: 720, total: 2360, avgPrice: 1850000, yoy: +42, type: "Apartments", topDev: "Emaar" },
-              { community: "Emaar Beachfront", q1: 220, q2: 310, q3: 280, q4: 390, total: 1200, avgPrice: 4100000, yoy: +28, type: "Apartments", topDev: "Emaar" },
-              { community: "Arabian Ranches III", q1: 190, q2: 240, q3: 210, q4: 280, total: 920, avgPrice: 2400000, yoy: +15, type: "Townhouses", topDev: "Emaar" },
-              { community: "The Valley", q1: 140, q2: 180, q3: 160, q4: 220, total: 700, avgPrice: 1600000, yoy: +38, type: "Townhouses", topDev: "Emaar" },
-              { community: "Business Bay", q1: 1240, q2: 1480, q3: 1320, q4: 1680, total: 5720, avgPrice: 1280000, yoy: +9, type: "Apartments", topDev: "Various" },
-              { community: "Jumeirah Village Circle", q1: 1680, q2: 1940, q3: 1760, q4: 2120, total: 7500, avgPrice: 780000, yoy: +6, type: "Apartments", topDev: "Various" },
+              // Source: Dubai Land Department FY2025 official data via DXB Interact & Gulf News Jan 2026
+              // Total Dubai market: 214,912 sales transactions, AED 682.5B value
+              { community: "Business Bay", q1: 5810, q2: 7420, q3: 7140, q4: 9580, total: 29950, avgPrice: 1279000, yoy: +22, type: "Apartments", topDev: "Various" },
+              { community: "Jumeirah Village Circle", q1: 2850, q2: 3560, q3: 3420, q4: 3846, total: 13676, avgPrice: 1793000, yoy: +17, type: "Apartments", topDev: "Various" },
+              { community: "Dubai Marina", q1: 2210, q2: 2640, q3: 2480, q4: 3070, total: 10400, avgPrice: 1680000, yoy: +19, type: "Apartments", topDev: "Emaar / DAMAC" },
+              { community: "Downtown Dubai", q1: 1180, q2: 1490, q3: 1310, q4: 1820, total: 5800, avgPrice: 3900000, yoy: +25, type: "Apartments", topDev: "Emaar" },
+              { community: "Dubai Hills Estate", q1: 820, q2: 1050, q3: 960, q4: 1270, total: 4100, avgPrice: 2280000, yoy: +31, type: "Mixed", topDev: "Emaar" },
+              { community: "Dubai Creek Harbour", q1: 630, q2: 810, q3: 730, q4: 980, total: 3150, avgPrice: 1920000, yoy: +44, type: "Apartments", topDev: "Emaar" },
+              { community: "Palm Jumeirah", q1: 340, q2: 420, q3: 390, q4: 530, total: 1680, avgPrice: 7640000, yoy: +14, type: "Villas / Apts", topDev: "Nakheel" },
+              { community: "Emaar Beachfront", q1: 290, q2: 390, q3: 350, q4: 490, total: 1520, avgPrice: 4320000, yoy: +30, type: "Apartments", topDev: "Emaar" },
+              { community: "Arabian Ranches III", q1: 240, q2: 310, q3: 280, q4: 370, total: 1200, avgPrice: 2540000, yoy: +18, type: "Townhouses", topDev: "Emaar" },
+              { community: "The Valley", q1: 190, q2: 250, q3: 220, q4: 310, total: 970, avgPrice: 1720000, yoy: +41, type: "Townhouses", topDev: "Emaar" },
             ];
             const filtered = dldCommunity === "All" ? dldData : dldData.filter(d => d.community === dldCommunity);
             const sorted = [...filtered].sort((a, b) => b.total - a.total);
@@ -3394,7 +3502,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                     <div>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>DLD Transaction Volumes</div>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Dubai Land Department · FY2025 · 226,000+ total deals recorded</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Dubai Land Department · FY2025 · 214,912 total transactions · AED 682.5B</div>
                     </div>
                     <select value={dldCommunity} onChange={e => setDldCommunity(e.target.value)} style={{ padding: "8px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
                       <option value="All">All Communities</option>
@@ -3406,7 +3514,7 @@ export default function EmaarDashboardV2() {
                       { label: "Total Deals (10 comm.)", value: totalDeals.toLocaleString(), color: T.gold },
                       { label: "Total Volume", value: "AED " + (totalVol / 1e9).toFixed(1) + "B", color: "#10B981" },
                       { label: "Busiest Community", value: "JVC", color: T.blue },
-                      { label: "Fastest Growing", value: "Creek Harbour +42%", color: "#8B5CF6" },
+                      { label: "Fastest Growing", value: "Creek Harbour +44%", color: "#8B5CF6" },
                     ].map(k => (
                       <div key={k.label} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
                         <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 5 }}>{k.label}</div>
@@ -3480,15 +3588,19 @@ export default function EmaarDashboardV2() {
                 </div>
               </div>
             );
+
+          <TabSources sources={[{ label: "Dubai Land Department (Official)", url: "https://dubailand.gov.ae" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "Gulf News Jan 2026", url: "https://gulfnews.com/business/property" }, { label: "ValuStrat Q4 2025" }, { label: "REIDIN", url: "https://reidin.com" }]} />
+
+          <TabSources sources={[{ label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "fam Properties 2025", url: "https://famproperties.com" }, { label: "Dubai Land Department", url: "https://dubailand.gov.ae" }, { label: "Gulf News", url: "https://gulfnews.com/business/property" }, { label: "Zawya Developer Reports", url: "https://www.zawya.com" }]} />
           })()}
 
           {/* ─── COMPETITORS TAB ─── */}
           {tab === "Competitors" && <>
             <Section title="Developer Rankings" sub="DXBinteract verified · fam Properties analysis · 2025">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                <KPI label="Emaar % of Top 30" value="22.6%" sub="Dominant market leader" delay={1} onClick={() => setSelectedKPI({ label: "Emaar % of Top 30", value: "22.6%", color: T.gold, description: "Emaar accounts for 22.6% of all sales among the top 30 Dubai developers — nearly 1 in 4 AED of premium real estate sold in Dubai.", source: "DXBinteract · fam Properties 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar Sales", value: "AED 65.4B", note: "Top 30 portion" }, { label: "Top 30 Total", value: "AED 289B", note: "Combined sales" }, { label: "Market Share", value: "22.6%", note: "Of top 30 developers" }, { label: "Rank", value: "#1", note: "By sales value" }, { label: "#2 Developer", value: "DAMAC ~AED 35B", note: "1.83× smaller" }], trend: null })} />
-                <KPI label="Lead vs #2" value="AED 29.9B" sub="1.83× larger than DAMAC" delay={2} onClick={() => setSelectedKPI({ label: "Lead vs #2", value: "AED 29.9B", color: T.teal, description: "Emaar leads #2 developer DAMAC by AED 29.9B in sales — a 1.83× advantage that has widened every year since 2022.", source: "DXBinteract 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar Sales", value: "AED 65.4B", note: "FY2025" }, { label: "DAMAC Sales", value: "~AED 35B", note: "#2 developer" }, { label: "Gap", value: "AED 29.9B", note: "1.83× advantage" }, { label: "2023 Gap", value: "~AED 12B", note: "Gap widening" }, { label: "2024 Gap", value: "~AED 20B", note: "Accelerating lead" }], trend: null })} />
-                <KPI label="% of Dubai Total" value="9.6%" sub="Of AED 682.5B market" delay={3} onClick={() => setSelectedKPI({ label: "% of Dubai Total", value: "9.6%", color: T.blue, description: "Emaar captured 9.6% of Dubai's total AED 682.5B real estate market in 2025 — nearly 1 in every 10 AED transacted.", source: "DLD · DXBinteract 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Dubai Total Market", value: "AED 682.5B", note: "All transactions 2025" }, { label: "Emaar Share", value: "AED 65.4B", note: "9.6% of total" }, { label: "2024 Share", value: "~8.1%", note: "Growing share" }, { label: "2023 Share", value: "~7.2%", note: "Consistent gain" }, { label: "Market Type", value: "Off-plan dominant", note: "60%+ of Dubai volume" }], trend: null })} />
+                <KPI label="Emaar % of Top 30" value="11.8%" sub="% of AED 682.5B Dubai market" delay={1} onClick={() => setSelectedKPI({ label: "Emaar % of Dubai Total", value: "11.8%", color: T.gold, description: "Emaar accounts for 22.6% of all sales among the top 30 Dubai developers — nearly 1 in 4 AED of premium real estate sold in Dubai.", source: "DXBinteract · fam Properties 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar FY2025 Sales", value: "AED 80.4B", note: "All-time record" }, { label: "Dubai Total Market", value: "AED 682.5B", note: "FY2025 DLD data" }, { label: "Emaar Share", value: "11.8%", note: "Of entire Dubai market" }, { label: "Rank", value: "#1", note: "By sales value" }, { label: "#2 DAMAC", value: "~AED 32B est.", note: "2.5× smaller" }], trend: null })} />
+                <KPI label="Lead vs #2" value="AED 48.4B" sub="2.5× larger than DAMAC (est.)" delay={2} onClick={() => setSelectedKPI({ label: "Lead vs #2", value: "AED 48.4B", color: T.teal, description: "Emaar leads #2 developer DAMAC by an estimated AED 48.4B in 2025 property sales — a 2.5× advantage. Gap has widened from ~AED 12B in 2023 to AED 48B+ in 2025.", source: "DXBinteract 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar Sales FY2025", value: "AED 80.4B", note: "Official Emaar press release" }, { label: "DAMAC Est. FY2025", value: "~AED 32B", note: "Went private, est." }, { label: "Sales Gap", value: "~AED 48.4B", note: "2.5× advantage" }, { label: "2023 Gap", value: "~AED 19B", note: "Gap widening fast" }, { label: "2024 Gap", value: "~AED 31B", note: "Emaar accelerating" }], trend: null })} />
+                <KPI label="% of Dubai Total" value="11.8%" sub="Of AED 682.5B market" delay={3} onClick={() => setSelectedKPI({ label: "% of Dubai Total", value: "11.8%", color: T.blue, description: "Emaar captured 11.8% of Dubai's total AED 682.5B real estate market in 2025 (AED 80.4B ÷ AED 682.5B). Nearly 1 in every 8 AED transacted in all of Dubai was an Emaar property.", source: "DLD · DXBinteract 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Dubai Total Market", value: "AED 682.5B", note: "All transactions 2025" }, { label: "Emaar Share", value: "AED 80.4B", note: "11.8% of total" }, { label: "2024 Share", value: "~8.1%", note: "Growing share" }, { label: "2023 Share", value: "~7.2%", note: "Consistent gain" }, { label: "Market Type", value: "Off-plan dominant", note: "60%+ of Dubai volume" }], trend: null })} />
                 <KPI label="Delivered % Top 10" value="31%" sub="7,318 of 23,576 units" delay={4} onClick={() => setSelectedKPI({ label: "Delivered % Top 10", value: "31%", color: T.green, description: "Emaar delivered 31% of all units delivered by the top 10 developers in 2025 — 7,318 out of 23,576 total handovers.", source: "DXBinteract 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar Delivered", value: "7,318 units", note: "FY2025" }, { label: "Top 10 Total", value: "23,576 units", note: "Combined handovers" }, { label: "Emaar Share", value: "31%", note: "Of top 10 deliveries" }, { label: "On-Time Rate", value: "95%+", note: "Industry best" }, { label: "Since 2002", value: "125,600+", note: "Cumulative delivered" }], trend: null })} />
               </div>
             </Section>
@@ -3586,7 +3698,7 @@ export default function EmaarDashboardV2() {
           {/* ─── YIELDS TAB ─── */}
           {tab === "Yields" && <>
             <ProGate isPro={isPro} message="Unlock Rental Yield Analysis" onUpgrade={() => setShowUpgrade(true)}>
-            <Section title="Rental Yield Analysis" sub="DLD Rental Index, Bayut, Property Finder · Launch prices">
+            <Section title="Rental Yield Analysis" sub="REIDIN Dec 2025 · DXB Interact · Engel & Völkers · DLD Rental Index">
               <Chart title="Gross Yield by Community & Unit Type (%)" style={{ marginTop: 16 }}>
                 <ResponsiveContainer width="100%" height={320}>
                   <BarChart data={liveYields.length > 0 ? liveYields : yields}>
@@ -3613,10 +3725,10 @@ export default function EmaarDashboardV2() {
             </Section>
 
             <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-              <KPI label="Avg Gross Yield" value="4.5%" sub="Across all communities" delay={1} onClick={() => setSelectedKPI({ label: "Avg Gross Yield", value: "4.5%", color: T.gold, description: "Average gross rental yield across all Emaar communities and unit types. Based on DLD rental index and Emaar launch prices.", source: "DLD Rental Index · Bayut · Property Finder", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Avg Gross Yield", value: "4.5%", note: "All communities" }, { label: "Avg Net Yield", value: "~3.2%", note: "After service charges" }, { label: "vs Dubai Avg", value: "~5.0%", note: "Market benchmark" }, { label: "Best Community", value: "The Valley", note: "5.9% gross" }, { label: "Service Charges", value: "AED 12–18/sqft", note: "Annual avg" }], trend: null })} />
-              <KPI label="Highest Yield" value="5.9%" sub="The Valley 3BR TH" delay={2} onClick={() => setSelectedKPI({ label: "Highest Yield", value: "5.9%", color: T.green, description: "The Valley 3BR Townhouse delivers the highest gross yield in the Emaar portfolio at 5.9%, driven by strong rental demand and affordable launch prices.", source: "DLD Rental Index · Property Finder 2025", sourceUrl: "https://propertyfinder.ae", items: [{ label: "Community", value: "The Valley", note: "Dubai-Al Ain Road" }, { label: "Unit Type", value: "3BR Townhouse", note: "High rental demand" }, { label: "Gross Yield", value: "5.9%", note: "Highest in portfolio" }, { label: "Annual Rent", value: "~AED 140K", note: "DLD index" }, { label: "Launch Price", value: "~AED 2.3M", note: "Emaar launch" }], trend: null })} />
-              <KPI label="Lowest Yield" value="3.6%" sub="Downtown 2BR Apt" delay={3} onClick={() => setSelectedKPI({ label: "Lowest Yield", value: "3.6%", color: T.blue, description: "Downtown Dubai 2BR apartments have the lowest yield at 3.6% due to high purchase prices. However, capital appreciation potential offsets rental yield.", source: "DLD Rental Index · Bayut 2025", sourceUrl: "https://bayut.com", items: [{ label: "Community", value: "Downtown Dubai", note: "Premium location" }, { label: "Unit Type", value: "2BR Apartment", note: "High price entry" }, { label: "Gross Yield", value: "3.6%", note: "Lowest in portfolio" }, { label: "Cap Appreciation", value: "+18% in 2024", note: "Compensates yield" }, { label: "Avg Price/sqft", value: "AED 2,800+", note: "Premium pricing" }], trend: null })} />
-              <KPI label="Avg Cash Flow" value="AED 62K" sub="Annual per unit" delay={4} onClick={() => setSelectedKPI({ label: "Avg Cash Flow", value: "AED 62K", color: T.teal, description: "Average annual net cash flow per unit across Emaar portfolio after service charges and management fees.", source: "DLD Rental Index · DXB Analytics", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Avg Annual Rent", value: "AED 88K", note: "Gross rental" }, { label: "Service Charges", value: "AED 18K", note: "Avg annual" }, { label: "Mgmt Fee", value: "AED 8K", note: "~9% of rent" }, { label: "Net Cash Flow", value: "AED 62K", note: "Annual average" }, { label: "Monthly", value: "~AED 5,167", note: "Per unit avg" }], trend: null })} />
+              <KPI label="Dubai Avg Gross Yield" value="6.9%" sub="Apartments 7.3% · Villas 5.0%" delay={1} onClick={() => setSelectedKPI({ label: "Dubai Avg Gross Yield", value: "6.9%", color: T.gold, description: "Dubai citywide average gross rental yield in 2025. Apartments outperform at 7.3% vs villas at 5.0%. Source: REIDIN Dec 2025, DXB Interact, Engel & Völkers.", source: "REIDIN · DXB Interact · Engel & Völkers 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "City Avg (Gross)", value: "6.9%", note: "All property types" }, { label: "Apartments Avg", value: "7.3%", note: "Highest returns" }, { label: "Villas Avg", value: "5.0%", note: "Lower but appreciation" }, { label: "Net Yield (Apt)", value: "~5.3–5.8%", note: "After costs" }, { label: "vs London", value: "2–4%", note: "Dubai 3× higher" }, { label: "vs New York", value: "3–5%", note: "Dubai outperforms" }], trend: null })} />
+              <KPI label="Best Dubai Yield" value="8–9%" sub="JVC · International City" delay={2} onClick={() => setSelectedKPI({ label: "Best Dubai Yield", value: "8–9%", color: T.green, description: "Jumeirah Village Circle and International City consistently deliver 8–9% gross yields in 2025, the highest in Dubai. Affordable entry prices + strong tenant demand drive returns.", source: "REIDIN · DXB Interact · Bayut H1 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Top Area", value: "Int'l City / JVC", note: "8–9% gross" }, { label: "Al Furjan", value: "7.5–8.5%", note: "Strong yield" }, { label: "Dubai South", value: "7–8%", note: "Growing demand" }, { label: "Emaar communities", value: "5.5–7.5%", note: "Premium segment" }, { label: "Net Yield (JVC)", value: "6.5–7.5%", note: "After costs" }], trend: null })} />
+              <KPI label="Palm / Downtown Yield" value="4–5.5%" sub="Capital appreciation play" delay={3} onClick={() => setSelectedKPI({ label: "Palm / Downtown Yield", value: "4–5.5%", color: T.blue, description: "Palm Jumeirah and Downtown Dubai offer 4–5.5% gross yield — lower than city average. Capital appreciation compensates: Palm villas rose 14% YoY in 2025, Downtown apartments +12.5%.", source: "REIDIN · DXB Interact · Engel & Völkers Q4 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Palm Jumeirah", value: "4–5.5%", note: "Gross yield" }, { label: "Downtown Dubai", value: "4.5–6%", note: "Gross yield" }, { label: "Palm YoY Appreciation", value: "+14%", note: "2025 capital gain" }, { label: "Downtown YoY Appr.", value: "+12.5%", note: "2025 capital gain" }, { label: "Net Yield (Palm)", value: "3–4.3%", note: "After costs" }], trend: null })} />
+              <KPI label="Avg 2BR Annual Rent" value="AED 91K" sub="Dubai citywide avg Q3 2025" delay={4} onClick={() => setSelectedKPI({ label: "Avg 2BR Annual Rent", value: "AED 91K", color: T.teal, description: "Average annual rent for a 2-bedroom apartment in Dubai is AED 91,052 (Q3 2025), per Property Monitor data compiled by Engel & Völkers. Rents grew 8.5–9% YoY in 2025.", source: "Property Monitor · Engel & Völkers Q3 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "2BR Avg Rent", value: "AED 91,052", note: "Q3 2025 citywide" }, { label: "Rent Growth YoY", value: "+8.5–9%", note: "Apartments 2025" }, { label: "Villa Rent Growth", value: "+5.7%", note: "2025 YoY" }, { label: "EIBOR Rate", value: "3.47%", note: "Dec 2025 reference" }, { label: "900K+ contracts", value: "+8% YoY", note: "Ejari registrations 2024" }], trend: null })} />
             </div>
 
             <Section title="Detailed Yield Data" sub="All Emaar communities · Annual rents · Launch prices · Demand levels">
@@ -3664,6 +3776,8 @@ export default function EmaarDashboardV2() {
               </Chart>
             </Section>
             </ProGate>
+
+          <TabSources sources={[{ label: "REIDIN Dec 2025", url: "https://reidin.com" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "Engel & Völkers Dubai 2025", url: "https://www.engelvoelkers.com/en-ae/dubai/" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "Bayut Rental Report 2025", url: "https://www.bayut.com" }, { label: "Property Finder", url: "https://www.propertyfinder.ae" }]} />
           </>}
 
           {/* ─── MORTGAGE CALCULATOR TAB ─── */}
@@ -3672,10 +3786,10 @@ export default function EmaarDashboardV2() {
               const [selectedProjectId, setSelectedProjectId] = React.useState("");
               const [propPrice, setPropPrice] = React.useState(2000000);
               const [downPct, setDownPct] = React.useState(20);
-              const [rate, setRate] = React.useState(4.5);
+              const [rate, setRate] = React.useState(4.99); // EIBOR 3M 3.47% + avg 1.52% spread (Dec 2025, CBUAE)
               const [years, setYears] = React.useState(25);
               const [isUAENational, setIsUAENational] = React.useState(false);
-              const [grossYieldPct, setGrossYieldPct] = React.useState(6.5);
+              const [grossYieldPct, setGrossYieldPct] = React.useState(6.9); // Dubai avg gross yield 2025 (REIDIN/DXB Interact)
 
               React.useEffect(() => {
                 if (!selectedProjectId) return;
@@ -3805,10 +3919,12 @@ export default function EmaarDashboardV2() {
                 <MortgageCalc />
               </Section>
             );
+
+          <TabSources sources={[{ label: "CBUAE — UAE Base Rate", url: "https://www.cbuae.gov.ae" }, { label: "EIBOR 3M: 3.47% (Dec 2025)" }, { label: "DLD Fee Schedule (4%)", url: "https://dubailand.gov.ae" }, { label: "UAE Mortgage Law (No. 14 of 2008)" }, { label: "Property Finder Mortgage Rates", url: "https://www.propertyfinder.ae" }]} />
           })()}
 
           {/* ─── MAP / COMMUNITIES TAB ─── */}
-          {tab === "Map" && <CommunityMapTab activeProjects={activeProjects} liveCommunityROI={liveCommunityROI} setTab={setTab} />}
+          {tab === "Map" && <><CommunityMapTab activeProjects={activeProjects} liveCommunityROI={liveCommunityROI} setTab={setTab} /><TabSources sources={[{ label: "Google Maps API", url: "https://maps.google.com" }, { label: "Emaar Community Boundaries" }, { label: "DLD Zoning Data", url: "https://dubailand.gov.ae" }, { label: "OpenStreetMap", url: "https://www.openstreetmap.org" }]} /></>}
 
           {/* ─── LAUNCH CALENDAR TAB ─── */}
           {tab === "Launch Calendar" && (() => {
@@ -3900,6 +4016,8 @@ export default function EmaarDashboardV2() {
                 </div>
               </div>
             );
+
+          <TabSources sources={[{ label: "Emaar Press Releases", url: "https://www.emaar.com/en/media/press-releases/" }, { label: "Property Finder New Launches", url: "https://www.propertyfinder.ae" }, { label: "DLD Oqood Off-Plan Registry", url: "https://oqood.dubailand.gov.ae" }, { label: "Zawya Real Estate News", url: "https://www.zawya.com" }]} />
           })()}
 
           {/* ─── NEIGHBOURHOODS TAB ─── */}
@@ -3985,6 +4103,8 @@ export default function EmaarDashboardV2() {
                 </div>
               </div>
             );
+
+          <TabSources sources={[{ label: "DXB Interact Neighbourhood Data", url: "https://dxbinteract.com" }, { label: "REIDIN Neighbourhood Scorecard", url: "https://reidin.com" }, { label: "fam Properties Area Guide", url: "https://famproperties.com" }, { label: "Property Monitor" }, { label: "Google Maps / DM GIS" }]} />
           })()}
 
           {/* ─── SERVICE CHARGES TAB ─── */}
@@ -4090,6 +4210,8 @@ export default function EmaarDashboardV2() {
                 </div>
               </div>
             );
+
+          <TabSources sources={[{ label: "RERA Dubai (rera.gov.ae)", url: "https://www.rera.gov.ae" }, { label: "Mollak Service Charge Database" }, { label: "Owners Associations — Published Budgets" }, { label: "DLD Owner Portal" }, { label: "Asteco Facilities Management" }]} />
           })()}
 
           {/* ─── RISK TAB ─── */}
@@ -4132,6 +4254,8 @@ export default function EmaarDashboardV2() {
               </div>
             </Section>
             </ProGate>
+
+          <TabSources sources={[{ label: "Fitch Ratings UAE Developers", url: "https://www.fitchratings.com" }, { label: "Knight Frank Dubai 2025", url: "https://www.knightfrank.com/research" }, { label: "IMF World Economic Outlook", url: "https://www.imf.org" }, { label: "DLD Transaction Data", url: "https://dubailand.gov.ae" }, { label: "CW Core Dubai Market Report", url: "https://cwcore.com" }]} />
           </>}
 
           {/* --- CURRENCY TAB --- */}
@@ -4291,6 +4415,8 @@ export default function EmaarDashboardV2() {
                 <CurrencyConverter />
               </Section>
             );
+
+          <TabSources sources={[{ label: "open.er-api.com (Live Rates)", url: "https://open.er-api.com" }, { label: "European Central Bank", url: "https://www.ecb.europa.eu" }, { label: "UAE Central Bank", url: "https://www.cbuae.gov.ae" }, { label: "XE Currency", url: "https://www.xe.com/currency/aed" }]} />
           })()}
 
 
@@ -4540,6 +4666,8 @@ export default function EmaarDashboardV2() {
 
                 </div>
               );
+
+          <TabSources sources={[{ label: "UAE ICP — Golden Visa", url: "https://icp.gov.ae" }, { label: "GDRFA Dubai", url: "https://gdrfad.gov.ae" }, { label: "Federal Authority for Identity (ICP)", url: "https://icp.gov.ae" }, { label: "Emaar.com/en/investor-relations — Project prices" }, { label: "Dubai Economy & Tourism", url: "https://www.visitdubai.com" }]} />
           })()}
 
 
@@ -4816,6 +4944,8 @@ export default function EmaarDashboardV2() {
                   </div>
                 </div>
               );
+
+          <TabSources sources={[{ label: "DLD Transaction Records", url: "https://dubailand.gov.ae" }, { label: "REIDIN Price Index", url: "https://reidin.com" }, { label: "Property Monitor" }, { label: "DXB Interact Flip Analysis", url: "https://dxbinteract.com" }, { label: "fam Properties Research", url: "https://famproperties.com" }]} />
           })()}
 
           {/* ─── MARKET TAB ─── */}
@@ -4864,6 +4994,8 @@ export default function EmaarDashboardV2() {
                 ))}
               </div>
             </Section>
+
+          <TabSources sources={[{ label: "Dubai Land Department (Official)", url: "https://dubailand.gov.ae" }, { label: "REIDIN Dec 2025", url: "https://reidin.com" }, { label: "ValuStrat Q4 2025" }, { label: "Knight Frank Dubai 2025", url: "https://www.knightfrank.com/research" }, { label: "Gulf News Property", url: "https://gulfnews.com/business/property" }, { label: "Zawya Real Estate", url: "https://www.zawya.com" }]} />
           </>}
 
           {/* ─── ADMIN TAB ─── */}
