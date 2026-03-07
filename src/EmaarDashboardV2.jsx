@@ -1247,6 +1247,10 @@ export default function EmaarDashboardV2() {
   const [flipHoldYears, setFlipHoldYears] = useState(3);
   const [flipIncludeRental, setFlipIncludeRental] = useState(false);
   const [flipRentalYield, setFlipRentalYield] = useState(6.5);
+  // Golden Visa Calculator state (lifted up)
+  const [gvPropPrice, setGvPropPrice] = useState(2000000);
+  const [gvPaymentPlan, setGvPaymentPlan] = useState("cash");
+  const [gvNationality, setGvNationality] = useState("other");
 
   // Load projects from Firestore (runs for ALL users — guests and logged-in)
   const [projectsLoading, setProjectsLoading] = useState(true);
@@ -3128,10 +3132,12 @@ export default function EmaarDashboardV2() {
 
           {/* ─── GOLDEN VISA TAB ─── */}
           {tab === "Golden Visa" && (() => {
-            const GoldenVisaCalc = () => {
-              const [propPrice, setPropPrice] = React.useState(2000000);
-              const [paymentPlan, setPaymentPlan] = React.useState("cash");
-              const [nationality, setNationality] = React.useState("other");
+            const propPrice = gvPropPrice;
+              const setPropPrice = setGvPropPrice;
+              const paymentPlan = gvPaymentPlan;
+              const setPaymentPlan = setGvPaymentPlan;
+              const nationality = gvNationality;
+              const setNationality = setGvNationality;
               const [selectedProjGV, setSelectedProjGV] = React.useState(null);
 
               const THRESHOLD = 2000000;
@@ -3189,11 +3195,23 @@ export default function EmaarDashboardV2() {
                         <div style={{ fontSize: 12, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Your Property</div>
 
                         <div style={{ marginBottom: 16 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                             <span style={{ fontSize: 12, color: T.textSecondary }}>Property Price</span>
-                            <span style={{ fontSize: 14, fontWeight: 700, color: eligible ? T.green : T.gold }}>AED {propPrice.toLocaleString()}</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <span style={{ fontSize: 11, color: T.textMuted }}>AED</span>
+                              <input
+                                type="number"
+                                value={propPrice}
+                                min={500000}
+                                max={15000000}
+                                step={50000}
+                                onChange={e => { const v = parseInt(e.target.value) || 0; if (v >= 0) setPropPrice(v); }}
+                                onBlur={e => { const v = parseInt(e.target.value) || 500000; setPropPrice(Math.min(15000000, Math.max(500000, v))); }}
+                                style={{ width: 130, padding: "5px 10px", borderRadius: 8, border: "1px solid " + (eligible ? T.green : T.gold), background: T.surfaceAlt, color: eligible ? T.green : T.gold, fontSize: 13, fontWeight: 700, fontFamily: "'Outfit',sans-serif", textAlign: "right", outline: "none" }}
+                              />
+                            </div>
                           </div>
-                          <input type="range" min={500000} max={15000000} step={50000} value={propPrice} onChange={e => setPropPrice(+e.target.value)} style={{ width: "100%", accentColor: eligible ? T.green : T.gold }} />
+                          <input type="range" min={500000} max={15000000} step={50000} value={Math.min(15000000, Math.max(500000, propPrice))} onChange={e => setPropPrice(+e.target.value)} style={{ width: "100%", accentColor: eligible ? T.green : T.gold }} />
                           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
                             <span style={{ fontSize: 10, color: T.textMuted }}>AED 500K</span>
                             <span style={{ fontSize: 10, color: T.textMuted }}>AED 15M</span>
@@ -3358,8 +3376,6 @@ export default function EmaarDashboardV2() {
 
                 </div>
               );
-            };
-            return <GoldenVisaCalc />;
           })()}
 
 
