@@ -2140,6 +2140,11 @@ export default function EmaarDashboardV2() {
                   </div>
                   {/* Action Buttons */}
                   <div style={{ display: "flex", gap: 6, marginTop: 10 }} onClick={e => e.stopPropagation()}>
+                    {p.website && (
+                      <a href={p.website} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "8px 0", background: "rgba(212,168,67,0.08)", border: `1px solid rgba(212,168,67,0.2)`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, textAlign: "center", textDecoration: "none" }}>
+                        Emaar ↗
+                      </a>
+                    )}
                     {isPro ? (<>
                     <a href={whatsappLink(p.name, p.community)} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "8px 0", background: "#25D366", borderRadius: 8, color: "#fff", fontSize: 11, fontWeight: 600, textAlign: "center", textDecoration: "none" }}>
                       WhatsApp
@@ -3516,6 +3521,15 @@ export default function EmaarDashboardV2() {
               )}
 
               {/* Contact CTAs */}
+              {selectedProject_.website && (
+                <a href={selectedProject_.website} target="_blank" rel="noopener noreferrer"
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "11px 0", marginBottom: 10, background: "rgba(212,168,67,0.08)", border: `1px solid ${T.border}`, borderRadius: 12, color: T.gold, fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(212,168,67,0.15)"; e.currentTarget.style.borderColor = T.gold; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(212,168,67,0.08)"; e.currentTarget.style.borderColor = T.border; }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  View Official Project Page on Emaar ↗
+                </a>
+              )}
               {isPro ? (
               <div style={{ display: "flex", gap: 8 }}>
                 <a href={whatsappLink(selectedProject_.name, selectedProject_.community)} target="_blank" rel="noopener noreferrer"
