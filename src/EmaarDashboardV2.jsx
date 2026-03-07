@@ -3616,7 +3616,7 @@ export default function EmaarDashboardV2() {
                       } catch(cacheErr) {}
                       const bedsParam = beds === "Studio" ? "0" : beds.replace("BR","");
                       // Bayut Search endpoint - resets 9th March
-                      const url = `https://unofficial-bayut-api.p.rapidapi.com/search?locationExternalIDs=5002&purpose=for-sale&categoryExternalID=${propType === "Apartment" ? "4" : "16"}&lang=en&sort=price-asc&page=0&hitsPerPage=6&roomsMin=${bedsParam}&roomsMax=${bedsParam}`;
+                      const url = `https://unofficial-bayut-api.p.rapidapi.com/search?locationExternalIDs=5002&purpose=for-sale&categoryExternalID=${propType === "Apartment" ? "4" : "16"}&lang=en&sort=price-asc&page=0&hitsPerPage=6&rooms=${bedsParam}`;
                       const res = await fetch(url, {
                         method: "GET",
                         headers: {
