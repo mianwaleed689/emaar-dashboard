@@ -1438,17 +1438,32 @@ export default function EmaarDashboardV2() {
         const combined = [...extraFromOverrides, ...extraFromNew.filter(p => !seen.has(String(p.id)))];
         setExtraProjects(combined);
 
-        // Load live yield data (merges with static emaarYields)
-        if (yieldSnap.size > 0) {
-          const yieldOverrides = {};
-          yieldSnap.forEach(d => { yieldOverrides[d.id] = d.data(); });
-          const mergedYields = emaarYields.map(y => {
-            const key = `${y.community}_${y.unit}`;
-            const ov = yieldOverrides[key];
-            return ov ? { ...y, ...ov } : y;
-          }).map(y => ({ label: y.unit, community: y.community, rent: (y.rent||0)/1000, price: (y.price||0)/1000, gross: y.gross, net: y.net, demand: y.demand === "Very High" ? "V.High" : y.demand === "Moderate-High" ? "High" : y.demand, visa: y.visa }));
-          setLiveYields(mergedYields);
-        }
+        // Load live yield data — check tabData first (admin editor), then yieldData collection
+        try {
+          const tabYieldSnap = await getDoc(doc(db, "tabData", "yieldData"));
+          if (tabYieldSnap.exists() && tabYieldSnap.data().rows?.length > 0) {
+            const rows = tabYieldSnap.data().rows;
+            const mapped = rows.map(r => ({
+              label: "Apt", community: r.community,
+              rent: parseFloat(r.avgRent || 0) / 1000,
+              price: 0,
+              gross: parseFloat(r.grossYield || 0),
+              net: parseFloat(r.netYield || 0),
+              demand: r.trend === "rising" ? "V.High" : "High",
+              visa: false
+            }));
+            setLiveYields(mapped);
+          } else if (yieldSnap.size > 0) {
+            const yieldOverrides = {};
+            yieldSnap.forEach(d => { yieldOverrides[d.id] = d.data(); });
+            const mergedYields = emaarYields.map(y => {
+              const key = `${y.community}_${y.unit}`;
+              const ov = yieldOverrides[key];
+              return ov ? { ...y, ...ov } : y;
+            }).map(y => ({ label: y.unit, community: y.community, rent: (y.rent||0)/1000, price: (y.price||0)/1000, gross: y.gross, net: y.net, demand: y.demand === "Very High" ? "V.High" : y.demand === "Moderate-High" ? "High" : y.demand, visa: y.visa }));
+            setLiveYields(mergedYields);
+          }
+        } catch(e) {}
 
         // Load live communityROI (merges with static)
         if (roiSnap.size > 0) {
@@ -3674,7 +3689,22 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── COMPETITORS TAB ─── */}
-          {tab === "Competitors" && <>
+          {tab === "Competitors" && (() => {
+            // Use live competitor data from admin if available, else static
+            const devList = liveCompetitors.length > 0
+              ? liveCompetitors.map((d, i) => ({
+                  rank: i + 1,
+                  name: (d.developer || d.name || "").replace(" Properties","").replace(" Realty","").replace(" Development",""),
+                  sales: parseFloat(d.sales2025) || 0,
+                  units: 0,
+                  delivered: 0,
+                  underConst: 0,
+                  color: [T.gold,"#3B82F6","#10B981","#8B5CF6","#F59E0B","#06B6D4"][i % 6],
+                  share: parseFloat(d.marketShare) || 0,
+                  segment: d.strength || "—",
+                }))
+              : developers;
+            return <>
             <Section title="Developer Rankings" sub="DXBinteract verified · fam Properties analysis · 2025">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Emaar % of Top 30" value="11.8%" sub="% of AED 682.5B Dubai market" delay={1} onClick={() => setSelectedKPI({ label: "Emaar % of Dubai Total", value: "11.8%", color: T.gold, description: "Emaar accounts for 22.6% of all sales among the top 30 Dubai developers — nearly 1 in 4 AED of premium real estate sold in Dubai.", source: "DXBinteract · fam Properties 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar FY2025 Sales", value: "AED 80.4B", note: "All-time record" }, { label: "Dubai Total Market", value: "AED 682.5B", note: "FY2025 DLD data" }, { label: "Emaar Share", value: "11.8%", note: "Of entire Dubai market" }, { label: "Rank", value: "#1", note: "By sales value" }, { label: "#2 DAMAC", value: "~AED 32B est.", note: "2.5× smaller" }], trend: null })} />
@@ -3687,13 +3717,13 @@ export default function EmaarDashboardV2() {
             <ProGate isPro={isPro} message="Unlock Competitor Analysis" onUpgrade={() => setShowUpgrade(true)}>
             <Chart title="Sales Value (AED Billions) — Top 10 Developers" style={{ marginTop: 20 }}>
               <ResponsiveContainer width="100%" height={380}>
-                <BarChart data={developers} layout="vertical">
+                <BarChart data={devList} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                   <XAxis type="number" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis type="category" dataKey="name" tick={{ fill: T.textSecondary, fontSize: 12 }} width={70} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="sales" name="Sales (AED B)" radius={[0, 8, 8, 0]} barSize={22}>
-                    {developers.map((d, i) => <Cell key={i} fill={d.color} />)}
+                    {devList.map((d, i) => <Cell key={i} fill={d.color} />)}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -3702,7 +3732,7 @@ export default function EmaarDashboardV2() {
             <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 20 }}>
               <Chart title="Units Sold (Volume)">
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={developers} layout="vertical">
+                  <BarChart data={devList} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                     <XAxis type="number" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
                     <YAxis type="category" dataKey="name" tick={{ fill: T.textSecondary, fontSize: 11 }} width={65} axisLine={false} tickLine={false} />
@@ -3713,7 +3743,7 @@ export default function EmaarDashboardV2() {
               </Chart>
               <Chart title="Units Under Construction">
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={developers} layout="vertical">
+                  <BarChart data={devList} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                     <XAxis type="number" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
                     <YAxis type="category" dataKey="name" tick={{ fill: T.textSecondary, fontSize: 11 }} width={65} axisLine={false} tickLine={false} />
@@ -3735,7 +3765,7 @@ export default function EmaarDashboardV2() {
                     </tr>
                   </thead>
                   <tbody>
-                    {developers.map((d, i) => (
+                    {devList.map((d, i) => (
                       <tr key={i} style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                         <td style={{ padding: "10px 12px", textAlign: "center", color: i === 0 ? T.gold : T.textMuted, fontWeight: 700, fontFamily: "'Fraunces', serif" }}>{d.rank}</td>
                         <td style={{ padding: "10px 12px", color: T.white, fontWeight: 600 }}>
@@ -3772,7 +3802,8 @@ export default function EmaarDashboardV2() {
               </div>
             </Section>
             </ProGate>
-          </>}
+            <TabSources sources={[{ label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "fam Properties", url: "https://famproperties.com" }, { label: "DLD", url: "https://dubailand.gov.ae" }, { label: "Gulf News", url: "https://gulfnews.com" }, { label: "Zawya", url: "https://zawya.com" }]} />
+          </>; })()}
 
           {/* ─── YIELDS TAB ─── */}
           {tab === "Yields" && <>
@@ -3997,6 +4028,38 @@ export default function EmaarDashboardV2() {
               <Section title="Mortgage Calculator" sub="4 questions every Dubai property buyer needs answered">
                 <MortgageCalc />
               </Section>
+
+              {/* Bank Rate Comparison — from admin Tab Control */}
+              {liveMortgageRates.length > 0 && (
+                <Section title="Bank Rate Comparison" sub="Updated via Admin · Live rates from UAE banks">
+                  <div style={{ overflowX: "auto", marginTop: 12 }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 600 }}>
+                      <thead>
+                        <tr style={{ borderBottom: `2px solid ${T.border}` }}>
+                          {["Bank", "Rate (p.a.)", "Max LTV", "Processing Fee", "Min Salary", "Notes"].map(h => (
+                            <th key={h} style={{ padding: "10px 12px", textAlign: h === "Bank" ? "left" : "center", color: T.gold, fontWeight: 600, fontSize: 10, letterSpacing: 0.5, textTransform: "uppercase" }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[...liveMortgageRates].sort((a,b) => parseFloat(a.rate) - parseFloat(b.rate)).map((b, i) => (
+                          <tr key={i} style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.2s" }}
+                            onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <td style={{ padding: "10px 12px", color: i === 0 ? T.gold : T.white, fontWeight: 600 }}>{b.bank}{i === 0 && <span style={{ marginLeft: 6, fontSize: 9, color: T.green, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "rgba(16,185,129,0.1)" }}>BEST</span>}</td>
+                            <td style={{ padding: "10px 12px", textAlign: "center", color: i === 0 ? T.green : T.textSecondary, fontWeight: 600, fontFamily: "'Fraunces',serif" }}>{b.rate}%</td>
+                            <td style={{ padding: "10px 12px", textAlign: "center", color: T.textSecondary }}>{b.maxLTV}%</td>
+                            <td style={{ padding: "10px 12px", textAlign: "center", color: T.textSecondary }}>{b.processingFee}</td>
+                            <td style={{ padding: "10px 12px", textAlign: "center", color: T.textSecondary }}>AED {parseInt(b.minSalary||0).toLocaleString()}</td>
+                            <td style={{ padding: "10px 12px", textAlign: "center", fontSize: 11, color: T.textMuted }}>{b.notes}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Section>
+              )}
+
               <TabSources sources={[{ label: "CBUAE — UAE Base Rate", url: "https://www.cbuae.gov.ae" }, { label: "EIBOR 3M: 3.47% (Dec 2025)" }, { label: "DLD Fee Schedule (4%)", url: "https://dubailand.gov.ae" }, { label: "UAE Mortgage Law (No. 14 of 2008)" }, { label: "Property Finder Mortgage Rates", url: "https://www.propertyfinder.ae" }]} />
               </>
             );
