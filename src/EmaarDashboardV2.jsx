@@ -59,6 +59,58 @@ const getHandoverCountdown = (handover) => {
   return { label, color, urgent: diffDays <= 90, months: diffMonths, days: diffDays };
 };
 
+// ─── INVESTMENT SCORE (out of 10) ─────────────────────────────────────────
+const getInvestmentScore = (p) => {
+  let score = 0;
+  const breakdown = [];
+
+  // 1. Yield (0–3 pts)
+  const gross = p.gross || p.yield || 0;
+  if (gross >= 8)      { score += 3; breakdown.push({ label: "Yield", pts: 3, max: 3, note: gross + "% gross" }); }
+  else if (gross >= 6) { score += 2; breakdown.push({ label: "Yield", pts: 2, max: 3, note: gross + "% gross" }); }
+  else if (gross >= 4) { score += 1; breakdown.push({ label: "Yield", pts: 1, max: 3, note: gross + "% gross" }); }
+  else                 { breakdown.push({ label: "Yield", pts: 0, max: 3, note: gross ? gross + "%" : "No data" }); }
+
+  // 2. Value (PPSF) (0–2 pts)
+  const ppsf = p.ppsf || 0;
+  if (ppsf > 0 && ppsf <= 1500)       { score += 2; breakdown.push({ label: "Value", pts: 2, max: 2, note: "AED " + ppsf + "/sqft" }); }
+  else if (ppsf > 0 && ppsf <= 2200)  { score += 1; breakdown.push({ label: "Value", pts: 1, max: 2, note: "AED " + ppsf + "/sqft" }); }
+  else if (ppsf > 0)                  { breakdown.push({ label: "Value", pts: 0, max: 2, note: "AED " + ppsf + "/sqft" }); }
+  else                                { breakdown.push({ label: "Value", pts: 0, max: 2, note: "No PPSF" }); }
+
+  // 3. Handover timing (0–2 pts) — sweet spot is 12–36 months
+  const cd = getHandoverCountdown(p.handover);
+  if (cd) {
+    if (cd.passed)              { score += 1.5; breakdown.push({ label: "Handover", pts: 1.5, max: 2, note: "Ready now" }); }
+    else if (cd.months <= 12)   { score += 1;   breakdown.push({ label: "Handover", pts: 1,   max: 2, note: cd.label }); }
+    else if (cd.months <= 30)   { score += 2;   breakdown.push({ label: "Handover", pts: 2,   max: 2, note: cd.label }); }
+    else if (cd.months <= 48)   { score += 1;   breakdown.push({ label: "Handover", pts: 1,   max: 2, note: cd.label }); }
+    else                        { score += 0.5; breakdown.push({ label: "Handover", pts: 0.5, max: 2, note: cd.label }); }
+  } else {
+    breakdown.push({ label: "Handover", pts: 0, max: 2, note: "No date" });
+  }
+
+  // 4. Payment plan (0–2 pts)
+  const pp = (p.paymentPlan || p.payment || "").toLowerCase();
+  if (pp.includes("80/20") || pp.includes("80:20"))       { score += 2;   breakdown.push({ label: "Payment", pts: 2,   max: 2, note: "80/20 plan" }); }
+  else if (pp.includes("70/30") || pp.includes("60/40"))  { score += 1.5; breakdown.push({ label: "Payment", pts: 1.5, max: 2, note: pp }); }
+  else if (pp.includes("50/50") || pp.includes("40/60"))  { score += 1;   breakdown.push({ label: "Payment", pts: 1,   max: 2, note: pp }); }
+  else if (pp.length > 0)                                 { score += 0.5; breakdown.push({ label: "Payment", pts: 0.5, max: 2, note: pp }); }
+  else                                                    { breakdown.push({ label: "Payment", pts: 0, max: 2, note: "Unknown" }); }
+
+  // 5. Golden Visa eligible (0–1 pt)
+  if (p.price && p.price >= 2000000) {
+    score += 1; breakdown.push({ label: "Golden Visa", pts: 1, max: 1, note: "Eligible" });
+  } else {
+    breakdown.push({ label: "Golden Visa", pts: 0, max: 1, note: p.price ? "Below 2M" : "No price" });
+  }
+
+  const final = Math.min(10, Math.round(score * 10) / 10);
+  const color = final >= 8 ? "#10B981" : final >= 6 ? "#D4A843" : final >= 4 ? "#F59E0B" : "#EF4444";
+  const label = final >= 8 ? "Excellent" : final >= 6 ? "Strong" : final >= 4 ? "Good" : "Weak";
+  return { score: final, color, label, breakdown };
+};
+
 /* ─── ICONS (inline SVG) ─── */
 const Icons = {
   overview: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
@@ -87,6 +139,7 @@ const TABS = [
   { key: "Overview", icon: Icons.overview },
   { key: "Financials", icon: Icons.financials },
   { key: "Projects", icon: Icons.projects },
+  { key: "Handover", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="8 14 10 16 16 13"/></svg> },
   { key: "Portfolio", icon: Icons.portfolio },
   { key: "Competitors", icon: Icons.competitors },
   { key: "Yields", icon: Icons.yields },
@@ -2303,9 +2356,19 @@ export default function EmaarDashboardV2() {
                         {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 4, fontWeight: 600, letterSpacing: 0.3, flexShrink: 0 }} title="Official listing on Emaar.com">{getLinkLabel(p.emaarUrl)}</a>}
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: 4 }}>
-                      {p.branded && <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{p.brand}</span>}
-                      <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: p.status === "Completed" ? "rgba(16,185,129,0.2)" : p.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: p.status === "Completed" ? T.green : p.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{p.status === "Completed" ? "✓ Done" : p.status === "Under Construction" ? "Building" : "Off-Plan"}</span>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                      {(() => { const inv = getInvestmentScore(p); return (
+                        <div title={`Investment Score: ${inv.score}/10 — ${inv.breakdown.map(b => b.label + ': ' + b.pts + '/' + b.max).join(' · ')}`}
+                          style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 8, background: `${inv.color}18`, border: `1px solid ${inv.color}40`, cursor: "default" }}>
+                          <span style={{ fontSize: 11, fontWeight: 900, color: inv.color, fontFamily: "'Fraunces', serif" }}>{inv.score}</span>
+                          <span style={{ fontSize: 9, color: inv.color, fontWeight: 700, letterSpacing: 0.3 }}>/10</span>
+                          <span style={{ fontSize: 9, color: inv.color, fontWeight: 600 }}>★ {inv.label}</span>
+                        </div>
+                      ); })()}
+                      <div style={{ display: "flex", gap: 4 }}>
+                        {p.branded && <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{p.brand}</span>}
+                        <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: p.status === "Completed" ? "rgba(16,185,129,0.2)" : p.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: p.status === "Completed" ? T.green : p.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{p.status === "Completed" ? "✓ Done" : p.status === "Under Construction" ? "Building" : "Off-Plan"}</span>
+                      </div>
                     </div>
                   </div>
                   {/* Construction Progress */}
@@ -2502,6 +2565,160 @@ export default function EmaarDashboardV2() {
               </div>
             </Section>
           </>}
+
+          {/* ─── HANDOVER TRACKER TAB ─── */}
+          {tab === "Handover" && (() => {
+            const now = new Date();
+            const thisYear = now.getFullYear();
+            const allHandover = activeProjects
+              .map(p => ({ ...p, _cd: getHandoverCountdown(p.handover), _score: getInvestmentScore(p) }))
+              .filter(p => p.handover)
+              .sort((a, b) => {
+                const getMs = p => { const cd = p._cd; if (!cd) return Infinity; if (cd.passed) return -1; return cd.days || 99999; };
+                return getMs(a) - getMs(b);
+              });
+            const delivering = allHandover.filter(p => p._cd && (p._cd.passed || p._cd.months <= 12));
+            const nextYear = allHandover.filter(p => p._cd && !p._cd.passed && p._cd.months > 12 && p._cd.months <= 24);
+            const beyond = allHandover.filter(p => p._cd && !p._cd.passed && p._cd.months > 24);
+            const avgConstruction = allHandover.length ? Math.round(allHandover.reduce((a, p) => a + (p.construction || 0), 0) / allHandover.length) : 0;
+
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                {/* Summary KPIs */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+                  {[
+                    { label: "Ready / Overdue", value: delivering.length, color: "#10B981", sub: "Keys available" },
+                    { label: "Next 12 Months", value: delivering.filter(p => p._cd && !p._cd.passed).length + " soon", color: T.gold, sub: "Upcoming handovers" },
+                    { label: "Avg Construction", value: avgConstruction + "%", color: T.blue, sub: "Across all projects" },
+                    { label: "Total Tracked", value: allHandover.length, color: T.textSecondary, sub: "With handover dates" },
+                  ].map(k => (
+                    <div key={k.label} style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 18px" }}>
+                      <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>{k.label}</div>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: k.color, fontFamily: "'Fraunces', serif" }}>{k.value}</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>{k.sub}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Ready / Overdue */}
+                {delivering.length > 0 && (
+                  <div style={{ background: T.surface, borderRadius: 16, border: `1px solid rgba(16,185,129,0.25)`, overflow: "hidden" }}>
+                    <div style={{ padding: "16px 20px", background: "rgba(16,185,129,0.06)", borderBottom: `1px solid rgba(16,185,129,0.15)`, display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10B981" }} />
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 800, color: "#10B981" }}>Ready for Handover</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginLeft: "auto" }}>{delivering.length} project{delivering.length !== 1 ? "s" : ""}</div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                      {delivering.map((p, i) => (
+                        <div key={p.id} onClick={() => setSelectedProject(p)} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 20px", borderBottom: i < delivering.length - 1 ? `1px solid ${T.border}` : "none", cursor: "pointer", transition: "background 0.15s" }}
+                          onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                          {/* Construction ring */}
+                          <div style={{ position: "relative", width: 44, height: 44, flexShrink: 0 }}>
+                            <svg width="44" height="44" viewBox="0 0 44 44">
+                              <circle cx="22" cy="22" r="18" fill="none" stroke={T.border} strokeWidth="3"/>
+                              <circle cx="22" cy="22" r="18" fill="none" stroke="#10B981" strokeWidth="3"
+                                strokeDasharray={`${(p.construction || 100) / 100 * 113} 113`}
+                                strokeLinecap="round" transform="rotate(-90 22 22)"/>
+                            </svg>
+                            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: "#10B981" }}>{p.construction || 100}%</div>
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 700, color: T.white, fontSize: 13, fontFamily: "'Fraunces', serif", marginBottom: 2 }}>{p.name}</div>
+                            <div style={{ fontSize: 11, color: T.textMuted }}>{p.community} · {p.handover}</div>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{p.price ? "AED " + (p.price / 1e6).toFixed(1) + "M" : "TBD"}</div>
+                            <div style={{ fontSize: 10, color: "#10B981", fontWeight: 600, marginTop: 2 }}>✓ Ready</div>
+                          </div>
+                          <div style={{ padding: "4px 10px", borderRadius: 8, background: `${p._score.color}18`, border: `1px solid ${p._score.color}40`, textAlign: "center", flexShrink: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 900, color: p._score.color, fontFamily: "'Fraunces', serif" }}>{p._score.score}</div>
+                            <div style={{ fontSize: 9, color: p._score.color }}>★ Score</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Next 12–24 months */}
+                {nextYear.length > 0 && (
+                  <div style={{ background: T.surface, borderRadius: 16, border: `1px solid rgba(212,168,67,0.2)`, overflow: "hidden" }}>
+                    <div style={{ padding: "16px 20px", background: "rgba(212,168,67,0.05)", borderBottom: `1px solid rgba(212,168,67,0.12)`, display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.gold }} />
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 800, color: T.gold }}>Delivering in 12–24 Months</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginLeft: "auto" }}>{nextYear.length} project{nextYear.length !== 1 ? "s" : ""}</div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                      {nextYear.map((p, i) => (
+                        <div key={p.id} onClick={() => setSelectedProject(p)} style={{ padding: "14px 20px", borderBottom: i < nextYear.length - 1 ? `1px solid ${T.border}` : "none", cursor: "pointer" }}
+                          onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                            <div>
+                              <div style={{ fontWeight: 700, color: T.white, fontSize: 13, fontFamily: "'Fraunces', serif" }}>{p.name}</div>
+                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{p.community} · {p.handover}</div>
+                            </div>
+                            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                              <div style={{ padding: "4px 10px", borderRadius: 8, background: `${p._score.color}18`, border: `1px solid ${p._score.color}40`, textAlign: "center" }}>
+                                <span style={{ fontSize: 12, fontWeight: 900, color: p._score.color, fontFamily: "'Fraunces', serif" }}>{p._score.score}</span>
+                                <span style={{ fontSize: 9, color: p._score.color }}>/10</span>
+                              </div>
+                              <div style={{ textAlign: "right" }}>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{p.price ? "AED " + (p.price / 1e6).toFixed(1) + "M" : "TBD"}</div>
+                                <div style={{ fontSize: 10, color: T.gold, fontWeight: 600 }}>⏱ {p._cd?.label}</div>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Construction progress */}
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.surfaceAlt, overflow: "hidden" }}>
+                              <div style={{ height: "100%", width: `${p.construction || 0}%`, borderRadius: 3, background: T.gold, transition: "width 0.5s" }} />
+                            </div>
+                            <span style={{ fontSize: 10, color: T.textMuted, flexShrink: 0, minWidth: 32 }}>{p.construction || 0}%</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Beyond 24 months */}
+                {beyond.length > 0 && (
+                  <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                    <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.textMuted }} />
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 800, color: T.textSecondary }}>24+ Months Away</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginLeft: "auto" }}>{beyond.length} project{beyond.length !== 1 ? "s" : ""}</div>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12, padding: 16 }}>
+                      {beyond.map(p => (
+                        <div key={p.id} onClick={() => setSelectedProject(p)} style={{ background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, padding: "12px 14px", cursor: "pointer" }}
+                          onMouseEnter={e => e.currentTarget.style.borderColor = T.gold + "60"}
+                          onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                            <div>
+                              <div style={{ fontWeight: 700, color: T.white, fontSize: 12, fontFamily: "'Fraunces', serif" }}>{p.name}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>{p.community}</div>
+                            </div>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: p._score.color, padding: "3px 7px", borderRadius: 6, background: `${p._score.color}15` }}>{p._score.score}★</span>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
+                            <span style={{ color: T.textMuted }}>{p.handover}</span>
+                            <span style={{ color: T.textSecondary }}>{p._cd?.label}</span>
+                          </div>
+                          <div style={{ marginTop: 8, height: 4, borderRadius: 2, background: T.border, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${p.construction || 0}%`, background: T.textMuted, borderRadius: 2 }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            );
+          })()}
 
           {/* ─── PORTFOLIO TAB ─── */}
           {tab === "Portfolio" && <>
