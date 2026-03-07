@@ -3457,11 +3457,29 @@ export default function EmaarDashboardV2() {
                         {/* Buy / Sell price */}
                         {[["Buy Price (Launch)", buyPrice, setBuyPrice, T.gold], ["Sell Price (Target)", sellPrice, setSellPrice, T.green]].map(([label, val, setter, col]) => (
                           <div key={label} style={{ marginBottom: 14 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                               <span style={{ fontSize: 12, color: T.textSecondary }}>{label}</span>
-                              <span style={{ fontSize: 13, fontWeight: 700, color: col }}>AED {val.toLocaleString()}</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <span style={{ fontSize: 11, color: T.textMuted }}>AED</span>
+                                <input
+                                  type="number"
+                                  value={val}
+                                  min={500000}
+                                  max={20000000}
+                                  step={50000}
+                                  onChange={e => {
+                                    const v = parseInt(e.target.value.replace(/,/g, "")) || 0;
+                                    if (v >= 0) setter(v);
+                                  }}
+                                  onBlur={e => {
+                                    const v = parseInt(e.target.value) || 500000;
+                                    setter(Math.min(20000000, Math.max(500000, v)));
+                                  }}
+                                  style={{ width: 130, padding: "5px 10px", borderRadius: 8, border: "1px solid " + col, background: T.surfaceAlt, color: col, fontSize: 13, fontWeight: 700, fontFamily: "'Outfit',sans-serif", textAlign: "right", outline: "none" }}
+                                />
+                              </div>
                             </div>
-                            <input type="range" min={500000} max={20000000} step={50000} value={val} onChange={e => setter(+e.target.value)} style={{ width: "100%", accentColor: col }} />
+                            <input type="range" min={500000} max={20000000} step={50000} value={Math.min(20000000, Math.max(500000, val))} onChange={e => setter(+e.target.value)} style={{ width: "100%", accentColor: col }} />
                             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 3 }}>
                               <span style={{ fontSize: 9, color: T.textMuted }}>AED 500K</span>
                               <span style={{ fontSize: 9, color: T.textMuted }}>AED 20M</span>
@@ -3618,7 +3636,6 @@ export default function EmaarDashboardV2() {
                   </div>
                 </div>
               );
-            };
           })()}
 
           {/* ─── MARKET TAB ─── */}
