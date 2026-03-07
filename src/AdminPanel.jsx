@@ -3123,66 +3123,65 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* Two-panel layout */}
-                <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 16, alignItems: "start" }}>
+                {/* Stacked layout */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-                  {/* LEFT — Tab list */}
+                  {/* TOP — Tab list (horizontal scrollable cards) */}
                   <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
                     <div style={{ padding: "10px 16px", borderBottom: `1px solid ${T.border}`, display: "grid", gridTemplateColumns: "1fr 44px", gap: 8, alignItems: "center" }}>
                       <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Tab</span>
                       <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, textAlign: "center" }}>On</span>
                     </div>
-                    {ALL_TABS.map((tabKey, i) => {
-                      const setting = getTabSetting(tabKey);
-                      const isVisible = setting.visible !== false;
-                      const minTier = setting.minTier || "free";
-                      const isSelected = selectedTabControl === tabKey;
-                      const editable = hasData(tabKey);
-                      return (
-                        <div key={tabKey} onClick={() => setSelectedTabControl(isSelected ? null : tabKey)} style={{
-                          display: "grid", gridTemplateColumns: "1fr 44px", gap: 8,
-                          padding: "11px 16px",
-                          borderBottom: i < ALL_TABS.length - 1 ? `1px solid ${T.border}` : "none",
-                          background: isSelected ? "rgba(212,168,67,0.07)" : "transparent",
-                          cursor: "pointer", alignItems: "center",
-                          borderLeft: isSelected ? `2px solid ${T.gold}` : "2px solid transparent",
-                          transition: "all 0.15s"
-                        }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: "12px 16px" }}>
+                      {ALL_TABS.map((tabKey) => {
+                        const setting = getTabSetting(tabKey);
+                        const isVisible = setting.visible !== false;
+                        const minTier = setting.minTier || "free";
+                        const isSelected = selectedTabControl === tabKey;
+                        const editable = hasData(tabKey);
+                        return (
+                          <div key={tabKey} onClick={() => setSelectedTabControl(isSelected ? null : tabKey)} style={{
+                            display: "flex", alignItems: "center", gap: 8,
+                            padding: "8px 14px",
+                            borderRadius: 10,
+                            background: isSelected ? "rgba(212,168,67,0.1)" : T.surfaceAlt,
+                            border: `1px solid ${isSelected ? T.gold : T.border}`,
+                            cursor: "pointer", transition: "all 0.15s",
+                          }}>
+                            {/* Visibility dot */}
                             <div style={{ width: 7, height: 7, borderRadius: "50%", flexShrink: 0,
                               background: !isVisible ? T.textMuted : minTier === "enterprise" ? T.purple : minTier === "pro" ? T.gold : T.green }} />
-                            <div style={{ minWidth: 0 }}>
-                              <div style={{ fontSize: 12, fontWeight: isSelected ? 700 : 500, color: isVisible ? T.white : T.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{tabKey}</div>
-                              <div style={{ display: "flex", gap: 4, marginTop: 2, flexWrap: "wrap" }}>
-                                {minTier !== "free" && <span style={{ fontSize: 9, fontWeight: 700, color: TIER_COLORS[minTier], padding: "1px 5px", borderRadius: 4, background: `${TIER_COLORS[minTier]}15` }}>{TIER_LABELS[minTier].toUpperCase()}</span>}
-                                {editable && <span style={{ fontSize: 9, color: T.blue, padding: "1px 5px", borderRadius: 4, background: "rgba(59,130,246,0.1)" }}>DATA</span>}
-                              </div>
+                            {/* Name */}
+                            <span style={{ fontSize: 12, fontWeight: isSelected ? 700 : 500, color: isVisible ? T.white : T.textMuted, whiteSpace: "nowrap" }}>{tabKey}</span>
+                            {/* Tier badge */}
+                            {minTier !== "free" && <span style={{ fontSize: 9, fontWeight: 700, color: TIER_COLORS[minTier], padding: "1px 5px", borderRadius: 4, background: `${TIER_COLORS[minTier]}15` }}>{TIER_LABELS[minTier].toUpperCase()}</span>}
+                            {/* Data badge */}
+                            {editable && <span style={{ fontSize: 9, color: T.blue, padding: "1px 5px", borderRadius: 4, background: "rgba(59,130,246,0.1)" }}>DATA</span>}
+                            {/* Toggle */}
+                            <div onClick={e => e.stopPropagation()}>
+                              <button type="button" onClick={() => updateTabSetting(tabKey, "visible", !isVisible)} style={{
+                                width: 32, height: 18, borderRadius: 9,
+                                background: isVisible ? T.green : "rgba(255,255,255,0.08)",
+                                border: "none", cursor: "pointer", position: "relative", transition: "background 0.2s", display: "block"
+                              }}>
+                                <div style={{ position: "absolute", top: 2, left: isVisible ? 16 : 2, width: 14, height: 14, borderRadius: "50%", background: T.white, transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
+                              </button>
                             </div>
                           </div>
-                          <div style={{ display: "flex", justifyContent: "center" }} onClick={e => e.stopPropagation()}>
-                            <button type="button" onClick={() => updateTabSetting(tabKey, "visible", !isVisible)} style={{
-                              width: 36, height: 20, borderRadius: 10,
-                              background: isVisible ? T.green : "rgba(255,255,255,0.08)",
-                              border: "none", cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0
-                            }}>
-                              <div style={{ position: "absolute", top: 2, left: isVisible ? 18 : 2, width: 16, height: 16, borderRadius: "50%", background: T.white, transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
 
-                  {/* RIGHT — Selected tab detail */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {!selectedTabControl ? (
-                      <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "48px 24px", textAlign: "center" }}>
-                        <div style={{ fontSize: 32, marginBottom: 12 }}>👈</div>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: T.white, marginBottom: 6 }}>Select a tab to configure</div>
-                        <div style={{ fontSize: 12, color: T.textMuted }}>Click any tab on the left to set tier access or edit its data table</div>
-                      </div>
-                    ) : (
-                      <>
+                  {/* BOTTOM — Selected tab config (full width) */}
+                  {!selectedTabControl ? (
+                    <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "32px 24px", textAlign: "center" }}>
+                      <div style={{ fontSize: 28, marginBottom: 10 }}>☝️</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: T.white, marginBottom: 6 }}>Select a tab above to configure</div>
+                      <div style={{ fontSize: 12, color: T.textMuted }}>Click any tab card to set tier access or edit its data table in full width</div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                         {/* Tier control for selected tab */}
                         <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
@@ -3190,6 +3189,7 @@ export default function AdminPanel() {
                               <div style={{ fontSize: 16, fontWeight: 700, color: T.white, fontFamily: "'Fraunces', serif" }}>{selectedTabControl}</div>
                               <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Access control · Who can see this tab</div>
                             </div>
+                            <button type="button" onClick={() => setSelectedTabControl(null)} style={{ background: "none", border: "none", color: T.textMuted, fontSize: 18, cursor: "pointer" }}>✕</button>
                           </div>
                           <div style={{ display: "flex", gap: 8 }}>
                             {TIERS.map(tier => {
@@ -3279,9 +3279,8 @@ export default function AdminPanel() {
                             <div style={{ fontSize: 12, color: T.textMuted }}>This tab renders dynamic or user-specific data (Portfolio, Map, DXB Estimate, etc.) that can't be edited here.</div>
                           </div>
                         )}
-                      </>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Quick actions */}
