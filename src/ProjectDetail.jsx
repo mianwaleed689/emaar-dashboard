@@ -18,8 +18,31 @@ const getLinkDomain = (url) => {
   if (!url) return "Official Listing";
   if (url.includes("propertyfinder.ae")) return "PropertyFinder.ae";
   if (url.includes("bayut.com")) return "Bayut.com";
-  if (url.includes("properties.emaar.com") || url.includes("emaar.com")) return "Emaar.com";
-  return "Official Listing";
+  if (url.includes(\"properties.emaar.com\") || url.includes(\"emaar.com\")) return \"Emaar.com\";
+  return \"Official Listing\";
+};
+
+/* ─── HANDOVER COUNTDOWN ─── */
+const getHandoverCountdown = (handover) => {
+  if (!handover) return null;
+  const match = handover.match(/Q([1-4])\s+(\d{4})/);
+  if (!match) return null;
+  const q = parseInt(match[1]);
+  const year = parseInt(match[2]);
+  const qEndMonth = [2, 5, 8, 11];
+  const qEndDay   = [31, 30, 30, 31];
+  const target = new Date(year, qEndMonth[q - 1], qEndDay[q - 1]);
+  const now = new Date();
+  const diffMs = target - now;
+  if (diffMs <= 0) return { label: "Handover due", color: "#10B981", urgent: false, passed: true };
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const diffMonths = Math.round(diffMs / (1000 * 60 * 60 * 24 * 30.44));
+  let label, color;
+  if (diffDays <= 90) { label = `${diffDays}d left`; color = "#EF4444"; }
+  else if (diffMonths <= 6) { label = `${diffMonths}mo left`; color = "#F59E0B"; }
+  else if (diffMonths <= 18) { label = `${diffMonths}mo left`; color = "#D4A843"; }
+  else { label = `${(diffMonths / 12).toFixed(1)}yr left`; color = "#94A3B8"; }
+  return { label, color, urgent: diffDays <= 90, months: diffMonths, days: diffDays };
 };
 
 
@@ -45,11 +68,11 @@ const Chip = ({ label, color = T.gold, bg }) => (
   <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 6, background: bg || `${color}18`, color, border: `1px solid ${color}33`, letterSpacing: 0.4 }}>{label}</span>
 );
 
-const StatBox = ({ label, value, color = T.white, sub }) => (
+const StatBox = ({ label, value, color = T.white, sub, subColor }) => (
   <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "12px 14px", textAlign: "center" }}>
     <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{label}</div>
     <div style={{ fontSize: 15, fontWeight: 800, color, fontFamily: "'Fraunces', serif" }}>{value}</div>
-    {sub && <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>{sub}</div>}
+    {sub && <div style={{ fontSize: 9, color: subColor || T.textMuted, marginTop: 2, fontWeight: subColor ? 700 : 400 }}>{sub}</div>}
   </div>
 );
 
@@ -318,7 +341,14 @@ export default function ProjectDetail() {
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 11, color: T.textMuted }}>
                 <span>Launch</span>
-                <span>Handover: {project.handover}</span>
+                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  Handover: {project.handover}
+                  {(() => { const cd = getHandoverCountdown(project.handover); return cd ? (
+                    <span style={{ fontSize: 10, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, background: cd.passed ? "rgba(16,185,129,0.1)" : cd.urgent ? "rgba(239,68,68,0.12)" : "rgba(212,168,67,0.08)", padding: "1px 6px", borderRadius: 4 }}>
+                      {cd.passed ? "✓ Ready" : `⏱ ${cd.label}`}
+                    </span>
+                  ) : null; })()}
+                </span>
               </div>
             </div>
 
@@ -327,7 +357,7 @@ export default function ProjectDetail() {
               <SectionTitle>📋 Project Details</SectionTitle>
               <div className="pd-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
                 <StatBox label="Starting From" value={price ? fmtM(price) : "TBD"} color={T.gold} />
-                <StatBox label="Handover" value={project.handover || "—"} />
+                <StatBox label="Handover" value={project.handover || "—"} color={T.white} sub={(() => { const cd = getHandoverCountdown(project.handover); return cd ? (cd.passed ? "✓ Ready" : `⏱ ${cd.label}`) : undefined; })()} subColor={(() => { const cd = getHandoverCountdown(project.handover); return cd ? (cd.passed ? "#10B981" : cd.color) : undefined; })()} />
                 <StatBox label="Price / sqft" value={project.ppsf ? `AED ${project.ppsf.toLocaleString()}` : "—"} />
                 <StatBox label="Size Range" value={project.sizeFrom ? `${project.sizeFrom.toLocaleString()}–${(project.sizeTo || "").toLocaleString()} sqft` : project.sizeRange || "—"} />
                 <StatBox label="Bedrooms" value={project.beds ? project.beds + " BR" : "—"} />

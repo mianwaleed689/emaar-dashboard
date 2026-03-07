@@ -35,6 +35,40 @@ const getLinkDomain = (url) => {
   if (url.includes("properties.emaar.com") || url.includes("emaar.com")) return "Emaar.com";
   return "Official Listing";
 };
+/* ─── HANDOVER COUNTDOWN ─── */
+const getHandoverCountdown = (handover) => {
+  if (!handover) return null;
+  const match = handover.match(/Q([1-4])\s+(\d{4})/);
+  if (!match) return null;
+  const q = parseInt(match[1]);
+  const year = parseInt(match[2]);
+  // End month of each quarter (0-indexed): Q1=Feb28→Mar31, Q2=Jun30, Q3=Sep30, Q4=Dec31
+  const qEndMonth = [2, 5, 8, 11]; // March=2, June=5, Sep=8, Dec=11
+  const qEndDay   = [31, 30, 30, 31];
+  const target = new Date(year, qEndMonth[q - 1], qEndDay[q - 1]);
+  const now = new Date();
+  const diffMs = target - now;
+  if (diffMs <= 0) return { label: "Handover due", color: "#10B981", urgent: false, passed: true };
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const diffMonths = Math.round(diffMs / (1000 * 60 * 60 * 24 * 30.44));
+  let label, color;
+  if (diffDays <= 90) {
+    label = `${diffDays}d left`;
+    color = "#EF4444"; // red — imminent
+  } else if (diffMonths <= 6) {
+    label = `${diffMonths}mo left`;
+    color = "#F59E0B"; // amber — soon
+  } else if (diffMonths <= 18) {
+    label = `${diffMonths}mo left`;
+    color = "#D4A843"; // gold — medium
+  } else {
+    const yrs = (diffMonths / 12).toFixed(1);
+    label = `${yrs}yr left`;
+    color = "#94A3B8"; // muted — far
+  }
+  return { label, color, urgent: diffDays <= 90, months: diffMonths, days: diffDays };
+};
+
 /* ─── ICONS (inline SVG) ─── */
 const Icons = {
   overview: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
@@ -2130,7 +2164,15 @@ export default function EmaarDashboardV2() {
                   {/* Details Grid */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>FROM</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.price ? `AED ${(p.price/1000000).toFixed(1)}M` : "TBD"}</span></div>
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>HANDOVER</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.handover}</span></div>
+                    <div>
+                      <span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>HANDOVER</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.handover}</span>
+                      {(() => { const cd = getHandoverCountdown(p.handover); return cd ? (
+                        <span style={{ display: "inline-block", marginTop: 2, fontSize: 9, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, background: cd.passed ? "rgba(16,185,129,0.1)" : cd.urgent ? "rgba(239,68,68,0.12)" : "rgba(212,168,67,0.08)", padding: "1px 5px", borderRadius: 4, letterSpacing: 0.3 }}>
+                          {cd.passed ? "✓ Ready" : `⏱ ${cd.label}`}
+                        </span>
+                      ) : null; })()}
+                    </div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PRICE/SQFT</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "TBD"}</span></div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>SIZE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.sizeFrom?.toLocaleString()} - {p.sizeTo?.toLocaleString()} sqft</span></div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TYPE</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.type} · {p.beds} BR</span></div>
@@ -2341,6 +2383,7 @@ export default function EmaarDashboardV2() {
                         </div>
                         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
                           <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: T.surfaceAlt, color: T.textMuted }}>{p.handover}</span>
+                          {(() => { const cd = getHandoverCountdown(p.handover); return cd ? <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, background: cd.passed ? "rgba(16,185,129,0.1)" : cd.urgent ? "rgba(239,68,68,0.1)" : "rgba(212,168,67,0.08)" }}>{cd.passed ? "✓ Ready" : `⏱ ${cd.label}`}</span> : null; })()}
                           <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: T.surfaceAlt, color: T.textMuted }}>AED {p.ppsf}/sqft</span>
                           {p.branded && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "rgba(212,168,67,0.12)", color: T.gold }}>{p.brand}</span>}
                         </div>
@@ -3982,6 +4025,7 @@ export default function EmaarDashboardV2() {
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>AED {p.price ? (p.price/1e6).toFixed(2) + "M" : "TBD"}</div>
                       <div style={{ fontSize: 9, color: T.textMuted }}>{p.handover}</div>
+                      {(() => { const cd = getHandoverCountdown(p.handover); return cd ? <div style={{ fontSize: 9, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, marginTop: 1 }}>{cd.passed ? "✓ Ready" : `⏱ ${cd.label}`}</div> : null; })()}
                     </div>
                   </div>
                 ))}
