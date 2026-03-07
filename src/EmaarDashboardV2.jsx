@@ -3625,8 +3625,10 @@ export default function EmaarDashboardV2() {
                         }
                       });
                       const data = await res.json();
+                      console.log("Bayut API raw response:", JSON.stringify(data).slice(0, 500));
                       // Handle both hits array and direct results
-                      const rawListings = data?.hits || data?.properties || data?.results || [];
+                      const rawListings = data?.hits || data?.properties || data?.results || data?.data || [];
+                      console.log("Raw listings count:", rawListings.length, "Keys:", Object.keys(data));
                       const listings = rawListings.slice(0, 6).map(h => ({
                         id: h.externalID || h.id || Math.random(),
                         price: h.price,
@@ -3637,6 +3639,12 @@ export default function EmaarDashboardV2() {
                         location: h.location?.[2]?.name || h.location?.[1]?.name || community,
                         url: `https://www.bayut.com/property/details-${h.externalID || h.id}.html`,
                       }));
+                      // Show debug info if empty
+                      if (listings.length === 0) {
+                        setBayutListings([{ id: "debug", _debug: JSON.stringify(Object.keys(data)) + " | " + JSON.stringify(data).slice(0,200) }]);
+                        setBayutLoading(false);
+                        return;
+                      }
                       setBayutListings(listings);
                       try {
                         const cacheRef2 = doc(db, "bayutCache", cacheKey);
@@ -3662,6 +3670,11 @@ export default function EmaarDashboardV2() {
                       {bayutListings && bayutListings.length > 0 && (
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
                           {bayutListings.map(l => (
+                            l._debug ? (
+                              <div key="debug" style={{ gridColumn: "1/-1", fontSize: 11, color: T.textMuted, background: T.surfaceAlt, padding: 12, borderRadius: 8, wordBreak: "break-all" }}>
+                                🔍 Debug: {l._debug}
+                              </div>
+                            ) : (
                             <a key={l.id} href={l.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", background: T.surface, borderRadius: 10, padding: "12px 14px", border: "1px solid " + T.border, display: "block" }}
                               onMouseEnter={e => e.currentTarget.style.borderColor = "#60A5FA"}
                               onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
@@ -3670,6 +3683,7 @@ export default function EmaarDashboardV2() {
                               <div style={{ fontSize: 10, color: "#60A5FA", marginTop: 2 }}>AED {l.ppsf?.toLocaleString()} /sqft</div>
                               <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{l.beds} bed · {l.baths} bath · {Math.round(l.area).toLocaleString()} sqft</div>
                             </a>
+                            )
                           ))}
                         </div>
                       )}
