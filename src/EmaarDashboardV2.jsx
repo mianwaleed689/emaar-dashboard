@@ -1239,6 +1239,14 @@ export default function EmaarDashboardV2() {
   const [expandedMega, setExpandedMega] = useState(null);
   const [compareList, setCompareList] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
+  // Flip Calculator state (lifted up to prevent reset on re-render)
+  const [flipProjId, setFlipProjId] = useState("");
+  const [flipBuyPrice, setFlipBuyPrice] = useState(2000000);
+  const [flipSellPrice, setFlipSellPrice] = useState(2500000);
+  const [flipPaymentPlan, setFlipPaymentPlan] = useState("80_20");
+  const [flipHoldYears, setFlipHoldYears] = useState(3);
+  const [flipIncludeRental, setFlipIncludeRental] = useState(false);
+  const [flipRentalYield, setFlipRentalYield] = useState(6.5);
 
   // Load projects from Firestore (runs for ALL users — guests and logged-in)
   const [projectsLoading, setProjectsLoading] = useState(true);
@@ -3357,20 +3365,25 @@ export default function EmaarDashboardV2() {
 
           {/* ─── FLIP PROFIT TAB ─── */}
           {tab === "Flip" && (() => {
-            const FlipCalc = () => {
-              const [selectedFlipProj, setSelectedFlipProj] = React.useState(activeProjects[0] || null);
-              const [buyPrice, setBuyPrice] = React.useState(selectedFlipProj?.price || 2000000);
-              const [sellPrice, setSellPrice] = React.useState(Math.round((selectedFlipProj?.price || 2000000) * 1.25));
-              const [paymentPlan, setPaymentPlan] = React.useState("80_20");
-              const [holdYears, setHoldYears] = React.useState(3);
-              const [includeRental, setIncludeRental] = React.useState(false);
-              const [rentalYield, setRentalYield] = React.useState(6.5);
+            const selectedFlipProj = activeProjects.find(p => p.id === flipProjId) || activeProjects[0] || null;
+              const buyPrice = flipBuyPrice;
+              const setBuyPrice = setFlipBuyPrice;
+              const sellPrice = flipSellPrice;
+              const setSellPrice = setFlipSellPrice;
+              const paymentPlan = flipPaymentPlan;
+              const setPaymentPlan = setFlipPaymentPlan;
+              const holdYears = flipHoldYears;
+              const setHoldYears = setFlipHoldYears;
+              const includeRental = flipIncludeRental;
+              const setIncludeRental = setFlipIncludeRental;
+              const rentalYield = flipRentalYield;
+              const setRentalYield = setFlipRentalYield;
 
               // When project changes, update prices
               const handleProjSelect = (p) => {
-                setSelectedFlipProj(p);
-                setBuyPrice(p.price || 2000000);
-                setSellPrice(Math.round((p.price || 2000000) * 1.25));
+                setFlipProjId(p.id);
+                setFlipBuyPrice(p.price || 2000000);
+                setFlipSellPrice(Math.round((p.price || 2000000) * 1.25));
               };
 
               // Payment plan configs
@@ -3606,7 +3619,6 @@ export default function EmaarDashboardV2() {
                 </div>
               );
             };
-            return <FlipCalc />;
           })()}
 
           {/* ─── MARKET TAB ─── */}
