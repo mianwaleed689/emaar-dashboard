@@ -246,7 +246,7 @@ const css = `
 
   @media (max-width: 768px) {
     html { font-size: 13px; }
-    .sidebar { transform: translateX(-100%); position: fixed !important; z-index: 100; box-shadow: 4px 0 24px rgba(0,0,0,0.5); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1) !important; }
+    .sidebar { transform: translateX(-100%); position: fixed !important; z-index: 100; }
     .sidebar.open { transform: translateX(0); }
     .main-content { margin-left: 0 !important; }
     .top-bar { left: 0 !important; }
@@ -266,16 +266,8 @@ const css = `
     .filter-scroll button { flex-shrink: 0; }
     .compare-bar { padding: 10px 14px !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
     .compare-bar > div { justify-content: center; flex-wrap: wrap; }
-    .table-scroll { position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-scroll { position: relative; }
     .table-scroll::after { content: "→"; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: ${T.gold}; font-size: 16px; opacity: 0.4; pointer-events: none; }
-    /* Trial banner stacks vertically */
-    .trial-banner { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
-    /* Search label hidden on mobile */
-    .search-label { display: none !important; }
-    /* Project cards single col */
-    .projects-grid { grid-template-columns: 1fr !important; }
-    /* Modals bottom-sheet style */
-    [role="dialog"] > div { border-radius: 20px 20px 0 0 !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; max-height: 92vh !important; width: 100% !important; max-width: 100% !important; }
   }
 
   @media (max-width: 480px) {
@@ -1009,173 +1001,18 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
   );
 }
 
-/* ─── GLOBAL SEARCH COMPONENT ─── */
-function GlobalSearch({ show, onClose, projects, communities, onNavigate, onSelectProject }) {
-  const [q, setQ] = useState("");
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    if (show) { setTimeout(() => inputRef.current?.focus(), 50); }
-    else { setQ(""); }
-  }, [show]);
-
-  if (!show) return null;
-
-  const ql = q.toLowerCase().trim();
-
-  const matchedProjects = ql
-    ? projects.filter(p =>
-        (p.name || "").toLowerCase().includes(ql) ||
-        (p.community || "").toLowerCase().includes(ql) ||
-        (p.type || "").toLowerCase().includes(ql)
-      ).slice(0, 6)
-    : [];
-
-  const matchedCommunities = ql
-    ? communities.filter(c =>
-        (c.name || c.full || "").toLowerCase().includes(ql) ||
-        (c.district || "").toLowerCase().includes(ql)
-      ).slice(0, 4)
-    : [];
-
-  const navTabs = ["Overview","Projects","Yields","Portfolio","Analytics","Risk","Market","Stocks","Map"];
-  const matchedNav = ql
-    ? navTabs.filter(t => t.toLowerCase().includes(ql))
-    : [];
-
-  const hasResults = matchedProjects.length > 0 || matchedCommunities.length > 0 || matchedNav.length > 0;
-
-  return (
-    <div
-      style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.88)", zIndex: 8000, display: "flex", alignItems: "flex-start", justifyContent: "center", backdropFilter: "blur(12px)", paddingTop: "12vh" }}
-      onClick={onClose}
-    >
-      <div
-        style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "min(640px, 94vw)", boxShadow: "0 32px 80px rgba(0,0,0,0.7)", overflow: "hidden" }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Search input */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 20px", borderBottom: `1px solid ${q ? T.border : "transparent"}` }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input
-            ref={inputRef}
-            value={q}
-            onChange={e => setQ(e.target.value)}
-            onKeyDown={e => { if (e.key === "Escape") onClose(); }}
-            placeholder="Search projects, communities, tabs…"
-            style={{ flex: 1, background: "none", border: "none", outline: "none", color: T.white, fontSize: 16, fontFamily: "'Outfit', sans-serif" }}
-          />
-          {q && <button type="button" onClick={() => setQ("")} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textMuted, width: 24, height: 24, cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>}
-          <kbd style={{ padding: "2px 8px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, fontSize: 11, color: T.textMuted, fontFamily: "'Outfit', sans-serif" }}>ESC</kbd>
-        </div>
-
-        {/* Empty state — suggestion chips */}
-        {!q && (
-          <div style={{ padding: "16px 20px 20px" }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 12 }}>Quick Jump</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {[["🏙️","Projects"],["📊","Yields"],["🗺️","Map"],["📈","Stocks"],["💼","Portfolio"],["⚠️","Risk"]].map(([icon, label]) => (
-                <button key={label} type="button" onClick={() => { onNavigate(label); onClose(); }}
-                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 20, color: T.textSecondary, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.15s" }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold; e.currentTarget.style.color = T.gold; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSecondary; }}>
-                  {icon} {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Results */}
-        {q && (
-          <div style={{ maxHeight: 420, overflowY: "auto", padding: "8px 0 12px" }}>
-            {!hasResults && (
-              <div style={{ padding: "32px 20px", textAlign: "center", color: T.textMuted, fontSize: 13 }}>No results for "<span style={{ color: T.gold }}>{q}</span>"</div>
-            )}
-
-            {matchedProjects.length > 0 && (
-              <div>
-                <div style={{ padding: "6px 20px 8px", fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase" }}>Projects</div>
-                {matchedProjects.map(p => (
-                  <button key={p.id} type="button" onClick={() => { onSelectProject(p); onClose(); }}
-                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 20px", background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background 0.15s" }}
-                    onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
-                    onMouseLeave={e => e.currentTarget.style.background = "none"}>
-                    <div style={{ width: 36, height: 36, borderRadius: 8, background: `linear-gradient(135deg, ${T.gold}22, ${T.gold}08)`, border: `1px solid ${T.gold}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>🏢</div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
-                      <div style={{ fontSize: 11, color: T.textMuted }}>{p.community} · {p.type}</div>
-                    </div>
-                    <div style={{ fontSize: 12, color: T.gold, fontWeight: 700, flexShrink: 0 }}>{p.price ? `AED ${(p.price/1e6).toFixed(1)}M` : ""}</div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {matchedCommunities.length > 0 && (
-              <div>
-                <div style={{ padding: "6px 20px 8px", fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase" }}>Communities</div>
-                {matchedCommunities.map((c, i) => (
-                  <button key={i} type="button" onClick={() => { onNavigate("Map"); onClose(); }}
-                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 20px", background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background 0.15s" }}
-                    onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
-                    onMouseLeave={e => e.currentTarget.style.background = "none"}>
-                    <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(45,212,191,0.1)", border: "1px solid rgba(45,212,191,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>🗺️</div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{c.name || c.full || c.district}</div>
-                      <div style={{ fontSize: 11, color: T.textMuted }}>Community · {c.projects || "—"} projects</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {matchedNav.length > 0 && (
-              <div>
-                <div style={{ padding: "6px 20px 8px", fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase" }}>Navigate To</div>
-                {matchedNav.map(t => (
-                  <button key={t} type="button" onClick={() => { onNavigate(t); onClose(); }}
-                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 20px", background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background 0.15s" }}
-                    onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
-                    onMouseLeave={e => e.currentTarget.style.background = "none"}>
-                    <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>⚡</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{t}</div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        <div style={{ padding: "10px 20px", borderTop: `1px solid ${T.border}`, display: "flex", gap: 16, alignItems: "center" }}>
-          <span style={{ fontSize: 10, color: T.textMuted }}>
-            <kbd style={{ padding: "1px 5px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 4, fontSize: 10 }}>↑↓</kbd> navigate
-          </span>
-          <span style={{ fontSize: 10, color: T.textMuted }}>
-            <kbd style={{ padding: "1px 5px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 4, fontSize: 10 }}>↵</kbd> select
-          </span>
-          <span style={{ fontSize: 10, color: T.textMuted }}>
-            <kbd style={{ padding: "1px 5px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 4, fontSize: 10 }}>ESC</kbd> close
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function EmaarDashboardV2() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState("");
   const [userName, setUserName] = useState("");
+  const [userTier, setUserTier] = useState("free");
   const [userPhone, setUserPhone] = useState("");
   const [userCountry, setUserCountry] = useState("");
-  const [userTier, setUserTier] = useState("free");
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
   const [showLogin, setShowLogin] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [profileEdit, setProfileEdit] = useState({ name: "", phone: "", country: "" });
-  const [showSearch, setShowSearch] = useState(false);
   const [showCheckout, setShowCheckout] = useState(null);
   const [checkoutStep, setCheckoutStep] = useState(1);
   const [myPortfolio, setMyPortfolio] = useState([]);
@@ -1581,8 +1418,7 @@ export default function EmaarDashboardV2() {
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === "Escape") {
-        if (showSearch) { setShowSearch(false); }
-        else if (showCheckout) { setShowCheckout(null); setCheckoutStep(1); }
+        if (showCheckout) { setShowCheckout(null); setCheckoutStep(1); }
         else if (showProfile) setShowProfile(false);
         else if (showUpgrade) setShowUpgrade(false);
         else if (showNotifications) setShowNotifications(false);
@@ -1593,15 +1429,10 @@ export default function EmaarDashboardV2() {
         else if (selectedStockTv) setSelectedStockTv(null);
         else if (selectedKPI) setSelectedKPI(null);
       }
-      // Ctrl+K or Cmd+K → open search
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-        e.preventDefault();
-        setShowSearch(v => !v);
-      }
     };
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
-  }, [showUpgrade, showStock, selectedProject, showCompare, selectedStockTv, showCheckout, showProfile, selectedKPI, showSearch]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [showUpgrade, showStock, selectedProject, showCompare, selectedStockTv, showCheckout, showProfile, selectedKPI]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (authLoading) {
     return (
@@ -1806,16 +1637,6 @@ export default function EmaarDashboardV2() {
           </div>
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {/* Global Search Button */}
-          <button type="button" onClick={() => setShowSearch(true)}
-            style={{ display: "flex", alignItems: "center", gap: 7, padding: "7px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textMuted, cursor: "pointer", fontSize: 12, fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold; e.currentTarget.style.color = T.gold; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textMuted; }}
-            title="Search (Ctrl+K)">
-            {Icons.search}
-            <span className="search-label">Search</span>
-            <kbd style={{ padding: "1px 5px", background: "rgba(255,255,255,0.06)", border: `1px solid ${T.border}`, borderRadius: 4, fontSize: 10, fontFamily: "'Outfit', sans-serif" }}>⌘K</kbd>
-          </button>
           <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setShowStock(true); }} onClick={() => setShowStock(true)} style={{ background: stock.marketState === "REGULAR" ? "rgba(16,185,129,0.06)" : T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${stock.marketState === "REGULAR" ? T.green : T.border}`, display: "flex", alignItems: "center", gap: 6, cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = stock.marketState === "REGULAR" ? T.green : T.border}>
             <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 10, height: 10 }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: stock.marketState === "REGULAR" ? T.green : stock.marketState === "PRE" ? T.gold : T.textMuted, display: "inline-block", animation: stock.marketState === "REGULAR" ? "pulse 1.5s infinite" : "none", position: "relative", zIndex: 1 }} />
@@ -4238,110 +4059,64 @@ export default function EmaarDashboardV2() {
 
       {/* USER PROFILE MODAL */}
       {showProfile && <div role="dialog" aria-modal="true" aria-label="User profile" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowProfile(false)}>
-        <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 580, maxHeight: "90vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={() => setShowProfile(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>✕</button>
-
-          {/* Header */}
+        <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 560, maxHeight: "90vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
+          <button type="button" onClick={() => setShowProfile(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>\u2715</button>
           <div style={{ padding: "32px 28px 20px", background: `linear-gradient(135deg, rgba(212,168,67,0.08), rgba(14,29,53,0.6))`, borderBottom: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ width: 56, height: 56, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 22, color: T.bg, flexShrink: 0 }}>{user.charAt(0).toUpperCase()}</div>
               <div>
                 <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{userName || user.split("@")[0]}</div>
                 <div style={{ fontSize: 12, color: T.textSecondary, marginTop: 2 }}>{user}</div>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, padding: "3px 10px", borderRadius: 6, background: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? "rgba(16,185,129,0.12)" : userTier === "pro_trial" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", fontSize: 10, fontWeight: 700, color: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : userTier === "pro_trial" ? T.gold : T.blue }}>
-                  {userTier === "admin" ? "⚡ Admin" : userTier === "pro" ? "⭐ Pro Plan" : userTier === "pro_trial" ? `⭐ Pro Trial · ${trialDaysLeft}d left` : userTier === "enterprise" ? "🏢 Enterprise" : "Free Plan"}
-                </div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, padding: "3px 10px", borderRadius: 6, background: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? "rgba(16,185,129,0.12)" : userTier === "pro_trial" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", fontSize: 10, fontWeight: 700, color: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : userTier === "pro_trial" ? T.gold : T.blue }}>{userTier === "admin" ? "\u26A1 Admin" : userTier === "pro" ? "\u2B50 Pro Plan" : userTier === "pro_trial" ? `\u2B50 Pro Trial \u00B7 ${trialDaysLeft}d left` : userTier === "enterprise" ? "\uD83C\uDFE2 Enterprise" : "Free Plan"}</div>
               </div>
             </div>
           </div>
-
           <div style={{ padding: "20px 28px 28px" }}>
-
-            {/* Profile Fields */}
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Profile Details</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Profile Details</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <div>
-                  <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>DISPLAY NAME</label>
-                  <input type="text" value={profileEdit.name} onChange={e => setProfileEdit({...profileEdit, name: e.target.value})} placeholder="Your name"
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }}
-                    onFocus={e => e.target.style.borderColor = T.gold} onBlur={e => e.target.style.borderColor = T.border} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>EMAIL (read-only)</label>
-                  <input type="email" value={user} disabled style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", opacity: 0.6, boxSizing: "border-box" }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>PHONE</label>
-                  <input type="tel" value={profileEdit.phone} onChange={e => setProfileEdit({...profileEdit, phone: e.target.value})} placeholder="+971 50 000 0000"
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }}
-                    onFocus={e => e.target.style.borderColor = T.gold} onBlur={e => e.target.style.borderColor = T.border} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>COUNTRY</label>
-                  <input type="text" value={profileEdit.country} onChange={e => setProfileEdit({...profileEdit, country: e.target.value})} placeholder="UAE"
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }}
-                    onFocus={e => e.target.style.borderColor = T.gold} onBlur={e => e.target.style.borderColor = T.border} />
+                <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>DISPLAY NAME</label><input type="text" value={profileEdit.name} onChange={e => setProfileEdit({...profileEdit, name: e.target.value})} placeholder="Your name" style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }} /></div>
+                <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>EMAIL</label><input type="email" value={user} disabled style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", opacity: 0.6, boxSizing: "border-box" }} /></div>
+                <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>PHONE</label><input type="tel" value={profileEdit.phone} onChange={e => setProfileEdit({...profileEdit, phone: e.target.value})} placeholder="+971 50 000 0000" style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }} /></div>
+                <div><label style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, display: "block", marginBottom: 4 }}>COUNTRY</label>
+                  <select value={profileEdit.country} onChange={e => setProfileEdit({...profileEdit, country: e.target.value})} style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: profileEdit.country ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", cursor: "pointer", boxSizing: "border-box" }}>
+                    <option value="">Select Country</option>
+                    <option value="UAE">🇦🇪 UAE</option>
+                    <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
+                    <option value="Qatar">🇶🇦 Qatar</option>
+                    <option value="Kuwait">🇰🇼 Kuwait</option>
+                    <option value="Bahrain">🇧🇭 Bahrain</option>
+                    <option value="Oman">🇴🇲 Oman</option>
+                    <option value="UK">🇬🇧 UK</option>
+                    <option value="USA">🇺🇸 USA</option>
+                    <option value="India">🇮🇳 India</option>
+                    <option value="Pakistan">🇵🇰 Pakistan</option>
+                    <option value="Egypt">🇪🇬 Egypt</option>
+                    <option value="Jordan">🇯🇴 Jordan</option>
+                    <option value="Lebanon">🇱🇧 Lebanon</option>
+                    <option value="Russia">🇷🇺 Russia</option>
+                    <option value="China">🇨🇳 China</option>
+                    <option value="Germany">🇩🇪 Germany</option>
+                    <option value="France">🇫🇷 France</option>
+                    <option value="Canada">🇨🇦 Canada</option>
+                    <option value="Australia">🇦🇺 Australia</option>
+                    <option value="Other">🌍 Other</option>
+                  </select>
                 </div>
               </div>
-              <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-                <button type="button" onClick={async () => {
-                  if (auth.currentUser) {
-                    try {
-                      const updates = { name: profileEdit.name.trim() };
-                      if (profileEdit.phone !== undefined) updates.phone = profileEdit.phone.trim();
-                      if (profileEdit.country !== undefined) updates.country = profileEdit.country.trim();
-                      await setDoc(doc(db, "users", auth.currentUser.uid), updates, { merge: true });
-                      setUserName(updates.name);
-                      setUserPhone(updates.phone || "");
-                      setUserCountry(updates.country || "");
-                      notify("✅ Profile updated!");
-                    } catch(e) { notify("❌ Update failed"); }
-                  }
-                }} style={{ padding: "9px 22px", background: T.gold, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Save Changes</button>
-                <button type="button" onClick={async () => {
-                  if (!user) return;
-                  try {
-                    await sendPasswordResetEmail(auth, user);
-                    notify("✅ Password reset email sent!");
-                  } catch(e) { notify("❌ Could not send reset email"); }
-                }} style={{ padding: "9px 22px", background: "transparent", color: T.textSecondary, border: `1px solid ${T.border}`, borderRadius: 8, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
-                  🔑 Reset Password
-                </button>
-              </div>
+              <button type="button" onClick={async () => { if (auth.currentUser) { try { await setDoc(doc(db, "users", auth.currentUser.uid), { name: profileEdit.name.trim(), phone: profileEdit.phone.trim(), country: profileEdit.country }, { merge: true }); setUserName(profileEdit.name.trim()); setUserPhone(profileEdit.phone.trim()); setUserCountry(profileEdit.country); setToast("\u2705 Profile updated!"); setTimeout(() => setToast(""), 3000); } catch(e) { setToast("\u274C Update failed"); setTimeout(() => setToast(""), 3000); } } }} style={{ marginTop: 10, padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Save Changes</button>
             </div>
-
-            {/* Subscription Card */}
-            <div style={{ marginBottom: 20, padding: 18, borderRadius: 12, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
+            <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Subscription</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: userTier === "pro_trial" ? 12 : 0 }}>
-                <div><div style={{ fontSize: 10, color: T.textMuted, marginBottom: 3 }}>Plan</div><div style={{ fontSize: 14, fontWeight: 700, color: T.gold, fontFamily: "'Fraunces', serif" }}>{userTier === "admin" ? "Admin" : userTier === "pro" ? "Pro" : userTier === "pro_trial" ? "Trial" : userTier === "enterprise" ? "Ent." : "Free"}</div></div>
-                <div><div style={{ fontSize: 10, color: T.textMuted, marginBottom: 3 }}>Status</div><div style={{ fontSize: 14, fontWeight: 700, color: userTier === "free" ? T.blue : T.green }}>{userTier === "free" ? "Limited" : "Active"}</div></div>
-                <div><div style={{ fontSize: 10, color: T.textMuted, marginBottom: 3 }}>Projects</div><div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{userTier === "free" ? "5" : "All 48"}</div></div>
-                <div><div style={{ fontSize: 10, color: T.textMuted, marginBottom: 3 }}>{userTier === "pro_trial" ? "Days Left" : "Billing"}</div><div style={{ fontSize: 14, fontWeight: 700, color: userTier === "pro_trial" && trialDaysLeft <= 3 ? T.red : T.white }}>{userTier === "pro_trial" ? `${trialDaysLeft}d` : userTier === "pro" ? "Monthly" : userTier === "enterprise" ? "Monthly" : "—"}</div></div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                <div><div style={{ fontSize: 10, color: T.textMuted }}>Plan</div><div style={{ fontSize: 14, fontWeight: 700, color: T.gold, fontFamily: "'Fraunces', serif" }}>{userTier === "admin" ? "Admin" : userTier === "pro" ? "Pro" : userTier === "pro_trial" ? "Pro Trial" : userTier === "enterprise" ? "Enterprise" : "Free"}</div></div>
+                <div><div style={{ fontSize: 10, color: T.textMuted }}>Status</div><div style={{ fontSize: 14, fontWeight: 700, color: userTier === "free" ? T.blue : T.green }}>{userTier === "free" ? "Limited" : "Active"}</div></div>
+                <div><div style={{ fontSize: 10, color: T.textMuted }}>Access</div><div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{userTier === "free" ? "5 projects" : "All 48"}</div></div>
               </div>
-              {userTier === "pro_trial" && trialDaysLeft > 0 && (
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                    <span style={{ fontSize: 10, color: T.textMuted }}>Trial progress</span>
-                    <span style={{ fontSize: 10, color: trialDaysLeft <= 3 ? T.red : T.gold, fontWeight: 600 }}>{trialDaysLeft} / 7 days left</span>
-                  </div>
-                  <div style={{ height: 4, background: T.border, borderRadius: 2, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${(trialDaysLeft / 7) * 100}%`, background: trialDaysLeft <= 3 ? T.red : T.gold, borderRadius: 2, transition: "width 0.5s" }} />
-                  </div>
-                </div>
-              )}
-              {(userTier === "free" || userTier === "pro_trial") && (
-                <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                  {userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "⭐ Upgrade to Pro — AED 99/mo"}
-                </button>
-              )}
+              {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "\u2B50 Upgrade to Pro \u2014 AED 99/mo"}</button>}
             </div>
-
-            {/* Quick Links */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-              <button type="button" onClick={() => { setShowProfile(false); handleTabChange("Portfolio"); }} style={{ padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>📊 Portfolio</button>
-              <button type="button" onClick={() => { setShowProfile(false); handleTabChange("Projects"); }} style={{ padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🏢 Projects</button>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <button type="button" onClick={() => { setShowProfile(false); handleTabChange("Portfolio"); }} style={{ padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>\uD83D\uDCCA Portfolio</button>
               <button type="button" onClick={() => { signOut(auth); setShowProfile(false); }} style={{ padding: "10px 0", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, color: "#EF4444", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Sign Out</button>
             </div>
           </div>
@@ -4560,16 +4335,6 @@ export default function EmaarDashboardV2() {
 
       {/* Upgrade Modal */}
       <UpgradeModal show={showUpgrade} onClose={() => setShowUpgrade(false)} />
-
-      {/* ─── GLOBAL SEARCH ─── */}
-      <GlobalSearch
-        show={showSearch}
-        onClose={() => setShowSearch(false)}
-        projects={activeProjects || []}
-        communities={communityProjects || []}
-        onNavigate={(tabKey) => handleTabChange(tabKey)}
-        onSelectProject={(p) => setSelectedProject(p)}
-      />
     </div>
   );
 }
