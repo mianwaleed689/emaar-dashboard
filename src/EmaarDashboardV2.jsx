@@ -2720,103 +2720,213 @@ export default function EmaarDashboardV2() {
           {/* ─── MORTGAGE CALCULATOR TAB ─── */}
           {tab === "Mortgage" && (() => {
             const MortgageCalc = () => {
+              const [selectedProjectId, setSelectedProjectId] = React.useState("");
               const [propPrice, setPropPrice] = React.useState(2000000);
               const [downPct, setDownPct] = React.useState(20);
               const [rate, setRate] = React.useState(4.5);
               const [years, setYears] = React.useState(25);
               const [isUAENational, setIsUAENational] = React.useState(false);
+              const [isIslamic, setIsIslamic] = React.useState(false);
+              const [grossYieldPct, setGrossYieldPct] = React.useState(6.5);
+              const [showAmort, setShowAmort] = React.useState(false);
+
+              React.useEffect(() => {
+                if (!selectedProjectId) return;
+                const p = activeProjects.find(x => String(x.id) === selectedProjectId);
+                if (p) {
+                  if (p.price) setPropPrice(p.price);
+                  const comm = emaarCommunities.find(c => c.name === p.community);
+                  if (comm && comm.avgYield) setGrossYieldPct(comm.avgYield);
+                }
+              }, [selectedProjectId]);
 
               const downAmt = propPrice * (downPct / 100);
               const loanAmt = propPrice - downAmt;
-              const monthlyRate = rate / 100 / 12;
+              const effectiveRate = isIslamic ? rate * 1.05 : rate;
+              const monthlyRate = effectiveRate / 100 / 12;
               const numPayments = years * 12;
               const monthly = loanAmt * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1);
               const totalPaid = monthly * numPayments;
               const totalInterest = totalPaid - loanAmt;
               const dldFee = propPrice * 0.04;
               const agencyFee = propPrice * 0.02;
-              const totalCost = propPrice + dldFee + agencyFee + 4200 + 580;
+              const mortgageReg = 4200;
+              const valuationFee = 580;
+              const totalAcqCost = propPrice + dldFee + agencyFee + mortgageReg + valuationFee;
+              const totalUpfront = downAmt + dldFee + agencyFee + mortgageReg + valuationFee;
+              const annualRent = propPrice * (grossYieldPct / 100);
+              const monthlyRent = annualRent / 12;
+              const serviceCharge = propPrice * 0.015 / 12;
+              const mgmtFee = annualRent * 0.08 / 12;
+              const netMonthly = monthlyRent - serviceCharge - mgmtFee;
+              const monthlyCashflow = netMonthly - monthly;
+              const netYieldAfterDebt = (monthlyCashflow * 12 / propPrice) * 100;
+              const cashOnCash = (monthlyCashflow * 12 / totalUpfront) * 100;
+              const breakEvenYears = totalAcqCost / Math.max(annualRent - (monthly * 12 - loanAmt / years), 1);
+              const fmt = (n) => "AED " + Math.round(n).toLocaleString();
+              const fmtM = (n) => "AED " + (n / 1e6).toFixed(2) + "M";
+              const cashflowColor = monthlyCashflow >= 0 ? T.green : "#EF4444";
 
-              const fmt = (n) => `AED ${Math.round(n).toLocaleString()}`;
+              const amortData = [];
+              let bal = loanAmt;
+              for (let yr = 1; yr <= Math.min(years, 25); yr++) {
+                let yp = 0, yi = 0;
+                for (let m = 0; m < 12; m++) {
+                  const ip = bal * monthlyRate;
+                  const pp = monthly - ip;
+                  yi += ip; yp += pp;
+                  bal = Math.max(0, bal - pp);
+                }
+                amortData.push({ year: "Y" + yr, principal: Math.round(yp), interest: Math.round(yi), balance: Math.round(bal) });
+              }
 
               return (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                  {/* Inputs */}
-                  <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 24 }}>
-                    <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.gold, marginBottom: 20 }}>Mortgage Calculator</h3>
-                    {[
-                      { label: "Property Price (AED)", value: propPrice, set: setPropPrice, min: 500000, max: 50000000, step: 100000, fmt: v => `AED ${Number(v).toLocaleString()}` },
-                      { label: `Down Payment (${downPct}%) — AED ${Math.round(propPrice * downPct / 100).toLocaleString()}`, value: downPct, set: setDownPct, min: isUAENational ? 15 : 20, max: 80, step: 1, fmt: v => `${v}%` },
-                      { label: `Interest Rate (${rate}% p.a.)`, value: rate, set: setRate, min: 2, max: 10, step: 0.1, fmt: v => `${v}%` },
-                      { label: `Loan Tenure (${years} years)`, value: years, set: setYears, min: 5, max: 25, step: 1, fmt: v => `${v} yrs` },
-                    ].map((f, i) => (
-                      <div key={i} style={{ marginBottom: 20 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                          <span style={{ fontSize: 11, color: T.textMuted }}>{f.label}</span>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{f.fmt(f.value)}</span>
-                        </div>
-                        <input type="range" min={f.min} max={f.max} step={f.step} value={f.value}
-                          onChange={e => f.set(Number(e.target.value))}
-                          style={{ width: "100%", accentColor: T.gold, cursor: "pointer" }} />
-                      </div>
-                    ))}
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 12, color: T.textSecondary }}>
-                      <input type="checkbox" checked={isUAENational} onChange={e => { setIsUAENational(e.target.checked); if (e.target.checked && downPct < 15) setDownPct(15); }} style={{ accentColor: T.gold }} />
-                      UAE National (15% min down payment)
-                    </label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                  <div style={{ background: T.surface, borderRadius: 16, border: "1px solid " + T.border, padding: 20 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Quick Load a Project</div>
+                    <select value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)} style={{ width: "100%", padding: "10px 14px", background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 10, color: selectedProjectId ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                      <option value="">— Enter price manually below —</option>
+                      {activeProjects.map(p => <option key={p.id} value={String(p.id)}>{p.name} · {p.community} · {p.price ? "AED " + (p.price/1e6).toFixed(2) + "M" : "Price TBC"}</option>)}
+                    </select>
                   </div>
 
-                  {/* Results */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {/* Monthly Payment Hero */}
-                    <div style={{ background: `linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.05))`, borderRadius: 16, border: `1px solid rgba(212,168,67,0.3)`, padding: 24, textAlign: "center" }}>
-                      <div style={{ fontSize: 11, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Monthly Payment</div>
-                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 38, fontWeight: 900, color: T.gold }}>{isNaN(monthly) ? "—" : fmt(monthly)}</div>
-                      <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 6 }}>{years} years · {rate}% p.a. · {downPct}% down</div>
-                    </div>
-
-                    {/* Breakdown */}
-                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Loan Breakdown</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                    <div style={{ background: T.surface, borderRadius: 16, border: "1px solid " + T.border, padding: 24 }}>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.gold, marginBottom: 20 }}>Mortgage Inputs</div>
                       {[
-                        ["Loan Amount", fmt(loanAmt), T.blue],
-                        ["Down Payment", fmt(downAmt), T.green],
-                        ["Total Interest", fmt(totalInterest), T.red],
-                        ["Total Repaid", fmt(totalPaid), T.gold],
-                      ].map(([label, val, color], i) => (
-                        <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${T.border}` }}>
-                          <span style={{ fontSize: 12, color: T.textSecondary }}>{label}</span>
-                          <span style={{ fontSize: 13, fontWeight: 700, color }}>{val}</span>
+                        { label: "Property Price", value: propPrice, set: setPropPrice, min: 500000, max: 30000000, step: 100000, disp: fmtM(propPrice) },
+                        { label: "Down Payment — " + fmt(downAmt), value: downPct, set: setDownPct, min: isUAENational ? 15 : 20, max: 80, step: 1, disp: downPct + "%" },
+                        { label: (isIslamic ? "Profit Rate" : "Interest Rate") + " p.a.", value: rate, set: setRate, min: 2, max: 12, step: 0.1, disp: effectiveRate.toFixed(1) + "%" },
+                        { label: "Loan Tenure", value: years, set: setYears, min: 5, max: 25, step: 1, disp: years + " yrs" },
+                        { label: "Gross Rental Yield", value: grossYieldPct, set: setGrossYieldPct, min: 3, max: 12, step: 0.1, disp: grossYieldPct + "%" },
+                      ].map((f, i) => (
+                        <div key={i} style={{ marginBottom: 18 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                            <span style={{ fontSize: 11, color: T.textMuted }}>{f.label}</span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{f.disp}</span>
+                          </div>
+                          <input type="range" min={f.min} max={f.max} step={f.step} value={f.value} onChange={e => f.set(Number(e.target.value))} style={{ width: "100%", accentColor: T.gold, cursor: "pointer" }} />
                         </div>
                       ))}
-                    </div>
-
-                    {/* Transaction Costs */}
-                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Transaction Costs (UAE)</div>
-                      {[
-                        ["DLD Transfer Fee (4%)", fmt(dldFee)],
-                        ["Agency Fee (2%)", fmt(agencyFee)],
-                        ["Mortgage Registration", "AED 4,200"],
-                        ["Valuation Fee", "AED 580"],
-                        ["Total Extra Costs", fmt(dldFee + agencyFee + 4780)],
-                      ].map(([label, val], i) => (
-                        <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
-                          <span style={{ fontSize: 11, color: i === 4 ? T.white : T.textSecondary, fontWeight: i === 4 ? 700 : 400 }}>{label}</span>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: i === 4 ? T.gold : T.textSecondary }}>{val}</span>
-                        </div>
-                      ))}
-                      <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.15)" }}>
-                        <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>Total Cost of Ownership</div>
-                        <div style={{ fontSize: 16, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>{fmt(totalCost)}</div>
+                      <div style={{ display: "flex", gap: 20, marginTop: 4 }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 11, color: T.textSecondary }}>
+                          <input type="checkbox" checked={isUAENational} onChange={e => { setIsUAENational(e.target.checked); if (e.target.checked && downPct < 15) setDownPct(15); }} style={{ accentColor: T.gold }} /> UAE National
+                        </label>
+                        <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 11, color: T.textSecondary }}>
+                          <input type="checkbox" checked={isIslamic} onChange={e => setIsIslamic(e.target.checked)} style={{ accentColor: T.gold }} /> Islamic Mortgage
+                        </label>
                       </div>
+                      {isIslamic && <div style={{ marginTop: 10, padding: "8px 12px", background: "rgba(212,168,67,0.06)", borderRadius: 8, fontSize: 10, color: T.textMuted }}>Islamic finance profit rate shown as {effectiveRate.toFixed(2)}% effective (approx. 5% premium over conventional).</div>}
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                      <div style={{ background: "linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05))", borderRadius: 16, border: "1px solid rgba(212,168,67,0.3)", padding: 24, textAlign: "center" }}>
+                        <div style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Monthly Mortgage Payment</div>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 36, fontWeight: 900, color: T.gold }}>{isNaN(monthly) ? "—" : fmt(monthly)}</div>
+                        <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 6 }}>{years} yrs · {effectiveRate.toFixed(1)}% · {downPct}% down</div>
+                      </div>
+
+                      <div style={{ background: monthlyCashflow >= 0 ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)", borderRadius: 16, border: "1px solid " + (monthlyCashflow >= 0 ? "rgba(16,185,129,0.25)" : "rgba(239,68,68,0.25)"), padding: 20 }}>
+                        <div style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Monthly P&L — Rental vs Mortgage</div>
+                        {[
+                          ["Gross Rental Income", fmt(monthlyRent), T.green],
+                          ["Service Charges (~1.5% pa)", "− " + fmt(serviceCharge), T.textMuted],
+                          ["Mgmt Fee (8%)", "− " + fmt(mgmtFee), T.textMuted],
+                          ["Mortgage Payment", "− " + fmt(monthly), "#EF4444"],
+                        ].map(([l, v, c], i) => (
+                          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: i < 3 ? "1px solid " + T.border : "none" }}>
+                            <span style={{ fontSize: 11, color: T.textSecondary }}>{l}</span>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: c }}>{v}</span>
+                          </div>
+                        ))}
+                        <div style={{ marginTop: 10, padding: "10px 14px", background: monthlyCashflow >= 0 ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)", borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: cashflowColor }}>Net Monthly Cashflow</span>
+                          <span style={{ fontSize: 16, fontWeight: 900, color: cashflowColor, fontFamily: "'Fraunces',serif" }}>{monthlyCashflow >= 0 ? "+" : ""}{fmt(monthlyCashflow)}</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                        {[
+                          ["Net Yield After Debt", netYieldAfterDebt.toFixed(2) + "%", netYieldAfterDebt >= 0 ? T.green : "#EF4444", "Annual net return after mortgage"],
+                          ["Cash-on-Cash Return", cashOnCash.toFixed(2) + "%", cashOnCash >= 0 ? T.teal : "#EF4444", "Return on upfront cash invested"],
+                          ["Break-Even", breakEvenYears.toFixed(1) + " yrs", T.gold, "Years to recoup all costs"],
+                          ["Total Upfront Cash", fmtM(totalUpfront), T.blue, "Down payment + all fees"],
+                        ].map(([label, val, color, sub], i) => (
+                          <div key={i} style={{ background: T.surface, borderRadius: 12, border: "1px solid " + T.border, padding: "14px 16px" }}>
+                            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{label}</div>
+                            <div style={{ fontSize: 18, fontWeight: 800, color, fontFamily: "'Fraunces',serif" }}>{val}</div>
+                            <div style={{ fontSize: 9, color: T.textMuted, marginTop: 3 }}>{sub}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: 20 }}>
+                    <div style={{ background: T.surface, borderRadius: 16, border: "1px solid " + T.border, padding: 20 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>UAE Transaction Costs</div>
+                      {[
+                        ["Property Price", fmtM(propPrice), T.white, true],
+                        ["DLD Transfer Fee (4%)", fmt(dldFee), T.textSecondary, false],
+                        ["Agency Fee (2%)", fmt(agencyFee), T.textSecondary, false],
+                        ["Mortgage Registration", "AED 4,200", T.textSecondary, false],
+                        ["Valuation Fee", "AED 580", T.textSecondary, false],
+                      ].map(([l, v, c, bold], i) => (
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid " + T.border }}>
+                          <span style={{ fontSize: 11, color: c, fontWeight: bold ? 700 : 400 }}>{l}</span>
+                          <span style={{ fontSize: 12, fontWeight: bold ? 700 : 500, color: c }}>{v}</span>
+                        </div>
+                      ))}
+                      <div style={{ marginTop: 12, padding: "12px 14px", background: "rgba(212,168,67,0.08)", borderRadius: 10, border: "1px solid rgba(212,168,67,0.15)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                          <span style={{ fontSize: 11, color: T.textMuted }}>Total Acquisition Cost</span>
+                          <span style={{ fontSize: 15, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>{fmtM(totalAcqCost)}</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <span style={{ fontSize: 11, color: T.textMuted }}>Lifetime Interest</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: "#EF4444" }}>{fmtM(totalInterest)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ background: T.surface, borderRadius: 16, border: "1px solid " + T.border, padding: 20 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase" }}>Amortization Schedule</div>
+                        <button type="button" onClick={() => setShowAmort(v => !v)} style={{ fontSize: 10, color: T.gold, background: "none", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 6, padding: "3px 10px", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>{showAmort ? "Show Chart" : "Show Table"}</button>
+                      </div>
+                      {showAmort ? (
+                        <div style={{ overflowY: "auto", maxHeight: 240 }}>
+                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                            <thead><tr>{["Year","Principal","Interest","Balance"].map(h => <th key={h} style={{ padding: "6px 8px", textAlign: "right", color: T.textMuted, fontWeight: 600, borderBottom: "1px solid " + T.border }}>{h}</th>)}</tr></thead>
+                            <tbody>{amortData.map((r, i) => (
+                              <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                                <td style={{ padding: "5px 8px", color: T.textSecondary, textAlign: "right" }}>{r.year}</td>
+                                <td style={{ padding: "5px 8px", color: T.teal, textAlign: "right" }}>{(r.principal/1000).toFixed(0)}K</td>
+                                <td style={{ padding: "5px 8px", color: "#EF4444", textAlign: "right" }}>{(r.interest/1000).toFixed(0)}K</td>
+                                <td style={{ padding: "5px 8px", color: T.gold, textAlign: "right" }}>{(r.balance/1e6).toFixed(2)}M</td>
+                              </tr>
+                            ))}</tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={240}>
+                          <BarChart data={amortData} barSize={12}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                            <XAxis dataKey="year" tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} interval={Math.floor(years / 6)} />
+                            <YAxis tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} tickFormatter={v => (v/1000).toFixed(0) + "K"} />
+                            <Tooltip formatter={(v, n) => ["AED " + Math.round(v).toLocaleString(), n]} contentStyle={{ background: T.surface, border: "1px solid " + T.border, borderRadius: 8, fontSize: 11 }} />
+                            <Bar dataKey="principal" name="Principal" fill={T.teal} stackId="a" />
+                            <Bar dataKey="interest" name="Interest" fill="rgba(239,68,68,0.7)" stackId="a" radius={[3,3,0,0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )}
                     </div>
                   </div>
                 </div>
               );
             };
             return (
-              <Section title="Mortgage & Cost Calculator" sub="UAE mortgage rates · DLD fees · Full ownership cost breakdown">
+              <Section title="Mortgage & Investment Calculator" sub="UAE rates · net yield after debt · cash-on-cash return · amortization">
                 <MortgageCalc />
               </Section>
             );
