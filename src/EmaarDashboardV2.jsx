@@ -68,7 +68,6 @@ const Icons = {
   yields: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
   risk: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
   market: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
-  stocks: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><line x1="16" y1="2" x2="22" y2="2"/><line x1="22" y1="2" x2="22" y2="8"/></svg>,
   logout: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
   menu: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
   close: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
@@ -94,47 +93,9 @@ const TABS = [
   { key: "Mortgage", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
   { key: "Map", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg> },
   { key: "Risk", icon: Icons.risk },
-  { key: "Stocks", icon: Icons.stocks },
   { key: "Market", icon: Icons.market },
   { key: "Currency", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2m0 8v2M9.5 9.5C9.5 8.1 10.6 7 12 7s2.5 1.1 2.5 2.5c0 3-5 3-5 6 0 1.4 1.1 2.5 2.5 2.5s2.5-1.1 2.5-2.5"/></svg> },
 ];
-
-/* ─── REAL ESTATE STOCKS DATABASE ─── */
-const RE_STOCKS = [
-  // ─── DFM (Dubai Financial Market) ───
-  { ticker: "EMAAR", name: "Emaar Properties PJSC", exchange: "DFM", tv: "DFM:EMAAR", sector: "Developer", marketCap: "143B", pe: "8.1", divYield: "6.2%", rating: "Strong Buy", desc: "UAE's largest developer. Burj Khalifa, Dubai Mall, Dubai Hills Estate.", region: "UAE" },
-  { ticker: "EMAARDEV", name: "Emaar Development PJSC", exchange: "DFM", tv: "DFM:EMAARDEV", sector: "Developer", marketCap: "77B", pe: "6.8", divYield: "3.5%", rating: "Strong Buy", desc: "Emaar's development arm. All off-plan sales and project delivery.", region: "UAE" },
-  { ticker: "TECOM", name: "TECOM Group PJSC", exchange: "DFM", tv: "DFM:TECOM", sector: "Commercial RE", marketCap: "19B", pe: "9.0", divYield: "4.3%", rating: "Strong Buy", desc: "Business parks: Dubai Internet City, Media City, Design District.", region: "UAE" },
-  { ticker: "DIC", name: "Dubai Investments PJSC", exchange: "DFM", tv: "DFM:DIC", sector: "Diversified RE", marketCap: "16B", pe: "10.5", divYield: "3.8%", rating: "Buy", desc: "Diversified investment company with major real estate portfolio.", region: "UAE" },
-  { ticker: "DUBAIRESI", name: "Dubai Residential REIT", exchange: "DFM", tv: "DFM:DUBAIRESI", sector: "REIT", marketCap: "16B", pe: "—", divYield: "7.7%", rating: "Buy", desc: "Dubai Holding's residential REIT. IPO May 2025. Income-generating.", region: "UAE" },
-  { ticker: "EMPOWER", name: "Emirates Central Cooling", exchange: "DFM", tv: "DFM:EMPOWER", sector: "RE Infra", marketCap: "16B", pe: "14.2", divYield: "4.8%", rating: "Buy", desc: "World's largest district cooling. Cools major developments.", region: "UAE" },
-  { ticker: "TABREED", name: "National Central Cooling", exchange: "DFM", tv: "DFM:TABREED", sector: "RE Infra", marketCap: "8.8B", pe: "11.5", divYield: "5.2%", rating: "Buy", desc: "District cooling for Abu Dhabi & GCC properties.", region: "UAE" },
-  { ticker: "ALEC", name: "ALEC Holdings PJSC", exchange: "DFM", tv: "DFM:ALEC", sector: "Construction", marketCap: "7.3B", pe: "12.0", divYield: "1.5%", rating: "Buy", desc: "UAE's largest construction firm. Builds for Emaar, Dubai Holding.", region: "UAE" },
-  { ticker: "DEYAAR", name: "Deyaar Development PJSC", exchange: "DFM", tv: "DFM:DEYAAR", sector: "Developer", marketCap: "4.5B", pe: "7.4", divYield: "4.9%", rating: "Strong Buy", desc: "Developer in Business Bay, Al Barsha, Dubai Science Park.", region: "UAE" },
-  { ticker: "UPP", name: "Union Properties PJSC", exchange: "DFM", tv: "DFM:UPP", sector: "Developer", marketCap: "3.9B", pe: "10.8", divYield: "0%", rating: "Buy", desc: "Motor City, Green Community, AUTODROME. Turnaround story.", region: "UAE" },
-  { ticker: "AMLAK", name: "Amlak Finance PJSC", exchange: "DFM", tv: "DFM:AMLAK", sector: "RE Finance", marketCap: "2.5B", pe: "8.2", divYield: "2.1%", rating: "Hold", desc: "Islamic mortgage and property finance provider.", region: "UAE" },
-  { ticker: "MAZAYA", name: "Al-Mazaya Holding", exchange: "DFM", tv: "DFM:MAZAYA", sector: "Developer", marketCap: "443M", pe: "24.3", divYield: "0%", rating: "—", desc: "Kuwait-based developer with UAE projects.", region: "Kuwait" },
-  // ─── ADX (Abu Dhabi Securities Exchange) ───
-  { ticker: "ALDAR", name: "Aldar Properties PJSC", exchange: "ADX", tv: "ADX:ALDAR", sector: "Developer", marketCap: "85B", pe: "11.3", divYield: "1.7%", rating: "Strong Buy", desc: "Abu Dhabi's largest. Yas Island, Saadiyat, expanding to Dubai.", region: "UAE" },
-  { ticker: "RAKPROP", name: "RAK Properties PJSC", exchange: "ADX", tv: "ADX:RAKPROP", sector: "Developer", marketCap: "4.1B", pe: "—", divYield: "0%", rating: "Strong Buy", desc: "Mina Al Arab, Julphar Towers. RAK tourism boom play.", region: "UAE" },
-  { ticker: "ANAN", name: "Anan Investment Holding", exchange: "ADX", tv: "ADX:ANAN", sector: "Developer", marketCap: "3.2B", pe: "—", divYield: "0%", rating: "—", desc: "Abu Dhabi real estate investment holding.", region: "UAE" },
-  { ticker: "ESHRAQ", name: "Eshraq Investments PJSC", exchange: "ADX", tv: "ADX:ESHRAQ", sector: "RE Investment", marketCap: "1.3B", pe: "—", divYield: "0%", rating: "—", desc: "Abu Dhabi real estate investment company.", region: "UAE" },
-  { ticker: "MANAZEL", name: "Manazel PJSC", exchange: "ADX", tv: "ADX:MANAZEL", sector: "Developer", marketCap: "777M", pe: "11.5", divYield: "0%", rating: "—", desc: "Affordable housing in Abu Dhabi and Al Ain.", region: "UAE" },
-  { ticker: "ARAM", name: "Aram Group", exchange: "ADX", tv: "ADX:ARAM", sector: "Developer", marketCap: "212M", pe: "—", divYield: "0%", rating: "—", desc: "Abu Dhabi real estate development.", region: "UAE" },
-  // ─── Tadawul (Saudi Stock Exchange) ───
-  { ticker: "4300", name: "Dar Al Arkan RE Dev.", exchange: "Tadawul", tv: "TADAWUL:4300", sector: "Developer", marketCap: "27B SAR", pe: "12.4", divYield: "1.8%", rating: "Buy", desc: "Saudi's largest listed developer. Trump branded projects.", region: "KSA" },
-  { ticker: "4250", name: "Jabal Omar Development", exchange: "Tadawul", tv: "TADAWUL:4250", sector: "Developer", marketCap: "22B SAR", pe: "—", divYield: "0%", rating: "Hold", desc: "Mega development next to Grand Mosque, Makkah.", region: "KSA" },
-  { ticker: "4100", name: "Makkah Construction & Dev.", exchange: "Tadawul", tv: "TADAWUL:4100", sector: "Developer", marketCap: "15B SAR", pe: "22.1", divYield: "3.1%", rating: "Hold", desc: "Hospitality projects around the Grand Mosque.", region: "KSA" },
-  { ticker: "4322", name: "Retal Urban Development", exchange: "Tadawul", tv: "TADAWUL:4322", sector: "Developer", marketCap: "8B SAR", pe: "9.5", divYield: "2.8%", rating: "Strong Buy", desc: "Fast-growing Saudi residential developer.", region: "KSA" },
-  { ticker: "4150", name: "Arriyadh Development Co.", exchange: "Tadawul", tv: "TADAWUL:4150", sector: "Developer", marketCap: "5B SAR", pe: "18.6", divYield: "2.3%", rating: "Hold", desc: "Riyadh commercial and residential projects.", region: "KSA" },
-  { ticker: "4320", name: "Alandalus Property Co.", exchange: "Tadawul", tv: "TADAWUL:4320", sector: "Developer", marketCap: "4B SAR", pe: "14.8", divYield: "4.2%", rating: "Buy", desc: "Malls and commercial properties across Saudi.", region: "KSA" },
-  { ticker: "4020", name: "Saudi Real Estate Co.", exchange: "Tadawul", tv: "TADAWUL:4020", sector: "Developer", marketCap: "3B SAR", pe: "15.2", divYield: "3.5%", rating: "Hold", desc: "One of Saudi's oldest RE companies.", region: "KSA" },
-  { ticker: "4323", name: "Sumou Real Estate Co.", exchange: "Tadawul", tv: "TADAWUL:4323", sector: "Developer", marketCap: "2B SAR", pe: "—", divYield: "0%", rating: "—", desc: "Saudi residential and mixed-use developer.", region: "KSA" },
-  { ticker: "4230", name: "Red Sea International Co.", exchange: "Tadawul", tv: "TADAWUL:4230", sector: "Construction", marketCap: "2B SAR", pe: "—", divYield: "0%", rating: "—", desc: "Prefab construction for Saudi RE sector.", region: "KSA" },
-  // ─── London Stock Exchange ───
-  { ticker: "DGS", name: "DarGlobal PLC", exchange: "LSE", tv: "LSE:DGS", sector: "Developer", marketCap: "£1.2B", pe: "8.5", divYield: "0%", rating: "Buy", desc: "International arm of Dar Al Arkan. Trump, Missoni, Pagani branded.", region: "International" },
-];
-const EX_COLORS = { DFM: "#D4A843", ADX: "#2DD4BF", Tadawul: "#6366F1", LSE: "#3B82F6" };
 
 /* ─── STYLES ─── */
 const css = `
@@ -319,7 +280,6 @@ const css = `
     .header-badges { display: none !important; }
     .top-bar { padding: 0 12px !important; }
     .top-bar h1 { font-size: 13px !important; }
-    .mobile-stock-bar { display: flex !important; }
     .chart-box .recharts-responsive-container { max-height: 200px !important; }
   }
 `;
@@ -814,7 +774,6 @@ const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this dat
           <div style={{ fontFamily: "'Fraunces', serif", fontSize: 17, fontWeight: 800, color: T.white, marginBottom: 6 }}>{message}</div>
           <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16, lineHeight: 1.6 }}>Join 500+ investors using DXB Analytics Pro to track the Dubai real estate market</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
-            {["✓ Full 6-year financial data", "✓ All 48 projects & analytics", "✓ Yields, ROI & stock tracker", "✓ Competitor intelligence"].map((f, i) => (
               <div key={i} style={{ fontSize: 11, color: T.textSecondary, textAlign: "left", paddingLeft: 4 }}>{f}</div>
             ))}
           </div>
@@ -832,7 +791,6 @@ const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this dat
 const UpgradeModal = ({ show, onClose }) => {
   if (!show) return null;
   const plans = [
-    { name: "Pro", price: "99", period: "month", features: ["All 48+ active projects", "Full 6-year financials & ratios", "Rental yields & ROI calculator", "30 RE stocks tracker", "Competitor intelligence", "3-project side-by-side compare", "Location & community deep-dives", "WhatsApp / Email inquiry"], popular: true, cta: "Start Pro Now →" },
     { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation ⏳", "API data access ⏳", "Custom dashboards ⏳", "Multi-user team accounts ⏳", "Developer-level raw data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Launching Q3 2026", cta: "Contact Sales →" },
   ];
   return (
@@ -1136,10 +1094,6 @@ export default function EmaarDashboardV2() {
   const [expandedMega, setExpandedMega] = useState(null);
   const [compareList, setCompareList] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
-  const [showStock, setShowStock] = useState(false);
-  const [stockFilter, setStockFilter] = useState("All");
-  const [stockSearch, setStockSearch] = useState("");
-  const [selectedStockTv, setSelectedStockTv] = useState(null);
 
   // Load projects from Firestore (runs for ALL users — guests and logged-in)
   const [projectsLoading, setProjectsLoading] = useState(true);
@@ -1236,8 +1190,6 @@ export default function EmaarDashboardV2() {
       return [...prev, p];
     });
   };
-  const [stock, setStock] = useState({ price: 0, change: 0, changePercent: 0, dayHigh: null, dayLow: null, volume: null, marketState: "LOADING", open: null });
-  const [stockLive, setStockLive] = useState(false);
 
   // Listen to Firebase auth state + fetch user profile
   useEffect(() => {
@@ -1479,35 +1431,6 @@ export default function EmaarDashboardV2() {
   };
 
 
-  // Fetch live stock data
-  useEffect(() => {
-    const fetchStock = async () => {
-      try {
-        const res = await fetch("/api/stock");
-        const data = await res.json();
-        if (data && data.price) {
-          setStock({
-            price: data.price,
-            change: data.change,
-            changePercent: data.changePercent,
-            dayHigh: data.dayHigh,
-            dayLow: data.dayLow,
-            volume: data.volume,
-            marketState: data.marketState || "CLOSED",
-            open: data.open,
-          });
-          setStockLive(data.success !== false);
-        }
-      } catch (e) {
-        console.log("Stock fetch failed, using fallback data");
-        setStockLive(false);
-      }
-    };
-    fetchStock();
-    const stockInterval = setInterval(fetchStock, 5 * 60 * 1000); // Refresh every 5 min
-    return () => clearInterval(stockInterval);
-  }, []);
-
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(t);
@@ -1522,16 +1445,14 @@ export default function EmaarDashboardV2() {
         else if (showUpgrade) setShowUpgrade(false);
         else if (showNotifications) setShowNotifications(false);
         else if (showWatchlist) setShowWatchlist(false);
-        else if (showStock) setShowStock(false);
         else if (selectedProject) setSelectedProject(null);
         else if (showCompare) setShowCompare(false);
-        else if (selectedStockTv) setSelectedStockTv(null);
         else if (selectedKPI) setSelectedKPI(null);
       }
     };
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
-  }, [showUpgrade, showStock, selectedProject, showCompare, selectedStockTv, showCheckout, showProfile, selectedKPI]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [showUpgrade, selectedProject, showCompare, showCheckout, showProfile, selectedKPI]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (authLoading) {
     return (
@@ -1733,31 +1654,18 @@ export default function EmaarDashboardV2() {
           </button>
           <div>
             <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>Emaar Properties <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>PJSC</span></h1>
-            <p style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1 }}>DFM: EMAAR · {stockLive ? <span style={{ color: T.green }}>Market {stock.marketState === "REGULAR" ? "Open" : stock.marketState === "PRE" ? "Pre-Market" : "Closed"}</span> : "Offline"} · {time.toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}</p>
           </div>
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setShowStock(true); }} onClick={() => setShowStock(true)} style={{ background: stock.marketState === "REGULAR" ? "rgba(16,185,129,0.06)" : T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${stock.marketState === "REGULAR" ? T.green : T.border}`, display: "flex", alignItems: "center", gap: 6, cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = stock.marketState === "REGULAR" ? T.green : T.border}>
-            <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 10, height: 10 }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: stock.marketState === "REGULAR" ? T.green : stock.marketState === "PRE" ? T.gold : T.textMuted, display: "inline-block", animation: stock.marketState === "REGULAR" ? "pulse 1.5s infinite" : "none", position: "relative", zIndex: 1 }} />
-              {stock.marketState === "REGULAR" && <span style={{ position: "absolute", width: 14, height: 14, borderRadius: "50%", border: `1.5px solid ${T.green}`, animation: "ping 1.5s ease-out infinite" }} />}
-            </span>
-            <span style={{ fontSize: 10, color: stock.marketState === "REGULAR" ? T.green : T.textMuted, fontWeight: stock.marketState === "REGULAR" ? 700 : 400 }}>{stock.marketState === "REGULAR" ? "LIVE" : stock.marketState === "PRE" ? "PRE" : stockLive ? "CLOSED" : "STOCK"}</span>
-            <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 14, color: T.gold }}>{stock.price.toFixed(2)}</span>
-            <span style={{ color: stock.change >= 0 ? T.green : T.red, fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", gap: 2 }}>{stock.change >= 0 ? Icons.up : Icons.down} {Math.abs(stock.changePercent).toFixed(2)}%</span>
           </div>
-          <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setShowStock(true); }} onClick={() => setShowStock(true)} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
+          <div role="button" tabIndex={0}  onClick={() => {}} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
             <span style={{ fontSize: 10, color: T.textMuted }}>RATING </span>
             <span style={{ fontSize: 12, fontWeight: 600, color: T.teal }}>BBB+ / Baa1</span>
           </div>
-          <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setShowStock(true); }} onClick={() => setShowStock(true)} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
+          <div role="button" tabIndex={0}  onClick={() => {}} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
             <span style={{ fontSize: 10, color: T.textMuted }}>TARGET </span>
             <span style={{ fontSize: 12, fontWeight: 600, color: T.goldLight }}>AED 20.77</span>
           </div>
-          {stock.dayHigh && <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}` }}>
-            <span style={{ fontSize: 10, color: T.textMuted }}>H/L </span>
-            <span style={{ fontSize: 11, fontWeight: 600, color: T.textPrimary }}>{stock.dayHigh} / {stock.dayLow}</span>
-          </div>}
           <button type="button" onClick={() => setShowWatchlist(true)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: watchlist.length > 0 ? T.gold : T.textSecondary, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} title="My Watchlist">
             ☆ {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
           </button>
@@ -1805,22 +1713,11 @@ export default function EmaarDashboardV2() {
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 16 }}>🔒</span>
               <span style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>Free Plan</span>
-              <span style={{ fontSize: 12, color: T.textSecondary }}>— You're seeing limited data. Upgrade to unlock all projects, yields, stocks & more.</span>
+              <span style={{ fontSize: 12, color: T.textSecondary }}>— You're seeing limited data. Upgrade to unlock all projects, yields & more.</span>
             </div>
             <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro — AED 99/mo</button>
           </div>
         )}
-        {/* Mobile stock ticker - only visible on small screens */}
-        <div className="mobile-stock-bar" style={{ display: "none", alignItems: "center", justifyContent: "center", gap: 12, padding: "8px 14px", background: T.surface, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            {stockLive && <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />}
-            <span style={{ fontSize: 9, color: T.textMuted }}>{stockLive ? "LIVE" : "STOCK"}</span>
-            <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 13, color: T.gold }}>{stock.price.toFixed(2)}</span>
-            <span style={{ color: stock.change >= 0 ? T.green : T.red, fontSize: 10, fontWeight: 600 }}>{stock.change >= 0 ? "▲" : "▼"} {Math.abs(stock.changePercent).toFixed(2)}%</span>
-          </div>
-          <span style={{ fontSize: 9, color: T.textMuted }}>BBB+ / Baa1</span>
-          <span style={{ fontSize: 9, color: T.goldLight }}>Target: 20.77</span>
-        </div>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: `0 24px ${compareList.length > 0 && tab === "Projects" ? "120px" : "60px"}` }}>
 
           {/* ─── OVERVIEW TAB ─── */}
@@ -2914,104 +2811,6 @@ export default function EmaarDashboardV2() {
                 ))}
               </div>
             </Section>
-            </ProGate>
-          </>}
-
-          {/* ─── STOCKS TAB ─── */}
-          {tab === "Stocks" && <>
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-                <div>
-                  <h2 className="section-title" style={{ fontSize: 22, fontWeight: 800, fontFamily: "'Fraunces', serif", color: T.white, display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ width: 4, height: 26, background: T.gold, borderRadius: 2 }} /> RE Stock Market
-                  </h2>
-                  <p style={{ color: T.textMuted, fontSize: 12, marginTop: 4, marginLeft: 14 }}>30 publicly traded real estate companies · DFM · ADX · Tadawul · LSE · Click any stock for live chart</p>
-                </div>
-              </div>
-            </div>
-
-            {/* KPIs */}
-            <div className="kpi-grid" style={{ display: "grid", gap: 12, marginBottom: 20 }}>
-              <KPI label="Total Listed RE Stocks" value="30" sub="DFM · ADX · Tadawul · LSE" delay={1} onClick={() => setSelectedKPI({ label: "Listed RE Stocks", value: "30", color: T.gold, description: "30 publicly traded real estate companies across 4 exchanges — DFM, ADX, Tadawul, and LSE. Emaar is by far the largest by market cap.", source: "DXB Analytics · Exchange Data 2025", sourceUrl: "https://www.dfm.ae", items: [{ label: "DFM (Dubai)", value: "12 companies", note: "incl. Emaar, Emaar Dev" }, { label: "ADX (Abu Dhabi)", value: "6 companies", note: "incl. Aldar" }, { label: "Tadawul (KSA)", value: "10 companies", note: "incl. ROSHN, Dar Al Arkan" }, { label: "LSE (London)", value: "1 company", note: "DarGlobal" }, { label: "Largest by Mkt Cap", value: "Emaar PJSC", note: "AED 128B" }], trend: null })} />
-              <KPI label="UAE Stocks" value="18" sub="12 DFM · 6 ADX" delay={2} onClick={() => setSelectedKPI({ label: "UAE RE Stocks", value: "18", color: T.teal, description: "18 UAE-listed real estate stocks across DFM and ADX. DFM leads with 12 listings including Emaar, Emaar Development, and DAMAC.", source: "DFM · ADX 2025", sourceUrl: "https://www.dfm.ae", items: [{ label: "DFM Listings", value: "12 stocks", note: "Dubai Financial Market" }, { label: "ADX Listings", value: "6 stocks", note: "Abu Dhabi Securities" }, { label: "Largest DFM", value: "EMAAR", note: "AED 128.2B mkt cap" }, { label: "Largest ADX", value: "ALDAR", note: "Abu Dhabi's #1 dev" }, { label: "Avg Div Yield", value: "~5.2%", note: "UAE RE stocks" }], trend: null })} />
-              <KPI label="Saudi Stocks" value="10" sub="Tadawul Exchange" delay={3} onClick={() => setSelectedKPI({ label: "Saudi RE Stocks", value: "10", color: T.blue, description: "10 Saudi-listed real estate companies on Tadawul. The Saudi market is growing rapidly with ROSHN and Dar Al Arkan as the largest players.", source: "Tadawul Exchange 2025", sourceUrl: "https://www.saudiexchange.sa", items: [{ label: "Tadawul Listings", value: "10 stocks", note: "Saudi Exchange" }, { label: "Largest", value: "Dar Al Arkan", note: "SAR 16.6B mkt cap" }, { label: "Fastest Growing", value: "ROSHN", note: "Giga-project developer" }, { label: "Avg P/E", value: "~18×", note: "Saudi RE sector" }, { label: "Market Growth", value: "NEOM-driven", note: "Vision 2030 pipeline" }], trend: null })} />
-              <KPI label="International" value="1" sub="LSE (DarGlobal)" delay={4} onClick={() => setSelectedKPI({ label: "International Listed", value: "1 Stock", color: T.purple, description: "DarGlobal is the only GCC real estate developer listed on the London Stock Exchange (LSE). It develops properties in partnership with global luxury brands.", source: "LSE · DarGlobal 2025", sourceUrl: "https://www.londonstockexchange.com", items: [{ label: "Company", value: "DarGlobal", note: "LSE listed" }, { label: "Exchange", value: "London (LSE)", note: "International listing" }, { label: "Focus", value: "Luxury branded", note: "Trump, Aston Martin" }, { label: "Markets", value: "UAE, UK, KSA", note: "Multi-market" }, { label: "Status", value: "Small cap", note: "Growth stage" }], trend: null })} />
-            </div>
-
-            {/* Search & Filter */}
-            <div style={{ display: "flex", gap: 10, marginBottom: 16, alignItems: "center", flexWrap: "wrap" }}>
-              <div style={{ position: "relative", flex: "1 1 240px" }}>
-                <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{Icons.search}</span>
-                <input value={stockSearch} onChange={e => setStockSearch(e.target.value)} placeholder="Search stocks..." style={{ width: "100%", padding: "10px 12px 10px 34px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 13, outline: "none", fontFamily: "'Outfit', sans-serif" }} />
-              </div>
-              {["All", "DFM", "ADX", "Tadawul", "LSE"].map(f => (
-                <button type="button" key={f} onClick={() => setStockFilter(f)} style={{ padding: "8px 14px", borderRadius: 20, border: `1px solid ${stockFilter === f ? T.gold : T.border}`, background: stockFilter === f ? T.goldGlow : "transparent", color: stockFilter === f ? T.gold : T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{f}</button>
-              ))}
-            </div>
-
-            {/* Stock Cards Grid */}
-            <ProGate isPro={isPro} message="Unlock 30 RE Stocks Tracker" onUpgrade={() => setShowUpgrade(true)}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
-              {RE_STOCKS.filter(s => {
-                const matchFilter = stockFilter === "All" || s.exchange === stockFilter;
-                const matchSearch = !stockSearch || s.name.toLowerCase().includes(stockSearch.toLowerCase()) || s.ticker.toLowerCase().includes(stockSearch.toLowerCase());
-                return matchFilter && matchSearch;
-              }).map((s, i) => (
-                <div key={s.ticker} className="chart-box fade-up" style={{ animationDelay: `${Math.min(i * 0.03, 0.5)}s`, padding: 16, cursor: s.tv !== "—" ? "pointer" : "default", opacity: s.tv === "—" ? 0.5 : 1 }} onClick={() => s.tv !== "—" && setSelectedStockTv(s)}>
-                  {/* Header */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 800, color: EX_COLORS[s.exchange] || T.gold }}>{s.ticker}</span>
-                        <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 6, background: `${EX_COLORS[s.exchange] || T.gold}22`, color: EX_COLORS[s.exchange] || T.gold, fontWeight: 700, letterSpacing: 0.5 }}>{s.exchange}</span>
-                      </div>
-                      <p style={{ fontSize: 12, color: T.white, fontWeight: 600, marginTop: 2 }}>{s.name}</p>
-                    </div>
-                    {s.rating && s.rating !== "—" && (
-                      <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, fontWeight: 700, background: s.rating.includes("Strong") ? "rgba(34,197,94,0.12)" : s.rating === "Buy" ? "rgba(45,212,191,0.12)" : "rgba(234,179,8,0.12)", color: s.rating.includes("Strong") ? T.green : s.rating === "Buy" ? T.teal : T.gold }}>{s.rating}</span>
-                    )}
-                  </div>
-                  {/* Description */}
-                  <p style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.4, marginBottom: 10, minHeight: 30 }}>{s.desc}</p>
-                  {/* Metrics Row */}
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <div style={{ flex: 1, background: T.surfaceAlt, borderRadius: 8, padding: "6px 10px", textAlign: "center", border: `1px solid ${T.border}` }}>
-                      <div style={{ fontSize: 8, color: T.textMuted, textTransform: "uppercase" }}>Mkt Cap</div>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: T.white, fontFamily: "'Fraunces', serif" }}>{s.marketCap}</div>
-                    </div>
-                    <div style={{ flex: 1, background: T.surfaceAlt, borderRadius: 8, padding: "6px 10px", textAlign: "center", border: `1px solid ${T.border}` }}>
-                      <div style={{ fontSize: 8, color: T.textMuted, textTransform: "uppercase" }}>P/E</div>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: T.teal, fontFamily: "'Fraunces', serif" }}>{s.pe}</div>
-                    </div>
-                    <div style={{ flex: 1, background: T.surfaceAlt, borderRadius: 8, padding: "6px 10px", textAlign: "center", border: `1px solid ${T.border}` }}>
-                      <div style={{ fontSize: 8, color: T.textMuted, textTransform: "uppercase" }}>Div Yield</div>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: parseFloat(s.divYield) > 3 ? T.green : T.textPrimary, fontFamily: "'Fraunces', serif" }}>{s.divYield}</div>
-                    </div>
-                  </div>
-                  {/* Sector Tag */}
-                  <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: T.surfaceAlt, color: T.textMuted, border: `1px solid ${T.border}` }}>{s.sector}</span>
-                    {s.tv !== "—" && <span style={{ fontSize: 10, color: T.gold, fontWeight: 600 }}>View Chart →</span>}
-                    {s.tv === "—" && <span style={{ fontSize: 10, color: T.red, fontWeight: 600 }}>Private — Not Tradeable</span>}
-                  </div>
-                </div>
-              ))}
-              {RE_STOCKS.filter(s => { const mf = stockFilter === "All" || s.exchange === stockFilter; const ms = !stockSearch || s.name.toLowerCase().includes(stockSearch.toLowerCase()) || s.ticker.toLowerCase().includes(stockSearch.toLowerCase()); return mf && ms; }).length === 0 && (
-                <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 20px" }}>
-                  <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>🔍</div>
-                  <div style={{ fontSize: 16, fontWeight: 600, color: T.white, marginBottom: 4 }}>No stocks found</div>
-                  <div style={{ fontSize: 13, color: T.textMuted }}>Try adjusting your search or filter</div>
-                </div>
-              )}
-            </div>
-
-            {/* Note about private companies */}
-            <div style={{ marginTop: 20, padding: 16, background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}` }}>
-              <h4 style={{ fontSize: 12, fontWeight: 700, color: T.goldLight, marginBottom: 6 }}>Note: Major Private Developers (Not Listed)</h4>
-              <p style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.6 }}>
-                DAMAC Properties (delisted 2020), Nakheel (Dubai Holding subsidiary), Azizi Developments, Sobha Realty, Binghatti, Select Group, Omniyat, Meraas, Ellington Properties, Danube Properties, Samana Developers, MAG, and many others are private companies. They do not have publicly traded shares. Only the 30 companies above can be invested in through stock exchanges.
-              </p>
-            </div>
             </ProGate>
           </>}
 
@@ -4116,142 +3915,6 @@ export default function EmaarDashboardV2() {
         </div>
       )}
 
-      {/* ─── STOCK DETAIL MODAL (from Stocks tab) ─── */}
-      {selectedStockTv && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 4500, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setSelectedStockTv(null)}>
-          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 900, maxHeight: "92vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-            <button type="button" onClick={() => setSelectedStockTv(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-            <div style={{ padding: 24 }}>
-              {/* Header */}
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                <span style={{ fontFamily: "'Fraunces', serif", fontSize: 28, fontWeight: 900, color: EX_COLORS[selectedStockTv.exchange] || T.gold }}>{selectedStockTv.ticker}</span>
-                <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 8, background: `${EX_COLORS[selectedStockTv.exchange]}22`, color: EX_COLORS[selectedStockTv.exchange], fontWeight: 700 }}>{selectedStockTv.exchange}</span>
-                {selectedStockTv.rating && selectedStockTv.rating !== "—" && <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 8, background: "rgba(34,197,94,0.12)", color: T.green, fontWeight: 700 }}>{selectedStockTv.rating}</span>}
-              </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: T.white, marginBottom: 4 }}>{selectedStockTv.name}</h3>
-              <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>{selectedStockTv.desc}</p>
-
-              {/* Key Metrics */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
-                {[["Market Cap", selectedStockTv.marketCap, T.gold], ["P/E Ratio", selectedStockTv.pe, T.teal], ["Div Yield", selectedStockTv.divYield, T.green], ["Sector", selectedStockTv.sector, T.textPrimary]].map(([l,v,c], i) => (
-                  <div key={i} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 12, border: `1px solid ${T.border}`, textAlign: "center" }}>
-                    <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 3 }}>{l}</div>
-                    <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Fraunces', serif", color: c }}>{v}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* TradingView Chart */}
-              <div style={{ background: T.surfaceAlt, borderRadius: 12, overflow: "hidden", marginBottom: 16, border: `1px solid ${T.border}`, height: 420 }}>
-                <iframe src={`https://www.tradingview.com/widgetembed/?symbol=${encodeURIComponent(selectedStockTv.tv)}&interval=D&hidesidetoolbar=1&symboledit=1&saveimage=0&theme=dark&style=1&timezone=Asia/Dubai&withdateranges=1&locale=en&allow_symbol_change=1`} style={{ width: "100%", height: "100%", border: "none" }} title={`${selectedStockTv.ticker} Chart`} allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-popups" />
-              </div>
-
-              {/* Action Buttons */}
-              <div style={{ display: "flex", gap: 10 }}>
-                <a href={`https://www.tradingview.com/symbols/${selectedStockTv.tv}/`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "12px 0", background: T.gold, borderRadius: 12, color: T.bg, fontSize: 13, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>Full Analysis on TradingView</a>
-                <a href={whatsappLink(`${selectedStockTv.name} (${selectedStockTv.ticker})`, selectedStockTv.exchange)} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "12px 0", background: "#25D366", borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>Ask About This Stock</a>
-                <a href="tel:+971542410599" style={{ padding: "12px 20px", background: T.teal, borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>Call</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── STOCK MODAL ─── */}
-      {showStock && (
-        <div role="dialog" aria-modal="true" aria-label="Stock details" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 4000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowStock(false)}>
-          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 960, maxHeight: "92vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-            <button type="button" onClick={() => setShowStock(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-
-            <div style={{ padding: 28 }}>
-              {/* Header */}
-              <div style={{ marginBottom: 20 }}>
-                <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, color: T.gold, margin: 0 }}>Emaar Properties PJSC</h2>
-                <p style={{ color: T.textMuted, fontSize: 12, marginTop: 4 }}>DFM: EMAAR · Real Estate Development · Dubai, UAE</p>
-              </div>
-
-              {/* Live Price Banner */}
-              <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
-                <div style={{ background: T.surfaceAlt, borderRadius: 12, padding: "16px 20px", border: `1px solid ${T.gold}`, flex: "1 1 200px" }}>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>{stockLive ? "LIVE PRICE" : "LAST KNOWN PRICE"}</div>
-                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 36, fontWeight: 900, color: T.gold }}>{stock.price.toFixed(2)} <span style={{ fontSize: 14, color: T.textMuted }}>AED</span></div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: stock.change >= 0 ? T.green : T.red, marginTop: 4 }}>{stock.change >= 0 ? "▲" : "▼"} {Math.abs(stock.change).toFixed(2)} ({Math.abs(stock.changePercent).toFixed(2)}%)</div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, flex: "2 1 400px" }}>
-                  {[["Day High", stock.dayHigh ? `AED ${stock.dayHigh}` : "—"], ["Day Low", stock.dayLow ? `AED ${stock.dayLow}` : "—"], ["Open", stock.open ? `AED ${stock.open}` : "—"], ["Volume", stock.volume ? stock.volume.toLocaleString() : "—"]].map(([l, v], i) => (
-                    <div key={i} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "10px 14px", border: `1px solid ${T.border}` }}>
-                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>{l}</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginTop: 2 }}>{v}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* TradingView Chart */}
-              <div style={{ background: T.surfaceAlt, borderRadius: 12, overflow: "hidden", marginBottom: 20, border: `1px solid ${T.border}`, height: 450 }}>
-                <iframe src={`https://www.tradingview.com/widgetembed/?symbol=DFM:EMAAR&interval=D&hidesidetoolbar=1&symboledit=1&saveimage=0&theme=dark&style=1&timezone=Asia/Dubai&withdateranges=1&locale=en&allow_symbol_change=1`} style={{ width: "100%", height: "100%", border: "none" }} title="Emaar Chart" allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-popups" />
-              </div>
-
-              {/* Key Metrics */}
-              <h3 style={{ fontSize: 12, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Key Stock Metrics</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 20 }}>
-                {[["Market Cap","AED 150B+",T.gold],["P/E Ratio","8.5x",T.teal],["EPS (2025)","AED 2.00",T.green],["Dividend Yield","5.9%",T.goldLight],["52W High","AED 22.40",T.green],["52W Low","AED 13.80",T.red],["Dividend/Share","AED 1.00",T.teal],["Beta","0.85",T.textPrimary]].map(([l,v,c],i) => (
-                  <div key={i} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 12, border: `1px solid ${T.border}`, textAlign: "center" }}>
-                    <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 4 }}>{l}</div>
-                    <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "'Fraunces', serif", color: c }}>{v}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Other RE Stocks */}
-              <h3 style={{ fontSize: 12, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Dubai Real Estate Stocks</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10, marginBottom: 20 }}>
-                {[{t:"EMAAR",n:"Emaar Properties",p:stock.price.toFixed(2),c:`${stock.changePercent>=0?"+":""}${stock.changePercent.toFixed(2)}`,cl:T.gold,a:true},{t:"EMAARDEV",n:"Emaar Development",p:"—",c:"dfm",cl:T.blue},{t:"ALDAR",n:"Aldar Properties",p:"—",c:"dfm",cl:T.green},{t:"DEYAAR",n:"Deyaar Development",p:"—",c:"dfm",cl:T.purple},{t:"TECOM",n:"TECOM Group",p:"—",c:"dfm",cl:T.teal}].map((s,i) => (
-                  <div key={i} style={{ background: s.a ? "rgba(212,168,67,0.08)" : T.surfaceAlt, borderRadius: 10, padding: 14, border: `1px solid ${s.a ? T.gold : T.border}` }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: s.cl }}>{s.t}</span>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: s.c === "dfm" ? T.textMuted : s.c.includes("-") ? T.red : T.green }}>{s.c === "dfm" ? "DFM Only" : `${s.c}%`}</span>
-                    </div>
-                    <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>{s.n}</div>
-                    <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'Fraunces', serif", color: T.white }}>AED {s.p}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Analyst Consensus */}
-              <div style={{ background: T.surfaceAlt, borderRadius: 12, padding: 16, border: `1px solid ${T.border}`, marginBottom: 20 }}>
-                <h3 style={{ fontSize: 12, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Analyst Consensus</h3>
-                <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
-                  <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 32, fontWeight: 900, fontFamily: "'Fraunces', serif", color: T.green }}>BUY</div>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>12 of 15 analysts</div>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 200 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: T.textMuted, marginBottom: 6 }}>
-                      <span>Strong Buy (8)</span><span>Buy (4)</span><span>Hold (2)</span><span>Sell (1)</span>
-                    </div>
-                    <div style={{ display: "flex", height: 8, borderRadius: 4, overflow: "hidden" }}>
-                      <div style={{ width: "53%", background: T.green }} /><div style={{ width: "27%", background: T.teal }} /><div style={{ width: "13%", background: T.gold }} /><div style={{ width: "7%", background: T.red }} />
-                    </div>
-                  </div>
-                  <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>Target Price</div>
-                    <div style={{ fontSize: 22, fontWeight: 800, fontFamily: "'Fraunces', serif", color: T.gold }}>AED 20.77</div>
-                    <div style={{ fontSize: 11, color: T.green, fontWeight: 600 }}>+{((20.77/stock.price - 1) * 100).toFixed(0)}% upside</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Trade Buttons */}
-              <div style={{ display: "flex", gap: 10, position: "sticky", bottom: 0, background: T.surface, padding: "16px 0 0" }}>
-                <a href="https://www.dfm.ae/issuers/listed-securities/securities-details?id=EMAAR" target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "14px 0", background: T.gold, borderRadius: 12, color: T.bg, fontSize: 14, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>View on DFM</a>
-                <a href="tel:+971542410599" style={{ flex: 1, padding: "14px 0", background: T.teal, borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>Call to Trade</a>
-                <a href={whatsappLink("Emaar Stock (EMAAR)", "DFM")} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: "14px 0", background: "#25D366", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>Ask on WhatsApp</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
 
 
