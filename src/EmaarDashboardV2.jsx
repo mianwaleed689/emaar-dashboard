@@ -3594,7 +3594,106 @@ export default function EmaarDashboardV2() {
                     </div>
                   </div>
                 </div>
-              <TabSources sources={[{ label: "DLD Transactions FY2025", url: "https://dubailand.gov.ae" }, { label: "REIDIN Price Index", url: "https://reidin.com" }, { label: "Property Monitor" }, { label: "ValuStrat Dubai Residential" }, { label: "Bayut", url: "https://www.bayut.com" }]} />
+              {/* ─── LIVE BAYUT LISTINGS ─── */}
+              {(() => {
+                const [bayutListings, setBayutListings] = React.useState(null);
+                const [bayutLoading, setBayutLoading] = React.useState(false);
+                const [bayutError, setBayutError] = React.useState(false);
+                const [bayutFetched, setBayutFetched] = React.useState("");
+
+                const communityQueryMap = {
+                  "Dubai Hills Estate": "Dubai Hills Estate",
+                  "Dubai Creek Harbour": "Dubai Creek Harbour",
+                  "Emaar Beachfront": "Emaar Beachfront",
+                  "Downtown Dubai": "Downtown Dubai",
+                  "Arabian Ranches III": "Arabian Ranches III",
+                  "The Valley": "The Valley Dubai",
+                  "The Oasis": "The Oasis Emaar",
+                };
+
+                const fetchBayutListings = async () => {
+                  if (bayutFetched === avmCommunity) return;
+                  setBayutLoading(true); setBayutError(false);
+                  try {
+                    // Check Firestore cache first (24h cache)
+                    const cacheKey = "bayut_" + avmCommunity.replace(/\s/g, "_").toLowerCase();
+                    const { doc, getDoc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+                    const cacheRef = doc(db, "bayutCache", cacheKey);
+                    const cacheSnap = await getDoc(cacheRef);
+                    if (cacheSnap.exists() && cacheSnap.data().fetchedAt > Date.now() - 86400000) {
+                      setBayutListings(cacheSnap.data().listings);
+                      setBayutFetched(avmCommunity);
+                      setBayutLoading(false);
+                      return;
+                    }
+                    // Fetch from Bayut via RapidAPI
+                    const query = communityQueryMap[avmCommunity] || avmCommunity;
+                    const bedsParam = avmBeds === "Studio" ? "0" : avmBeds.replace("BR","");
+                    const purposeParam = "for-sale";
+                    const url = `https://unofficial-bayut-api.p.rapidapi.com/search?locationExternalIDs=5002&purpose=${purposeParam}&categoryExternalID=${avmType === "Apartment" ? "4" : "16"}&bathsMin=1&rentFrequency=monthly&lang=en&sort=price-asc&page=0&hitsPerPage=6&roomsMin=${bedsParam}&roomsMax=${bedsParam}`;
+                    const res = await fetch(url, {
+                      headers: {
+                        "x-rapidapi-key": "420de140camsh35f3baf70380d11p1e0c92jsn00005ba30591",
+                        "x-rapidapi-host": "unofficial-bayut-api.p.rapidapi.com"
+                      }
+                    });
+                    const data = await res.json();
+                    const listings = (data?.hits || []).slice(0, 6).map(h => ({
+                      id: h.externalID,
+                      title: h.title || h.agency?.name || "Listing",
+                      price: h.price,
+                      area: h.area,
+                      ppsf: h.area > 0 ? Math.round(h.price / h.area) : 0,
+                      beds: h.rooms,
+                      baths: h.baths,
+                      location: h.location?.[2]?.name || avmCommunity,
+                      url: `https://www.bayut.com/property/details-${h.externalID}.html`,
+                    }));
+                    setBayutListings(listings);
+                    setBayutFetched(avmCommunity);
+                    // Cache in Firestore
+                    try { await setDoc(cacheRef, { listings, fetchedAt: Date.now() }); } catch(e) {}
+                  } catch(e) {
+                    setBayutError(true);
+                  }
+                  setBayutLoading(false);
+                };
+
+                return (
+                  <div style={{ background: "rgba(59,130,246,0.04)", border: "1px solid rgba(59,130,246,0.15)", borderRadius: 14, padding: 20, marginTop: 4 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#60A5FA" }}>🏠 Live Bayut Listings</div>
+                        <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Real market comparables · {avmCommunity} · {avmType}</div>
+                      </div>
+                      <button type="button" onClick={fetchBayutListings} disabled={bayutLoading}
+                        style={{ padding: "6px 14px", borderRadius: 8, background: bayutLoading ? T.surfaceAlt : "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)", color: bayutLoading ? T.textMuted : "#60A5FA", fontSize: 11, fontWeight: 600, cursor: bayutLoading ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        {bayutLoading ? "Loading..." : bayutListings ? "Refresh" : "Load Live Listings"}
+                      </button>
+                    </div>
+                    {bayutError && <div style={{ fontSize: 12, color: T.textMuted, textAlign: "center", padding: 20 }}>Could not load listings. Try again.</div>}
+                    {bayutListings && bayutListings.length > 0 && (
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
+                        {bayutListings.map(l => (
+                          <a key={l.id} href={l.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", background: T.surface, borderRadius: 10, padding: "12px 14px", border: "1px solid " + T.border, display: "block", transition: "border-color 0.2s" }}
+                            onMouseEnter={e => e.currentTarget.style.borderColor = "#60A5FA"}
+                            onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{l.location}</div>
+                            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.gold }}>AED {(l.price/1e6).toFixed(2)}M</div>
+                            <div style={{ fontSize: 10, color: "#60A5FA", marginTop: 2 }}>AED {l.ppsf?.toLocaleString()} /sqft</div>
+                            <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{l.beds} bed · {l.baths} bath · {Math.round(l.area).toLocaleString()} sqft</div>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    {!bayutListings && !bayutLoading && !bayutError && (
+                      <div style={{ fontSize: 12, color: T.textMuted, textAlign: "center", padding: "16px 0" }}>Click "Load Live Listings" to fetch real Bayut comparables for this community.</div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              <TabSources sources={[{ label: "DLD Transactions FY2025", url: "https://dubailand.gov.ae" }, { label: "REIDIN Price Index", url: "https://reidin.com" }, { label: "Property Monitor" }, { label: "ValuStrat Dubai Residential" }, { label: "Bayut Live Listings (RapidAPI)", url: "https://www.bayut.com" }]} />
               </div>
             );
           })()}
