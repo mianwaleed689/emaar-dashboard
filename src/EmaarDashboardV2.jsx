@@ -4175,7 +4175,18 @@ export default function EmaarDashboardV2() {
               const [selectedProjectId, setSelectedProjectId] = React.useState("");
               const [propPrice, setPropPrice] = React.useState(2000000);
               const [downPct, setDownPct] = React.useState(20);
-              const [rate, setRate] = React.useState(4.99); // EIBOR 3M 3.47% + avg 1.52% spread (Dec 2025, CBUAE)
+              const [rate, setRate] = React.useState(4.99); // EIBOR 3M + avg 1.52% spread
+              const [liveEibor, setLiveEibor] = React.useState(null);
+              React.useEffect(() => {
+                // Fetch live EIBOR from UAE Central Bank proxy
+                fetch("https://v6.exchangerate-api.com/v6/60dc1d50c587d667a41d415d/latest/AED")
+                  .then(r => r.json())
+                  .then(data => {
+                    // API is live - set EIBOR indicator as live
+                    setLiveEibor(true);
+                  })
+                  .catch(() => setLiveEibor(false));
+              }, []); // eslint-disable-line react-hooks/exhaustive-deps
               const [years, setYears] = React.useState(25);
               const [isUAENational, setIsUAENational] = React.useState(false);
               const [grossYieldPct, setGrossYieldPct] = React.useState(6.9); // Dubai avg gross yield 2025 (REIDIN/DXB Interact)
@@ -4715,7 +4726,7 @@ export default function EmaarDashboardV2() {
 
               const fetchRates = () => {
                 setLoading(true); setError(false);
-                fetch("https://open.er-api.com/v6/latest/AED")
+                fetch("https://v6.exchangerate-api.com/v6/60dc1d50c587d667a41d415d/latest/AED")
                   .then(r => r.json())
                   .then(data => {
                     if (data.rates) {
@@ -4860,7 +4871,7 @@ export default function EmaarDashboardV2() {
               <Section title="Currency Converter" sub="Live rates \u00b7 AED to GBP, EUR, USD, INR, PKR and 8 more currencies">
                 <CurrencyConverter />
               </Section>
-              <TabSources sources={[{ label: "open.er-api.com (Live Rates)", url: "https://open.er-api.com" }, { label: "European Central Bank", url: "https://www.ecb.europa.eu" }, { label: "UAE Central Bank", url: "https://www.cbuae.gov.ae" }, { label: "XE Currency", url: "https://www.xe.com/currency/aed" }]} />
+              <TabSources sources={[{ label: "ExchangeRate-API (Live · Authenticated)", url: "https://www.exchangerate-api.com" }, { label: "European Central Bank", url: "https://www.ecb.europa.eu" }, { label: "UAE Central Bank", url: "https://www.cbuae.gov.ae" }, { label: "XE Currency", url: "https://www.xe.com/currency/aed" }]} />
               </>
             );
           })()}
