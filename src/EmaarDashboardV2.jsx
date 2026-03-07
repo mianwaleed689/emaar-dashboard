@@ -1143,6 +1143,56 @@ export default function EmaarDashboardV2() {
 
   // Load projects from Firestore (runs for ALL users — guests and logged-in)
   const [projectsLoading, setProjectsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState(null);
+
+  const globalRefresh = async () => {
+    setIsRefreshing(true);
+    setProjectsLoading(true);
+    try {
+      const [pdSnap, npSnap, yieldSnap, roiSnap] = await Promise.all([
+        getDocs(collection(db, "projectData")),
+        getDocs(collection(db, "projects")),
+        getDocs(collection(db, "yieldData")),
+        getDocs(collection(db, "communityROI")),
+      ]);
+      const overrides = {};
+      pdSnap.forEach(d => { const numId = d.id.replace("project_", ""); overrides[numId] = d.data(); });
+      setLiveProjects(overrides);
+      const baseIds = new Set(emaarProjects.map(p => String(p.id)));
+      const extraFromOverrides = Object.entries(overrides).filter(([id]) => !baseIds.has(id)).map(([id, data]) => ({ id, ...data }));
+      const extraFromNew = [];
+      npSnap.forEach(d => { const data = { ...d.data(), id: d.id }; if (!baseIds.has(String(d.id))) extraFromNew.push(data); });
+      const seen = new Set(extraFromOverrides.map(p => String(p.id)));
+      setExtraProjects([...extraFromOverrides, ...extraFromNew.filter(p => !seen.has(String(p.id)))]);
+      if (yieldSnap.size > 0) {
+        const yieldOverrides = {};
+        yieldSnap.forEach(d => { yieldOverrides[d.id] = d.data(); });
+        const mergedYields = emaarYields.map(y => { const key = y.community + "_" + y.unit; const ov = yieldOverrides[key]; return ov ? { ...y, ...ov } : y; }).map(y => ({ label: y.unit, community: y.community, rent: (y.rent||0)/1000, price: (y.price||0)/1000, gross: y.gross, net: y.net, demand: y.demand === "Very High" ? "V.High" : y.demand === "Moderate-High" ? "High" : y.demand, visa: y.visa }));
+        setLiveYields(mergedYields);
+      }
+      if (roiSnap.size > 0) {
+        const roiOverrides = {};
+        roiSnap.forEach(d => { roiOverrides[d.id] = d.data(); });
+        setLiveCommunityROI(roiOverrides);
+      }
+      if (auth.currentUser) {
+        const [wlSnap, portSnap, alertsSnap] = await Promise.all([
+          getDoc(doc(db, "watchlists", auth.currentUser.uid)),
+          getDoc(doc(db, "portfolios", auth.currentUser.uid)),
+          getDoc(doc(db, "priceAlerts", auth.currentUser.uid)),
+        ]);
+        if (wlSnap.exists()) setWatchlist(wlSnap.data().projects || []);
+        if (portSnap.exists()) setMyPortfolio(portSnap.data().holdings || []);
+        if (alertsSnap.exists()) setMyAlerts(alertsSnap.data().alerts || []);
+      }
+      setLastRefreshed(new Date());
+      notify("Dashboard refreshed");
+    } catch (e) { notify("Refresh failed - check connection"); }
+    setProjectsLoading(false);
+    setIsRefreshing(false);
+  };
+
   useEffect(() => {
     const loadProjects = async () => {
       setProjectsLoading(true);
@@ -1751,6 +1801,10 @@ export default function EmaarDashboardV2() {
           </div>}
           <button type="button" onClick={() => setShowWatchlist(true)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: watchlist.length > 0 ? T.gold : T.textSecondary, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} title="My Watchlist">
             ☆ {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
+          </button>
+          <button type="button" onClick={globalRefresh} disabled={isRefreshing} title="Refresh all data" style={{ background: isRefreshing ? T.surfaceAlt : "rgba(212,168,67,0.08)", border: "1px solid " + (isRefreshing ? T.border : "rgba(212,168,67,0.25)"), borderRadius: 10, padding: "8px 12px", cursor: isRefreshing ? "not-allowed" : "pointer", color: isRefreshing ? T.textMuted : T.gold, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: isRefreshing ? "spin 1s linear infinite" : "none" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            {isRefreshing ? "Refreshing..." : "Refresh"}
           </button>
           <button type="button" onClick={() => setShowNotifications(v => !v)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: 8, cursor: "pointer", color: T.textSecondary, position: "relative" }} title="Notifications">
             {Icons.bell}
@@ -3059,7 +3113,13 @@ export default function EmaarDashboardV2() {
                       <div style={{ width: 8, height: 8, borderRadius: "50%", background: loading ? T.gold : error ? "#EF4444" : T.green }} />
                       <span style={{ fontSize: 12, color: T.textSecondary }}>{loading ? "Fetching live rates..." : error ? "Could not load rates \u2014 check connection" : "Live rates"}</span>
                     </div>
-                    {lastUpdated && <span style={{ fontSize: 11, color: T.textMuted }}>Updated {lastUpdated}</span>}
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      {lastUpdated && <span style={{ fontSize: 11, color: T.textMuted }}>Updated {lastUpdated}</span>}
+                      <button type="button" onClick={fetchRates} disabled={loading} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", background: loading ? T.surfaceAlt : "rgba(212,168,67,0.1)", border: "1px solid " + (loading ? T.border : "rgba(212,168,67,0.3)"), borderRadius: 8, color: loading ? T.textMuted : T.gold, fontSize: 11, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                        {loading ? "Refreshing..." : "Refresh Rates"}
+                      </button>
+                    </div>
                   </div>
 
                   {/* Amount input + quick project buttons */}
