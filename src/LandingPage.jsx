@@ -72,6 +72,11 @@ const landingCss = `
   .nav-link { color: ${T.textSecondary}; text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; font-family: 'Outfit', sans-serif; }
   .nav-link:hover { color: ${T.gold}; }
 
+  .mobile-menu-btn { display: none; align-items: center; justify-content: center; width: 40px; height: 40px; background: none; border: 1px solid ${T.border}; border-radius: 8px; cursor: pointer; color: ${T.textSecondary}; }
+  .mobile-drawer { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: ${T.bg}; z-index: 2000; flex-direction: column; padding: 80px 24px 24px; gap: 8px; }
+  .mobile-drawer a { color: ${T.textSecondary}; text-decoration: none; font-size: 18px; font-weight: 500; padding: 14px 0; border-bottom: 1px solid ${T.border}; font-family: 'Outfit', sans-serif; }
+  .mobile-drawer a:hover { color: ${T.gold}; }
+
   @media (max-width: 768px) {
     .hero-title { font-size: 32px !important; }
     .hero-subtitle { font-size: 16px !important; }
@@ -83,10 +88,6 @@ const landingCss = `
     .mobile-menu-btn { display: flex !important; }
     .mobile-drawer { display: flex !important; }
     .landing-section { padding: 60px 16px !important; }
-  .mobile-menu-btn { display: none; align-items: center; justify-content: center; width: 40px; height: 40px; background: none; border: 1px solid ${T.border}; border-radius: 8px; cursor: pointer; color: ${T.textSecondary}; }
-  .mobile-drawer { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: ${T.bg}; z-index: 2000; flex-direction: column; padding: 80px 24px 24px; gap: 8px; }
-  .mobile-drawer a { color: ${T.textSecondary}; text-decoration: none; font-size: 18px; font-weight: 500; padding: 14px 0; border-bottom: 1px solid ${T.border}; font-family: 'Outfit', sans-serif; }
-  .mobile-drawer a:hover { color: ${T.gold}; }
   }
 `;
 
@@ -315,13 +316,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                     </div>
                   ))}
                 </div>
-                <button onClick={() => {
-                    if (plan.name === "Enterprise") {
-                      window.location.href = "mailto:mianwaleed689@gmail.com?subject=Enterprise Plan Enquiry — DXB Analytics&body=Hi, I'm interested in the Enterprise plan. My company is: ";
-                    } else {
-                      onSignUpClick(plan.name.toLowerCase());
-                    }
-                  }} className={plan.popular ? "cta-btn" : "cta-btn-outline"} style={{ width: "100%", justifyContent: "center", padding: "12px 0" }}>
+                <button onClick={() => onSignUpClick(plan.name.toLowerCase())} className={plan.popular ? "cta-btn" : "cta-btn-outline"} style={{ width: "100%", justifyContent: "center", padding: "12px 0" }}>
                   {plan.cta}
                 </button>
                 {plan.note && <p style={{ fontSize: 10, color: T.textMuted, marginTop: 12, textAlign: "center" }}>{plan.note}</p>}
@@ -409,6 +404,22 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           </div>
         </div>
       </section>
+
+      {/* FOOTER */}
+      <footer style={{ padding: "40px 40px", borderTop: "1px solid rgba(212,168,67,0.08)", background: "#0A1628" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <svg width="24" height="24" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke="#D4A843" strokeWidth="2"/><path d="M12 28V12h10l-6 8h8l-12 8z" fill="#D4A843"/></svg>
+            <span style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 800, color: "#D4A843" }}>DXB Analytics</span>
+          </div>
+          <p style={{ fontSize: 12, color: "#64748B" }}>© 2026 DXB Analytics by The Address Holding. Dubai, UAE.</p>
+          <div style={{ display: "flex", gap: 20 }}>
+            <a href="#features" style={{ fontSize: 12, color: "#64748B", textDecoration: "none" }}>Features</a>
+            <a href="#pricing" style={{ fontSize: 12, color: "#64748B", textDecoration: "none" }}>Pricing</a>
+            <a href="/" style={{ fontSize: 12, color: "#64748B", textDecoration: "none" }}>Dashboard</a>
+          </div>
+        </div>
+      </footer>
 
       {/* ─── FINAL CTA ─── */}
       <section className="landing-section" style={{ padding: "100px 40px", textAlign: "center", position: "relative", overflow: "hidden" }}>
