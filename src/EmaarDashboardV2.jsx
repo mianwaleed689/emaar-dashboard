@@ -2682,7 +2682,6 @@ export default function EmaarDashboardV2() {
             const avgConstruction = allHandover.length ? Math.round(allHandover.reduce((a, p) => a + (p.construction || 0), 0) / allHandover.length) : 0;
 
             return (
-              <>
               <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                 {/* Summary KPIs */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
@@ -3150,7 +3149,6 @@ export default function EmaarDashboardV2() {
             const confColor = confidence === "Very High" ? "#10B981" : confidence === "High" ? T.gold : "#F59E0B";
             const invScore = getInvestmentScore({ price: currentValue, ppsf: currentPpsf, gross: parseFloat(grossYield), handover: null, paymentPlan: "80/20" });
             return (
-              <>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 {/* Header */}
                 <div style={{ background: T.surface, borderRadius: 14, border: "1px solid rgba(212,168,67,0.3)", padding: "20px 24px" }}>
@@ -3270,7 +3268,6 @@ export default function EmaarDashboardV2() {
             const filtered = strCommunity === "All" ? strData : strData.filter(d => d.community === strCommunity);
             const maxStr = Math.max(...strData.map(d => d.str));
             return (
-              <>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 {/* Header */}
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
@@ -3383,7 +3380,6 @@ export default function EmaarDashboardV2() {
               return b.profit - a.profit;
             });
             return (
-              <>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 {/* Header */}
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
@@ -3490,7 +3486,6 @@ export default function EmaarDashboardV2() {
             const totalDeals = dldData.reduce((s, d) => s + d.total, 0);
             const totalVol = dldData.reduce((s, d) => s + d.total * d.avgPrice, 0);
             return (
-              <>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 {/* Header */}
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
@@ -4032,7 +4027,6 @@ export default function EmaarDashboardV2() {
               </div>
             );
             return (
-              <>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
                   <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800, color: T.gold }}>Neighbourhood Scorecard</div>
@@ -4116,7 +4110,6 @@ export default function EmaarDashboardV2() {
             const maxSC = Math.max(...scData.map(d => d.high));
             const sorted = [...scData].sort((a, b) => scSort === "avg" ? b.avg - a.avg : scSort === "community" ? a.community.localeCompare(b.community) : b.high - a.high);
             return (
-              <>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 {/* Header */}
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
