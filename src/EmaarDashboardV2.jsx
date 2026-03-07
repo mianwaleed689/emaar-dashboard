@@ -1111,7 +1111,7 @@ export default function EmaarDashboardV2() {
       {locked && <UpgradeOverlay message={message} compact={compact} />}
     </div>
   );
-  const [tab, setTab] = useState("Overview");
+  const [tab, setTab] = useState(() => { try { return sessionStorage.getItem("dxb_active_tab") || "Overview"; } catch(e) { return "Overview"; } });
   const [selectedKPI, setSelectedKPI] = useState(null);
   const [breadcrumb, setBreadcrumb] = useState([]); // [{label, action}]
   const [projectPage, setProjectPage] = useState(1);
@@ -1147,6 +1147,7 @@ export default function EmaarDashboardV2() {
 
   const globalRefresh = () => {
     setIsRefreshing(true);
+    try { sessionStorage.setItem("dxb_active_tab", tab); } catch(e) {}
     setTimeout(() => { window.location.reload(); }, 300);
   };
 
