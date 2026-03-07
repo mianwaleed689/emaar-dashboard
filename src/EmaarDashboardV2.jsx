@@ -6,7 +6,7 @@ import emailjs from "@emailjs/browser";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, query, where, orderBy, limit } from "firebase/firestore";
 
 import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
 import LandingPage from "./LandingPage";
@@ -1235,6 +1235,7 @@ export default function EmaarDashboardV2() {
   const [liveYields, setLiveYields] = useState([]);
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [selectedProject, setSelectedProject] = useState(null);
+  const [projectPriceHistory, setProjectPriceHistory] = useState({});
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [expandedMega, setExpandedMega] = useState(null);
   const [compareList, setCompareList] = useState([]);
@@ -1317,6 +1318,34 @@ export default function EmaarDashboardV2() {
     };
     loadProjects(); // Load for everyone — no isLoggedIn gate
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch price history from Firestore when a project is selected
+  useEffect(() => {
+    if (!selectedProject) return;
+    const projectId = String(typeof selectedProject === "object" ? selectedProject.id : selectedProject);
+    if (projectPriceHistory[projectId]) return; // already loaded
+    const fetchHistory = async () => {
+      try {
+        const q = query(
+          collection(db, "priceHistory"),
+          where("projectId", "==", projectId),
+          orderBy("recordedAt", "asc"),
+          limit(24)
+        );
+        const snap = await getDocs(q);
+        if (snap.empty) return;
+        const history = snap.docs.map(d => {
+          const data = d.data();
+          const date = data.recordedAt
+            ? new Date(data.recordedAt.toMillis ? data.recordedAt.toMillis() : data.recordedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
+            : "—";
+          return { date, price: data.price };
+        });
+        setProjectPriceHistory(prev => ({ ...prev, [projectId]: history }));
+      } catch (e) { /* silently fail if no price history */ }
+    };
+    fetchHistory();
+  }, [selectedProject]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Use merged Firestore+static data if available, otherwise pure static fallback
   const activeProjects = [...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }), ...extraProjects];
@@ -4034,7 +4063,9 @@ export default function EmaarDashboardV2() {
           : selectedProject;
         if (!_sp) { return null; }
         /* Use _sp below but keep variable name short */
-        const selectedProject_ = _sp;
+        const _phKey = String(_sp.id);
+        const _ph = projectPriceHistory[_phKey];
+        const selectedProject_ = _ph && _ph.length >= 2 ? { ..._sp, priceHistory: _ph } : _sp;
         const ci = communityIntel[selectedProject_.community] || null;
         return (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setSelectedProject(null)}>
