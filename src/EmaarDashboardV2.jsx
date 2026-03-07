@@ -3066,7 +3066,8 @@ export default function EmaarDashboardV2() {
               const [error, setError] = React.useState(false);
               const [inputVal, setInputVal] = React.useState("2000000");
 
-              React.useEffect(() => {
+              const fetchRates = () => {
+                setLoading(true); setError(false);
                 fetch("https://open.er-api.com/v6/latest/AED")
                   .then(r => r.json())
                   .then(data => {
@@ -3077,7 +3078,9 @@ export default function EmaarDashboardV2() {
                     setLoading(false);
                   })
                   .catch(() => { setError(true); setLoading(false); });
-              }, []);
+              };
+
+              React.useEffect(() => { fetchRates(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
               const currencies = [
                 { code: "GBP", name: "British Pound",     flag: "GB", color: "#3B82F6" },
