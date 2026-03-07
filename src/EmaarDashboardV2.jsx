@@ -3311,7 +3311,7 @@ export default function EmaarDashboardV2() {
                     const overall = Math.round((n.maturity + n.rentalDemand + n.strPotential + n.infrastructure + n.appreciation) / 5);
                     const isOpen = selectedNbhd === n.name;
                     return (
-                      <div key={n.name} style={{ background: T.surface, borderRadius: 14, border: `1px solid ${isOpen ? n.color + "60" : T.border}`, overflow: "hidden", cursor: "pointer", transition: "border-color 0.2s" }} onClick={() => setSelectedNbhd(isOpen ? null : n.name)}>
+                      <div key={n.name} style={{ background: T.surface, borderRadius: 14, border: `1px solid ${isOpen ? n.color + "60" : T.border}`, overflow: "hidden", cursor: "pointer", transition: "border-color 0.2s", gridColumn: isOpen ? "1 / -1" : "auto" }} onClick={() => setSelectedNbhd(isOpen ? null : n.name)}>
                         <div style={{ padding: "16px 18px", background: isOpen ? `${n.color}08` : "transparent" }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                             <div>
@@ -3332,7 +3332,7 @@ export default function EmaarDashboardV2() {
                         </div>
                         {isOpen && (
                           <div style={{ padding: "0 18px 16px", borderTop: `1px solid ${T.border}` }}>
-                            <div style={{ paddingTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+                            <div style={{ paddingTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 12 }}>
                               {[
                                 { label: "Community Maturity", val: n.maturity, color: n.color },
                                 { label: "Rental Demand", val: n.rentalDemand, color: "#10B981" },
