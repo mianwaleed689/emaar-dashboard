@@ -3615,9 +3615,9 @@ export default function EmaarDashboardV2() {
                         }
                       } catch(cacheErr) {}
                       const bedsParam = beds === "Studio" ? "0" : beds.replace("BR","");
-                      // Use Bayut search endpoint with community name query
-                      const searchQuery = encodeURIComponent(community);
-                      const url = `https://unofficial-bayut-api.p.rapidapi.com/search?query=${searchQuery}&purpose=for-sale&categoryExternalID=${propType === "Apartment" ? "4" : "16"}&lang=en&sort=price-asc&page=0&hitsPerPage=6&roomsMin=${bedsParam}&roomsMax=${bedsParam}`;
+                      // Use correct Bayut API search endpoint
+                      const searchQuery = encodeURIComponent(community + " Dubai");
+                      const url = `https://unofficial-bayut-api.p.rapidapi.com/properties/list?locationExternalIDs=5002&purpose=for-sale&categoryExternalID=${propType === "Apartment" ? "4" : "16"}&lang=en&sort=price-asc&page=0&hitsPerPage=6&roomsMin=${bedsParam}&roomsMax=${bedsParam}`;
                       const res = await fetch(url, {
                         headers: {
                           "x-rapidapi-key": "420de140camsh35f3baf70380d11p1e0c92jsn00005ba30591",
