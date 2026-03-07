@@ -77,11 +77,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<HomeRoute />} />
-            <Route path="/dashboard" element={
-              <AuthGuard>
-                <EmaarDashboardV2 />
-              </AuthGuard>
-            } />
+            <Route path="/dashboard" element={<EmaarDashboardV2 />} />
             <Route path="/admin" element={
               <AuthGuard requireAdmin>
                 <AdminPanel />
