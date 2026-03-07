@@ -1044,7 +1044,7 @@ export default function AdminPanel() {
           {TABS.map(t => (
             <button type="button" key={t.id} className={`sidebar-btn ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
               <span style={{ color: tab === t.id ? T.gold : T.textMuted, transition: "color 0.15s" }}>{t.icon}</span>
-              {i18t("adminTabs", t.id)}
+              {i18t("adminTabs", t.id) || t.label}
             </button>
           ))}
 
