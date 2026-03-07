@@ -1251,6 +1251,7 @@ export default function EmaarDashboardV2() {
   const [gvPropPrice, setGvPropPrice] = useState(2000000);
   const [gvPaymentPlan, setGvPaymentPlan] = useState("cash");
   const [gvNationality, setGvNationality] = useState("other");
+  const [gvSelectedProj, setGvSelectedProj] = useState(null);
 
   // Load projects from Firestore (runs for ALL users — guests and logged-in)
   const [projectsLoading, setProjectsLoading] = useState(true);
@@ -3138,7 +3139,7 @@ export default function EmaarDashboardV2() {
               const setPaymentPlan = setGvPaymentPlan;
               const nationality = gvNationality;
               const setNationality = setGvNationality;
-              const [selectedProjGV, setSelectedProjGV] = React.useState(null);
+              const selectedProjGV = gvSelectedProj; const setSelectedProjGV = setGvSelectedProj;
 
               const THRESHOLD = 2000000;
               const eligible = propPrice >= THRESHOLD;
