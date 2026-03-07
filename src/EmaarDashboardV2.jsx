@@ -1144,8 +1144,6 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
   );
 }
 
-}
-
 export default function EmaarDashboardV2() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState("");
