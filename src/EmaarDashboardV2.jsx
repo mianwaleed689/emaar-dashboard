@@ -3616,16 +3616,17 @@ export default function EmaarDashboardV2() {
                   setBayutLoading(true); setBayutError(false);
                   try {
                     // Check Firestore cache first (24h cache)
-                    const cacheKey = "bayut_" + avmCommunity.replace(/\s/g, "_").toLowerCase();
-                    const { doc, getDoc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
-                    const cacheRef = doc(db, "bayutCache", cacheKey);
-                    const cacheSnap = await getDoc(cacheRef);
-                    if (cacheSnap.exists() && cacheSnap.data().fetchedAt > Date.now() - 86400000) {
-                      setBayutListings(cacheSnap.data().listings);
-                      setBayutFetched(avmCommunity);
-                      setBayutLoading(false);
-                      return;
-                    }
+                    const cacheKey = "bayut_" + avmCommunity.replace(/ /g, "_").toLowerCase();
+                    try {
+                      const cacheRef = doc(db, "bayutCache", cacheKey);
+                      const cacheSnap = await getDoc(cacheRef);
+                      if (cacheSnap.exists() && cacheSnap.data().fetchedAt > Date.now() - 86400000) {
+                        setBayutListings(cacheSnap.data().listings);
+                        setBayutFetched(avmCommunity);
+                        setBayutLoading(false);
+                        return;
+                      }
+                    } catch(cacheErr) {}
                     // Fetch from Bayut via RapidAPI
                     const query = communityQueryMap[avmCommunity] || avmCommunity;
                     const bedsParam = avmBeds === "Studio" ? "0" : avmBeds.replace("BR","");
@@ -3652,7 +3653,10 @@ export default function EmaarDashboardV2() {
                     setBayutListings(listings);
                     setBayutFetched(avmCommunity);
                     // Cache in Firestore
-                    try { await setDoc(cacheRef, { listings, fetchedAt: Date.now() }); } catch(e) {}
+                    try {
+                      const cacheRef2 = doc(db, "bayutCache", cacheKey);
+                      await setDoc(cacheRef2, { listings, fetchedAt: Date.now() });
+                    } catch(e) {}
                   } catch(e) {
                     setBayutError(true);
                   }
