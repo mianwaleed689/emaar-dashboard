@@ -1619,6 +1619,7 @@ export default function EmaarDashboardV2() {
   };
 
   const handleTabChange = (key) => {
+    sessionStorage.removeItem("dxb_active_tab");
     setTab(key);
     setSidebarOpen(false);
     if (key === "Admin" && userTier === "admin") fetchAdminUsers();
