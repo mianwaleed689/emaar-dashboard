@@ -306,7 +306,7 @@ function BroadcastTab({ notify, adminUser, users }) {
             </div>
             <button type="button" onClick={sendDigest} disabled={digestSending}
               style={{ padding:"13px 28px", background:digestSending?T.surfaceAlt:`linear-gradient(135deg,${T.gold},#B8912F)`, border:"none", borderRadius:10, color:digestSending?T.textMuted:T.bg, fontWeight:800, fontSize:14, cursor:digestSending?"not-allowed":"pointer", fontFamily:"'Outfit',sans-serif" }}>
-              {digestSending?"Sending..."`Send Digest Now → ${proUsers.length} users`}
+              {digestSending?"Sending...":`Send Digest Now → ${proUsers.length} users`}
             </button>
             {digestResult && (
               <div style={{ marginTop:16, padding:"12px 16px", borderRadius:10, background:digestResult.success?"rgba(16,185,129,.08)":"rgba(239,68,68,.08)", border:`1px solid ${digestResult.success?"rgba(16,185,129,.2)":"rgba(239,68,68,.2)"}` }}>
