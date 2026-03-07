@@ -3719,19 +3719,156 @@ export default function EmaarDashboardV2() {
       })()}
 
       {/* ─── COMPARE MODAL ─── */}
-      {showCompare && compareList.length >= 2 && (
-        <div role="dialog" aria-modal="true" aria-label="Project comparison" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowCompare(false)}>
-          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}`, width: "95%", maxWidth: 900, maxHeight: "90vh", overflowY: "auto", padding: 28 }} onClick={e => e.stopPropagation()}>
+      {showCompare && compareList.length >= 2 && (() => {
+        const getRoi = (p) => (liveCommunityROI && liveCommunityROI[p.community]) || communityROI[p.community] || {};
+        const getGrossYield = (p) => { const r = getRoi(p); return r.grossYield?.apt1 || r.grossYield?.th || r.grossYield?.villa || null; };
+        const getNetYield = (p) => { const r = getRoi(p); return r.netYield?.apt1 || r.netYield?.th || r.netYield?.villa || null; };
+        const getEstRent = (p) => { const r = getRoi(p); return r.estRent?.apt1 || r.estRent?.th || r.estRent?.villa || null; };
+        const getAppr5 = (p) => getRoi(p).appreciation5yr || null;
+        const getOccupancy = (p) => getRoi(p).occupancy || null;
+        const getDownPayment = (p) => { const pct = parseInt((p.payment||"80/20").split("/")[0]); return p.price ? Math.round(p.price * pct / 100) : null; };
+        const fmtAED = (n) => n >= 1e6 ? `AED ${(n/1e6).toFixed(2)}M` : n ? `AED ${Math.round(n).toLocaleString()}` : "—";
+
+        const exportComparePDF = () => {
+          const now = new Date().toLocaleDateString("en-AE", { day: "numeric", month: "long", year: "numeric" });
+          const cols = compareList.length;
+          const colW = Math.floor(560 / cols);
+          const projectHeaders = compareList.map(p => {
+            const r = getRoi(p);
+            return `<th style="padding:14px 12px;text-align:center;background:#1a1a2e;border-bottom:2px solid #b8860b;width:${colW}px">
+              <div style="font-size:15px;font-weight:800;color:#b8860b;margin-bottom:3px">${p.name}</div>
+              <div style="font-size:11px;color:#888;margin-bottom:6px">${p.community}</div>
+              <div style="font-size:18px;font-weight:900;color:#fff">${p.price ? `AED ${(p.price/1e6).toFixed(2)}M` : "TBD"}</div>
+              <div style="font-size:10px;color:#aaa">Starting Price</div>
+            </th>`;
+          }).join("");
+
+          const rows = [
+            { section: "PROPERTY DETAILS", isHeader: true },
+            { label: "Status", fn: p => p.status },
+            { label: "Community", fn: p => p.community },
+            { label: "Type", fn: p => p.type },
+            { label: "Bedrooms", fn: p => p.beds ? p.beds + " BR" : "—" },
+            { label: "Size Range", fn: p => p.sizeFrom ? `${p.sizeFrom.toLocaleString()}–${p.sizeTo?.toLocaleString()} sqft` : "—" },
+            { label: "Tier", fn: p => p.tier },
+            { label: "Branded", fn: p => p.branded ? `✓ ${p.brand}` : "No" },
+            { section: "PRICING & PAYMENT", isHeader: true },
+            { label: "Starting Price", fn: p => p.price ? `AED ${(p.price/1e6).toFixed(3)}M` : "TBD", highlight: true },
+            { label: "Price / sqft", fn: p => p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "—" },
+            { label: "Payment Plan", fn: p => p.payment || "—", highlight: true },
+            { label: "Down Payment", fn: p => fmtAED(getDownPayment(p)) },
+            { section: "TIMELINE", isHeader: true },
+            { label: "Handover", fn: p => p.handover || "—", highlight: true },
+            { label: "Construction", fn: p => p.construction != null ? `${p.construction}%` : "—" },
+            { section: "INVESTMENT RETURNS", isHeader: true },
+            { label: "Gross Yield (1BR)", fn: p => { const y = getGrossYield(p); return y ? `${y}%` : "—"; }, highlight: true },
+            { label: "Net Yield (1BR)", fn: p => { const y = getNetYield(p); return y ? `${y}%` : "—"; }, highlight: true },
+            { label: "Est. Annual Rent", fn: p => fmtAED(getEstRent(p)) },
+            { label: "5-Year Appreciation", fn: p => { const a = getAppr5(p); return a ? `+${a}%` : "—"; }, highlight: true },
+            { label: "Occupancy Rate", fn: p => { const o = getOccupancy(p); return o ? `${o}%` : "—"; } },
+            { label: "Service Charge", fn: p => { const sc = getRoi(p).serviceCharge; return sc ? `AED ${sc}/sqft/yr` : "—"; } },
+            { label: "Golden Visa", fn: p => getRoi(p).goldenVisa ? "✓ Eligible" : "Check" },
+          ];
+
+          const tableRows = rows.map((row, i) => {
+            if (row.isHeader) return `<tr><td colspan="${cols+1}" style="padding:10px 12px 6px;font-size:9px;font-weight:800;letter-spacing:2px;color:#b8860b;text-transform:uppercase;background:#0d0d1a;border-top:1px solid #333">${row.section}</td></tr>`;
+            const bg = i % 2 === 0 ? "#111122" : "#0d0d1a";
+            const highlightBg = row.highlight ? "#1a160a" : bg;
+            const cells = compareList.map(p => {
+              const val = row.fn(p);
+              return `<td style="padding:10px 12px;text-align:center;font-size:13px;font-weight:${row.highlight ? 700 : 400};color:${row.highlight ? "#e8c96a" : "#e2e8f0"}">${val}</td>`;
+            }).join("");
+            return `<tr style="background:${highlightBg};border-bottom:1px solid #1a1a2e"><td style="padding:10px 12px;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px">${row.label}</td>${cells}</tr>`;
+          }).join("");
+
+          const html = `<!DOCTYPE html><html><head><title>DXB Analytics — Project Comparison Report</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Georgia',serif;background:#fff;color:#111;padding:0}
+  @media print{
+    @page{margin:15mm;size:A4 ${cols >= 3 ? "landscape" : "portrait"}}
+    .no-print{display:none!important}
+    body{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  }
+  .header{background:linear-gradient(135deg,#04090F 0%,#0a1628 100%);color:#fff;padding:28px 36px;display:flex;justify-content:space-between;align-items:center}
+  .brand{font-size:22px;font-weight:900;color:#D4A843;letter-spacing:2px}
+  .subtitle{font-size:11px;color:#94a3b8;margin-top:4px}
+  .report-title{font-size:13px;color:#D4A843;font-weight:700;text-align:right}
+  .report-date{font-size:10px;color:#64748b;text-align:right;margin-top:3px}
+  .content{padding:24px 36px}
+  table{width:100%;border-collapse:collapse}
+  .footer{background:#04090F;color:#64748b;padding:14px 36px;font-size:9px;display:flex;justify-content:space-between;align-items:center;margin-top:24px}
+  .disclaimer{font-size:9px;color:#94a3b8;background:#f8f8f8;border-left:3px solid #D4A843;padding:10px 14px;margin-top:16px}
+</style>
+</head><body>
+<div class="header">
+  <div>
+    <div class="brand">DXB ANALYTICS</div>
+    <div class="subtitle">The Bloomberg of Dubai Real Estate</div>
+  </div>
+  <div>
+    <div class="report-title">⚖ PROJECT COMPARISON REPORT</div>
+    <div class="report-date">Generated: ${now} · emaar-dashboard.vercel.app</div>
+  </div>
+</div>
+<div class="content">
+  <table style="margin-bottom:24px">
+    <thead>
+      <tr>
+        <th style="padding:14px 12px;text-align:left;background:#04090F;border-bottom:2px solid #b8860b;color:#64748b;font-size:10px;font-weight:600;text-transform:uppercase;width:140px">METRIC</th>
+        ${projectHeaders}
+      </tr>
+    </thead>
+    <tbody>${tableRows}</tbody>
+  </table>
+  <div class="disclaimer">
+    <strong>Investment Yields & Projections:</strong> Gross/net yields and appreciation data are community averages sourced from Engel &amp; Völkers, BetterHomes, Bayut, and DLD Ejari. Individual unit performance may vary. This report is for informational purposes only and does not constitute financial or investment advice.
+  </div>
+</div>
+<div class="footer">
+  <span>DXB Analytics · emaar-dashboard.vercel.app · Data sources: Emaar IR, DLD, BetterHomes, Bayut Q1 2026</span>
+  <span>⚖ ${compareList.map(p=>p.name).join(" vs ")} · ${now}</span>
+</div>
+</body></html>`;
+
+          const w = window.open("", "_blank");
+          w.document.write(html);
+          w.document.close();
+          setTimeout(() => w.print(), 600);
+        };
+
+        return (
+        <div role="dialog" aria-modal="true" aria-label="Project comparison" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowCompare(false)}>
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}`, width: "95%", maxWidth: 960, maxHeight: "92vh", overflowY: "auto", padding: 28 }} onClick={e => e.stopPropagation()}>
+
+            {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: T.gold, margin: 0 }}>⚖️ Project Comparison</h2>
-              <button type="button" onClick={() => setShowCompare(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>✕</button>
+              <div>
+                <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: T.gold, margin: 0 }}>⚖️ Project Comparison</h2>
+                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{compareList.length} projects · Side-by-side analysis</div>
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                {isPro ? (
+                  <button type="button" onClick={exportComparePDF}
+                    style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "rgba(212,168,67,0.12)", border: `1px solid ${T.gold}`, borderRadius: 8, color: T.gold, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                    ⬇ Export PDF
+                  </button>
+                ) : (
+                  <button type="button" onClick={() => setShowUpgrade(true)}
+                    style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "rgba(212,168,67,0.06)", border: `1px solid rgba(212,168,67,0.3)`, borderRadius: 8, color: "rgba(212,168,67,0.5)", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                    🔒 Export PDF
+                  </button>
+                )}
+                <button type="button" onClick={() => setShowCompare(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              </div>
             </div>
 
+            {/* Comparison Table */}
             <div className="table-scroll" style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ borderBottom: `2px solid ${T.gold}` }}>
-                    <th style={{ padding: "12px 16px", textAlign: "left", color: T.textMuted, fontSize: 11, fontWeight: 600, width: 140 }}>METRIC</th>
+                    <th style={{ padding: "12px 16px", textAlign: "left", color: T.textMuted, fontSize: 11, fontWeight: 600, width: 150 }}>METRIC</th>
                     {compareList.map(p => (
                       <th key={p.id} style={{ padding: "12px 16px", textAlign: "center" }}>
                         <div style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.gold }}>{p.name}</div>
@@ -3742,63 +3879,99 @@ export default function EmaarDashboardV2() {
                   </tr>
                 </thead>
                 <tbody>
+                  {/* Section: Property */}
+                  <tr><td colSpan={compareList.length + 1} style={{ padding: "10px 16px 6px", fontSize: 9, fontWeight: 700, letterSpacing: 2, color: T.gold, textTransform: "uppercase", background: "rgba(212,168,67,0.04)", borderTop: `1px solid ${T.border}` }}>PROPERTY DETAILS</td></tr>
                   {[
                     { label: "Status", fn: p => p.status },
-                    { label: "Construction", fn: p => `${p.construction}%`, highlight: true },
-                    { label: "Starting Price", fn: p => p.price ? `AED ${(p.price/1000000).toFixed(1)}M` : "TBD" },
-                    { label: "Price/sqft", fn: p => p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "TBD" },
-                    { label: "Handover", fn: p => p.handover },
-                    { label: "Size Range", fn: p => `${p.sizeFrom?.toLocaleString()} - ${p.sizeTo?.toLocaleString()} sqft` },
-                    { label: "Bedrooms", fn: p => p.beds + " BR" },
                     { label: "Type", fn: p => p.type },
-                    { label: "Payment Plan", fn: p => p.payment },
+                    { label: "Bedrooms", fn: p => p.beds ? p.beds + " BR" : "—" },
+                    { label: "Size Range", fn: p => p.sizeFrom ? `${p.sizeFrom.toLocaleString()}–${p.sizeTo?.toLocaleString()} sqft` : "—" },
                     { label: "Tier", fn: p => p.tier },
                     { label: "Branded", fn: p => p.branded ? `✓ ${p.brand}` : "No" },
-                    { label: "Total Units", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + u.total, 0) : "—" },
-                    { label: "Available", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + (u.total - u.sold), 0) : "—", highlight: true },
-                    { label: "% Sold", fn: p => { if (!p.units) return "—"; const entries = getUnitEntries(p.units); const t = entries.reduce((a,[,u]) => a + u.total, 0); const s = entries.reduce((a,[,u]) => a + u.sold, 0); return t > 0 ? `${((s/t)*100).toFixed(0)}%` : "—"; } },
                   ].map((row, ri) => (
-                    <tr key={ri} style={{ borderBottom: `1px solid ${T.border}`, background: row.highlight ? "rgba(212,168,67,0.04)" : "transparent" }}>
-                      <td style={{ padding: "10px 16px", color: T.textMuted, fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>{row.label}</td>
-                      {compareList.map(p => (
-                        <td key={p.id} style={{ padding: "10px 16px", textAlign: "center", color: row.highlight ? T.gold : T.white, fontSize: 13, fontWeight: row.highlight ? 700 : 400 }}>{row.fn(p)}</td>
-                      ))}
+                    <tr key={ri} style={{ borderBottom: `1px solid ${T.border}`, background: ri % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)" }}>
+                      <td style={{ padding: "9px 16px", color: T.textMuted, fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>{row.label}</td>
+                      {compareList.map(p => <td key={p.id} style={{ padding: "9px 16px", textAlign: "center", color: T.textPrimary, fontSize: 13 }}>{row.fn(p)}</td>)}
+                    </tr>
+                  ))}
+                  {/* Section: Pricing */}
+                  <tr><td colSpan={compareList.length + 1} style={{ padding: "10px 16px 6px", fontSize: 9, fontWeight: 700, letterSpacing: 2, color: T.blue, textTransform: "uppercase", background: "rgba(59,130,246,0.04)", borderTop: `1px solid ${T.border}` }}>PRICING & PAYMENT</td></tr>
+                  {[
+                    { label: "Starting Price", fn: p => p.price ? `AED ${(p.price/1e6).toFixed(3)}M` : "TBD", color: T.gold, bold: true },
+                    { label: "Price / sqft", fn: p => p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "—" },
+                    { label: "Payment Plan", fn: p => p.payment || "—", color: T.teal, bold: true },
+                    { label: "Down Payment", fn: p => fmtAED(getDownPayment(p)) },
+                  ].map((row, ri) => (
+                    <tr key={ri} style={{ borderBottom: `1px solid ${T.border}`, background: row.bold ? "rgba(212,168,67,0.03)" : "transparent" }}>
+                      <td style={{ padding: "9px 16px", color: T.textMuted, fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>{row.label}</td>
+                      {compareList.map(p => <td key={p.id} style={{ padding: "9px 16px", textAlign: "center", color: row.color || T.textPrimary, fontSize: 13, fontWeight: row.bold ? 700 : 400 }}>{row.fn(p)}</td>)}
+                    </tr>
+                  ))}
+                  {/* Section: Timeline */}
+                  <tr><td colSpan={compareList.length + 1} style={{ padding: "10px 16px 6px", fontSize: 9, fontWeight: 700, letterSpacing: 2, color: T.teal, textTransform: "uppercase", background: "rgba(0,191,165,0.04)", borderTop: `1px solid ${T.border}` }}>TIMELINE</td></tr>
+                  {[
+                    { label: "Handover", fn: p => p.handover || "—", bold: true, color: T.teal },
+                    { label: "Construction %", fn: p => p.construction != null ? `${p.construction}%` : "—" },
+                  ].map((row, ri) => (
+                    <tr key={ri} style={{ borderBottom: `1px solid ${T.border}`, background: row.bold ? "rgba(0,191,165,0.03)" : "transparent" }}>
+                      <td style={{ padding: "9px 16px", color: T.textMuted, fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>{row.label}</td>
+                      {compareList.map(p => <td key={p.id} style={{ padding: "9px 16px", textAlign: "center", color: row.color || T.textPrimary, fontSize: 13, fontWeight: row.bold ? 700 : 400 }}>{row.fn(p)}</td>)}
+                    </tr>
+                  ))}
+                  {/* Section: Investment Returns */}
+                  <tr><td colSpan={compareList.length + 1} style={{ padding: "10px 16px 6px", fontSize: 9, fontWeight: 700, letterSpacing: 2, color: T.green, textTransform: "uppercase", background: "rgba(16,185,129,0.04)", borderTop: `1px solid ${T.border}` }}>INVESTMENT RETURNS</td></tr>
+                  {[
+                    { label: "Gross Yield", fn: p => { const y = getGrossYield(p); return y ? `${y}%` : "—"; }, color: T.green, bold: true },
+                    { label: "Net Yield", fn: p => { const y = getNetYield(p); return y ? `${y}%` : "—"; }, color: T.green, bold: true },
+                    { label: "Est. Annual Rent", fn: p => fmtAED(getEstRent(p)) },
+                    { label: "5-Yr Appreciation", fn: p => { const a = getAppr5(p); return a ? `+${a}%` : "—"; }, color: T.gold, bold: true },
+                    { label: "Occupancy Rate", fn: p => { const o = getOccupancy(p); return o ? `${o}%` : "—"; } },
+                    { label: "Golden Visa", fn: p => getRoi(p).goldenVisa ? "✓ Eligible" : "Check" },
+                    { label: "Service Charge", fn: p => { const sc = getRoi(p).serviceCharge; return sc ? `AED ${sc}/sqft/yr` : "—"; } },
+                  ].map((row, ri) => (
+                    <tr key={ri} style={{ borderBottom: `1px solid ${T.border}`, background: row.bold ? "rgba(16,185,129,0.03)" : "transparent" }}>
+                      <td style={{ padding: "9px 16px", color: T.textMuted, fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>{row.label}</td>
+                      {compareList.map(p => <td key={p.id} style={{ padding: "9px 16px", textAlign: "center", color: row.color || T.textPrimary, fontSize: 13, fontWeight: row.bold ? 700 : 400 }}>{row.fn(p)}</td>)}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* WhatsApp for all */}
+            {/* Action Buttons */}
             <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
               {compareList.map(p => (
                 isPro ? (
-                <a key={p.id} href={whatsappLink(p.name, p.community)} target="_blank" rel="noopener noreferrer"
-                  style={{ flex: 1, padding: "10px 0", background: "#25D366", borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none" }}>
-                  Inquire: {p.name.split(" ").slice(0,2).join(" ")}
-                </a>
+                  <a key={p.id} href={whatsappLink(p.name, p.community)} target="_blank" rel="noopener noreferrer"
+                    style={{ flex: 1, padding: "10px 0", background: "#25D366", borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 600, textAlign: "center", textDecoration: "none" }}>
+                    WhatsApp: {p.name.split(" ").slice(0,2).join(" ")}
+                  </a>
                 ) : (
-                <button type="button" key={p.id} onClick={() => setShowUpgrade(true)}
-                  style={{ flex: 1, padding: "10px 0", background: "rgba(37,211,102,0.15)", borderRadius: 10, color: "rgba(37,211,102,0.5)", fontSize: 12, fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer" }}>
-                  🔒 Inquire: {p.name.split(" ").slice(0,2).join(" ")}
-                </button>
+                  <button type="button" key={p.id} onClick={() => setShowUpgrade(true)}
+                    style={{ flex: 1, padding: "10px 0", background: "rgba(37,211,102,0.1)", borderRadius: 10, color: "rgba(37,211,102,0.45)", fontSize: 12, fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer" }}>
+                    🔒 Inquire: {p.name.split(" ").slice(0,2).join(" ")}
+                  </button>
                 )
               ))}
             </div>
-            {/* View on Emaar for all compared projects */}
             {compareList.some(p => p.emaarUrl) && (
               <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
                 {compareList.map(p => p.emaarUrl ? (
                   <a key={p.id} href={p.emaarUrl} target="_blank" rel="noopener noreferrer"
-                    style={{ flex: 1, padding: "8px 0", background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.35)", borderRadius: 10, color: T.gold, fontSize: 11, fontWeight: 700, textAlign: "center", textDecoration: "none" }}>
+                    style={{ flex: 1, padding: "8px 0", background: "rgba(212,168,67,0.07)", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 10, color: T.gold, fontSize: 11, fontWeight: 700, textAlign: "center", textDecoration: "none" }}>
                     {p.name.split(" ").slice(0,2).join(" ")} ↗ emaar.com
                   </a>
                 ) : <div key={p.id} style={{ flex: 1 }} />)}
               </div>
             )}
+
+            <div style={{ marginTop: 12, fontSize: 10, color: T.textMuted, textAlign: "center" }}>
+              Yield & appreciation data are community averages · Sources: Engel & Völkers, BetterHomes, Bayut Q1 2026, DLD Ejari · Not financial advice
+            </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ─── STOCK DETAIL MODAL (from Stocks tab) ─── */}
       {selectedStockTv && (
