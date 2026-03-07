@@ -2527,20 +2527,146 @@ export default function AdminPanel() {
           {/* ═══════════════════════════════════════
              ANALYTICS TAB
              ═══════════════════════════════════════ */}
-          {tab === "analytics" && (
+          {tab === "analytics" && (() => {
+            /* ── per-tab computed data ── */
+            const weeklySignups = (() => {
+              const weeks = [];
+              for (let i = 7; i >= 0; i--) {
+                const start = new Date(now); start.setDate(start.getDate() - i * 7 - 6);
+                const end   = new Date(now); end.setDate(end.getDate() - i * 7);
+                const label = `W${8 - i}`;
+                const count = users.filter(u => { try { const d = new Date(u.createdAt); return d >= start && d <= end; } catch { return false; } }).length;
+                const paid  = users.filter(u => { try { const d = new Date(u.createdAt); return d >= start && d <= end && (u.tier === "pro" || u.tier === "enterprise"); } catch { return false; } }).length;
+                weeks.push({ label, signups: count, paid });
+              }
+              return weeks;
+            })();
+
+            const mrrHistory = (() => {
+              const months = [];
+              for (let i = 5; i >= 0; i--) {
+                const d = new Date(now); d.setMonth(d.getMonth() - i);
+                const label = d.toLocaleString("en", { month: "short" });
+                const proCount = users.filter(u => { try { return u.tier === "pro" && new Date(u.createdAt) <= d; } catch { return false; } }).length;
+                const entCount = users.filter(u => { try { return u.tier === "enterprise" && new Date(u.createdAt) <= d; } catch { return false; } }).length;
+                months.push({ label, mrr: proCount * 99 + entCount * 499, pro: proCount * 99, enterprise: entCount * 499 });
+              }
+              months.push({ label: "Now", mrr, pro: stats.pro * 99, enterprise: stats.enterprise * 499 });
+              return months;
+            })();
+
+            const topProjects = (() => {
+              const counts = {};
+              leads.forEach(l => { const k = l.project || l.projectName || "Unknown"; counts[k] = (counts[k] || 0) + 1; });
+              return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name, count]) => ({ name, count }));
+            })();
+
+            const funnelData = [
+              { label: "Total Users", value: stats.total, color: T.textSecondary },
+              { label: "Pro Trial", value: stats.proTrial, color: T.gold },
+              { label: "Paid (Pro)", value: stats.pro, color: T.green },
+              { label: "Enterprise", value: stats.enterprise, color: T.teal },
+            ];
+
+            const weeklyRetention = (() => {
+              const cohorts = {};
+              users.forEach(u => {
+                try {
+                  const d = new Date(u.createdAt);
+                  const week = `${d.getFullYear()}-W${Math.ceil(d.getDate() / 7)}`;
+                  if (!cohorts[week]) cohorts[week] = { total: 0, retained: 0 };
+                  cohorts[week].total++;
+                  if (u.tier === "pro" || u.tier === "enterprise" || u.tier === "pro_trial") cohorts[week].retained++;
+                } catch {}
+              });
+              return Object.entries(cohorts).slice(-6).map(([week, d]) => ({
+                label: week.replace(/.*-W/, "Wk "),
+                retention: d.total > 0 ? Math.round((d.retained / d.total) * 100) : 0,
+                total: d.total,
+              }));
+            })();
+
+            const growthRate = stats.total > 0 && stats.thisWeek > 0 ? Math.round((stats.thisWeek / stats.total) * 100) : 0;
+            const ltv = stats.paid > 0 ? Math.round((mrr / stats.paid) * 12) : 0;
+
+            return (
             <>
-              <Section title="Growth Analytics" sub="Platform growth metrics & milestone tracking">
-                <div className="kpi-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-                  <KPI label="Growth Rate" value={`${stats.total > 0 && stats.thisWeek > 0 ? Math.round((stats.thisWeek / stats.total) * 100) : 0}%`} sub="Week over week" color={T.green} delay={1} />
-                  <KPI label="ARPU" value={`AED ${stats.total > 0 ? Math.round(mrr / stats.total) : 0}`} sub="Average per user" delay={2} />
-                  <KPI label="Trial Rate" value={`${trialConversion}%`} sub="Trial → Paid conversion" color={T.blue} delay={3} />
-                  <KPI label="Platform Health" value={stats.paid > 0 ? "Strong" : stats.proTrial > 0 ? "Growing" : "Early"} sub={stats.total > 10 ? "Scaling phase" : "Launch phase"} color={T.teal} delay={4} />
+              {/* ── KPI Row ── */}
+              <Section title="Growth Analytics" sub="Platform growth metrics — live from Firestore">
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12 }}>
+                  <KPI label="Weekly Growth" value={`${growthRate}%`} sub={`${stats.thisWeek} signups this week`} color={T.green} delay={1} />
+                  <KPI label="MRR" value={`AED ${mrr.toLocaleString()}`} sub={`ARR AED ${arr.toLocaleString()}`} color={T.gold} delay={2} />
+                  <KPI label="Proj. MRR" value={`AED ${projectedMRR.toLocaleString()}`} sub="If 30% trials convert" color={T.teal} delay={3} />
+                  <KPI label="Trial → Paid" value={`${trialConversion}%`} sub={`${stats.pro} paid · ${stats.expired} expired`} color={T.blue} delay={4} />
+                  <KPI label="ARPU" value={`AED ${stats.total > 0 ? Math.round(mrr / stats.total) : 0}`} sub="Per active user" delay={5} />
+                  <KPI label="LTV (Est.)" value={`AED ${ltv.toLocaleString()}`} sub="12-month paid LTV" color={T.purple} delay={6} />
                 </div>
               </Section>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 28 }}>
+              {/* ── Revenue + Weekly Signups ── */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+                <Chart title="MRR History (6 Months)" sub="Monthly Recurring Revenue growth">
+                  <ResponsiveContainer width="100%" height={230}>
+                    <AreaChart data={mrrHistory}>
+                      <defs>
+                        <linearGradient id="gMRR" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={T.gold} stopOpacity={0.3} />
+                          <stop offset="100%" stopColor={T.gold} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                      <XAxis dataKey="label" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <Tooltip content={<CustomTooltip />} formatter={(v) => [`AED ${v}`, "MRR"]} />
+                      <Area type="monotone" dataKey="mrr" stroke={T.gold} fill="url(#gMRR)" strokeWidth={2.5} name="MRR (AED)" dot={{ fill: T.gold, r: 3 }} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </Chart>
+
+                <Chart title="Weekly Signups vs Paid" sub="Last 8 weeks">
+                  <ResponsiveContainer width="100%" height={230}>
+                    <BarChart data={weeklySignups} barGap={4}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                      <XAxis dataKey="label" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="signups" name="Signups" fill={T.teal} radius={[4, 4, 0, 0]} barSize={14} opacity={0.7} />
+                      <Bar dataKey="paid" name="Paid" fill={T.gold} radius={[4, 4, 0, 0]} barSize={14} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Chart>
+              </div>
+
+              {/* ── Funnel + Cumulative + Retention ── */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
+                <Chart title="Conversion Funnel">
+                  <div style={{ padding: "8px 0" }}>
+                    {funnelData.map((row, i) => {
+                      const maxVal = funnelData[0].value || 1;
+                      const pct = Math.round((row.value / maxVal) * 100);
+                      return (
+                        <div key={i} style={{ marginBottom: 14 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                            <span style={{ fontSize: 12, color: T.textSecondary }}>{row.label}</span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: row.color }}>{row.value} <span style={{ fontSize: 10, color: T.textMuted }}>({pct}%)</span></span>
+                          </div>
+                          <div style={{ height: 8, borderRadius: 4, background: T.surfaceAlt }}>
+                            <div style={{ width: `${pct}%`, height: "100%", borderRadius: 4, background: row.color, transition: "width 0.7s ease" }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div style={{ marginTop: 16, padding: "10px 12px", borderRadius: 8, background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)" }}>
+                      <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Free → Paid Rate</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: T.green, fontFamily: "'Fraunces',serif", marginTop: 2 }}>
+                        {stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0}%
+                      </div>
+                    </div>
+                  </div>
+                </Chart>
+
                 <Chart title="Cumulative User Growth">
-                  <ResponsiveContainer width="100%" height={240}>
+                  <ResponsiveContainer width="100%" height={230}>
                     <AreaChart data={cumulativeData}>
                       <defs>
                         <linearGradient id="gGrow" x1="0" y1="0" x2="0" y2="1">
@@ -2556,21 +2682,19 @@ export default function AdminPanel() {
                     </AreaChart>
                   </ResponsiveContainer>
                 </Chart>
-                <Chart title="Signup Sources (Estimated)">
-                  <div style={{ padding: "20px 0" }}>
-                    {[
-                      { label: "Direct (REMOVE_THIS_LINE)", pct: 65, color: T.gold },
-                      { label: "Organic Search", pct: 20, color: T.teal },
-                      { label: "Referral", pct: 10, color: T.blue },
-                      { label: "Social Media", pct: 5, color: T.purple },
-                    ].map((s, i) => (
-                      <div key={i} className="fade-up" style={{ marginBottom: 16, animationDelay: `${i * 0.08}s` }}>
+
+                <Chart title="Weekly Retention by Cohort" sub="% active (trial/pro) by signup week">
+                  <div style={{ padding: "8px 0" }}>
+                    {weeklyRetention.length === 0 ? (
+                      <div style={{ textAlign: "center", color: T.textMuted, fontSize: 12, padding: 32 }}>No cohort data yet</div>
+                    ) : weeklyRetention.map((row, i) => (
+                      <div key={i} style={{ marginBottom: 14 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                          <span style={{ fontSize: 12, color: T.textSecondary }}>{s.label}</span>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: s.color }}>{s.pct}%</span>
+                          <span style={{ fontSize: 12, color: T.textSecondary }}>{row.label} <span style={{ color: T.textMuted }}>({row.total} users)</span></span>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: row.retention >= 50 ? T.green : row.retention >= 20 ? T.gold : T.textMuted }}>{row.retention}%</span>
                         </div>
-                        <div style={{ height: 6, borderRadius: 3, background: T.surfaceAlt }}>
-                          <div style={{ width: `${s.pct}%`, height: "100%", borderRadius: 3, background: s.color, transition: "width 0.6s ease" }} />
+                        <div style={{ height: 8, borderRadius: 4, background: T.surfaceAlt }}>
+                          <div style={{ width: `${row.retention}%`, height: "100%", borderRadius: 4, background: row.retention >= 50 ? T.green : row.retention >= 20 ? T.gold : T.textMuted, transition: "width 0.7s ease" }} />
                         </div>
                       </div>
                     ))}
@@ -2578,36 +2702,81 @@ export default function AdminPanel() {
                 </Chart>
               </div>
 
-              {/* Milestones */}
+              {/* ── Top Projects by Lead Interest ── */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+                <Section title="Top Projects by Lead Interest" sub={`${leads.length} total leads captured`}>
+                  {topProjects.length === 0 ? (
+                    <div style={{ padding: 24, textAlign: "center", color: T.textMuted, fontSize: 13 }}>No leads captured yet — leads are logged when users click WhatsApp/email on project cards.</div>
+                  ) : (
+                    <div>
+                      {topProjects.map((p, i) => {
+                        const maxCount = topProjects[0]?.count || 1;
+                        return (
+                          <div key={i} className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < topProjects.length - 1 ? `1px solid ${T.border}` : "none", animationDelay: `${i * 0.04}s` }}>
+                            <div style={{ width: 24, height: 24, borderRadius: 6, background: T.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: i < 3 ? T.gold : T.textMuted, flexShrink: 0 }}>#{i + 1}</div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
+                              <div style={{ height: 4, borderRadius: 2, background: T.surfaceAlt }}>
+                                <div style={{ width: `${Math.round((p.count / maxCount) * 100)}%`, height: "100%", borderRadius: 2, background: i < 3 ? T.gold : T.teal }} />
+                              </div>
+                            </div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: T.gold, flexShrink: 0 }}>{p.count}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Section>
+
+                {/* Revenue projection */}
+                <Chart title="Revenue Projection (If Trials Convert)" sub="Based on 30% trial-to-paid assumption">
+                  <ResponsiveContainer width="100%" height={240}>
+                    <AreaChart data={revenueProjection}>
+                      <defs>
+                        <linearGradient id="gRevProj" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={T.green} stopOpacity={0.3} />
+                          <stop offset="100%" stopColor={T.green} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                      <XAxis dataKey="month" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <Tooltip content={<CustomTooltip />} formatter={(v) => [`AED ${v}`, "MRR"]} />
+                      <Area type="monotone" dataKey="revenue" stroke={T.green} fill="url(#gRevProj)" strokeWidth={2.5} name="Projected MRR" dot={{ fill: T.green, r: 4 }} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </Chart>
+              </div>
+
+              {/* ── Milestones ── */}
               <Section title="Growth Milestones" sub="Track your progress towards key goals">
-                <div className="kpi-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
                   {[
-                    { label: "Platform Launch", target: 1, current: 1, icon: I.rocket, date: "Mar 2026" },
-                    { label: "First 10 Users", target: 10, current: stats.total, icon: I.team },
-                    { label: "First 50 Users", target: 50, current: stats.total, icon: I.target },
-                    { label: "First Paid User", target: 1, current: stats.paid, icon: I.revenue },
-                    { label: "100 Users", target: 100, current: stats.total, icon: I.users },
-                    { label: "AED 10K MRR", target: 10000, current: mrr, icon: I.trophy },
-                    { label: "500 Users", target: 500, current: stats.total, icon: I.star },
-                    { label: "AED 50K MRR", target: 50000, current: mrr, icon: I.trophy },
+                    { label: "Platform Launch", target: 1, current: 1, icon: "🚀", date: "Mar 2026" },
+                    { label: "First 10 Users", target: 10, current: stats.total, icon: "👥" },
+                    { label: "First 50 Users", target: 50, current: stats.total, icon: "🎯" },
+                    { label: "First Paid User", target: 1, current: stats.paid, icon: "💳" },
+                    { label: "100 Users", target: 100, current: stats.total, icon: "💯" },
+                    { label: "AED 10K MRR", target: 10000, current: mrr, icon: "🏆" },
+                    { label: "500 Users", target: 500, current: stats.total, icon: "⭐" },
+                    { label: "AED 50K MRR", target: 50000, current: mrr, icon: "🏆" },
                   ].map((m, i) => {
                     const done = m.current >= m.target;
                     const pct = Math.min(Math.round((m.current / m.target) * 100), 100);
                     return (
-                      <div key={i} className="chart-box fade-up" style={{ padding: 16, animationDelay: `${i * 0.04}s`, opacity: done ? 1 : 0.8 }}>
+                      <div key={i} className="chart-box fade-up" style={{ padding: 16, animationDelay: `${i * 0.04}s`, border: done ? `1px solid rgba(16,185,129,0.3)` : `1px solid ${T.border}` }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                           <span style={{ fontSize: 20 }}>{m.icon}</span>
-                          {done ? (
-                            <span style={{ fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green }}>✓ Done</span>
-                          ) : (
-                            <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted }}>{pct}%</span>
-                          )}
+                          {done
+                            ? <span style={{ fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green }}>✓ Done</span>
+                            : <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted }}>{pct}%</span>
+                          }
                         </div>
                         <div style={{ fontSize: 12, fontWeight: 600, color: done ? T.white : T.textSecondary, marginBottom: 6 }}>{m.label}</div>
                         <div style={{ height: 4, borderRadius: 2, background: T.surfaceAlt }}>
                           <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: done ? T.green : T.gold, transition: "width 0.5s" }} />
                         </div>
-                        {!done && m.target > 1 && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{m.target - m.current} to go</div>}
+                        {!done && m.target > 1 && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 5 }}>{(m.target - m.current).toLocaleString()} to go</div>}
                         {m.date && <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>{m.date}</div>}
                       </div>
                     );
@@ -2615,7 +2784,8 @@ export default function AdminPanel() {
                 </div>
               </Section>
             </>
-          )}
+            );
+          })()}
 
         </div>
       </main>
