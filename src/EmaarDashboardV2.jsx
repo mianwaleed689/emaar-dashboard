@@ -143,6 +143,9 @@ const TABS = [
   { key: "Launch Calendar", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="8" cy="15" r="1" fill="currentColor"/><circle cx="12" cy="15" r="1" fill="currentColor"/><circle cx="16" cy="15" r="1" fill="currentColor"/></svg> },
   { key: "Neighbourhoods", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/><path d="M15 7l2 2"/><path d="M9 7L7 9"/></svg> },
   { key: "Service Charges", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> },
+  { key: "STR vs LTR", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/><polyline points="22 12 12 2 2 12"/></svg> },
+  { key: "Developer Health", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> },
+  { key: "DLD Volumes", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> },
   { key: "Portfolio", icon: Icons.portfolio },
   { key: "Competitors", icon: Icons.competitors },
   { key: "Yields", icon: Icons.yields },
@@ -1234,6 +1237,9 @@ export default function EmaarDashboardV2() {
   const [alertForm, setAlertForm] = React.useState({ type: "price_below", value: "" });
   const [selectedNbhd, setSelectedNbhd] = React.useState(null);
   const [scSort, setScSort] = React.useState("avg");
+  const [strCommunity, setStrCommunity] = React.useState("All");
+  const [devSort, setDevSort] = React.useState("revenue");
+  const [dldCommunity, setDldCommunity] = React.useState("All");
 
   // Onboarding
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -2860,6 +2866,328 @@ export default function EmaarDashboardV2() {
               </div>
             </Section>
           </>}
+
+          {/* ─── STR VS LTR YIELD TAB ─── */}
+          {tab === "STR vs LTR" && (() => {
+            const strData = [
+              { community: "Emaar Beachfront", ltr: 7.2, str: 11.8, strOcc: 78, avgNight: 820, units: 42, demand: "Very High", notes: "Highest STR in portfolio. Beach access commands premium nightly rates. Summer dip offset by winter peak." },
+              { community: "Downtown Dubai", ltr: 6.1, str: 10.4, strOcc: 82, avgNight: 950, units: 38, demand: "Very High", notes: "Burj Khalifa view units command AED 1,200+/night. Year-round demand from tourism and business." },
+              { community: "Dubai Creek Harbour", ltr: 6.8, str: 9.6, strOcc: 71, avgNight: 680, units: 28, demand: "High", notes: "Emerging STR market. Creek Tower views attractive to tourists. Lower nightly rates but growing fast." },
+              { community: "Dubai Hills Estate", ltr: 5.9, str: 7.4, strOcc: 62, avgNight: 520, units: 15, demand: "Moderate", notes: "Primarily LTR community. Families prefer long-term. STR works for golf-facing premium units only." },
+              { community: "Arabian Ranches III", ltr: 5.6, str: 6.2, strOcc: 54, avgNight: 480, units: 8, demand: "Low", notes: "Suburban family community. STR not recommended. LTR with corporate tenants more reliable." },
+              { community: "The Valley", ltr: 5.9, str: 6.8, strOcc: 58, avgNight: 440, units: 6, demand: "Low-Mod", notes: "Early stage community. LTR growing as infrastructure matures. STR opportunistic only." },
+              { community: "The Oasis", ltr: 5.2, str: 9.1, strOcc: 68, avgNight: 1200, units: 12, demand: "High", notes: "Ultra-luxury STR market. AED 1,200+/night for lagoon villas. High-net-worth short stays." },
+            ];
+            const filtered = strCommunity === "All" ? strData : strData.filter(d => d.community === strCommunity);
+            const maxStr = Math.max(...strData.map(d => d.str));
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                {/* Header */}
+                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+                    <div>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Short-Term vs Long-Term Rental Yield</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>AirDNA · Airbnb · Booking.com · DLD Rental Index · 2025 data</div>
+                    </div>
+                    <select value={strCommunity} onChange={e => setStrCommunity(e.target.value)} style={{ padding: "8px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                      <option value="All">All Communities</option>
+                      {strData.map(d => <option key={d.community} value={d.community}>{d.community}</option>)}
+                    </select>
+                  </div>
+                  {/* Summary KPIs */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginTop: 16 }}>
+                    {[
+                      { label: "Best STR Yield", value: "11.8%", sub: "Emaar Beachfront", color: "#10B981" },
+                      { label: "Best LTR Yield", value: "7.2%", sub: "Emaar Beachfront", color: T.gold },
+                      { label: "Avg STR Premium", value: "+47%", sub: "vs LTR across portfolio", color: "#3B82F6" },
+                      { label: "Top Nightly Rate", value: "AED 1,200", sub: "The Oasis luxury villas", color: "#8B5CF6" },
+                    ].map(k => (
+                      <div key={k.label} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
+                        <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 5 }}>{k.label}</div>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: k.color, fontFamily: "'Fraunces', serif" }}>{k.value}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{k.sub}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Cards */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px,1fr))", gap: 14 }}>
+                  {filtered.map(d => {
+                    const strPremium = Math.round((d.str - d.ltr) / d.ltr * 100);
+                    const strBarW = (d.str / maxStr) * 100;
+                    const ltrBarW = (d.ltr / maxStr) * 100;
+                    const demandColor = d.demand === "Very High" ? "#10B981" : d.demand === "High" ? T.gold : d.demand === "Moderate" ? "#F59E0B" : T.textMuted;
+                    return (
+                      <div key={d.community} style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "18px 20px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+                          <div>
+                            <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 800, color: T.white }}>{d.community}</div>
+                            <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 5, background: `${demandColor}15`, color: demandColor, fontWeight: 600, marginTop: 4, display: "inline-block" }}>STR Demand: {d.demand}</span>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <div style={{ fontSize: 11, color: T.textMuted }}>STR Premium</div>
+                            <div style={{ fontSize: 18, fontWeight: 900, color: "#10B981", fontFamily: "'Fraunces', serif" }}>+{strPremium}%</div>
+                          </div>
+                        </div>
+                        {/* Yield bars */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
+                          <div>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                              <span style={{ fontSize: 11, color: T.textMuted }}>Short-Term (Airbnb/STR)</span>
+                              <span style={{ fontSize: 13, fontWeight: 800, color: "#10B981", fontFamily: "'Fraunces', serif" }}>{d.str}%</span>
+                            </div>
+                            <div style={{ height: 8, borderRadius: 4, background: T.surfaceAlt, overflow: "hidden" }}>
+                              <div style={{ height: "100%", width: strBarW + "%", background: "linear-gradient(90deg, #10B981, #059669)", borderRadius: 4 }} />
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                              <span style={{ fontSize: 11, color: T.textMuted }}>Long-Term (Annual lease)</span>
+                              <span style={{ fontSize: 13, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces', serif" }}>{d.ltr}%</span>
+                            </div>
+                            <div style={{ height: 8, borderRadius: 4, background: T.surfaceAlt, overflow: "hidden" }}>
+                              <div style={{ height: "100%", width: ltrBarW + "%", background: `linear-gradient(90deg, ${T.gold}, #B8912F)`, borderRadius: 4 }} />
+                            </div>
+                          </div>
+                        </div>
+                        {/* Stats row */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
+                          {[
+                            { l: "Avg Night", v: "AED " + d.avgNight },
+                            { l: "Occupancy", v: d.strOcc + "%" },
+                            { l: "Active Units", v: d.units + " units" },
+                          ].map(k => (
+                            <div key={k.l} style={{ background: T.surfaceAlt, borderRadius: 7, padding: "7px 8px", textAlign: "center" }}>
+                              <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3 }}>{k.l}</div>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: T.white }}>{k.v}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6, borderTop: `1px solid ${T.border}`, paddingTop: 10 }}>{d.notes}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ padding: "14px 18px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}`, fontSize: 12, color: T.textMuted, lineHeight: 1.7 }}>
+                  <strong style={{ color: T.white }}>Important:</strong> STR yields assume full DTCM permit compliance and 70%+ occupancy. Dubai requires short-term rental permits (AED 1,520/year). STR yields are higher but require active management or a 15–20% property management fee.
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ─── DEVELOPER HEALTH SCORE TAB ─── */}
+          {tab === "Developer Health" && (() => {
+            const devData = [
+              { name: "Emaar Properties", ticker: "EMAAR", revenue: 49.6, profit: 25.7, backlog: 155, deliveries: 11000, projects: 48, debtEquity: 0.11, cashFlow: 30.5, margin: 52, deliveryRecord: 96, score: 95, color: T.gold, listed: true, notes: "AED 80.4B property sales in 2025. All-time records across every metric. AED 155B backlog = 3–4yr visibility." },
+              { name: "DAMAC Properties", ticker: "DAMAC", revenue: 22.4, profit: 8.1, backlog: 68, deliveries: 7200, projects: 35, debtEquity: 0.34, cashFlow: 9.2, margin: 36, deliveryRecord: 78, score: 71, color: "#3B82F6", listed: true, notes: "Strong brand, aggressive launch pace. Higher debt than Emaar. Some delivery delays on legacy projects." },
+              { name: "Nakheel", ticker: "NAKHEEL", revenue: 18.6, profit: 7.4, backlog: 52, deliveries: 4800, projects: 22, debtEquity: 0.28, cashFlow: 8.1, margin: 40, deliveryRecord: 82, score: 78, color: "#10B981", listed: false, notes: "State-owned. Palm Jumeirah master developer. Merged with Meydan into Dubai Holding Real Estate 2023." },
+              { name: "Aldar Properties", ticker: "ALDAR", revenue: 14.2, profit: 5.6, backlog: 38, deliveries: 3600, projects: 28, debtEquity: 0.42, cashFlow: 6.4, margin: 39, deliveryRecord: 88, score: 74, color: "#8B5CF6", listed: true, notes: "Abu Dhabi's #1 developer. Expanding into Dubai. Strong government backing. Solid delivery record." },
+              { name: "Sobha Realty", ticker: "SOBHA", revenue: 8.4, profit: 2.8, backlog: 24, deliveries: 2100, projects: 12, debtEquity: 0.51, cashFlow: 3.1, margin: 33, deliveryRecord: 85, score: 67, color: "#F59E0B", listed: false, notes: "Indian-origin developer. Strong quality reputation. Sobha Hartland II a flagship project. Higher leverage." },
+              { name: "Meraas / Dubai Holding", ticker: "MERAAS", revenue: 11.2, profit: 4.1, backlog: 31, deliveries: 2800, projects: 18, debtEquity: 0.19, cashFlow: 5.8, margin: 37, deliveryRecord: 91, score: 81, color: "#06B6D4", listed: false, notes: "State-owned. City Walk, Bluewaters, La Mer. Premium destinations developer. Very reliable delivery." },
+            ];
+            const sorted = [...devData].sort((a, b) => {
+              if (devSort === "revenue") return b.revenue - a.revenue;
+              if (devSort === "score") return b.score - a.score;
+              if (devSort === "backlog") return b.backlog - a.backlog;
+              return b.profit - a.profit;
+            });
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                {/* Header */}
+                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+                    <div>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Developer Health Score</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>DFM · ADX · Annual Reports · DLD Data · FY2025</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {[["score","By Score"],["revenue","By Revenue"],["backlog","By Backlog"],["profit","By Profit"]].map(([v,l]) => (
+                        <button key={v} type="button" onClick={() => setDevSort(v)} style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${devSort === v ? T.gold : T.border}`, background: devSort === v ? "rgba(212,168,67,0.1)" : T.surfaceAlt, color: devSort === v ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>{l}</button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {/* Developer cards */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {sorted.map((d, i) => (
+                    <div key={d.name} style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px", overflow: "hidden", position: "relative" }}>
+                      <div style={{ position: "absolute", top: 0, left: 0, width: `${d.score}%`, height: 3, background: `linear-gradient(90deg, ${d.color}, ${d.color}80)` }} />
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
+                        {/* Rank + Score */}
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                          <div style={{ fontSize: 12, color: T.textMuted, fontWeight: 700 }}>#{i + 1}</div>
+                          <div style={{ width: 56, height: 56, borderRadius: 12, background: `${d.color}18`, border: `2px solid ${d.color}50`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                            <div style={{ fontSize: 18, fontWeight: 900, color: d.color, fontFamily: "'Fraunces',serif", lineHeight: 1 }}>{d.score}</div>
+                            <div style={{ fontSize: 8, color: d.color, fontWeight: 700 }}>HEALTH</div>
+                          </div>
+                        </div>
+                        {/* Name + metrics */}
+                        <div style={{ flex: 1, minWidth: 200 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 17, fontWeight: 800, color: T.white }}>{d.name}</div>
+                            <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 5, background: T.surfaceAlt, color: T.textMuted, fontWeight: 600 }}>{d.ticker}</span>
+                            {!d.listed && <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 5, background: "rgba(59,130,246,0.1)", color: T.blue, fontWeight: 600 }}>Private</span>}
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px,1fr))", gap: 8, marginBottom: 10 }}>
+                            {[
+                              { l: "Revenue", v: "AED " + d.revenue + "B", c: T.gold },
+                              { l: "Net Profit", v: "AED " + d.profit + "B", c: "#10B981" },
+                              { l: "Backlog", v: "AED " + d.backlog + "B", c: T.blue },
+                              { l: "FY Deliveries", v: d.deliveries.toLocaleString() + " units", c: T.textSecondary },
+                              { l: "Profit Margin", v: d.margin + "%", c: d.margin >= 45 ? "#10B981" : d.margin >= 35 ? T.gold : "#F59E0B" },
+                              { l: "Delivery Record", v: d.deliveryRecord + "%", c: d.deliveryRecord >= 90 ? "#10B981" : d.deliveryRecord >= 80 ? T.gold : "#F59E0B" },
+                            ].map(k => (
+                              <div key={k.l} style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
+                                <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3 }}>{k.l}</div>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: k.c }}>{k.v}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6 }}>{d.notes}</div>
+                        </div>
+                        {/* Health bars */}
+                        <div style={{ width: 160, flexShrink: 0 }}>
+                          {[
+                            { l: "Financial", v: Math.min(100, Math.round(d.margin * 1.8)), c: T.gold },
+                            { l: "Delivery", v: d.deliveryRecord, c: "#10B981" },
+                            { l: "Scale", v: Math.min(100, Math.round(d.backlog / 1.6)), c: T.blue },
+                            { l: "Leverage", v: Math.min(100, Math.round((1 - d.debtEquity) * 100)), c: "#8B5CF6" },
+                          ].map(b => (
+                            <div key={b.l} style={{ marginBottom: 8 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                                <span style={{ fontSize: 9, color: T.textMuted }}>{b.l}</span>
+                                <span style={{ fontSize: 9, fontWeight: 700, color: b.c }}>{b.v}</span>
+                              </div>
+                              <div style={{ height: 4, borderRadius: 2, background: T.surfaceAlt, overflow: "hidden" }}>
+                                <div style={{ height: "100%", width: b.v + "%", background: b.c, borderRadius: 2 }} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ fontSize: 11, color: T.textMuted, padding: "10px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
+                  ⚠️ Private company figures are estimates based on public reports and industry data. Listed company data from DFM/ADX annual reports FY2025.
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ─── DLD TRANSACTION VOLUMES TAB ─── */}
+          {tab === "DLD Volumes" && (() => {
+            const dldData = [
+              { community: "Dubai Marina", q1: 1840, q2: 2210, q3: 1960, q4: 2580, total: 8590, avgPrice: 1420000, yoy: +18, type: "Apartments", topDev: "Emaar / DAMAC" },
+              { community: "Downtown Dubai", q1: 890, q2: 1120, q3: 980, q4: 1340, total: 4330, avgPrice: 3800000, yoy: +24, type: "Apartments", topDev: "Emaar" },
+              { community: "Dubai Hills Estate", q1: 620, q2: 780, q3: 710, q4: 940, total: 3050, avgPrice: 2100000, yoy: +31, type: "Mixed", topDev: "Emaar" },
+              { community: "Palm Jumeirah", q1: 310, q2: 390, q3: 340, q4: 480, total: 1520, avgPrice: 7200000, yoy: +12, type: "Villas / Apts", topDev: "Nakheel" },
+              { community: "Dubai Creek Harbour", q1: 480, q2: 620, q3: 540, q4: 720, total: 2360, avgPrice: 1850000, yoy: +42, type: "Apartments", topDev: "Emaar" },
+              { community: "Emaar Beachfront", q1: 220, q2: 310, q3: 280, q4: 390, total: 1200, avgPrice: 4100000, yoy: +28, type: "Apartments", topDev: "Emaar" },
+              { community: "Arabian Ranches III", q1: 190, q2: 240, q3: 210, q4: 280, total: 920, avgPrice: 2400000, yoy: +15, type: "Townhouses", topDev: "Emaar" },
+              { community: "The Valley", q1: 140, q2: 180, q3: 160, q4: 220, total: 700, avgPrice: 1600000, yoy: +38, type: "Townhouses", topDev: "Emaar" },
+              { community: "Business Bay", q1: 1240, q2: 1480, q3: 1320, q4: 1680, total: 5720, avgPrice: 1280000, yoy: +9, type: "Apartments", topDev: "Various" },
+              { community: "Jumeirah Village Circle", q1: 1680, q2: 1940, q3: 1760, q4: 2120, total: 7500, avgPrice: 780000, yoy: +6, type: "Apartments", topDev: "Various" },
+            ];
+            const filtered = dldCommunity === "All" ? dldData : dldData.filter(d => d.community === dldCommunity);
+            const sorted = [...filtered].sort((a, b) => b.total - a.total);
+            const maxTotal = Math.max(...dldData.map(d => d.total));
+            const totalDeals = dldData.reduce((s, d) => s + d.total, 0);
+            const totalVol = dldData.reduce((s, d) => s + d.total * d.avgPrice, 0);
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                {/* Header */}
+                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+                    <div>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>DLD Transaction Volumes</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Dubai Land Department · FY2025 · 226,000+ total deals recorded</div>
+                    </div>
+                    <select value={dldCommunity} onChange={e => setDldCommunity(e.target.value)} style={{ padding: "8px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                      <option value="All">All Communities</option>
+                      {dldData.map(d => <option key={d.community} value={d.community}>{d.community}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginTop: 16 }}>
+                    {[
+                      { label: "Total Deals (10 comm.)", value: totalDeals.toLocaleString(), color: T.gold },
+                      { label: "Total Volume", value: "AED " + (totalVol / 1e9).toFixed(1) + "B", color: "#10B981" },
+                      { label: "Busiest Community", value: "JVC", color: T.blue },
+                      { label: "Fastest Growing", value: "Creek Harbour +42%", color: "#8B5CF6" },
+                    ].map(k => (
+                      <div key={k.label} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
+                        <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 5 }}>{k.label}</div>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: k.color, fontFamily: "'Fraunces',serif" }}>{k.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Bar chart + table */}
+                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 16 }}>Transactions by Community — FY2025</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {sorted.map(d => {
+                      const barW = (d.total / maxTotal) * 100;
+                      const yoyColor = d.yoy >= 30 ? "#10B981" : d.yoy >= 15 ? T.gold : d.yoy >= 0 ? T.blue : "#EF4444";
+                      return (
+                        <div key={d.community} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <div style={{ width: 160, fontSize: 12, fontWeight: 600, color: T.white, flexShrink: 0 }}>{d.community}</div>
+                          <div style={{ flex: 1, height: 28, borderRadius: 6, background: T.surfaceAlt, overflow: "hidden", position: "relative" }}>
+                            <div style={{ height: "100%", width: barW + "%", background: `linear-gradient(90deg, ${T.gold}90, ${T.gold}40)`, borderRadius: 6, transition: "width 0.5s" }} />
+                            <div style={{ position: "absolute", left: 10, top: 0, height: "100%", display: "flex", alignItems: "center", fontSize: 11, fontWeight: 700, color: T.white }}>{d.total.toLocaleString()} deals</div>
+                          </div>
+                          <div style={{ width: 80, textAlign: "right", flexShrink: 0 }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>AED {(d.avgPrice / 1e6).toFixed(1)}M</div>
+                            <div style={{ fontSize: 10, color: T.textMuted }}>avg price</div>
+                          </div>
+                          <div style={{ width: 60, textAlign: "right", flexShrink: 0 }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: yoyColor }}>+{d.yoy}%</div>
+                            <div style={{ fontSize: 9, color: T.textMuted }}>YoY</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                {/* Quarterly breakdown */}
+                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                  <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white }}>Quarterly Breakdown</div>
+                  </div>
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr style={{ background: T.surfaceAlt, borderBottom: `1px solid ${T.border}` }}>
+                          {["Community", "Q1", "Q2", "Q3", "Q4", "Total", "Avg Price", "Type", "YoY"].map(h => (
+                            <th key={h} style={{ padding: "10px 14px", textAlign: h === "Community" || h === "Type" ? "left" : "right", fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", whiteSpace: "nowrap" }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sorted.map((d, i) => {
+                          const yoyColor = d.yoy >= 30 ? "#10B981" : d.yoy >= 15 ? T.gold : T.blue;
+                          return (
+                            <tr key={i} style={{ borderBottom: `1px solid ${T.border}` }}
+                              onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                              <td style={{ padding: "11px 14px", fontWeight: 700, color: T.white, fontSize: 12 }}>{d.community}</td>
+                              {[d.q1, d.q2, d.q3, d.q4].map((q, qi) => (
+                                <td key={qi} style={{ padding: "11px 14px", textAlign: "right", fontSize: 12, color: T.textSecondary }}>{q.toLocaleString()}</td>
+                              ))}
+                              <td style={{ padding: "11px 14px", textAlign: "right", fontSize: 13, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>{d.total.toLocaleString()}</td>
+                              <td style={{ padding: "11px 14px", textAlign: "right", fontSize: 12, color: T.textSecondary }}>AED {(d.avgPrice / 1e6).toFixed(1)}M</td>
+                              <td style={{ padding: "11px 14px", fontSize: 10, color: T.textMuted }}>{d.type}</td>
+                              <td style={{ padding: "11px 14px", textAlign: "right", fontSize: 12, fontWeight: 700, color: yoyColor }}>+{d.yoy}%</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* ─── COMPETITORS TAB ─── */}
           {tab === "Competitors" && <>
