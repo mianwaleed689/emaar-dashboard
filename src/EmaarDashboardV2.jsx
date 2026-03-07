@@ -4283,23 +4283,18 @@ export default function EmaarDashboardV2() {
               const [liveEibor, setLiveEibor] = React.useState(EIBOR_RATES);
               const [eiborSource, setEiborSource] = React.useState("CBUAE · " + EIBOR_RATES.asOf);
               React.useEffect(() => {
-                // Try UAE Central Bank live data endpoint
-                fetch("https://centralbank.ae/umbraco/Surface/Eibor/GetEiborData")
+                // Fetch via our Vercel proxy (avoids CORS from CBUAE)
+                fetch("/api/eibor")
                   .then(r => r.json())
                   .then(data => {
-                    if (data && data.length > 0) {
-                      const latest = data[0];
-                      const e3m = parseFloat(latest.ThreeMonths || latest["3M"] || EIBOR_RATES["3m"]);
-                      const e1m = parseFloat(latest.OneMonth || latest["1M"] || EIBOR_RATES["1m"]);
-                      const e6m = parseFloat(latest.SixMonths || latest["6M"] || EIBOR_RATES["6m"]);
-                      const e1y = parseFloat(latest.OneYear || latest["1Y"] || EIBOR_RATES["1y"]);
-                      const rates = { "1m": e1m, "3m": e3m, "6m": e6m, "1y": e1y, asOf: "Live · CBUAE" };
-                      setLiveEibor(rates);
-                      setEiborSource("Live · UAE Central Bank");
-                      setRate(parseFloat((e3m + BANK_SPREAD).toFixed(2)));
+                    if (data && data.eibor) {
+                      const e = data.eibor;
+                      setLiveEibor(e);
+                      setEiborSource(data.fallback ? "CBUAE · " + e.asOf : "Live · UAE Central Bank");
+                      setRate(parseFloat((e["3m"] + BANK_SPREAD).toFixed(2)));
                     }
                   })
-                  .catch(() => {}); // use hardcoded fallback silently
+                  .catch(() => {}); // silently keep fallback
               }, []); // eslint-disable-line react-hooks/exhaustive-deps
               const [years, setYears] = React.useState(25);
               const [isUAENational, setIsUAENational] = React.useState(false);
