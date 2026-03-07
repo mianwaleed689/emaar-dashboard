@@ -1288,10 +1288,8 @@ export default function EmaarDashboardV2() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Price Alerts
-  const [myAlerts, setMyAlerts] = React.useState([]);
+  // Price Alerts (old per-project alert modal — kept for project cards)
   const [showSetAlert, setShowSetAlert] = React.useState(null);
-  const [alertForm, setAlertForm] = React.useState({ type: "price_below", value: "" });
   const [selectedNbhd, setSelectedNbhd] = React.useState(null);
   const [scSort, setScSort] = React.useState("avg");
   const [strCommunity, setStrCommunity] = React.useState("All");
