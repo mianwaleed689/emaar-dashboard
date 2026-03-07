@@ -140,6 +140,9 @@ const TABS = [
   { key: "Financials", icon: Icons.financials },
   { key: "Projects", icon: Icons.projects },
   { key: "Handover", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="8 14 10 16 16 13"/></svg> },
+  { key: "Launch Calendar", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="8" cy="15" r="1" fill="currentColor"/><circle cx="12" cy="15" r="1" fill="currentColor"/><circle cx="16" cy="15" r="1" fill="currentColor"/></svg> },
+  { key: "Neighbourhoods", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/><path d="M15 7l2 2"/><path d="M9 7L7 9"/></svg> },
+  { key: "Service Charges", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> },
   { key: "Portfolio", icon: Icons.portfolio },
   { key: "Competitors", icon: Icons.competitors },
   { key: "Yields", icon: Icons.yields },
@@ -3183,6 +3186,290 @@ export default function EmaarDashboardV2() {
 
           {/* ─── MAP / COMMUNITIES TAB ─── */}
           {tab === "Map" && <CommunityMapTab activeProjects={activeProjects} liveCommunityROI={liveCommunityROI} setTab={setTab} />}
+
+          {/* ─── LAUNCH CALENDAR TAB ─── */}
+          {tab === "Launch Calendar" && (() => {
+            const launches = [
+              { name: "Palmiera 2 — The Oasis", community: "The Oasis", date: "Q1 2026", status: "launched", expectedPrice: 4200000, developer: "Emaar", type: "Villa", beds: "4–6 BR", paymentPlan: "80/20", goldenVisa: true, notes: "Second phase of The Oasis mega-project. Lagoon-facing plots." },
+              { name: "Savanna — Arabian Ranches III", community: "Arabian Ranches III", date: "Q1 2026", status: "launched", expectedPrice: 2100000, developer: "Emaar", type: "Townhouse", beds: "3–4 BR", paymentPlan: "80/20", goldenVisa: true, notes: "Final townhouse phase in AR3. Near community centre." },
+              { name: "Address Residences — Dubai Creek", community: "Dubai Creek Harbour", date: "Q2 2026", status: "upcoming", expectedPrice: 3500000, developer: "Emaar", type: "Apartment", beds: "1–3 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Branded Address tower at Creek Marina. Expected May 2026." },
+              { name: "Grove — Creek Harbour", community: "Dubai Creek Harbour", date: "Q2 2026", status: "upcoming", expectedPrice: 1800000, developer: "Emaar", type: "Apartment", beds: "Studio–2 BR", paymentPlan: "80/20", goldenVisa: false, notes: "Affordable entry into Creek Harbour. High rental demand community." },
+              { name: "The Valley Phase 3", community: "The Valley", date: "Q2 2026", status: "upcoming", expectedPrice: 1600000, developer: "Emaar", type: "Townhouse", beds: "3–5 BR", paymentPlan: "80/20", goldenVisa: false, notes: "Next phase of The Valley. Expected strong demand from end-users." },
+              { name: "Seascape — Emaar Beachfront", community: "Emaar Beachfront", date: "Q3 2026", status: "rumoured", expectedPrice: 4800000, developer: "Emaar", type: "Apartment", beds: "2–4 BR", paymentPlan: "60/40", goldenVisa: true, notes: "New beachfront tower. Expected to sell out within days of launch." },
+              { name: "Grand Bleu Tower 3", community: "Emaar Beachfront", date: "Q3 2026", status: "rumoured", expectedPrice: 6500000, developer: "Emaar", type: "Apartment", beds: "2–4 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Elie Saab branded. Ultra-premium pricing expected." },
+              { name: "Hills Park 2 — Dubai Hills", community: "Dubai Hills Estate", date: "Q3 2026", status: "rumoured", expectedPrice: 1400000, developer: "Emaar", type: "Apartment", beds: "1–3 BR", paymentPlan: "80/20", goldenVisa: false, notes: "Adjacent to Hills Park 1. Park-facing units expected to sell fast." },
+              { name: "The Heights — Dubai Hills", community: "Dubai Hills Estate", date: "Q4 2026", status: "rumoured", expectedPrice: 2800000, developer: "Emaar", type: "Villa", beds: "3–5 BR", paymentPlan: "80/20", goldenVisa: true, notes: "Premium villas in DHE. Limited supply expected." },
+              { name: "Riverside — The Oasis", community: "The Oasis", date: "Q4 2026", status: "rumoured", expectedPrice: 5200000, developer: "Emaar", type: "Villa", beds: "5–6 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Ultra-luxury riverside plots. AED 5M+ bracket." },
+              { name: "Creek Crescent Phase 2", community: "Dubai Creek Harbour", date: "Q1 2027", status: "pipeline", expectedPrice: 2200000, developer: "Emaar", type: "Apartment", beds: "1–3 BR", paymentPlan: "TBD", goldenVisa: true, notes: "Expansion of Creek Crescent. Strong resale market expected." },
+              { name: "Downtown Hills", community: "Dubai Hills Estate", date: "Q2 2027", status: "pipeline", expectedPrice: 3100000, developer: "Emaar", type: "Apartment", beds: "2–4 BR", paymentPlan: "TBD", goldenVisa: true, notes: "Premium mid-rise adjacent to DHE Mall. High occupancy expected." },
+            ];
+            const statusColors = { launched: "#10B981", upcoming: T.gold, rumoured: "#8B5CF6", pipeline: T.textMuted };
+            const statusLabels = { launched: "🟢 Launched", upcoming: "🟡 Upcoming", rumoured: "🟣 Rumoured", pipeline: "⚪ Pipeline" };
+            const groups = ["launched", "upcoming", "rumoured", "pipeline"];
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                {/* Header */}
+                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+                    <div>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Off-Plan Launch Calendar</div>
+                      <div style={{ fontSize: 13, color: T.textMuted, marginTop: 4 }}>Upcoming Emaar launches · 2026–2027 · Updated weekly</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {groups.map(s => (
+                        <div key={s} style={{ padding: "5px 12px", borderRadius: 8, background: `${statusColors[s]}15`, border: `1px solid ${statusColors[s]}40`, fontSize: 11, fontWeight: 600, color: statusColors[s] }}>{statusLabels[s]} · {launches.filter(l => l.status === s).length}</div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {/* Groups */}
+                {groups.map(status => {
+                  const items = launches.filter(l => l.status === status);
+                  if (!items.length) return null;
+                  return (
+                    <div key={status} style={{ background: T.surface, borderRadius: 16, border: `1px solid ${statusColors[status]}30`, overflow: "hidden" }}>
+                      <div style={{ padding: "14px 20px", background: `${statusColors[status]}08`, borderBottom: `1px solid ${statusColors[status]}20`, display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: statusColors[status], flexShrink: 0 }} />
+                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 800, color: statusColors[status] }}>{statusLabels[status].replace(/[🟢🟡🟣⚪] /, "")}</div>
+                        <div style={{ fontSize: 11, color: T.textMuted, marginLeft: "auto" }}>{items.length} project{items.length !== 1 ? "s" : ""}</div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 0 }}>
+                        {items.map((l, i) => {
+                          const inv = getInvestmentScore({ price: l.expectedPrice, paymentPlan: l.paymentPlan, handover: null, ppsf: null, gross: null });
+                          return (
+                            <div key={i} style={{ padding: "16px 20px", borderRight: "1px solid " + T.border, borderBottom: "1px solid " + T.border }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                                <div style={{ flex: 1, minWidth: 0, marginRight: 10 }}>
+                                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 2 }}>{l.name}</div>
+                                  <div style={{ fontSize: 11, color: T.textMuted }}>{l.community}</div>
+                                </div>
+                                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                                  <div style={{ fontSize: 13, fontWeight: 700, color: statusColors[status] }}>{l.date}</div>
+                                  {l.goldenVisa && <div style={{ fontSize: 9, color: T.gold, fontWeight: 600, marginTop: 2 }}>🏅 GV Eligible</div>}
+                                </div>
+                              </div>
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 10 }}>
+                                {[
+                                  { l: "FROM", v: l.expectedPrice ? "AED " + (l.expectedPrice / 1e6).toFixed(1) + "M" : "TBD" },
+                                  { l: "TYPE", v: l.type + " · " + l.beds },
+                                  { l: "PAYMENT", v: l.paymentPlan },
+                                ].map(k => (
+                                  <div key={k.l} style={{ background: T.surfaceAlt, borderRadius: 6, padding: "6px 8px" }}>
+                                    <div style={{ fontSize: 8, color: T.textMuted, marginBottom: 2 }}>{k.l}</div>
+                                    <div style={{ fontSize: 11, fontWeight: 600, color: T.white }}>{k.v}</div>
+                                  </div>
+                                ))}
+                              </div>
+                              <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5, marginBottom: 8 }}>{l.notes}</div>
+                              <div style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 6, background: `${inv.color}15`, border: `1px solid ${inv.color}30` }}>
+                                <span style={{ fontSize: 11, fontWeight: 800, color: inv.color }}>{inv.score}/10</span>
+                                <span style={{ fontSize: 9, color: inv.color }}>★ {inv.label}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div style={{ padding: "12px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}`, fontSize: 11, color: T.textMuted }}>
+                  ⚠️ Launch dates and prices are estimates based on market intelligence. Always verify with official Emaar sources before making investment decisions.
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ─── NEIGHBOURHOODS TAB ─── */}
+          {tab === "Neighbourhoods" && (() => {
+            const neighbourhoods = [
+              { name: "Dubai Hills Estate", maturity: 88, rentalDemand: 94, strPotential: 72, infrastructure: 95, schools: 92, transport: 78, retail: 90, appreciation: 82, serviceCharge: 18, visa: true, type: "Master-planned suburb", tagline: "Dubai's most complete community", color: "#10B981" },
+              { name: "Dubai Creek Harbour", maturity: 65, rentalDemand: 85, strPotential: 88, infrastructure: 82, schools: 60, transport: 72, retail: 75, appreciation: 90, serviceCharge: 22, visa: true, type: "Waterfront district", tagline: "The new Downtown — cheaper entry", color: T.gold },
+              { name: "Emaar Beachfront", maturity: 70, rentalDemand: 92, strPotential: 96, infrastructure: 85, schools: 45, transport: 68, retail: 72, appreciation: 85, serviceCharge: 28, visa: true, type: "Beachfront enclave", tagline: "Highest STR yields in portfolio", color: "#3B82F6" },
+              { name: "Downtown Dubai", maturity: 98, rentalDemand: 96, strPotential: 94, infrastructure: 98, schools: 70, transport: 98, retail: 98, appreciation: 65, serviceCharge: 32, visa: true, type: "Urban CBD", tagline: "Premium address, lower upside", color: "#8B5CF6" },
+              { name: "Arabian Ranches III", maturity: 75, rentalDemand: 80, strPotential: 55, infrastructure: 82, schools: 88, transport: 62, retail: 75, appreciation: 75, serviceCharge: 14, visa: false, type: "Family suburb", tagline: "Best for families, low service charge", color: "#F59E0B" },
+              { name: "The Valley", maturity: 45, rentalDemand: 65, strPotential: 48, infrastructure: 60, schools: 72, transport: 52, retail: 58, appreciation: 82, serviceCharge: 12, visa: false, type: "Emerging suburb", tagline: "High upside, early stage", color: "#06B6D4" },
+              { name: "The Oasis", maturity: 30, rentalDemand: 72, strPotential: 65, infrastructure: 55, schools: 40, transport: 48, retail: 45, appreciation: 95, serviceCharge: 20, visa: true, type: "Ultra-luxury", tagline: "Highest appreciation potential", color: "#EF4444" },
+            ];
+            const [selectedNbhd, setSelectedNbhd] = React.useState(null);
+            const scoreBar = (val, color) => (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.surfaceAlt, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: val + "%", borderRadius: 3, background: color, transition: "width 0.5s" }} />
+                </div>
+                <span style={{ fontSize: 10, fontWeight: 700, color, minWidth: 24, textAlign: "right" }}>{val}</span>
+              </div>
+            );
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800, color: T.gold }}>Neighbourhood Scorecard</div>
+                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Click any community to see full breakdown · 7 factors scored out of 100</div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 14 }}>
+                  {neighbourhoods.map(n => {
+                    const overall = Math.round((n.maturity + n.rentalDemand + n.strPotential + n.infrastructure + n.appreciation) / 5);
+                    const isOpen = selectedNbhd === n.name;
+                    return (
+                      <div key={n.name} style={{ background: T.surface, borderRadius: 14, border: `1px solid ${isOpen ? n.color + "60" : T.border}`, overflow: "hidden", cursor: "pointer", transition: "border-color 0.2s" }} onClick={() => setSelectedNbhd(isOpen ? null : n.name)}>
+                        <div style={{ padding: "16px 18px", background: isOpen ? `${n.color}08` : "transparent" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                            <div>
+                              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 800, color: n.color }}>{n.name}</div>
+                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{n.type}</div>
+                              <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2, fontStyle: "italic" }}>{n.tagline}</div>
+                            </div>
+                            <div style={{ textAlign: "center", background: `${n.color}18`, border: `1px solid ${n.color}40`, borderRadius: 10, padding: "8px 12px" }}>
+                              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: n.color }}>{overall}</div>
+                              <div style={{ fontSize: 9, color: n.color, fontWeight: 600 }}>SCORE</div>
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            {n.visa && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 5, background: "rgba(212,168,67,0.12)", color: T.gold, fontWeight: 600 }}>🏅 Golden Visa</span>}
+                            <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 5, background: T.surfaceAlt, color: T.textMuted, fontWeight: 600 }}>AED {n.serviceCharge}/sqft SC</span>
+                            <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 5, background: "rgba(16,185,129,0.1)", color: "#10B981", fontWeight: 600 }}>STR {n.strPotential}%</span>
+                          </div>
+                        </div>
+                        {isOpen && (
+                          <div style={{ padding: "0 18px 16px", borderTop: `1px solid ${T.border}` }}>
+                            <div style={{ paddingTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+                              {[
+                                { label: "Community Maturity", val: n.maturity, color: n.color },
+                                { label: "Rental Demand", val: n.rentalDemand, color: "#10B981" },
+                                { label: "STR Potential", val: n.strPotential, color: "#3B82F6" },
+                                { label: "Infrastructure", val: n.infrastructure, color: T.gold },
+                                { label: "Schools & Education", val: n.schools, color: "#F59E0B" },
+                                { label: "Transport Links", val: n.transport, color: "#8B5CF6" },
+                                { label: "Retail & Dining", val: n.retail, color: "#06B6D4" },
+                                { label: "Appreciation Potential", val: n.appreciation, color: "#EF4444" },
+                              ].map(f => (
+                                <div key={f.label}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                                    <span style={{ fontSize: 10, color: T.textMuted }}>{f.label}</span>
+                                  </div>
+                                  {scoreBar(f.val, f.color)}
+                                </div>
+                              ))}
+                              <div style={{ marginTop: 6, padding: "10px 12px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
+                                <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>SERVICE CHARGE</div>
+                                <div style={{ fontSize: 15, fontWeight: 700, color: T.white }}>AED {n.serviceCharge} / sqft / year</div>
+                                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>On 1,000 sqft = AED {(n.serviceCharge * 1000).toLocaleString()}/yr</div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ─── SERVICE CHARGES TAB ─── */}
+          {tab === "Service Charges" && (() => {
+            const scData = [
+              { community: "Downtown Dubai", type: "Apartment", low: 28, high: 38, avg: 32, rera: true, notes: "Burj Khalifa zone highest at AED 38. Older towers closer to AED 28." },
+              { community: "Emaar Beachfront", type: "Apartment", low: 24, high: 32, avg: 28, rera: true, notes: "Sea-facing units attract premium SC due to beach maintenance." },
+              { community: "Dubai Creek Harbour", type: "Apartment", low: 18, high: 26, avg: 22, rera: true, notes: "New builds with efficient infrastructure. SC expected to rise as community matures." },
+              { community: "Dubai Hills Estate", type: "Apartment", low: 15, high: 22, avg: 18, rera: true, notes: "Well-maintained. Park District higher end. Maple higher than Acacia." },
+              { community: "Dubai Hills Estate", type: "Villa", low: 3, high: 6, avg: 4.5, rera: true, notes: "Villas charged per sqft of plot. Substantially lower than apartments." },
+              { community: "Arabian Ranches III", type: "Townhouse", low: 12, high: 16, avg: 14, rera: true, notes: "Newer community with competitive SC. Includes park maintenance." },
+              { community: "The Valley", type: "Townhouse", low: 10, high: 14, avg: 12, rera: false, notes: "Estimated. Community still developing. RERA registration pending." },
+              { community: "The Oasis", type: "Villa", low: 16, high: 24, avg: 20, rera: false, notes: "Ultra-luxury facilities and lagoon maintenance push SC higher than typical villas." },
+              { community: "Address Residences", type: "Branded Apt", low: 38, high: 55, avg: 46, rera: true, notes: "Branded residences command highest SC. Hotel services included in fee." },
+              { community: "Vida Residences", type: "Branded Apt", low: 30, high: 42, avg: 36, rera: true, notes: "Vida brand properties. Includes access to hotel amenities." },
+            ];
+            const maxSC = Math.max(...scData.map(d => d.high));
+            const [scSort, setScSort] = React.useState("avg");
+            const sorted = [...scData].sort((a, b) => scSort === "avg" ? b.avg - a.avg : scSort === "community" ? a.community.localeCompare(b.community) : b.high - a.high);
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                {/* Header */}
+                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+                    <div>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Service Charge Database</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>AED per sqft per year · RERA-regulated · Affects net yield</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {[["avg", "By Average"], ["high", "By Highest"], ["community", "A–Z"]].map(([v, l]) => (
+                        <button key={v} type="button" onClick={() => setScSort(v)} style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${scSort === v ? T.gold : T.border}`, background: scSort === v ? "rgba(212,168,67,0.1)" : T.surfaceAlt, color: scSort === v ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{l}</button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Summary boxes */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginTop: 16 }}>
+                    {[
+                      { label: "Lowest SC", value: "AED 3/sqft", sub: "DHE Villas", color: "#10B981" },
+                      { label: "Highest SC", value: "AED 55/sqft", sub: "Address Branded", color: "#EF4444" },
+                      { label: "Avg Apartment", value: "AED 24/sqft", sub: "Portfolio average", color: T.gold },
+                      { label: "Impact on 1BR", value: "AED 18–40K/yr", sub: "800 sqft typical", color: T.blue },
+                    ].map(k => (
+                      <div key={k.label} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
+                        <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 5 }}>{k.label}</div>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: k.color, fontFamily: "'Fraunces', serif" }}>{k.value}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{k.sub}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Table */}
+                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr style={{ borderBottom: `1px solid ${T.border}`, background: T.surfaceAlt }}>
+                          {["Community", "Type", "Low", "Avg", "High", "Range", "RERA", "Notes"].map(h => (
+                            <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, whiteSpace: "nowrap" }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sorted.map((d, i) => {
+                          const barWidth = (d.avg / maxSC) * 100;
+                          const scColor = d.avg <= 15 ? "#10B981" : d.avg <= 25 ? T.gold : d.avg <= 35 ? "#F59E0B" : "#EF4444";
+                          return (
+                            <tr key={i} style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.15s" }}
+                              onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                              <td style={{ padding: "12px 14px" }}>
+                                <div style={{ fontWeight: 700, color: T.white, fontSize: 13 }}>{d.community}</div>
+                              </td>
+                              <td style={{ padding: "12px 14px" }}>
+                                <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 5, background: T.surfaceAlt, color: T.textSecondary, fontWeight: 600 }}>{d.type}</span>
+                              </td>
+                              <td style={{ padding: "12px 14px", fontSize: 12, color: T.textSecondary }}>{d.low}</td>
+                              <td style={{ padding: "12px 14px" }}>
+                                <span style={{ fontSize: 14, fontWeight: 800, color: scColor, fontFamily: "'Fraunces', serif" }}>{d.avg}</span>
+                                <span style={{ fontSize: 10, color: T.textMuted }}> /sqft</span>
+                              </td>
+                              <td style={{ padding: "12px 14px", fontSize: 12, color: T.textSecondary }}>{d.high}</td>
+                              <td style={{ padding: "12px 14px", minWidth: 120 }}>
+                                <div style={{ height: 6, borderRadius: 3, background: T.surfaceAlt, overflow: "hidden" }}>
+                                  <div style={{ height: "100%", width: barWidth + "%", background: scColor, borderRadius: 3 }} />
+                                </div>
+                              </td>
+                              <td style={{ padding: "12px 14px" }}>
+                                <span style={{ fontSize: 10, fontWeight: 700, color: d.rera ? "#10B981" : T.textMuted }}>{d.rera ? "✓ RERA" : "Est."}</span>
+                              </td>
+                              <td style={{ padding: "12px 14px", fontSize: 11, color: T.textMuted, maxWidth: 220 }}>{d.notes}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                {/* Net yield impact calculator */}
+                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid rgba(212,168,67,0.2)`, padding: "20px 24px" }}>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 800, color: T.gold, marginBottom: 4 }}>💡 Why Service Charges Matter</div>
+                  <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.7 }}>
+                    A 7% gross yield on a AED 2M apartment = AED 140,000/year rental income. But on a 1,200 sqft unit with AED 28/sqft SC, you pay AED 33,600/year in service charges — reducing your <strong style={{ color: T.white }}>net yield to 5.3%</strong>. On a lower-SC community like Arabian Ranches (AED 14/sqft), the same calculation gives you a <strong style={{ color: "#10B981" }}>net yield of 6.2%</strong>. Always calculate net, not gross.
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* ─── RISK TAB ─── */}
           {tab === "Risk" && <>
