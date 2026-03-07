@@ -146,6 +146,7 @@ const TABS = [
   { key: "STR vs LTR", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/><polyline points="22 12 12 2 2 12"/></svg> },
   { key: "Developer Health", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> },
   { key: "DLD Volumes", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> },
+  { key: "DXB Estimate", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M11 8v6M8 11h6"/></svg> },
   { key: "Portfolio", icon: Icons.portfolio },
   { key: "Competitors", icon: Icons.competitors },
   { key: "Yields", icon: Icons.yields },
@@ -1240,6 +1241,12 @@ export default function EmaarDashboardV2() {
   const [strCommunity, setStrCommunity] = React.useState("All");
   const [devSort, setDevSort] = React.useState("revenue");
   const [dldCommunity, setDldCommunity] = React.useState("All");
+  const [avmCommunity, setAvmCommunity] = React.useState("Dubai Hills Estate");
+  const [avmType, setAvmType] = React.useState("Apartment");
+  const [avmBeds, setAvmBeds] = React.useState("1BR");
+  const [avmSize, setAvmSize] = React.useState(750);
+  const [avmYear, setAvmYear] = React.useState(2023);
+  const [roiMode, setRoiMode] = React.useState("summary");
 
   // Onboarding
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -2726,7 +2733,152 @@ export default function EmaarDashboardV2() {
           {/* ─── PORTFOLIO TAB ─── */}
           {tab === "Portfolio" && <>
 
-            {/* MY INVESTMENTS TRACKER */}
+            {/* ROI MODE TOGGLE */}
+            {myPortfolio.length > 0 && (
+              <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+                {[["summary","📊 Summary"],["roi","💰 ROI Analysis"],["cashflow","📈 Cash Flow"],["holdings","🏠 Holdings"]].map(([v,l]) => (
+                  <button key={v} type="button" onClick={() => setRoiMode(v)} style={{ padding: "7px 16px", borderRadius: 8, border: `1px solid ${roiMode === v ? T.gold : T.border}`, background: roiMode === v ? "rgba(212,168,67,0.12)" : T.surfaceAlt, color: roiMode === v ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>{l}</button>
+                ))}
+              </div>
+            )}
+
+            {/* ── ROI ANALYSIS VIEW ── */}
+            {roiMode === "roi" && myPortfolio.length > 0 && (() => {
+              const holdings = myPortfolio.map(h => {
+                const p = activeProjects.find(x => x.id === h.projectId);
+                if (!p) return null;
+                const comm = emaarCommunities.find(c => c.name === p.community);
+                const grossYield = comm ? comm.avgYield : 5.0;
+                const serviceCharge = p.ppsf > 2500 ? 28 : p.ppsf > 1800 ? 20 : 14;
+                const sqft = h.investedAmount / (p.ppsf || 2000);
+                const annualRent = h.investedAmount * (grossYield / 100);
+                const annualSC = sqft * serviceCharge;
+                const mgmtFee = annualRent * 0.09;
+                const netRent = annualRent - annualSC - mgmtFee;
+                const netYield = (netRent / h.investedAmount) * 100;
+                const yrsHeld = h.purchaseDate ? Math.max(0.5, (new Date() - new Date(h.purchaseDate)) / (365.25 * 24 * 3600 * 1000)) : 1;
+                const apprRate = p.ppsf > 2500 ? 0.12 : p.ppsf > 2000 ? 0.18 : 0.22;
+                const currentValue = h.investedAmount * Math.pow(1 + apprRate, yrsHeld);
+                const capitalGain = currentValue - h.investedAmount;
+                const totalReturn = capitalGain + (netRent * yrsHeld);
+                const irr = ((totalReturn / h.investedAmount) / yrsHeld) * 100;
+                return { ...h, p, grossYield, netYield: netYield.toFixed(1), annualRent: Math.round(annualRent), annualSC: Math.round(annualSC), netRent: Math.round(netRent), currentValue: Math.round(currentValue), capitalGain: Math.round(capitalGain), totalReturn: Math.round(totalReturn), irr: irr.toFixed(1), yrsHeld: yrsHeld.toFixed(1) };
+              }).filter(Boolean);
+              const totalInvested = holdings.reduce((s, h) => s + h.investedAmount, 0);
+              const totalCurrentVal = holdings.reduce((s, h) => s + h.currentValue, 0);
+              const totalNetRent = holdings.reduce((s, h) => s + h.netRent, 0);
+              const totalCapGain = holdings.reduce((s, h) => s + h.capitalGain, 0);
+              const avgIRR = holdings.length ? (holdings.reduce((s,h) => s + parseFloat(h.irr), 0) / holdings.length).toFixed(1) : "—";
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  <div style={{ background: T.surface, borderRadius: 14, border: "1px solid rgba(212,168,67,0.3)", padding: "20px 24px" }}>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: T.gold, marginBottom: 4 }}>Portfolio ROI Dashboard</div>
+                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Projected based on DLD rental index + historical appreciation rates</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px,1fr))", gap: 12 }}>
+                      {[
+                        { l: "Total Invested", v: "AED " + (totalInvested/1e6).toFixed(2) + "M", c: T.white },
+                        { l: "Current Value", v: "AED " + (totalCurrentVal/1e6).toFixed(2) + "M", c: "#10B981" },
+                        { l: "Capital Gain", v: "AED " + (totalCapGain/1e6).toFixed(2) + "M", c: T.gold },
+                        { l: "Annual Net Rent", v: "AED " + (totalNetRent/1000).toFixed(0) + "K", c: "#3B82F6" },
+                        { l: "Portfolio IRR", v: avgIRR + "%", c: "#8B5CF6" },
+                        { l: "Total Return", v: "AED " + ((totalCapGain + totalNetRent)/1e6).toFixed(2) + "M", c: "#10B981" },
+                      ].map(k => (
+                        <div key={k.l} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "12px 14px", border: "1px solid " + T.border }}>
+                          <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 5 }}>{k.l}</div>
+                          <div style={{ fontSize: 15, fontWeight: 800, color: k.c, fontFamily: "'Fraunces',serif" }}>{k.v}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.border, overflow: "hidden" }}>
+                    <div style={{ padding: "14px 20px", borderBottom: "1px solid " + T.border }}>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Per-Property Breakdown</div>
+                    </div>
+                    <div style={{ overflowX: "auto" }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 700 }}>
+                        <thead>
+                          <tr style={{ background: T.surfaceAlt, borderBottom: "1px solid " + T.border }}>
+                            {["Project","Invested","Current Val","Capital Gain","Gross Yield","Net Yield","Annual Net Rent","IRR"].map(h => (
+                              <th key={h} style={{ padding: "9px 12px", textAlign: h === "Project" ? "left" : "right", fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", whiteSpace: "nowrap" }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {holdings.map((h, i) => (
+                            <tr key={i} style={{ borderBottom: "1px solid " + T.border }}
+                              onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                              <td style={{ padding: "11px 12px" }}>
+                                <div style={{ fontWeight: 700, color: T.white, fontSize: 12 }}>{h.p.name}</div>
+                                <div style={{ fontSize: 10, color: T.textMuted }}>{h.p.community} · {h.unitType}</div>
+                              </td>
+                              <td style={{ padding: "11px 12px", textAlign: "right", fontSize: 12, color: T.textSecondary }}>AED {(h.investedAmount/1e6).toFixed(2)}M</td>
+                              <td style={{ padding: "11px 12px", textAlign: "right", fontSize: 12, fontWeight: 700, color: "#10B981" }}>AED {(h.currentValue/1e6).toFixed(2)}M</td>
+                              <td style={{ padding: "11px 12px", textAlign: "right", fontSize: 12, color: T.gold }}>+AED {(h.capitalGain/1000).toFixed(0)}K</td>
+                              <td style={{ padding: "11px 12px", textAlign: "right", fontSize: 12, color: T.gold, fontWeight: 700 }}>{h.grossYield}%</td>
+                              <td style={{ padding: "11px 12px", textAlign: "right", fontSize: 12, color: "#10B981", fontWeight: 700 }}>{h.netYield}%</td>
+                              <td style={{ padding: "11px 12px", textAlign: "right", fontSize: 12, color: "#3B82F6" }}>AED {(h.netRent/1000).toFixed(0)}K</td>
+                              <td style={{ padding: "11px 12px", textAlign: "right", fontSize: 14, fontWeight: 800, color: "#8B5CF6", fontFamily: "'Fraunces',serif" }}>{h.irr}%</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ── CASH FLOW VIEW ── */}
+            {roiMode === "cashflow" && myPortfolio.length > 0 && (() => {
+              const holdings = myPortfolio.map(h => {
+                const p = activeProjects.find(x => x.id === h.projectId);
+                if (!p) return null;
+                const comm = emaarCommunities.find(c => c.name === p.community);
+                const grossYield = comm ? comm.avgYield : 5.0;
+                const serviceCharge = p.ppsf > 2500 ? 28 : p.ppsf > 1800 ? 20 : 14;
+                const sqft = h.investedAmount / (p.ppsf || 2000);
+                const annualRent = h.investedAmount * (grossYield / 100);
+                const annualSC = sqft * serviceCharge;
+                const mgmtFee = annualRent * 0.09;
+                const netRent = annualRent - annualSC - mgmtFee;
+                return { ...h, p, annualRent: Math.round(annualRent), annualSC: Math.round(annualSC), mgmtFee: Math.round(mgmtFee), netRent: Math.round(netRent) };
+              }).filter(Boolean);
+              const yr = (v) => "AED " + (v/1000).toFixed(0) + "K/yr";
+              const mo = (v) => "AED " + Math.round(v/12).toLocaleString() + "/mo";
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {holdings.map((h, i) => (
+                    <div key={i} style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.border, padding: "18px 22px" }}>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 800, color: T.white, marginBottom: 2 }}>{h.p.name}</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>{h.p.community} · {h.unitType} · AED {(h.investedAmount/1e6).toFixed(2)}M invested</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                        {[
+                          { l: "Gross Rental Income", v: h.annualRent, c: "#10B981", sign: "+" },
+                          { l: "Service Charges", v: h.annualSC, c: "#EF4444", sign: "−" },
+                          { l: "Property Management (9%)", v: h.mgmtFee, c: "#EF4444", sign: "−" },
+                          { l: "Net Annual Cash Flow", v: h.netRent, c: T.gold, sign: "=", bold: true },
+                        ].map((row, ri) => (
+                          <div key={ri} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: ri === 3 ? "rgba(212,168,67,0.06)" : "transparent", borderRadius: ri === 3 ? 8 : 0, borderTop: ri === 3 ? "1px solid " + T.border : "none", marginTop: ri === 3 ? 4 : 0 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <span style={{ fontSize: 14, fontWeight: 700, color: row.c, width: 16 }}>{row.sign}</span>
+                              <span style={{ fontSize: 12, color: row.bold ? T.white : T.textSecondary, fontWeight: row.bold ? 700 : 400 }}>{row.l}</span>
+                            </div>
+                            <div style={{ textAlign: "right" }}>
+                              <span style={{ fontSize: row.bold ? 15 : 13, fontWeight: row.bold ? 800 : 600, color: row.c, fontFamily: row.bold ? "'Fraunces',serif" : "inherit" }}>{yr(row.v)}</span>
+                              <span style={{ fontSize: 10, color: T.textMuted, marginLeft: 8 }}>({mo(row.v)})</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
+            {/* ── HOLDINGS / SUMMARY VIEW ── */}
+            {(roiMode === "holdings" || roiMode === "summary" || myPortfolio.length === 0) && (
             <Section title="My Investments" sub={myPortfolio.length > 0 ? `${myPortfolio.length} holdings` : "Track your Emaar investments"}>
               {myPortfolio.length > 0 ? <>
                 <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
@@ -2865,7 +3017,148 @@ export default function EmaarDashboardV2() {
                 ))}
               </div>
             </Section>
+            )}
+
           </>}
+
+          {/* ─── DXB ESTIMATE AVM TAB ─── */}
+          {tab === "DXB Estimate" && (() => {
+            const avmData = {
+              "Dubai Hills Estate":    { apt: { "Studio": { ppsf: 1680, rent: 55 }, "1BR": { ppsf: 1820, rent: 80 }, "2BR": { ppsf: 2050, rent: 125 }, "3BR": { ppsf: 2300, rent: 180 } }, villa: { "3BR": { ppsf: 1450, rent: 180 }, "4BR": { ppsf: 1550, rent: 240 }, "5BR": { ppsf: 1700, rent: 320 } }, apprRate: 0.18, sc: 18 },
+              "Dubai Creek Harbour":   { apt: { "Studio": { ppsf: 1600, rent: 52 }, "1BR": { ppsf: 1750, rent: 78 }, "2BR": { ppsf: 1950, rent: 118 }, "3BR": { ppsf: 2200, rent: 170 } }, villa: null, apprRate: 0.22, sc: 22 },
+              "Emaar Beachfront":      { apt: { "Studio": { ppsf: 2800, rent: 95 }, "1BR": { ppsf: 3200, rent: 140 }, "2BR": { ppsf: 3600, rent: 200 }, "3BR": { ppsf: 4100, rent: 290 } }, villa: null, apprRate: 0.16, sc: 28 },
+              "Downtown Dubai":        { apt: { "Studio": { ppsf: 2600, rent: 90 }, "1BR": { ppsf: 2900, rent: 135 }, "2BR": { ppsf: 3200, rent: 190 }, "3BR": { ppsf: 3800, rent: 270 } }, villa: null, apprRate: 0.12, sc: 32 },
+              "Arabian Ranches III":   { apt: null, villa: { "3BR": { ppsf: 1350, rent: 155 }, "4BR": { ppsf: 1450, rent: 200 }, "5BR": { ppsf: 1600, rent: 260 } }, apprRate: 0.15, sc: 14 },
+              "The Valley":            { apt: null, villa: { "3BR": { ppsf: 1200, rent: 140 }, "4BR": { ppsf: 1300, rent: 185 }, "5BR": { ppsf: 1450, rent: 240 } }, apprRate: 0.22, sc: 12 },
+              "The Oasis":             { apt: null, villa: { "4BR": { ppsf: 2200, rent: 260 }, "5BR": { ppsf: 2600, rent: 340 }, "6BR": { ppsf: 3200, rent: 450 } }, apprRate: 0.25, sc: 20 },
+            };
+            const communities = Object.keys(avmData);
+            const communityInfo = avmData[avmCommunity];
+            const typeMap = avmType === "Apartment" ? communityInfo?.apt : communityInfo?.villa;
+            const beds = typeMap ? Object.keys(typeMap) : [];
+            const activeBeds = beds.includes(avmBeds) ? avmBeds : (beds[0] || "1BR");
+            const unitData = typeMap?.[activeBeds] || { ppsf: 2000, rent: 100 };
+            const currentPpsf = unitData.ppsf;
+            const currentValue = currentPpsf * avmSize;
+            const purchaseYear = avmYear;
+            const currentYear = 2026;
+            const yearsHeld = Math.max(0, currentYear - purchaseYear);
+            const apprRate = communityInfo?.apprRate || 0.15;
+            const purchaseValue = currentValue / Math.pow(1 + apprRate, yearsHeld);
+            const capitalGain = currentValue - purchaseValue;
+            const capGainPct = yearsHeld > 0 ? ((capitalGain / purchaseValue) * 100).toFixed(1) : "0";
+            const annualRent = unitData.rent * 1000;
+            const grossYield = ((annualRent / currentValue) * 100).toFixed(1);
+            const sc = (communityInfo?.sc || 18) * avmSize;
+            const mgmt = annualRent * 0.09;
+            const netRent = annualRent - sc - mgmt;
+            const netYield = ((netRent / currentValue) * 100).toFixed(1);
+            const monthlyRent = Math.round(annualRent / 12);
+            const confidence = currentValue > 5000000 ? "Moderate" : currentValue > 2000000 ? "High" : "Very High";
+            const confColor = confidence === "Very High" ? "#10B981" : confidence === "High" ? T.gold : "#F59E0B";
+            const invScore = getInvestmentScore({ price: currentValue, ppsf: currentPpsf, gross: parseFloat(grossYield), handover: null, paymentPlan: "80/20" });
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                {/* Header */}
+                <div style={{ background: T.surface, borderRadius: 14, border: "1px solid rgba(212,168,67,0.3)", padding: "20px 24px" }}>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.gold }}>DXB Estimate</div>
+                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Automated Valuation Model · Emaar Portfolio · DLD-calibrated pricing</div>
+                </div>
+                {/* Input form */}
+                <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.border, padding: "20px 24px" }}>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 14 }}>Property Details</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px,1fr))", gap: 14 }}>
+                    <div>
+                      <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", marginBottom: 6, fontWeight: 700, letterSpacing: 0.8 }}>Community</div>
+                      <select value={avmCommunity} onChange={e => setAvmCommunity(e.target.value)} style={{ width: "100%", padding: "9px 12px", background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                        {communities.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", marginBottom: 6, fontWeight: 700, letterSpacing: 0.8 }}>Type</div>
+                      <select value={avmType} onChange={e => { setAvmType(e.target.value); setAvmBeds(""); }} style={{ width: "100%", padding: "9px 12px", background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                        {communityInfo?.apt && <option value="Apartment">Apartment</option>}
+                        {communityInfo?.villa && <option value="Villa / Townhouse">Villa / Townhouse</option>}
+                      </select>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", marginBottom: 6, fontWeight: 700, letterSpacing: 0.8 }}>Bedrooms</div>
+                      <select value={activeBeds} onChange={e => setAvmBeds(e.target.value)} style={{ width: "100%", padding: "9px 12px", background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                        {beds.map(b => <option key={b} value={b}>{b}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", marginBottom: 6, fontWeight: 700, letterSpacing: 0.8 }}>Size (sqft)</div>
+                      <input type="number" value={avmSize} onChange={e => setAvmSize(Math.max(200, parseInt(e.target.value) || 750))} style={{ width: "100%", padding: "9px 12px", background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", marginBottom: 6, fontWeight: 700, letterSpacing: 0.8 }}>Purchase Year</div>
+                      <select value={avmYear} onChange={e => setAvmYear(parseInt(e.target.value))} style={{ width: "100%", padding: "9px 12px", background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                        {[2019,2020,2021,2022,2023,2024,2025,2026].map(y => <option key={y} value={y}>{y}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                {/* Estimate result */}
+                <div style={{ background: T.surface, borderRadius: 14, border: "1px solid rgba(212,168,67,0.4)", overflow: "hidden" }}>
+                  <div style={{ background: "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.04))", padding: "20px 24px", borderBottom: "1px solid rgba(212,168,67,0.2)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+                      <div>
+                        <div style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Estimated Current Value</div>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 36, fontWeight: 900, color: T.gold }}>AED {(currentValue/1e6).toFixed(3)}M</div>
+                        <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>AED {currentPpsf.toLocaleString()} /sqft · {avmSize.toLocaleString()} sqft · {avmCommunity}</div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>CONFIDENCE</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: confColor, padding: "4px 12px", borderRadius: 8, background: confColor + "15" }}>{confidence}</div>
+                        <div style={{ marginTop: 8 }}>
+                          <div style={{ fontSize: 11, fontWeight: 800, color: invScore.color, padding: "4px 10px", borderRadius: 7, background: invScore.color + "15" }}>{invScore.score}/10 ★ {invScore.label}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ padding: "20px 24px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: 12, marginBottom: 20 }}>
+                      {[
+                        { l: "Price/sqft", v: "AED " + currentPpsf.toLocaleString(), c: T.white },
+                        { l: "Gross Yield", v: grossYield + "%", c: T.gold },
+                        { l: "Net Yield", v: netYield + "%", c: "#10B981" },
+                        { l: "Annual Rent", v: "AED " + (annualRent/1000).toFixed(0) + "K", c: "#3B82F6" },
+                        { l: "Monthly Rent", v: "AED " + monthlyRent.toLocaleString(), c: "#3B82F6" },
+                        { l: "Net Cash Flow", v: "AED " + (netRent/1000).toFixed(0) + "K/yr", c: "#8B5CF6" },
+                      ].map(k => (
+                        <div key={k.l} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "12px 14px", border: "1px solid " + T.border }}>
+                          <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 5 }}>{k.l}</div>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: k.c, fontFamily: "'Fraunces',serif" }}>{k.v}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {yearsHeld > 0 && (
+                      <div style={{ background: "rgba(16,185,129,0.06)", borderRadius: 12, border: "1px solid rgba(16,185,129,0.2)", padding: "16px 18px" }}>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: "#10B981", marginBottom: 10 }}>📈 Since {purchaseYear} — Capital Appreciation</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: 10 }}>
+                          {[
+                            { l: "Purchase Price", v: "AED " + (purchaseValue/1e6).toFixed(3) + "M" },
+                            { l: "Current Value", v: "AED " + (currentValue/1e6).toFixed(3) + "M" },
+                            { l: "Capital Gain", v: "+AED " + (capitalGain/1000).toFixed(0) + "K" },
+                            { l: "Total Appreciation", v: "+" + capGainPct + "%" },
+                          ].map(k => (
+                            <div key={k.l} style={{ background: T.surfaceAlt, borderRadius: 8, padding: "10px 12px" }}>
+                              <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4 }}>{k.l}</div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: "#10B981" }}>{k.v}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 8, background: T.surfaceAlt, fontSize: 11, color: T.textMuted, lineHeight: 1.7 }}>
+                      ⚠️ DXB Estimate is an automated model using DLD transaction data, Emaar price lists, and rental index. Estimates may vary ±15% from actual market prices. Always verify with a registered valuer before transacting.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* ─── STR VS LTR YIELD TAB ─── */}
           {tab === "STR vs LTR" && (() => {
