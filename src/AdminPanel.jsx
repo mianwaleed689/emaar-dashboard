@@ -1000,6 +1000,7 @@ export default function AdminPanel() {
     { id: "notifications", label: "Notifications", icon: I.bell },
     { id: "verification", label: "Verification", icon: I.verify },
     { id: "analytics", label: "Analytics", icon: I.analytics },
+    { id: "digest", label: "Email Digest", icon: I.bell },
   ];
 
   /* ═══════════════════════════════════════
@@ -2527,6 +2528,98 @@ export default function AdminPanel() {
           {/* ═══════════════════════════════════════
              ANALYTICS TAB
              ═══════════════════════════════════════ */}
+          {/* ─── EMAIL DIGEST TAB ─── */}
+          {tab === "digest" && (() => {
+            const DigestTab = () => {
+              const [sending, setSending] = React.useState(false);
+              const [lastResult, setLastResult] = React.useState(null);
+              const [proUsers, setProUsers] = React.useState([]);
+
+              React.useEffect(() => {
+                setProUsers(users.filter(u => ["pro", "pro_trial", "enterprise", "admin"].includes(u.tier)));
+              }, []);
+
+              const sendDigest = async () => {
+                setSending(true);
+                setLastResult(null);
+                try {
+                  const res = await fetch("/api/weekly-digest", {
+                    method: "GET",
+                    headers: { Authorization: `Bearer ${process.env.REACT_APP_CRON_SECRET || "dxb-cron-2026"}` },
+                  });
+                  const data = await res.json();
+                  setLastResult(data);
+                  notify(data.success ? `Digest sent to ${data.sent} users!` : "Send failed — check logs");
+                } catch (e) {
+                  setLastResult({ error: e.message });
+                  notify("Error sending digest");
+                } finally {
+                  setSending(false);
+                }
+              };
+
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                  <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: 24 }}>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: T.gold, marginBottom: 6 }}>Weekly Email Digest</div>
+                    <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 20 }}>Automatically sends every Monday at 8:00 AM UAE time to all Pro users. You can also trigger it manually below.</div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 24 }}>
+                      {[
+                        ["Pro Users", proUsers.length, T.gold],
+                        ["Schedule", "Mon 8AM UAE", T.teal],
+                        ["Content", "5 sections", T.green],
+                      ].map(([l, v, c]) => (
+                        <div key={l} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "14px 16px", border: `1px solid ${T.border}` }}>
+                          <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", marginBottom: 4 }}>{l}</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: c }}>{v}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "14px 16px", border: `1px solid ${T.border}`, marginBottom: 20 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, marginBottom: 10 }}>EMAIL CONTENTS</div>
+                      {["📊 Market Pulse — Revenue, profit, backlog", "🏆 Top 5 Yield Opportunities", "⏰ Upcoming Handovers (next 6 months)", "🛂 Golden Visa Eligible Projects", "🔗 Link back to dashboard"].map((item, i) => (
+                        <div key={i} style={{ fontSize: 12, color: T.textSecondary, padding: "6px 0", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>{item}</div>
+                      ))}
+                    </div>
+
+                    <button type="button" onClick={sendDigest} disabled={sending} style={{ padding: "12px 28px", background: sending ? T.surfaceAlt : `linear-gradient(135deg,${T.gold},#B8912F)`, border: "none", borderRadius: 10, color: sending ? T.textMuted : T.bg, fontWeight: 800, fontSize: 14, cursor: sending ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 8 }}>
+                      {sending ? "Sending..." : `Send Digest Now → ${proUsers.length} users`}
+                    </button>
+
+                    {lastResult && (
+                      <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 10, background: lastResult.success ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)", border: `1px solid ${lastResult.success ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}` }}>
+                        <div style={{ fontSize: 12, color: lastResult.success ? T.green : "#EF4444", fontWeight: 700 }}>
+                          {lastResult.success ? `✅ Sent to ${lastResult.sent}/${lastResult.total} users` : `❌ Error: ${lastResult.error}`}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pro users list */}
+                  <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: 20 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Who Will Receive the Digest ({proUsers.length})</div>
+                    {proUsers.length === 0 ? (
+                      <div style={{ fontSize: 13, color: T.textMuted, textAlign: "center", padding: 20 }}>No Pro users yet — upgrade some users to Pro to test</div>
+                    ) : (
+                      proUsers.map((u, i) => (
+                        <div key={u.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", borderRadius: 8, marginBottom: 4, background: T.surfaceAlt }}>
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{u.name || u.email}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted }}>{u.email}</div>
+                          </div>
+                          <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: "rgba(212,168,67,0.1)", color: T.gold, fontWeight: 700 }}>{u.tier?.toUpperCase()}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            };
+            return <DigestTab />;
+          })()}
+
           {tab === "analytics" && (() => {
             /* ── per-tab computed data ── */
             const weeklySignups = (() => {
