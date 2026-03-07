@@ -1429,22 +1429,6 @@ export default function EmaarDashboardV2() {
         const combined = [...extraFromOverrides, ...extraFromNew.filter(p => !seen.has(String(p.id)))];
         setExtraProjects(combined);
 
-        // ── Live EMAAR stock price via Yahoo Finance (free, no key) ──
-        const fetchEmaarStock = async () => {
-          try {
-            const res = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/EMAAR.DU?interval=1d&range=1d");
-            const data = await res.json();
-            const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-            const prev  = data?.chart?.result?.[0]?.meta?.chartPreviousClose;
-            if (price && prev) {
-              const chg = ((price - prev) / prev * 100).toFixed(2);
-              setEmaarStockPrice({ price: price.toFixed(2), change: chg, up: price >= prev });
-            }
-          } catch(e) { /* silent — stock price is bonus feature */ }
-        };
-        fetchEmaarStock();
-        const stockInterval = setInterval(fetchEmaarStock, 300000); // refresh every 5 min
-
         // Load live yield data (merges with static emaarYields)
         if (yieldSnap.size > 0) {
           const yieldOverrides = {};
@@ -1466,6 +1450,21 @@ export default function EmaarDashboardV2() {
       } catch (e) { console.log("Firestore not available, using static data"); }
       setProjectsLoading(false);
     };
+    // ── Live EMAAR stock price via Yahoo Finance (free, no key) ──
+    const fetchEmaarStock = async () => {
+      try {
+        const res = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/EMAAR.DU?interval=1d&range=1d");
+        const data = await res.json();
+        const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+        const prev  = data?.chart?.result?.[0]?.meta?.chartPreviousClose;
+        if (price && prev) {
+          const chg = ((price - prev) / prev * 100).toFixed(2);
+          setEmaarStockPrice({ price: price.toFixed(2), change: chg, up: price >= prev });
+        }
+      } catch(e) { /* silent */ }
+    };
+    fetchEmaarStock();
+    const stockInterval = setInterval(fetchEmaarStock, 300000);
     loadProjects(); // Load for everyone — no isLoggedIn gate
     return () => clearInterval(stockInterval);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
