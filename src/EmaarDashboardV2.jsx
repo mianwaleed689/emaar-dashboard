@@ -309,40 +309,118 @@ const css = `
   }
   .mobile-overlay.open { opacity: 1; pointer-events: auto; }
 
+  /* ── 768px: Tablet / small laptop ── */
   @media (max-width: 768px) {
     html { font-size: 13px; }
-    .sidebar { transform: translateX(-100%); position: fixed !important; z-index: 100; }
+
+    /* Sidebar slides in as drawer */
+    .sidebar { transform: translateX(-100%); position: fixed !important; z-index: 100; height: 100dvh !important; box-shadow: 8px 0 40px rgba(0,0,0,0.6); }
     .sidebar.open { transform: translateX(0); }
     .main-content { margin-left: 0 !important; }
-    .top-bar { left: 0 !important; }
+    .top-bar { left: 0 !important; padding: 0 14px !important; }
+
+    /* Grids */
     .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
-    .chart-grid-2 { grid-template-columns: 1fr !important; }
-    .chart-grid-3 { grid-template-columns: 1fr !important; }
-    .chart-grid-4 { grid-template-columns: 1fr 1fr !important; }
-    .header-badges { gap: 4px !important; }
-    .header-badges > div:nth-child(n+3) { display: none !important; }
-    .mobile-menu-btn { display: block !important; }
+    .chart-grid-2 { grid-template-columns: 1fr !important; gap: 12px !important; }
+    .chart-grid-3 { grid-template-columns: 1fr !important; gap: 12px !important; }
+    .chart-grid-4 { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+
+    /* Cards */
     .kpi-card { padding: 14px 12px !important; border-radius: 12px !important; }
     .kpi-card .kpi-value { font-size: 22px !important; }
     .chart-box { padding: 14px 10px !important; border-radius: 12px !important; }
-    .main-content > div { padding: 0 14px 40px !important; }
+
+    /* Header */
+    .header-badges { gap: 4px !important; }
+    .header-badges > div:nth-child(n+3) { display: none !important; }
+    .mobile-menu-btn { display: flex !important; }
+
+    /* Content */
+    .main-content > div { padding: 0 12px 60px !important; }
     .filter-scroll { overflow-x: auto; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 4px; }
     .filter-scroll::-webkit-scrollbar { display: none; }
     .filter-scroll button { flex-shrink: 0; }
+
+    /* Tables — horizontal scroll with hint arrow */
+    .table-scroll { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+    .table-scroll::after { content: "swipe →"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
+    .table-scroll table { min-width: 560px; }
+
+    /* Compare bar */
     .compare-bar { padding: 10px 14px !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
     .compare-bar > div { justify-content: center; flex-wrap: wrap; }
-    .table-scroll { position: relative; }
-    .table-scroll::after { content: "→"; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: ${T.gold}; font-size: 16px; opacity: 0.4; pointer-events: none; }
+
+    /* Mortgage calculator 2-col → 1-col */
+    .mortgage-grid { grid-template-columns: 1fr !important; }
+
+    /* AI Insights full width cards */
+    .ai-insights-grid { grid-template-columns: 1fr !important; }
+
+    /* Alert modal full screen */
+    .alerts-modal { max-width: 100% !important; max-height: 100dvh !important; border-radius: 20px 20px 0 0 !important; position: fixed !important; bottom: 0 !important; top: auto !important; margin: 0 !important; }
   }
 
+  /* ── 480px: Mobile phones ── */
   @media (max-width: 480px) {
     html { font-size: 12px; }
-    .kpi-grid { grid-template-columns: 1fr !important; gap: 6px !important; }
-    .chart-grid-4 { grid-template-columns: 1fr !important; }
+
+    /* KPI grid: single column on small phones */
+    .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 6px !important; }
+    .chart-grid-4 { grid-template-columns: 1fr 1fr !important; }
+
+    /* Header strip */
     .header-badges { display: none !important; }
-    .top-bar { padding: 0 12px !important; }
+    .top-bar { padding: 0 10px !important; height: 52px !important; }
     .top-bar h1 { font-size: 13px !important; }
-    .chart-box .recharts-responsive-container { max-height: 200px !important; }
+
+    /* Charts shorter on tiny screens */
+    .recharts-responsive-container { max-height: 200px !important; }
+    .chart-box { padding: 12px 8px !important; }
+
+    /* Upgrade modal full screen */
+    .upgrade-modal { width: 100% !important; max-width: 100% !important; border-radius: 20px 20px 0 0 !important; position: fixed !important; bottom: 0 !important; top: auto !important; margin: 0 !important; max-height: 90dvh !important; overflow-y: auto; }
+
+    /* Plans stacked vertically */
+    .plans-grid { grid-template-columns: 1fr !important; }
+
+    /* Checkout modal */
+    .checkout-modal { width: 100% !important; max-width: 100% !important; border-radius: 20px 20px 0 0 !important; position: fixed !important; bottom: 0 !important; top: auto !important; }
+
+    /* Section titles smaller */
+    .section-title { font-size: 14px !important; }
+
+    /* Tab content spacing */
+    .main-content > div { padding: 0 10px 70px !important; }
+
+    /* Bottom nav bar hint spacing */
+    .tab-content-pad { padding-bottom: 80px !important; }
+  }
+
+  /* ── 360px: Very small phones ── */
+  @media (max-width: 360px) {
+    .kpi-grid { grid-template-columns: 1fr !important; }
+    html { font-size: 11px; }
+  }
+
+  /* ── Touch improvements ── */
+  * { -webkit-tap-highlight-color: transparent; }
+  button, a, [role="button"] { touch-action: manipulation; }
+  input[type="range"] { height: 32px; }
+
+  /* ── Mobile Bottom Nav Bar ── */
+  @media (max-width: 768px) {
+    .mobile-bottom-nav {
+      display: flex !important;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 60px;
+      background: rgba(6,12,22,0.97);
+      border-top: 1px solid rgba(212,168,67,0.15);
+      z-index: 200;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
   }
 `;
 
@@ -858,7 +936,7 @@ const UpgradeModal = ({ show, onClose }) => {
   ];
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={onClose}>
-      <div style={{ background: T.surface, borderRadius: 24, border: `1px solid ${T.border}`, width: "95%", maxWidth: 720, padding: 36, position: "relative", boxShadow: "0 40px 100px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
+      <div className="upgrade-modal" style={{ background: T.surface, borderRadius: 24, border: `1px solid ${T.border}`, width: "95%", maxWidth: 720, padding: 36, position: "relative", boxShadow: "0 40px 100px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
         <button type="button" onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
 
         {/* Header */}
@@ -882,7 +960,7 @@ const UpgradeModal = ({ show, onClose }) => {
         </div>
 
         {/* Plans */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+        <div className="plans-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
           {plans.map((plan, i) => (
             <div key={i} style={{ background: T.surfaceAlt, borderRadius: 16, padding: 24, border: plan.popular ? `2px solid ${T.gold}` : `1px solid ${T.border}`, position: "relative" }}>
               {plan.popular && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 16px", borderRadius: 20, background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, fontSize: 10, fontWeight: 800, letterSpacing: 0.5, whiteSpace: "nowrap" }}>⭐ MOST POPULAR</div>}
@@ -2314,7 +2392,7 @@ export default function EmaarDashboardV2() {
                 </div>
                 {insightsLoading
                   ? <div style={{ display: "flex", gap: 8, alignItems: "center", color: T.textMuted, fontSize: 12 }}><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span> Analysing Dubai market data…</div>
-                  : <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
+                  : <div className="ai-insights-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
                       {aiInsights.map((ins, i) => (
                         <div key={i} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
@@ -4146,7 +4224,7 @@ export default function EmaarDashboardV2() {
                   {/* Sliders */}
                   <div style={{ background: T.surface, borderRadius: 16, border: "1px solid " + T.border, padding: 24 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 18 }}>Step 2 — Adjust your numbers</div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 32px" }}>
+                    <div className="mortgage-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 32px" }}>
                       {[
                         { label: "Property Price", value: propPrice, set: setPropPrice, min: 500000, max: 20000000, step: 100000, disp: fmtM(propPrice) },
                         { label: "Down Payment", value: downPct, set: setDownPct, min: isUAENational ? 15 : 20, max: 80, step: 1, disp: downPct + "% = " + fmtM(downAmt) },
@@ -6340,7 +6418,7 @@ export default function EmaarDashboardV2() {
       {/* CHECKOUT PAYMENT MODAL */}}
       {/* ─── PRICE ALERTS MODAL ─── */}
       {showAlerts && isLoggedIn && <div role="dialog" aria-modal="true" aria-label="Price Alerts" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.93)", zIndex: 3200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={() => setShowAlerts(false)}>
-        <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 560, maxHeight: "88vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
+        <div className="alerts-modal" style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 560, maxHeight: "88vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
           <button type="button" onClick={() => setShowAlerts(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>✕</button>
           <div style={{ padding: "28px 28px 20px", borderBottom: `1px solid ${T.border}` }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>🔔 Price Alerts</div>
@@ -6515,6 +6593,29 @@ export default function EmaarDashboardV2() {
           </div>
         </div>
       </div>}
+
+      {/* ── MOBILE BOTTOM NAV BAR ── */}
+      <nav style={{ display: "none" }} className="mobile-bottom-nav" aria-label="Quick navigation">
+        {[
+          { key: "Overview", icon: "◈", label: "Overview" },
+          { key: "Projects", icon: "⊞", label: "Projects" },
+          { key: "Yields", icon: "◎", label: "Yields" },
+          { key: "Portfolio", icon: "◉", label: "Portfolio" },
+          { key: "Market", icon: "⊿", label: "Market" },
+        ].map(item => (
+          <button key={item.key} type="button" onClick={() => { setTab(item.key); setSidebarOpen(false); }}
+            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: "6px 0", color: tab === item.key ? T.gold : T.textMuted, fontFamily: "'Outfit',sans-serif", transition: "color 0.2s" }}>
+            <span style={{ fontSize: 18, lineHeight: 1 }}>{item.icon}</span>
+            <span style={{ fontSize: 9, fontWeight: tab === item.key ? 700 : 400, letterSpacing: 0.3 }}>{item.label}</span>
+            {tab === item.key && <span style={{ width: 4, height: 4, borderRadius: "50%", background: T.gold, display: "block" }} />}
+          </button>
+        ))}
+        <button type="button" onClick={() => setSidebarOpen(s => !s)}
+          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: "6px 0", color: T.textMuted, fontFamily: "'Outfit',sans-serif" }}>
+          <span style={{ fontSize: 18 }}>☰</span>
+          <span style={{ fontSize: 9, letterSpacing: 0.3 }}>More</span>
+        </button>
+      </nav>
 
       {/* USER PROFILE MODAL */}
       {showProfile && <div role="dialog" aria-modal="true" aria-label="User profile" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowProfile(false)}>
