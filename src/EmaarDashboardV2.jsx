@@ -934,6 +934,7 @@ const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this dat
 const UpgradeModal = ({ show, onClose }) => {
   if (!show) return null;
   const plans = [
+    { name: "Pro", price: "99", period: "month", features: ["48 Emaar projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →" },
     { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation ⏳", "API data access ⏳", "Custom dashboards ⏳", "Multi-user team accounts ⏳", "Developer-level raw data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Launching Q3 2026", cta: "Contact Sales →" },
   ];
   return (
@@ -1670,7 +1671,7 @@ export default function EmaarDashboardV2() {
       script.onload = () => {
         // ── PASTE YOUR PADDLE CLIENT TOKEN BELOW ──
         // Get it from paddle.com → Developer → Authentication → Client-side token
-        const PADDLE_CLIENT_TOKEN = "live_PASTE_YOUR_CLIENT_TOKEN_HERE";
+        const PADDLE_CLIENT_TOKEN = "live_4393f28d4ec943ebe056835651f";
         if (!PADDLE_CLIENT_TOKEN.includes("PASTE")) {
           window.Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
         }
@@ -7042,8 +7043,8 @@ export default function EmaarDashboardV2() {
                   // 2. Create products: Pro (AED 99/mo), Enterprise (AED 499/mo)
                   // 3. Paste the price IDs below (format: pri_XXXXXXXX)
                   const PADDLE_PRICE_IDS = {
-                    "Pro":        "pri_PASTE_PRO_PRICE_ID",
-                    "Enterprise": "pri_PASTE_ENT_PRICE_ID",
+                    "Pro":        "pri_01kk54qfbzqhbvk3d8h7e11tgt",
+                    "Enterprise": "pri_01kk54tmkq6be21z94bw2fyhnr",
                   };
                   const paddleReady = window.Paddle && !PADDLE_PRICE_IDS[showCheckout.name].includes("PASTE");
                   const openPaddle = () => {
