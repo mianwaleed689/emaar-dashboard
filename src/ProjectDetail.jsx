@@ -13,6 +13,16 @@ import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import { T, emaarProjects, communityIntel, communityROI } from "./data";
 import RoiCalculator from "./RoiCalculator";
 
+/* ─── LINK HELPERS ─── */
+const getLinkDomain = (url) => {
+  if (!url) return "Official Listing";
+  if (url.includes("propertyfinder.ae")) return "PropertyFinder.ae";
+  if (url.includes("bayut.com")) return "Bayut.com";
+  if (url.includes("properties.emaar.com") || url.includes("emaar.com")) return "Emaar.com";
+  return "Official Listing";
+};
+
+
 /* ─── helpers ─── */
 const fmtM = (v) => v ? `AED ${(v / 1_000_000).toFixed(2)}M` : "—";
 const fmtNum = (v) => v ? `AED ${Number(v).toLocaleString()}` : "—";
@@ -238,7 +248,7 @@ export default function ProjectDetail() {
           {project.emaarUrl && (
             <a href={project.emaarUrl} target="_blank" rel="noopener noreferrer"
               style={{ padding: "7px 14px", borderRadius: 8, background: T.goldMuted, border: `1px solid ${T.border}`, color: T.gold, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
-              Official Listing ↗
+              View on {getLinkDomain(project.emaarUrl)} ↗
             </a>
           )}
         </div>
