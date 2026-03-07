@@ -216,17 +216,17 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         <div className="landing-hero-glow" />
         <div className="landing-grid-bg" />
         
-        <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 800, animation: "fadeUp 0.8s ease-out forwards", pointerEvents: "auto" }}>
-          <div style={{ display: "inline-block", padding: "6px 16px", borderRadius: 20, background: T.goldGlow, border: `1px solid ${T.border}`, marginBottom: 24 }}>
+        <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 800 }}>
+          <div style={{ display: "inline-block", padding: "6px 16px", borderRadius: 20, background: T.goldGlow, border: `1px solid ${T.border}`, marginBottom: 24, animation: "fadeUp 0.6s ease-out forwards" }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: T.gold, letterSpacing: 1 }}>DUBAI'S FIRST REAL ESTATE INTELLIGENCE PLATFORM</span>
           </div>
           
-          <h1 className="hero-title" style={{ fontFamily: "'Fraunces', serif", fontSize: 52, fontWeight: 900, lineHeight: 1.1, marginBottom: 20 }}>
+          <h1 className="hero-title" style={{ fontFamily: "'Fraunces', serif", fontSize: 52, fontWeight: 900, lineHeight: 1.1, marginBottom: 20, animation: "fadeUp 0.6s ease-out 0.1s forwards", opacity: 0 }}>
             <span style={{ color: T.white }}>Smarter Decisions in</span><br/>
             <span style={{ background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Dubai Real Estate</span>
           </h1>
           
-          <p className="hero-subtitle" style={{ fontSize: 18, color: T.textSecondary, lineHeight: 1.6, marginBottom: 36, maxWidth: 600, margin: "0 auto 36px" }}>
+          <p className="hero-subtitle" style={{ fontSize: 18, color: T.textSecondary, lineHeight: 1.6, marginBottom: 36, maxWidth: 600, margin: "0 auto 36px", animation: "fadeUp 0.6s ease-out 0.2s forwards", opacity: 0 }}>
             Verified financials, location intelligence, rental yields, competitor analysis, and stock market data — everything Dubai's agents and investors need in one premium dashboard.
           </p>
           
