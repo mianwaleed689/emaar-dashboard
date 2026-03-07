@@ -6231,40 +6231,41 @@ export default function EmaarDashboardV2() {
             {/* ─── EIBOR ADMIN UPDATE ─── */}
             <Section title="EIBOR Rate Update" sub="Update live EIBOR rates — displayed in Mortgage calculator for all users">
               {(() => {
-                const [eiborEdit, setEiborEdit] = React.useState({ "1m": "", "3m": "", "6m": "", "1y": "", asOf: "" });
-                const [eiborSaving, setEiborSaving] = React.useState(false);
-                const [eiborSaved, setEiborSaved] = React.useState(false);
-                const [eiborCurrent, setEiborCurrent] = React.useState(null);
+                const EiborAdmin = () => {
+                  const [eiborEdit, setEiborEdit] = React.useState({ "1m": "", "3m": "", "6m": "", "1y": "", asOf: "" });
+                  const [eiborSaving, setEiborSaving] = React.useState(false);
+                  const [eiborSaved, setEiborSaved] = React.useState(false);
+                  const [eiborCurrent, setEiborCurrent] = React.useState(null);
 
-                React.useEffect(() => {
-                  getDoc(doc(db, "tabData", "eiborRates")).then(snap => {
-                    if (snap.exists()) setEiborCurrent(snap.data());
-                  }).catch(() => {});
-                }, []);
+                  React.useEffect(() => {
+                    getDoc(doc(db, "tabData", "eiborRates")).then(snap => {
+                      if (snap.exists()) setEiborCurrent(snap.data());
+                    }).catch(() => {});
+                  }, []);
 
-                const saveEibor = async () => {
-                  if (!eiborEdit["3m"]) return;
-                  setEiborSaving(true);
-                  try {
-                    await setDoc(doc(db, "tabData", "eiborRates"), {
-                      on:   parseFloat(eiborEdit.on  || eiborCurrent?.on  || 3.473),
-                      "1w": parseFloat(eiborEdit["1w"] || eiborCurrent?.["1w"] || 3.577),
-                      "1m": parseFloat(eiborEdit["1m"] || eiborCurrent?.["1m"] || 3.635),
-                      "3m": parseFloat(eiborEdit["3m"]),
-                      "6m": parseFloat(eiborEdit["6m"] || eiborCurrent?.["6m"] || 3.676),
-                      "1y": parseFloat(eiborEdit["1y"] || eiborCurrent?.["1y"] || 3.674),
-                      asOf: eiborEdit.asOf || new Date().toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" }),
-                      source: "Live · UAE Central Bank",
-                      updatedAt: Date.now(),
-                    });
-                    setEiborSaved(true);
-                    getDoc(doc(db, "tabData", "eiborRates")).then(snap => { if (snap.exists()) setEiborCurrent(snap.data()); });
-                    setTimeout(() => setEiborSaved(false), 3000);
-                  } catch(e) {}
-                  setEiborSaving(false);
-                };
+                  const saveEibor = async () => {
+                    if (!eiborEdit["3m"]) return;
+                    setEiborSaving(true);
+                    try {
+                      await setDoc(doc(db, "tabData", "eiborRates"), {
+                        on:   parseFloat(eiborEdit.on  || eiborCurrent?.on  || 3.473),
+                        "1w": parseFloat(eiborEdit["1w"] || eiborCurrent?.["1w"] || 3.577),
+                        "1m": parseFloat(eiborEdit["1m"] || eiborCurrent?.["1m"] || 3.635),
+                        "3m": parseFloat(eiborEdit["3m"]),
+                        "6m": parseFloat(eiborEdit["6m"] || eiborCurrent?.["6m"] || 3.676),
+                        "1y": parseFloat(eiborEdit["1y"] || eiborCurrent?.["1y"] || 3.674),
+                        asOf: eiborEdit.asOf || new Date().toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" }),
+                        source: "Live · UAE Central Bank",
+                        updatedAt: Date.now(),
+                      });
+                      setEiborSaved(true);
+                      getDoc(doc(db, "tabData", "eiborRates")).then(snap => { if (snap.exists()) setEiborCurrent(snap.data()); });
+                      setTimeout(() => setEiborSaved(false), 3000);
+                    } catch(e) {}
+                    setEiborSaving(false);
+                  };
 
-                return (
+                  return (
                   <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
                     {eiborCurrent && (
                       <div style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 12, padding: "14px 18px" }}>
@@ -6307,7 +6308,9 @@ export default function EmaarDashboardV2() {
                       </div>
                     </div>
                   </div>
-                );
+                  );
+                };
+                return <EiborAdmin />;
               })()}
             </Section>
 
