@@ -6,7 +6,7 @@ import emailjs from "@emailjs/browser";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
 
 import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
 import LandingPage from "./LandingPage";
@@ -1367,6 +1367,14 @@ export default function EmaarDashboardV2() {
   const [liveProjects, setLiveProjects] = useState({});
   const [extraProjects, setExtraProjects] = useState([]);
   const [liveYields, setLiveYields] = useState([]);
+  // ── Price Alerts ──
+  const [showAlerts, setShowAlerts] = useState(false);
+  const [myAlerts, setMyAlerts] = useState([]);
+  const [alertForm, setAlertForm] = useState({ community: "Dubai Hills Estate", metric: "grossYield", condition: "above", value: "8" });
+  const [alertSaving, setAlertSaving] = useState(false);
+  // ── AI Insights ──
+  const [aiInsights, setAiInsights] = useState([]);
+  const [insightsLoading, setInsightsLoading] = useState(false);
   const [liveDevHealth, setLiveDevHealth] = useState([]);
   const [liveDLDVolumes, setLiveDLDVolumes] = useState([]);
   const [liveSTRData, setLiveSTRData] = useState([]);
@@ -1510,6 +1518,61 @@ export default function EmaarDashboardV2() {
     fetchEmaarStock();
     const stockInterval = setInterval(fetchEmaarStock, 300000);
     loadProjects(); // Load for everyone — no isLoggedIn gate
+
+    // ── Load Price Alerts for logged-in user ──
+    if (isLoggedIn && user) {
+      try {
+        const alertSnap = await getDoc(doc(db, "priceAlerts", user));
+        if (alertSnap.exists()) setMyAlerts(alertSnap.data().alerts || []);
+      } catch(e) {}
+    }
+
+    // ── Load AI Insights (weekly cache in Firestore) ──
+    (async () => {
+      try {
+        const insightSnap = await getDoc(doc(db, "aiInsights", "latest"));
+        const data = insightSnap.exists() ? insightSnap.data() : null;
+        const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        if (data && data.insights && data.generatedAt > oneWeekAgo) {
+          setAiInsights(data.insights);
+        } else {
+          // Generate fresh insights via Claude API
+          setInsightsLoading(true);
+          const res = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "claude-sonnet-4-20250514",
+              max_tokens: 1000,
+              messages: [{ role: "user", content: `You are a Dubai real estate analyst. Generate exactly 5 sharp, data-driven market insights for Dubai property investors right now (${new Date().toLocaleDateString("en-AE", { month: "long", year: "numeric" })}). Use these verified 2025 facts: Dubai total market AED 682.5B, 214,912 transactions, Emaar FY2025 sales AED 80.4B (+16% YoY), avg yield city 6.9%, JVC yields 8-9%, EIBOR 3.47%, Downtown avg AED 2,800/sqft, DLD transfer fee 4%, off-plan 60%+ of market. Return ONLY a JSON array of 5 objects, no markdown, no preamble: [{"title":"...","insight":"...","tag":"Yield|Price|Risk|Macro|Opportunity","direction":"up|down|neutral"}]` }]
+            })
+          });
+          const apiData = await res.json();
+          const text = apiData.content?.[0]?.text || "[]";
+          const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
+          setAiInsights(parsed);
+          // Cache for a week
+          try { await setDoc(doc(db, "aiInsights", "latest"), { insights: parsed, generatedAt: Date.now() }); } catch(e) {}
+          setInsightsLoading(false);
+        }
+      } catch(e) { setInsightsLoading(false); }
+    })();
+
+    // ── Load Paddle.js for billing ──
+    if (!window.Paddle) {
+      const script = document.createElement("script");
+      script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
+      script.onload = () => {
+        // ── PASTE YOUR PADDLE CLIENT TOKEN BELOW ──
+        // Get it from paddle.com → Developer → Authentication → Client-side token
+        const PADDLE_CLIENT_TOKEN = "live_PASTE_YOUR_CLIENT_TOKEN_HERE";
+        if (!PADDLE_CLIENT_TOKEN.includes("PASTE")) {
+          window.Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
+        }
+      };
+      document.head.appendChild(script);
+    }
+
     return () => clearInterval(stockInterval);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -2145,21 +2208,91 @@ export default function EmaarDashboardV2() {
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 10, color: T.textMuted }}>Click any card for breakdown & sources</span>
-                <button type="button" onClick={() => {
-                  const printWindow = window.open("", "_blank");
+                <button type="button" onClick={async () => {
                   const now = new Date().toLocaleDateString("en-AE", { day: "numeric", month: "long", year: "numeric" });
-                  printWindow.document.write(`<html><head><title>Emaar Properties — Overview Report</title><style>body{font-family:Georgia,serif;background:#fff;color:#111;margin:0;padding:40px}h1{font-size:28px;color:#1a1a1a;margin-bottom:4px}.sub{color:#666;font-size:13px;margin-bottom:32px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}.card{border:1px solid #e0e0e0;border-radius:8px;padding:16px}.label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#888;margin-bottom:6px}.value{font-size:22px;font-weight:700;color:#b8860b;margin-bottom:4px}.note{font-size:11px;color:#444}.section-title{font-size:16px;font-weight:700;margin:24px 0 12px;border-left:3px solid #b8860b;padding-left:10px}.footer{margin-top:40px;padding-top:16px;border-top:1px solid #e0e0e0;font-size:10px;color:#999}@media print{body{padding:20px}}</style></head><body>
-                    <h1>Emaar Properties PJSC</h1><div class="sub">DXB Analytics Overview Report · Generated ${now} · DFM: EMAAR</div>
-                    <div class="section-title">Key Performance — FY 2025</div>
-                    <div class="grid">${[["Property Sales","AED 80.4B","+16% YoY · All-time record"],["Revenue","AED 49.6B","+40% YoY · USD 13.5B"],["Net Profit","AED 25.7B","+36% YoY · USD 7.0B"],["EBITDA","AED 25.6B","+33% YoY · Margin 51.6%"],["Backlog","AED 155B","+39% YoY · 3–4yr visibility"],["Recurring Rev","AED 10.5B","+13% · 32% of EBITDA"],["Units Delivered","125,600+","Since 2002 · #1 in GCC"],["Land Bank","618M sqft","344M UAE · AED 120B dev"]].map(([l,v,n])=>`<div class="card"><div class="label">${l}</div><div class="value">${v}</div><div class="note">${n}</div></div>`).join("")}</div>
-                    <div class="section-title">Key Financial Ratios</div>
-                    <div class="grid">${[["P/E Ratio (TTM)","7.83×","Industry avg: 15.5×"],["Forward P/E","8.10×","FY26 estimates"],["P/B Ratio","1.50×","Book value AED 9.44"],["EPS (TTM)","AED 1.87","Q4 2025: AED 0.70"],["ROE","22.05%","Strong capital efficiency"],["Dividend Yield","7.04%","AED 1.00/share"],["Debt/Equity","0.11×","Very low leverage"],["Beta","0.22","Low volatility, defensive"]].map(([l,v,n])=>`<div class="card"><div class="label">${l}</div><div class="value">${v}</div><div class="note">${n}</div></div>`).join("")}</div>
-                    <div class="section-title">Analyst Consensus</div>
-                    <div class="grid">${[["Consensus","Strong Buy","12 of 12 analysts"],["Avg Target","AED 19.94","Analyst consensus"],["High Target","AED 30.00","Bull case"],["Potential Upside","+29.5%","From AED 15.40"],["S&P Rating","BBB+","Stable outlook"],["Moody's","Baa1","Stable outlook"],["Fitch","BBB","Stable outlook"],["Market Cap","AED 128.2B","~USD 34.9B"]].map(([l,v,n])=>`<div class="card"><div class="label">${l}</div><div class="value">${v}</div><div class="note">${n}</div></div>`).join("")}</div>
-                    <div class="footer">Sources: Emaar IR, DLD, TradingView, Investing.com, GuruFocus · Generated ${now} · For informational purposes only · DXB Analytics — emaar-dashboard.vercel.app</div>
-                  </body></html>`);
-                  printWindow.document.close();
-                  setTimeout(() => printWindow.print(), 500);
+                  const tabLabel = tab || "Overview";
+                  // Dynamic load jsPDF from CDN
+                  if (!window.jspdf) {
+                    await new Promise((resolve, reject) => {
+                      const s = document.createElement("script");
+                      s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+                      s.onload = resolve; s.onerror = reject;
+                      document.head.appendChild(s);
+                    });
+                  }
+                  const { jsPDF } = window.jspdf;
+                  const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+                  const W = 210, M = 18;
+                  // Dark background
+                  pdf.setFillColor(4, 9, 15);
+                  pdf.rect(0, 0, W, 297, "F");
+                  // Gold header bar
+                  pdf.setFillColor(212, 168, 67);
+                  pdf.rect(0, 0, W, 2, "F");
+                  // Logo / Title
+                  pdf.setFont("helvetica", "bold");
+                  pdf.setFontSize(22); pdf.setTextColor(212, 168, 67);
+                  pdf.text("DXB Analytics", M, 22);
+                  pdf.setFontSize(10); pdf.setTextColor(180, 180, 180);
+                  pdf.text("The Bloomberg of Dubai Real Estate", M, 29);
+                  // Report title
+                  pdf.setFontSize(14); pdf.setTextColor(255, 255, 255); pdf.setFont("helvetica", "bold");
+                  pdf.text(`${tabLabel} Report`, M, 42);
+                  pdf.setFontSize(9); pdf.setTextColor(140, 140, 140); pdf.setFont("helvetica", "normal");
+                  pdf.text(`Generated ${now} · ${user || "DXB Analytics"}`, M, 49);
+                  // Divider
+                  pdf.setDrawColor(212, 168, 67, 0.3); pdf.setLineWidth(0.3);
+                  pdf.line(M, 54, W - M, 54);
+                  // Data sections based on tab
+                  let y = 62;
+                  const addSection = (title, rows) => {
+                    pdf.setFont("helvetica", "bold"); pdf.setFontSize(10); pdf.setTextColor(212, 168, 67);
+                    pdf.text(title.toUpperCase(), M, y); y += 7;
+                    rows.forEach(([label, value, note]) => {
+                      pdf.setFillColor(20, 35, 60); pdf.rect(M, y - 4, W - M * 2, 10, "F");
+                      pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor(160, 160, 160);
+                      pdf.text(label, M + 3, y + 2);
+                      pdf.setFont("helvetica", "bold"); pdf.setFontSize(9); pdf.setTextColor(255, 255, 255);
+                      pdf.text(value, M + 70, y + 2);
+                      if (note) { pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(120, 140, 160); pdf.text(note, M + 130, y + 2); }
+                      y += 12;
+                    });
+                    y += 4;
+                  };
+                  const sections = {
+                    "Overview": [
+                      ["KEY METRICS", [["Property Sales FY2025","AED 80.4B","+16% YoY · All-time record"],["Revenue FY2025","AED 49.6B","+40% YoY · USD 13.5B"],["Net Profit FY2025","AED 25.7B","+36% YoY · USD 7.0B"],["Backlog","AED 155B","3–4yr revenue visibility"],["Units Delivered","125,600+","Since 2002 · #1 GCC"]]],
+                      ["FINANCIALS", [["Market Cap","AED 128.2B","~USD 34.9B"],["P/E Ratio","7.83×","Industry avg 15.5×"],["Dividend Yield","7.04%","AED 1.00/share"],["Debt/Equity","0.11×","Very low leverage"],["Credit Rating","BBB+ / Baa1","S&P / Moody's stable"]]]
+                    ],
+                    "Yields": [
+                      ["RENTAL YIELD SUMMARY", [["City Average Gross Yield","6.9%","Dubai 2025"],["JVC — Highest Yield","8–9%","Best community for yield"],["Downtown Dubai","4–5%","Premium pricing, lower yield"],["Palm Jumeirah","4.5–5.5%","Ultra-luxury, lower yield"],["Dubai Hills Estate","5.5–6.5%","Family community premium"]]]
+                    ],
+                    "Market": [
+                      ["DUBAI MARKET 2025", [["Total Transactions","214,912","Record — 5th consecutive year"],["Total Market Value","AED 682.5B","All-time high"],["Avg Price/sqft","AED 1,689","2025 Dubai average"],["Off-Plan Share","60%+","Dominant market segment"],["YoY Growth","~22%","Transaction volume growth"]]]
+                    ]
+                  };
+                  const tabSections = sections[tabLabel] || sections["Overview"];
+                  tabSections.forEach(([title, rows]) => addSection(title, rows));
+                  // AI Insights in PDF
+                  if (aiInsights.length > 0 && y < 220) {
+                    pdf.setFont("helvetica", "bold"); pdf.setFontSize(10); pdf.setTextColor(212, 168, 67);
+                    pdf.text("AI MARKET INSIGHTS", M, y); y += 7;
+                    aiInsights.slice(0, 3).forEach(ins => {
+                      if (y > 260) return;
+                      pdf.setFillColor(14, 25, 45); pdf.rect(M, y - 4, W - M * 2, 14, "F");
+                      pdf.setFont("helvetica", "bold"); pdf.setFontSize(8); pdf.setTextColor(200, 200, 200);
+                      pdf.text(ins.title, M + 3, y + 1);
+                      pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(140, 140, 140);
+                      const insText = ins.insight.length > 90 ? ins.insight.slice(0, 90) + "…" : ins.insight;
+                      pdf.text(insText, M + 3, y + 7);
+                      y += 16;
+                    });
+                  }
+                  // Footer
+                  pdf.setFillColor(212, 168, 67); pdf.rect(0, 293, W, 4, "F");
+                  pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(100, 100, 100);
+                  pdf.text(`DXB Analytics · emaar-dashboard.vercel.app · ${now} · For informational purposes only`, M, 289);
+                  pdf.save(`DXB-Analytics-${tabLabel.replace(/ /g,"-")}-${new Date().toISOString().slice(0,10)}.pdf`);
                 }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}
                 onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.2)"}
                 onMouseLeave={e => e.currentTarget.style.background = "rgba(212,168,67,0.1)"}>
@@ -2167,6 +2300,39 @@ export default function EmaarDashboardV2() {
                 </button>
               </div>
             </div>
+
+            {/* ── AI Market Insights Feed ── */}
+            {(aiInsights.length > 0 || insightsLoading) && (
+              <div style={{ background: "linear-gradient(135deg, rgba(14,29,53,0.8), rgba(4,9,15,0.9))", borderRadius: 16, border: `1px solid rgba(212,168,67,0.2)`, padding: "18px 20px", marginBottom: 20 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 14 }}>✦</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>AI Market Intelligence</span>
+                    <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: T.gold, border: `1px solid ${T.gold}30` }}>Powered by Claude</span>
+                  </div>
+                  <span style={{ fontSize: 10, color: T.textMuted }}>Updated {new Date().toLocaleDateString("en-AE", { month: "short", year: "numeric" })}</span>
+                </div>
+                {insightsLoading
+                  ? <div style={{ display: "flex", gap: 8, alignItems: "center", color: T.textMuted, fontSize: 12 }}><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span> Analysing Dubai market data…</div>
+                  : <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
+                      {aiInsights.map((ins, i) => (
+                        <div key={i} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                            <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 8, fontWeight: 700, letterSpacing: 0.5,
+                              background: ins.tag === "Yield" ? "rgba(16,185,129,0.1)" : ins.tag === "Risk" ? "rgba(239,68,68,0.1)" : ins.tag === "Opportunity" ? "rgba(212,168,67,0.1)" : "rgba(59,130,246,0.1)",
+                              color: ins.tag === "Yield" ? T.green : ins.tag === "Risk" ? "#EF4444" : ins.tag === "Opportunity" ? T.gold : T.blue }}>
+                              {ins.tag}
+                            </span>
+                            <span style={{ fontSize: 13 }}>{ins.direction === "up" ? "↑" : ins.direction === "down" ? "↓" : "→"}</span>
+                          </div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 5, lineHeight: 1.3 }}>{ins.title}</div>
+                          <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>{ins.insight}</div>
+                        </div>
+                      ))}
+                    </div>
+                }
+              </div>
+            )}
 
             <Section title="Key Performance" sub="FY 2025 — All-Time Records Across Every Metric · Source: Emaar Annual Report 2025">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
@@ -6172,6 +6338,82 @@ export default function EmaarDashboardV2() {
       )}
 
       {/* CHECKOUT PAYMENT MODAL */}}
+      {/* ─── PRICE ALERTS MODAL ─── */}
+      {showAlerts && isLoggedIn && <div role="dialog" aria-modal="true" aria-label="Price Alerts" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.93)", zIndex: 3200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={() => setShowAlerts(false)}>
+        <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 560, maxHeight: "88vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
+          <button type="button" onClick={() => setShowAlerts(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>✕</button>
+          <div style={{ padding: "28px 28px 20px", borderBottom: `1px solid ${T.border}` }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>🔔 Price Alerts</div>
+            <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>Get notified when the market moves</div>
+            <div style={{ fontSize: 12, color: T.textSecondary, marginTop: 4 }}>Alerts sent to {user} via email</div>
+          </div>
+          <div style={{ padding: "20px 28px" }}>
+            {/* Create alert form */}
+            <div style={{ background: T.surfaceAlt, borderRadius: 14, padding: 18, border: `1px solid ${T.border}`, marginBottom: 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Create New Alert</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 5 }}>COMMUNITY</div>
+                  <select value={alertForm.community} onChange={e => setAlertForm(f => ({...f, community: e.target.value}))} style={{ width: "100%", padding: "9px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
+                    {["Dubai Hills Estate","Downtown Dubai","Dubai Creek Harbour","Emaar Beachfront","Arabian Ranches III","JVC","The Valley","Business Bay","Palm Jumeirah","DIFC"].map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 5 }}>METRIC</div>
+                  <select value={alertForm.metric} onChange={e => setAlertForm(f => ({...f, metric: e.target.value}))} style={{ width: "100%", padding: "9px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
+                    <option value="grossYield">Gross Yield (%)</option>
+                    <option value="netYield">Net Yield (%)</option>
+                    <option value="avgPriceSqft">Avg Price (AED/sqft)</option>
+                    <option value="transactions">Monthly Transactions</option>
+                  </select>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 5 }}>CONDITION</div>
+                  <select value={alertForm.condition} onChange={e => setAlertForm(f => ({...f, condition: e.target.value}))} style={{ width: "100%", padding: "9px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
+                    <option value="above">Goes Above</option>
+                    <option value="below">Falls Below</option>
+                  </select>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 5 }}>VALUE</div>
+                  <input type="number" value={alertForm.value} onChange={e => setAlertForm(f => ({...f, value: e.target.value}))} style={{ width: "100%", padding: "9px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} placeholder="e.g. 8.5" />
+                </div>
+              </div>
+              <button type="button" disabled={alertSaving} onClick={async () => {
+                if (!alertForm.value) return;
+                setAlertSaving(true);
+                const newAlert = { ...alertForm, id: Date.now(), createdAt: new Date().toISOString(), active: true };
+                const updated = [...myAlerts, newAlert];
+                setMyAlerts(updated);
+                try { await setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }); } catch(e) {}
+                setAlertSaving(false);
+              }} style={{ width: "100%", padding: "10px 0", background: alertSaving ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: alertSaving ? T.textMuted : T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: alertSaving ? "default" : "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.2s" }}>
+                {alertSaving ? "Saving…" : "+ Create Alert"}
+              </button>
+            </div>
+            {/* Existing alerts */}
+            <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Active Alerts ({myAlerts.filter(a => a.active).length})</div>
+            {myAlerts.length === 0 && <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 13 }}>No alerts yet — create your first one above</div>}
+            {myAlerts.map((a, i) => (
+              <div key={a.id || i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, marginBottom: 8 }}>
+                <span style={{ fontSize: 18 }}>{a.condition === "above" ? "📈" : "📉"}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{a.community}</div>
+                  <div style={{ fontSize: 11, color: T.textSecondary }}>{a.metric === "grossYield" ? "Gross Yield" : a.metric === "netYield" ? "Net Yield" : a.metric === "avgPriceSqft" ? "Avg Price/sqft" : "Transactions"} {a.condition} {a.value}{a.metric.includes("Yield") ? "%" : ""}</div>
+                </div>
+                <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: a.active ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)", color: a.active ? T.green : "#EF4444", fontWeight: 700 }}>{a.active ? "ACTIVE" : "PAUSED"}</span>
+                <button type="button" onClick={async () => {
+                  const updated = myAlerts.filter((_, j) => j !== i);
+                  setMyAlerts(updated);
+                  try { await setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }); } catch(e) {}
+                }} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "4px 6px", borderRadius: 6, transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "#EF4444"} onMouseLeave={e => e.currentTarget.style.color = T.textMuted}>✕</button>
+              </div>
+            ))}
+            {myAlerts.length > 0 && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 12, textAlign: "center" }}>Alerts checked daily. Email sent to {user}</div>}
+          </div>
+        </div>
+      </div>}
+
       {showCheckout && <div role="dialog" aria-modal="true" aria-label="Upgrade checkout" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.95)", zIndex: 3100, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)" }} onClick={() => { setShowCheckout(null); setCheckoutStep(1); }}>
         <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 480, position: "relative", overflow: "hidden" }} onClick={e => e.stopPropagation()}>
           <button type="button" onClick={() => { setShowCheckout(null); setCheckoutStep(1); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>{"\u2715"}</button>
@@ -6195,32 +6437,48 @@ export default function EmaarDashboardV2() {
                 <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, marginBottom: 12 }}>CHOOSE PAYMENT METHOD</div>
 
                 {/* Stripe Payment Links */}
+                {/* ── Paddle Card Payment ── */}
                 {(() => {
-                  // ─── STRIPE PAYMENT LINKS ───────────────────────────────
-                  // After creating links in stripe.com/payment-links, paste them here:
-                  const STRIPE_LINKS = {
-                    "Pro":        "PASTE_YOUR_PRO_STRIPE_LINK_HERE",
-                    "Enterprise": "PASTE_YOUR_ENTERPRISE_STRIPE_LINK_HERE",
+                  // ─── PADDLE PRICE IDs ─────────────────────────────────
+                  // 1. Sign up at paddle.com (free)
+                  // 2. Create products: Pro (AED 99/mo), Enterprise (AED 499/mo)
+                  // 3. Paste the price IDs below (format: pri_XXXXXXXX)
+                  const PADDLE_PRICE_IDS = {
+                    "Pro":        "pri_PASTE_PRO_PRICE_ID",
+                    "Enterprise": "pri_PASTE_ENT_PRICE_ID",
                   };
-                  const stripeUrl = STRIPE_LINKS[showCheckout.name];
-                  const finalUrl = stripeUrl && !stripeUrl.startsWith("PASTE")
-                    ? `${stripeUrl}?prefilled_email=${encodeURIComponent(user || "")}`
-                    : null;
+                  const paddleReady = window.Paddle && !PADDLE_PRICE_IDS[showCheckout.name].includes("PASTE");
+                  const openPaddle = () => {
+                    if (paddleReady) {
+                      window.Paddle.Checkout.open({
+                        items: [{ priceId: PADDLE_PRICE_IDS[showCheckout.name], quantity: 1 }],
+                        customer: { email: user || "" },
+                        settings: { theme: "dark", displayMode: "overlay" },
+                        successCallback: async () => {
+                          try {
+                            await updateDoc(doc(db, "users", user), {
+                              tier: showCheckout.name.toLowerCase(),
+                              upgradedAt: new Date().toISOString(),
+                              upgradedPlan: showCheckout.name
+                            });
+                          } catch(e) {}
+                          setCheckoutStep(3);
+                        }
+                      });
+                    } else {
+                      // Fallback to WhatsApp until Paddle is configured
+                      window.open(`https://wa.me/971542410599?text=${encodeURIComponent(`Hi, I want DXB Analytics ${showCheckout.name} Plan (AED ${showCheckout.price}/mo). Email: ${user}`)}`, "_blank");
+                      setCheckoutStep(3);
+                    }
+                  };
                   return (
-                    <div onClick={() => {
-                      if (finalUrl) {
-                        window.location.href = finalUrl;
-                      } else {
-                        window.open(`https://wa.me/971542410599?text=${encodeURIComponent(`Hi, I want DXB Analytics ${showCheckout.name} Plan (AED ${showCheckout.price}/mo). Email: ${user}`)}`, "_blank");
-                        setCheckoutStep(3);
-                      }
-                    }} style={{ padding: "16px", borderRadius: 12, background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.3)", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", transition: "all 0.2s", marginBottom: 8 }}
+                    <div onClick={openPaddle} style={{ padding: "16px", borderRadius: 12, background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.3)", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", transition: "all 0.2s", marginBottom: 8 }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = "#3B82F6"}
                       onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(59,130,246,0.3)"}>
                       <div style={{ fontSize: 24 }}>💳</div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Credit / Debit Card</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>Visa · Mastercard · Amex · Apple Pay — powered by Stripe</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>Visa · Mastercard · Amex · Apple Pay · {paddleReady ? "Powered by Paddle" : "Powered by Paddle (setup pending)"}</div>
                       </div>
                       <span style={{ fontSize: 9, padding: "3px 10px", borderRadius: 6, background: "rgba(34,197,94,0.12)", color: "#22C55E", fontWeight: 700, border: "1px solid rgba(34,197,94,0.2)" }}>RECOMMENDED</span>
                     </div>
