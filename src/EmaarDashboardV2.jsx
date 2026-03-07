@@ -1180,7 +1180,6 @@ export default function EmaarDashboardV2() {
   // Onboarding
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
-  const [userGoal, setUserGoal] = useState("");
 
   useEffect(() => {
     const handler = (e) => { setShowCheckout(e.detail); setCheckoutStep(1); };
@@ -1223,6 +1222,13 @@ export default function EmaarDashboardV2() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [time, setTime] = useState(new Date());
   const [authLoading, setAuthLoading] = useState(true);
+  const [isSuspended, setIsSuspended] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+  const [verifiedLevel, setVerifiedLevel] = useState(null);
+  const [showKYC, setShowKYC] = useState(false);
+  const [kycForm, setKycForm] = useState({ name: "", phone: "", nationality: "", dob: "", address: "", level: "basic" });
+  const [kycSubmitting, setKycSubmitting] = useState(false);
+  const [kycStatus, setKycStatus] = useState(null);
 
   // Set page title
   useEffect(() => { document.title = "DXB Analytics — Dubai Real Estate Intelligence Platform"; }, []);
@@ -1418,6 +1424,10 @@ export default function EmaarDashboardV2() {
             // Admin override — by role field OR by owner email
             if (data.role === "admin" || firebaseUser.email === "mianwaleed689@gmail.com") tier = "admin";
             setUserTier(tier);
+            setIsSuspended(!!data.suspended);
+            setIsVerified(!!data.verified);
+            setVerifiedLevel(data.verifiedLevel || null);
+            setKycStatus(data.kycStatus || null);
           } else {
             // Existing user without profile (e.g. your admin account) — treat as admin/pro
             setUserTier("admin");
@@ -1626,6 +1636,41 @@ export default function EmaarDashboardV2() {
       </div>
     );
   }
+
+  // SUSPENDED USER SCREEN
+  if (isLoggedIn && isSuspended && userTier !== "admin") {
+    return (
+      <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 20, fontFamily: "'Outfit', sans-serif", padding: 24 }}>
+        <style>{css}</style>
+        <div style={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(239,68,68,0.1)", border: "2px solid rgba(239,68,68,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32 }}>🚫</div>
+        <div style={{ textAlign: "center", maxWidth: 420 }}>
+          <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 800, color: "#EF4444", margin: "0 0 10px" }}>Account Suspended</h1>
+          <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, margin: "0 0 24px" }}>Your account has been suspended by an administrator. If you believe this is an error, please contact support.</p>
+          <a href="mailto:support@dxbanalytics.com" style={{ display: "inline-block", padding: "12px 28px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, color: "#EF4444", fontWeight: 700, fontSize: 13, textDecoration: "none" }}>Contact Support</a>
+        </div>
+        <button type="button" onClick={() => signOut(auth)} style={{ background: "none", border: `1px solid ${T.border}`, color: T.textMuted, padding: "8px 20px", borderRadius: 8, cursor: "pointer", fontSize: 12, fontFamily: "'Outfit', sans-serif" }}>Sign Out</button>
+      </div>
+    );
+  }
+
+  // KYC SUBMIT FUNCTION
+  const submitKYC = async () => {
+    if (!kycForm.name.trim()) { notify("❌ Full name required"); return; }
+    if (!kycForm.phone.trim()) { notify("❌ Phone number required"); return; }
+    if (!auth.currentUser) return;
+    setKycSubmitting(true);
+    try {
+      await setDoc(doc(db, "verifications", auth.currentUser.uid), {
+        uid: auth.currentUser.uid, email: user, ...kycForm,
+        status: "pending", submittedAt: new Date().toISOString(),
+      });
+      await setDoc(doc(db, "users", auth.currentUser.uid), { kycStatus: "pending" }, { merge: true });
+      setKycStatus("pending");
+      notify("✅ Verification submitted! Admin will review within 24h.");
+      setShowKYC(false);
+    } catch(e) { notify("❌ " + e.message); }
+    setKycSubmitting(false);
+  };
 
   if (!isLoggedIn && !showLogin) {
     return <LandingPage onLoginClick={() => setShowLogin("login")} onSignUpClick={() => setShowLogin("signup")} />;
@@ -4282,7 +4327,7 @@ export default function EmaarDashboardV2() {
               })()}
 
               {/* Project Documents & Media */}
-              {(selectedProject_.pdfBrochure || selectedProject_.pdfFloorPlan || selectedProject_.pdfPaymentPlan || selectedProject_.pdfFactSheet || selectedProject_.videoUrl || selectedProject_.imageUrl) && (
+              {(selectedProject_.pdfBrochure || selectedProject_.pdfFloorPlan || selectedProject_.pdfPaymentPlan || selectedProject_.pdfFactSheet || selectedProject_.videoUrl || selectedProject_.externalLink || selectedProject_.imageUrl) && (
                 <div style={{ marginBottom: 16 }}>
                   <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>📎 Documents & Media</h3>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -4308,6 +4353,12 @@ export default function EmaarDashboardV2() {
                       <a href={selectedProject_.pdfFactSheet} target="_blank" rel="noreferrer"
                         style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(0,191,165,0.1)", border: "1px solid rgba(0,191,165,0.3)", color: T.teal, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
                         📊 Fact Sheet
+                      </a>
+                    )}
+                    {selectedProject_.externalLink && (
+                      <a href={selectedProject_.externalLink} target="_blank" rel="noreferrer"
+                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.3)", color: "#8B5CF6", fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
+                        🌐 Visit Website
                       </a>
                     )}
                   </div>
@@ -4806,6 +4857,7 @@ export default function EmaarDashboardV2() {
                 <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{userName || user.split("@")[0]}</div>
                 <div style={{ fontSize: 12, color: T.textSecondary, marginTop: 2 }}>{user}</div>
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, padding: "3px 10px", borderRadius: 6, background: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? "rgba(16,185,129,0.12)" : userTier === "pro_trial" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", fontSize: 10, fontWeight: 700, color: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : userTier === "pro_trial" ? T.gold : T.blue }}>{userTier === "admin" ? "\u26A1 Admin" : userTier === "pro" ? "\u2B50 Pro Plan" : userTier === "pro_trial" ? `\u2B50 Pro Trial \u00B7 ${trialDaysLeft}d left` : userTier === "enterprise" ? "\uD83C\uDFE2 Enterprise" : "Free Plan"}</div>
+                {isVerified && <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, marginLeft: 6, padding: "3px 10px", borderRadius: 6, background: "rgba(0,191,165,0.12)", fontSize: 10, fontWeight: 700, color: "#00BFA5" }}>✓ Verified {verifiedLevel ? `· ${verifiedLevel.charAt(0).toUpperCase() + verifiedLevel.slice(1)}` : ""}</div>}
               </div>
             </div>
           </div>
@@ -4828,12 +4880,86 @@ export default function EmaarDashboardV2() {
               {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "\u2B50 Upgrade to Pro \u2014 AED 99/mo"}</button>}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <button type="button" onClick={() => { setShowProfile(false); handleTabChange("Portfolio"); }} style={{ padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>\uD83D\uDCCA Portfolio</button>
+              <button type="button" onClick={() => { setShowProfile(false); handleTabChange("Portfolio"); }} style={{ padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>📊 Portfolio</button>
               <button type="button" onClick={() => { signOut(auth); setShowProfile(false); }} style={{ padding: "10px 0", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, color: "#EF4444", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Sign Out</button>
+            </div>
+            {/* KYC VERIFICATION SECTION */}
+            <div style={{ marginTop: 16, padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Identity Verification</div>
+              {isVerified ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,191,165,0.15)", border: "2px solid #00BFA5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>✓</div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#00BFA5" }}>Identity Verified</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>Level: {verifiedLevel || "Basic"} · Approved by admin</div>
+                  </div>
+                </div>
+              ) : kycStatus === "pending" ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(245,158,11,0.15)", border: "2px solid #F59E0B", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⏳</div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#F59E0B" }}>Verification Pending</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>Admin review in progress · Usually within 24h</div>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 10, lineHeight: 1.6 }}>Verify your identity to unlock the verified badge and access exclusive features.</p>
+                  <button type="button" onClick={() => { setShowProfile(false); setShowKYC(true); }} style={{ padding: "9px 20px", background: `linear-gradient(135deg, #00BFA5, #00897B)`, color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🛡 Apply for Verification</button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>}
+
+      {/* ─── KYC VERIFICATION MODAL ─── */}
+      {showKYC && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)", padding: 16 }} onClick={() => setShowKYC(false)}>
+          <div style={{ background: T.surface, borderRadius: 20, border: `1px solid rgba(0,191,165,0.3)`, width: "95%", maxWidth: 520, maxHeight: "90vh", overflow: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: "24px 28px 20px", background: "linear-gradient(135deg, rgba(0,191,165,0.08), rgba(14,29,53,0.6))", borderBottom: `1px solid ${T.border}` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: "#00BFA5" }}>🛡 Identity Verification</div>
+                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Submit your details for admin review · Usually approved within 24h</div>
+                </div>
+                <button type="button" onClick={() => setShowKYC(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              </div>
+            </div>
+            <div style={{ padding: "24px 28px 28px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
+                {[
+                  { k: "name", l: "Full Name *", p: "As on your passport", t: "text" },
+                  { k: "phone", l: "Phone Number *", p: "+971 50 000 0000", t: "tel" },
+                  { k: "nationality", l: "Nationality", p: "e.g. UAE, India, UK", t: "text" },
+                  { k: "dob", l: "Date of Birth", p: "", t: "date" },
+                  { k: "address", l: "Residential Address", p: "Dubai, UAE", t: "text" },
+                ].map(f => (
+                  <div key={f.k} style={{ gridColumn: f.k === "address" ? "1 / -1" : "auto" }}>
+                    <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 5 }}>{f.l}</label>
+                    <input type={f.t} placeholder={f.p} value={kycForm[f.k] || ""} onChange={e => setKycForm(prev => ({ ...prev, [f.k]: e.target.value }))}
+                      style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }} />
+                  </div>
+                ))}
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 5 }}>Verification Level</label>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
+                    {[{ v: "basic", l: "Basic", d: "Name & phone", c: "#3B82F6" }, { v: "intermediate", l: "Intermediate", d: "ID + selfie", c: T.gold }, { v: "advanced", l: "Advanced", d: "Video call", c: "#10B981" }].map(opt => (
+                      <div key={opt.v} onClick={() => setKycForm(prev => ({ ...prev, level: opt.v }))} style={{ padding: "12px 10px", borderRadius: 10, border: `1px solid ${kycForm.level === opt.v ? opt.c : T.border}`, background: kycForm.level === opt.v ? `${opt.c}12` : T.surfaceAlt, cursor: "pointer", textAlign: "center" }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: kycForm.level === opt.v ? opt.c : T.white }}>{opt.l}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>{opt.d}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <button type="button" onClick={submitKYC} disabled={kycSubmitting} style={{ width: "100%", padding: "13px 0", background: kycSubmitting ? T.surfaceAlt : "linear-gradient(135deg, #00BFA5, #00897B)", border: "none", borderRadius: 10, color: kycSubmitting ? T.textMuted : "#fff", fontWeight: 800, fontSize: 14, cursor: kycSubmitting ? "not-allowed" : "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                {kycSubmitting ? "Submitting..." : "Submit for Verification →"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── KPI DETAIL MODAL ─── */}
       {selectedKPI && (
@@ -5005,130 +5131,60 @@ export default function EmaarDashboardV2() {
 
       {/* ─── ONBOARDING MODAL ─── */}
       {showOnboarding && (() => {
-        const goalSteps = {
-          investing: [
-            { icon: "📈", title: "Track Price History", body: "Every project card now shows a live price history chart. See how prices have moved and set alerts for your target price.", cta: "Next →" },
-            { icon: "📊", title: "ROI & Yield Intelligence", body: "The Yields tab shows gross and net rental returns for every Emaar community. Pro users get full ROI calculator with payment plan modelling.", cta: "Next →" },
-            { icon: "💼", title: "Portfolio Tracker", body: "Log your properties in the Portfolio tab. Get live KPIs — total invested, current value, average yield, and a one-click PDF report.", cta: "Next →" },
-          ],
-          researching: [
-            { icon: "🔍", title: "48+ Emaar Projects", body: "Browse every active development in the Projects tab. Filter by community, handover year, price, or status. Click any card for full specs, floor plans, and documents.", cta: "Next →" },
-            { icon: "🗺️", title: "Interactive Map", body: "The Map tab shows all 48 projects as yield-colour-coded pins across Dubai. Click any pin for instant details.", cta: "Next →" },
-            { icon: "🏆", title: "Competitor Intelligence", body: "The Competitors tab benchmarks Emaar against DAMAC, Sobha, Aldar, and 7 others — market share, units delivered, and backlog.", cta: "Next →" },
-          ],
-          tracking: [
-            { icon: "⭐", title: "Watchlist", body: "Star any project card to save it to your watchlist. Your list syncs across devices and is waiting for you every time you log in.", cta: "Next →" },
-            { icon: "🔔", title: "Price Alerts", body: "Hit the bell icon on any project to set a price-drop or price-rise alert. You'll get an email the moment the price crosses your threshold.", cta: "Next →" },
-            { icon: "📅", title: "Handover Countdowns", body: "Every project card shows a live countdown to handover — colour-coded red when under 90 days. Never miss a handover date.", cta: "Next →" },
-          ],
-        };
-        const selectedGoalSteps = userGoal ? goalSteps[userGoal] || [] : [];
-        const steps = userGoal ? [
-          ...selectedGoalSteps,
-          { icon: "🚀", title: "You're Ready!", body: null, cta: userTier === "free" ? null : "Start Exploring" }
-        ] : [];
-        const isGoalStep = !userGoal;
-        const isLastStep = !isGoalStep && onboardingStep === steps.length - 1;
-        const step = !isGoalStep && steps[onboardingStep];
+        const steps = [
+          {
+            icon: "🏙️",
+            title: `Welcome to DXB Analytics, ${userName || "Investor"}!`,
+            body: "You now have access to Dubai's most comprehensive real estate intelligence platform. Let us show you around in 30 seconds.",
+            cta: "Let's Go →"
+          },
+          {
+            icon: "🔍",
+            title: "Browse 48+ Emaar Projects",
+            body: "Go to the Projects tab to explore every active development. Filter by community, tier, handover year, or price range. Click any card for full details, documents, and ROI analysis.",
+            cta: "Next →"
+          },
+          {
+            icon: "⭐",
+            title: "Build Your Watchlist",
+            body: "See the ☆ star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
+            cta: "Next →"
+          },
+          {
+            icon: "📊",
+            title: "Yields, ROI & Mortgage",
+            body: "Use the Yields tab for rental returns by community. The Mortgage tab calculates your monthly payment + all UAE transaction costs instantly.",
+            cta: "Next →"
+          },
+          {
+            icon: "🚀",
+            title: "You're All Set!",
+            body: userTier === "free" ? "You're on the Free plan. Upgrade to Pro for compare mode, full project details, PDF reports, and portfolio tracking — from AED 99/month." : "You have full Pro access. Explore everything — compare projects, track your portfolio, and download reports.",
+            cta: userTier === "free" ? "Explore Free Features" : "Start Exploring"
+          },
+        ];
+        const step = steps[onboardingStep];
         return (
           <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(16px)" }}>
-            <div style={{ background: T.surface, borderRadius: 24, border: "1px solid rgba(212,168,67,0.3)", width: "min(500px,95vw)", padding: "40px 36px", textAlign: "center", position: "relative", boxShadow: "0 40px 100px rgba(0,0,0,0.7)" }}>
-
-              {/* Progress dots — only show after goal selected */}
-              {!isGoalStep && (
-                <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28 }}>
-                  {steps.map((_, i) => (
-                    <div key={i} style={{ width: i === onboardingStep ? 20 : 8, height: 8, borderRadius: 4, background: i === onboardingStep ? T.gold : T.border, transition: "all 0.3s" }} />
-                  ))}
-                </div>
-              )}
-
-              {/* ── STEP 0: Goal selector ── */}
-              {isGoalStep && (
-                <>
-                  <div style={{ fontSize: 48, marginBottom: 12 }}>🏙️</div>
-                  <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 8, lineHeight: 1.3 }}>
-                    Welcome, {userName || "Investor"}!
-                  </h2>
-                  <p style={{ fontSize: 13, color: T.textSecondary, marginBottom: 28, lineHeight: 1.6 }}>
-                    What brings you to DXB Analytics? We'll personalise your tour.
-                  </p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
-                    {[
-                      { key: "investing", icon: "💰", label: "I'm looking to invest in Dubai property" },
-                      { key: "researching", icon: "🔍", label: "I'm researching the Dubai market" },
-                      { key: "tracking", icon: "📋", label: "I already own property and want to track it" },
-                    ].map(g => (
-                      <button key={g.key} type="button" onClick={() => { setUserGoal(g.key); setOnboardingStep(0); }}
-                        style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 12, border: "1px solid rgba(212,168,67,0.25)", background: "rgba(212,168,67,0.06)", color: T.white, fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all 0.15s" }}
-                        onMouseEnter={e => { e.currentTarget.style.background = "rgba(212,168,67,0.15)"; e.currentTarget.style.borderColor = "rgba(212,168,67,0.5)"; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = "rgba(212,168,67,0.06)"; e.currentTarget.style.borderColor = "rgba(212,168,67,0.25)"; }}>
-                        <span style={{ fontSize: 22 }}>{g.icon}</span>
-                        <span>{g.label}</span>
-                        <span style={{ marginLeft: "auto", color: T.textMuted, fontSize: 16 }}>›</span>
-                      </button>
-                    ))}
-                  </div>
-                  <button type="button" onClick={completeOnboarding} style={{ background: "none", border: "none", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Skip tour</button>
-                </>
-              )}
-
-              {/* ── STEPS 1–3: Personalised tour steps ── */}
-              {!isGoalStep && !isLastStep && step && (
-                <>
-                  <div style={{ fontSize: 52, marginBottom: 16 }}>{step.icon}</div>
-                  <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 21, fontWeight: 800, color: T.white, marginBottom: 14, lineHeight: 1.3 }}>{step.title}</h2>
-                  <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, marginBottom: 32 }}>{step.body}</p>
-                  <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-                    {onboardingStep > 0 && (
-                      <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "12px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>← Back</button>
-                    )}
-                    <button type="button" onClick={() => setOnboardingStep(s => s + 1)} style={{ padding: "12px 28px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                      {step.cta}
-                    </button>
-                  </div>
-                  <button type="button" onClick={completeOnboarding} style={{ marginTop: 16, background: "none", border: "none", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Skip tour</button>
-                </>
-              )}
-
-              {/* ── FINAL STEP: Conversion screen ── */}
-              {!isGoalStep && isLastStep && (
-                <>
-                  <div style={{ fontSize: 52, marginBottom: 16 }}>🚀</div>
-                  <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 10, lineHeight: 1.3 }}>You're all set!</h2>
-                  {userTier === "free" ? (
-                    <>
-                      <p style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.7, marginBottom: 20 }}>
-                        You're on the <strong style={{ color: T.white }}>Free plan</strong>. Unlock the full platform with Pro:
-                      </p>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, textAlign: "left" }}>
-                        {["Full project details, documents & floor plans", "ROI calculator with payment plan modelling", "Compare any 2 projects side-by-side", "Portfolio tracker with PDF export", "Price alerts (email notification on any move)", "Mortgage calculator with all DLD fee breakdown"].map((f, i) => (
-                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: T.textSecondary }}>
-                            <span style={{ color: T.green, fontSize: 15, fontWeight: 700 }}>✓</span> {f}
-                          </div>
-                        ))}
-                      </div>
-                      <button type="button" onClick={() => { completeOnboarding(); setShowUpgrade(true); }}
-                        style={{ width: "100%", padding: "15px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit',sans-serif", marginBottom: 10, letterSpacing: 0.3 }}>
-                        Upgrade to Pro — AED 99/month
-                      </button>
-                      <button type="button" onClick={completeOnboarding} style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                        Continue with Free Plan
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, marginBottom: 28 }}>
-                        You have full <strong style={{ color: T.gold }}>Pro access</strong>. Compare projects, track your portfolio, and download reports.
-                      </p>
-                      <button type="button" onClick={completeOnboarding} style={{ padding: "14px 36px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                        Start Exploring
-                      </button>
-                    </>
-                  )}
-                </>
-              )}
-
+            <div style={{ background: T.surface, borderRadius: 24, border: `1px solid rgba(212,168,67,0.3)`, width: "min(480px,94vw)", padding: "40px 36px", textAlign: "center", position: "relative", boxShadow: "0 40px 100px rgba(0,0,0,0.7)" }}>
+              {/* Progress dots */}
+              <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28 }}>
+                {steps.map((_, i) => (
+                  <div key={i} style={{ width: i === onboardingStep ? 20 : 8, height: 8, borderRadius: 4, background: i === onboardingStep ? T.gold : T.border, transition: "all 0.3s" }} />
+                ))}
+              </div>
+              <div style={{ fontSize: 52, marginBottom: 16 }}>{step.icon}</div>
+              <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 14, lineHeight: 1.3 }}>{step.title}</h2>
+              <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, marginBottom: 32 }}>{step.body}</p>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                {onboardingStep > 0 && (
+                  <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "12px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>← Back</button>
+                )}
+                <button type="button" onClick={() => { if (onboardingStep < steps.length - 1) { setOnboardingStep(s => s + 1); } else { completeOnboarding(); } }} style={{ padding: "12px 28px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                  {step.cta}
+                </button>
+              </div>
+              <button type="button" onClick={completeOnboarding} style={{ marginTop: 16, background: "none", border: "none", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Skip tour</button>
             </div>
           </div>
         );
