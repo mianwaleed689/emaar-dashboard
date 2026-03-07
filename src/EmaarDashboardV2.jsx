@@ -880,126 +880,270 @@ function useFocusTrap(active) {
 
 /* ─── COMMUNITY MAP TAB COMPONENT ─── */
 function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
-  const [selectedComm, setSelectedComm] = useState(null);
+  const [selectedProject, setSelectedProjectMap] = React.useState(null);
+  const [filterComm, setFilterComm] = React.useState("All");
+  const [filterYield, setFilterYield] = React.useState("All");
+  const [mapLoaded, setMapLoaded] = React.useState(false);
+  const mapRef = React.useRef(null);
+  const mapInstanceRef = React.useRef(null);
+  const markersRef = React.useRef([]);
 
-  const communityStats = emaarCommunities.map(c => {
-    const cProjects = activeProjects.filter(p => p.community === c.name);
-    const roi = (liveCommunityROI && liveCommunityROI[c.name]) || communityROI[c.name] || {};
-    return {
-      ...c,
-      projectCount: cProjects.length,
-      avgYield: roi.grossYield || c.yield || "6-8",
-      appreciation: roi.appreciation || "35-45",
-      pricePerSqft: roi.pricePerSqft || c.priceRange || "1,800-2,400",
-      avgRent: roi.avgRent || "90K-150K",
-      score: roi.investmentScore || c.score || 75,
+  // Project coordinates (lat/lng for Dubai)
+  const projectCoords = {
+    "Creek Waters": [25.1876, 55.3344], "Creek Waters 2": [25.1890, 55.3360],
+    "Creek Horizon": [25.1860, 55.3320], "Creek Beach": [25.1920, 55.3380],
+    "Creek Palace": [25.1840, 55.3300], "Harbour Gate": [25.1950, 55.3400],
+    "Address Harbour Point": [25.1930, 55.3390], "Creek Edge": [25.1870, 55.3350],
+    "Dubai Hills": [25.1124, 55.2594], "Golf Grand": [25.1050, 55.2650],
+    "Elvira": [25.1070, 55.2570], "Lime Gardens": [25.1090, 55.2530],
+    "Greenside": [25.1030, 55.2510], "Parkside Hills": [25.1000, 55.2480],
+    "The Acres": [24.9800, 55.2000], "The Oasis": [25.0200, 55.1800],
+    "Emaar South": [24.8980, 55.1640], "Greenview": [24.9000, 55.1660],
+    "Urbana": [24.8950, 55.1600], "Expo Golf Villas": [24.8900, 55.1580],
+    "Emaar Beachfront": [25.0780, 55.1340], "Address Beach Resort": [25.0800, 55.1360],
+    "Marina Shores": [25.0760, 55.1320], "Beach Mansion": [25.0820, 55.1380],
+    "Grand Polo Club": [24.8500, 55.4200], "The Valley": [25.0000, 55.5000],
+    "Sunridge": [25.0100, 55.5100], "Farm Gardens": [25.0050, 55.4950],
+    "Alana": [25.0080, 55.5050], "Orania": [24.9950, 55.4900],
+    "Downtown Dubai": [25.1972, 55.2744], "The Grand": [25.1950, 55.2720],
+    "Palace Residences": [25.1990, 55.2760], "IL Primo": [25.1960, 55.2730],
+    "Act One Act Two": [25.1980, 55.2750], "Forte": [25.1940, 55.2710],
+    "Opera District": [25.1930, 55.2700], "Address Residences": [25.1970, 55.2740],
+    "Business Bay": [25.1867, 55.2653], "The Crest": [25.1850, 55.2640],
+    "Arabian Ranches": [25.0530, 55.2690], "Ruba": [25.0550, 55.2710],
+    "Mudon": [25.0200, 55.2500], "Nima": [25.0220, 55.2520],
+    "Rashid Yachts": [25.2200, 55.3100], "Elvire": [25.1080, 55.2560],
+    "Park Lane": [25.1110, 55.2580], "Golf Place": [25.1060, 55.2620],
+  };
+
+  const getCoords = (project) => {
+    // Exact match first
+    if (projectCoords[project.name]) return projectCoords[project.name];
+    // Community fallback coords
+    const communityFallback = {
+      "Dubai Creek Harbour": [25.1876, 55.3344],
+      "Dubai Hills Estate": [25.1100, 55.2580],
+      "Emaar South": [24.8980, 55.1640],
+      "Emaar Beachfront": [25.0780, 55.1340],
+      "Downtown Dubai": [25.1972, 55.2744],
+      "Business Bay": [25.1867, 55.2653],
+      "Arabian Ranches 3": [25.0530, 55.2690],
+      "Mudon": [25.0200, 55.2500],
+      "The Valley": [25.0000, 55.5000],
+      "Grand Polo Club": [24.8500, 55.4200],
+      "The Oasis": [25.0200, 55.1800],
+      "Rashid Yachts & Marina": [25.2200, 55.3100],
     };
-  }).sort((a, b) => b.score - a.score);
+    return communityFallback[project.community] || [25.1972, 55.2744];
+  };
 
-  const sc = selectedComm ? communityStats.find(c => c.name === selectedComm) : null;
-  const scoreColor = (s) => s >= 90 ? T.green : s >= 75 ? T.gold : s >= 60 ? T.blue : T.textMuted;
+  const getYield = (project) => {
+    const roi = (liveCommunityROI && liveCommunityROI[project.community]) || {};
+    const y = roi.grossYield;
+    if (!y) return 6.5;
+    if (typeof y === "object") return parseFloat(y.apt1 || y.apt2 || Object.values(y)[0]) || 6.5;
+    return parseFloat(y) || 6.5;
+  };
+
+  const getPinColor = (project) => {
+    const y = getYield(project);
+    if (y >= 8) return "#10B981";
+    if (y >= 6.5) return "#D4A843";
+    if (y >= 5) return "#3B82F6";
+    return "#94A3B8";
+  };
+
+  const communities = ["All", ...Array.from(new Set(activeProjects.map(p => p.community)))];
+  const filteredProjects = activeProjects.filter(p => {
+    const commOk = filterComm === "All" || p.community === filterComm;
+    const y = getYield(p);
+    const yieldOk = filterYield === "All" || (filterYield === "8%+" && y >= 8) || (filterYield === "6-8%" && y >= 6 && y < 8) || (filterYield === "<6%" && y < 6);
+    return commOk && yieldOk;
+  });
+
+  // Load Leaflet dynamically
+  React.useEffect(() => {
+    if (mapLoaded || typeof window === "undefined") return;
+    // Load Leaflet CSS
+    if (!document.getElementById("leaflet-css")) {
+      const link = document.createElement("link");
+      link.id = "leaflet-css";
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+    // Load Leaflet JS
+    if (!window.L) {
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.onload = () => setMapLoaded(true);
+      document.head.appendChild(script);
+    } else {
+      setMapLoaded(true);
+    }
+  }, []);
+
+  // Init map after Leaflet loads
+  React.useEffect(() => {
+    if (!mapLoaded || !mapRef.current || mapInstanceRef.current) return;
+    const L = window.L;
+    const map = L.map(mapRef.current, { center: [25.1124, 55.2594], zoom: 11, zoomControl: true });
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      attribution: "© OpenStreetMap © CARTO", maxZoom: 19,
+    }).addTo(map);
+    mapInstanceRef.current = map;
+  }, [mapLoaded]);
+
+  // Update markers when filters change
+  React.useEffect(() => {
+    if (!mapInstanceRef.current || !window.L) return;
+    const L = window.L;
+    const map = mapInstanceRef.current;
+    // Clear old markers
+    markersRef.current.forEach(m => map.removeLayer(m));
+    markersRef.current = [];
+    // Add new markers
+    filteredProjects.forEach(p => {
+      const coords = getCoords(p);
+      const color = getPinColor(p);
+      const y = getYield(p);
+      const icon = L.divIcon({
+        className: "",
+        html: `<div style="width:12px;height:12px;border-radius:50%;background:\${color};border:2px solid rgba(255,255,255,0.8);box-shadow:0 0 8px \${color}88;cursor:pointer;"></div>`,
+        iconSize: [12, 12], iconAnchor: [6, 6],
+      });
+      const marker = L.marker(coords, { icon })
+        .addTo(map)
+        .bindPopup(`<div style="font-family:'Outfit',sans-serif;min-width:180px;background:#0D1821;color:#fff;border-radius:10px;padding:0;">
+          <div style="background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05));padding:12px 14px;border-radius:10px 10px 0 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">\${p.name}</div>
+            <div style="font-size:10px;color:#94A3B8;">\${p.community}</div>
+          </div>
+          <div style="padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Price</div><div style="font-size:12px;font-weight:700;color:#D4A843;">\${p.price ? "AED " + (p.price/1e6).toFixed(2) + "M" : "TBC"}</div></div>
+            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Yield</div><div style="font-size:12px;font-weight:700;color:\${color}">\${y.toFixed(1)}%</div></div>
+            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Type</div><div style="font-size:11px;color:#CBD5E1;">\${p.type || "Residential"}</div></div>
+            <div><div style="font-size:9px;color:#94A3B8;text-transform:uppercase;">Handover</div><div style="font-size:11px;color:#CBD5E1;">\${p.handover || "TBC"}</div></div>
+          </div>
+        </div>`, { className: "dxb-popup" });
+      marker.on("click", () => setSelectedProjectMap(p));
+      markersRef.current.push(marker);
+    });
+  }, [mapLoaded, filteredProjects.length, filterComm, filterYield]);
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
 
   return (
-    <>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
-        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
-          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 4 }}>Community Investment Heatmap</h3>
-          <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Click any community to see detailed analytics</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
-            {communityStats.map((c) => (
-              <div key={c.name} onClick={() => setSelectedComm(c.name === selectedComm ? null : c.name)}
-                style={{ padding: "12px 10px", borderRadius: 10, border: `2px solid ${selectedComm === c.name ? T.gold : "transparent"}`, background: `rgba(${c.score >= 90 ? "16,185,129" : c.score >= 75 ? "212,168,67" : c.score >= 60 ? "59,130,246" : "100,116,139"},${0.04 + (c.score - 60) / 200})`, cursor: "pointer", transition: "all 0.2s", position: "relative" }}
-                onMouseEnter={e => e.currentTarget.style.transform = "scale(1.02)"}
-                onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: T.white, marginBottom: 4, lineHeight: 1.2 }}>{c.name}</div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: scoreColor(c.score), fontFamily: "'Fraunces',serif" }}>{c.score}</div>
-                <div style={{ fontSize: 9, color: T.textMuted }}>Score</div>
-                <div style={{ position: "absolute", top: 8, right: 8, fontSize: 9, fontWeight: 700, color: scoreColor(c.score) }}>{c.avgYield}%</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: "flex", gap: 16, marginTop: 14, flexWrap: "wrap" }}>
-            {[["Elite (90+)", T.green], ["Strong (75-89)", T.gold], ["Good (60-74)", T.blue]].map(([l, col]) => (
-              <div key={l} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: col }} />
-                <span style={{ fontSize: 10, color: T.textMuted }}>{l}</span>
-              </div>
-            ))}
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+      {/* Filters */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>FILTER:</div>
+        <select value={filterComm} onChange={e => setFilterComm(e.target.value)} style={{ padding: "6px 12px", background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 8, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+          {communities.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <div style={{ display: "flex", gap: 6 }}>
+          {["All", "8%+", "6-8%", "<6%"].map(f => (
+            <button key={f} type="button" onClick={() => setFilterYield(f)} style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid " + (filterYield === f ? T.gold : T.border), background: filterYield === f ? "rgba(212,168,67,0.15)" : T.surfaceAlt, color: filterYield === f ? T.gold : T.textSecondary, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>{f === "All" ? "All Yields" : f + " yield"}</button>
+          ))}
+        </div>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 10, alignItems: "center" }}>
+          {[["#10B981", "8%+ yield"], ["#D4A843", "6-8% yield"], ["#3B82F6", "5-6% yield"], ["#94A3B8", "<5% yield"]].map(([col, label]) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: col, boxShadow: "0 0 6px " + col + "88" }} />
+              <span style={{ fontSize: 10, color: T.textMuted }}>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Map + sidebar */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16, height: 560 }}>
+
+        {/* Map */}
+        <div style={{ borderRadius: 16, overflow: "hidden", border: "1px solid " + T.border, position: "relative" }}>
+          {!mapLoaded && (
+            <div style={{ position: "absolute", inset: 0, background: T.surface, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, zIndex: 10 }}>
+              <div style={{ fontSize: 32 }}>&#x1F5FA;</div>
+              <div style={{ fontSize: 13, color: T.textMuted }}>Loading map...</div>
+            </div>
+          )}
+          <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
+          {/* Floating counter */}
+          <div style={{ position: "absolute", bottom: 12, left: 12, background: "rgba(13,24,33,0.9)", backdropFilter: "blur(8px)", borderRadius: 8, padding: "6px 12px", border: "1px solid " + T.border, zIndex: 999, fontSize: 11, color: T.textSecondary }}>
+            <span style={{ color: T.gold, fontWeight: 700 }}>{filteredProjects.length}</span> projects shown
           </div>
         </div>
 
-        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20, overflowY: "auto", maxHeight: 480 }}>
-          {sc ? (
-            <>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+        {/* Right sidebar */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, overflowY: "auto" }}>
+          {selectedProject ? (
+            <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.gold, padding: 18 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
                 <div>
-                  <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{sc.name}</h3>
-                  <p style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{communityIntel[sc.name]?.tagline || "Premium Dubai community"}</p>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.gold }}>{selectedProject.name}</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{selectedProject.community}</div>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 28, fontWeight: 900, color: scoreColor(sc.score), fontFamily: "'Fraunces',serif" }}>{sc.score}</div>
-                  <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>Investment Score</div>
-                </div>
+                <button type="button" onClick={() => setSelectedProjectMap(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>×</button>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+              {selectedProject.imageUrl && <img src={selectedProject.imageUrl} alt="" style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 8, marginBottom: 12 }} onError={e => e.target.style.display="none"} />}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
                 {[
-                  ["Gross Yield", sc.avgYield + "%", T.green],
-                  ["5Y Appreciation", sc.appreciation + "%", T.gold],
-                  ["Price / sqft", "AED " + sc.pricePerSqft, T.blue],
-                  ["Active Projects", sc.projectCount, T.teal],
-                  ["Avg Annual Rent", "AED " + sc.avgRent, T.purple],
-                  ["Occupancy", (communityROI[sc.name]?.occupancy || "88") + "%", T.green],
-                ].map(([l, v, col]) => (
-                  <div key={l} style={{ background: T.card, borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
-                    <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>{l}</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: col }}>{v}</div>
+                  ["Price", selectedProject.price ? "AED " + (selectedProject.price/1e6).toFixed(2) + "M" : "TBC", T.gold],
+                  ["Yield", getYield(selectedProject).toFixed(1) + "%", getPinColor(selectedProject)],
+                  ["Handover", selectedProject.handover || "TBC", T.teal],
+                  ["Type", selectedProject.type || "Residential", T.textPrimary],
+                ].map(([l, v, c]) => (
+                  <div key={l} style={{ background: T.card, borderRadius: 8, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 3 }}>{l}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: c }}>{v}</div>
                   </div>
                 ))}
               </div>
-              <p style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.7, marginBottom: 14 }}>
-                {communityIntel[sc.name]?.notes || `${sc.name} is one of Dubai's premier residential communities, offering strong returns and consistent demand from global investors.`}
-              </p>
-              <button type="button" onClick={() => setTab("Projects")} style={{ width: "100%", padding: "10px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                View {sc.projectCount} Project{sc.projectCount !== 1 ? "s" : ""} in {sc.name} →
-              </button>
-            </>
+              <button type="button" onClick={() => setTab("Projects")} style={{ width: "100%", padding: "9px 0", background: "linear-gradient(135deg," + T.gold + ",#B8912F)", color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View Full Details →</button>
+            </div>
           ) : (
-            <>
-              <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>Top Communities by Investment Score</h3>
-              {communityStats.slice(0, 8).map((c, i) => (
-                <div key={c.name} onClick={() => setSelectedComm(c.name)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, marginBottom: 6, cursor: "pointer", transition: "background 0.2s" }}
-                  onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
-                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: T.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: T.gold, flexShrink: 0 }}>#{i + 1}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{c.name}</div>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>{c.projectCount} projects · AED {c.pricePerSqft}/sqft</div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: scoreColor(c.score) }}>{c.score}</div>
-                    <div style={{ fontSize: 10, color: T.green }}>{c.avgYield}% yield</div>
-                  </div>
-                </div>
-              ))}
-            </>
+            <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.border, padding: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>Click any pin on the map</div>
+              <div style={{ fontSize: 11, color: T.textMuted }}>to see project details here</div>
+            </div>
           )}
+
+          {/* Project list */}
+          <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.border, padding: 14, flex: 1, overflowY: "auto" }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>All Projects ({filteredProjects.length})</div>
+            {filteredProjects.map(p => (
+              <div key={p.id} onClick={() => { setSelectedProjectMap(p); const coords = getCoords(p); if (mapInstanceRef.current) mapInstanceRef.current.setView(coords, 14, { animate: true }); }} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 8, marginBottom: 4, cursor: "pointer", background: selectedProject?.id === p.id ? "rgba(212,168,67,0.1)" : "transparent", border: "1px solid " + (selectedProject?.id === p.id ? T.gold : "transparent"), transition: "all 0.15s" }}
+                onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                onMouseLeave={e => e.currentTarget.style.background = selectedProject?.id === p.id ? "rgba(212,168,67,0.1)" : "transparent"}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: T.white }}>{p.name}</div>
+                  <div style={{ fontSize: 10, color: T.textMuted }}>{p.community}</div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: getPinColor(p) }}>{getYield(p).toFixed(1)}%</div>
+                  <div style={{ fontSize: 10, color: T.textMuted }}>{p.price ? (p.price/1e6).toFixed(1) + "M" : "TBC"}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
-        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>Yield Comparison Across Communities</h3>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={communityStats.slice(0, 10).map(c => ({ name: c.name.replace(" by Emaar", "").substring(0, 14), yield: parseFloat(String(c.avgYield).split("-")[0]) || 6 }))}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-            <XAxis dataKey="name" tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} unit="%" />
-            <Tooltip content={({ active, payload }) => active && payload?.length ? <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 12px" }}><div style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>{payload[0]?.payload?.name}</div><div style={{ fontSize: 11, color: T.textSecondary }}>Yield: {payload[0]?.value}%</div></div> : null} />
-            <Bar dataKey="yield" fill={T.gold} radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </>
+      {/* Popup CSS */}
+      <style>{".dxb-popup .leaflet-popup-content-wrapper { background: #0D1821; border: 1px solid rgba(212,168,67,0.3); border-radius: 12px; padding: 0; box-shadow: 0 20px 60px rgba(0,0,0,0.6); } .dxb-popup .leaflet-popup-content { margin: 0; } .dxb-popup .leaflet-popup-tip { background: #0D1821; } .leaflet-container { background: #0D1821; }"}</style>
+    </div>
   );
+}
+
 }
 
 export default function EmaarDashboardV2() {
