@@ -4,5 +4,9 @@
       "path": "/api/weekly-digest",
       "schedule": "0 4 * * 1"
     }
+  ],
+  "rewrites": [
+    { "source": "/dubai-rental-yields-2025", "destination": "/dubai-rental-yields-2025.html" },
+    { "source": "/dubai-real-estate-investment-2025", "destination": "/dubai-real-estate-investment-2025.html" }
   ]
 }
