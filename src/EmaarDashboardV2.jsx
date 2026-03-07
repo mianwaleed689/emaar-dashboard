@@ -1144,53 +1144,10 @@ export default function EmaarDashboardV2() {
   // Load projects from Firestore (runs for ALL users — guests and logged-in)
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastRefreshed, setLastRefreshed] = useState(null);
 
-  const globalRefresh = async () => {
+  const globalRefresh = () => {
     setIsRefreshing(true);
-    setProjectsLoading(true);
-    try {
-      const [pdSnap, npSnap, yieldSnap, roiSnap] = await Promise.all([
-        getDocs(collection(db, "projectData")),
-        getDocs(collection(db, "projects")),
-        getDocs(collection(db, "yieldData")),
-        getDocs(collection(db, "communityROI")),
-      ]);
-      const overrides = {};
-      pdSnap.forEach(d => { const numId = d.id.replace("project_", ""); overrides[numId] = d.data(); });
-      setLiveProjects(overrides);
-      const baseIds = new Set(emaarProjects.map(p => String(p.id)));
-      const extraFromOverrides = Object.entries(overrides).filter(([id]) => !baseIds.has(id)).map(([id, data]) => ({ id, ...data }));
-      const extraFromNew = [];
-      npSnap.forEach(d => { const data = { ...d.data(), id: d.id }; if (!baseIds.has(String(d.id))) extraFromNew.push(data); });
-      const seen = new Set(extraFromOverrides.map(p => String(p.id)));
-      setExtraProjects([...extraFromOverrides, ...extraFromNew.filter(p => !seen.has(String(p.id)))]);
-      if (yieldSnap.size > 0) {
-        const yieldOverrides = {};
-        yieldSnap.forEach(d => { yieldOverrides[d.id] = d.data(); });
-        const mergedYields = emaarYields.map(y => { const key = y.community + "_" + y.unit; const ov = yieldOverrides[key]; return ov ? { ...y, ...ov } : y; }).map(y => ({ label: y.unit, community: y.community, rent: (y.rent||0)/1000, price: (y.price||0)/1000, gross: y.gross, net: y.net, demand: y.demand === "Very High" ? "V.High" : y.demand === "Moderate-High" ? "High" : y.demand, visa: y.visa }));
-        setLiveYields(mergedYields);
-      }
-      if (roiSnap.size > 0) {
-        const roiOverrides = {};
-        roiSnap.forEach(d => { roiOverrides[d.id] = d.data(); });
-        setLiveCommunityROI(roiOverrides);
-      }
-      if (auth.currentUser) {
-        const [wlSnap, portSnap, alertsSnap] = await Promise.all([
-          getDoc(doc(db, "watchlists", auth.currentUser.uid)),
-          getDoc(doc(db, "portfolios", auth.currentUser.uid)),
-          getDoc(doc(db, "priceAlerts", auth.currentUser.uid)),
-        ]);
-        if (wlSnap.exists()) setWatchlist(wlSnap.data().projects || []);
-        if (portSnap.exists()) setMyPortfolio(portSnap.data().holdings || []);
-        if (alertsSnap.exists()) setMyAlerts(alertsSnap.data().alerts || []);
-      }
-      setLastRefreshed(new Date());
-      notify("Dashboard refreshed");
-    } catch (e) { notify("Refresh failed - check connection"); }
-    setProjectsLoading(false);
-    setIsRefreshing(false);
+    setTimeout(() => { window.location.reload(); }, 300);
   };
 
   useEffect(() => {
