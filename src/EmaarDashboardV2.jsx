@@ -3284,14 +3284,19 @@ export default function EmaarDashboardV2() {
                         <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>{qualifyingProjects.length} projects at AED 2M+</div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 220, overflowY: "auto" }}>
                           {qualifyingProjects.slice(0, 12).map(p => (
-                            <div key={p.id} onClick={() => setSelectedProjGV(selectedProjGV?.id === p.id ? null : p)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 8, cursor: "pointer", background: selectedProjGV?.id === p.id ? "rgba(16,185,129,0.1)" : T.surfaceAlt, border: "1px solid " + (selectedProjGV?.id === p.id ? T.green : "transparent"), transition: "all 0.15s" }}>
+                            <div key={p.id} onClick={() => { setSelectedProject(p); setTab("Projects"); }} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 8, cursor: "pointer", background: T.surfaceAlt, border: "1px solid transparent", transition: "all 0.15s" }}
+                              onMouseEnter={e => { e.currentTarget.style.background = "rgba(16,185,129,0.1)"; e.currentTarget.style.borderColor = T.green; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = T.surfaceAlt; e.currentTarget.style.borderColor = "transparent"; }}>
                               <div>
                                 <div style={{ fontSize: 11, fontWeight: 600, color: T.white }}>{p.name}</div>
                                 <div style={{ fontSize: 10, color: T.textMuted }}>{p.community}</div>
                               </div>
-                              <div style={{ textAlign: "right" }}>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: T.green }}>AED {p.price ? (p.price/1e6).toFixed(2) + "M" : "2M+"}</div>
-                                <div style={{ fontSize: 10, color: T.gold }}>✓ Eligible</div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <div style={{ textAlign: "right" }}>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: T.green }}>AED {p.price ? (p.price/1e6).toFixed(2) + "M" : "2M+"}</div>
+                                  <div style={{ fontSize: 10, color: T.gold }}>✓ Eligible</div>
+                                </div>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
                               </div>
                             </div>
                           ))}
@@ -3301,14 +3306,19 @@ export default function EmaarDashboardV2() {
                           <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid " + T.border }}>
                             <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, marginBottom: 8 }}>Almost There (AED 1.5M–2M)</div>
                             {nearProjects.slice(0, 4).map(p => (
-                              <div key={p.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", borderRadius: 8, marginBottom: 4, background: T.surfaceAlt }}>
+                              <div key={p.id} onClick={() => { setSelectedProject(p); setTab("Projects"); }} style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", borderRadius: 8, marginBottom: 4, background: T.surfaceAlt, cursor: "pointer", border: "1px solid transparent", transition: "all 0.15s" }}
+                                onMouseEnter={e => { e.currentTarget.style.background = "rgba(212,168,67,0.08)"; e.currentTarget.style.borderColor = T.gold; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = T.surfaceAlt; e.currentTarget.style.borderColor = "transparent"; }}>
                                 <div>
                                   <div style={{ fontSize: 11, color: T.white }}>{p.name}</div>
                                   <div style={{ fontSize: 10, color: T.textMuted }}>{p.community}</div>
                                 </div>
-                                <div style={{ textAlign: "right" }}>
-                                  <div style={{ fontSize: 11, fontWeight: 600, color: T.gold }}>AED {p.price ? (p.price/1e6).toFixed(2) + "M" : "TBC"}</div>
-                                  <div style={{ fontSize: 10, color: T.textMuted }}>{p.price ? "AED " + ((THRESHOLD - p.price)/1000).toFixed(0) + "K short" : "—"}</div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <div style={{ textAlign: "right" }}>
+                                    <div style={{ fontSize: 11, fontWeight: 600, color: T.gold }}>AED {p.price ? (p.price/1e6).toFixed(2) + "M" : "TBC"}</div>
+                                    <div style={{ fontSize: 10, color: T.textMuted }}>{p.price ? "AED " + ((THRESHOLD - p.price)/1000).toFixed(0) + "K short" : "—"}</div>
+                                  </div>
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
                                 </div>
                               </div>
                             ))}
