@@ -3111,7 +3111,6 @@ export default function EmaarDashboardV2() {
             </>)}
 
 
-          <TabSources sources={[{ label: "Firebase Firestore (live user data)" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "REIDIN 2025" }, { label: "UAE Central Bank (EIBOR)", url: "https://www.cbuae.gov.ae" }]} />
           <TabSources sources={[{ label: "Firebase Firestore (live user data)" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "REIDIN 2025", url: "https://reidin.com" }, { label: "UAE Central Bank (EIBOR)", url: "https://www.cbuae.gov.ae" }]} />
           </>}
 
@@ -3909,10 +3908,12 @@ export default function EmaarDashboardV2() {
               );
             };
             return (
+              <>
               <Section title="Mortgage Calculator" sub="4 questions every Dubai property buyer needs answered">
                 <MortgageCalc />
               </Section>
               <TabSources sources={[{ label: "CBUAE — UAE Base Rate", url: "https://www.cbuae.gov.ae" }, { label: "EIBOR 3M: 3.47% (Dec 2025)" }, { label: "DLD Fee Schedule (4%)", url: "https://dubailand.gov.ae" }, { label: "UAE Mortgage Law (No. 14 of 2008)" }, { label: "Property Finder Mortgage Rates", url: "https://www.propertyfinder.ae" }]} />
+              </>
             );
           })()}
 
