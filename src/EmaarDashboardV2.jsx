@@ -3112,7 +3112,6 @@ export default function EmaarDashboardV2() {
 
 
           <TabSources sources={[{ label: "Firebase Firestore (live user data)" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "REIDIN 2025" }, { label: "UAE Central Bank (EIBOR)", url: "https://www.cbuae.gov.ae" }]} />
-
           <TabSources sources={[{ label: "Firebase Firestore (live user data)" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "REIDIN 2025", url: "https://reidin.com" }, { label: "UAE Central Bank (EIBOR)", url: "https://www.cbuae.gov.ae" }]} />
           </>}
 
@@ -3772,7 +3771,6 @@ export default function EmaarDashboardV2() {
               </Chart>
             </Section>
             </ProGate>
-
           <TabSources sources={[{ label: "REIDIN Dec 2025", url: "https://reidin.com" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "Engel & Völkers Dubai 2025", url: "https://www.engelvoelkers.com/en-ae/dubai/" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "Bayut Rental Report 2025", url: "https://www.bayut.com" }, { label: "Property Finder", url: "https://www.propertyfinder.ae" }]} />
           </>}
 
@@ -3914,7 +3912,6 @@ export default function EmaarDashboardV2() {
               <Section title="Mortgage Calculator" sub="4 questions every Dubai property buyer needs answered">
                 <MortgageCalc />
               </Section>
-
               <TabSources sources={[{ label: "CBUAE — UAE Base Rate", url: "https://www.cbuae.gov.ae" }, { label: "EIBOR 3M: 3.47% (Dec 2025)" }, { label: "DLD Fee Schedule (4%)", url: "https://dubailand.gov.ae" }, { label: "UAE Mortgage Law (No. 14 of 2008)" }, { label: "Property Finder Mortgage Rates", url: "https://www.propertyfinder.ae" }]} />
             );
           })()}
@@ -4249,7 +4246,6 @@ export default function EmaarDashboardV2() {
               </div>
             </Section>
             </ProGate>
-
           <TabSources sources={[{ label: "Fitch Ratings UAE Developers", url: "https://www.fitchratings.com" }, { label: "Knight Frank Dubai 2025", url: "https://www.knightfrank.com/research" }, { label: "IMF World Economic Outlook", url: "https://www.imf.org" }, { label: "DLD Transaction Data", url: "https://dubailand.gov.ae" }, { label: "CW Core Dubai Market Report", url: "https://cwcore.com" }]} />
           </>}
 
@@ -4409,7 +4405,6 @@ export default function EmaarDashboardV2() {
               <Section title="Currency Converter" sub="Live rates \u00b7 AED to GBP, EUR, USD, INR, PKR and 8 more currencies">
                 <CurrencyConverter />
               </Section>
-
               <TabSources sources={[{ label: "open.er-api.com (Live Rates)", url: "https://open.er-api.com" }, { label: "European Central Bank", url: "https://www.ecb.europa.eu" }, { label: "UAE Central Bank", url: "https://www.cbuae.gov.ae" }, { label: "XE Currency", url: "https://www.xe.com/currency/aed" }]} />
             );
           })()}
@@ -4660,7 +4655,6 @@ export default function EmaarDashboardV2() {
                   </div>
 
                 </div>
-  
               <TabSources sources={[{ label: "UAE ICP — Golden Visa", url: "https://icp.gov.ae" }, { label: "GDRFA Dubai", url: "https://gdrfad.gov.ae" }, { label: "Federal Authority for Identity (ICP)", url: "https://icp.gov.ae" }, { label: "Emaar.com/en/investor-relations — Project prices" }, { label: "Dubai Economy & Tourism", url: "https://www.visitdubai.com" }]} />
             );
           })()}
@@ -4938,7 +4932,6 @@ export default function EmaarDashboardV2() {
                     </div>
                   </div>
                 </div>
-  
               <TabSources sources={[{ label: "DLD Transaction Records", url: "https://dubailand.gov.ae" }, { label: "REIDIN Price Index", url: "https://reidin.com" }, { label: "Property Monitor" }, { label: "DXB Interact Flip Analysis", url: "https://dxbinteract.com" }, { label: "fam Properties Research", url: "https://famproperties.com" }]} />
             );
           })()}
@@ -4989,7 +4982,6 @@ export default function EmaarDashboardV2() {
                 ))}
               </div>
             </Section>
-
           <TabSources sources={[{ label: "Dubai Land Department (Official)", url: "https://dubailand.gov.ae" }, { label: "REIDIN Dec 2025", url: "https://reidin.com" }, { label: "ValuStrat Q4 2025" }, { label: "Knight Frank Dubai 2025", url: "https://www.knightfrank.com/research" }, { label: "Gulf News Property", url: "https://gulfnews.com/business/property" }, { label: "Zawya Real Estate", url: "https://www.zawya.com" }]} />
           </>}
 
