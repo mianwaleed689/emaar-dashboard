@@ -1232,6 +1232,8 @@ export default function EmaarDashboardV2() {
   const [myAlerts, setMyAlerts] = React.useState([]);
   const [showSetAlert, setShowSetAlert] = React.useState(null);
   const [alertForm, setAlertForm] = React.useState({ type: "price_below", value: "" });
+  const [selectedNbhd, setSelectedNbhd] = React.useState(null);
+  const [scSort, setScSort] = React.useState("avg");
 
   // Onboarding
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -3290,7 +3292,6 @@ export default function EmaarDashboardV2() {
               { name: "The Valley", maturity: 45, rentalDemand: 65, strPotential: 48, infrastructure: 60, schools: 72, transport: 52, retail: 58, appreciation: 82, serviceCharge: 12, visa: false, type: "Emerging suburb", tagline: "High upside, early stage", color: "#06B6D4" },
               { name: "The Oasis", maturity: 30, rentalDemand: 72, strPotential: 65, infrastructure: 55, schools: 40, transport: 48, retail: 45, appreciation: 95, serviceCharge: 20, visa: true, type: "Ultra-luxury", tagline: "Highest appreciation potential", color: "#EF4444" },
             ];
-            const [selectedNbhd, setSelectedNbhd] = React.useState(null);
             const scoreBar = (val, color) => (
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.surfaceAlt, overflow: "hidden" }}>
@@ -3380,7 +3381,6 @@ export default function EmaarDashboardV2() {
               { community: "Vida Residences", type: "Branded Apt", low: 30, high: 42, avg: 36, rera: true, notes: "Vida brand properties. Includes access to hotel amenities." },
             ];
             const maxSC = Math.max(...scData.map(d => d.high));
-            const [scSort, setScSort] = React.useState("avg");
             const sorted = [...scData].sort((a, b) => scSort === "avg" ? b.avg - a.avg : scSort === "community" ? a.community.localeCompare(b.community) : b.high - a.high);
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
