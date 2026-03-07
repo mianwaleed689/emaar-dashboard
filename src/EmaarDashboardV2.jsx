@@ -1443,7 +1443,7 @@ export default function EmaarDashboardV2() {
       {locked && <UpgradeOverlay message={message} compact={compact} />}
     </div>
   );
-  const [tab, setTab] = useState(() => { try { return sessionStorage.getItem("dxb_active_tab") || "Overview"; } catch(e) { return "Overview"; } });
+  const [tab, setTab] = useState(() => { try { const urlTab = new URLSearchParams(window.location.search).get("tab"); return urlTab || sessionStorage.getItem("dxb_active_tab") || "Overview"; } catch(e) { return "Overview"; } });
   const [selectedKPI, setSelectedKPI] = useState(null);
   const [breadcrumb, setBreadcrumb] = useState([]); // [{label, action}]
   const [projectPage, setProjectPage] = useState(1);
@@ -2187,7 +2187,7 @@ export default function EmaarDashboardV2() {
           {userTier === "admin" && (
             <>
               <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Admin</div>
-              <button type="button" className={`sidebar-btn ${tab === "Admin" ? "active" : ""}`} onClick={() => window.location.href = "/admin"}>
+              <button type="button" className={`sidebar-btn ${tab === "Admin" ? "active" : ""}`} onClick={() => setTab("Admin")}>
                 {Icons.admin}
                 Admin Panel
               </button>
