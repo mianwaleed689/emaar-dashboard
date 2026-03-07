@@ -2878,7 +2878,7 @@ export default function EmaarDashboardV2() {
             })()}
 
             {/* ── HOLDINGS / SUMMARY VIEW ── */}
-            {(roiMode === "holdings" || roiMode === "summary" || myPortfolio.length === 0) && (
+            {(roiMode === "holdings" || roiMode === "summary" || myPortfolio.length === 0) && (<>
             <Section title="My Investments" sub={myPortfolio.length > 0 ? `${myPortfolio.length} holdings` : "Track your Emaar investments"}>
               {myPortfolio.length > 0 ? <>
                 <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
@@ -3017,7 +3017,7 @@ export default function EmaarDashboardV2() {
                 ))}
               </div>
             </Section>
-            )}
+            </>)}
 
           </>}
 
