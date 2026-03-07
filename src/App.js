@@ -10,6 +10,7 @@ import Terms from "./Terms";
 import Privacy from "./Privacy";
 import ErrorBoundary from "./ErrorBoundary";
 import NotFound from "./NotFound";
+import ProjectDetail from "./ProjectDetail";
 import { I18nProvider } from "./i18n";
 
 function AuthGuard({ children }) {
@@ -49,6 +50,7 @@ function App() {
             <Route path="/dashboard" element={<EmaarDashboardV2 />} />
             <Route path="/admin" element={<AuthGuard><AdminPanel /></AuthGuard>} />
             <Route path="/manage" element={<AuthGuard><ProjectManager /></AuthGuard>} />
+            <Route path="/project/:id" element={<ProjectDetail />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
