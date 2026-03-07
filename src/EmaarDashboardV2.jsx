@@ -4283,18 +4283,19 @@ export default function EmaarDashboardV2() {
               const [liveEibor, setLiveEibor] = React.useState(EIBOR_RATES);
               const [eiborSource, setEiborSource] = React.useState("CBUAE · " + EIBOR_RATES.asOf);
               React.useEffect(() => {
-                // Fetch via our Vercel proxy (avoids CORS from CBUAE)
-                fetch("/api/eibor")
-                  .then(r => r.json())
-                  .then(data => {
-                    if (data && data.eibor) {
-                      const e = data.eibor;
-                      setLiveEibor(e);
-                      setEiborSource(data.fallback ? "CBUAE · " + e.asOf : "Live · UAE Central Bank");
-                      setRate(parseFloat((e["3m"] + BANK_SPREAD).toFixed(2)));
+                // Load EIBOR from Firestore (set by Admin panel)
+                getDoc(doc(db, "tabData", "eiborRates"))
+                  .then(snap => {
+                    if (snap.exists()) {
+                      const e = snap.data();
+                      if (e["3m"] && e["3m"] > 1) {
+                        setLiveEibor(e);
+                        setEiborSource((e.source || "CBUAE") + " · " + (e.asOf || ""));
+                        setRate(parseFloat((e["3m"] + BANK_SPREAD).toFixed(2)));
+                      }
                     }
                   })
-                  .catch(() => {}); // silently keep fallback
+                  .catch(() => {}); // silently keep hardcoded fallback
               }, []); // eslint-disable-line react-hooks/exhaustive-deps
               const [years, setYears] = React.useState(25);
               const [isUAENational, setIsUAENational] = React.useState(false);
@@ -6226,6 +6227,90 @@ export default function EmaarDashboardV2() {
                 </ResponsiveContainer>
               </div>
             </Section>
+
+            {/* ─── EIBOR ADMIN UPDATE ─── */}
+            <Section title="EIBOR Rate Update" sub="Update live EIBOR rates — displayed in Mortgage calculator for all users">
+              {(() => {
+                const [eiborEdit, setEiborEdit] = React.useState({ "1m": "", "3m": "", "6m": "", "1y": "", asOf: "" });
+                const [eiborSaving, setEiborSaving] = React.useState(false);
+                const [eiborSaved, setEiborSaved] = React.useState(false);
+                const [eiborCurrent, setEiborCurrent] = React.useState(null);
+
+                React.useEffect(() => {
+                  getDoc(doc(db, "tabData", "eiborRates")).then(snap => {
+                    if (snap.exists()) setEiborCurrent(snap.data());
+                  }).catch(() => {});
+                }, []);
+
+                const saveEibor = async () => {
+                  if (!eiborEdit["3m"]) return;
+                  setEiborSaving(true);
+                  try {
+                    await setDoc(doc(db, "tabData", "eiborRates"), {
+                      on:   parseFloat(eiborEdit.on  || eiborCurrent?.on  || 3.473),
+                      "1w": parseFloat(eiborEdit["1w"] || eiborCurrent?.["1w"] || 3.577),
+                      "1m": parseFloat(eiborEdit["1m"] || eiborCurrent?.["1m"] || 3.635),
+                      "3m": parseFloat(eiborEdit["3m"]),
+                      "6m": parseFloat(eiborEdit["6m"] || eiborCurrent?.["6m"] || 3.676),
+                      "1y": parseFloat(eiborEdit["1y"] || eiborCurrent?.["1y"] || 3.674),
+                      asOf: eiborEdit.asOf || new Date().toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" }),
+                      source: "Live · UAE Central Bank",
+                      updatedAt: Date.now(),
+                    });
+                    setEiborSaved(true);
+                    getDoc(doc(db, "tabData", "eiborRates")).then(snap => { if (snap.exists()) setEiborCurrent(snap.data()); });
+                    setTimeout(() => setEiborSaved(false), 3000);
+                  } catch(e) {}
+                  setEiborSaving(false);
+                };
+
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
+                    {eiborCurrent && (
+                      <div style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 12, padding: "14px 18px" }}>
+                        <div style={{ fontSize: 11, color: "#10B981", fontWeight: 700, marginBottom: 8 }}>📊 Currently Live — {eiborCurrent.asOf || "—"}</div>
+                        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+                          {[["1M", eiborCurrent["1m"]], ["3M", eiborCurrent["3m"]], ["6M", eiborCurrent["6m"]], ["1Y", eiborCurrent["1y"]]].map(([l, v]) => (
+                            <div key={l}><span style={{ fontSize: 10, color: T.textMuted }}>{l}: </span><span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{v ? parseFloat(v).toFixed(3) : "—"}%</span></div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div style={{ background: T.surface, border: "1px solid " + T.border, borderRadius: 12, padding: "18px 20px" }}>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 12 }}>
+                        Check latest rates at <a href="https://www.centralbank.ae/en/forex-eibor/eibor-rates/" target="_blank" rel="noopener noreferrer" style={{ color: T.gold }}>centralbank.ae ↗</a> or <a href="https://fcmb.ae/eibor-rate-today" target="_blank" rel="noopener noreferrer" style={{ color: T.gold }}>fcmb.ae ↗</a> then enter below:
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 12 }}>
+                        {[["1M EIBOR", "1m"], ["3M EIBOR", "3m"], ["6M EIBOR", "6m"], ["1Y EIBOR", "1y"]].map(([label, key]) => (
+                          <div key={key}>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>{label} {key === "3m" && <span style={{ color: T.gold }}>★ Primary</span>}</div>
+                            <input
+                              type="number" step="0.001" placeholder={eiborCurrent?.[key] ? eiborCurrent[key].toFixed(3) : "e.g. 3.593"}
+                              value={eiborEdit[key]}
+                              onChange={e => setEiborEdit(prev => ({ ...prev, [key]: e.target.value }))}
+                              style={{ width: "100%", padding: "9px 12px", background: T.surfaceAlt, border: "1px solid " + (key === "3m" ? T.gold : T.border), borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>Value Date (e.g. "8 Mar 2026")</div>
+                          <input type="text" placeholder="e.g. 8 Mar 2026" value={eiborEdit.asOf}
+                            onChange={e => setEiborEdit(prev => ({ ...prev, asOf: e.target.value }))}
+                            style={{ width: "100%", padding: "9px 12px", background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                        </div>
+                        <button type="button" onClick={saveEibor} disabled={eiborSaving || !eiborEdit["3m"]}
+                          style={{ padding: "10px 24px", borderRadius: 10, background: eiborSaved ? "#10B981" : T.gold, border: "none", color: T.bg, fontSize: 13, fontWeight: 700, cursor: eiborEdit["3m"] ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", marginTop: 20, whiteSpace: "nowrap" }}>
+                          {eiborSaved ? "✅ Saved!" : eiborSaving ? "Saving..." : "Save to Firestore →"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </Section>
+
           </>}
 
         </div>
