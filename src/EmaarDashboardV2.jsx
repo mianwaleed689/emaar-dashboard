@@ -1657,7 +1657,6 @@ export default function EmaarDashboardV2() {
           </div>
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          </div>
           <div role="button" tabIndex={0}  onClick={() => {}} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
             <span style={{ fontSize: 10, color: T.textMuted }}>RATING </span>
             <span style={{ fontSize: 12, fontWeight: 600, color: T.teal }}>BBB+ / Baa1</span>
