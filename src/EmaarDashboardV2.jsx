@@ -6,7 +6,7 @@ import emailjs from "@emailjs/browser";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc, query, where, orderBy, limit } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc } from "firebase/firestore";
 
 import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
 import LandingPage from "./LandingPage";
@@ -1180,6 +1180,7 @@ export default function EmaarDashboardV2() {
   // Onboarding
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
+  const [userGoal, setUserGoal] = useState("");
 
   useEffect(() => {
     const handler = (e) => { setShowCheckout(e.detail); setCheckoutStep(1); };
@@ -1235,7 +1236,6 @@ export default function EmaarDashboardV2() {
   const [liveYields, setLiveYields] = useState([]);
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [selectedProject, setSelectedProject] = useState(null);
-  const [projectPriceHistory, setProjectPriceHistory] = useState({});
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [expandedMega, setExpandedMega] = useState(null);
   const [compareList, setCompareList] = useState([]);
@@ -1318,34 +1318,6 @@ export default function EmaarDashboardV2() {
     };
     loadProjects(); // Load for everyone — no isLoggedIn gate
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Fetch price history from Firestore when a project is selected
-  useEffect(() => {
-    if (!selectedProject) return;
-    const projectId = String(typeof selectedProject === "object" ? selectedProject.id : selectedProject);
-    if (projectPriceHistory[projectId]) return; // already loaded
-    const fetchHistory = async () => {
-      try {
-        const q = query(
-          collection(db, "priceHistory"),
-          where("projectId", "==", projectId),
-          orderBy("recordedAt", "asc"),
-          limit(24)
-        );
-        const snap = await getDocs(q);
-        if (snap.empty) return;
-        const history = snap.docs.map(d => {
-          const data = d.data();
-          const date = data.recordedAt
-            ? new Date(data.recordedAt.toMillis ? data.recordedAt.toMillis() : data.recordedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
-            : "—";
-          return { date, price: data.price };
-        });
-        setProjectPriceHistory(prev => ({ ...prev, [projectId]: history }));
-      } catch (e) { /* silently fail if no price history */ }
-    };
-    fetchHistory();
-  }, [selectedProject]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Use merged Firestore+static data if available, otherwise pure static fallback
   const activeProjects = [...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }), ...extraProjects];
@@ -4063,9 +4035,7 @@ export default function EmaarDashboardV2() {
           : selectedProject;
         if (!_sp) { return null; }
         /* Use _sp below but keep variable name short */
-        const _phKey = String(_sp.id);
-        const _ph = projectPriceHistory[_phKey];
-        const selectedProject_ = _ph && _ph.length >= 2 ? { ..._sp, priceHistory: _ph } : _sp;
+        const selectedProject_ = _sp;
         const ci = communityIntel[selectedProject_.community] || null;
         return (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setSelectedProject(null)}>
@@ -5035,60 +5005,130 @@ export default function EmaarDashboardV2() {
 
       {/* ─── ONBOARDING MODAL ─── */}
       {showOnboarding && (() => {
-        const steps = [
-          {
-            icon: "🏙️",
-            title: `Welcome to DXB Analytics, ${userName || "Investor"}!`,
-            body: "You now have access to Dubai's most comprehensive real estate intelligence platform. Let us show you around in 30 seconds.",
-            cta: "Let's Go →"
-          },
-          {
-            icon: "🔍",
-            title: "Browse 48+ Emaar Projects",
-            body: "Go to the Projects tab to explore every active development. Filter by community, tier, handover year, or price range. Click any card for full details, documents, and ROI analysis.",
-            cta: "Next →"
-          },
-          {
-            icon: "⭐",
-            title: "Build Your Watchlist",
-            body: "See the ☆ star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
-            cta: "Next →"
-          },
-          {
-            icon: "📊",
-            title: "Yields, ROI & Mortgage",
-            body: "Use the Yields tab for rental returns by community. The Mortgage tab calculates your monthly payment + all UAE transaction costs instantly.",
-            cta: "Next →"
-          },
-          {
-            icon: "🚀",
-            title: "You're All Set!",
-            body: userTier === "free" ? "You're on the Free plan. Upgrade to Pro for compare mode, full project details, PDF reports, and portfolio tracking — from AED 99/month." : "You have full Pro access. Explore everything — compare projects, track your portfolio, and download reports.",
-            cta: userTier === "free" ? "Explore Free Features" : "Start Exploring"
-          },
-        ];
-        const step = steps[onboardingStep];
+        const goalSteps = {
+          investing: [
+            { icon: "📈", title: "Track Price History", body: "Every project card now shows a live price history chart. See how prices have moved and set alerts for your target price.", cta: "Next →" },
+            { icon: "📊", title: "ROI & Yield Intelligence", body: "The Yields tab shows gross and net rental returns for every Emaar community. Pro users get full ROI calculator with payment plan modelling.", cta: "Next →" },
+            { icon: "💼", title: "Portfolio Tracker", body: "Log your properties in the Portfolio tab. Get live KPIs — total invested, current value, average yield, and a one-click PDF report.", cta: "Next →" },
+          ],
+          researching: [
+            { icon: "🔍", title: "48+ Emaar Projects", body: "Browse every active development in the Projects tab. Filter by community, handover year, price, or status. Click any card for full specs, floor plans, and documents.", cta: "Next →" },
+            { icon: "🗺️", title: "Interactive Map", body: "The Map tab shows all 48 projects as yield-colour-coded pins across Dubai. Click any pin for instant details.", cta: "Next →" },
+            { icon: "🏆", title: "Competitor Intelligence", body: "The Competitors tab benchmarks Emaar against DAMAC, Sobha, Aldar, and 7 others — market share, units delivered, and backlog.", cta: "Next →" },
+          ],
+          tracking: [
+            { icon: "⭐", title: "Watchlist", body: "Star any project card to save it to your watchlist. Your list syncs across devices and is waiting for you every time you log in.", cta: "Next →" },
+            { icon: "🔔", title: "Price Alerts", body: "Hit the bell icon on any project to set a price-drop or price-rise alert. You'll get an email the moment the price crosses your threshold.", cta: "Next →" },
+            { icon: "📅", title: "Handover Countdowns", body: "Every project card shows a live countdown to handover — colour-coded red when under 90 days. Never miss a handover date.", cta: "Next →" },
+          ],
+        };
+        const selectedGoalSteps = userGoal ? goalSteps[userGoal] || [] : [];
+        const steps = userGoal ? [
+          ...selectedGoalSteps,
+          { icon: "🚀", title: "You're Ready!", body: null, cta: userTier === "free" ? null : "Start Exploring" }
+        ] : [];
+        const isGoalStep = !userGoal;
+        const isLastStep = !isGoalStep && onboardingStep === steps.length - 1;
+        const step = !isGoalStep && steps[onboardingStep];
         return (
           <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(16px)" }}>
-            <div style={{ background: T.surface, borderRadius: 24, border: `1px solid rgba(212,168,67,0.3)`, width: "min(480px,94vw)", padding: "40px 36px", textAlign: "center", position: "relative", boxShadow: "0 40px 100px rgba(0,0,0,0.7)" }}>
-              {/* Progress dots */}
-              <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28 }}>
-                {steps.map((_, i) => (
-                  <div key={i} style={{ width: i === onboardingStep ? 20 : 8, height: 8, borderRadius: 4, background: i === onboardingStep ? T.gold : T.border, transition: "all 0.3s" }} />
-                ))}
-              </div>
-              <div style={{ fontSize: 52, marginBottom: 16 }}>{step.icon}</div>
-              <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 14, lineHeight: 1.3 }}>{step.title}</h2>
-              <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, marginBottom: 32 }}>{step.body}</p>
-              <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-                {onboardingStep > 0 && (
-                  <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "12px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>← Back</button>
-                )}
-                <button type="button" onClick={() => { if (onboardingStep < steps.length - 1) { setOnboardingStep(s => s + 1); } else { completeOnboarding(); } }} style={{ padding: "12px 28px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                  {step.cta}
-                </button>
-              </div>
-              <button type="button" onClick={completeOnboarding} style={{ marginTop: 16, background: "none", border: "none", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Skip tour</button>
+            <div style={{ background: T.surface, borderRadius: 24, border: "1px solid rgba(212,168,67,0.3)", width: "min(500px,95vw)", padding: "40px 36px", textAlign: "center", position: "relative", boxShadow: "0 40px 100px rgba(0,0,0,0.7)" }}>
+
+              {/* Progress dots — only show after goal selected */}
+              {!isGoalStep && (
+                <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28 }}>
+                  {steps.map((_, i) => (
+                    <div key={i} style={{ width: i === onboardingStep ? 20 : 8, height: 8, borderRadius: 4, background: i === onboardingStep ? T.gold : T.border, transition: "all 0.3s" }} />
+                  ))}
+                </div>
+              )}
+
+              {/* ── STEP 0: Goal selector ── */}
+              {isGoalStep && (
+                <>
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>🏙️</div>
+                  <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 8, lineHeight: 1.3 }}>
+                    Welcome, {userName || "Investor"}!
+                  </h2>
+                  <p style={{ fontSize: 13, color: T.textSecondary, marginBottom: 28, lineHeight: 1.6 }}>
+                    What brings you to DXB Analytics? We'll personalise your tour.
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+                    {[
+                      { key: "investing", icon: "💰", label: "I'm looking to invest in Dubai property" },
+                      { key: "researching", icon: "🔍", label: "I'm researching the Dubai market" },
+                      { key: "tracking", icon: "📋", label: "I already own property and want to track it" },
+                    ].map(g => (
+                      <button key={g.key} type="button" onClick={() => { setUserGoal(g.key); setOnboardingStep(0); }}
+                        style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 12, border: "1px solid rgba(212,168,67,0.25)", background: "rgba(212,168,67,0.06)", color: T.white, fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all 0.15s" }}
+                        onMouseEnter={e => { e.currentTarget.style.background = "rgba(212,168,67,0.15)"; e.currentTarget.style.borderColor = "rgba(212,168,67,0.5)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "rgba(212,168,67,0.06)"; e.currentTarget.style.borderColor = "rgba(212,168,67,0.25)"; }}>
+                        <span style={{ fontSize: 22 }}>{g.icon}</span>
+                        <span>{g.label}</span>
+                        <span style={{ marginLeft: "auto", color: T.textMuted, fontSize: 16 }}>›</span>
+                      </button>
+                    ))}
+                  </div>
+                  <button type="button" onClick={completeOnboarding} style={{ background: "none", border: "none", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Skip tour</button>
+                </>
+              )}
+
+              {/* ── STEPS 1–3: Personalised tour steps ── */}
+              {!isGoalStep && !isLastStep && step && (
+                <>
+                  <div style={{ fontSize: 52, marginBottom: 16 }}>{step.icon}</div>
+                  <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 21, fontWeight: 800, color: T.white, marginBottom: 14, lineHeight: 1.3 }}>{step.title}</h2>
+                  <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, marginBottom: 32 }}>{step.body}</p>
+                  <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                    {onboardingStep > 0 && (
+                      <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "12px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>← Back</button>
+                    )}
+                    <button type="button" onClick={() => setOnboardingStep(s => s + 1)} style={{ padding: "12px 28px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      {step.cta}
+                    </button>
+                  </div>
+                  <button type="button" onClick={completeOnboarding} style={{ marginTop: 16, background: "none", border: "none", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Skip tour</button>
+                </>
+              )}
+
+              {/* ── FINAL STEP: Conversion screen ── */}
+              {!isGoalStep && isLastStep && (
+                <>
+                  <div style={{ fontSize: 52, marginBottom: 16 }}>🚀</div>
+                  <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 10, lineHeight: 1.3 }}>You're all set!</h2>
+                  {userTier === "free" ? (
+                    <>
+                      <p style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.7, marginBottom: 20 }}>
+                        You're on the <strong style={{ color: T.white }}>Free plan</strong>. Unlock the full platform with Pro:
+                      </p>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, textAlign: "left" }}>
+                        {["Full project details, documents & floor plans", "ROI calculator with payment plan modelling", "Compare any 2 projects side-by-side", "Portfolio tracker with PDF export", "Price alerts (email notification on any move)", "Mortgage calculator with all DLD fee breakdown"].map((f, i) => (
+                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: T.textSecondary }}>
+                            <span style={{ color: T.green, fontSize: 15, fontWeight: 700 }}>✓</span> {f}
+                          </div>
+                        ))}
+                      </div>
+                      <button type="button" onClick={() => { completeOnboarding(); setShowUpgrade(true); }}
+                        style={{ width: "100%", padding: "15px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit',sans-serif", marginBottom: 10, letterSpacing: 0.3 }}>
+                        Upgrade to Pro — AED 99/month
+                      </button>
+                      <button type="button" onClick={completeOnboarding} style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        Continue with Free Plan
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, marginBottom: 28 }}>
+                        You have full <strong style={{ color: T.gold }}>Pro access</strong>. Compare projects, track your portfolio, and download reports.
+                      </p>
+                      <button type="button" onClick={completeOnboarding} style={{ padding: "14px 36px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        Start Exploring
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
+
             </div>
           </div>
         );
