@@ -2195,7 +2195,6 @@ export default function EmaarDashboardV2() {
                   ))}
                 </div>
               </div>
-
           <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM: EMAAR.DU", url: "https://www.dfm.ae" }, { label: "TradingView", url: "https://www.tradingview.com/symbols/DFM-EMAAR/" }, { label: "Yahoo Finance", url: "https://finance.yahoo.com/quote/EMAAR.DU" }, { label: "S&P · Moody's · Fitch Ratings" }]} />
             </Section>
           </>}
@@ -2360,7 +2359,6 @@ export default function EmaarDashboardV2() {
                   </tbody>
                 </table>
               </div>
-
           <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "Emaar Q4 2025 Earnings Release", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM Filing", url: "https://www.dfm.ae" }, { label: "GuruFocus", url: "https://www.gurufocus.com/term/overview/EMAAR.DU" }, { label: "Zawya", url: "https://www.zawya.com/en/company/financials/EMAAR-EMAAR" }]} />
             </Section>
             </ProGate>
@@ -2663,7 +2661,6 @@ export default function EmaarDashboardV2() {
                   </div>
                 );})}
               </div>
-
           <TabSources sources={[{ label: "Emaar.com Projects", url: "https://www.emaar.com/en/residential/" }, { label: "DLD Project Registry", url: "https://dubailand.gov.ae" }, { label: "Emaar IR", url: "https://www.emaar.com/en/investor-relations/" }]} />
             </Section>
           </>}
@@ -2685,6 +2682,7 @@ export default function EmaarDashboardV2() {
             const avgConstruction = allHandover.length ? Math.round(allHandover.reduce((a, p) => a + (p.construction || 0), 0) / allHandover.length) : 0;
 
             return (
+              <>
               <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                 {/* Summary KPIs */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
@@ -2819,7 +2817,6 @@ export default function EmaarDashboardV2() {
                 )}
 
               </div>
-
               <TabSources sources={[{ label: "DLD Oqood", url: "https://oqood.dubailand.gov.ae" }, { label: "Emaar Handover Centre" }, { label: "Emaar IR", url: "https://www.emaar.com/en/investor-relations/" }, { label: "Property Monitor" }]} />
             );
           })()}
@@ -3156,6 +3153,7 @@ export default function EmaarDashboardV2() {
             const confColor = confidence === "Very High" ? "#10B981" : confidence === "High" ? T.gold : "#F59E0B";
             const invScore = getInvestmentScore({ price: currentValue, ppsf: currentPpsf, gross: parseFloat(grossYield), handover: null, paymentPlan: "80/20" });
             return (
+              <>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 {/* Header */}
                 <div style={{ background: T.surface, borderRadius: 14, border: "1px solid rgba(212,168,67,0.3)", padding: "20px 24px" }}>
@@ -3255,7 +3253,6 @@ export default function EmaarDashboardV2() {
                   </div>
                 </div>
               </div>
-
               <TabSources sources={[{ label: "DLD Transactions FY2025", url: "https://dubailand.gov.ae" }, { label: "REIDIN Price Index", url: "https://reidin.com" }, { label: "Property Monitor" }, { label: "ValuStrat Dubai Residential" }, { label: "Bayut", url: "https://www.bayut.com" }]} />
             );
           })()}
@@ -3276,6 +3273,7 @@ export default function EmaarDashboardV2() {
             const filtered = strCommunity === "All" ? strData : strData.filter(d => d.community === strCommunity);
             const maxStr = Math.max(...strData.map(d => d.str));
             return (
+              <>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 {/* Header */}
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
@@ -3367,7 +3365,6 @@ export default function EmaarDashboardV2() {
                   <strong style={{ color: T.white }}>Important:</strong> STR yields assume full DTCM permit compliance and 70%+ occupancy. Dubai requires short-term rental permits (AED 1,520/year). STR yields are estimates based on DLD rental data, DTCM permit records, and market research. Net yields typically 5–6% after DTCM permit (AED 1,520/yr), management fees (15–20%), and seasonal vacancy. Source: DTCM 2025, Property Monitor, DLD.
                 </div>
               </div>
-
               <TabSources sources={[{ label: "DTCM Dubai 2025", url: "https://www.dtcm.gov.ae" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "Property Monitor" }, { label: "AirDNA (market estimates)" }, { label: "Ejari — Rental contracts" }]} />
             );
           })()}
@@ -3389,6 +3386,7 @@ export default function EmaarDashboardV2() {
               return b.profit - a.profit;
             });
             return (
+              <>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 {/* Header */}
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
@@ -3469,7 +3467,6 @@ export default function EmaarDashboardV2() {
                   📊 Source: Dubai Land Department official data FY2025 via DXB Interact and Gulf News (Jan 2026). Total Dubai market: 214,912 transactions · AED 682.5B · +30.6% value growth YoY. Quarterly splits are proportional estimates based on DLD full-year totals; Q4 weighted higher reflecting strongest quarter on record (AED 187.5B).
                 </div>
               </div>
-
               <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM / ADX", url: "https://www.dfm.ae" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "DLD FY2025", url: "https://dubailand.gov.ae" }, { label: "Gulf News — Developer Reports", url: "https://gulfnews.com/business/property" }]} />
             );
           })()}
@@ -3496,6 +3493,7 @@ export default function EmaarDashboardV2() {
             const totalDeals = dldData.reduce((s, d) => s + d.total, 0);
             const totalVol = dldData.reduce((s, d) => s + d.total * d.avgPrice, 0);
             return (
+              <>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 {/* Header */}
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
@@ -4013,7 +4011,6 @@ export default function EmaarDashboardV2() {
                   ⚠️ Launch dates and prices are estimates based on market intelligence. Always verify with official Emaar sources before making investment decisions.
                 </div>
               </div>
-
               <TabSources sources={[{ label: "Emaar Press Releases", url: "https://www.emaar.com/en/media/press-releases/" }, { label: "Property Finder New Launches", url: "https://www.propertyfinder.ae" }, { label: "DLD Oqood Off-Plan Registry", url: "https://oqood.dubailand.gov.ae" }, { label: "Zawya Real Estate News", url: "https://www.zawya.com" }]} />
             );
           })()}
@@ -4038,6 +4035,7 @@ export default function EmaarDashboardV2() {
               </div>
             );
             return (
+              <>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
                   <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800, color: T.gold }}>Neighbourhood Scorecard</div>
@@ -4100,7 +4098,6 @@ export default function EmaarDashboardV2() {
                   })}
                 </div>
               </div>
-
               <TabSources sources={[{ label: "DXB Interact Neighbourhood Data", url: "https://dxbinteract.com" }, { label: "REIDIN Neighbourhood Scorecard", url: "https://reidin.com" }, { label: "fam Properties Area Guide", url: "https://famproperties.com" }, { label: "Property Monitor" }, { label: "Google Maps / DM GIS" }]} />
             );
           })()}
@@ -4122,6 +4119,7 @@ export default function EmaarDashboardV2() {
             const maxSC = Math.max(...scData.map(d => d.high));
             const sorted = [...scData].sort((a, b) => scSort === "avg" ? b.avg - a.avg : scSort === "community" ? a.community.localeCompare(b.community) : b.high - a.high);
             return (
+              <>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 {/* Header */}
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
@@ -4207,7 +4205,6 @@ export default function EmaarDashboardV2() {
                   </div>
                 </div>
               </div>
-
               <TabSources sources={[{ label: "RERA Dubai (rera.gov.ae)", url: "https://www.rera.gov.ae" }, { label: "Mollak Service Charge Database" }, { label: "Owners Associations — Published Budgets" }, { label: "DLD Owner Portal" }, { label: "Asteco Facilities Management" }]} />
             );
           })()}
