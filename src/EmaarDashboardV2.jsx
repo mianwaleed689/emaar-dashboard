@@ -2819,9 +2819,8 @@ export default function EmaarDashboardV2() {
                 )}
 
               </div>
-            );
 
-          <TabSources sources={[{ label: "DLD Oqood", url: "https://oqood.dubailand.gov.ae" }, { label: "Emaar Handover Centre" }, { label: "Emaar IR", url: "https://www.emaar.com/en/investor-relations/" }, { label: "Property Monitor" }]} />
+              <TabSources sources={[{ label: "DLD Oqood", url: "https://oqood.dubailand.gov.ae" }, { label: "Emaar Handover Centre" }, { label: "Emaar IR", url: "https://www.emaar.com/en/investor-relations/" }, { label: "Property Monitor" }]} />            );
           })()}
 
           {/* ─── PORTFOLIO TAB ─── */}
@@ -3255,9 +3254,8 @@ export default function EmaarDashboardV2() {
                   </div>
                 </div>
               </div>
-            );
 
-          <TabSources sources={[{ label: "DLD Transactions FY2025", url: "https://dubailand.gov.ae" }, { label: "REIDIN Price Index", url: "https://reidin.com" }, { label: "Property Monitor" }, { label: "ValuStrat Dubai Residential" }, { label: "Bayut", url: "https://www.bayut.com" }]} />
+              <TabSources sources={[{ label: "DLD Transactions FY2025", url: "https://dubailand.gov.ae" }, { label: "REIDIN Price Index", url: "https://reidin.com" }, { label: "Property Monitor" }, { label: "ValuStrat Dubai Residential" }, { label: "Bayut", url: "https://www.bayut.com" }]} />            );
           })()}
 
           {/* ─── STR VS LTR YIELD TAB ─── */}
@@ -3367,9 +3365,8 @@ export default function EmaarDashboardV2() {
                   <strong style={{ color: T.white }}>Important:</strong> STR yields assume full DTCM permit compliance and 70%+ occupancy. Dubai requires short-term rental permits (AED 1,520/year). STR yields are estimates based on DLD rental data, DTCM permit records, and market research. Net yields typically 5–6% after DTCM permit (AED 1,520/yr), management fees (15–20%), and seasonal vacancy. Source: DTCM 2025, Property Monitor, DLD.
                 </div>
               </div>
-            );
 
-          <TabSources sources={[{ label: "DTCM Dubai 2025", url: "https://www.dtcm.gov.ae" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "Property Monitor" }, { label: "AirDNA (market estimates)" }, { label: "Ejari — Rental contracts" }]} />
+              <TabSources sources={[{ label: "DTCM Dubai 2025", url: "https://www.dtcm.gov.ae" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "Property Monitor" }, { label: "AirDNA (market estimates)" }, { label: "Ejari — Rental contracts" }]} />            );
           })()}
 
           {/* ─── DEVELOPER HEALTH SCORE TAB ─── */}
@@ -3469,9 +3466,8 @@ export default function EmaarDashboardV2() {
                   📊 Source: Dubai Land Department official data FY2025 via DXB Interact and Gulf News (Jan 2026). Total Dubai market: 214,912 transactions · AED 682.5B · +30.6% value growth YoY. Quarterly splits are proportional estimates based on DLD full-year totals; Q4 weighted higher reflecting strongest quarter on record (AED 187.5B).
                 </div>
               </div>
-            );
 
-          <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM / ADX", url: "https://www.dfm.ae" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "DLD FY2025", url: "https://dubailand.gov.ae" }, { label: "Gulf News — Developer Reports", url: "https://gulfnews.com/business/property" }]} />
+              <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM / ADX", url: "https://www.dfm.ae" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "DLD FY2025", url: "https://dubailand.gov.ae" }, { label: "Gulf News — Developer Reports", url: "https://gulfnews.com/business/property" }]} />            );
           })()}
 
           {/* ─── DLD TRANSACTION VOLUMES TAB ─── */}
@@ -3587,11 +3583,9 @@ export default function EmaarDashboardV2() {
                   </div>
                 </div>
               </div>
+              <TabSources sources={[{ label: "Dubai Land Department (Official)", url: "https://dubailand.gov.ae" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "Gulf News Jan 2026", url: "https://gulfnews.com/business/property" }, { label: "ValuStrat Q4 2025" }, { label: "REIDIN", url: "https://reidin.com" }]} />
             );
 
-          <TabSources sources={[{ label: "Dubai Land Department (Official)", url: "https://dubailand.gov.ae" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "Gulf News Jan 2026", url: "https://gulfnews.com/business/property" }, { label: "ValuStrat Q4 2025" }, { label: "REIDIN", url: "https://reidin.com" }]} />
-
-          <TabSources sources={[{ label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "fam Properties 2025", url: "https://famproperties.com" }, { label: "Dubai Land Department", url: "https://dubailand.gov.ae" }, { label: "Gulf News", url: "https://gulfnews.com/business/property" }, { label: "Zawya Developer Reports", url: "https://www.zawya.com" }]} />
           })()}
 
           {/* ─── COMPETITORS TAB ─── */}
@@ -3918,9 +3912,8 @@ export default function EmaarDashboardV2() {
               <Section title="Mortgage Calculator" sub="4 questions every Dubai property buyer needs answered">
                 <MortgageCalc />
               </Section>
-            );
 
-          <TabSources sources={[{ label: "CBUAE — UAE Base Rate", url: "https://www.cbuae.gov.ae" }, { label: "EIBOR 3M: 3.47% (Dec 2025)" }, { label: "DLD Fee Schedule (4%)", url: "https://dubailand.gov.ae" }, { label: "UAE Mortgage Law (No. 14 of 2008)" }, { label: "Property Finder Mortgage Rates", url: "https://www.propertyfinder.ae" }]} />
+              <TabSources sources={[{ label: "CBUAE — UAE Base Rate", url: "https://www.cbuae.gov.ae" }, { label: "EIBOR 3M: 3.47% (Dec 2025)" }, { label: "DLD Fee Schedule (4%)", url: "https://dubailand.gov.ae" }, { label: "UAE Mortgage Law (No. 14 of 2008)" }, { label: "Property Finder Mortgage Rates", url: "https://www.propertyfinder.ae" }]} />            );
           })()}
 
           {/* ─── MAP / COMMUNITIES TAB ─── */}
@@ -4015,9 +4008,8 @@ export default function EmaarDashboardV2() {
                   ⚠️ Launch dates and prices are estimates based on market intelligence. Always verify with official Emaar sources before making investment decisions.
                 </div>
               </div>
-            );
 
-          <TabSources sources={[{ label: "Emaar Press Releases", url: "https://www.emaar.com/en/media/press-releases/" }, { label: "Property Finder New Launches", url: "https://www.propertyfinder.ae" }, { label: "DLD Oqood Off-Plan Registry", url: "https://oqood.dubailand.gov.ae" }, { label: "Zawya Real Estate News", url: "https://www.zawya.com" }]} />
+              <TabSources sources={[{ label: "Emaar Press Releases", url: "https://www.emaar.com/en/media/press-releases/" }, { label: "Property Finder New Launches", url: "https://www.propertyfinder.ae" }, { label: "DLD Oqood Off-Plan Registry", url: "https://oqood.dubailand.gov.ae" }, { label: "Zawya Real Estate News", url: "https://www.zawya.com" }]} />            );
           })()}
 
           {/* ─── NEIGHBOURHOODS TAB ─── */}
@@ -4102,9 +4094,8 @@ export default function EmaarDashboardV2() {
                   })}
                 </div>
               </div>
-            );
 
-          <TabSources sources={[{ label: "DXB Interact Neighbourhood Data", url: "https://dxbinteract.com" }, { label: "REIDIN Neighbourhood Scorecard", url: "https://reidin.com" }, { label: "fam Properties Area Guide", url: "https://famproperties.com" }, { label: "Property Monitor" }, { label: "Google Maps / DM GIS" }]} />
+              <TabSources sources={[{ label: "DXB Interact Neighbourhood Data", url: "https://dxbinteract.com" }, { label: "REIDIN Neighbourhood Scorecard", url: "https://reidin.com" }, { label: "fam Properties Area Guide", url: "https://famproperties.com" }, { label: "Property Monitor" }, { label: "Google Maps / DM GIS" }]} />            );
           })()}
 
           {/* ─── SERVICE CHARGES TAB ─── */}
@@ -4209,9 +4200,8 @@ export default function EmaarDashboardV2() {
                   </div>
                 </div>
               </div>
-            );
 
-          <TabSources sources={[{ label: "RERA Dubai (rera.gov.ae)", url: "https://www.rera.gov.ae" }, { label: "Mollak Service Charge Database" }, { label: "Owners Associations — Published Budgets" }, { label: "DLD Owner Portal" }, { label: "Asteco Facilities Management" }]} />
+              <TabSources sources={[{ label: "RERA Dubai (rera.gov.ae)", url: "https://www.rera.gov.ae" }, { label: "Mollak Service Charge Database" }, { label: "Owners Associations — Published Budgets" }, { label: "DLD Owner Portal" }, { label: "Asteco Facilities Management" }]} />            );
           })()}
 
           {/* ─── RISK TAB ─── */}
@@ -4414,9 +4404,8 @@ export default function EmaarDashboardV2() {
               <Section title="Currency Converter" sub="Live rates \u00b7 AED to GBP, EUR, USD, INR, PKR and 8 more currencies">
                 <CurrencyConverter />
               </Section>
-            );
 
-          <TabSources sources={[{ label: "open.er-api.com (Live Rates)", url: "https://open.er-api.com" }, { label: "European Central Bank", url: "https://www.ecb.europa.eu" }, { label: "UAE Central Bank", url: "https://www.cbuae.gov.ae" }, { label: "XE Currency", url: "https://www.xe.com/currency/aed" }]} />
+              <TabSources sources={[{ label: "open.er-api.com (Live Rates)", url: "https://open.er-api.com" }, { label: "European Central Bank", url: "https://www.ecb.europa.eu" }, { label: "UAE Central Bank", url: "https://www.cbuae.gov.ae" }, { label: "XE Currency", url: "https://www.xe.com/currency/aed" }]} />            );
           })()}
 
 
@@ -4665,9 +4654,8 @@ export default function EmaarDashboardV2() {
                   </div>
 
                 </div>
-              );
-
-          <TabSources sources={[{ label: "UAE ICP — Golden Visa", url: "https://icp.gov.ae" }, { label: "GDRFA Dubai", url: "https://gdrfad.gov.ae" }, { label: "Federal Authority for Identity (ICP)", url: "https://icp.gov.ae" }, { label: "Emaar.com/en/investor-relations — Project prices" }, { label: "Dubai Economy & Tourism", url: "https://www.visitdubai.com" }]} />
+  
+              <TabSources sources={[{ label: "UAE ICP — Golden Visa", url: "https://icp.gov.ae" }, { label: "GDRFA Dubai", url: "https://gdrfad.gov.ae" }, { label: "Federal Authority for Identity (ICP)", url: "https://icp.gov.ae" }, { label: "Emaar.com/en/investor-relations — Project prices" }, { label: "Dubai Economy & Tourism", url: "https://www.visitdubai.com" }]} />            );
           })()}
 
 
@@ -4943,9 +4931,8 @@ export default function EmaarDashboardV2() {
                     </div>
                   </div>
                 </div>
-              );
-
-          <TabSources sources={[{ label: "DLD Transaction Records", url: "https://dubailand.gov.ae" }, { label: "REIDIN Price Index", url: "https://reidin.com" }, { label: "Property Monitor" }, { label: "DXB Interact Flip Analysis", url: "https://dxbinteract.com" }, { label: "fam Properties Research", url: "https://famproperties.com" }]} />
+  
+              <TabSources sources={[{ label: "DLD Transaction Records", url: "https://dubailand.gov.ae" }, { label: "REIDIN Price Index", url: "https://reidin.com" }, { label: "Property Monitor" }, { label: "DXB Interact Flip Analysis", url: "https://dxbinteract.com" }, { label: "fam Properties Research", url: "https://famproperties.com" }]} />            );
           })()}
 
           {/* ─── MARKET TAB ─── */}
