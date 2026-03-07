@@ -2816,8 +2816,8 @@ export default function EmaarDashboardV2() {
                   </div>
                 )}
 
-              </div>
               <TabSources sources={[{ label: "DLD Oqood", url: "https://oqood.dubailand.gov.ae" }, { label: "Emaar Handover Centre" }, { label: "Emaar IR", url: "https://www.emaar.com/en/investor-relations/" }, { label: "Property Monitor" }]} />
+              </div>
             );
           })()}
 
@@ -3110,7 +3110,6 @@ export default function EmaarDashboardV2() {
             </Section>
             </>)}
 
-
           <TabSources sources={[{ label: "Firebase Firestore (live user data)" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "REIDIN 2025", url: "https://reidin.com" }, { label: "UAE Central Bank (EIBOR)", url: "https://www.cbuae.gov.ae" }]} />
           </>}
 
@@ -3250,8 +3249,8 @@ export default function EmaarDashboardV2() {
                     </div>
                   </div>
                 </div>
-              </div>
               <TabSources sources={[{ label: "DLD Transactions FY2025", url: "https://dubailand.gov.ae" }, { label: "REIDIN Price Index", url: "https://reidin.com" }, { label: "Property Monitor" }, { label: "ValuStrat Dubai Residential" }, { label: "Bayut", url: "https://www.bayut.com" }]} />
+              </div>
             );
           })()}
 
@@ -3362,8 +3361,8 @@ export default function EmaarDashboardV2() {
                 <div style={{ padding: "14px 18px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}`, fontSize: 12, color: T.textMuted, lineHeight: 1.7 }}>
                   <strong style={{ color: T.white }}>Important:</strong> STR yields assume full DTCM permit compliance and 70%+ occupancy. Dubai requires short-term rental permits (AED 1,520/year). STR yields are estimates based on DLD rental data, DTCM permit records, and market research. Net yields typically 5–6% after DTCM permit (AED 1,520/yr), management fees (15–20%), and seasonal vacancy. Source: DTCM 2025, Property Monitor, DLD.
                 </div>
-              </div>
               <TabSources sources={[{ label: "DTCM Dubai 2025", url: "https://www.dtcm.gov.ae" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "Property Monitor" }, { label: "AirDNA (market estimates)" }, { label: "Ejari — Rental contracts" }]} />
+              </div>
             );
           })()}
 
@@ -3464,8 +3463,8 @@ export default function EmaarDashboardV2() {
                 <div style={{ fontSize: 11, color: T.textMuted, padding: "10px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
                   📊 Source: Dubai Land Department official data FY2025 via DXB Interact and Gulf News (Jan 2026). Total Dubai market: 214,912 transactions · AED 682.5B · +30.6% value growth YoY. Quarterly splits are proportional estimates based on DLD full-year totals; Q4 weighted higher reflecting strongest quarter on record (AED 187.5B).
                 </div>
-              </div>
               <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM / ADX", url: "https://www.dfm.ae" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "DLD FY2025", url: "https://dubailand.gov.ae" }, { label: "Gulf News — Developer Reports", url: "https://gulfnews.com/business/property" }]} />
+              </div>
             );
           })()}
 
@@ -3582,8 +3581,8 @@ export default function EmaarDashboardV2() {
                     </table>
                   </div>
                 </div>
-              </div>
               <TabSources sources={[{ label: "Dubai Land Department (Official)", url: "https://dubailand.gov.ae" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "Gulf News Jan 2026", url: "https://gulfnews.com/business/property" }, { label: "ValuStrat Q4 2025" }, { label: "REIDIN", url: "https://reidin.com" }]} />
+              </div>
             );
 
           })()}
@@ -4008,8 +4007,8 @@ export default function EmaarDashboardV2() {
                 <div style={{ padding: "12px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}`, fontSize: 11, color: T.textMuted }}>
                   ⚠️ Launch dates and prices are estimates based on market intelligence. Always verify with official Emaar sources before making investment decisions.
                 </div>
-              </div>
               <TabSources sources={[{ label: "Emaar Press Releases", url: "https://www.emaar.com/en/media/press-releases/" }, { label: "Property Finder New Launches", url: "https://www.propertyfinder.ae" }, { label: "DLD Oqood Off-Plan Registry", url: "https://oqood.dubailand.gov.ae" }, { label: "Zawya Real Estate News", url: "https://www.zawya.com" }]} />
+              </div>
             );
           })()}
 
@@ -4095,8 +4094,8 @@ export default function EmaarDashboardV2() {
                     );
                   })}
                 </div>
-              </div>
               <TabSources sources={[{ label: "DXB Interact Neighbourhood Data", url: "https://dxbinteract.com" }, { label: "REIDIN Neighbourhood Scorecard", url: "https://reidin.com" }, { label: "fam Properties Area Guide", url: "https://famproperties.com" }, { label: "Property Monitor" }, { label: "Google Maps / DM GIS" }]} />
+              </div>
             );
           })()}
 
@@ -4202,8 +4201,8 @@ export default function EmaarDashboardV2() {
                     A 7% gross yield on a AED 2M apartment = AED 140,000/year rental income. But on a 1,200 sqft unit with AED 28/sqft SC, you pay AED 33,600/year in service charges — reducing your <strong style={{ color: T.white }}>net yield to 5.3%</strong>. On a lower-SC community like Arabian Ranches (AED 14/sqft), the same calculation gives you a <strong style={{ color: "#10B981" }}>net yield of 6.2%</strong>. Always calculate net, not gross.
                   </div>
                 </div>
-              </div>
               <TabSources sources={[{ label: "RERA Dubai (rera.gov.ae)", url: "https://www.rera.gov.ae" }, { label: "Mollak Service Charge Database" }, { label: "Owners Associations — Published Budgets" }, { label: "DLD Owner Portal" }, { label: "Asteco Facilities Management" }]} />
+              </div>
             );
           })()}
 
@@ -4403,10 +4402,12 @@ export default function EmaarDashboardV2() {
               );
             };
             return (
+              <>
               <Section title="Currency Converter" sub="Live rates \u00b7 AED to GBP, EUR, USD, INR, PKR and 8 more currencies">
                 <CurrencyConverter />
               </Section>
               <TabSources sources={[{ label: "open.er-api.com (Live Rates)", url: "https://open.er-api.com" }, { label: "European Central Bank", url: "https://www.ecb.europa.eu" }, { label: "UAE Central Bank", url: "https://www.cbuae.gov.ae" }, { label: "XE Currency", url: "https://www.xe.com/currency/aed" }]} />
+              </>
             );
           })()}
 
@@ -4655,8 +4656,8 @@ export default function EmaarDashboardV2() {
                     ))}
                   </div>
 
-                </div>
               <TabSources sources={[{ label: "UAE ICP — Golden Visa", url: "https://icp.gov.ae" }, { label: "GDRFA Dubai", url: "https://gdrfad.gov.ae" }, { label: "Federal Authority for Identity (ICP)", url: "https://icp.gov.ae" }, { label: "Emaar.com/en/investor-relations — Project prices" }, { label: "Dubai Economy & Tourism", url: "https://www.visitdubai.com" }]} />
+                </div>
             );
           })()}
 
@@ -4932,8 +4933,8 @@ export default function EmaarDashboardV2() {
                       </div>
                     </div>
                   </div>
-                </div>
               <TabSources sources={[{ label: "DLD Transaction Records", url: "https://dubailand.gov.ae" }, { label: "REIDIN Price Index", url: "https://reidin.com" }, { label: "Property Monitor" }, { label: "DXB Interact Flip Analysis", url: "https://dxbinteract.com" }, { label: "fam Properties Research", url: "https://famproperties.com" }]} />
+                </div>
             );
           })()}
 
