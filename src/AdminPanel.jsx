@@ -466,7 +466,31 @@ export default function AdminPanel() {
 
   useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin, fetchLeads]);
 
-  const approveVerification = async (v) => {
+  /* ─── FETCH AUDIT LOG ─── */
+  const fetchAuditLog = useCallback(async () => {
+    try {
+      const { getDocs, collection: col, query, orderBy, limit } = await import("firebase/firestore");
+      const q = query(col(db, "auditLog"), orderBy("changedAt", "desc"), limit(100));
+      const snap = await getDocs(q);
+      const list = [];
+      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+      setAuditLog(list);
+    } catch (e) {
+      // fallback without orderBy if index not ready
+      try {
+        const { getDocs, collection: col } = await import("firebase/firestore");
+        const snap = await getDocs(col(db, "auditLog"));
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+        list.sort((a, b) => new Date(b.changedAt || 0) - new Date(a.changedAt || 0));
+        setAuditLog(list.slice(0, 100));
+      } catch (e2) { console.error("Fetch audit log:", e2); }
+    }
+  }, []);
+
+  useEffect(() => { if (isAdmin) fetchAuditLog(); }, [isAdmin, fetchAuditLog]);
+
+ = async (v) => {
     if (!window.confirm(`⚠️ APPROVE VERIFICATION\n\nUser: ${v.name || v.email}\nLevel: ${v.level || "Basic"}\n\nThis will:\n• Mark this user as verified\n• Update their profile with a verified badge\n• They can access verified-tier features\n\nContinue?`)) return;
     try {
       await setDoc(doc(db, "verifications", v.id), { status: "approved", reviewedAt: new Date().toISOString(), reviewedBy: adminUser?.email || "admin" }, { merge: true });
@@ -1583,33 +1607,118 @@ export default function AdminPanel() {
                       </div>
                     </div>
                   </div>
+                  {/* ── ENHANCED AUDIT LOG ── */}
                   <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden" }}>
-                    <div style={{ padding: "16px 20px", borderBottom: "2px solid rgba(212,168,67,0.1)" }}>
-                      <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Audit Log</h3>
-                      <p style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>All data changes</p>
+                    <div style={{ padding: "16px 20px", borderBottom: "2px solid rgba(212,168,67,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+                      <div>
+                        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Audit Log</h3>
+                        <p style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{auditLog.length} events · All admin data changes · Last 100 entries</p>
+                      </div>
+                      <button onClick={fetchAuditLog} style={{ padding: "6px 14px", background: "rgba(212,168,67,0.1)", border: "1px solid rgba(212,168,67,0.25)", borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>↻ Refresh</button>
                     </div>
-                    {auditLog.length === 0 && (
-                      <div style={{ padding: 40, textAlign: "center", color: T.textMuted, fontSize: 13 }}>No changes recorded yet.</div>
-                    )}
-                    {auditLog.map((log, i) => (
-                      <div key={log.id} style={{ display: "grid", gridTemplateColumns: "180px 1fr 150px 160px", gap: 8, padding: "12px 20px", borderBottom: "1px solid rgba(212,168,67,0.08)", alignItems: "center" }}>
-                        <span style={{ fontSize: 11, color: T.textMuted }}>{log.changedAt ? new Date(log.changedAt).toLocaleString("en-AE") : "-"}</span>
-                        <div>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: T.gold }}>{log.action === "project_update" ? "Project Updated" : log.action === "community_update" ? "Community Updated" : log.action}</span>
-                        {log.diff && Object.keys(log.diff).length > 0 && (
-                          <div style={{ marginTop: 4 }}>
-                            {Object.entries(log.diff).map(([k, v]) => (
-                              <span key={k} style={{ fontSize: 10, color: T.textMuted, marginRight: 8 }}>
-                                {k}: <span style={{ color: "#EF4444" }}>{String(v.old)}</span> → <span style={{ color: "#10B981" }}>{String(v.new)}</span>
-                              </span>
-                            ))}
+
+                    {/* Summary stats */}
+                    {auditLog.length > 0 && (
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0, borderBottom: "1px solid rgba(212,168,67,0.08)" }}>
+                        {[
+                          { label: "Total Changes", val: auditLog.length, color: T.gold },
+                          { label: "Project Updates", val: auditLog.filter(l => l.action === "project_update").length, color: T.blue },
+                          { label: "New Projects", val: auditLog.filter(l => l.action === "project_create").length, color: T.green },
+                          { label: "Community Updates", val: auditLog.filter(l => l.action === "community_update").length, color: "#8B5CF6" },
+                        ].map((s, i) => (
+                          <div key={i} style={{ padding: "12px 16px", borderRight: i < 3 ? "1px solid rgba(255,255,255,0.04)" : "none", textAlign: "center" }}>
+                            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: s.color }}>{s.val}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{s.label}</div>
                           </div>
-                        )}
+                        ))}
                       </div>
-                        <span style={{ fontSize: 11, color: T.textSecondary }}>{log.changedBy || "-"}</span>
-                        <span style={{ fontSize: 11, color: T.textSecondary }}>{log.projectId || log.communityKey || "-"}</span>
+                    )}
+
+                    {/* Column headers */}
+                    {auditLog.length > 0 && (
+                      <div style={{ display: "grid", gridTemplateColumns: "160px 80px 1fr 160px", gap: 8, padding: "8px 20px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(212,168,67,0.08)" }}>
+                        {["Timestamp", "Action", "Details & Changes", "Admin"].map((h, i) => (
+                          <span key={i} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{h}</span>
+                        ))}
                       </div>
-                    ))}
+                    )}
+
+                    {auditLog.length === 0 && (
+                      <div style={{ padding: 48, textAlign: "center" }}>
+                        <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
+                        <div style={{ fontSize: 14, color: T.textSecondary, fontWeight: 600, marginBottom: 6 }}>No audit events yet</div>
+                        <div style={{ fontSize: 12, color: T.textMuted }}>Events are recorded automatically when you update projects, communities, or yields.</div>
+                      </div>
+                    )}
+
+                    <div style={{ maxHeight: 500, overflowY: "auto" }}>
+                      {auditLog.map((log, i) => {
+                        const actionMeta = {
+                          project_update:    { label: "Project Updated",    color: T.blue,    icon: "✏️" },
+                          project_create:    { label: "Project Created",    color: T.green,   icon: "➕" },
+                          community_update:  { label: "Community Updated",  color: "#8B5CF6", icon: "🏘️" },
+                          tab_visibility:    { label: "Tab Visibility",     color: T.gold,    icon: "👁️" },
+                          user_tier_change:  { label: "User Tier Changed",  color: T.orange,  icon: "👤" },
+                          yield_update:      { label: "Yield Updated",      color: T.teal,    icon: "📈" },
+                        };
+                        const meta = actionMeta[log.action] || { label: log.action || "Unknown", color: T.textMuted, icon: "🔧" };
+                        const timeAgo = (() => {
+                          if (!log.changedAt) return "—";
+                          const diff = Date.now() - new Date(log.changedAt).getTime();
+                          const mins = Math.floor(diff / 60000);
+                          const hrs = Math.floor(diff / 3600000);
+                          const days = Math.floor(diff / 86400000);
+                          if (mins < 1) return "just now";
+                          if (mins < 60) return `${mins}m ago`;
+                          if (hrs < 24) return `${hrs}h ago`;
+                          return `${days}d ago`;
+                        })();
+                        const hasDiff = log.diff && Object.keys(log.diff).length > 0;
+
+                        return (
+                          <div key={log.id} style={{ display: "grid", gridTemplateColumns: "160px 80px 1fr 160px", gap: 8, padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "flex-start", transition: "background 0.15s" }}
+                            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            {/* Time */}
+                            <div>
+                              <div style={{ fontSize: 11, color: T.textSecondary, fontWeight: 600 }}>{timeAgo}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{log.changedAt ? new Date(log.changedAt).toLocaleString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}</div>
+                            </div>
+                            {/* Action badge */}
+                            <div>
+                              <span style={{ display: "inline-block", padding: "3px 8px", borderRadius: 6, background: meta.color + "18", border: `1px solid ${meta.color}33`, color: meta.color, fontSize: 10, fontWeight: 700 }}>{meta.icon}</span>
+                            </div>
+                            {/* Details */}
+                            <div>
+                              <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 4 }}>
+                                {meta.label}{log.projectId ? ` — ${log.projectId}` : ""}{log.communityKey ? ` — ${log.communityKey}` : ""}
+                              </div>
+                              {hasDiff && (
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                                  {Object.entries(log.diff).slice(0, 5).map(([k, v]) => (
+                                    <span key={k} style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", padding: "2px 8px", borderRadius: 4, color: T.textMuted }}>
+                                      <span style={{ color: T.textSecondary }}>{k}:</span> <span style={{ color: "#EF4444", textDecoration: "line-through" }}>{String(v.old || "—").slice(0, 20)}</span> → <span style={{ color: "#10B981" }}>{String(v.new || "—").slice(0, 20)}</span>
+                                    </span>
+                                  ))}
+                                  {Object.keys(log.diff).length > 5 && <span style={{ fontSize: 10, color: T.textMuted }}>+{Object.keys(log.diff).length - 5} more</span>}
+                                </div>
+                              )}
+                              {!hasDiff && log.changes && (
+                                <div style={{ fontSize: 10, color: T.textMuted }}>New record created</div>
+                              )}
+                            </div>
+                            {/* Admin */}
+                            <div style={{ fontSize: 11, color: T.textMuted, textAlign: "right" }}>
+                              {log.changedBy ? (
+                                <span style={{ background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.15)", borderRadius: 6, padding: "2px 8px", color: T.gold, fontSize: 10, fontWeight: 600 }}>
+                                  {log.changedBy.split("@")[0]}
+                                </span>
+                              ) : "—"}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </>
               )}

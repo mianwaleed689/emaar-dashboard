@@ -1288,26 +1288,30 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
 
 
 // ─── Tab Data Sources Footer ────────────────────────────────────────────────
+/* ─── DATA BADGE — verified data stamp ─── */
+const DataBadge = ({ source, date, type = "dld" }) => {
+  const cfg = {
+    dld:     { label: "DLD Verified",     color: "#10B981", icon: "✓" },
+    reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "✓" },
+    emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "✓" },
+    live:    { label: "Live · Firestore", color: "#10B981", icon: "●" },
+    ai:      { label: "AI Estimate",      color: "#8B5CF6", icon: "✦" },
+    manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "✓" },
+  };
+  const c = cfg[type] || cfg.dld;
+  return (
+    <span title={`Source: ${source || c.label}${date ? " · " + date : ""}`} style={{
+      display: "inline-flex", alignItems: "center", gap: 4,
+      fontSize: 9, fontWeight: 700, color: c.color, letterSpacing: 0.5,
+      background: c.color + "12", border: `1px solid ${c.color}30`,
+      borderRadius: 5, padding: "1px 6px", cursor: "default", flexShrink: 0,
+    }}>
+      <span style={{ fontSize: 8 }}>{c.icon}</span>{c.label}
+    </span>
+  );
+};
+
 const TabSources = ({ sources }) => (
-  <div style={{
-    marginTop: 28,
-    padding: "12px 16px",
-    background: "rgba(255,255,255,0.025)",
-    border: "1px solid rgba(255,255,255,0.07)",
-    borderRadius: 12,
-    display: "flex",
-    alignItems: "flex-start",
-    gap: 10,
-    flexWrap: "wrap"
-  }}>
-    <span style={{
-      fontSize: 9,
-      fontWeight: 700,
-      color: "rgba(212,168,67,0.7)",
-      letterSpacing: 1.2,
-      textTransform: "uppercase",
-      paddingTop: 2,
-      flexShrink: 0
     }}>Sources</span>
     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
       {sources.map((s, i) => (
@@ -2489,6 +2493,10 @@ export default function EmaarDashboardV2() {
             </div>
 
             <Section title="Company Strength" sub="Analyst consensus: STRONG BUY (12 of 12 analysts) · Source: Investing.com">
+              <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <DataBadge source="Emaar Annual Report FY2025" date="Dec 2025" type="emaar" />
+                <DataBadge source="S&P / Fitch Ratings 2025" date="2025" type="manual" />
+              </div>
               <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
                 <Chart title="Performance Radar">
                   <ResponsiveContainer width="100%" height={260}>
@@ -4057,6 +4065,10 @@ export default function EmaarDashboardV2() {
           {tab === "Yields" && <>
             <ProGate isPro={isPro} message="Unlock Rental Yield Analysis" onUpgrade={() => setShowUpgrade(true)}>
             <Section title="Rental Yield Analysis" sub="REIDIN Dec 2025 · DXB Interact · Engel & Völkers · DLD Rental Index">
+              <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <DataBadge source="REIDIN Dec 2025" date="Dec 2025" type="reidin" />
+                <DataBadge source="Dubai Land Department Rental Index" date="2025" type="dld" />
+              </div>
               <Chart title="Gross Yield by Community & Unit Type (%)" style={{ marginTop: 16 }}>
                 <ResponsiveContainer width="100%" height={320}>
                   <BarChart data={liveYields.length > 0 ? liveYields : yields}>
@@ -5363,6 +5375,11 @@ export default function EmaarDashboardV2() {
           {/* ─── MARKET TAB ─── */}
           {tab === "Market" && <>
             <Section title="Dubai Real Estate — 2025" sub="Official DLD Data · 5th Consecutive Record Year">
+              <div style={{ marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <DataBadge source="Dubai Land Department FY2025" date="Dec 2025" type="dld" />
+                <DataBadge source="REIDIN Price Index Dec 2025" date="Dec 2025" type="reidin" />
+                <DataBadge source="ValuStrat Q4 2025" date="Q4 2025" type="manual" />
+              </div>
               <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 16 }}>
                 {(liveMarketData.length > 0 ? liveMarketData.map(d => ({ metric: d.metric, val2025: d.value, yoy: d.change, val2024: "" })) : dubaiMarket).map((m, i) => <KPI key={i} label={m.metric} value={m.val2025} sub={m.yoy} delay={Math.min(i + 1, 8)} onClick={() => setSelectedKPI({ label: m.metric, value: m.val2025, color: T.gold, description: `${m.metric} — Official DLD data for 2025. Dubai's 5th consecutive record year.`, source: "Dubai Land Department 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "2025 Value", value: m.val2025, note: "Record year" }, { label: "YoY Change", value: m.yoy, note: "vs 2024" }, { label: "2024 Value", value: m.val2024 || "—", note: "Prior year" }], trend: null })} />)}
               </div>
