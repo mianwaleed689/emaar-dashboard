@@ -52,7 +52,6 @@ const I = {
   star: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
   verify: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>,
   target: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
-  edit: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
 };
 
 /* ─── CSS (exactly matching main dashboard design DNA) ─── */
@@ -462,18 +461,6 @@ export default function AdminPanel() {
 
   useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin, fetchLeads]);
 
-  const fetchAuditLog = useCallback(async () => {
-    try {
-      const snap = await getDocs(collection(db, "auditLog"));
-      const list = [];
-      snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
-      list.sort((a, b) => new Date(b.changedAt || 0) - new Date(a.changedAt || 0));
-      setAuditLog(list.slice(0, 50));
-    } catch (e) { console.error("Fetch audit log:", e); }
-  }, []);
-
-  useEffect(() => { if (isAdmin) fetchAuditLog(); }, [isAdmin, fetchAuditLog]);
-
   const approveVerification = async (v) => {
     if (!window.confirm(`⚠️ APPROVE VERIFICATION\n\nUser: ${v.name || v.email}\nLevel: ${v.level || "Basic"}\n\nThis will:\n• Mark this user as verified\n• Update their profile with a verified badge\n• They can access verified-tier features\n\nContinue?`)) return;
     try {
@@ -647,7 +634,7 @@ export default function AdminPanel() {
     try {
       const { getDocs, collection: col } = await import("firebase/firestore");
       const snap = await getDocs(col(db, "users"));
-      const proUsers = snap.docs.filter(d => d.data().tier === "pro" || d.data().tier === "enterprise").map(d => d.data());
+      const proUsers = snap.docs.filter(d => d.data().plan === "pro" || d.data().plan === "Pro").map(d => d.data());
       for (const user of proUsers) {
         if (user.email) await sendAlertEmail(user.email, user.name || user.displayName, projectName, changeType, newValue, oldValue);
       }
@@ -787,14 +774,7 @@ export default function AdminPanel() {
     const u = users.find(x => x.uid === uid);
     if (!window.confirm(`DELETE USER: ${u?.name || u?.email}\n\nThis permanently removes them from the database and revokes all access.\n\nContinue?`)) return;
     try {
-      const idToken = await auth.currentUser.getIdToken();
-      const res = await fetch("/api/admin-delete-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
-        body: JSON.stringify({ uid }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to delete user");
+      await deleteDoc(doc(db, "users", uid));
       try { await deleteDoc(doc(db, "watchlists", uid)); } catch(e) {}
       notify("✅ User deleted");
       setExpandedUser(null);
@@ -848,7 +828,7 @@ export default function AdminPanel() {
     setEditUserLoading(true);
     try {
       const data = { ...editUserForm };
-      if (data.trialEnd) data.trialEnd = new Date(data.trialEnd + "T23:59:59+04:00").toISOString();
+      if (data.trialEnd) data.trialEnd = new Date(data.trialEnd).toISOString();
       await setDoc(doc(db, "users", editingUser.uid), data, { merge: true });
       notify("✅ User updated successfully");
       setEditingUser(null);
@@ -863,25 +843,22 @@ export default function AdminPanel() {
     if (!addUserForm.password || addUserForm.password.length < 6) { notify("❌ Password must be at least 6 characters"); return; }
     setAddUserLoading(true);
     try {
-      const idToken = await auth.currentUser.getIdToken();
+      const cred = await createUserWithEmailAndPassword(auth, addUserForm.email.trim(), addUserForm.password);
       const now = new Date();
       const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-      const res = await fetch("/api/admin-create-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
-        body: JSON.stringify({
-          email: addUserForm.email.trim(),
-          password: addUserForm.password,
-          name: addUserForm.name.trim(),
-          tier: addUserForm.tier,
-          phone: addUserForm.phone.trim(),
-          country: addUserForm.country.trim(),
-          notes: addUserForm.notes.trim(),
-          trialEnd: addUserForm.tier === "pro_trial" ? trialEnd.toISOString() : null,
-        }),
+      await setDoc(doc(db, "users", cred.user.uid), {
+        name: addUserForm.name.trim(),
+        email: addUserForm.email.trim(),
+        phone: addUserForm.phone.trim(),
+        country: addUserForm.country.trim(),
+        tier: addUserForm.tier,
+        notes: addUserForm.notes.trim(),
+        createdAt: now.toISOString(),
+        trialEnd: addUserForm.tier === "pro_trial" ? trialEnd.toISOString() : null,
+        role: "user",
+        createdByAdmin: adminUser?.email,
+        provider: "admin",
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create user");
       notify(`✅ User "${addUserForm.name}" created successfully`);
       setShowAddUser(false);
       setAddUserForm({ name: "", email: "", password: "", phone: "", country: "", tier: "free", notes: "" });
@@ -900,7 +877,7 @@ export default function AdminPanel() {
     setDataSaving(true);
     try {
       const newId = Date.now();
-      await setDoc(doc(db, "projectData", String(newId)), { ...form, id: newId, createdAt: new Date().toISOString(), createdBy: adminUser?.email });
+      await setDoc(doc(db, "projects", String(newId)), { ...form, id: newId, createdAt: new Date().toISOString(), createdBy: adminUser?.email });
       notify("New project added!");
       setEditingProject(null);
       setProjectForm({});
@@ -922,7 +899,7 @@ export default function AdminPanel() {
       let saved = 0;
       for (const row of rows) {
         if (row.id) {
-          await setDoc(doc(db, "projectData", String(row.id)), row, { merge: true });
+          await setDoc(doc(db, "projects", String(row.id)), row, { merge: true });
           saved++;
         }
       }
@@ -1245,7 +1222,6 @@ export default function AdminPanel() {
                       { label: "Email Address *", key: "email", type: "email", placeholder: "john@company.com", full: true },
                       { label: "Password *", key: "password", type: "password", placeholder: "Min 6 characters", full: true },
                       { label: "Phone", key: "phone", type: "tel", placeholder: "+971 50 000 0000" },
-                      { label: "Country", key: "country", type: "text", placeholder: "UAE" },
                     ].map(f => (
                       <div key={f.key} style={{ gridColumn: f.full ? "1 / -1" : "auto" }}>
                         <label style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>{f.label}</label>
@@ -1253,6 +1229,33 @@ export default function AdminPanel() {
                           style={{ width: "100%", padding: "9px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
                       </div>
                     ))}
+                    <div style={{ gridColumn: "auto" }}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Country</label>
+                      <select value={addUserForm.country} onChange={e => setAddUserForm(p => ({ ...p, country: e.target.value }))}
+                        style={{ width: "100%", padding: "9px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" }}>
+                        <option value="">Select Country</option>
+                        <option value="UAE">🇦🇪 UAE</option>
+                        <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
+                        <option value="Qatar">🇶🇦 Qatar</option>
+                        <option value="Kuwait">🇰🇼 Kuwait</option>
+                        <option value="Bahrain">🇧🇭 Bahrain</option>
+                        <option value="Oman">🇴🇲 Oman</option>
+                        <option value="UK">🇬🇧 UK</option>
+                        <option value="USA">🇺🇸 USA</option>
+                        <option value="India">🇮🇳 India</option>
+                        <option value="Pakistan">🇵🇰 Pakistan</option>
+                        <option value="Egypt">🇪🇬 Egypt</option>
+                        <option value="Jordan">🇯🇴 Jordan</option>
+                        <option value="Lebanon">🇱🇧 Lebanon</option>
+                        <option value="Russia">🇷🇺 Russia</option>
+                        <option value="China">🇨🇳 China</option>
+                        <option value="Germany">🇩🇪 Germany</option>
+                        <option value="France">🇫🇷 France</option>
+                        <option value="Canada">🇨🇦 Canada</option>
+                        <option value="Australia">🇦🇺 Australia</option>
+                        <option value="Other">🌍 Other</option>
+                      </select>
+                    </div>
                     <div style={{ gridColumn: "1 / -1" }}>
                       <label style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Access Tier</label>
                       <select value={addUserForm.tier} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))}
@@ -1294,7 +1297,6 @@ export default function AdminPanel() {
                     {[
                       { label: "Full Name", key: "name", type: "text", placeholder: "Full name", full: true },
                       { label: "Phone", key: "phone", type: "tel", placeholder: "+971 50 000 0000" },
-                      { label: "Country", key: "country", type: "text", placeholder: "UAE" },
                     ].map(f => (
                       <div key={f.key} style={{ gridColumn: f.full ? "1 / -1" : "auto" }}>
                         <label style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>{f.label}</label>
@@ -1302,6 +1304,33 @@ export default function AdminPanel() {
                           style={{ width: "100%", padding: "9px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
                       </div>
                     ))}
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Country</label>
+                      <select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))}
+                        style={{ width: "100%", padding: "9px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" }}>
+                        <option value="">Select Country</option>
+                        <option value="UAE">🇦🇪 UAE</option>
+                        <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
+                        <option value="Qatar">🇶🇦 Qatar</option>
+                        <option value="Kuwait">🇰🇼 Kuwait</option>
+                        <option value="Bahrain">🇧🇭 Bahrain</option>
+                        <option value="Oman">🇴🇲 Oman</option>
+                        <option value="UK">🇬🇧 UK</option>
+                        <option value="USA">🇺🇸 USA</option>
+                        <option value="India">🇮🇳 India</option>
+                        <option value="Pakistan">🇵🇰 Pakistan</option>
+                        <option value="Egypt">🇪🇬 Egypt</option>
+                        <option value="Jordan">🇯🇴 Jordan</option>
+                        <option value="Lebanon">🇱🇧 Lebanon</option>
+                        <option value="Russia">🇷🇺 Russia</option>
+                        <option value="China">🇨🇳 China</option>
+                        <option value="Germany">🇩🇪 Germany</option>
+                        <option value="France">🇫🇷 France</option>
+                        <option value="Canada">🇨🇦 Canada</option>
+                        <option value="Australia">🇦🇺 Australia</option>
+                        <option value="Other">🌍 Other</option>
+                      </select>
+                    </div>
                     <div>
                       <label style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5 }}>Access Tier</label>
                       <select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))}
@@ -1506,6 +1535,13 @@ export default function AdminPanel() {
                       { event: "Dubai Market Report Q2", due: "2026-07-30", note: "DLD and DXBinteract" },
                       { event: "Emaar Q3 2026 Results", due: "2026-10-15", note: "Download from emaar.com/investor-relations" },
                       { event: "Emaar FY 2026 Results", due: "2027-02-15", note: "Annual results — biggest update of the year" },
+
+                      { event: "Emaar Q1 2026 Results", due: "2026-04-15", note: "Download from emaar.com/investor-relations" },
+                      { event: "Dubai Market Report Q1", due: "2026-04-30", note: "DLD and DXBinteract" },
+                      { event: "Emaar Q2 2026 Results", due: "2026-07-15", note: "Download from emaar.com/investor-relations" },
+                      { event: "Dubai Market Report Q2", due: "2026-07-30", note: "DLD and DXBinteract" },
+                      { event: "Emaar Q3 2026 Results", due: "2026-10-15", note: "Download from emaar.com/investor-relations" },
+                      { event: "Emaar FY 2026 Results", due: "2027-02-15", note: "Annual results — biggest update of the year" },
                     ].map((item, i) => {
                       const daysLeft = Math.ceil((new Date(item.due) - new Date()) / (1000 * 60 * 60 * 24));
                       const isUrgent = daysLeft <= 30;
@@ -1622,8 +1658,8 @@ export default function AdminPanel() {
                         <div style={{ fontSize: 18, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>AED {stats.total > 0 ? Math.round(mrr / stats.total) : 0}</div>
                       </div>
                       <div>
-                        <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>Est. Lead Value</div>
-                        <div style={{ fontSize: 18, fontWeight: 800, color: T.teal, fontFamily: "'Fraunces',serif" }}>~AED 2,400</div>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>Lead Value</div>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: T.teal, fontFamily: "'Fraunces',serif" }}>AED 125</div>
                         <div style={{ fontSize: 10, color: T.textMuted }}>Per inquiry avg</div>
                       </div>
                     </div>
@@ -2254,7 +2290,7 @@ export default function AdminPanel() {
                               {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short" }) : "—"}
                             </td>
                             <td style={{ padding: "10px 12px" }}>
-                              <a href={`https://wa.me/971542410599?text=${encodeURIComponent(`Hi ${lead.name || ""}, following up on your interest in ${lead.project || "the property"}. Are you still looking?`)}`}
+                              <a href={`https://wa.me/${lead.email ? "" : "971542410599"}?text=${encodeURIComponent(`Hi ${lead.name || ""}, following up on your interest in ${lead.project || "the property"}. Are you still looking?`)}`}
                                 target="_blank" rel="noreferrer"
                                 style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>
                                 Follow Up
@@ -2523,7 +2559,7 @@ export default function AdminPanel() {
                 <Chart title="Signup Sources (Estimated)">
                   <div style={{ padding: "20px 0" }}>
                     {[
-                      { label: "Direct / Unknown", pct: 65, color: T.gold },
+                      { label: "Direct (REMOVE_THIS_LINE)", pct: 65, color: T.gold },
                       { label: "Organic Search", pct: 20, color: T.teal },
                       { label: "Referral", pct: 10, color: T.blue },
                       { label: "Social Media", pct: 5, color: T.purple },
