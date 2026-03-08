@@ -2319,9 +2319,9 @@ export default function AdminPanel() {
     auditLog.slice(0, 20).forEach(l => {
       if (l.action !== "tier_change") return;
       const u = users.find(x => x.uid === l.uid);
-      const isUpgrade = (l.to === "pro" || l.to === "enterprise") && (l.from === "free" || l.from === "pro_trial");
+      const isUpgrade = (l.to === "pro" || l.to === "enterprise" || l.to === "pro_trial") && l.from !== l.to;
       const isDowngrade = (l.from === "pro" || l.from === "enterprise") && (l.to === "free" || l.to === "pro_trial");
-      if (!isUpgrade && !isDowngrade) return;
+      // Show all tier changes regardless
       items.push({
         type: isUpgrade ? "upgrade" : "downgrade",
         uid: l.uid, user: u,
