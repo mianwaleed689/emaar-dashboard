@@ -3150,9 +3150,11 @@ export default function AdminPanel() {
   
   const fetchPriceHistory = async (projectId) => {
     try {
-      const q = query(collection(db, "priceHistory"), where("projectId", "==", String(projectId)), limit(50));
-      const snap = await getDocs(q);
-      const data = snap.docs.map(d => d.data()).sort((a, b) => new Date(a.recordedAt) - new Date(b.recordedAt));
+      const snap = await getDocs(collection(db, "priceHistory"));
+      const data = snap.docs
+        .map(d => d.data())
+        .filter(d => String(d.projectId) === String(projectId))
+        .sort((a, b) => new Date(a.recordedAt) - new Date(b.recordedAt));
       setPriceHistory(prev => ({ ...prev, [projectId]: data }));
     } catch(e) { console.log("fetchPriceHistory error:", e); }
   };
