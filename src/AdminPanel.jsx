@@ -824,9 +824,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const focusedRowRef = React.useRef(0);
   focusedRowRef.current = focusedRow;
 
-  // Notify parent when drawer opens/closes (for push layout effect)
+  // Notify parent when drawer opens/closes
   const setDrawerUserWithCallback = (u) => {
-    setDrawerUserWithCallback(u);
+    setDrawerUser(u);
     if (onDrawerChange) onDrawerChange(!!u);
   };
 
