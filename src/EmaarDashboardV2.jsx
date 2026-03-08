@@ -930,6 +930,49 @@ const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this dat
   );
 };
 
+/* ─── PRO GATE FULL PAGE ─── */
+const ProGateFullPage = ({ tabName, onUpgrade }) => {
+  const tabBenefits = {
+    "DXB Estimate":     ["Automated property valuations", "AVM price estimates per unit", "Bayut live listings", "±15% accuracy model"],
+    "Portfolio":        ["Track your Dubai investments", "ROI calculations", "Portfolio performance chart", "Yield tracking"],
+    "Yields":           ["Gross & net yield by community", "STR vs LTR comparison", "Top yielding Emaar areas", "Historical yield trends"],
+    "Mortgage":         ["Live EIBOR rates", "UAE bank comparison", "Monthly payment calculator", "Affordability analysis"],
+    "DLD Volumes":      ["Real transaction volumes", "Community deal counts", "YoY growth by area", "Quarterly breakdown"],
+    "STR vs LTR":       ["Airbnb vs long-term yields", "Occupancy rates", "Nightly rate benchmarks", "Best STR communities"],
+    "Developer Health": ["Developer financial scores", "Delivery track records", "Risk ratings", "Off-plan safety analysis"],
+    "Competitors":      ["Emaar vs DAMAC vs Nakheel", "Market share data", "Price per sqft comparison", "Analyst ratings"],
+    "Service Charges":  ["RERA approved rates", "Community-by-community breakdown", "Annual charge estimates", "Hidden cost analysis"],
+    "Flip":             ["Buy-renovate-sell calculator", "Flip ROI estimator", "DLD fee breakdown", "Best flip communities"],
+    "Investment Score": ["AI-powered property scoring", "Risk vs return matrix", "Top picks by budget", "Score breakdown"],
+    "Price History":    ["Historical price charts", "5-year appreciation data", "Price per sqft trends", "Community comparisons"],
+  };
+  const benefits = tabBenefits[tabName] || ["Full data access", "Live market insights", "Advanced analytics", "Export reports"];
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: "40px 20px" }}>
+      <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 24, padding: "48px 40px", textAlign: "center", maxWidth: 480, width: "100%", boxShadow: `0 30px 80px rgba(0,0,0,0.4), 0 0 40px ${T.gold}10` }}>
+        <div style={{ width: 64, height: 64, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}20, ${T.gold}05)`, border: `1px solid ${T.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, margin: "0 auto 20px" }}>🔒</div>
+        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 8 }}>{tabName}</div>
+        <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 28, lineHeight: 1.6 }}>This feature is available on the <span style={{ color: T.gold, fontWeight: 700 }}>Pro plan</span>. Upgrade to unlock full access.</div>
+        <div style={{ background: T.surfaceAlt, borderRadius: 14, padding: "18px 20px", marginBottom: 28, textAlign: "left" }}>
+          <div style={{ fontSize: 11, color: T.gold, fontWeight: 700, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>What you unlock:</div>
+          {benefits.map((b, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <div style={{ width: 18, height: 18, borderRadius: "50%", background: `${T.gold}20`, border: `1px solid ${T.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke={T.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+              <span style={{ fontSize: 12, color: T.textSecondary }}>{b}</span>
+            </div>
+          ))}
+        </div>
+        <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "14px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3, marginBottom: 10 }}>
+          Upgrade to Pro — AED 99/mo →
+        </button>
+        <div style={{ fontSize: 11, color: T.textMuted }}>7-day free trial · Cancel anytime · Money-back guarantee</div>
+      </div>
+    </div>
+  );
+};
+
 /* ─── UPGRADE MODAL ─── */
 const UpgradeModal = ({ show, onClose }) => {
   if (!show) return null;
@@ -2311,6 +2354,20 @@ export default function EmaarDashboardV2() {
         </div>
       </aside>
 
+      {/* ─── FREE TIER BANNER ─── */}
+      {userTier === "free" && (
+        <div style={{ position: "fixed", top: 0, left: 240, right: 0, zIndex: 60, background: `linear-gradient(90deg, ${T.gold}ee, #B8912Fee)`, padding: "8px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 14 }}>🔒</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#04090F" }}>You're on the Free plan — 12 tabs locked</span>
+            <span style={{ fontSize: 11, color: "rgba(4,9,15,0.7)" }}>Upgrade to Pro to unlock DXB Estimate, Yields, Mortgage, Portfolio & more</span>
+          </div>
+          <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "5px 16px", background: "#04090F", color: T.gold, border: "none", borderRadius: 8, fontSize: 11, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
+            Upgrade Now →
+          </button>
+        </div>
+      )}
+
       {/* ─── TOP BAR ─── */}
       <header className="top-bar" style={{
         position: "fixed", top: 0, right: 0, left: 240, height: 60,
@@ -3251,7 +3308,8 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── PORTFOLIO TAB ─── */}
-          {tab === "Portfolio" && <>
+          {tab === "Portfolio" && !isPro && <ProGateFullPage tabName="Portfolio" onUpgrade={() => setShowUpgrade(true)} />}
+          {tab === "Portfolio" && isPro && <>
 
             {/* ROI MODE TOGGLE */}
             {myPortfolio.length > 0 && (
@@ -3543,7 +3601,8 @@ export default function EmaarDashboardV2() {
           </>}
 
           {/* ─── DXB ESTIMATE AVM TAB ─── */}
-          {tab === "DXB Estimate" && (() => {
+          {tab === "DXB Estimate" && !isPro && <ProGateFullPage tabName="DXB Estimate" onUpgrade={() => setShowUpgrade(true)} />}
+          {tab === "DXB Estimate" && isPro && (() => {
             const avmData = {
               "Dubai Hills Estate":    { apt: { "Studio": { ppsf: 1680, rent: 55 }, "1BR": { ppsf: 1820, rent: 80 }, "2BR": { ppsf: 2050, rent: 125 }, "3BR": { ppsf: 2300, rent: 180 } }, villa: { "3BR": { ppsf: 1450, rent: 180 }, "4BR": { ppsf: 1550, rent: 240 }, "5BR": { ppsf: 1700, rent: 320 } }, apprRate: 0.18, sc: 18 },
               "Dubai Creek Harbour":   { apt: { "Studio": { ppsf: 1600, rent: 52 }, "1BR": { ppsf: 1750, rent: 78 }, "2BR": { ppsf: 1950, rent: 118 }, "3BR": { ppsf: 2200, rent: 170 } }, villa: null, apprRate: 0.22, sc: 22 },
@@ -3784,7 +3843,8 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── STR VS LTR YIELD TAB ─── */}
-          {tab === "STR vs LTR" && (() => {
+          {tab === "STR vs LTR" && !isPro && <ProGateFullPage tabName="STR vs LTR" onUpgrade={() => setShowUpgrade(true)} />}
+          {tab === "STR vs LTR" && isPro && (() => {
             const strDataStatic = [
               // Source: DTCM Dubai 2025, Property Monitor, DLD Rental Index, industry estimates
               // Dubai STR avg gross: ~8% | LTR avg: 6.9% | DTCM permit: AED 1,520/yr | Mgmt: 15–20%
@@ -3907,7 +3967,8 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── DEVELOPER HEALTH SCORE TAB ─── */}
-          {tab === "Developer Health" && (() => {
+          {tab === "Developer Health" && !isPro && <ProGateFullPage tabName="Developer Health" onUpgrade={() => setShowUpgrade(true)} />}
+          {tab === "Developer Health" && isPro && (() => {
             const devData = liveDevHealth.length > 0
               ? liveDevHealth.map(d => ({
                   name: d.developer || d.name || "Unknown",
@@ -4020,7 +4081,8 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── DLD TRANSACTION VOLUMES TAB ─── */}
-          {tab === "DLD Volumes" && (() => {
+          {tab === "DLD Volumes" && !isPro && <ProGateFullPage tabName="DLD Volumes" onUpgrade={() => setShowUpgrade(true)} />}
+          {tab === "DLD Volumes" && isPro && (() => {
             const dldDataStatic = [
               // Source: Dubai Land Department FY2025 official data via DXB Interact & Gulf News Jan 2026
               // Total Dubai market: 214,912 sales transactions, AED 682.5B value
@@ -4149,7 +4211,8 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── COMPETITORS TAB ─── */}
-          {tab === "Competitors" && (() => {
+          {tab === "Competitors" && !isPro && <ProGateFullPage tabName="Competitors" onUpgrade={() => setShowUpgrade(true)} />}
+          {tab === "Competitors" && isPro && (() => {
             // Use live competitor data from admin if available, else static
             const devList = liveCompetitors.length > 0
               ? liveCompetitors.map((d, i) => ({
@@ -4266,7 +4329,8 @@ export default function EmaarDashboardV2() {
           </>; })()}
 
           {/* ─── YIELDS TAB ─── */}
-          {tab === "Yields" && <>
+          {tab === "Yields" && !isPro && <ProGateFullPage tabName="Yields" onUpgrade={() => setShowUpgrade(true)} />}
+          {tab === "Yields" && isPro && <>
             <ProGate isPro={isPro} message="Unlock Rental Yield Analysis" onUpgrade={() => setShowUpgrade(true)}>
             <Section title="Rental Yield Analysis" sub="REIDIN Dec 2025 · DXB Interact · Engel & Völkers · DLD Rental Index">
               <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -4354,7 +4418,8 @@ export default function EmaarDashboardV2() {
           </>}
 
           {/* ─── MORTGAGE CALCULATOR TAB ─── */}
-          {tab === "Mortgage" && (() => {
+          {tab === "Mortgage" && !isPro && <ProGateFullPage tabName="Mortgage" onUpgrade={() => setShowUpgrade(true)} />}
+          {tab === "Mortgage" && isPro && (() => {
             const MortgageCalc = () => {
               const [selectedProjectId, setSelectedProjectId] = React.useState("");
               const [propPrice, setPropPrice] = React.useState(2000000);
@@ -4783,7 +4848,8 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── SERVICE CHARGES TAB ─── */}
-          {tab === "Service Charges" && (() => {
+          {tab === "Service Charges" && !isPro && <ProGateFullPage tabName="Service Charges" onUpgrade={() => setShowUpgrade(true)} />}
+          {tab === "Service Charges" && isPro && (() => {
             const scDataStatic = [
               { community: "Downtown Dubai", type: "Apartment", low: 28, high: 38, avg: 32, rera: true, notes: "Burj Khalifa zone highest at AED 38. Older towers closer to AED 28." },
               { community: "Emaar Beachfront", type: "Apartment", low: 24, high: 32, avg: 28, rera: true, notes: "Sea-facing units attract premium SC due to beach maintenance." },
@@ -5356,7 +5422,8 @@ export default function EmaarDashboardV2() {
 
 
           {/* ─── FLIP PROFIT TAB ─── */}
-          {tab === "Flip" && (() => {
+          {tab === "Flip" && !isPro && <ProGateFullPage tabName="Flip" onUpgrade={() => setShowUpgrade(true)} />}
+          {tab === "Flip" && isPro && (() => {
             const selectedFlipProj = activeProjects.find(p => p.id === flipProjId) || activeProjects[0] || null;
               const buyPrice = flipBuyPrice;
               const setBuyPrice = setFlipBuyPrice;
@@ -5686,7 +5753,8 @@ export default function EmaarDashboardV2() {
           </>}
 
           {/* ─── INVESTMENT SCORE TAB ─── */}
-          {tab === "Investment Score" && (() => {
+          {tab === "Investment Score" && !isPro && <ProGateFullPage tabName="Investment Score" onUpgrade={() => setShowUpgrade(true)} />}
+          {tab === "Investment Score" && isPro && (() => {
             const COMMUNITIES = [
               { name: "Jumeirah Village Circle", short: "JVC", yield: 8.5, supplyRisk: 3, momentum: 7, demand: 9, goldenVisa: false, strPotential: 6, devQuality: 8, avgPriceSqft: 1180, note: "Highest yields in Dubai. Watch supply pipeline." },
               { name: "Dubai Hills Estate", short: "DHE", yield: 6.0, supplyRisk: 7, momentum: 9, demand: 9, goldenVisa: true, strPotential: 7, devQuality: 10, avgPriceSqft: 2050, note: "Premium family community. Strong capital appreciation." },
@@ -5906,7 +5974,8 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── PRICE HISTORY TAB ─── */}
-          {tab === "Price History" && (() => {
+          {tab === "Price History" && !isPro && <ProGateFullPage tabName="Price History" onUpgrade={() => setShowUpgrade(true)} />}
+          {tab === "Price History" && isPro && (() => {
             // 2008–2025 Dubai price per sqft data by community
             const HISTORY = {
               "Dubai Average": [
