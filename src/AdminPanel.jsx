@@ -2146,6 +2146,11 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
   const tierColor = { free: "#94A3B8", pro_trial: T.gold, pro: T.green, enterprise: T.teal, suspended: T.red, admin: T.blue, staff: T.blue };
   const tierLabel = { free: "Free", pro_trial: "Pro Trial", pro: "Pro", enterprise: "Enterprise", suspended: "Suspended", admin: "Admin", staff: "Staff" };
 
+  const dateRangeCutoff = { all: 0, today: 1, "7d": 7, "30d": 30 }[dateRange] || 0;
+  const rangeFiltered = dateRange === "all" ? auditLog : auditLog.filter(l => {
+    try { return (Date.now() - new Date(l.changedAt).getTime()) < dateRangeCutoff * 24 * 60 * 60 * 1000; } catch { return false; }
+  });
+
   const filterCounts = {
     all: rangeFiltered.length,
     tier: rangeFiltered.filter(l => l.action === "tier_change").length,
@@ -2155,11 +2160,6 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
     logins: rangeFiltered.filter(l => ["admin_login","admin_logout"].includes(l.action)).length,
     users: rangeFiltered.filter(l => ["user_created","user_deleted","user_suspended","user_unsuspended"].includes(l.action)).length,
   };
-
-  const dateRangeCutoff = { all: 0, today: 1, "7d": 7, "30d": 30 }[dateRange] || 0;
-  const rangeFiltered = dateRange === "all" ? auditLog : auditLog.filter(l => {
-    try { return (Date.now() - new Date(l.changedAt).getTime()) < dateRangeCutoff * 24 * 60 * 60 * 1000; } catch { return false; }
-  });
 
   const exportCSV = () => {
     const rows = [["Time", "Action", "Changed By", "IP Address", "User / Project", "Details", "From Tier", "To Tier"]];
