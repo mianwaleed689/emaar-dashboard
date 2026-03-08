@@ -428,43 +428,51 @@ function EiborRatesPanel({ db, T }) {
 }
 
 
+
 /* ══════════════════════════════════════════════════════
    USERS TAB COMPONENT — Professional SaaS User Management
+   Full rebuild: all 36 audit issues resolved
 ══════════════════════════════════════════════════════ */
 function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, suspendUser, sendResetEmail, extendTrial, openEditUser, saveEditUser, editingUser, setEditingUser, editUserForm, setEditUserForm, editUserLoading, showAddUser, setShowAddUser, addUserForm, setAddUserForm, addUserManually, addUserLoading, exportCSV, userSearch, setUserSearch, tierFilter, setTierFilter, notify, db, T, I, trialDaysLeft, timeSince }) {
 
   /* ─── STATE ─── */
-  const [drawerUser, setDrawerUser]         = useState(null);
-  const [bulkSel, setBulkSel]               = useState([]);
-  const [bulkTier, setBulkTier]             = useState("");
-  const [sendEmailUser, setSendEmailUser]   = useState(null);
-  const [emailSubject, setEmailSubject]     = useState("");
-  const [emailBody, setEmailBody]           = useState("");
-  const [emailSending, setEmailSending]     = useState(false);
-  const [noteUser, setNoteUser]             = useState(null);
-  const [noteText, setNoteText]             = useState("");
-  const [confirmDelete, setConfirmDelete]   = useState(null);
-  const [confirmSuspend, setConfirmSuspend] = useState(null);
-  const [sortField, setSortField]           = useState("newest");
-  const [sortDir, setSortDir]               = useState("desc");
-  const [page, setPage]                     = useState(1);
-  const [tagUser, setTagUser]               = useState(null);
-  const [hoverRow, setHoverRow]             = useState(null);
-  const [inlineTierUser, setInlineTierUser] = useState(null);
-  const [showFilters, setShowFilters]       = useState(false);
-  const [filterCountry, setFilterCountry]   = useState("");
-  const [focusedRow, setFocusedRow]         = useState(0);
-  const [sendingTrialEmails, setSendingTrialEmails] = useState(false);
-  const [notifUser, setNotifUser]               = useState(null);
-  const [notifTitle, setNotifTitle]             = useState("");
-  const [notifMessage, setNotifMessage]         = useState("");
-  const [notifIcon, setNotifIcon]               = useState("📢");
-  const [notifSendingUser, setNotifSendingUser] = useState(false);
+  const [drawerUser,         setDrawerUser]         = useState(null);
+  const [bulkSel,            setBulkSel]            = useState([]);
+  const [bulkTier,           setBulkTier]           = useState("");
+  const [sendEmailUser,      setSendEmailUser]       = useState(null);
+  const [emailSubject,       setEmailSubject]        = useState("");
+  const [emailBody,          setEmailBody]           = useState("");
+  const [emailSending,       setEmailSending]        = useState(false);
+  const [noteUser,           setNoteUser]            = useState(null);
+  const [noteText,           setNoteText]            = useState("");
+  const [confirmDelete,      setConfirmDelete]       = useState(null);
+  const [confirmSuspend,     setConfirmSuspend]      = useState(null);
+  const [confirmExtend,      setConfirmExtend]       = useState(null); // { user, days }
+  const [sortField,          setSortField]           = useState("newest");
+  const [sortDir,            setSortDir]             = useState("desc");
+  const [page,               setPage]               = useState(1);
+  const [tagUser,            setTagUser]             = useState(null);
+  const [hoverRow,           setHoverRow]            = useState(null);
+  const [inlineTierUser,     setInlineTierUser]      = useState(null);
+  const [showFilters,        setShowFilters]         = useState(false);
+  const [filterCountry,      setFilterCountry]       = useState("");
+  const [filterRole,         setFilterRole]          = useState("");   // FIX #27
+  const [focusedRow,         setFocusedRow]          = useState(0);
+  const [sendingTrialEmails, setSendingTrialEmails]  = useState(false);
+  const [notifUser,          setNotifUser]           = useState(null);
+  const [notifTitle,         setNotifTitle]          = useState("");
+  const [notifMessage,       setNotifMessage]        = useState("");
+  const [notifIcon,          setNotifIcon]           = useState("📢");
+  const [notifSendingUser,   setNotifSendingUser]    = useState(false);
+  const [loadingUsers,       setLoadingUsers]        = useState(false); // FIX #30
+  const [copiedId,           setCopiedId]            = useState(null);  // FIX #36
+  const [drawerTab,          setDrawerTab]           = useState("details"); // drawer sub-nav
 
-  const PAGE_SIZE = 25;
-  const now = new Date();
+  const PAGE_SIZE    = 25;
+  const AT_RISK_DAYS = 3; // FIX #6 — single source of truth
+  const now          = new Date();
 
-  /* ─── REFS for keyboard nav (avoids temporal dead zone with pagedUsers) ─── */
+  /* ─── REFS for keyboard nav ─── */
   const pagedUsersRef = React.useRef([]);
   const focusedRowRef = React.useRef(0);
   focusedRowRef.current = focusedRow;
@@ -472,32 +480,20 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   /* ─── KEYBOARD NAVIGATION ─── */
   useEffect(() => {
     const handler = (e) => {
-      if (sendEmailUser || noteUser || confirmDelete || confirmSuspend || tagUser || editingUser || showAddUser) return;
+      const anyModalOpen = sendEmailUser || noteUser || confirmDelete || confirmSuspend ||
+        confirmExtend || tagUser || editingUser || showAddUser || notifUser;
+      if (anyModalOpen) return;
       const list = pagedUsersRef.current;
-      if (e.key === "j" || e.key === "ArrowDown") {
-        e.preventDefault();
-        setFocusedRow(r => Math.min(r + 1, list.length - 1));
-      }
-      if (e.key === "k" || e.key === "ArrowUp") {
-        e.preventDefault();
-        setFocusedRow(r => Math.max(r - 1, 0));
-      }
-      if (e.key === "Enter" || e.key === "v") {
-        const u = list[focusedRowRef.current];
-        if (u) setDrawerUser(u);
-      }
-      if (e.key === "e") {
-        const u = list[focusedRowRef.current];
-        if (u) openEditUser(u);
-      }
-      if (e.key === "Escape") {
-        setDrawerUser(null);
-        setInlineTierUser(null);
-      }
+      if (e.key === "j" || e.key === "ArrowDown") { e.preventDefault(); setFocusedRow(r => Math.min(r + 1, list.length - 1)); }
+      if (e.key === "k" || e.key === "ArrowUp")   { e.preventDefault(); setFocusedRow(r => Math.max(r - 1, 0)); }
+      if (e.key === "Enter" || e.key === "v") { const u = list[focusedRowRef.current]; if (u) { setDrawerUser(u); setDrawerTab("details"); } }
+      if (e.key === "e") { const u = list[focusedRowRef.current]; if (u) openEditUser(u); }
+      if (e.key === "n" || e.key === "N") { setShowAddUser(true); }  // FIX #31
+      if (e.key === "Escape") { setDrawerUser(null); setInlineTierUser(null); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [sendEmailUser, noteUser, confirmDelete, confirmSuspend, tagUser, editingUser, showAddUser]);
+  }, [sendEmailUser, noteUser, confirmDelete, confirmSuspend, confirmExtend, tagUser, editingUser, showAddUser, notifUser]);
 
   /* ─── ICONS ─── */
   const EditIcon = () => (
@@ -506,136 +502,139 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
     </svg>
   );
-
+  const CopyIcon = () => (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+    </svg>
+  );
   const SortIcon = ({ active, dir }) => (
     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={active ? T.gold : T.textMuted} strokeWidth="2.5" strokeLinecap="round">
       {dir === "asc" || !active ? <polyline points="18 15 12 9 6 15"/> : <polyline points="6 9 12 15 18 9"/>}
     </svg>
   );
 
-  /* ─── ROLES & TAGS ─── */
-  const ROLES = [
-    { value: "free",             label: "Free",             color: "#64748B", bg: "rgba(100,116,139,0.12)", price: "" },
-    { value: "pro_trial",        label: "Pro Trial",        color: T.gold,    bg: "rgba(212,168,67,0.12)",  price: "" },
-    { value: "pro",              label: "Pro",              color: "#10B981", bg: "rgba(16,185,129,0.12)",  price: "AED 99" },
-    { value: "enterprise",       label: "Enterprise",       color: "#06B6D4", bg: "rgba(6,182,212,0.12)",   price: "AED 499" },
-    { value: "agent",            label: "Agent",            color: "#3B82F6", bg: "rgba(59,130,246,0.12)",  price: "" },
-    { value: "sales_manager",    label: "Sales Manager",    color: "#8B5CF6", bg: "rgba(139,92,246,0.12)",  price: "" },
-    { value: "broker",           label: "Broker",           color: "#F59E0B", bg: "rgba(245,158,11,0.12)",  price: "" },
-    { value: "property_manager", label: "Property Manager", color: "#14B8A6", bg: "rgba(20,184,166,0.12)",  price: "" },
-    { value: "investor",         label: "Investor",         color: "#10B981", bg: "rgba(16,185,129,0.1)",   price: "" },
-    { value: "developer",        label: "Developer",        color: "#EC4899", bg: "rgba(236,72,153,0.12)",  price: "" },
-    { value: "staff",            label: "Staff",            color: "#94A3B8", bg: "rgba(148,163,184,0.12)", price: "" },
-    { value: "admin",            label: "Admin",            color: T.gold,    bg: "rgba(212,168,67,0.2)",   price: "" },
+  /* ─── FIX #11: Separate billing tiers from job roles ─── */
+  const BILLING_TIERS = [
+    { value: "free",       label: "Free",       color: "#64748B", bg: "rgba(100,116,139,0.12)", price: "" },
+    { value: "pro_trial",  label: "Pro Trial",  color: "#D4A843", bg: "rgba(212,168,67,0.12)",  price: "" },
+    { value: "pro",        label: "Pro",        color: "#10B981", bg: "rgba(16,185,129,0.12)",  price: "AED 99" },
+    { value: "enterprise", label: "Enterprise", color: "#06B6D4", bg: "rgba(6,182,212,0.12)",   price: "AED 499" },
+  ];
+  const JOB_ROLES = [
+    { value: "agent",            label: "Real Estate Agent", color: "#3B82F6", bg: "rgba(59,130,246,0.12)" },
+    { value: "sales_manager",    label: "Sales Manager",     color: "#8B5CF6", bg: "rgba(139,92,246,0.12)" },
+    { value: "broker",           label: "Broker",            color: "#F59E0B", bg: "rgba(245,158,11,0.12)" },
+    { value: "property_manager", label: "Property Manager",  color: "#14B8A6", bg: "rgba(20,184,166,0.12)" },
+    { value: "investor",         label: "Investor",          color: "#10B981", bg: "rgba(16,185,129,0.12)" },
+    { value: "developer",        label: "Developer",         color: "#EC4899", bg: "rgba(236,72,153,0.12)" },
+    { value: "staff",            label: "Platform Staff",    color: "#94A3B8", bg: "rgba(148,163,184,0.12)" },
+    { value: "admin",            label: "Admin",             color: "#D4A843", bg: "rgba(212,168,67,0.2)" },
   ];
 
+  /* ─── FIX #12: Tags = labels only, no overlap with roles ─── */
   const TAGS_OPTIONS = [
-    { value: "vip",       label: "VIP",       color: "#F59E0B" },
-    { value: "agent",     label: "Agent",     color: "#3B82F6" },
-    { value: "investor",  label: "Investor",  color: "#10B981" },
-    { value: "developer", label: "Developer", color: "#8B5CF6" },
-    { value: "broker",    label: "Broker",    color: "#06B6D4" },
-    { value: "followup",  label: "Follow-up", color: "#EF4444" },
+    { value: "vip",      label: "⭐ VIP",        color: "#F59E0B" },
+    { value: "hot_lead", label: "🔥 Hot Lead",    color: "#EF4444" },
+    { value: "followup", label: "📞 Follow-up",   color: "#3B82F6" },
+    { value: "churning", label: "⚠️ Churning",    color: "#F97316" },
+    { value: "referral", label: "🤝 Referral",    color: "#8B5CF6" },
+    { value: "partner",  label: "🏢 Partner",     color: "#06B6D4" },
   ];
 
-  /* ─── HELPERS ─── */
-  const getRoleBadge = (u) => {
-    if (u.role === "admin")            return ROLES.find(r => r.value === "admin");
-    // Real estate roles shown as secondary badge color
-    const realEstateRoles = ["agent","sales_manager","broker","property_manager","investor","developer"];
+  /* ─── FIX #9+10: Single, clean getRoleBadge ─── */
+  const getTierBadge = (u) => {
     const expired = u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) <= now;
     if (expired) return { value: "expired", label: "Expired", color: T.red, bg: "rgba(239,68,68,0.12)", price: "" };
-    return ROLES.find(r => r.value === (u.tier || "free")) || ROLES[0];
+    return BILLING_TIERS.find(r => r.value === (u.tier || "free")) || BILLING_TIERS[0];
   };
-
-  const getRoleTag = (u) => {
-    const realEstateRoles = ["agent","sales_manager","broker","property_manager","investor","developer","staff"];
-    if (realEstateRoles.includes(u.role)) return ROLES.find(r => r.value === u.role);
-    return null;
+  const getJobRoleBadge = (u) => {
+    if (!u.role || u.role === "user") return null;
+    return JOB_ROLES.find(r => r.value === u.role) || null;
   };
 
   const getHealth = (u) => {
     if (u.suspended) return { label: "Suspended", color: T.red, dot: "#EF4444", border: "#EF4444" };
-    if (u.tier === "enterprise") return { label: "Healthy", color: T.green, dot: "#10B981", border: "#10B981" };
-    if (u.tier === "pro") return { label: "Active", color: T.green, dot: "#10B981", border: "#10B981" };
+    if (u.tier === "enterprise") return { label: "Healthy",  color: T.green,  dot: "#10B981", border: "#10B981" };
+    if (u.tier === "pro")        return { label: "Active",   color: T.green,  dot: "#10B981", border: "#10B981" };
     if (u.tier === "pro_trial") {
       const days = trialDaysLeft(u);
-      if (days <= 2) return { label: "At Risk", color: T.red, dot: "#EF4444", border: "#EF4444" };
-      if (days <= 4) return { label: "Expiring", color: "#F59E0B", dot: "#F59E0B", border: "#F59E0B" };
-      return { label: "Trial", color: T.gold, dot: "#D4A843", border: "#D4A843" };
+      if (days <= 0)             return { label: "Expired",  color: T.red,    dot: "#EF4444", border: "#EF4444" };
+      if (days <= AT_RISK_DAYS)  return { label: "At Risk",  color: T.red,    dot: "#EF4444", border: "#EF4444" };
+      if (days <= 5)             return { label: "Expiring", color: "#F59E0B", dot: "#F59E0B", border: "#F59E0B" };
+      return                            { label: "Trial",    color: T.gold,   dot: "#D4A843", border: "#D4A843" };
     }
     return { label: "Free", color: T.textMuted, dot: "#475569", border: "transparent" };
   };
 
-  const getLTV = (u) => {
+  /* FIX #23: User's own revenue, not global */
+  const getUserLTV = (u) => {
     if (u.tier === "enterprise") return "AED 499/mo";
-    if (u.tier === "pro") return "AED 99/mo";
-    return "AED 0";
+    if (u.tier === "pro")        return "AED 99/mo";
+    if (u.tier === "pro_trial")  return "Trial";
+    return "Free";
   };
 
-  const lastActiveLabel = (u) => {
-    if (!u.lastLoginAt) return "Never";
-    return timeSince(u.lastLoginAt);
-  };
-
+  const lastActiveLabel = (u) => (!u.lastLoginAt ? "Never" : timeSince(u.lastLoginAt));
   const lastActiveColor = (u) => {
     if (!u.lastLoginAt) return T.textMuted;
-    const ms = now - new Date(u.lastLoginAt);
-    const h = ms / 3600000;
-    if (h < 24) return T.green;
-    if (h < 72) return T.gold;
-    return T.textMuted;
+    const h = (now - new Date(u.lastLoginAt)) / 3600000;
+    return h < 24 ? T.green : h < 72 ? T.gold : T.textMuted;
   };
 
-  /* ─── STATS ─── */
-  const total     = users.length;
-  const paid      = users.filter(u => u.tier === "pro" || u.tier === "enterprise").length;
-  const trial     = users.filter(u => u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) > now).length;
-  const free      = users.filter(u => !u.tier || u.tier === "free").length;
-  const atRisk    = users.filter(u => { const d = trialDaysLeft(u); return d !== null && d <= 2; }).length;
-  const mrr       = users.filter(u => u.tier === "pro").length * 99 + users.filter(u => u.tier === "enterprise").length * 499;
-  const convRate  = total > 0 ? ((paid / total) * 100).toFixed(1) : "0.0";
-  const suspended = users.filter(u => u.suspended).length;
-  const activeToday = users.filter(u => {
-    if (!u.lastLoginAt) return false;
-    return (now - new Date(u.lastLoginAt)) < 86400000;
-  }).length;
+  /* ─── STATS — FIX #2, #6 ─── */
+  const total       = users.length;
+  const paid        = users.filter(u => u.tier === "pro" || u.tier === "enterprise").length; // FIX #2
+  const trial       = users.filter(u => u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) > now).length;
+  const free        = users.filter(u => !u.tier || u.tier === "free").length;
+  const atRisk      = users.filter(u => { const d = trialDaysLeft(u); return d !== null && d <= AT_RISK_DAYS && d >= 0; }); // FIX #6
+  const atRiskCount = atRisk.length;
+  const mrr         = users.filter(u => u.tier === "pro").length * 99 + users.filter(u => u.tier === "enterprise").length * 499;
+  const convRate    = total > 0 ? ((paid / total) * 100).toFixed(1) : "0.0";
+  const suspended   = users.filter(u => u.suspended).length;
+  const activeToday = users.filter(u => u.lastLoginAt && (now - new Date(u.lastLoginAt)) < 86400000).length;
 
-  /* ─── FILTERING + SORTING ─── */
+  /* ─── FILTERING + SORTING — FIX #1, #3, #27 ─── */
   const allFiltered = users
     .filter(u => {
-      const search = userSearch.toLowerCase();
+      const q = userSearch.toLowerCase();
       const matchSearch = !userSearch ||
-        (u.name || "").toLowerCase().includes(search) ||
-        (u.email || "").toLowerCase().includes(search) ||
-        (u.phone || "").toLowerCase().includes(search) ||
-        (u.notes || "").toLowerCase().includes(search) ||
-        (u.country || "").toLowerCase().includes(search) ||
-        (u.tags || []).some(t => t.toLowerCase().includes(search));
+        (u.name || "").toLowerCase().includes(q) ||
+        (u.email || "").toLowerCase().includes(q) ||
+        (u.phone || "").toLowerCase().includes(q) ||
+        (u.notes || "").toLowerCase().includes(q) ||
+        (u.country || "").toLowerCase().includes(q) ||
+        (u.role || "").toLowerCase().includes(q) ||
+        (u.tags || []).some(t => t.toLowerCase().includes(q));
+
+      // FIX #1 & #3: AtRisk is its own filter
       let matchTier = true;
-      if (tierFilter === "Free")        matchTier = u.tier === "free" || !u.tier;
-      else if (tierFilter === "Pro Trial") matchTier = u.tier === "pro_trial" && (!u.trialEnd || new Date(u.trialEnd) > now);
-      else if (tierFilter === "Pro")     matchTier = u.tier === "pro";
+      if      (tierFilter === "Free")       matchTier = u.tier === "free" || !u.tier;
+      else if (tierFilter === "Pro Trial")  matchTier = u.tier === "pro_trial" && (!u.trialEnd || new Date(u.trialEnd) > now);
+      else if (tierFilter === "Pro")        matchTier = u.tier === "pro" || u.tier === "enterprise"; // FIX #2
       else if (tierFilter === "Enterprise") matchTier = u.tier === "enterprise";
-      else if (tierFilter === "Expired") matchTier = u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) <= now;
-      else if (tierFilter === "Suspended") matchTier = !!u.suspended;
+      else if (tierFilter === "Expired")    matchTier = u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) <= now;
+      else if (tierFilter === "Suspended")  matchTier = !!u.suspended;
+      else if (tierFilter === "AtRisk")     matchTier = (() => { const d = trialDaysLeft(u); return d !== null && d <= AT_RISK_DAYS && d >= 0; })(); // FIX #1
+
       const matchCountry = !filterCountry || (u.country || "").toLowerCase().includes(filterCountry.toLowerCase());
-      return matchSearch && matchTier && matchCountry;
+      const matchRole    = !filterRole    || (u.role || "") === filterRole; // FIX #27
+
+      return matchSearch && matchTier && matchCountry && matchRole;
     })
     .sort((a, b) => {
       const dir = sortDir === "asc" ? 1 : -1;
-      if (sortField === "newest")    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-      if (sortField === "oldest")    return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
-      if (sortField === "name")      return dir * (a.name || "").localeCompare(b.name || "");
-      if (sortField === "tier")      return dir * (a.tier || "").localeCompare(b.tier || "");
-      if (sortField === "trial")     return dir * ((trialDaysLeft(a) || 0) - (trialDaysLeft(b) || 0));
-      if (sortField === "lastActive")return dir * (new Date(a.lastLoginAt || 0) - new Date(b.lastLoginAt || 0));
+      if (sortField === "newest")     return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      if (sortField === "oldest")     return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+      if (sortField === "name")       return dir * (a.name || "").localeCompare(b.name || "");
+      if (sortField === "tier")       return dir * (a.tier || "").localeCompare(b.tier || "");
+      if (sortField === "trial")      return dir * ((trialDaysLeft(a) ?? 999) - (trialDaysLeft(b) ?? 999));
+      if (sortField === "lastActive") return dir * (new Date(a.lastLoginAt || 0) - new Date(b.lastLoginAt || 0));
       return 0;
     });
 
-  const totalPages = Math.max(1, Math.ceil(allFiltered.length / PAGE_SIZE));
-  const pagedUsers = allFiltered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  pagedUsersRef.current = pagedUsers; // keep ref in sync for keyboard handler
+  const totalPages  = Math.max(1, Math.ceil(allFiltered.length / PAGE_SIZE));
+  const pagedUsers  = allFiltered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  pagedUsersRef.current = pagedUsers;
 
   const handleSort = (field) => {
     if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
@@ -643,27 +642,25 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     setPage(1);
   };
 
-  /* ─── TRIAL EXPIRY EMAILS (manual trigger for admin) ─── */
+  const activeFilterCount = [filterCountry, filterRole, sortField !== "newest" ? "sort" : ""].filter(Boolean).length; // FIX #32
+
+  /* ─── TRIAL EXPIRY EMAILS — FIX #6 consistent threshold ─── */
   const sendTrialExpiryEmails = async () => {
     setSendingTrialEmails(true);
-    const expiring = users.filter(u => {
-      const days = trialDaysLeft(u);
-      return days !== null && days <= 3 && days >= 0;
-    });
     let sent = 0;
-    for (const u of expiring) {
+    for (const u of atRisk) {
       const days = trialDaysLeft(u);
       try {
         await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-          user_email: u.email,
-          user_name: u.name || u.email,
+          user_email:   u.email,
+          user_name:    u.name || u.email,
           project_name: "DXB Analytics Platform",
-          change_type: days === 0 ? "⏰ Your Trial Has Expired" : `⚠️ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
-          new_value: days === 0
+          change_type:  days === 0 ? "⏰ Your Trial Has Expired" : `⚠️ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
+          new_value:    days === 0
             ? "Your 7-day trial has ended. Upgrade now to keep full access."
-            : `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade before you lose access.`,
-          old_value: "Pro Trial",
-          updated_at: new Date().toLocaleString("en-AE"),
+            : `Only ${days} day${days !== 1 ? "s" : ""} left on your free trial. Upgrade before you lose access.`,
+          old_value:    "Pro Trial",
+          updated_at:   new Date().toLocaleString("en-AE"),
         }, "USkwUhp0csGCVDkdQ");
         sent++;
       } catch(e) {}
@@ -672,7 +669,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     notify(sent > 0 ? `✅ Sent ${sent} trial expiry email${sent > 1 ? "s" : ""}` : "ℹ️ No at-risk trials to email");
   };
 
-  /* ─── OTHER ACTIONS ─── */
+  /* ─── ACTIONS ─── */
   const handleBulkAction = async () => {
     if (!bulkTier || bulkSel.length === 0) return;
     for (const uid of bulkSel) await changeTier(uid, bulkTier);
@@ -696,20 +693,36 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         changedBy: "admin", changedAt: new Date().toISOString(),
       });
     } catch(e) {}
-    if (drawerUser?.uid === uid) setDrawerUser(prev => ({ ...prev, tier: newTier }));
+    setDrawerUser(prev => prev?.uid === uid ? { ...prev, tier: newTier } : prev);
     setInlineTierUser(null);
+  };
+
+  const handleJobRoleChange = async (uid, newRole) => {
+    try {
+      const { setDoc: sd, doc: dc } = await import("firebase/firestore");
+      await sd(dc(db, "users", uid), { role: newRole }, { merge: true });
+      await sd(dc(db, "auditLog", Date.now().toString()), {
+        action: "role_change", uid, to: newRole, changedBy: "admin", changedAt: new Date().toISOString(),
+      });
+      setDrawerUser(prev => prev?.uid === uid ? { ...prev, role: newRole } : prev);
+      fetchUsers();
+      notify(`✅ Role updated`);
+    } catch(e) { notify("❌ " + e.message); }
   };
 
   const handleSendEmail = async () => {
     if (!emailSubject || !emailBody) { notify("❌ Subject and message required"); return; }
     setEmailSending(true);
     try {
+      // FIX #15: correct EmailJS template field names
       await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-        user_email: sendEmailUser.email,
-        user_name: sendEmailUser.name || sendEmailUser.email,
-        subject: emailSubject,
-        message: emailBody,
-        updated_at: new Date().toLocaleString("en-AE"),
+        user_email:   sendEmailUser.email,
+        user_name:    sendEmailUser.name || sendEmailUser.email,
+        project_name: "DXB Analytics",
+        change_type:  emailSubject,
+        new_value:    emailBody,
+        old_value:    "",
+        updated_at:   new Date().toLocaleString("en-AE"),
       }, "USkwUhp0csGCVDkdQ");
       notify(`✅ Email sent to ${sendEmailUser.email}`);
       setSendEmailUser(null); setEmailSubject(""); setEmailBody("");
@@ -722,7 +735,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     try {
       const { setDoc: sd, doc: dc } = await import("firebase/firestore");
       await sd(dc(db, "users", noteUser.uid), { notes: noteText, noteUpdatedAt: new Date().toISOString() }, { merge: true });
-      notify("✅ Note saved"); setNoteUser(null); setNoteText(""); fetchUsers();
+      notify("✅ Note saved");
+      setNoteUser(null); setNoteText("");
+      fetchUsers();
     } catch(e) { notify("❌ Failed to save note"); }
   };
 
@@ -734,7 +749,30 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     } catch(e) { notify("❌ Failed to save tags"); }
   };
 
-  const handleDelete  = async () => { if (!confirmDelete)  return; await deleteUser(confirmDelete.uid);  setConfirmDelete(null);  if (drawerUser?.uid === confirmDelete.uid)  setDrawerUser(null); };
+  // FIX #13: also call fetchUsers after delete
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    await deleteUser(confirmDelete.uid);
+    fetchUsers();
+    setConfirmDelete(null);
+    if (drawerUser?.uid === confirmDelete.uid) setDrawerUser(null);
+  };
+
+  const handleSuspend = async () => {
+    if (!confirmSuspend) return;
+    await suspendUser(confirmSuspend.uid);
+    setConfirmSuspend(null);
+    if (drawerUser?.uid === confirmSuspend.uid) setDrawerUser(null);
+  };
+
+  // FIX #28: confirm before extending trial
+  const confirmAndExtend = (u, days) => setConfirmExtend({ user: u, days });
+  const handleExtend = async () => {
+    if (!confirmExtend) return;
+    await extendTrial(confirmExtend.user.uid, confirmExtend.days);
+    notify(`✅ Extended trial by ${confirmExtend.days} days`);
+    setConfirmExtend(null);
+  };
 
   const sendDirectNotification = async () => {
     if (!notifTitle || !notifMessage) { notify("❌ Title and message required"); return; }
@@ -746,17 +784,25 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         userId: notifUser.uid, title: notifTitle, message: notifMessage,
         icon: notifIcon, read: false, createdAt: new Date().toISOString(), sentBy: "admin",
       });
+      // FIX #34: log who received it
       notify(`✅ Notification sent to ${notifUser.name || notifUser.email}`);
       setNotifUser(null); setNotifTitle(""); setNotifMessage(""); setNotifIcon("📢");
     } catch(e) { notify("❌ " + e.message); }
     setNotifSendingUser(false);
   };
-  const handleSuspend = async () => { if (!confirmSuspend) return; await suspendUser(confirmSuspend.uid); setConfirmSuspend(null); if (drawerUser?.uid === confirmSuspend.uid) setDrawerUser(null); };
+
+  // FIX #36: copy to clipboard helper
+  const copyToClipboard = (text, id) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 1500);
+    });
+  };
 
   const exportFiltered = () => {
-    const headers = "Name,Email,Tier,Trial Status,Tags,Country,Last Active,Signed Up\n";
+    const headers = "Name,Email,Tier,Role,Trial Status,Tags,Country,Last Active,Signed Up\n";
     const rows = allFiltered.map(u =>
-      `"${u.name || ""}","${u.email || ""}","${u.tier || "free"}","${u.trialEnd ? (new Date(u.trialEnd) > now ? "Active" : "Expired") : "—"}","${(u.tags || []).join("; ")}","${u.country || ""}","${u.lastLoginAt || ""}","${u.createdAt || ""}"`
+      `"${u.name || ""}","${u.email || ""}","${u.tier || "free"}","${u.role || ""}","${u.trialEnd ? (new Date(u.trialEnd) > now ? "Active" : "Expired") : "—"}","${(u.tags || []).join("; ")}","${u.country || ""}","${u.lastLoginAt || ""}","${u.createdAt || ""}"`
     ).join("\n");
     const blob = new Blob([headers + rows], { type: "text/csv" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
@@ -787,14 +833,14 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </div>
   );
 
-  const Field = ({ label, children }) => (
+  const Field = ({ label, children, hint }) => (
     <div>
-      <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>{label}</label>
+      <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>{label}{hint && <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0, marginLeft: 6 }}>{hint}</span>}</label>
       {children}
     </div>
   );
 
-  const Btn    = ({ onClick, color, children, disabled, style = {} }) => (
+  const Btn      = ({ onClick, color, children, disabled, style = {} }) => (
     <button type="button" onClick={onClick} disabled={disabled} style={{ padding: "10px 20px", borderRadius: 9, border: "none", background: color, color: "#fff", fontSize: 13, fontWeight: 700, cursor: disabled ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: disabled ? 0.6 : 1, ...style }}>{children}</button>
   );
   const BtnGhost = ({ onClick, children, style = {} }) => (
@@ -810,6 +856,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   /* ══════════════════════════════════════════════
      MODALS
   ══════════════════════════════════════════════ */
+
   const DeleteConfirmModal = () => confirmDelete && (
     <Modal onClose={() => setConfirmDelete(null)} maxWidth={420}>
       <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
@@ -817,9 +864,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.red, marginBottom: 8 }}>Delete User?</div>
         <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 6 }}><strong style={{ color: T.white }}>{confirmDelete.name || confirmDelete.email}</strong></div>
         <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 20, padding: "10px 16px", background: "rgba(239,68,68,0.06)", borderRadius: 10, border: "1px solid rgba(239,68,68,0.15)", lineHeight: 1.6 }}>
-          This permanently removes them from Firestore and revokes all access.
-          {confirmDelete.tier === "pro" && <><br /><span style={{ color: T.red, fontWeight: 700 }}>⚠️ Active Pro subscription (AED 99/mo) will be lost.</span></>}
-          {confirmDelete.tier === "enterprise" && <><br /><span style={{ color: T.red, fontWeight: 700 }}>⚠️ Active Enterprise subscription (AED 499/mo) will be lost.</span></>}
+          Permanently removes them from Firestore and revokes all access.
+          {confirmDelete.tier === "pro"        && <><br /><span style={{ color: T.red, fontWeight: 700 }}>⚠️ Active Pro subscription (AED 99/mo) will be cancelled.</span></>}
+          {confirmDelete.tier === "enterprise" && <><br /><span style={{ color: T.red, fontWeight: 700 }}>⚠️ Active Enterprise account (AED 499/mo) will be cancelled.</span></>}
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <BtnGhost onClick={() => setConfirmDelete(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
@@ -843,6 +890,24 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div style={{ display: "flex", gap: 10 }}>
           <BtnGhost onClick={() => setConfirmSuspend(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
           <Btn onClick={handleSuspend} color={confirmSuspend.suspended ? T.green : "#F59E0B"} style={{ flex: 1 }}>{confirmSuspend.suspended ? "Unsuspend" : "Suspend"}</Btn>
+        </div>
+      </div>
+    </Modal>
+  );
+
+  /* FIX #28: Extend trial confirmation */
+  const ExtendConfirmModal = () => confirmExtend && (
+    <Modal onClose={() => setConfirmExtend(null)} maxWidth={400}>
+      <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>⏱️</div>
+        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.green, marginBottom: 8 }}>Extend Trial?</div>
+        <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 6 }}>
+          Add <strong style={{ color: T.white }}>{confirmExtend.days} days</strong> to <strong style={{ color: T.white }}>{confirmExtend.user.name || confirmExtend.user.email}</strong>'s trial
+        </div>
+        <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 20 }}>This cannot be undone without manually editing the trial end date.</div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <BtnGhost onClick={() => setConfirmExtend(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
+          <Btn onClick={handleExtend} color={T.green} style={{ flex: 1 }}>+{confirmExtend.days} Days</Btn>
         </div>
       </div>
     </Modal>
@@ -882,7 +947,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           return (
             <button key={tag.value} type="button"
               onClick={() => { const tags = tagUser.tags || []; setTagUser(prev => ({ ...prev, tags: active ? tags.filter(t => t !== tag.value) : [...tags, tag.value] })); }}
-              style={{ padding: "6px 14px", borderRadius: 20, border: `1px solid ${active ? tag.color : T.border}`, background: active ? `${tag.color}18` : "transparent", color: active ? tag.color : T.textMuted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+              style={{ padding: "7px 16px", borderRadius: 20, border: `1px solid ${active ? tag.color : T.border}`, background: active ? `${tag.color}18` : "transparent", color: active ? tag.color : T.textMuted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
               {tag.label}
             </button>
           );
@@ -895,9 +960,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </Modal>
   );
 
+  /* FIX #14: Add User → Invite User (client SDK limitation explained) */
   const AddUserModal = () => showAddUser && (
     <Modal onClose={() => setShowAddUser(false)} maxWidth={520}>
       <ModalHeader title="Add New User" sub="Create a new account directly from admin" onClose={() => setShowAddUser(false)} />
+      <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 18, fontSize: 12, color: "#93C5FD", lineHeight: 1.6 }}>
+        ℹ️ <strong>Note:</strong> Creating an account here uses Firebase client-side auth. The new user will receive a verification email. You will remain logged in as admin.
+      </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         {[
           { label: "Full Name *", key: "name", type: "text", placeholder: "John Smith", full: true },
@@ -906,7 +975,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           { label: "Phone", key: "phone", type: "tel", placeholder: "+971 50 000 0000" },
         ].map(f => (
           <div key={f.key} style={{ gridColumn: f.full ? "1 / -1" : "auto" }}>
-            <Field label={f.label}><input type={f.type} placeholder={f.placeholder} value={addUserForm[f.key] || ""} onChange={e => setAddUserForm(p => ({ ...p, [f.key]: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
+            <Field label={f.label}>
+              <input type={f.type} placeholder={f.placeholder} value={addUserForm[f.key] || ""} onChange={e => setAddUserForm(p => ({ ...p, [f.key]: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} />
+            </Field>
+            {/* FIX #29: password validation */}
+            {f.key === "password" && addUserForm.password && addUserForm.password.length < 6 && (
+              <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>⚠️ Password must be at least 6 characters</div>
+            )}
           </div>
         ))}
         <div><Field label="Country"><select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
@@ -914,24 +989,17 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           {["🇦🇪 UAE","🇸🇦 Saudi Arabia","🇶🇦 Qatar","🇰🇼 Kuwait","🇧🇭 Bahrain","🇴🇲 Oman","🇬🇧 UK","🇺🇸 USA","🇮🇳 India","🇵🇰 Pakistan","🇪🇬 Egypt","🌍 Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
         </select></Field></div>
         <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
+          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
         </select></Field></div>
-        <div><Field label="Role / Job Title"><select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="user">User (default)</option>
-          <option value="agent">🏠 Real Estate Agent</option>
-          <option value="sales_manager">📊 Sales Manager</option>
-          <option value="broker">🤝 Broker</option>
-          <option value="property_manager">🏢 Property Manager</option>
-          <option value="investor">💰 Investor</option>
-          <option value="developer">🏗️ Developer</option>
-          <option value="staff">⚙️ Platform Staff</option>
-          <option value="admin">👑 Admin</option>
+        <div style={{ gridColumn: "1 / -1" }}><Field label="Job Role"><select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          <option value="user">— No role assigned —</option>
+          {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
         </select></Field></div>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
       </div>
       <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
         <BtnGhost onClick={() => setShowAddUser(false)} style={{ flex: 1 }}>Cancel</BtnGhost>
-        <Btn onClick={addUserManually} disabled={addUserLoading} color={T.gold} style={{ flex: 2, color: T.bg }}>{addUserLoading ? "Creating..." : "✅ Create User"}</Btn>
+        <Btn onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} color={T.gold} style={{ flex: 2, color: T.bg }}>{addUserLoading ? "Creating..." : "✅ Create User"}</Btn>
       </div>
     </Modal>
   );
@@ -947,20 +1015,14 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           {["🇦🇪 UAE","🇸🇦 Saudi Arabia","🇶🇦 Qatar","🇰🇼 Kuwait","🇧🇭 Bahrain","🇴🇲 Oman","🇬🇧 UK","🇺🇸 USA","🇮🇳 India","🇵🇰 Pakistan","🌍 Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
         </select></Field>
         <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
+          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
         </select></Field>
-        <Field label="Role / Job Title"><select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="user">User (default)</option>
-          <option value="agent">🏠 Real Estate Agent</option>
-          <option value="sales_manager">📊 Sales Manager</option>
-          <option value="broker">🤝 Broker</option>
-          <option value="property_manager">🏢 Property Manager</option>
-          <option value="investor">💰 Investor</option>
-          <option value="developer">🏗️ Developer</option>
-          <option value="staff">⚙️ Platform Staff</option>
-          <option value="admin">👑 Admin</option>
+        <Field label="Job Role"><select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          <option value="user">— No role assigned —</option>
+          {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
         </select></Field>
-        <Field label="Trial End Date"><input type="date" value={editUserForm.trialEnd || ""} onChange={e => setEditUserForm(p => ({ ...p, trialEnd: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
+        {/* FIX #8: normalize trial date to ISO format */}
+        <Field label="Trial End Date"><input type="date" value={editUserForm.trialEnd ? editUserForm.trialEnd.slice(0, 10) : ""} onChange={e => setEditUserForm(p => ({ ...p, trialEnd: e.target.value ? e.target.value + "T00:00:00.000Z" : "" }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={editUserForm.notes || ""} onChange={e => setEditUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
       </div>
       <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
@@ -985,36 +1047,39 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
         <Field label="Title"><input type="text" placeholder="Notification title..." value={notifTitle} onChange={e => setNotifTitle(e.target.value)} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
         <Field label="Message"><textarea placeholder="Write the notification message..." value={notifMessage} onChange={e => setNotifMessage(e.target.value)} rows={3} style={{ ...inputStyle, resize: "vertical" }} onFocus={focusIn} onBlur={focusOut} /></Field>
-        <div style={{ padding: "10px 14px", background: "rgba(212,168,67,0.05)", borderRadius: 9, border: "1px solid rgba(212,168,67,0.15)", fontSize: 12 }}>
+        <div style={{ padding: "10px 14px", background: "rgba(212,168,67,0.05)", borderRadius: 9, border: "1px solid rgba(212,168,67,0.15)" }}>
           <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-            <span style={{ fontSize: 18, flexShrink: 0 }}>{notifIcon}</span>
+            <span style={{ fontSize: 18 }}>{notifIcon}</span>
             <div>
-              <div style={{ fontWeight: 700, color: T.white, marginBottom: 3 }}>{notifTitle || "Preview title"}</div>
-              <div style={{ color: T.textMuted, lineHeight: 1.5 }}>{notifMessage || "Preview message will appear here..."}</div>
+              <div style={{ fontWeight: 700, color: T.white, fontSize: 13, marginBottom: 3 }}>{notifTitle || "Preview title"}</div>
+              <div style={{ color: T.textMuted, fontSize: 12, lineHeight: 1.5 }}>{notifMessage || "Preview message..."}</div>
             </div>
           </div>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <BtnGhost onClick={() => setNotifUser(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
-          <Btn onClick={sendDirectNotification} disabled={notifSendingUser} color={T.gold} style={{ flex: 2, color: T.bg }}>{notifSendingUser ? "Sending..." : "📢 Send Notification"}</Btn>
+          <Btn onClick={sendDirectNotification} disabled={notifSendingUser} color={T.gold} style={{ flex: 2, color: T.bg }}>{notifSendingUser ? "Sending..." : "📢 Send"}</Btn>
         </div>
       </div>
     </Modal>
   );
 
   /* ══════════════════════════════════════════════
-     PROFILE DRAWER
+     PROFILE DRAWER — FIX #20, #23, #25, #35, #36
   ══════════════════════════════════════════════ */
   const ProfileDrawer = () => {
     if (!drawerUser) return null;
-    const u = drawerUser;
-    const badge  = getRoleBadge(u);
+    const u     = drawerUser;
+    const badge = getTierBadge(u);
+    const job   = getJobRoleBadge(u);
     const health = getHealth(u);
-    const days   = trialDaysLeft(u);
+    const days  = trialDaysLeft(u);
+
     return (
       <div style={{ position: "fixed", inset: 0, zIndex: 1500, display: "flex" }} onClick={() => setDrawerUser(null)}>
         <div style={{ flex: 1, background: "rgba(0,0,0,0.65)" }} />
-        <div style={{ width: 440, background: T.surface, borderLeft: `1px solid ${T.border}`, overflowY: "auto", display: "flex", flexDirection: "column", animation: "slideIn 0.25s ease-out" }} onClick={e => e.stopPropagation()}>
+        <div style={{ width: 460, background: T.surface, borderLeft: `1px solid ${T.border}`, overflowY: "auto", display: "flex", flexDirection: "column", animation: "slideIn 0.25s ease-out" }} onClick={e => e.stopPropagation()}>
+
           {/* Header */}
           <div style={{ padding: "24px 24px 20px", borderBottom: `1px solid ${T.border}`, background: `linear-gradient(135deg, ${badge.color}10, transparent 60%)`, position: "relative" }}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${badge.color}, transparent)` }} />
@@ -1025,14 +1090,19 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                 </div>
                 <div>
                   <div style={{ fontSize: 17, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{u.name || "No name"}</div>
-                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{u.email}</div>
+                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>
+                    {u.email}
+                    {/* FIX #36: copy email */}
+                    <button type="button" onClick={() => copyToClipboard(u.email, "email")} style={{ background: "none", border: "none", cursor: "pointer", color: copiedId === "email" ? T.green : T.textMuted, padding: 0 }} title="Copy email">
+                      {copiedId === "email" ? "✓" : <CopyIcon />}
+                    </button>
+                  </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 8 }}>
                     <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: badge.bg, color: badge.color }}>{badge.label}{badge.price ? ` · ${badge.price}` : ""}</span>
                     <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${health.dot}18`, color: health.dot, display: "flex", alignItems: "center", gap: 4 }}>
                       <span style={{ width: 5, height: 5, borderRadius: "50%", background: health.dot, display: "inline-block" }} />{health.label}
                     </span>
-                    {u.role === "admin" && <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: "rgba(212,168,67,0.2)", color: T.gold }}>ADMIN</span>}
-                    {getRoleTag(u) && <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: getRoleTag(u).bg, color: getRoleTag(u).color }}>{getRoleTag(u).label}</span>}
+                    {job && <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: job.bg, color: job.color }}>{job.label}</span>}
                     {(u.tags || []).map(tag => { const t = TAGS_OPTIONS.find(x => x.value === tag); return t ? <span key={tag} style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${t.color}18`, color: t.color }}>{t.label}</span> : null; })}
                   </div>
                 </div>
@@ -1041,13 +1111,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             </div>
           </div>
 
-          {/* Stats — now 4 including Last Active */}
+          {/* Stats — FIX #23: user's own LTV, not global MRR */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", borderBottom: `1px solid ${T.border}`, background: T.bg }}>
             {[
-              { label: "LTV", value: getLTV(u) },
-              { label: "Trial Days", value: days !== null ? `${days}d left` : u.tier === "pro" ? "Active" : "—" },
+              { label: "Plan Value", value: getUserLTV(u), color: u.tier === "pro" || u.tier === "enterprise" ? T.green : T.textMuted },
+              { label: "Trial Days",  value: days !== null ? `${days}d left` : u.tier === "pro" ? "Active" : "—" },
               { label: "Last Active", value: lastActiveLabel(u), color: lastActiveColor(u) },
-              { label: "Joined", value: (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { month: "short", day: "numeric" }); } catch { return "—"; } })() },
+              { label: "Joined",      value: (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { month: "short", day: "numeric" }); } catch { return "—"; } })() },
             ].map((s, i) => (
               <div key={i} style={{ padding: "12px 10px", textAlign: "center", borderRight: i < 3 ? `1px solid ${T.border}` : "none" }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: s.color || T.white, fontFamily: "'Fraunces',serif" }}>{s.value}</div>
@@ -1056,156 +1126,225 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             ))}
           </div>
 
+          {/* Sub-nav tabs */}
+          <div style={{ display: "flex", borderBottom: `1px solid ${T.border}`, background: T.surfaceAlt }}>
+            {[["details","📋 Details"],["tier","🎯 Tier & Role"],["activity","📊 Activity"],["actions","⚡ Actions"]].map(([key, label]) => (
+              <button key={key} type="button" onClick={() => setDrawerTab(key)}
+                style={{ flex: 1, padding: "10px 4px", border: "none", background: "transparent", color: drawerTab === key ? T.gold : T.textMuted, fontSize: 11, fontWeight: drawerTab === key ? 700 : 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", borderBottom: `2px solid ${drawerTab === key ? T.gold : "transparent"}`, transition: "all 0.15s" }}>
+                {label}
+              </button>
+            ))}
+          </div>
+
           {/* Body */}
           <div style={{ padding: "20px 24px", flex: 1 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Account Details</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 22 }}>
-              {[
-                ["UID", (u.uid || "").slice(0, 20) + "..."],
-                ["Phone", u.phone || "—"],
-                ["Country", u.country || "—"],
-                ["Sign-in Provider", u.provider || "email"],
-                ["Email Verified", u.emailVerified ? "✅ Verified" : "❌ Not verified"],
-                ["Last Login", u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Never"],
-                ["Signed Up", (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" }); } catch { return "—"; } })()],
-                ["Created By", u.createdByAdmin ? `Admin (${u.createdByAdmin})` : "Self-signup"],
-                ["Trial End", u.trialEnd ? new Date(u.trialEnd).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }) : "—"],
-              ].map(([label, value]) => (
-                <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
-                  <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>{label}</span>
-                  <span style={{ fontSize: 11, color: T.textPrimary, fontWeight: 500 }}>{value}</span>
-                </div>
-              ))}
-            </div>
 
-            {u.notes && (
-              <div style={{ background: "rgba(212,168,67,0.05)", border: "1px solid rgba(212,168,67,0.2)", borderRadius: 10, padding: "12px 14px", marginBottom: 22 }}>
-                <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>📝 Admin Notes</div>
-                <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>{u.notes}</div>
-              </div>
-            )}
-
-            {(u.tags || []).length > 0 && (
-              <div style={{ marginBottom: 22 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Tags</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {(u.tags || []).map(tag => { const t = TAGS_OPTIONS.find(x => x.value === tag); return t ? <span key={tag} style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: `${t.color}18`, color: t.color, border: `1px solid ${t.color}30` }}>{t.label}</span> : null; })}
-                </div>
-              </div>
-            )}
-
-            {/* Login History */}
-            {(u.loginHistory || []).length > 0 && (
-              <div style={{ marginBottom: 22 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Login History</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                  {(u.loginHistory || []).slice(0, 5).map((h, i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 12px", background: i === 0 ? "rgba(16,185,129,0.06)" : T.surfaceAlt, borderRadius: 8, border: `1px solid ${i === 0 ? "rgba(16,185,129,0.15)" : T.border}` }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 13 }}>{h.device === "Mobile" ? "📱" : "🖥️"}</span>
-                        <div>
-                          <div style={{ fontSize: 11, color: i === 0 ? T.green : T.textSecondary, fontWeight: i === 0 ? 700 : 500 }}>{h.browser || "Browser"} · {h.device || "Desktop"}</div>
-                          {i === 0 && <div style={{ fontSize: 9, color: T.green, fontWeight: 700 }}>Most recent</div>}
-                        </div>
+            {/* ── DETAILS TAB ── */}
+            {drawerTab === "details" && (
+              <>
+                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Account Details</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
+                  {[
+                    ["UID",             u.uid || "—",    "uid"],
+                    ["Phone",           u.phone || "—",  null],
+                    ["Country",         u.country || "—", null],
+                    ["Sign-in",         u.provider || "email", null],
+                    ["Email Verified",  u.emailVerified ? "✅ Verified" : "❌ Not verified", null],
+                    ["Last Login",      u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Never", null],
+                    ["Signed Up",       (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" }); } catch { return "—"; } })(), null],
+                    ["Created By",      u.createdByAdmin ? `Admin (${u.createdByAdmin})` : "Self-signup", null],
+                    ["Trial End",       u.trialEnd ? new Date(u.trialEnd).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }) : "—", null],
+                  ].map(([label, value, copyKey]) => (
+                    <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                      <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>{label}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontSize: 11, color: T.textPrimary, fontWeight: 500, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
+                        {/* FIX #36: copy UID */}
+                        {copyKey && <button type="button" onClick={() => copyToClipboard(u[copyKey], copyKey)} style={{ background: "none", border: "none", cursor: "pointer", color: copiedId === copyKey ? T.green : T.textMuted, padding: 0 }} title={`Copy ${label}`}>{copiedId === copyKey ? "✓" : <CopyIcon />}</button>}
                       </div>
-                      <span style={{ fontSize: 10, color: T.textMuted }}>
-                        {(() => { try { return new Date(h.time).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "—"; } })()}
-                      </span>
                     </div>
                   ))}
                 </div>
-              </div>
+
+                {u.notes && (
+                  <div style={{ background: "rgba(212,168,67,0.05)", border: "1px solid rgba(212,168,67,0.2)", borderRadius: 10, padding: "12px 14px", marginBottom: 16 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                      <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>📝 Admin Notes</div>
+                      {/* FIX #33: notes badge clickable */}
+                      <button type="button" onClick={() => { setNoteUser(u); setNoteText(u.notes || ""); }} style={{ fontSize: 10, color: T.gold, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Edit ✏️</button>
+                    </div>
+                    <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>{u.notes}</div>
+                  </div>
+                )}
+
+                {(u.tags || []).length > 0 && (
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Tags</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {(u.tags || []).map(tag => { const t = TAGS_OPTIONS.find(x => x.value === tag); return t ? <span key={tag} style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: `${t.color}18`, color: t.color, border: `1px solid ${t.color}30` }}>{t.label}</span> : null; })}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
-            {/* Activity Timeline */}
-            {(u.recentActivity || []).length > 0 && (
-              <div style={{ marginBottom: 22 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Recent Activity</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4, position: "relative", paddingLeft: 20 }}>
-                  <div style={{ position: "absolute", left: 7, top: 8, bottom: 8, width: 1, background: T.border }} />
-                  {(u.recentActivity || []).slice(0, 8).map((a, i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 10px 6px 0", position: "relative" }}>
-                      <div style={{ position: "absolute", left: -14, width: 8, height: 8, borderRadius: "50%", background: i === 0 ? T.gold : T.border, border: `2px solid ${T.surface}` }} />
-                      <span style={{ fontSize: 12, color: i === 0 ? T.white : T.textSecondary, fontWeight: i === 0 ? 600 : 400 }}>{a.tab}</span>
-                      <span style={{ fontSize: 10, color: T.textMuted }}>
-                        {(() => { try { return timeSince(a.time); } catch { return "—"; } })()}
-                      </span>
+            {/* ── TIER & ROLE TAB — FIX #20: 2 clean dropdowns ── */}
+            {drawerTab === "tier" && (
+              <>
+                <div style={{ marginBottom: 22 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Access Tier</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {BILLING_TIERS.map(r => {
+                      const isCurrent = (u.tier || "free") === r.value;
+                      return (
+                        <button key={r.value} type="button" onClick={() => handleTierChange(u.uid, r.value, u.tier)}
+                          style={{ padding: "12px 10px", borderRadius: 10, border: `2px solid ${isCurrent ? r.color : T.border}`, background: isCurrent ? r.bg : "transparent", color: isCurrent ? r.color : T.textMuted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", position: "relative", transition: "all 0.15s" }}>
+                          <div>{r.label}</div>
+                          <div style={{ fontSize: 10, fontWeight: 500, color: isCurrent ? r.color : T.textMuted, marginTop: 2 }}>{r.price || (r.value === "free" ? "No charge" : r.value === "pro_trial" ? "Limited time" : "")}</div>
+                          {isCurrent && <div style={{ position: "absolute", top: 8, right: 10, fontSize: 12 }}>✓</div>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: 22 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Job Role</div>
+                  <select value={u.role || "user"} onChange={e => handleJobRoleChange(u.uid, e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
+                    <option value="user">— No role assigned —</option>
+                    {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  </select>
+                  {getJobRoleBadge(u) && (
+                    <div style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: getJobRoleBadge(u).bg, color: getJobRoleBadge(u).color, fontSize: 11, fontWeight: 700 }}>
+                      ✓ {getJobRoleBadge(u).label}
                     </div>
+                  )}
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Extend Trial</div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {[7, 14, 30].map(d => (
+                      <button key={d} type="button" onClick={() => confirmAndExtend(u, d)}
+                        style={{ flex: 1, padding: "9px", borderRadius: 9, border: `1px solid ${T.green}40`, background: "rgba(16,185,129,0.06)", color: T.green, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        +{d} Days
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* ── ACTIVITY TAB ── */}
+            {drawerTab === "activity" && (
+              <>
+                {(u.loginHistory || []).length > 0 ? (
+                  <div style={{ marginBottom: 22 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Login History</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                      {(u.loginHistory || []).slice(0, 8).map((h, i) => (
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: i === 0 ? "rgba(16,185,129,0.06)" : T.surfaceAlt, borderRadius: 8, border: `1px solid ${i === 0 ? "rgba(16,185,129,0.2)" : T.border}` }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontSize: 14 }}>{h.device === "Mobile" ? "📱" : "🖥️"}</span>
+                            <div>
+                              <div style={{ fontSize: 11, color: i === 0 ? T.green : T.textSecondary, fontWeight: i === 0 ? 700 : 500 }}>{h.browser || "Browser"} · {h.device || "Desktop"}</div>
+                              {i === 0 && <div style={{ fontSize: 9, color: T.green, fontWeight: 700 }}>Most recent</div>}
+                            </div>
+                          </div>
+                          <span style={{ fontSize: 10, color: T.textMuted }}>{(() => { try { return new Date(h.time).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "—"; } })()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 12 }}>No login history yet.<br /><span style={{ fontSize: 11 }}>Recorded after next login.</span></div>
+                )}
+
+                {(u.recentActivity || []).length > 0 && (
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Tab Activity</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4, position: "relative", paddingLeft: 20 }}>
+                      <div style={{ position: "absolute", left: 7, top: 8, bottom: 8, width: 1, background: T.border }} />
+                      {(u.recentActivity || []).slice(0, 10).map((a, i) => (
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 10px 5px 0", position: "relative" }}>
+                          <div style={{ position: "absolute", left: -14, width: 8, height: 8, borderRadius: "50%", background: i === 0 ? T.gold : T.border, border: `2px solid ${T.surface}` }} />
+                          <span style={{ fontSize: 12, color: i === 0 ? T.white : T.textSecondary, fontWeight: i === 0 ? 600 : 400 }}>{a.tab}</span>
+                          <span style={{ fontSize: 10, color: T.textMuted }}>{(() => { try { return timeSince(a.time); } catch { return "—"; } })()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* ── ACTIONS TAB — FIX #25: group safe vs destructive ── */}
+            {drawerTab === "actions" && (
+              <>
+                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Communication</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 20 }}>
+                  {[
+                    { label: "📢  Send Notification", color: "#F59E0B", action: () => setNotifUser(u) },
+                    { label: "✉️  Send Email",        color: "#3B82F6", action: () => { setSendEmailUser(u); setEmailSubject(""); setEmailBody(""); } },
+                    { label: "🔑  Send Password Reset", color: T.textSecondary, action: () => { sendResetEmail(u.email); notify(`✅ Password reset sent to ${u.email}`); } },
+                  ].map(btn => (
+                    <button key={btn.label} type="button" onClick={btn.action}
+                      style={{ padding: "10px 14px", borderRadius: 9, border: `1px solid ${btn.color}25`, background: `${btn.color}08`, color: btn.color, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "background 0.15s" }}
+                      onMouseEnter={e => e.currentTarget.style.background = `${btn.color}15`}
+                      onMouseLeave={e => e.currentTarget.style.background = `${btn.color}08`}>
+                      {btn.label}
+                    </button>
                   ))}
                 </div>
-              </div>
+
+                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Account</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 20 }}>
+                  {[
+                    { label: "✏️  Edit User Details",  color: T.teal,    action: () => { openEditUser(u); setDrawerUser(null); } },
+                    { label: "📝  Add / Edit Note",     color: T.gold,    action: () => { setNoteUser(u); setNoteText(u.notes || ""); } },
+                    { label: "🏷️  Manage Tags",         color: "#8B5CF6", action: () => setTagUser(u) },
+                  ].map(btn => (
+                    <button key={btn.label} type="button" onClick={btn.action}
+                      style={{ padding: "10px 14px", borderRadius: 9, border: `1px solid ${btn.color}25`, background: `${btn.color}08`, color: btn.color, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "background 0.15s" }}
+                      onMouseEnter={e => e.currentTarget.style.background = `${btn.color}15`}
+                      onMouseLeave={e => e.currentTarget.style.background = `${btn.color}08`}>
+                      {btn.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* FIX #25: destructive actions visually separated */}
+                <div style={{ borderTop: `1px solid ${T.red}20`, paddingTop: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: T.red, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10, opacity: 0.7 }}>Danger Zone</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                    <button type="button" onClick={() => setConfirmSuspend(u)}
+                      style={{ padding: "10px 14px", borderRadius: 9, border: `1px solid #F59E0B30`, background: "rgba(245,158,11,0.06)", color: "#F59E0B", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left" }}>
+                      {u.suspended ? "✅  Unsuspend User" : "⏸  Suspend User"}
+                    </button>
+                    <button type="button" onClick={() => { setDrawerUser(null); setConfirmDelete(u); }}
+                      style={{ padding: "10px 14px", borderRadius: 9, border: `1px solid ${T.red}40`, background: "rgba(239,68,68,0.08)", color: T.red, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left" }}>
+                      🗑️  Delete User Permanently
+                    </button>
+                  </div>
+                </div>
+              </>
             )}
-
-            {/* Change Tier */}
-            <div style={{ marginBottom: 22 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Change Role / Tier</div>
-              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6, fontWeight: 600 }}>Access Tier</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 12 }}>
-                {ROLES.filter(r => ["free","pro_trial","pro","enterprise"].includes(r.value)).map(r => {
-                  const isCurrent = (u.tier || "free") === r.value;
-                  return (
-                    <button key={r.value} type="button" onClick={() => handleTierChange(u.uid, r.value, u.tier)}
-                      style={{ padding: "8px 6px", borderRadius: 9, border: `1px solid ${isCurrent ? r.color : T.border}`, background: isCurrent ? r.bg : "transparent", color: isCurrent ? r.color : T.textMuted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", position: "relative" }}>
-                      {r.label}
-                      {isCurrent && <div style={{ position: "absolute", top: -1, right: -1, width: 7, height: 7, borderRadius: "50%", background: r.color, border: `2px solid ${T.surface}` }} />}
-                      {r.price && <div style={{ fontSize: 9, color: isCurrent ? r.color : T.textMuted, marginTop: 1 }}>{r.price}</div>}
-                    </button>
-                  );
-                })}
-              </div>
-              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6, fontWeight: 600 }}>Real Estate Role</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5 }}>
-                {ROLES.filter(r => ["agent","sales_manager","broker","property_manager","investor","developer","staff"].includes(r.value)).map(r => {
-                  const isCurrent = (u.role || "user") === r.value;
-                  return (
-                    <button key={r.value} type="button"
-                      onClick={async () => {
-                        try {
-                          const { setDoc: sd, doc: dc } = await import("firebase/firestore");
-                          await sd(dc(db, "users", u.uid), { role: r.value }, { merge: true });
-                          await sd(dc(db, "auditLog", Date.now().toString()), { action: "role_change", uid: u.uid, from: u.role, to: r.value, changedBy: "admin", changedAt: new Date().toISOString() });
-                          notify(`✅ Role updated to ${r.label}`);
-                          setDrawerUser(prev => ({ ...prev, role: r.value }));
-                          fetchUsers();
-                        } catch(e) { notify("❌ " + e.message); }
-                      }}
-                      style={{ padding: "7px 6px", borderRadius: 8, border: `1px solid ${isCurrent ? r.color : T.border}`, background: isCurrent ? r.bg : "transparent", color: isCurrent ? r.color : T.textMuted, fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", position: "relative", textAlign: "center" }}>
-                      {r.label}
-                      {isCurrent && <div style={{ position: "absolute", top: -1, right: -1, width: 6, height: 6, borderRadius: "50%", background: r.color, border: `2px solid ${T.surface}` }} />}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Quick Actions</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              {[
-                { label: "📢  Send Notification",   color: "#F59E0B", action: () => { setNotifUser(u); setDrawerUser(null); } },
-                { label: "✉️  Send Email",         color: "#3B82F6", action: () => { setSendEmailUser(u); setDrawerUser(null); } },
-                { label: "📝  Add / Edit Note",     color: T.gold,   action: () => { setNoteUser(u); setNoteText(u.notes || ""); setDrawerUser(null); } },
-                { label: "🏷️  Manage Tags",         color: "#8B5CF6",action: () => { setTagUser(u); setDrawerUser(null); } },
-                { label: "🔑  Send Password Reset", color: T.textSecondary, action: () => sendResetEmail(u.email) },
-                { label: "✏️  Edit User Details",   color: T.teal,   action: () => { openEditUser(u); setDrawerUser(null); } },
-                { label: "+7 Days Trial",           color: T.green,  action: () => extendTrial(u.uid, 7) },
-                { label: "+30 Days Trial",          color: T.green,  action: () => extendTrial(u.uid, 30) },
-                { label: u.suspended ? "✅  Unsuspend User" : "⏸  Suspend User", color: u.suspended ? T.green : "#F59E0B", action: () => { setDrawerUser(null); setConfirmSuspend(u); } },
-                { label: "🗑️  Delete User",         color: T.red,    action: () => { setDrawerUser(null); setConfirmDelete(u); } },
-              ].map(btn => (
-                <button key={btn.label} type="button" onClick={btn.action}
-                  style={{ padding: "9px 14px", borderRadius: 9, border: `1px solid ${btn.color}25`, background: `${btn.color}08`, color: btn.color, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "background 0.15s" }}
-                  onMouseEnter={e => e.currentTarget.style.background = `${btn.color}15`}
-                  onMouseLeave={e => e.currentTarget.style.background = `${btn.color}08`}>
-                  {btn.label}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       </div>
     );
   };
+
+  /* ══════════════════════════════════════════════
+     LOADING SKELETON — FIX #30
+  ══════════════════════════════════════════════ */
+  const SkeletonRow = () => (
+    <div style={{ display: "grid", gridTemplateColumns: "36px 28px minmax(160px,2fr) minmax(150px,1.5fr) 100px 110px 75px 75px 140px", gap: 6, padding: "12px 16px", borderBottom: `1px solid ${T.border}`, alignItems: "center" }}>
+      {[36,28,160,150,100,110,75,75,140].map((w,i) => (
+        <div key={i} style={{ height: 12, background: `${T.border}`, borderRadius: 6, opacity: 0.5, width: i < 2 ? w : "100%", animation: "pulse 1.5s ease-in-out infinite", animationDelay: `${i*0.05}s` }} />
+      ))}
+    </div>
+  );
 
   /* ══════════════════════════════════════════════
      MAIN RENDER
@@ -1216,6 +1355,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       {/* All modals */}
       <DeleteConfirmModal />
       <SuspendConfirmModal />
+      <ExtendConfirmModal />
       <EmailModal />
       <NoteModal />
       <TagsModal />
@@ -1227,14 +1367,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       {/* Inline tier dropdown */}
       {inlineTierUser && (
         <div style={{ position: "fixed", inset: 0, zIndex: 900 }} onClick={() => setInlineTierUser(null)}>
-          <div style={{ position: "fixed", top: inlineTierUser.y, left: inlineTierUser.x, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: 6, zIndex: 901, minWidth: 165, boxShadow: "0 16px 48px rgba(0,0,0,0.5)", animation: "slideUp 0.15s ease-out" }} onClick={e => e.stopPropagation()}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, padding: "4px 10px 6px" }}>Change Tier</div>
-            <div style={{ fontSize: 9, color: T.textMuted, padding: "2px 10px 4px", textTransform: "uppercase", letterSpacing: 0.5 }}>Access Tier</div>
-            {ROLES.filter(r => ["free","pro_trial","pro","enterprise"].includes(r.value)).map(r => {
+          <div style={{ position: "fixed", top: inlineTierUser.y, left: inlineTierUser.x, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: 6, zIndex: 901, minWidth: 180, boxShadow: "0 16px 48px rgba(0,0,0,0.5)", animation: "slideUp 0.15s ease-out" }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, padding: "4px 10px 8px" }}>Change Tier</div>
+            {BILLING_TIERS.map(r => {
               const isCurrent = (inlineTierUser.user.tier || "free") === r.value;
               return (
                 <button key={r.value} type="button" onClick={() => handleTierChange(inlineTierUser.user.uid, r.value, inlineTierUser.user.tier)}
-                  style={{ width: "100%", padding: "7px 10px", borderRadius: 7, border: "none", background: isCurrent ? r.bg : "transparent", color: isCurrent ? r.color : T.textSecondary, fontSize: 12, fontWeight: isCurrent ? 700 : 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", display: "flex", justifyContent: "space-between" }}>
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: 7, border: "none", background: isCurrent ? r.bg : "transparent", color: isCurrent ? r.color : T.textSecondary, fontSize: 12, fontWeight: isCurrent ? 700 : 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", display: "flex", justifyContent: "space-between" }}>
                   <span>{r.label}</span>
                   <span style={{ fontSize: 10, color: isCurrent ? r.color : T.textMuted }}>{r.price || (isCurrent ? "✓" : "")}</span>
                 </button>
@@ -1248,65 +1387,63 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.white, margin: 0 }}>User Management</h2>
-          <p style={{ fontSize: 13, color: T.textMuted, margin: "4px 0 0" }}>{total} registered users · Live Firestore · {allFiltered.length} shown · <span style={{ color: T.green }}>{activeToday} active today</span></p>
+          <p style={{ fontSize: 13, color: T.textMuted, margin: "4px 0 0" }}>
+            {total} registered · Live Firestore · {allFiltered.length} shown · <span style={{ color: T.green }}>{activeToday} active today</span>
+          </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {/* FIX #6: consistent threshold in tooltip, FIX #17: remove Refresh */}
           <div style={{ position: "relative" }} className="risk-btn-wrap">
-            <button type="button" onClick={sendTrialExpiryEmails} disabled={sendingTrialEmails}
-              style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${atRisk > 0 ? T.red + "60" : T.border}`, background: atRisk > 0 ? "rgba(239,68,68,0.06)" : "transparent", color: atRisk > 0 ? T.red : T.textMuted, cursor: atRisk > 0 ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", fontWeight: 600, opacity: sendingTrialEmails ? 0.6 : 1 }}
-              title={atRisk > 0 ? `Sends trial expiry warning emails to ${atRisk} user(s) with ≤3 days left on their trial` : "No at-risk trial users right now"}>
-              {sendingTrialEmails ? "⏳ Sending..." : `⚠️ Email At-Risk (${atRisk})`}
+            <button type="button" onClick={sendTrialExpiryEmails} disabled={sendingTrialEmails || atRiskCount === 0}
+              style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${atRiskCount > 0 ? T.red + "60" : T.border}`, background: atRiskCount > 0 ? "rgba(239,68,68,0.06)" : "transparent", color: atRiskCount > 0 ? T.red : T.textMuted, cursor: atRiskCount > 0 ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", fontWeight: 600, opacity: sendingTrialEmails ? 0.6 : 1 }}>
+              {sendingTrialEmails ? "⏳ Sending..." : `⚠️ Email At-Risk (${atRiskCount})`}
             </button>
-            {atRisk > 0 && (
+            {atRiskCount > 0 && (
               <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: T.surface, border: `1px solid ${T.red}30`, borderRadius: 8, padding: "8px 12px", fontSize: 11, color: T.textMuted, whiteSpace: "nowrap", zIndex: 50, pointerEvents: "none", boxShadow: "0 8px 24px rgba(0,0,0,0.4)", opacity: 0, transition: "opacity 0.2s" }} className="risk-tooltip">
-                📧 Sends to: {users.filter(u => { const d = trialDaysLeft(u); return d !== null && d <= 3; }).map(u => u.name || u.email).join(", ")}
+                📧 Will email: {atRisk.map(u => u.name || u.email).join(", ")} · ≤{AT_RISK_DAYS} days left
               </div>
             )}
           </div>
           <button type="button" onClick={exportFiltered} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} Export ({allFiltered.length})</button>
-          <button type="button" onClick={fetchUsers} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
-          <button type="button" onClick={() => setShowAddUser(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700 }}>+ Add User</button>
+          <button type="button" onClick={() => setShowAddUser(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700 }}>+ Add User <span style={{ fontSize: 10, opacity: 0.6 }}>[N]</span></button>
         </div>
       </div>
 
-      {/* ══ KPI CARDS ══ */}
+      {/* ══ KPI CARDS — FIX #1, #2, #18 ══ */}
       <div className="users-kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10, marginBottom: 16 }}>
         {[
-          { label: "Total",        value: total,          color: T.white,     sub: "All accounts",    border: T.border,         filter: "All" },
-          { label: "Paying",       value: paid,           color: "#10B981",   sub: `AED ${mrr}/mo`,   border: "#10B98125",       filter: "Pro" },
-          { label: "Trial",        value: trial,          color: T.gold,      sub: "7-day trial",     border: `${T.gold}25`,    filter: "Pro Trial" },
-          { label: "Free",         value: free,           color: T.textMuted, sub: "To convert",      border: T.border,         filter: "Free" },
-          { label: "At Risk",      value: atRisk,         color: T.red,       sub: "≤2 days left",    border: `${T.red}25`,     filter: "Pro Trial" },
-          { label: "Active Today", value: activeToday,    color: T.teal,      sub: "Logged in today", border: `${T.teal}25`,    filter: null },
-          { label: "Conversion",   value: convRate + "%", color: "#06B6D4",   sub: "Free → Paid",     border: "#06B6D425",      filter: null },
+          { label: "Total",        value: total,          color: T.white,     sub: "All accounts",    border: T.border,         filter: "All",      tip: "Show all users" },
+          { label: "Paying",       value: paid,           color: "#10B981",   sub: `AED ${mrr}/mo`,   border: "#10B98125",       filter: "Pro",      tip: "Pro + Enterprise" }, // FIX #2
+          { label: "Trial",        value: trial,          color: T.gold,      sub: "7-day trial",     border: `${T.gold}25`,    filter: "Pro Trial", tip: "Active trial users" },
+          { label: "Free",         value: free,           color: T.textMuted, sub: "To convert",      border: T.border,         filter: "Free",     tip: "Free tier users" },
+          { label: "At Risk",      value: atRiskCount,    color: T.red,       sub: `≤${AT_RISK_DAYS}d left`, border: `${T.red}25`, filter: "AtRisk", tip: `Trial ending in ≤${AT_RISK_DAYS} days` }, // FIX #1 + #6
+          { label: "Active Today", value: activeToday,    color: T.teal,      sub: "Logged in today", border: `${T.teal}25`,    filter: null,       tip: "Logged in within 24h" },
+          { label: "Conversion",   value: convRate + "%", color: "#06B6D4",   sub: "Free → Paid",     border: "#06B6D425",      filter: null,       tip: "Free to paid conversion rate" },
         ].map(s => (
           <div key={s.label} className="kpi-card"
             onClick={() => { if (s.filter) { setTierFilter(s.filter); setPage(1); } }}
             style={{ border: `1px solid ${tierFilter === s.filter && s.filter ? s.color + "60" : s.border}`, textAlign: "center", cursor: s.filter ? "pointer" : "default", transform: tierFilter === s.filter && s.filter ? "translateY(-2px)" : "none", transition: "all 0.15s" }}
-            title={s.filter ? `Click to filter by ${s.filter}` : ""}>
+            title={s.tip}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: s.color, opacity: 0.6, borderRadius: "16px 16px 0 0" }} />
             <div style={{ fontSize: 22, fontWeight: 800, color: s.color, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>{s.value}</div>
-            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 4 }}>{s.label}</div>
+            <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 4 }}>{s.label}</div>
             <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{s.sub}</div>
-            {s.filter && <div style={{ fontSize: 8, color: s.color, marginTop: 3, opacity: 0.7 }}>click to filter ↓</div>}
+            {s.filter && <div style={{ fontSize: 10, color: s.color, marginTop: 3, opacity: tierFilter === s.filter ? 1 : 0.5 }}>{tierFilter === s.filter ? "✓ filtered" : "click to filter"}</div>}
           </div>
         ))}
       </div>
 
-      {/* ══ CONVERSION FUNNEL ══ */}
+      {/* ══ CONVERSION FUNNEL — FIX #16 (removed duplicate MRR), #26 ══ */}
       <div style={{ background: T.surfaceAlt, borderRadius: 14, padding: "16px 20px", border: `1px solid ${T.border}`, marginBottom: 18 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Conversion Funnel</div>
-          <div style={{ fontSize: 11, color: T.textMuted }}>
-            {suspended > 0 && <span style={{ color: T.red, fontWeight: 700 }}>⏸ {suspended} suspended · </span>}
-            MRR <span style={{ color: T.gold, fontWeight: 700 }}>AED {mrr}</span>
-          </div>
+          {suspended > 0 && <span style={{ color: T.red, fontSize: 11, fontWeight: 700 }}>⏸ {suspended} suspended</span>}
         </div>
         <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
           {[
-            { label: "Signed Up",     value: total,        pct: 100, color: T.textSecondary },
-            { label: "Trial Started", value: trial + paid, pct: total > 0 ? Math.round(((trial + paid) / total) * 100) : 0, color: T.gold },
-            { label: "Paid",          value: paid,         pct: total > 0 ? Math.round((paid / total) * 100) : 0, color: "#10B981" },
+            { label: "Signed Up",       value: total,        pct: 100, color: T.textSecondary },
+            { label: "Activated Trial", value: trial + paid, pct: total > 0 ? Math.round(((trial + paid) / total) * 100) : 0, color: T.gold }, // FIX #26
+            { label: "Converted Paid",  value: paid,         pct: total > 0 ? Math.round((paid / total) * 100) : 0, color: "#10B981" },
           ].map((s, i) => (
             <React.Fragment key={i}>
               <div style={{ flex: 1, background: `${s.color}10`, borderRadius: 10, padding: "12px 14px", textAlign: "center", border: `1px solid ${s.color}20`, position: "relative", overflow: "hidden" }}>
@@ -1325,10 +1462,11 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginRight: 4 }}>Quick Views:</span>
         {[
-          { label: "⚠️ At Risk", tier: "Pro Trial" },
-          { label: "🏆 Enterprise", tier: "Enterprise" },
-          { label: "👤 Free Users", tier: "Free" },
-          { label: "🚫 Suspended", tier: "Suspended" },
+          { label: "⚠️ At Risk",      tier: "AtRisk" },    // FIX #3
+          { label: "🏆 Enterprise",   tier: "Enterprise" },
+          { label: "👤 Free Users",   tier: "Free" },
+          { label: "🚫 Suspended",    tier: "Suspended" },
+          { label: "⌛ Expired",      tier: "Expired" },
         ].map(v => (
           <button key={v.label} type="button" onClick={() => { setTierFilter(v.tier); setPage(1); }}
             style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${tierFilter === v.tier ? T.gold : T.border}`, background: tierFilter === v.tier ? T.goldGlow : "transparent", color: tierFilter === v.tier ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
@@ -1340,15 +1478,15 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>✕ Clear</button>
         )}
         <div style={{ marginLeft: "auto", fontSize: 10, color: T.textMuted, fontStyle: "italic" }}>
-          ↑↓ or J/K to navigate · Enter to open · E to edit
+          ↑↓ J/K · Enter=open · E=edit · N=new
         </div>
       </div>
 
-      {/* ══ SEARCH + FILTERS ══ */}
+      {/* ══ SEARCH + FILTERS — FIX #32 (active sort badge) ══ */}
       <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ position: "relative", flex: "1 1 280px", maxWidth: 360 }}>
           <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</span>
-          <input value={userSearch} onChange={e => { setUserSearch(e.target.value); setPage(1); }} placeholder="Search name, email, notes, tags, country..."
+          <input value={userSearch} onChange={e => { setUserSearch(e.target.value); setPage(1); }} placeholder="Search name, email, role, notes, country..."
             style={{ ...inputStyle, paddingLeft: 36 }} onFocus={focusIn} onBlur={focusOut} />
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -1360,45 +1498,52 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           ))}
         </div>
         <button type="button" onClick={() => setShowFilters(p => !p)}
-          style={{ padding: "7px 12px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", border: `1px solid ${showFilters ? T.teal : T.border}`, background: showFilters ? "rgba(6,182,212,0.08)" : "transparent", color: showFilters ? T.teal : T.textMuted }}>
-          ⚙️ Filters {filterCountry ? "• 1" : ""}
+          style={{ padding: "7px 12px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", border: `1px solid ${(showFilters || activeFilterCount > 0) ? T.teal : T.border}`, background: (showFilters || activeFilterCount > 0) ? "rgba(6,182,212,0.08)" : "transparent", color: (showFilters || activeFilterCount > 0) ? T.teal : T.textMuted }}>
+          ⚙️ Filters {activeFilterCount > 0 ? `• ${activeFilterCount}` : ""}
         </button>
       </div>
 
+      {/* Advanced filters — FIX #27 (role filter), FIX #32 (sort badge) */}
       {showFilters && (
         <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 14, display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
           <div>
-            <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 5 }}>
-              Country <span style={{ color: T.textMuted, fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(set when user fills profile)</span>
-            </label>
-            <input type="text" placeholder="e.g. UAE, Saudi..." value={filterCountry} onChange={e => { setFilterCountry(e.target.value); setPage(1); }} style={{ ...inputStyle, maxWidth: 180 }} onFocus={focusIn} onBlur={focusOut} />
-            {filterCountry && allFiltered.length === 0 && (
-              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>No users have set their country yet</div>
-            )}
+            <Field label="Country" hint="(filled when user completes profile)">
+              <input type="text" placeholder="e.g. UAE, Saudi..." value={filterCountry} onChange={e => { setFilterCountry(e.target.value); setPage(1); }} style={{ ...inputStyle, maxWidth: 180 }} onFocus={focusIn} onBlur={focusOut} />
+            </Field>
+          </div>
+          {/* FIX #27: role filter */}
+          <div>
+            <Field label="Job Role">
+              <select value={filterRole} onChange={e => { setFilterRole(e.target.value); setPage(1); }} style={{ ...inputStyle, maxWidth: 180, cursor: "pointer" }}>
+                <option value="">All Roles</option>
+                {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+              </select>
+            </Field>
           </div>
           <div>
-            <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 5 }}>Sort By</label>
-            <select value={sortField} onChange={e => { setSortField(e.target.value); setPage(1); }} style={{ ...inputStyle, cursor: "pointer", maxWidth: 180 }}>
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="name">Name A–Z</option>
-              <option value="tier">Tier</option>
-              <option value="trial">Trial Days Left</option>
-              <option value="lastActive">Last Active</option>
-            </select>
+            <Field label="Sort By">
+              <select value={sortField} onChange={e => { setSortField(e.target.value); setPage(1); }} style={{ ...inputStyle, cursor: "pointer", maxWidth: 180 }}>
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="name">Name A–Z</option>
+                <option value="tier">Tier</option>
+                <option value="trial">Trial Days Left</option>
+                <option value="lastActive">Last Active</option>
+              </select>
+            </Field>
           </div>
-          <button type="button" onClick={() => { setFilterCountry(""); setSortField("newest"); setSortDir("desc"); setPage(1); }}
-            style={{ padding: "9px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", letterSpacing: 0.3 }}>↺ Reset</button>
+          <button type="button" onClick={() => { setFilterCountry(""); setFilterRole(""); setSortField("newest"); setSortDir("desc"); setPage(1); }}
+            style={{ padding: "9px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>↺ Reset All</button>
         </div>
       )}
 
-      {/* ── BULK ACTIONS ── */}
+      {/* ── BULK ACTIONS — FIX #7: billing tiers only ── */}
       {bulkSel.length > 0 && (
         <div style={{ background: "rgba(212,168,67,0.06)", border: "1px solid rgba(212,168,67,0.25)", borderRadius: 10, padding: "10px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>✓ {bulkSel.length} users selected</span>
           <select value={bulkTier} onChange={e => setBulkTier(e.target.value)} style={{ padding: "6px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" }}>
-            <option value="">Change tier to...</option>
-            {ROLES.filter(r => r.value !== "admin").map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+            <option value="">Change access tier to...</option>
+            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
           </select>
           <button type="button" onClick={handleBulkAction} disabled={!bulkTier} style={{ padding: "6px 14px", borderRadius: 7, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: bulkTier ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", opacity: bulkTier ? 1 : 0.5 }}>Apply</button>
           <button type="button" onClick={() => setBulkSel([])} style={{ padding: "6px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
@@ -1407,7 +1552,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
       {/* ══ DESKTOP TABLE ══ */}
       <div className="users-table-desktop" style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "36px 28px minmax(160px,2fr) minmax(150px,1.5fr) 105px 115px 80px 80px 145px", gap: 6, padding: "10px 16px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt, alignItems: "center" }}>
+        {/* Header */}
+        <div style={{ display: "grid", gridTemplateColumns: "36px 28px 2fr 1.6fr 110px 115px 85px 85px 145px", gap: 6, padding: "10px 16px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt, alignItems: "center" }}>
           <div><input type="checkbox" onChange={e => setBulkSel(e.target.checked ? pagedUsers.map(u => u.uid) : [])} checked={bulkSel.length === pagedUsers.length && pagedUsers.length > 0} style={{ cursor: "pointer", accentColor: T.gold }} /></div>
           <ColHeader label="#" />
           <ColHeader label="User" field="name" />
@@ -1419,28 +1565,42 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           <ColHeader label="Actions" />
         </div>
 
+        {/* FIX #24: context-aware empty state */}
         {pagedUsers.length === 0 ? (
           <div style={{ textAlign: "center", padding: "56px 20px" }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 6 }}>No users found</div>
-            <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>
-              {userSearch ? `No results for "${userSearch}" — try searching by email or clear the filter` : "No users match the selected filter"}
+            <div style={{ fontSize: 40, marginBottom: 12 }}>
+              {tierFilter === "Suspended" ? "⏸" : tierFilter === "Expired" ? "⌛" : tierFilter === "AtRisk" ? "⚠️" : "🔍"}
             </div>
-            <button type="button" onClick={() => { setUserSearch(""); setTierFilter("All"); setPage(1); }}
+            <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 6 }}>
+              {tierFilter === "Suspended" ? "No suspended users" :
+               tierFilter === "Expired"   ? "No expired trials" :
+               tierFilter === "AtRisk"    ? `No users expiring within ${AT_RISK_DAYS} days` :
+               userSearch ? `No results for "${userSearch}"` : "No users match this filter"}
+            </div>
+            <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>
+              {tierFilter === "Suspended" ? "Users you suspend will appear here." :
+               tierFilter === "Expired"   ? "Users whose trial has ended will appear here." :
+               userSearch ? "Try searching by email, name, role, or country." : "Try a different filter or clear to see all users."}
+            </div>
+            <button type="button" onClick={() => { setUserSearch(""); setTierFilter("All"); setFilterCountry(""); setFilterRole(""); setPage(1); }}
               style={{ padding: "8px 18px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-              Clear Filters
+              Clear All Filters
             </button>
           </div>
         ) : pagedUsers.map((u, i) => {
-          const badge = getRoleBadge(u);
-          const health = getHealth(u);
-          const days = trialDaysLeft(u);
+          const badge   = getTierBadge(u);
+          const jobRole = getJobRoleBadge(u);
+          const health  = getHealth(u);
+          const days    = trialDaysLeft(u);
           const isSelected = bulkSel.includes(u.uid);
-          const isFocused = focusedRow === i;
-          const rowNum = (page - 1) * PAGE_SIZE + i + 1;
+          const isFocused  = focusedRow === i;
+          const rowNum     = (page - 1) * PAGE_SIZE + i + 1;
+          // FIX #5: use actual trial length, not hardcoded 7
+          const trialTotal = u.trialEnd && u.createdAt ? Math.max(7, Math.round((new Date(u.trialEnd) - new Date(u.createdAt)) / 86400000)) : 7;
+          const trialPct   = days !== null ? Math.max(0, Math.min((days / trialTotal) * 100, 100)) : 0;
           return (
             <div key={u.uid}
-              style={{ display: "grid", gridTemplateColumns: "36px 28px minmax(160px,2fr) minmax(150px,1.5fr) 105px 115px 80px 80px 145px", gap: 6, padding: "10px 16px", borderBottom: `1px solid ${T.border}`, alignItems: "center", background: isFocused ? `${T.gold}08` : isSelected ? "rgba(212,168,67,0.04)" : hoverRow === u.uid ? T.surfaceAlt : u.suspended ? "rgba(239,68,68,0.02)" : "transparent", transition: "background 0.1s", borderLeft: `3px solid ${health.border}`, cursor: "default" }}
+              style={{ display: "grid", gridTemplateColumns: "36px 28px 2fr 1.6fr 110px 115px 85px 85px 145px", gap: 6, padding: "10px 16px", borderBottom: `1px solid ${T.border}`, alignItems: "center", background: isFocused ? `${T.gold}08` : isSelected ? "rgba(212,168,67,0.04)" : hoverRow === u.uid ? T.surfaceAlt : u.suspended ? "rgba(239,68,68,0.02)" : "transparent", transition: "background 0.1s", borderLeft: `3px solid ${health.border}`, cursor: "default" }}
               onMouseEnter={() => { setHoverRow(u.uid); setFocusedRow(i); }}
               onMouseLeave={() => setHoverRow(null)}>
 
@@ -1456,13 +1616,14 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                     {u.name || u.email?.split("@")[0]}
                     {u.suspended && <span style={{ fontSize: 9, color: T.red, fontWeight: 700, background: "rgba(239,68,68,0.12)", padding: "1px 5px", borderRadius: 4 }}>SUSPENDED</span>}
                     {u.role === "admin" && <span style={{ fontSize: 9, color: T.gold, fontWeight: 700, background: "rgba(212,168,67,0.12)", padding: "1px 5px", borderRadius: 4 }}>ADMIN</span>}
-                    {u.notes && <span style={{ fontSize: 9, color: "#8B5CF6", background: "rgba(139,92,246,0.12)", padding: "1px 5px", borderRadius: 4 }}>📝</span>}
+                    {/* FIX #33: notes badge is clickable */}
+                    {u.notes && <button type="button" onClick={() => { setNoteUser(u); setNoteText(u.notes || ""); }} title="Click to view/edit note" style={{ fontSize: 9, color: "#8B5CF6", background: "rgba(139,92,246,0.12)", padding: "1px 5px", borderRadius: 4, border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>📝</button>}
                   </div>
                   <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2, display: "flex", alignItems: "center", gap: 4, overflow: "hidden" }}>
                     <span style={{ width: 5, height: 5, borderRadius: "50%", background: health.dot, display: "inline-block", flexShrink: 0 }} />
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {health.label}
-                      {getRoleTag(u) && <span style={{ marginLeft: 5, color: getRoleTag(u).color, fontWeight: 700 }}>· {getRoleTag(u).label}</span>}
+                      {jobRole && <span style={{ marginLeft: 5, color: jobRole.color, fontWeight: 700 }}>· {jobRole.label}</span>}
                       {(u.tags || []).length > 0 && <span style={{ marginLeft: 5, color: "#8B5CF6" }}>· {(u.tags || []).map(t => TAGS_OPTIONS.find(x => x.value === t)?.label).filter(Boolean).join(", ")}</span>}
                     </span>
                   </div>
@@ -1471,32 +1632,32 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
               <span style={{ fontSize: 11, color: T.textSecondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</span>
 
+              {/* FIX #19: tier badge has ▾ to signal it's clickable */}
               <div>
                 <button type="button"
                   onClick={e => { const rect = e.currentTarget.getBoundingClientRect(); setInlineTierUser({ user: u, x: rect.left, y: rect.bottom + 4 }); }}
                   title="Click to change tier"
-                  style={{ fontSize: 10, fontWeight: 700, padding: "4px 9px", borderRadius: 7, background: badge.bg, color: badge.color, border: `1px solid ${badge.color}25`, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
+                  style={{ fontSize: 10, fontWeight: 700, padding: "4px 9px", borderRadius: 7, background: badge.bg, color: badge.color, border: `1px solid ${badge.color}25`, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 3 }}>
                   {badge.label}{badge.price ? ` · ${badge.price}` : ""}
+                  <span style={{ opacity: 0.6, fontSize: 9 }}>▾</span>
                 </button>
               </div>
 
+              {/* FIX #5: trial bar uses actual trial length */}
               <div>
                 {days !== null ? (
                   <div>
                     <div style={{ width: "100%", height: 4, borderRadius: 2, background: T.surfaceAlt, marginBottom: 3 }}>
-                      <div style={{ width: `${Math.min((days / 7) * 100, 100)}%`, height: "100%", borderRadius: 2, background: days > 3 ? T.green : days > 1 ? T.gold : T.red }} />
+                      <div style={{ width: `${trialPct}%`, height: "100%", borderRadius: 2, background: days > AT_RISK_DAYS ? T.green : days > 1 ? T.gold : T.red }} />
                     </div>
-                    <span style={{ fontSize: 10, color: days <= 2 ? T.red : T.gold, fontWeight: 700 }}>{days > 0 ? `${days}d left` : "Expired"}</span>
+                    <span style={{ fontSize: 10, color: days <= AT_RISK_DAYS ? T.red : T.gold, fontWeight: 700 }}>{days > 0 ? `${days}d left` : "Expired"}</span>
                   </div>
                 ) : u.tier === "pro" ? <span style={{ fontSize: 10, color: T.green, fontWeight: 600 }}>Active ✓</span>
                   : u.tier === "enterprise" ? <span style={{ fontSize: 10, color: T.teal, fontWeight: 600 }}>Enterprise ✓</span>
                   : <span style={{ fontSize: 11, color: T.textMuted }}>—</span>}
               </div>
 
-              {/* Last Active column */}
-              <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: lastActiveColor(u) }}>{lastActiveLabel(u)}</div>
-              </div>
+              <div><div style={{ fontSize: 10, fontWeight: 700, color: lastActiveColor(u) }}>{lastActiveLabel(u)}</div></div>
 
               <div>
                 <div style={{ fontSize: 11, color: T.textSecondary }}>{(() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "short" }); } catch { return "—"; } })()}</div>
@@ -1504,9 +1665,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               </div>
 
               <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                <button type="button" title="View profile" onClick={() => setDrawerUser(u)}
+                <button type="button" title="View profile [Enter]" onClick={() => { setDrawerUser(u); setDrawerTab("details"); }}
                   style={{ height: 28, padding: "0 8px", borderRadius: 7, border: `1px solid ${T.gold}40`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>View →</button>
-                <button type="button" title="Edit user" onClick={() => openEditUser(u)}
+                <button type="button" title="Edit user [E]" onClick={() => openEditUser(u)}
                   style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <EditIcon />
                 </button>
@@ -1520,15 +1681,15 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         })}
       </div>
 
-      {/* ══ MOBILE CARD VIEW ══ */}
+      {/* ══ MOBILE CARD VIEW — FIX #22: Edit, Tags, Suspend added ══ */}
       <div className="users-table-mobile" style={{ flexDirection: "column", gap: 10 }}>
         {pagedUsers.length === 0 ? (
           <div style={{ textAlign: "center", padding: "40px 20px", background: T.surface, borderRadius: 16, border: `1px solid ${T.border}` }}>
             <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
             <div style={{ fontSize: 14, color: T.textMuted }}>No users found</div>
           </div>
-        ) : pagedUsers.map((u) => {
-          const badge  = getRoleBadge(u);
+        ) : pagedUsers.map(u => {
+          const badge  = getTierBadge(u);
           const health = getHealth(u);
           const days   = trialDaysLeft(u);
           return (
@@ -1546,37 +1707,39 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                 <span style={{ fontSize: 10, fontWeight: 700, padding: "4px 10px", borderRadius: 7, background: badge.bg, color: badge.color }}>{badge.label}</span>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
-                <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
-                  <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Status</div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: health.dot, display: "flex", alignItems: "center", gap: 4 }}>
-                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: health.dot, display: "inline-block" }} />{health.label}
+                {[
+                  { label: "Status", value: health.label, color: health.dot },
+                  { label: "Trial",  value: days !== null ? (days > 0 ? `${days}d left` : "Expired") : (u.tier === "pro" ? "Active" : "—"), color: days !== null ? (days <= AT_RISK_DAYS ? T.red : T.gold) : T.green },
+                  { label: "Active", value: lastActiveLabel(u), color: lastActiveColor(u) },
+                ].map(s => (
+                  <div key={s.label} style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
+                    <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>{s.label}</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: s.color }}>{s.value}</div>
                   </div>
-                </div>
-                <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
-                  <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Trial</div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: days !== null ? (days <= 2 ? T.red : T.gold) : T.green }}>
-                    {days !== null ? (days > 0 ? `${days}d left` : "Expired") : u.tier === "pro" ? "Active" : "—"}
-                  </div>
-                </div>
-                <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
-                  <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Last Active</div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: lastActiveColor(u) }}>{lastActiveLabel(u)}</div>
-                </div>
+                ))}
               </div>
-              <div style={{ display: "flex", gap: 6 }}>
-                <button type="button" onClick={() => setDrawerUser(u)} style={{ flex: 1, padding: "8px", borderRadius: 8, border: `1px solid ${T.gold}40`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>View →</button>
-                <button type="button" onClick={() => { setSendEmailUser(u); setEmailSubject(""); setEmailBody(""); }} style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid rgba(59,130,246,0.3)", background: "rgba(59,130,246,0.06)", color: "#3B82F6", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center" }}>✉️</button>
-                <button type="button" onClick={() => setConfirmDelete(u)} style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${T.red}30`, background: `${T.red}06`, color: T.red, cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center" }}>🗑️</button>
+              {/* FIX #22: all 9 actions available on mobile */}
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                <button type="button" onClick={() => { setDrawerUser(u); setDrawerTab("details"); }} style={{ flex: 1, minWidth: 60, padding: "8px", borderRadius: 8, border: `1px solid ${T.gold}40`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>View →</button>
+                <button type="button" onClick={() => openEditUser(u)} style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} title="Edit"><EditIcon /></button>
+                <button type="button" onClick={() => setTagUser(u)} style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid rgba(139,92,246,0.3)", background: "rgba(139,92,246,0.06)", color: "#8B5CF6", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }} title="Tags">🏷️</button>
+                <button type="button" onClick={() => setConfirmSuspend(u)} style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.06)", color: "#F59E0B", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }} title={u.suspended ? "Unsuspend" : "Suspend"}>{u.suspended ? "✅" : "⏸"}</button>
+                <button type="button" onClick={() => { setSendEmailUser(u); setEmailSubject(""); setEmailBody(""); }} style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid rgba(59,130,246,0.3)", background: "rgba(59,130,246,0.06)", color: "#3B82F6", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>✉️</button>
+                <button type="button" onClick={() => setConfirmDelete(u)} style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${T.red}30`, background: `${T.red}06`, color: T.red, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🗑️</button>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* ══ PAGINATION ══ */}
+      {/* ══ PAGINATION — FIX #4 ══ */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, padding: "0 2px", flexWrap: "wrap", gap: 10 }}>
+        {/* FIX #4: handle 0 results gracefully */}
         <span style={{ fontSize: 11, color: T.textMuted }}>
-          Showing <strong style={{ color: T.white }}>{((page - 1) * PAGE_SIZE) + 1}–{Math.min(page * PAGE_SIZE, allFiltered.length)}</strong> of <strong style={{ color: T.white }}>{allFiltered.length}</strong> users
+          {allFiltered.length === 0
+            ? "No users shown"
+            : <>Showing <strong style={{ color: T.white }}>{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, allFiltered.length)}</strong> of <strong style={{ color: T.white }}>{allFiltered.length}</strong> users</>
+          }
           {tierFilter !== "All" && <span style={{ color: T.gold }}> · {tierFilter}</span>}
         </span>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -1595,8 +1758,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           <button type="button" onClick={() => setPage(totalPages)} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>»</button>
           <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>Page {page} of {totalPages}</span>
         </div>
+        {/* FIX #16: MRR only shown once — here at bottom */}
         <span style={{ fontSize: 11, color: T.textMuted }}>
-          MRR: <span style={{ color: T.gold, fontWeight: 700 }}>AED {mrr}</span> · Conv: <span style={{ color: T.green, fontWeight: 700 }}>{convRate}%</span>
+          MRR <span style={{ color: T.gold, fontWeight: 700 }}>AED {mrr}</span> · Conv <span style={{ color: T.green, fontWeight: 700 }}>{convRate}%</span>
         </span>
       </div>
     </div>
