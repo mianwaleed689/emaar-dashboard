@@ -3643,6 +3643,159 @@ export default function AdminPanel() {
                 </div>
               </div>
 
+              {/* ══ ARPU TREND ══ */}
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Revenue Trend</div>
+              <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 24 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>ARPU & MRR Over Time</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Derived from user tier history · Updates as users join and upgrade</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 16 }}>
+                    {[["MRR", T.green], ["ARPU", "#8B5CF6"], ["Paid Users", T.teal]].map(([name, color]) => (
+                      <span key={name} style={{ fontSize: 10, color: T.textSecondary, display: "flex", alignItems: "center", gap: 5 }}>
+                        <span style={{ width: 16, height: 2, background: color, display: "inline-block", borderRadius: 1 }} />
+                        {name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                {(() => {
+                  // Build monthly ARPU from users createdAt + auditLog tier changes
+                  const monthsBack = 6;
+                  const monthData = [];
+                  const nowD = new Date();
+
+                  for (let m = monthsBack - 1; m >= 0; m--) {
+                    const d = new Date(nowD.getFullYear(), nowD.getMonth() - m, 1);
+                    const label = d.toLocaleDateString("en-AE", { month: "short", year: "2-digit" });
+                    const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+
+                    // For each user, determine their tier at end of this month
+                    // Use auditLog to find last tier_change before monthEnd
+                    let proCount = 0, entCount = 0;
+                    users.forEach(u => {
+                      const joined = new Date(u.createdAt || 0);
+                      if (joined > monthEnd) return; // didn't exist yet
+
+                      // Find last tier change for this user up to monthEnd
+                      const userChanges = auditLog
+                        .filter(l => l.userId === u.id && l.action === "tier_change" && new Date(l.changedAt) <= monthEnd)
+                        .sort((a, b) => new Date(b.changedAt) - new Date(a.changedAt));
+
+                      let tierAtMonth;
+                      if (userChanges.length > 0) {
+                        tierAtMonth = userChanges[0].newTier;
+                      } else {
+                        // No changes recorded — use current tier if they existed
+                        // If it's the current month use current tier, otherwise assume they started as pro_trial
+                        tierAtMonth = m === 0 ? u.tier : "pro_trial";
+                      }
+
+                      if (tierAtMonth === "pro") proCount++;
+                      else if (tierAtMonth === "enterprise") entCount++;
+                    });
+
+                    const mrrVal = proCount * 99 + entCount * 499;
+                    const paidCount = proCount + entCount;
+                    const arpuVal = paidCount > 0 ? Math.round(mrrVal / paidCount) : 0;
+                    monthData.push({ label, mrr: mrrVal, arpu: arpuVal, paid: paidCount });
+                  }
+
+                  const maxMrr = Math.max(...monthData.map(d => d.mrr), 1);
+                  const maxArpu = Math.max(...monthData.map(d => d.arpu), 1);
+                  const chartH = 180;
+                  const chartW = "100%";
+                  const pts = monthData.length;
+                  const hasData = monthData.some(d => d.mrr > 0 || d.arpu > 0);
+
+                  if (!hasData) return (
+                    <div style={{ textAlign: "center", padding: "40px 0", color: T.textMuted, fontSize: 12 }}>
+                      No revenue data yet — will populate as users upgrade to paid plans
+                    </div>
+                  );
+
+                  return (
+                    <div>
+                      {/* SVG chart */}
+                      <div style={{ position: "relative", height: chartH + 24, overflowX: "auto" }}>
+                        <svg width="100%" height={chartH + 24} viewBox={`0 0 ${pts * 80} ${chartH + 24}`} preserveAspectRatio="none" style={{ display: "block" }}>
+                          <defs>
+                            <linearGradient id="gMrr" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor={T.green} stopOpacity="0.2" />
+                              <stop offset="100%" stopColor={T.green} stopOpacity="0" />
+                            </linearGradient>
+                          </defs>
+                          {/* Grid lines */}
+                          {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => (
+                            <line key={i} x1="0" y1={chartH * pct} x2={pts * 80} y2={chartH * pct} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+                          ))}
+                          {/* MRR area fill */}
+                          <path
+                            d={monthData.map((d, i) => {
+                              const x = (i / (pts - 1 || 1)) * (pts * 80 - 40) + 20;
+                              const y = chartH - (d.mrr / maxMrr) * (chartH - 20);
+                              return `${i === 0 ? "M" : "L"}${x},${y}`;
+                            }).join(" ") + ` L${(pts * 80 - 20)},${chartH} L20,${chartH} Z`}
+                            fill="url(#gMrr)"
+                          />
+                          {/* MRR line */}
+                          <path
+                            d={monthData.map((d, i) => {
+                              const x = (i / (pts - 1 || 1)) * (pts * 80 - 40) + 20;
+                              const y = chartH - (d.mrr / maxMrr) * (chartH - 20);
+                              return `${i === 0 ? "M" : "L"}${x},${y}`;
+                            }).join(" ")}
+                            fill="none" stroke={T.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                          />
+                          {/* ARPU line */}
+                          <path
+                            d={monthData.map((d, i) => {
+                              const x = (i / (pts - 1 || 1)) * (pts * 80 - 40) + 20;
+                              const y = chartH - (d.arpu / maxArpu) * (chartH - 20);
+                              return `${i === 0 ? "M" : "L"}${x},${y}`;
+                            }).join(" ")}
+                            fill="none" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="5 3"
+                          />
+                          {/* Dots + labels */}
+                          {monthData.map((d, i) => {
+                            const x = (i / (pts - 1 || 1)) * (pts * 80 - 40) + 20;
+                            const yMrr = chartH - (d.mrr / maxMrr) * (chartH - 20);
+                            const yArpu = chartH - (d.arpu / maxArpu) * (chartH - 20);
+                            return (
+                              <g key={i}>
+                                {/* MRR dot */}
+                                {d.mrr > 0 && <circle cx={x} cy={yMrr} r="4" fill={T.green} stroke={T.surface} strokeWidth="2" />}
+                                {/* MRR value label */}
+                                {d.mrr > 0 && <text x={x} y={yMrr - 8} textAnchor="middle" fontSize="8" fill={T.green} fontFamily="Outfit,sans-serif">{d.mrr.toLocaleString()}</text>}
+                                {/* ARPU dot */}
+                                {d.arpu > 0 && <circle cx={x} cy={yArpu} r="3" fill="#8B5CF6" stroke={T.surface} strokeWidth="2" />}
+                                {/* Month label */}
+                                <text x={x} y={chartH + 16} textAnchor="middle" fontSize="9" fill="#64748B" fontFamily="Outfit,sans-serif">{d.label}</text>
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      </div>
+                      {/* Summary row */}
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+                        {[
+                          { label: "Current MRR", value: `AED ${mrr.toLocaleString()}`, color: T.green },
+                          { label: "Current ARPU", value: `AED ${arpu}`, color: "#8B5CF6" },
+                          { label: "MRR Growth", value: (() => { const prev = monthData[monthData.length - 2]?.mrr || 0; if (!prev) return "—"; const g = Math.round(((mrr - prev) / prev) * 100); return `${g >= 0 ? "+" : ""}${g}%`; })(), color: (() => { const prev = monthData[monthData.length - 2]?.mrr || 0; if (!prev) return T.textMuted; return mrr >= prev ? T.green : T.red; })() },
+                          { label: "Projected ARR", value: `AED ${arr.toLocaleString()}`, color: T.gold },
+                        ].map((s, i) => (
+                          <div key={i} style={{ textAlign: "center" }}>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: s.color, fontFamily: "'Fraunces',serif" }}>{s.value}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{s.label}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
               {/* ══ TRIAL EXPIRY + CONVERSION FUNNEL ══ */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Trial Pipeline</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }} className="charts-row-overview">
