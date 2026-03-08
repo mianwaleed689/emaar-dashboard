@@ -2133,6 +2133,15 @@ export default function AdminPanel() {
     { label: "Net MRR",        value: mrr },
   ];
 
+  // ── CUMULATIVE GROWTH — used by Analytics tab ──
+  const cumulativeData = (() => {
+    const sorted = [...users].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+    return sorted.map((u, i) => {
+      const d = new Date(u.createdAt || now);
+      return { date: `${d.getDate()}/${d.getMonth() + 1}`, total: i + 1 };
+    });
+  })();
+
   // ── REVENUE PROJECTION — kept for Revenue tab, clearly labelled as estimate ──
   const projectedMRR = mrr + Math.round(stats.proTrial * 99 * (trialConversion / 100 || 0.3));
   const revenueProjection = [
