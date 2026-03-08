@@ -2607,6 +2607,10 @@ export default function AdminPanel() {
 
   /* ─── DATA MANAGER STATE ─── */
   const [dataSubTab, setDataSubTab] = useState("data"); // projects | communities | yields
+  const [phSelId,   setPhSelId]   = useState("");
+  const [phLoading, setPhLoading] = useState(false);
+  const [phManual,  setPhManual]  = useState({ price: "", ppsf: "", date: "", note: "" });
+  const [phSaving,  setPhSaving]  = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [bulkSelected, setBulkSelected] = useState([]);
   const [priceHistory, setPriceHistory] = useState({});
@@ -6067,11 +6071,6 @@ export default function AdminPanel() {
 
               {/* ─── PRICE HISTORY SUB-TAB ─── */}
               {dataSubTab === "pricehistory" && (() => {
-                const [phSelId,   setPhSelId]   = React.useState("");
-                const [phLoading, setPhLoading] = React.useState(false);
-                const [phManual,  setPhManual]  = React.useState({ price: "", ppsf: "", date: "", note: "" });
-                const [phSaving,  setPhSaving]  = React.useState(false);
-
                 const selectedProject = emaarProjects.find(p => String(p.id) === String(phSelId));
                 const history         = phSelId ? (priceHistory[phSelId] || []) : [];
 
