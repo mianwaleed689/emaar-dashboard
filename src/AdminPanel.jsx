@@ -1124,9 +1124,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       { key: "actions",  label: "Actions",    Icon: IconActions },
     ];
 
-    return (
-      {/* Portal — renders at document.body, bypasses ALL stacking contexts */}
-      {ReactDOM.createPortal(
+    return ReactDOM.createPortal(
       <div style={{ position: "fixed", inset: 0, zIndex: 1500, background: "rgba(0,0,0,0.38)", animation: "fadeBackdrop 0.2s ease" }} onClick={() => setDrawerUserWithCallback(null)}>
 
         {/* Panel — child of backdrop, stopPropagation prevents close on panel clicks */}
@@ -1410,7 +1408,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
       </div>
       , document.body
-      )}
     );
   };
 
