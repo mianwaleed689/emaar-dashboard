@@ -6781,9 +6781,9 @@ export default function AdminPanel() {
                 const labelStyle = { fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 5, display: "block" };
                 const sectionHeadStyle = { fontSize: 11, fontWeight: 800, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, marginTop: 20, paddingBottom: 6, borderBottom: "1px solid rgba(212,168,67,0.15)", display: "flex", alignItems: "center", gap: 8 };
                 return (
-                  <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 0, background: T.surface, borderRadius: 12, border: "1px solid " + T.border, overflow: "hidden", minHeight: 600, width: "100%", boxSizing: "border-box" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "220px minmax(0,1fr)", gap: 0, background: T.surface, borderRadius: 12, border: "1px solid " + T.border, overflow: "hidden", height: "calc(100vh - 220px)" }}>
                     {/* ── LEFT PANEL: Community list ── */}
-                    <div style={{ borderRight: "1px solid " + T.border, overflowY: "auto" }}>
+                    <div style={{ borderRight: "1px solid " + T.border, overflowY: "auto", minWidth: 0 }}>
                       <div style={{ padding: "14px 16px 10px", borderBottom: "1px solid " + T.border }}>
                         <div style={{ fontSize: 12, fontWeight: 800, color: T.gold, letterSpacing: 0.5 }}>COMMUNITIES</div>
                         <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{communities.length} total · {Object.keys(liveCommunityIntel).length} live</div>
@@ -6806,7 +6806,7 @@ export default function AdminPanel() {
                     </div>
 
                     {/* ── RIGHT PANEL: Editor ── */}
-                    <div style={{ overflowY: "auto", maxHeight: 700, minWidth: 0, overflow: "hidden auto" }}>
+                    <div style={{ overflowY: "auto", minWidth: 0, overflow: "hidden auto" }}>
                       {/* Header */}
                       <div style={{ padding: "16px 24px 14px", borderBottom: "1px solid " + T.border, display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: T.surface, zIndex: 10 }}>
                         <div>
