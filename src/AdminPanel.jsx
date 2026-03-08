@@ -3372,7 +3372,7 @@ export default function AdminPanel() {
                       {churnEvents.slice(0, 5).map((ev, i) => (
                         <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < Math.min(churnEvents.length, 5) - 1 ? `1px solid ${T.border}` : "none" }}>
                           <div>
-                            <div style={{ fontSize: 12, color: T.white, fontWeight: 600 }}>{ev.userName || ev.userEmail || "Unknown"}</div>
+                            <div style={{ fontSize: 12, color: T.white, fontWeight: 600 }}>{(() => { const u = users.find(x => x.uid === ev.uid || x.uid === ev.userId); return ev.userName || ev.userEmail || u?.name || u?.email || ev.uid?.slice(0,8) || "Unknown"; })()}</div>
                             <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>
                               <span style={{ color: T.red, fontWeight: 600 }}>{ev.from}</span> → <span style={{ color: T.textSecondary }}>{ev.to}</span>
                             </div>
