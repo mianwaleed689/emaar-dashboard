@@ -6,7 +6,7 @@ import emailjs from "@emailjs/browser";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, Legend } from "recharts";
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot } from "firebase/firestore";
 
 import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
 import LandingPage from "./LandingPage";
@@ -1846,12 +1846,28 @@ export default function EmaarDashboardV2() {
         setUser(firebaseUser.email || "");
         // Fetch user profile from Firestore
         try {
-          // Track last login timestamp every session
+          // Track last login timestamp + history (last 10 logins)
           try {
+            const historyEntry = {
+              time: new Date().toISOString(),
+              device: navigator.userAgent.includes("Mobile") ? "Mobile" : "Desktop",
+              browser: (() => {
+                const ua = navigator.userAgent;
+                if (ua.includes("Chrome") && !ua.includes("Edg")) return "Chrome";
+                if (ua.includes("Firefox")) return "Firefox";
+                if (ua.includes("Safari") && !ua.includes("Chrome")) return "Safari";
+                if (ua.includes("Edg")) return "Edge";
+                return "Browser";
+              })(),
+            };
+            const existing = await getDoc(doc(db, "users", firebaseUser.uid));
+            const prevHistory = existing.exists() ? (existing.data().loginHistory || []) : [];
+            const newHistory = [historyEntry, ...prevHistory].slice(0, 10);
             await setDoc(doc(db, "users", firebaseUser.uid), {
               lastLoginAt: new Date().toISOString(),
               emailVerified: firebaseUser.emailVerified,
               provider: firebaseUser.providerData?.[0]?.providerId || "email",
+              loginHistory: newHistory,
             }, { merge: true });
           } catch(e) {}
           const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
@@ -2031,25 +2047,23 @@ export default function EmaarDashboardV2() {
     }
   }, [myAlerts, activeProjects]);
 
-  // NOTIFICATIONS
+  // NOTIFICATIONS — live listener so admin messages appear instantly
   useEffect(() => {
     if (!isLoggedIn || !auth.currentUser) return;
-    const loadNotifications = async () => {
-      try {
-        const snap = await getDocs(collection(db, "notifications"));
-        const userNotifs = [];
-        snap.forEach(d => {
-          const data = d.data();
-          if (data.userId === auth.currentUser.uid || data.userId === "all") {
-            userNotifs.push({ id: d.id, ...data });
-          }
-        });
-        userNotifs.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-        setNotifications(userNotifs.slice(0, 20));
-        setUnreadCount(userNotifs.filter(n => !n.read).length);
-      } catch (e) {}
-    };
-    loadNotifications();
+    const uid = auth.currentUser.uid;
+    const unsub = onSnapshot(collection(db, "notifications"), (snap) => {
+      const userNotifs = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.userId === uid || data.userId === "all") {
+          userNotifs.push({ id: d.id, ...data });
+        }
+      });
+      userNotifs.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      setNotifications(userNotifs.slice(0, 20));
+      setUnreadCount(userNotifs.filter(n => !n.read).length);
+    });
+    return () => unsub();
   }, [isLoggedIn]);
 
   const markNotifRead = async (id) => {
@@ -2254,6 +2268,17 @@ export default function EmaarDashboardV2() {
     window.scrollTo({ top: 0, behavior: "smooth" });
     const mainEl = document.querySelector(".main-content");
     if (mainEl) mainEl.scrollTop = 0;
+    // Track tab activity for admin panel
+    if (auth.currentUser) {
+      try {
+        const actEntry = { tab: key, time: new Date().toISOString() };
+        getDoc(doc(db, "users", auth.currentUser.uid)).then(snap => {
+          const prev = snap.exists() ? (snap.data().recentActivity || []) : [];
+          const updated = [actEntry, ...prev].slice(0, 15);
+          setDoc(doc(db, "users", auth.currentUser.uid), { recentActivity: updated }, { merge: true });
+        });
+      } catch(e) {}
+    }
   };
 
   return (

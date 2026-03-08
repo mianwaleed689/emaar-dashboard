@@ -454,6 +454,11 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const [filterCountry, setFilterCountry]   = useState("");
   const [focusedRow, setFocusedRow]         = useState(0);
   const [sendingTrialEmails, setSendingTrialEmails] = useState(false);
+  const [notifUser, setNotifUser]               = useState(null);
+  const [notifTitle, setNotifTitle]             = useState("");
+  const [notifMessage, setNotifMessage]         = useState("");
+  const [notifIcon, setNotifIcon]               = useState("📢");
+  const [notifSendingUser, setNotifSendingUser] = useState(false);
 
   const PAGE_SIZE = 25;
   const now = new Date();
@@ -716,6 +721,22 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   };
 
   const handleDelete  = async () => { if (!confirmDelete)  return; await deleteUser(confirmDelete.uid);  setConfirmDelete(null);  if (drawerUser?.uid === confirmDelete.uid)  setDrawerUser(null); };
+
+  const sendDirectNotification = async () => {
+    if (!notifTitle || !notifMessage) { notify("❌ Title and message required"); return; }
+    setNotifSendingUser(true);
+    try {
+      const { setDoc: sd, doc: dc } = await import("firebase/firestore");
+      const id = `notif_${Date.now()}`;
+      await sd(dc(db, "notifications", id), {
+        userId: notifUser.uid, title: notifTitle, message: notifMessage,
+        icon: notifIcon, read: false, createdAt: new Date().toISOString(), sentBy: "admin",
+      });
+      notify(`✅ Notification sent to ${notifUser.name || notifUser.email}`);
+      setNotifUser(null); setNotifTitle(""); setNotifMessage(""); setNotifIcon("📢");
+    } catch(e) { notify("❌ " + e.message); }
+    setNotifSendingUser(false);
+  };
   const handleSuspend = async () => { if (!confirmSuspend) return; await suspendUser(confirmSuspend.uid); setConfirmSuspend(null); if (drawerUser?.uid === confirmSuspend.uid) setDrawerUser(null); };
 
   const exportFiltered = () => {
@@ -916,6 +937,38 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </Modal>
   );
 
+  const NotifUserModal = () => notifUser && (
+    <Modal onClose={() => setNotifUser(null)} maxWidth={440}>
+      <ModalHeader title={`📢 Notify — ${notifUser.name || notifUser.email}`} sub="Appears instantly in their notification bell" onClose={() => setNotifUser(null)} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div>
+          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>Icon</label>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {["📢","🏙️","💰","📈","⚠️","🔥","✅","🎉","📋","🚨"].map(ic => (
+              <button key={ic} type="button" onClick={() => setNotifIcon(ic)}
+                style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${notifIcon === ic ? T.gold : T.border}`, background: notifIcon === ic ? T.goldGlow : T.surfaceAlt, cursor: "pointer", fontSize: 16 }}>{ic}</button>
+            ))}
+          </div>
+        </div>
+        <Field label="Title"><input type="text" placeholder="Notification title..." value={notifTitle} onChange={e => setNotifTitle(e.target.value)} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
+        <Field label="Message"><textarea placeholder="Write the notification message..." value={notifMessage} onChange={e => setNotifMessage(e.target.value)} rows={3} style={{ ...inputStyle, resize: "vertical" }} onFocus={focusIn} onBlur={focusOut} /></Field>
+        <div style={{ padding: "10px 14px", background: "rgba(212,168,67,0.05)", borderRadius: 9, border: "1px solid rgba(212,168,67,0.15)", fontSize: 12 }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <span style={{ fontSize: 18, flexShrink: 0 }}>{notifIcon}</span>
+            <div>
+              <div style={{ fontWeight: 700, color: T.white, marginBottom: 3 }}>{notifTitle || "Preview title"}</div>
+              <div style={{ color: T.textMuted, lineHeight: 1.5 }}>{notifMessage || "Preview message will appear here..."}</div>
+            </div>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <BtnGhost onClick={() => setNotifUser(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
+          <Btn onClick={sendDirectNotification} disabled={notifSendingUser} color={T.gold} style={{ flex: 2, color: T.bg }}>{notifSendingUser ? "Sending..." : "📢 Send Notification"}</Btn>
+        </div>
+      </div>
+    </Modal>
+  );
+
   /* ══════════════════════════════════════════════
      PROFILE DRAWER
   ══════════════════════════════════════════════ */
@@ -1007,6 +1060,48 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               </div>
             )}
 
+            {/* Login History */}
+            {(u.loginHistory || []).length > 0 && (
+              <div style={{ marginBottom: 22 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Login History</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                  {(u.loginHistory || []).slice(0, 5).map((h, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 12px", background: i === 0 ? "rgba(16,185,129,0.06)" : T.surfaceAlt, borderRadius: 8, border: `1px solid ${i === 0 ? "rgba(16,185,129,0.15)" : T.border}` }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 13 }}>{h.device === "Mobile" ? "📱" : "🖥️"}</span>
+                        <div>
+                          <div style={{ fontSize: 11, color: i === 0 ? T.green : T.textSecondary, fontWeight: i === 0 ? 700 : 500 }}>{h.browser || "Browser"} · {h.device || "Desktop"}</div>
+                          {i === 0 && <div style={{ fontSize: 9, color: T.green, fontWeight: 700 }}>Most recent</div>}
+                        </div>
+                      </div>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>
+                        {(() => { try { return new Date(h.time).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "—"; } })()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Activity Timeline */}
+            {(u.recentActivity || []).length > 0 && (
+              <div style={{ marginBottom: 22 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Recent Activity</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, position: "relative", paddingLeft: 20 }}>
+                  <div style={{ position: "absolute", left: 7, top: 8, bottom: 8, width: 1, background: T.border }} />
+                  {(u.recentActivity || []).slice(0, 8).map((a, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 10px 6px 0", position: "relative" }}>
+                      <div style={{ position: "absolute", left: -14, width: 8, height: 8, borderRadius: "50%", background: i === 0 ? T.gold : T.border, border: `2px solid ${T.surface}` }} />
+                      <span style={{ fontSize: 12, color: i === 0 ? T.white : T.textSecondary, fontWeight: i === 0 ? 600 : 400 }}>{a.tab}</span>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>
+                        {(() => { try { return timeSince(a.time); } catch { return "—"; } })()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Change Tier */}
             <div style={{ marginBottom: 22 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Change Role / Tier</div>
@@ -1029,6 +1124,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Quick Actions</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
               {[
+                { label: "📢  Send Notification",   color: "#F59E0B", action: () => { setNotifUser(u); setDrawerUser(null); } },
                 { label: "✉️  Send Email",         color: "#3B82F6", action: () => { setSendEmailUser(u); setDrawerUser(null); } },
                 { label: "📝  Add / Edit Note",     color: T.gold,   action: () => { setNoteUser(u); setNoteText(u.notes || ""); setDrawerUser(null); } },
                 { label: "🏷️  Manage Tags",         color: "#8B5CF6",action: () => { setTagUser(u); setDrawerUser(null); } },
@@ -1067,6 +1163,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <TagsModal />
       <AddUserModal />
       <EditUserModal />
+      <NotifUserModal />
       <ProfileDrawer />
 
       {/* Inline tier dropdown */}
