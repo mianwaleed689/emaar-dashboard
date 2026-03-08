@@ -3301,6 +3301,89 @@ export default function AdminPanel() {
                 )}
               </div>
 
+              {/* ══ STEP 7 — CHURN & RETENTION PANEL ══ */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 24 }} className="charts-row-overview">
+
+                {/* MRR Movement */}
+                <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.1s" }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 14 }}>MRR Movement</div>
+                  {[
+                    { label: "Starting MRR",  value: mrr - netMRR,        color: T.textSecondary, bar: null },
+                    { label: "New MRR",        value: newMRRThisMonth,     color: T.green,         bar: true },
+                    { label: "Churned MRR",    value: -churnedMRR,         color: T.red,           bar: true },
+                    { label: "Net MRR",        value: netMRR,              color: netMRR >= 0 ? T.green : T.red, bar: null, bold: true },
+                  ].map((row, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        {row.bar && <div style={{ width: 3, height: 14, borderRadius: 2, background: row.color }} />}
+                        {!row.bar && <div style={{ width: 3, height: 14 }} />}
+                        <span style={{ fontSize: 12, color: row.bold ? T.white : T.textMuted, fontWeight: row.bold ? 700 : 400 }}>{row.label}</span>
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: row.color, fontFamily: "'Fraunces',serif" }}>
+                        {row.value >= 0 ? "+" : ""}AED {Math.abs(row.value).toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Retention Breakdown */}
+                <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.15s" }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 14 }}>Retention Breakdown</div>
+                  {[
+                    { label: "Paid Retained",   value: stats.paid,         total: Math.max(stats.paid + churnThisMonth.length, 1), color: T.green },
+                    { label: "Trial Active",     value: stats.proTrial - stats.atRisk, total: Math.max(stats.proTrial, 1), color: T.gold },
+                    { label: "At Risk",          value: stats.atRisk,       total: Math.max(stats.proTrial, 1), color: T.red },
+                    { label: "Churned (month)",  value: churnThisMonth.length, total: Math.max(stats.paid + churnThisMonth.length, 1), color: "#F97316" },
+                  ].map((row, i) => {
+                    const pct = Math.round((row.value / row.total) * 100);
+                    return (
+                      <div key={i} style={{ marginBottom: 12 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                          <span style={{ fontSize: 11, color: T.textMuted }}>{row.label}</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: row.color }}>{row.value} <span style={{ fontWeight: 400, color: T.textMuted }}>({pct}%)</span></span>
+                        </div>
+                        <div style={{ height: 4, background: T.surfaceAlt, borderRadius: 2, overflow: "hidden" }}>
+                          <div style={{ width: `${pct}%`, height: "100%", background: row.color, borderRadius: 2, transition: "width 0.6s ease" }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Churn Events */}
+                <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.2s" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2 }}>Recent Churns</div>
+                    <span style={{ fontSize: 10, color: churnThisMonth.length > 0 ? T.red : T.green, fontWeight: 700, background: churnThisMonth.length > 0 ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)", padding: "2px 8px", borderRadius: 20 }}>
+                      {churnThisMonth.length} this month
+                    </span>
+                  </div>
+                  {churnEvents.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 12 }}>
+                      <div style={{ fontSize: 28, marginBottom: 8, color: T.green, opacity: 0.7 }}>✓</div>
+                      No churn events recorded
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                      {churnEvents.slice(0, 5).map((ev, i) => (
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < Math.min(churnEvents.length, 5) - 1 ? `1px solid ${T.border}` : "none" }}>
+                          <div>
+                            <div style={{ fontSize: 12, color: T.white, fontWeight: 600 }}>{ev.userName || ev.userEmail || "Unknown"}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>
+                              <span style={{ color: T.red, fontWeight: 600 }}>{ev.from}</span> → <span style={{ color: T.textSecondary }}>{ev.to}</span>
+                            </div>
+                          </div>
+                          <span style={{ fontSize: 10, color: T.textMuted, flexShrink: 0 }}>{timeSince(ev.changedAt)}</span>
+                        </div>
+                      ))}
+                      {churnEvents.length > 5 && (
+                        <div style={{ fontSize: 11, color: T.textMuted, textAlign: "center", paddingTop: 10 }}>+{churnEvents.length - 5} more</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
             </>
           )}
 
