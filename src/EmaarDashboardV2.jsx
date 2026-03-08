@@ -2272,7 +2272,11 @@ export default function EmaarDashboardV2() {
               <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Admin</div>
               <button type="button" className={`sidebar-btn ${tab === "Admin" ? "active" : ""}`} onClick={() => handleTabChange("Admin")}>
                 {Icons.admin}
-                Admin Panel
+                EIBOR Editor
+              </button>
+              <button type="button" className="sidebar-btn" onClick={() => window.open("/admin", "_blank")} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Admin Console ↗
               </button>
             </>
           )}
@@ -6168,6 +6172,11 @@ export default function EmaarDashboardV2() {
           {/* ─── ADMIN TAB ─── */}
           {tab === "Admin" && userTier === "admin" && (() => { if (adminUsers.length === 0 && !adminLoading) fetchAdminUsers(); return null; })()}
           {tab === "Admin" && userTier === "admin" && <>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <button type="button" onClick={() => handleTabChange("Overview")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "transparent", border: "1px solid #D4A843", borderRadius: 8, color: "#D4A843", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                ← Back to Dashboard
+              </button>
+            </div>
             <Section title="User Management" sub="All registered users · Real-time data from Firestore">
               <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
                 <button type="button" onClick={() => { setAdminError(""); fetchAdminUsers(); }} style={{ padding: "8px 16px", background: T.gold, border: "none", borderRadius: 8, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
