@@ -4477,6 +4477,191 @@ export default function AdminPanel() {
                         ))}
                       </div>
                     </div>
+
+                    {/* ══ STAGE 2 DIVIDER ══ */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "10px 0 20px" }}>
+                      <div style={{ flex: 1, height: 1, background: T.border }} />
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 20, background: `${T.gold}10`, border: `1px solid ${T.gold}30` }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase" }}>Paddle Payments — Stage 2</span>
+                        <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 6, background: `${T.gold}20`, color: T.gold, fontWeight: 700 }}>LIVE WHEN CONNECTED</span>
+                      </div>
+                      <div style={{ flex: 1, height: 1, background: T.border }} />
+                    </div>
+
+                    {/* ══ SECTION 7 — PAYMENT EVENTS LOG ══ */}
+                    {(() => {
+                      // Read from payments collection — empty until Paddle webhook is live
+                      const payments = [];  // Will be populated from Firestore payments collection
+                      const hasPaddle = payments.length > 0;
+                      return (
+                        <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 20 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Payment Events Log</div>
+                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Every payment, renewal, failure and refund from Paddle</div>
+                            </div>
+                            {hasPaddle && (
+                              <div style={{ display: "flex", gap: 8 }}>
+                                {["All", "Success", "Failed", "Refunded"].map((f, i) => (
+                                  <button key={i} type="button" style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: i === 0 ? T.gold : "transparent", color: i === 0 ? T.bg : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{f}</button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          {!hasPaddle ? (
+                            <div style={{ padding: "48px 20px", textAlign: "center" }}>
+                              <div style={{ fontSize: 36, marginBottom: 12 }}>🔌</div>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary, marginBottom: 6 }}>Waiting for Paddle Connection</div>
+                              <div style={{ fontSize: 12, color: T.textMuted, maxWidth: 360, margin: "0 auto", lineHeight: 1.6 }}>
+                                Once your Paddle webhook is connected and writing to Firestore, every payment event will appear here in real time — success, failed, refunded, and chargeback.
+                              </div>
+                              <div style={{ marginTop: 20, display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 10, background: `${T.gold}08`, border: `1px solid ${T.gold}20` }}>
+                                <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.gold, opacity: 0.5 }} />
+                                <span style={{ fontSize: 11, color: T.textMuted }}>Firestore collection: <span style={{ color: T.gold, fontFamily: "monospace" }}>payments</span></span>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 90px 90px 80px", padding: "8px 20px", borderBottom: `1px solid ${T.border}` }}>
+                                {["Customer", "Amount", "Type", "Date", "Status"].map((h, i) => (
+                                  <div key={i} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, textAlign: i > 0 ? "right" : "left" }}>{h}</div>
+                                ))}
+                              </div>
+                              {payments.map((p, i) => {
+                                const statusColor = p.type === "payment_success" ? T.green : p.type === "payment_failed" ? T.red : T.gold;
+                                const statusLabel = p.type === "payment_success" ? "Paid" : p.type === "payment_failed" ? "Failed" : p.type === "cancelled" ? "Cancelled" : "Refunded";
+                                const u = users.find(u => u.uid === p.userId);
+                                return (
+                                  <div key={i} onClick={() => u && (setTab("users"), setPendingOpenUid(p.userId))}
+                                    style={{ display: "grid", gridTemplateColumns: "1fr 100px 90px 90px 80px", padding: "12px 20px", borderBottom: i < payments.length - 1 ? `1px solid ${T.border}` : "none", cursor: u ? "pointer" : "default", transition: "background 0.15s" }}
+                                    onMouseEnter={e => u && (e.currentTarget.style.background = T.surfaceAlt)}
+                                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                    <div style={{ fontSize: 12, color: T.white, fontWeight: 500 }}>{u?.name || u?.email || p.userId?.slice(0, 10)}</div>
+                                    <div style={{ fontSize: 13, fontWeight: 700, color: T.green, fontFamily: "'Fraunces',serif", textAlign: "right" }}>AED {p.amount?.toLocaleString()}</div>
+                                    <div style={{ fontSize: 11, color: T.textSecondary, textAlign: "right", textTransform: "capitalize" }}>{p.planId || "Pro"}</div>
+                                    <div style={{ fontSize: 11, color: T.textMuted, textAlign: "right" }}>{new Date(p.date).toLocaleDateString("en-AE", { day: "numeric", month: "short" })}</div>
+                                    <div style={{ textAlign: "right" }}>
+                                      <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: `${statusColor}15`, color: statusColor, border: `1px solid ${statusColor}30` }}>{statusLabel}</span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* ══ SECTION 8 — FAILED PAYMENTS ══ */}
+                    {(() => {
+                      const failedPayments = []; // Will read from payments where type === "payment_failed"
+                      const hasFailed = failedPayments.length > 0;
+                      return (
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }}>
+
+                          {/* Failed Payments */}
+                          <div className="chart-box fade-up" style={{ padding: 20 }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Failed Payments</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Users at risk of churning due to payment failure</div>
+                            {!hasFailed ? (
+                              <div style={{ padding: "28px 0", textAlign: "center" }}>
+                                <div style={{ fontSize: 28, marginBottom: 8 }}>✅</div>
+                                <div style={{ fontSize: 13, color: T.textMuted }}>No failed payments</div>
+                                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Will show at-risk users once Paddle is connected</div>
+                              </div>
+                            ) : (
+                              failedPayments.map((p, i) => {
+                                const u = users.find(u => u.uid === p.userId);
+                                return (
+                                  <div key={i} onClick={() => u && (setTab("users"), setPendingOpenUid(p.userId))}
+                                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < failedPayments.length - 1 ? `1px solid ${T.border}` : "none", cursor: "pointer" }}>
+                                    <div>
+                                      <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{u?.name || u?.email?.split("@")[0] || "Unknown"}</div>
+                                      <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{new Date(p.date).toLocaleDateString("en-AE", { day: "numeric", month: "short" })}</div>
+                                    </div>
+                                    <div style={{ textAlign: "right" }}>
+                                      <div style={{ fontSize: 12, fontWeight: 700, color: T.red }}>AED {p.amount?.toLocaleString()}</div>
+                                      <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Attempt {p.attemptCount || 1}</div>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+
+                          {/* Cancellation Reasons */}
+                          <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.05s" }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Cancellation Reasons</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Why users cancelled their subscription</div>
+                            {[
+                              { reason: "Too expensive",       color: T.red,   pct: 0 },
+                              { reason: "Not using it enough", color: T.gold,  pct: 0 },
+                              { reason: "Missing features",    color: T.blue,  pct: 0 },
+                              { reason: "Found alternative",   color: T.teal,  pct: 0 },
+                              { reason: "Other / No reason",   color: T.textMuted, pct: 0 },
+                            ].map((r, i) => (
+                              <div key={i} style={{ marginBottom: 12 }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                                  <span style={{ fontSize: 12, color: T.textSecondary }}>{r.reason}</span>
+                                  <span style={{ fontSize: 11, fontWeight: 700, color: r.pct > 0 ? r.color : T.textMuted }}>{r.pct > 0 ? `${r.pct}%` : "—"}</span>
+                                </div>
+                                <div style={{ height: 3, background: T.surfaceAlt, borderRadius: 2, overflow: "hidden" }}>
+                                  <div style={{ width: `${r.pct}%`, height: "100%", background: r.color, borderRadius: 2 }} />
+                                </div>
+                              </div>
+                            ))}
+                            <div style={{ marginTop: 16, padding: "10px 12px", borderRadius: 8, background: `${T.gold}08`, border: `1px solid ${T.gold}20`, fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>
+                              Cancellation reasons will populate once Paddle webhook writes cancellation events to Firestore with a reason field.
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* ══ SECTION 9 — REAL REVENUE BY MONTH (PADDLE) ══ */}
+                    {(() => {
+                      const paddleRevenue = []; // Will read from payments collection grouped by month
+                      const hasPaddleRevenue = paddleRevenue.length > 0;
+                      return (
+                        <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 20 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Real Revenue by Month</div>
+                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
+                                {hasPaddleRevenue ? "Actual amounts charged via Paddle — not estimates" : "Stage 1 shows calculated MRR · This will show real Paddle amounts"}
+                              </div>
+                            </div>
+                            <div style={{ fontSize: 10, padding: "4px 10px", borderRadius: 8, background: hasPaddleRevenue ? `${T.green}15` : `${T.gold}10`, border: `1px solid ${hasPaddleRevenue ? T.green : T.gold}30`, color: hasPaddleRevenue ? T.green : T.gold, fontWeight: 700 }}>
+                              {hasPaddleRevenue ? "● LIVE DATA" : "● PENDING PADDLE"}
+                            </div>
+                          </div>
+                          {!hasPaddleRevenue ? (
+                            <div style={{ padding: "32px 0", textAlign: "center" }}>
+                              <div style={{ fontSize: 11, color: T.textMuted, maxWidth: 420, margin: "0 auto", lineHeight: 1.7 }}>
+                                This chart will show real money received via Paddle — including partial months, refunds, and actual AED amounts. Until Paddle is connected, use the MRR History chart above (Stage 1) which calculates revenue from user tiers.
+                              </div>
+                              <div style={{ marginTop: 20, display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
+                                {["Connect Paddle Webhook", "→", "Firebase Cloud Function", "→", "payments collection", "→", "Chart fills automatically"].map((s, i) => (
+                                  <span key={i} style={{ fontSize: 11, color: s === "→" ? T.gold : T.textMuted, fontWeight: s === "→" ? 700 : 400 }}>{s}</span>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <ResponsiveContainer width="100%" height={200}>
+                              <BarChart data={paddleRevenue}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                                <XAxis dataKey="month" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                                <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} width={50} />
+                                <Tooltip content={<CustomTooltip />} />
+                                <Bar dataKey="revenue" fill={T.green} radius={[4, 4, 0, 0]} name="Revenue (AED)" />
+                                <Bar dataKey="refunds" fill={T.red} radius={[4, 4, 0, 0]} name="Refunds (AED)" />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          )}
+                        </div>
+                      );
+                    })()}
+
                   </>
                 );
               })()}
