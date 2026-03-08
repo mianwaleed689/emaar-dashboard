@@ -2069,7 +2069,6 @@ export default function AdminPanel() {
       snap.forEach(d => list.push({ id: d.id, ...d.data() }));
       setAuditLog(list);
     } catch (e) {
-      // fallback without orderBy if index not ready
       try {
         const { getDocs, collection: col } = await import("firebase/firestore");
         const snap = await getDocs(col(db, "auditLog"));
@@ -2081,7 +2080,28 @@ export default function AdminPanel() {
     }
   }, []);
 
-  useEffect(() => { if (isAdmin) fetchAuditLog(); }, [isAdmin, fetchAuditLog]);
+  // Real-time listener — activity feed updates instantly on tier changes
+  useEffect(() => {
+    if (!isAdmin) return;
+    let unsub;
+    (async () => {
+      try {
+        const { onSnapshot, collection: col, query, orderBy, limit } = await import("firebase/firestore");
+        const q = query(col(db, "auditLog"), orderBy("changedAt", "desc"), limit(100));
+        unsub = onSnapshot(q, (snap) => {
+          const list = [];
+          snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+          setAuditLog(list);
+        });
+      } catch (e) {
+        // index not ready — fall back to polling every 10s
+        fetchAuditLog();
+        const interval = setInterval(fetchAuditLog, 10000);
+        unsub = () => clearInterval(interval);
+      }
+    })();
+    return () => { if (unsub) unsub(); };
+  }, [isAdmin]);
 
   const approveVerification = async (v) => {
     if (!window.confirm(`⚠️ APPROVE VERIFICATION\n\nUser: ${v.name || v.email}\nLevel: ${v.level || "Basic"}\n\nThis will:\n• Mark this user as verified\n• Update their profile with a verified badge\n• They can access verified-tier features\n\nContinue?`)) return;
