@@ -3211,6 +3211,66 @@ export default function AdminPanel() {
                   })
                 )}
               </div>
+
+              {/* ══ STEP 5 — CROSS-PLATFORM ACTIVITY FEED ══ */}
+              <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Activity Feed</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Signups · tier changes · leads · verifications</div>
+                  </div>
+                  <div style={{ fontSize: 10, color: T.textMuted }}>{activityFeed.length} recent events</div>
+                </div>
+
+                {activityFeed.length === 0 ? (
+                  <div style={{ padding: "36px 20px", textAlign: "center" }}>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>📭</div>
+                    <div style={{ fontSize: 13, color: T.textMuted }}>No recent activity yet.</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Events will appear here as users sign up, upgrade, and interact.</div>
+                  </div>
+                ) : (
+                  activityFeed.map((item, i) => (
+                    <div key={`${item.type}-${i}`}
+                      className="fade-up"
+                      onClick={() => {
+                        if (item.uid) { setTab("users"); }
+                        else if (item.type === "lead") setTab("leads");
+                        else if (item.type === "verification") setTab("verification");
+                      }}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 14,
+                        padding: "12px 20px",
+                        borderBottom: i < activityFeed.length - 1 ? `1px solid ${T.border}` : "none",
+                        cursor: item.uid || item.type === "lead" || item.type === "verification" ? "pointer" : "default",
+                        transition: "background 0.15s",
+                        animationDelay: `${i * 0.04}s`,
+                      }}
+                      onMouseEnter={e => { if (item.uid || item.type === "lead" || item.type === "verification") e.currentTarget.style.background = T.surfaceAlt; }}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      {/* Icon bubble */}
+                      <div style={{ width: 34, height: 34, borderRadius: 10, background: `${item.color}15`, border: `1px solid ${item.color}25`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>
+                        {item.icon}
+                      </div>
+
+                      {/* Label + sub */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.label}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{item.sub}</div>
+                      </div>
+
+                      {/* Type badge */}
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: `${item.color}15`, color: item.color, textTransform: "uppercase", letterSpacing: 0.8, flexShrink: 0 }}>
+                        {item.type === "signup" ? "New User" : item.type === "upgrade" ? "Upgrade" : item.type === "downgrade" ? "Downgrade" : item.type === "lead" ? "Lead" : "KYC"}
+                      </span>
+
+                      {/* Time */}
+                      <span style={{ fontSize: 10, color: T.textMuted, flexShrink: 0 }}>{timeSince(item.time)}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+
             </>
           )}
 
