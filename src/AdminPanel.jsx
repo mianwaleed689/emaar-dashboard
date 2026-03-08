@@ -189,8 +189,7 @@ select option { background: ${T.surface}; color: ${T.textPrimary}; }
 }
 @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
 @keyframes fadeBackdrop { from { opacity: 0; } to { opacity: 1; } }
-.main-content-push { transition: transform 0.32s cubic-bezier(0.16,1,0.3,1), margin-right 0.32s cubic-bezier(0.16,1,0.3,1) !important; }
-.drawer-open .main-content-push { margin-right: 520px; }
+
 @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .users-table-mobile { display: none; flex-direction: column; gap: 10px; }
 .risk-btn-wrap:hover .risk-tooltip { opacity: 1 !important; pointer-events: auto !important; }
@@ -1160,7 +1159,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                   </div>
                 </div>
               </div>
-              <button type="button" onClick={() => setDrawerUserWithCallback(null)}
+              <button type="button" onClick={e => { e.stopPropagation(); setDrawerUserWithCallback(null); }}
                 style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, transition: "all 0.15s", flexShrink: 0 }}
                 onMouseEnter={e => { e.currentTarget.style.background = T.surfaceAlt; e.currentTarget.style.color = T.white; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}>
@@ -2874,7 +2873,7 @@ export default function AdminPanel() {
           </div>
         </header>
 
-        <div className={drawerOpen ? "main-content-push" : ""} style={{ padding: "28px 28px 60px", transition: "margin-right 0.32s cubic-bezier(0.16,1,0.3,1)" }}>
+        <div  style={{ padding: "28px 28px 60px" }}>
 
           {/* ═══════════════════════════════════════
              OVERVIEW TAB
