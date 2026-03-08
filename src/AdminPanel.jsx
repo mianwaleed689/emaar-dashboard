@@ -6066,17 +6066,256 @@ export default function AdminPanel() {
               )}
 
               {/* ─── PRICE HISTORY SUB-TAB ─── */}
-              {dataSubTab === "pricehistory" && (
-                <Section title="Price History" sub="Track price changes per project over time">
-                  <div style={{ textAlign: "center", padding: "60px 20px" }}>
-                    <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", color: T.gold }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              {dataSubTab === "pricehistory" && (() => {
+                const [phSelId,   setPhSelId]   = React.useState("");
+                const [phLoading, setPhLoading] = React.useState(false);
+                const [phManual,  setPhManual]  = React.useState({ price: "", ppsf: "", date: "", note: "" });
+                const [phSaving,  setPhSaving]  = React.useState(false);
+
+                const selectedProject = emaarProjects.find(p => String(p.id) === String(phSelId));
+                const history         = phSelId ? (priceHistory[phSelId] || []) : [];
+
+                const loadHistory = async (id) => {
+                  setPhLoading(true);
+                  await fetchPriceHistory(id);
+                  setPhLoading(false);
+                };
+
+                const saveManualEntry = async () => {
+                  if (!phSelId)           { notify("Error: Select a project first"); return; }
+                  if (!phManual.price)    { notify("Error: Price is required"); return; }
+                  if (!phManual.date)     { notify("Error: Date is required"); return; }
+                  setPhSaving(true);
+                  try {
+                    const entryId = String(phSelId) + "_manual_" + Date.now();
+                    await setDoc(doc(db, "priceHistory", entryId), {
+                      projectId:  String(phSelId),
+                      projectName: selectedProject?.name || "",
+                      price:      Number(phManual.price),
+                      ppsf:       Number(phManual.ppsf) || 0,
+                      recordedAt: new Date(phManual.date).toISOString(),
+                      recordedBy: adminUser?.email || "admin",
+                      note:       phManual.note || "",
+                      manual:     true,
+                    });
+                    await logAudit(db, { action: "price_history_manual", projectId: phSelId, price: Number(phManual.price), date: phManual.date });
+                    notify("Price entry saved");
+                    setPhManual({ price: "", ppsf: "", date: "", note: "" });
+                    await loadHistory(phSelId);
+                  } catch(e) { notify("Error: " + e.message); }
+                  setPhSaving(false);
+                };
+
+                // Chart dimensions
+                const chartH = 140;
+                const chartW = 600;
+                const pad    = { t: 16, r: 20, b: 28, l: 56 };
+                const innerW = chartW - pad.l - pad.r;
+                const innerH = chartH - pad.t - pad.b;
+
+                const chartPoints = history.length >= 2 ? (() => {
+                  const prices = history.map(h => h.price);
+                  const minP   = Math.min(...prices) * 0.97;
+                  const maxP   = Math.max(...prices) * 1.03;
+                  const rangeP = maxP - minP || 1;
+                  return history.map((h, i) => ({
+                    x: pad.l + (i / (history.length - 1)) * innerW,
+                    y: pad.t + innerH - ((h.price - minP) / rangeP) * innerH,
+                    price: h.price,
+                    date:  h.recordedAt,
+                    ppsf:  h.ppsf,
+                  }));
+                })() : [];
+
+                const polyline = chartPoints.map(p => `${p.x},${p.y}`).join(" ");
+
+                const inputSt = { width: "100%", padding: "9px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" };
+
+                return (
+                  <Section title="Price History" sub="Track and log price changes per project over time">
+
+                    {/* ── PROJECT SELECTOR ── */}
+                    <div style={{ display: "flex", gap: 10, alignItems: "flex-end", marginBottom: 24, flexWrap: "wrap" }}>
+                      <div style={{ flex: "1 1 300px" }}>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Select Project</label>
+                        <select value={phSelId} onChange={e => { setPhSelId(e.target.value); if (e.target.value) loadHistory(e.target.value); }}
+                          style={{ ...inputSt, cursor: "pointer" }}>
+                          <option value="">— Choose a project —</option>
+                          {[...emaarProjects].sort((a,b) => (a.name||"").localeCompare(b.name||"")).map(p => (
+                            <option key={p.id} value={p.id}>{p.name} ({p.community})</option>
+                          ))}
+                        </select>
+                      </div>
+                      {phSelId && (
+                        <button type="button" onClick={() => loadHistory(phSelId)} disabled={phLoading}
+                          style={{ padding: "9px 16px", borderRadius: 8, border: `1px solid ${T.gold}40`, background: T.goldGlow, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", opacity: phLoading ? 0.6 : 1 }}>
+                          {phLoading ? "Loading..." : "↺ Refresh"}
+                        </button>
+                      )}
                     </div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 6 }}>Price History — Coming in Step 2</div>
-                    <div style={{ fontSize: 12, color: T.textMuted }}>Project selector, chart, table and manual entry will be built here.</div>
-                  </div>
-                </Section>
-              )}
+
+                    {/* ── EMPTY STATE ── */}
+                    {!phSelId && (
+                      <div style={{ textAlign: "center", padding: "48px 20px", background: T.surfaceAlt, borderRadius: 14, border: `1px solid ${T.border}` }}>
+                        <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", color: T.gold }}>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 6 }}>Select a project to view price history</div>
+                        <div style={{ fontSize: 12, color: T.textMuted }}>Price changes are recorded automatically every time you save a project's price.</div>
+                      </div>
+                    )}
+
+                    {/* ── LOADED STATE ── */}
+                    {phSelId && !phLoading && (
+                      <>
+                        {/* KPI row */}
+                        {history.length > 0 && (() => {
+                          const prices  = history.map(h => h.price);
+                          const first   = prices[0];
+                          const last    = prices[prices.length - 1];
+                          const changePct = first > 0 ? (((last - first) / first) * 100).toFixed(1) : 0;
+                          const highest = Math.max(...prices);
+                          const lowest  = Math.min(...prices);
+                          return (
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+                              {[
+                                { label: "Current Price",   value: `AED ${last.toLocaleString()}`,     color: T.gold  },
+                                { label: "Total Change",    value: `${changePct >= 0 ? "+" : ""}${changePct}%`, color: changePct >= 0 ? T.green : T.red },
+                                { label: "All-Time High",   value: `AED ${highest.toLocaleString()}`,  color: T.green },
+                                { label: "All-Time Low",    value: `AED ${lowest.toLocaleString()}`,   color: T.textMuted },
+                              ].map((k, i) => (
+                                <div key={i} className="kpi-card" style={{ border: `1px solid ${T.border}`, position: "relative" }}>
+                                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: k.color, opacity: 0.6, borderRadius: "16px 16px 0 0" }} />
+                                  <div style={{ fontSize: 18, fontWeight: 900, color: k.color, fontFamily: "'Fraunces',serif" }}>{k.value}</div>
+                                  <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 4 }}>{k.label}</div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
+
+                        {/* SVG CHART */}
+                        {history.length >= 2 ? (
+                          <div className="chart-box fade-up" style={{ padding: "16px 20px 12px", marginBottom: 20 }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>{selectedProject?.name} — Price Timeline</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>{history.length} data points · AED values</div>
+                            <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: "100%", height: chartH, overflow: "visible" }}>
+                              {/* Grid lines */}
+                              {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
+                                const y = pad.t + t * innerH;
+                                const prices = history.map(h => h.price);
+                                const minP = Math.min(...prices) * 0.97;
+                                const maxP = Math.max(...prices) * 1.03;
+                                const val  = maxP - (maxP - minP) * t;
+                                return (
+                                  <g key={i}>
+                                    <line x1={pad.l} y1={y} x2={chartW - pad.r} y2={y} stroke={T.border} strokeWidth="1" />
+                                    <text x={pad.l - 6} y={y + 4} textAnchor="end" fill={T.textMuted} fontSize="9">{(val / 1e6).toFixed(1)}M</text>
+                                  </g>
+                                );
+                              })}
+                              {/* Area fill */}
+                              <defs>
+                                <linearGradient id="phGrad" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor={T.gold} stopOpacity="0.2" />
+                                  <stop offset="100%" stopColor={T.gold} stopOpacity="0" />
+                                </linearGradient>
+                              </defs>
+                              <polygon
+                                points={`${pad.l},${pad.t + innerH} ${polyline} ${chartW - pad.r},${pad.t + innerH}`}
+                                fill="url(#phGrad)"
+                              />
+                              {/* Line */}
+                              <polyline points={polyline} fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              {/* Dots + labels */}
+                              {chartPoints.map((pt, i) => (
+                                <g key={i}>
+                                  <circle cx={pt.x} cy={pt.y} r="4" fill={T.gold} stroke={T.bg} strokeWidth="2" />
+                                  <text x={pt.x} y={chartH - 4} textAnchor="middle" fill={T.textMuted} fontSize="8">
+                                    {new Date(pt.date).toLocaleDateString("en-AE", { day: "numeric", month: "short" })}
+                                  </text>
+                                </g>
+                              ))}
+                            </svg>
+                          </div>
+                        ) : history.length === 1 ? (
+                          <div style={{ padding: "16px 20px", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}`, marginBottom: 20, fontSize: 12, color: T.textMuted }}>
+                            Only 1 data point — chart requires at least 2 entries. Add more price records below.
+                          </div>
+                        ) : (
+                          <div style={{ padding: "24px", textAlign: "center", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}`, marginBottom: 20 }}>
+                            <div style={{ fontSize: 13, color: T.textSecondary, fontWeight: 600, marginBottom: 4 }}>No price history yet</div>
+                            <div style={{ fontSize: 11, color: T.textMuted }}>Price changes are auto-recorded when you save a project. You can also add entries manually below.</div>
+                          </div>
+                        )}
+
+                        {/* PRICE CHANGE TABLE */}
+                        {history.length > 0 && (
+                          <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 20 }}>
+                            <div style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Price Change Log</div>
+                              <div style={{ fontSize: 11, color: T.textMuted }}>{history.length} entries</div>
+                            </div>
+                            {/* Header */}
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, padding: "10px 20px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}` }}>
+                              {["Date", "Price (AED)", "PPSF", "Change", "Recorded By"].map(h => (
+                                <span key={h} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{h}</span>
+                              ))}
+                            </div>
+                            {[...history].reverse().map((h, i, arr) => {
+                              const prev     = arr[i + 1];
+                              const changePct = prev ? (((h.price - prev.price) / prev.price) * 100).toFixed(1) : null;
+                              return (
+                                <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, padding: "11px 20px", borderBottom: i < arr.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : T.surfaceAlt }}>
+                                  <span style={{ fontSize: 12, color: T.textSecondary }}>{new Date(h.recordedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}</span>
+                                  <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>AED {h.price.toLocaleString()}</span>
+                                  <span style={{ fontSize: 12, color: T.textSecondary }}>{h.ppsf ? h.ppsf.toLocaleString() : "—"}</span>
+                                  <span style={{ fontSize: 11, fontWeight: 700, color: changePct === null ? T.textMuted : changePct >= 0 ? T.green : T.red }}>
+                                    {changePct === null ? "—" : `${changePct >= 0 ? "+" : ""}${changePct}%`}
+                                  </span>
+                                  <span style={{ fontSize: 11, color: T.textMuted }}>{h.recordedBy || "—"}{h.manual ? " (manual)" : ""}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* MANUAL ENTRY FORM */}
+                        <div className="chart-box fade-up" style={{ padding: 20 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Add Manual Price Entry</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Add a historical price point for {selectedProject?.name || "this project"}</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 14 }}>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Price (AED) *</label>
+                              <input type="number" placeholder="e.g. 2500000" value={phManual.price} onChange={e => setPhManual(p => ({ ...p, price: e.target.value }))} style={inputSt} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Price/sqft</label>
+                              <input type="number" placeholder="e.g. 2200" value={phManual.ppsf} onChange={e => setPhManual(p => ({ ...p, ppsf: e.target.value }))} style={inputSt} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Date *</label>
+                              <input type="date" value={phManual.date} onChange={e => setPhManual(p => ({ ...p, date: e.target.value }))} style={inputSt} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Note</label>
+                              <input type="text" placeholder="e.g. Q1 launch price" value={phManual.note} onChange={e => setPhManual(p => ({ ...p, note: e.target.value }))} style={inputSt} />
+                            </div>
+                          </div>
+                          <button type="button" onClick={saveManualEntry} disabled={phSaving}
+                            style={{ width: "100%", padding: "11px", borderRadius: 9, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8892E)`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: phSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: phSaving ? 0.6 : 1 }}>
+                            {phSaving ? "Saving..." : "+ Add Price Entry"}
+                          </button>
+                        </div>
+                      </>
+                    )}
+
+                    {phLoading && (
+                      <div style={{ textAlign: "center", padding: "40px", color: T.textMuted, fontSize: 13 }}>Loading price history...</div>
+                    )}
+                  </Section>
+                );
+              })()}
 
               {/* Data sync info */}
               <div className="chart-box fade-up" style={{ padding: 16, marginTop: 8, display: "flex", alignItems: "center", gap: 12 }}>
