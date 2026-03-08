@@ -1,6 +1,4 @@
-
-
-═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    DXB ANALYTICS — ADMIN PANEL
    Matching dashboard design DNA: sidebar nav, KPI cards, sections
    ═══════════════════════════════════════════════════════════════ */
@@ -280,10 +278,10 @@ const TabHelp = ({ items }) => {
       <button type="button" onClick={() => setOpen(o => !o)}
         style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px", background: "transparent", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 15 }}>💡</span>
+          <span style={{ fontSize: 15 }}>[i]</span>
           <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>How to use this section</span>
         </div>
-        <span style={{ fontSize: 12, color: T.textMuted, transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .2s", display: "inline-block" }}>▼</span>
+        <span style={{ fontSize: 12, color: T.textMuted, transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .2s", display: "inline-block" }}>v</span>
       </button>
       {open && (
         <div style={{ padding: "4px 18px 16px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 }}>
@@ -307,7 +305,7 @@ const TabHelp = ({ items }) => {
    ═══════════════════════════════════════ */
 /* ─── NOTIFICATIONS TAB COMPONENT ─── */
 function NotificationsTab({ T, notify, adminUser }) {
-  const [notifForm, setNotifForm] = useState({ title: "", message: "", icon: "📢", target: "all" });
+  const [notifForm, setNotifForm] = useState({ title: "", message: "", icon: "", target: "all" });
   const [notifSending, setNotifSending] = useState(false);
   const [sentNotifs, setSentNotifs] = useState([]);
 
@@ -336,7 +334,7 @@ function NotificationsTab({ T, notify, adminUser }) {
     setNotifSending(false);
   };
 
-  const ICONS = ["📢","🏙️","💰","📈","⚠️","🔥","✅","🎉","📋","🏗️"];
+  const ICONS = ["","","","[^]","⚠","","[v]","","",""];
 
   return (
     <Section title="Send Notification" sub="Broadcast alerts to all users on the dashboard">
@@ -1138,7 +1136,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           user_email:   u.email,
           user_name:    u.name || u.email,
           project_name: "DXB Analytics Platform",
-          change_type:  days === 0 ? "⏰ Your Trial Has Expired" : `⚠️ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
+          change_type:  days === 0 ? "⏰ Your Trial Has Expired" : `⚠ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
           new_value:    days === 0
             ? "Your 7-day trial has ended. Upgrade now to keep full access."
             : `Only ${days} day${days !== 1 ? "s" : ""} left on your free trial. Upgrade before you lose access.`,
@@ -1149,7 +1147,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       } catch(e) {}
     }
     setSendingTrialEmails(false);
-    notify(sent > 0 ? `✅ Sent ${sent} trial expiry email${sent > 1 ? "s" : ""}` : "ℹ️ No at-risk trials to email");
+    notify(sent > 0 ? `[v] Sent ${sent} trial expiry email${sent > 1 ? "s" : ""}` : "ℹ No at-risk trials to email");
   };
 
   /* ─── ACTIONS ─── */
@@ -1332,8 +1330,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 6 }}><strong style={{ color: T.white }}>{confirmDelete.name || confirmDelete.email}</strong></div>
         <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 20, padding: "10px 16px", background: "rgba(239,68,68,0.06)", borderRadius: 10, border: "1px solid rgba(239,68,68,0.15)", lineHeight: 1.6 }}>
           Permanently removes them from Firestore and revokes all access.
-          {confirmDelete.tier === "pro"        && <><br /><span style={{ color: T.red, fontWeight: 700 }}>⚠️ Active Pro subscription (AED 99/mo) will be cancelled.</span></>}
-          {confirmDelete.tier === "enterprise" && <><br /><span style={{ color: T.red, fontWeight: 700 }}>⚠️ Active Enterprise account (AED 499/mo) will be cancelled.</span></>}
+          {confirmDelete.tier === "pro"        && <><br /><span style={{ color: T.red, fontWeight: 700 }}>⚠ Active Pro subscription (AED 99/mo) will be cancelled.</span></>}
+          {confirmDelete.tier === "enterprise" && <><br /><span style={{ color: T.red, fontWeight: 700 }}>⚠ Active Enterprise account (AED 499/mo) will be cancelled.</span></>}
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <BtnGhost onClick={() => setConfirmDelete(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
@@ -1366,7 +1364,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const ExtendConfirmModal = () => confirmExtend && (
     <Modal onClose={() => setConfirmExtend(null)} maxWidth={400}>
       <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>⏱️</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>⏱</div>
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.green, marginBottom: 8 }}>Extend Trial?</div>
         <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 6 }}>
           Add <strong style={{ color: T.white }}>{confirmExtend.days} days</strong> to <strong style={{ color: T.white }}>{confirmExtend.user.name || confirmExtend.user.email}</strong>'s trial
@@ -1432,7 +1430,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     <Modal onClose={() => setShowAddUser(false)} maxWidth={520}>
       <ModalHeader title="Add New User" sub="Create a new account directly from admin" onClose={() => setShowAddUser(false)} />
       <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 18, fontSize: 12, color: "#93C5FD", lineHeight: 1.6 }}>
-        ℹ️ <strong>Note:</strong> Creating an account here uses Firebase client-side auth. The new user will receive a verification email. You will remain logged in as admin.
+        ℹ <strong>Note:</strong> Creating an account here uses Firebase client-side auth. The new user will receive a verification email. You will remain logged in as admin.
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         {[
@@ -1447,13 +1445,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             </Field>
             {/* FIX #29: password validation */}
             {f.key === "password" && addUserForm.password && addUserForm.password.length < 6 && (
-              <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>⚠️ Password must be at least 6 characters</div>
+              <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>⚠ Password must be at least 6 characters</div>
             )}
           </div>
         ))}
         <div><Field label="Country"><select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           <option value="">Select Country</option>
-          {["🇦🇪 UAE","🇸🇦 Saudi Arabia","🇶🇦 Qatar","🇰🇼 Kuwait","🇧🇭 Bahrain","🇴🇲 Oman","🇬🇧 UK","🇺🇸 USA","🇮🇳 India","🇵🇰 Pakistan","🇪🇬 Egypt","🌍 Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
+          {[" UAE"," Saudi Arabia"," Qatar"," Kuwait"," Bahrain"," Oman"," UK"," USA"," India"," Pakistan"," Egypt"," Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
         </select></Field></div>
         <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
@@ -1479,7 +1477,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <Field label="Phone"><input type="tel" placeholder="+971 50 000 0000" value={editUserForm.phone || ""} onChange={e => setEditUserForm(p => ({ ...p, phone: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
         <Field label="Country"><select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           <option value="">Select Country</option>
-          {["🇦🇪 UAE","🇸🇦 Saudi Arabia","🇶🇦 Qatar","🇰🇼 Kuwait","🇧🇭 Bahrain","🇴🇲 Oman","🇬🇧 UK","🇺🇸 USA","🇮🇳 India","🇵🇰 Pakistan","🌍 Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
+          {[" UAE"," Saudi Arabia"," Qatar"," Kuwait"," Bahrain"," Oman"," UK"," USA"," India"," Pakistan"," Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
         </select></Field>
         <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
@@ -1506,7 +1504,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div>
           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>Icon</label>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {["📢","🏙️","💰","📈","⚠️","🔥","✅","🎉","📋","🚨"].map(ic => (
+            {["","","","[^]","⚠","","[v]","","",""].map(ic => (
               <button key={ic} type="button" onClick={() => setNotifIcon(ic)}
                 style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${notifIcon === ic ? T.gold : T.border}`, background: notifIcon === ic ? T.goldGlow : T.surfaceAlt, cursor: "pointer", fontSize: 16 }}>{ic}</button>
             ))}
@@ -2065,7 +2063,7 @@ async function checkAlerts(db) {
         emailjs.send("service_da7nshv", "template_gl1xqhy", {
           user_email: adminEmail,
           user_name: "DXB Admin",
-          message: `⚠️ SUSPICIOUS ACTIVITY: ${recent.length} tier changes in the last 5 minutes by ${adminEmail}. Please review the Audit Log immediately.`,
+          message: `⚠ SUSPICIOUS ACTIVITY: ${recent.length} tier changes in the last 5 minutes by ${adminEmail}. Please review the Audit Log immediately.`,
         }, "USkwUhp0csGCVDkdQ");
       }
     }
@@ -2078,12 +2076,12 @@ function DataCalendar({ T, now }) {
   const [loading, setLoading] = useState(true);
 
   const calendarItems = [
-    { id: "emaar_q1_2026",  event: "Emaar Q1 2026 Results",  due: "2026-04-15", note: "emaar.com → Investor Relations",     icon: "📊", priority: "high"     },
-    { id: "market_q1_2026", event: "Dubai Market Report Q1", due: "2026-04-30", note: "DLD Open Data + DXBinteract",         icon: "🏙️", priority: "medium"   },
-    { id: "emaar_q2_2026",  event: "Emaar Q2 2026 Results",  due: "2026-07-15", note: "emaar.com → Investor Relations",     icon: "📊", priority: "high"     },
-    { id: "market_q2_2026", event: "Dubai Market Report Q2", due: "2026-07-30", note: "DLD Open Data + DXBinteract",         icon: "🏙️", priority: "medium"   },
-    { id: "emaar_q3_2026",  event: "Emaar Q3 2026 Results",  due: "2026-10-15", note: "emaar.com → Investor Relations",     icon: "📊", priority: "high"     },
-    { id: "emaar_fy_2026",  event: "Emaar FY 2026 Results",  due: "2027-02-15", note: "Annual results — biggest of the year", icon: "🏆", priority: "critical" },
+    { id: "emaar_q1_2026",  event: "Emaar Q1 2026 Results",  due: "2026-04-15", note: "emaar.com → Investor Relations",     icon: "[=]", priority: "high"     },
+    { id: "market_q1_2026", event: "Dubai Market Report Q1", due: "2026-04-30", note: "DLD Open Data + DXBinteract",         icon: "", priority: "medium"   },
+    { id: "emaar_q2_2026",  event: "Emaar Q2 2026 Results",  due: "2026-07-15", note: "emaar.com → Investor Relations",     icon: "[=]", priority: "high"     },
+    { id: "market_q2_2026", event: "Dubai Market Report Q2", due: "2026-07-30", note: "DLD Open Data + DXBinteract",         icon: "", priority: "medium"   },
+    { id: "emaar_q3_2026",  event: "Emaar Q3 2026 Results",  due: "2026-10-15", note: "emaar.com → Investor Relations",     icon: "[=]", priority: "high"     },
+    { id: "emaar_fy_2026",  event: "Emaar FY 2026 Results",  due: "2027-02-15", note: "Annual results — biggest of the year", icon: "", priority: "critical" },
   ];
 
   useEffect(() => {
@@ -2153,11 +2151,11 @@ function DataCalendar({ T, now }) {
 /* ─── UPDATE CHECKLIST (interactive, Firestore-persisted) ─── */
 function UpdateChecklist({ T }) {
   const steps = [
-    { id: "s1", icon: "🌐", text: "Go to emaar.com/investor-relations",   sub: "Download the latest quarterly PDF" },
-    { id: "s2", icon: "📝", text: "Update data.js",                        sub: "Revenue, profit, EBITDA, sales, backlog" },
-    { id: "s3", icon: "🏗️", text: "Update construction %",               sub: "For projects nearing handover date" },
-    { id: "s4", icon: "⌨️", text: "Run git commands",                     sub: "git add . → git commit -m msg → git push" },
-    { id: "s5", icon: "🚀", text: "Live in 3 minutes",                    sub: "Vercel deploys automatically on push" },
+    { id: "s1", icon: "", text: "Go to emaar.com/investor-relations",   sub: "Download the latest quarterly PDF" },
+    { id: "s2", icon: "[n]", text: "Update data.js",                        sub: "Revenue, profit, EBITDA, sales, backlog" },
+    { id: "s3", icon: "", text: "Update construction %",               sub: "For projects nearing handover date" },
+    { id: "s4", icon: "⌨", text: "Run git commands",                     sub: "git add . → git commit -m msg → git push" },
+    { id: "s5", icon: "", text: "Live in 3 minutes",                    sub: "Vercel deploys automatically on push" },
   ];
   const [checked, setChecked] = useState({});
   const [loading, setLoading] = useState(true);
@@ -2235,7 +2233,7 @@ function UpdateChecklist({ T }) {
         </div>
       )}
       <div style={{ margin: "0 16px 16px", padding: "10px 14px", borderRadius: 9, background: allDone ? `${T.green}10` : `${T.green}08`, border: `1px solid ${allDone ? T.green : T.green}20`, display: "flex", alignItems: "center", gap: 8, transition: "all 0.3s" }}>
-        <span style={{ fontSize: 16 }}>{allDone ? "🎉" : "⚡"}</span>
+        <span style={{ fontSize: 16 }}>{allDone ? "" : "⚡"}</span>
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, color: allDone ? T.green : T.green }}>{allDone ? "All done! Dashboard is live." : "Under 10 minutes total"}</div>
           <div style={{ fontSize: 10, color: T.textMuted }}>{allDone ? `${doneCount}/${steps.length} steps completed` : "From PDF download to live dashboard"}</div>
@@ -2251,22 +2249,22 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
   const [dateRange, setDateRange] = useState("all");
 
   const actionMeta = {
-    tier_change:       { label: "Tier Changed",      color: T.orange,   icon: "👤" },
-    bulk_tier_change:  { label: "Bulk Tier Change",  color: "#8B5CF6",  icon: "👥" },
-    project_update:    { label: "Project Updated",   color: T.blue,     icon: "🏗️" },
+    tier_change:       { label: "Tier Changed",      color: T.orange,   icon: "" },
+    bulk_tier_change:  { label: "Bulk Tier Change",  color: "#8B5CF6",  icon: "" },
+    project_update:    { label: "Project Updated",   color: T.blue,     icon: "" },
     project_create:    { label: "Project Created",   color: T.green,    icon: "✨" },
-    community_update:  { label: "Community Updated", color: "#8B5CF6",  icon: "🏘️" },
-    tab_visibility:    { label: "Tab Visibility",    color: T.gold,     icon: "👁️" },
-    yield_update:      { label: "Yield Updated",     color: T.teal,     icon: "📈" },
-    role_change:       { label: "Role Changed",      color: T.red,      icon: "🔑" },
-    admin_login:       { label: "Admin Login",       color: T.green,    icon: "🔓" },
-    admin_logout:      { label: "Admin Logout",      color: T.textMuted,icon: "🔒" },
+    community_update:  { label: "Community Updated", color: "#8B5CF6",  icon: "[c]" },
+    tab_visibility:    { label: "Tab Visibility",    color: T.gold,     icon: "" },
+    yield_update:      { label: "Yield Updated",     color: T.teal,     icon: "[^]" },
+    role_change:       { label: "Role Changed",      color: T.red,      icon: "" },
+    admin_login:       { label: "Admin Login",       color: T.green,    icon: "" },
+    admin_logout:      { label: "Admin Logout",      color: T.textMuted,icon: "" },
     user_created:      { label: "User Created",      color: T.teal,     icon: "➕" },
-    user_deleted:      { label: "User Deleted",      color: T.red,      icon: "🗑️" },
-    user_suspended:    { label: "User Suspended",    color: T.orange,   icon: "⏸️" },
-    user_unsuspended:  { label: "User Unsuspended",  color: T.green,    icon: "▶️" },
-    eibor_update:      { label: "EIBOR Updated",     color: "#14B8A6",  icon: "📊" },
-    csv_export:        { label: "Export",            color: T.cyan,     icon: "📤" },
+    user_deleted:      { label: "User Deleted",      color: T.red,      icon: "" },
+    user_suspended:    { label: "User Suspended",    color: T.orange,   icon: "⏸" },
+    user_unsuspended:  { label: "User Unsuspended",  color: T.green,    icon: "▶" },
+    eibor_update:      { label: "EIBOR Updated",     color: "#14B8A6",  icon: "[=]" },
+    csv_export:        { label: "Export",            color: T.cyan,     icon: "" },
   };
   const tierColor = { free: "#94A3B8", pro_trial: T.gold, pro: T.green, enterprise: T.teal, suspended: T.red, admin: T.blue, staff: T.blue };
   const tierLabel = { free: "Free", pro_trial: "Pro Trial", pro: "Pro", enterprise: "Enterprise", suspended: "Suspended", admin: "Admin", staff: "Staff" };
@@ -2430,8 +2428,8 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
           { id: "bulk",    label: "Bulk Actions",    count: filterCounts.bulk    },
           { id: "project", label: "Project Updates", count: filterCounts.project },
           { id: "tab",     label: "Tab Changes",     count: filterCounts.tab     },
-          { id: "logins",  label: "🔓 Logins",       count: filterCounts.logins  },
-          { id: "users",   label: "👤 User Events",  count: filterCounts.users   },
+          { id: "logins",  label: " Logins",       count: filterCounts.logins  },
+          { id: "users",   label: " User Events",  count: filterCounts.users   },
         ].map(f => (
           <button key={f.id} type="button" onClick={() => setAuditFilter(f.id)}
             style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 8, border: `1px solid ${auditFilter===f.id ? T.gold : T.border}`, background: auditFilter===f.id ? `${T.gold}18` : "transparent", color: auditFilter===f.id ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}>
@@ -2456,14 +2454,14 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
       {/* ── Empty State ── */}
       {auditLog.length === 0 && (
         <div style={{ padding: "60px 24px", textAlign: "center" }}>
-          <div style={{ fontSize: 40, marginBottom: 14 }}>📋</div>
+          <div style={{ fontSize: 40, marginBottom: 14 }}></div>
           <div style={{ fontSize: 15, color: T.textSecondary, fontWeight: 700, marginBottom: 6, fontFamily: "'Fraunces',serif" }}>No audit events yet</div>
           <div style={{ fontSize: 12, color: T.textMuted, maxWidth: 340, margin: "0 auto" }}>Every tier change, project update, and tab visibility change will appear here automatically the moment you make it.</div>
         </div>
       )}
       {auditLog.length > 0 && filteredLog.length === 0 && (
         <div style={{ padding: "40px 24px", textAlign: "center" }}>
-          <div style={{ fontSize: 28, marginBottom: 10 }}>🔍</div>
+          <div style={{ fontSize: 28, marginBottom: 10 }}>[?]</div>
           <div style={{ fontSize: 13, color: T.textMuted }}>No events match your filter or search.</div>
         </div>
       )}
@@ -2481,7 +2479,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
 
             {/* Events in this group */}
             {group.items.map(({ log, idx }) => {
-              const meta = actionMeta[log.action] || { label: log.action || "Unknown", color: T.textMuted, icon: "⚙️" };
+              const meta = actionMeta[log.action] || { label: log.action || "Unknown", color: T.textMuted, icon: "⚙" };
               const isTier = log.action === "tier_change";
               const isBulk = log.action === "bulk_tier_change";
               const isProject = ["project_update","project_create"].includes(log.action);
@@ -2516,7 +2514,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                       <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
                         {log.ip && log.ip !== "unknown" && (
                           <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: T.textMuted, fontFamily: "'Courier New', monospace" }}>
-                            🌍 {log.ip}
+                             {log.ip}
                           </span>
                         )}
                         {log.changedBy && (
@@ -2854,7 +2852,7 @@ export default function AdminPanel() {
   }, [isAdmin]);
 
   const approveVerification = async (v) => {
-    if (!window.confirm(`⚠️ APPROVE VERIFICATION\n\nUser: ${v.name || v.email}\nLevel: ${v.level || "Basic"}\n\nThis will:\n• Mark this user as verified\n• Update their profile with a verified badge\n• They can access verified-tier features\n\nContinue?`)) return;
+    if (!window.confirm(`⚠ APPROVE VERIFICATION\n\nUser: ${v.name || v.email}\nLevel: ${v.level || "Basic"}\n\nThis will:\n• Mark this user as verified\n• Update their profile with a verified badge\n• They can access verified-tier features\n\nContinue?`)) return;
     try {
       await setDoc(doc(db, "verifications", v.id), { status: "approved", reviewedAt: new Date().toISOString(), reviewedBy: adminUser?.email || "admin" }, { merge: true });
       await setDoc(doc(db, "users", v.uid), { verified: true, verifiedLevel: v.level || "basic", verifiedAt: new Date().toISOString() }, { merge: true });
@@ -2866,7 +2864,7 @@ export default function AdminPanel() {
 
   const rejectVerification = async (v) => {
     if (!rejectReason.trim()) { notify("Error: Please enter a rejection reason"); return; }
-    if (!window.confirm(`⚠️ REJECT VERIFICATION\n\nUser: ${v.name || v.email}\nReason: ${rejectReason}\n\nThis will:\n• Reject their verification request\n• They will be notified to resubmit\n• Documents will be marked as rejected\n\nContinue?`)) return;
+    if (!window.confirm(`⚠ REJECT VERIFICATION\n\nUser: ${v.name || v.email}\nReason: ${rejectReason}\n\nThis will:\n• Reject their verification request\n• They will be notified to resubmit\n• Documents will be marked as rejected\n\nContinue?`)) return;
     try {
       await setDoc(doc(db, "verifications", v.id), { status: "rejected", rejectReason, reviewedAt: new Date().toISOString(), reviewedBy: adminUser?.email || "admin" }, { merge: true });
       await setDoc(doc(db, "users", v.uid), { verified: false, verifiedLevel: null }, { merge: true });
@@ -3075,7 +3073,7 @@ export default function AdminPanel() {
       items.push({
         type: isUpgrade ? "upgrade" : "downgrade",
         uid: l.uid, user: u,
-        time: l.changedAt, icon: isUpgrade ? "⬆️" : "⬇️",
+        time: l.changedAt, icon: isUpgrade ? "⬆" : "⬇",
         label: `${u?.name || u?.email?.split("@")[0] || "User"} ${l.to === "free" ? "downgraded to free" : l.from === "free" || l.from === "pro_trial" ? "upgraded to" : "downgraded to"} ${l.to}`,
         sub: isUpgrade ? l.to : l.to, color: isUpgrade ? T.green : T.red,
       });
@@ -3305,7 +3303,7 @@ export default function AdminPanel() {
   };
 
   const resetProjectData = async (projectId) => {
-    if (!window.confirm(`⚠️ RESET PROJECT DATA: ${projectId}\n\nThis will:\n• Remove all live Firestore overrides for this project\n• Dashboard will revert to default data.js values\n• Any custom prices, units, or details you edited will be lost\n\nContinue?`)) return;
+    if (!window.confirm(`⚠ RESET PROJECT DATA: ${projectId}\n\nThis will:\n• Remove all live Firestore overrides for this project\n• Dashboard will revert to default data.js values\n• Any custom prices, units, or details you edited will be lost\n\nContinue?`)) return;
     try {
       await deleteDoc(doc(db, "projectData", projectId));
       notify("Reset to defaults");
@@ -3314,7 +3312,7 @@ export default function AdminPanel() {
   };
 
   const resetCommunityROI = async (key) => {
-    if (!window.confirm(`⚠️ RESET COMMUNITY ROI: ${key}\n\nThis will:\n• Remove all live yield/ROI overrides for this community\n• Dashboard will show default values from data.js\n• Any custom gross/net yield or rental data will be lost\n\nContinue?`)) return;
+    if (!window.confirm(`⚠ RESET COMMUNITY ROI: ${key}\n\nThis will:\n• Remove all live yield/ROI overrides for this community\n• Dashboard will show default values from data.js\n• Any custom gross/net yield or rental data will be lost\n\nContinue?`)) return;
     try {
       await deleteDoc(doc(db, "communityROI", key));
       notify("Reset to defaults");
@@ -3775,7 +3773,7 @@ export default function AdminPanel() {
                   stats.atRisk > 0 && { key: "atrisk", color: T.red, icon: "", label: `${stats.atRisk} at risk`, action: () => {
                     stats.atRiskUsers.forEach(u => {
                       const days = trialDaysLeft(u);
-                      emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `⚠️ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`, new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {});
+                      emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `⚠ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`, new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {});
                     });
                     notify(`Sent ${stats.atRisk} at-risk emails`);
                   }},
@@ -4760,7 +4758,7 @@ export default function AdminPanel() {
 
                           {/* Retention Policy */}
                           <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 18px" }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>🗄️ Log Retention</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}> Log Retention</div>
                             <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Auto-delete logs older than:</div>
                             <select value={auditRetentionDays} onChange={e => setAuditRetentionDays(parseInt(e.target.value))}
                               style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", marginBottom: 8 }}>
@@ -4785,7 +4783,7 @@ export default function AdminPanel() {
 
                           {/* Webhook / SIEM */}
                           <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 18px" }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>🌊 Webhook / SIEM</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}> Webhook / SIEM</div>
                             <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Push each audit event to your SIEM in real-time:</div>
                             <input value={auditWebhookUrl} onChange={e => setAuditWebhookUrl(e.target.value)}
                               placeholder="https://hooks.splunk.com/..."
@@ -4807,7 +4805,7 @@ export default function AdminPanel() {
 
                           {/* Alert Threshold */}
                           <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 18px" }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>🚨 Alert Threshold</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}> Alert Threshold</div>
                             <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Email alert if this many tier changes happen in 5 min:</div>
                             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
                               <input type="range" min={1} max={50} value={auditAlertThr} onChange={e => setAuditAlertThr(parseInt(e.target.value))}
@@ -4846,7 +4844,7 @@ export default function AdminPanel() {
 
                           {/* API Key Generator */}
                           <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.gold}30`, padding: "18px 20px" }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, marginBottom: 4 }}>🔑 Generate API Key</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, marginBottom: 4 }}> Generate API Key</div>
                             <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 12 }}>Keys authenticate external systems. Each key is hashed — shown once only.</div>
 
                             <input value={apiKeyLabel} onChange={e => setApiKeyLabel(e.target.value)}
@@ -4880,7 +4878,7 @@ export default function AdminPanel() {
 
                             {newApiKey && (
                               <div style={{ marginTop: 12, padding: "12px 14px", borderRadius: 10, background: `${T.green}08`, border: `1px solid ${T.green}30` }}>
-                                <div style={{ fontSize: 10, fontWeight: 700, color: T.green, marginBottom: 6 }}>⚠️ Copy now — not shown again</div>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: T.green, marginBottom: 6 }}>⚠ Copy now — not shown again</div>
                                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                                   <div style={{ flex: 1, fontSize: 9, fontFamily: "'Courier New', monospace", color: T.white, wordBreak: "break-all", lineHeight: 1.4, background: T.surfaceAlt, padding: "6px 8px", borderRadius: 6 }}>{newApiKey}</div>
                                   <button type="button" onClick={() => { navigator.clipboard.writeText(newApiKey); setApiKeyCopied(true); setTimeout(() => setApiKeyCopied(false), 2000); }}
@@ -4919,7 +4917,7 @@ export default function AdminPanel() {
 
                           {/* API Docs */}
                           <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "18px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 2 }}>📡 API Reference</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 2 }}> API Reference</div>
                             {[
                               { method: "GET", path: "/health", auth: false, desc: "Health check — no auth required" },
                               { method: "GET", path: "/logs", auth: true, desc: "Fetch events. Params: from, to, action, actor, ip, limit, offset, format=csv" },
@@ -5321,7 +5319,7 @@ export default function AdminPanel() {
                       </div>
                       {payingUsers.length === 0 ? (
                         <div style={{ padding: "36px 20px", textAlign: "center" }}>
-                          <div style={{ fontSize: 28, color: T.textMuted, marginBottom: 8 }}>💳</div>
+                          <div style={{ fontSize: 28, color: T.textMuted, marginBottom: 8 }}></div>
                           <div style={{ fontSize: 13, color: T.textMuted }}>No paying customers yet</div>
                           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Converting a trial user will show them here</div>
                         </div>
@@ -5380,7 +5378,7 @@ export default function AdminPanel() {
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>MRR Milestones</div>
                           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-                            {nextMilestone ? `Next: ${nextMilestone.label} — ${nextMilestone.usersNeeded} more paying user${nextMilestone.usersNeeded !== 1 ? "s" : ""} needed` : "All milestones reached 🎉"}
+                            {nextMilestone ? `Next: ${nextMilestone.label} — ${nextMilestone.usersNeeded} more paying user${nextMilestone.usersNeeded !== 1 ? "s" : ""} needed` : "All milestones reached "}
                           </div>
                         </div>
                         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.green }}>
@@ -5392,7 +5390,7 @@ export default function AdminPanel() {
                           <div key={i}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                <span style={{ fontSize: 14 }}>{m.reached ? "✅" : i === milestones.findIndex(x => !x.reached) ? "🎯" : "○"}</span>
+                                <span style={{ fontSize: 14 }}>{m.reached ? "[v]" : i === milestones.findIndex(x => !x.reached) ? "" : "○"}</span>
                                 <span style={{ fontSize: 12, fontWeight: m.reached ? 700 : 400, color: m.reached ? T.white : T.textMuted }}>{m.label} MRR</span>
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -5440,7 +5438,7 @@ export default function AdminPanel() {
                           </div>
                           {!hasPaddle ? (
                             <div style={{ padding: "48px 20px", textAlign: "center" }}>
-                              <div style={{ fontSize: 36, marginBottom: 12 }}>🔌</div>
+                              <div style={{ fontSize: 36, marginBottom: 12 }}></div>
                               <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary, marginBottom: 6 }}>Waiting for Paddle Connection</div>
                               <div style={{ fontSize: 12, color: T.textMuted, maxWidth: 360, margin: "0 auto", lineHeight: 1.6 }}>
                                 Once your Paddle webhook is connected and writing to Firestore, every payment event will appear here in real time — success, failed, refunded, and chargeback.
@@ -5495,7 +5493,7 @@ export default function AdminPanel() {
                             <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Users at risk of churning due to payment failure</div>
                             {!hasFailed ? (
                               <div style={{ padding: "28px 0", textAlign: "center" }}>
-                                <div style={{ fontSize: 28, marginBottom: 8 }}>✅</div>
+                                <div style={{ fontSize: 28, marginBottom: 8 }}>[v]</div>
                                 <div style={{ fontSize: 13, color: T.textMuted }}>No failed payments</div>
                                 <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Will show at-risk users once Paddle is connected</div>
                               </div>
@@ -5633,12 +5631,12 @@ export default function AdminPanel() {
                 }>
                   {/* Search */}
                   <TabHelp items={[
-                    { icon: "✏️", title: "Edit a Project", desc: "Click any row to open the edit drawer. Change price, status, handover date, images and more." },
-                    { icon: "💾", title: "Save Goes Live", desc: "Clicking 'Save to Firestore' updates the project instantly on the dashboard for all users." },
-                    { icon: "📸", title: "Upload Images", desc: "Upload a project image via Cloudinary. It appears on the dashboard project card." },
-                    { icon: "☑️", title: "Bulk Edit", desc: "Check multiple projects using the checkboxes, then set price or status for all at once." },
-                    { icon: "📥", title: "Export / Import", desc: "Export all project data to Excel. Import updates via CSV for bulk data changes." },
-                    { icon: "🔄", title: "Default vs Live", desc: "'Default' means data comes from data.js. 'Live' means you've saved a Firestore override." },
+                    { icon: "[e]", title: "Edit a Project", desc: "Click any row to open the edit drawer. Change price, status, handover date, images and more." },
+                    { icon: "[s]", title: "Save Goes Live", desc: "Clicking 'Save to Firestore' updates the project instantly on the dashboard for all users." },
+                    { icon: "[img]", title: "Upload Images", desc: "Upload a project image via Cloudinary. It appears on the dashboard project card." },
+                    { icon: "[x]", title: "Bulk Edit", desc: "Check multiple projects using the checkboxes, then set price or status for all at once." },
+                    { icon: "[dl]", title: "Export / Import", desc: "Export all project data to Excel. Import updates via CSV for bulk data changes." },
+                    { icon: "[~]", title: "Default vs Live", desc: "'Default' means data comes from data.js. 'Live' means you've saved a Firestore override." },
                   ]} />
                   <div style={{ position: "relative", maxWidth: 400, marginBottom: 16 }}>
                     <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</span>
@@ -6015,11 +6013,11 @@ export default function AdminPanel() {
 
                   {/* Community list */}
                   <TabHelp items={[
-                    { icon: "🏘️", title: "What is Community ROI?", desc: "Each card represents a Dubai community (e.g. Dubai Hills Estate). The data here powers the Yields & ROI section on the main dashboard." },
-                    { icon: "📈", title: "Gross vs Net Yield", desc: "Gross yield is before costs. Net yield deducts service charge and management fees. Users see both." },
-                    { icon: "🏠", title: "Unit Types", desc: "APT1 = 1BR apartment, APT2 = 2BR, TH = Townhouse. Edit each unit type's yield separately." },
-                    { icon: "💹", title: "Appreciation", desc: "5Y Appreciation = total % growth over 5 years. YoY = last 12 months. These appear on community comparison charts." },
-                    { icon: "🔄", title: "Reset", desc: "Clicking Reset removes your override and reverts to the default data.js values." },
+                    { icon: "[c]", title: "What is Community ROI?", desc: "Each card represents a Dubai community (e.g. Dubai Hills Estate). The data here powers the Yields & ROI section on the main dashboard." },
+                    { icon: "[^]", title: "Gross vs Net Yield", desc: "Gross yield is before costs. Net yield deducts service charge and management fees. Users see both." },
+                    { icon: "[h]", title: "Unit Types", desc: "APT1 = 1BR apartment, APT2 = 2BR, TH = Townhouse. Edit each unit type's yield separately." },
+                    { icon: "[%]", title: "Appreciation", desc: "5Y Appreciation = total % growth over 5 years. YoY = last 12 months. These appear on community comparison charts." },
+                    { icon: "[~]", title: "Reset", desc: "Clicking Reset removes your override and reverts to the default data.js values." },
                   ]} />
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
                     {Object.entries(defaultCommunityROI).map(([key, roi]) => {
@@ -6065,10 +6063,10 @@ export default function AdminPanel() {
                   <button type="button" onClick={fetchLiveData} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
                 }>
                   <TabHelp items={[
-                    { icon: "📊", title: "What is this table?", desc: "This is the yield comparison table users see on the dashboard. It shows rent, price and yield by unit type per community." },
-                    { icon: "🖊️", title: "How to edit", desc: "Click any row to open the edit form. Change rent, price, gross/net yield, demand level and Golden Visa eligibility." },
-                    { icon: "✅", title: "Save Goes Live", desc: "Changes save to Firestore and update immediately on the main dashboard Yields tab." },
-                    { icon: "🟢", title: "Live vs Default", desc: "Green 'Live' badge means you have a Firestore override. Grey means it's showing default data from data.js." },
+                    { icon: "[=]", title: "What is this table?", desc: "This is the yield comparison table users see on the dashboard. It shows rent, price and yield by unit type per community." },
+                    { icon: "[e]", title: "How to edit", desc: "Click any row to open the edit form. Change rent, price, gross/net yield, demand level and Golden Visa eligibility." },
+                    { icon: "[v]", title: "Save Goes Live", desc: "Changes save to Firestore and update immediately on the main dashboard Yields tab." },
+                    { icon: "[o]", title: "Live vs Default", desc: "Green 'Live' badge means you have a Firestore override. Grey means it's showing default data from data.js." },
                   ]} />
                   {/* Editing form */}
                   {editingYield !== null && (() => {
@@ -6217,11 +6215,11 @@ export default function AdminPanel() {
                 return (
                   <Section title="Price History" sub="Track and log price changes per project over time">
                     <TabHelp items={[
-                      { icon: "📉", title: "What is this?", desc: "An audit trail of every price change per project. Automatically records when you save a new price in the Projects tab." },
-                      { icon: "🔍", title: "Select a Project", desc: "Choose any of the 48 projects from the dropdown. The chart and table will load its full price history." },
-                      { icon: "📝", title: "Manual Entry", desc: "Add historical price points manually — useful for logging past prices before the system was set up." },
-                      { icon: "❌", title: "Delete Entry", desc: "Click the × button on any row to remove that price entry. A confirmation will appear first." },
-                      { icon: "📈", title: "Chart", desc: "Gold line chart shows price trend over time. Needs at least 2 data points to appear." },
+                      { icon: "[v]", title: "What is this?", desc: "An audit trail of every price change per project. Automatically records when you save a new price in the Projects tab." },
+                      { icon: "[?]", title: "Select a Project", desc: "Choose any of the 48 projects from the dropdown. The chart and table will load its full price history." },
+                      { icon: "[n]", title: "Manual Entry", desc: "Add historical price points manually — useful for logging past prices before the system was set up." },
+                      { icon: "[x]", title: "Delete Entry", desc: "Click the × button on any row to remove that price entry. A confirmation will appear first." },
+                      { icon: "[^]", title: "Chart", desc: "Gold line chart shows price trend over time. Needs at least 2 data points to appear." },
                     ]} />
 
                     {/* ── PROJECT SELECTOR ── */}
@@ -6413,7 +6411,7 @@ export default function AdminPanel() {
 
               {/* Data sync info */}
               <div className="chart-box fade-up" style={{ padding: 16, marginTop: 8, display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ fontSize: 24 }}>ℹ️</div>
+                <div style={{ fontSize: 24 }}>ℹ</div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>How Live Data Works</div>
                   <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6 }}>
