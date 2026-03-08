@@ -271,7 +271,7 @@ function NotificationsTab({ T, notify, adminUser }) {
   }, []);
 
   const sendNotification = async () => {
-    if (!notifForm.title || !notifForm.message) { notify("❌ Title and message required"); return; }
+    if (!notifForm.title || !notifForm.message) { notify("Error: Title and message required"); return; }
     setNotifSending(true);
     try {
       const id = `notif_${Date.now()}`;
@@ -279,10 +279,10 @@ function NotificationsTab({ T, notify, adminUser }) {
         ...notifForm, userId: notifForm.target, read: false,
         createdAt: new Date().toISOString(), sentBy: adminUser?.email || "admin"
       });
-      notify("✅ Notification sent to all users!");
-      setNotifForm({ title: "", message: "", icon: "📢", target: "all" });
+      notify("Notification sent to all users!");
+      setNotifForm({ title: "", message: "", icon: "bell", target: "all" });
       setSentNotifs(prev => [{ id, ...notifForm, createdAt: new Date().toISOString() }, ...prev]);
-    } catch (e) { notify("❌ " + e.message); }
+    } catch (e) { notify("Error: " + e.message); }
     setNotifSending(false);
   };
 
@@ -319,7 +319,7 @@ function NotificationsTab({ T, notify, adminUser }) {
             </div>
           </div>
           <button type="button" onClick={sendNotification} disabled={notifSending} style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontWeight: 700, fontSize: 13, cursor: notifSending ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
-            {notifSending ? "Sending..." : "📢 Send to All Users"}
+            {notifSending ? "Sending..." : "Send to All Users"}
           </button>
         </div>
         <div>
@@ -329,7 +329,7 @@ function NotificationsTab({ T, notify, adminUser }) {
           ) : sentNotifs.map((n) => (
             <div key={n.id} style={{ padding: "10px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, marginBottom: 8 }}>
               <div style={{ display: "flex", gap: 8 }}>
-                <span style={{ fontSize: 16 }}>{n.icon || "📢"}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", fontFamily: "sans-serif" }}>NOTIF</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>{n.title}</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{n.message}</div>
@@ -392,7 +392,7 @@ function EiborRatesPanel({ db, T }) {
       </div>
       {eiborCurrent && (
         <div style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 14, padding: "18px 22px" }}>
-          <div style={{ fontSize: 11, color: "#10B981", fontWeight: 700, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>📊 Currently Live — {eiborCurrent.asOf}</div>
+          <div style={{ fontSize: 11, color: "#10B981", fontWeight: 700, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>Currently Live — {eiborCurrent.asOf}</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
             {[["1M", "1m"], ["3M", "3m"], ["6M", "6m"], ["1Y", "1y"]].map(([l, k]) => (
               <div key={k} style={{ background: "rgba(16,185,129,0.04)", borderRadius: 10, padding: "12px 16px", border: "1px solid rgba(16,185,129,0.15)", textAlign: "center" }}>
@@ -409,7 +409,7 @@ function EiborRatesPanel({ db, T }) {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 16 }}>
           {[["1M EIBOR", "1m"], ["3M EIBOR", "3m"], ["6M EIBOR", "6m"], ["1Y EIBOR", "1y"]].map(([label, key]) => (
             <div key={key}>
-              <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>{label} {key === "3m" && <span style={{ color: T.gold }}>★ Primary</span>}</div>
+              <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>{label} {key === "3m" && <span style={{ fontSize: 9, fontWeight: 700, color: T.gold, background: "rgba(212,168,67,0.12)", padding: "1px 6px", borderRadius: 4, letterSpacing: 0.3 }}>PRIMARY</span>}</div>
               <input type="number" step="0.0001"
                 placeholder={eiborCurrent?.[key] ? parseFloat(eiborCurrent[key]).toFixed(4) : "e.g. 3.5992"}
                 value={eiborEdit[key]}
@@ -428,7 +428,7 @@ function EiborRatesPanel({ db, T }) {
           </div>
           <button type="button" onClick={saveEibor} disabled={eiborSaving || !eiborEdit["3m"]}
             style={{ padding: "10px 28px", borderRadius: 10, background: eiborSaved ? "#10B981" : T.gold, border: "none", color: "#04090F", fontSize: 14, fontWeight: 700, cursor: eiborEdit["3m"] ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
-            {eiborSaved ? "✅ Saved!" : eiborSaving ? "Saving..." : "Save to Firestore →"}
+            {eiborSaved ? "Saved!" : eiborSaving ? "Saving..." : "Save to Firestore →"}
           </button>
         </div>
       </div>
@@ -471,7 +471,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const [notifUser,          setNotifUser]           = useState(null);
   const [notifTitle,         setNotifTitle]          = useState("");
   const [notifMessage,       setNotifMessage]        = useState("");
-  const [notifIcon,          setNotifIcon]           = useState("📢");
+  const [notifIcon,          setNotifIcon]           = useState("bell");
   const [notifSendingUser,   setNotifSendingUser]    = useState(false);
   const [loadingUsers,       setLoadingUsers]        = useState(false); // FIX #30
   const [copiedId,           setCopiedId]            = useState(null);  // FIX #36
@@ -558,11 +558,11 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   /* ─── FIX #12: Tags = labels only, no overlap with roles ─── */
   const TAGS_OPTIONS = [
     { value: "vip",      label: "⭐ VIP",        color: "#F59E0B" },
-    { value: "hot_lead", label: "🔥 Hot Lead",    color: "#EF4444" },
-    { value: "followup", label: "📞 Follow-up",   color: "#3B82F6" },
-    { value: "churning", label: "⚠️ Churning",    color: "#F97316" },
-    { value: "referral", label: "🤝 Referral",    color: "#8B5CF6" },
-    { value: "partner",  label: "🏢 Partner",     color: "#06B6D4" },
+    { value: "hot_lead", label: "Hot Lead",    color: "#EF4444" },
+    { value: "followup", label: "Follow-up",   color: "#3B82F6" },
+    { value: "churning", label: "Churning",    color: "#F97316" },
+    { value: "referral", label: "Referral",    color: "#8B5CF6" },
+    { value: "partner",  label: "Partner",     color: "#06B6D4" },
   ];
 
   /* ─── FIX #9+10: Single, clean getRoleBadge ─── */
@@ -705,7 +705,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       });
     } catch(e) {}
     setBulkSel([]); setBulkTier("");
-    notify(`✅ Updated ${bulkSel.length} users to ${bulkTier}`);
+    notify(`Updated ${bulkSel.length} users to ${bulkTier}`);
   };
 
   const handleTierChange = async (uid, newTier, oldTier) => {
@@ -730,12 +730,12 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       });
       setDrawerUser(prev => prev?.uid === uid ? { ...prev, role: newRole } : prev);
       fetchUsers();
-      notify(`✅ Role updated`);
-    } catch(e) { notify("❌ " + e.message); }
+      notify(`Role updated`);
+    } catch(e) { notify("Error: " + e.message); }
   };
 
   const handleSendEmail = async () => {
-    if (!emailSubject || !emailBody) { notify("❌ Subject and message required"); return; }
+    if (!emailSubject || !emailBody) { notify("Error: Subject and message required"); return; }
     setEmailSending(true);
     try {
       // FIX #15: correct EmailJS template field names
@@ -748,9 +748,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         old_value:    "",
         updated_at:   new Date().toLocaleString("en-AE"),
       }, "USkwUhp0csGCVDkdQ");
-      notify(`✅ Email sent to ${sendEmailUser.email}`);
+      notify(`Email sent to ${sendEmailUser.email}`);
       setSendEmailUser(null); setEmailSubject(""); setEmailBody("");
-    } catch(e) { notify("❌ Email failed — check EmailJS config"); }
+    } catch(e) { notify("Error: Email failed — check EmailJS config"); }
     setEmailSending(false);
   };
 
@@ -759,18 +759,18 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     try {
       const { setDoc: sd, doc: dc } = await import("firebase/firestore");
       await sd(dc(db, "users", noteUser.uid), { notes: noteText, noteUpdatedAt: new Date().toISOString() }, { merge: true });
-      notify("✅ Note saved");
+      notify("Note saved");
       setNoteUser(null); setNoteText("");
       fetchUsers();
-    } catch(e) { notify("❌ Failed to save note"); }
+    } catch(e) { notify("Error: Failed to save note"); }
   };
 
   const saveTag = async (uid, tags) => {
     try {
       const { setDoc: sd, doc: dc } = await import("firebase/firestore");
       await sd(dc(db, "users", uid), { tags }, { merge: true });
-      notify("✅ Tags updated"); fetchUsers();
-    } catch(e) { notify("❌ Failed to save tags"); }
+      notify("Tags updated"); fetchUsers();
+    } catch(e) { notify("Error: Failed to save tags"); }
   };
 
   // FIX #13: also call fetchUsers after delete
@@ -794,12 +794,12 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const handleExtend = async () => {
     if (!confirmExtend) return;
     await extendTrial(confirmExtend.user.uid, confirmExtend.days);
-    notify(`✅ Extended trial by ${confirmExtend.days} days`);
+    notify(`Extended trial by ${confirmExtend.days} days`);
     setConfirmExtend(null);
   };
 
   const sendDirectNotification = async () => {
-    if (!notifTitle || !notifMessage) { notify("❌ Title and message required"); return; }
+    if (!notifTitle || !notifMessage) { notify("Error: Title and message required"); return; }
     setNotifSendingUser(true);
     try {
       const { setDoc: sd, doc: dc } = await import("firebase/firestore");
@@ -809,9 +809,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         icon: notifIcon, read: false, createdAt: new Date().toISOString(), sentBy: "admin",
       });
       // FIX #34: log who received it
-      notify(`✅ Notification sent to ${notifUser.name || notifUser.email}`);
-      setNotifUser(null); setNotifTitle(""); setNotifMessage(""); setNotifIcon("📢");
-    } catch(e) { notify("❌ " + e.message); }
+      notify(`Notification sent to ${notifUser.name || notifUser.email}`);
+      setNotifUser(null); setNotifTitle(""); setNotifMessage(""); setNotifIcon("bell");
+    } catch(e) { notify("Error: " + e.message); }
     setNotifSendingUser(false);
   };
 
@@ -831,7 +831,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     const blob = new Blob([headers + rows], { type: "text/csv" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
     a.download = `dxb-users-${new Date().toISOString().slice(0,10)}.csv`; a.click();
-    notify(`✅ Exported ${allFiltered.length} users`);
+    notify(`Exported ${allFiltered.length} users`);
   };
 
   /* ─── SHARED STYLE HELPERS ─── */
@@ -884,7 +884,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const DeleteConfirmModal = () => confirmDelete && (
     <Modal onClose={() => setConfirmDelete(null)} maxWidth={420}>
       <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>🗑️</div>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", color: "#EF4444" }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.red, marginBottom: 8 }}>Delete User?</div>
         <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 6 }}><strong style={{ color: T.white }}>{confirmDelete.name || confirmDelete.email}</strong></div>
         <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 20, padding: "10px 16px", background: "rgba(239,68,68,0.06)", borderRadius: 10, border: "1px solid rgba(239,68,68,0.15)", lineHeight: 1.6 }}>
@@ -903,7 +903,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const SuspendConfirmModal = () => confirmSuspend && (
     <Modal onClose={() => setConfirmSuspend(null)} maxWidth={420}>
       <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>{confirmSuspend.suspended ? "✅" : "⏸"}</div>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: confirmSuspend?.suspended ? "rgba(16,185,129,0.08)" : "rgba(245,158,11,0.08)", border: "1px solid", borderColor: confirmSuspend?.suspended ? "rgba(16,185,129,0.2)" : "rgba(245,158,11,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", color: confirmSuspend?.suspended ? "#10B981" : "#F59E0B" }}>{confirmSuspend?.suspended ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> : "⏸"}</div>
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: confirmSuspend.suspended ? T.green : "#F59E0B", marginBottom: 8 }}>
           {confirmSuspend.suspended ? "Unsuspend User?" : "Suspend User?"}
         </div>
@@ -939,13 +939,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const EmailModal = () => sendEmailUser && (
     <Modal onClose={() => setSendEmailUser(null)}>
-      <ModalHeader title="✉️ Send Email" sub={`To: ${sendEmailUser.name || sendEmailUser.email} · ${sendEmailUser.email}`} onClose={() => setSendEmailUser(null)} />
+      <ModalHeader title="Send Email" sub={`To: ${sendEmailUser.name || sendEmailUser.email} · ${sendEmailUser.email}`} onClose={() => setSendEmailUser(null)} />
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <Field label="Subject"><input type="text" placeholder="Email subject..." value={emailSubject} onChange={e => setEmailSubject(e.target.value)} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
         <Field label="Message"><textarea placeholder="Write your message..." value={emailBody} onChange={e => setEmailBody(e.target.value)} rows={5} style={{ ...inputStyle, resize: "vertical" }} onFocus={focusIn} onBlur={focusOut} /></Field>
         <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
           <BtnGhost onClick={() => setSendEmailUser(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
-          <Btn onClick={handleSendEmail} disabled={emailSending} color={T.gold} style={{ flex: 2, color: T.bg }}>{emailSending ? "Sending..." : "✉️ Send Email"}</Btn>
+          <Btn onClick={handleSendEmail} disabled={emailSending} color={T.gold} style={{ flex: 2, color: T.bg }}>{emailSending ? "Sending..." : "Send Email"}</Btn>
         </div>
       </div>
     </Modal>
@@ -953,18 +953,18 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const NoteModal = () => noteUser && (
     <Modal onClose={() => setNoteUser(null)} maxWidth={440}>
-      <ModalHeader title={`📝 Note — ${noteUser.name || noteUser.email}`} onClose={() => setNoteUser(null)} />
+      <ModalHeader title={`Note — ${noteUser.name || noteUser.email}`} onClose={() => setNoteUser(null)} />
       <textarea placeholder="Add internal admin notes..." value={noteText} onChange={e => setNoteText(e.target.value)} rows={5} style={{ ...inputStyle, resize: "vertical", marginBottom: 16 }} onFocus={focusIn} onBlur={focusOut} />
       <div style={{ display: "flex", gap: 10 }}>
         <BtnGhost onClick={() => setNoteUser(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
-        <Btn onClick={saveNote} color={T.gold} style={{ flex: 2, color: T.bg }}>💾 Save Note</Btn>
+        <Btn onClick={saveNote} color={T.gold} style={{ flex: 2, color: T.bg }}>Save Note</Btn>
       </div>
     </Modal>
   );
 
   const TagsModal = () => tagUser && (
     <Modal onClose={() => setTagUser(null)} maxWidth={400}>
-      <ModalHeader title={`🏷️ Tags — ${tagUser.name || tagUser.email}`} onClose={() => setTagUser(null)} />
+      <ModalHeader title={`Tags — ${tagUser.name || tagUser.email}`} onClose={() => setTagUser(null)} />
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
         {TAGS_OPTIONS.map(tag => {
           const active = (tagUser.tags || []).includes(tag.value);
@@ -979,7 +979,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       </div>
       <div style={{ display: "flex", gap: 10 }}>
         <BtnGhost onClick={() => setTagUser(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
-        <Btn onClick={() => { saveTag(tagUser.uid, tagUser.tags || []); setTagUser(null); }} color={T.gold} style={{ flex: 2, color: T.bg }}>💾 Save Tags</Btn>
+        <Btn onClick={() => { saveTag(tagUser.uid, tagUser.tags || []); setTagUser(null); }} color={T.gold} style={{ flex: 2, color: T.bg }}>Save Tags</Btn>
       </div>
     </Modal>
   );
@@ -1023,7 +1023,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       </div>
       <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
         <BtnGhost onClick={() => setShowAddUser(false)} style={{ flex: 1 }}>Cancel</BtnGhost>
-        <Btn onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} color={T.gold} style={{ flex: 2, color: T.bg }}>{addUserLoading ? "Creating..." : "✅ Create User"}</Btn>
+        <Btn onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} color={T.gold} style={{ flex: 2, color: T.bg }}>{addUserLoading ? "Creating..." : "Create User"}</Btn>
       </div>
     </Modal>
   );
@@ -1051,14 +1051,14 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       </div>
       <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
         <BtnGhost onClick={() => setEditingUser(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
-        <Btn onClick={saveEditUser} disabled={editUserLoading} color={T.gold} style={{ flex: 2, color: T.bg }}>{editUserLoading ? "Saving..." : "💾 Save Changes"}</Btn>
+        <Btn onClick={saveEditUser} disabled={editUserLoading} color={T.gold} style={{ flex: 2, color: T.bg }}>{editUserLoading ? "Saving..." : "Save Changes"}</Btn>
       </div>
     </Modal>
   );
 
   const NotifUserModal = () => notifUser && (
     <Modal onClose={() => setNotifUser(null)} maxWidth={440}>
-      <ModalHeader title={`📢 Notify — ${notifUser.name || notifUser.email}`} sub="Appears instantly in their notification bell" onClose={() => setNotifUser(null)} />
+      <ModalHeader title={`Notify — ${notifUser.name || notifUser.email}`} sub="Appears instantly in their notification bell" onClose={() => setNotifUser(null)} />
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div>
           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>Icon</label>
@@ -1082,7 +1082,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <BtnGhost onClick={() => setNotifUser(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
-          <Btn onClick={sendDirectNotification} disabled={notifSendingUser} color={T.gold} style={{ flex: 2, color: T.bg }}>{notifSendingUser ? "Sending..." : "📢 Send"}</Btn>
+          <Btn onClick={sendDirectNotification} disabled={notifSendingUser} color={T.gold} style={{ flex: 2, color: T.bg }}>{notifSendingUser ? "Sending..." : "Send"}</Btn>
         </div>
       </div>
     </Modal>
@@ -1132,75 +1132,65 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 520, background: T.bg, borderLeft: `1px solid ${T.border}`, boxShadow: "-24px 0 80px rgba(0,0,0,0.5)", overflowY: "auto", display: "flex", flexDirection: "column", animation: "slideIn 0.32s cubic-bezier(0.16,1,0.3,1)", zIndex: 1 }} onClick={e => e.stopPropagation()}>
 
           {/* ── Header ── */}
-          <div style={{ padding: "20px 24px 16px", borderBottom: `1px solid ${T.border}`, position: "relative" }}>
-            {/* Subtle tier colour bar at top */}
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: badge.color, opacity: 0.6 }} />
-
+          <div style={{ padding: "22px 24px 20px", borderBottom: `1px solid ${T.border}`, position: "relative", background: `linear-gradient(160deg, ${badge.color}0a 0%, transparent 60%)` }}>
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${badge.color} 0%, ${badge.color}00 100%)`, borderRadius: "0 0 2px 2px" }} />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                {/* Avatar */}
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: `${badge.color}18`, border: `1.5px solid ${badge.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800, color: badge.color, fontFamily: "'Fraunces',serif", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: `linear-gradient(135deg, ${badge.color}22, ${badge.color}08)`, border: `2px solid ${badge.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 900, color: badge.color, fontFamily: "'Fraunces',serif", flexShrink: 0 }}>
                   {(u.name || u.email || "?")[0].toUpperCase()}
                 </div>
                 <div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif", lineHeight: 1.1, letterSpacing: -0.4, marginBottom: 5 }}>
                     {u.name || "No name"}
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 9 }}>
                     <span style={{ fontSize: 12, color: T.textMuted }}>{u.email}</span>
                     <button type="button" onClick={() => copyToClipboard(u.email, "email")} style={{ background: "none", border: "none", cursor: "pointer", color: copiedId === "email" ? T.green : T.textMuted, padding: 0, display: "flex", alignItems: "center" }} title="Copy email">
                       {copiedId === "email" ? <IconCheck /> : <CopyIcon />}
                     </button>
                   </div>
-                  {/* Status badges — clean, no emojis */}
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 7 }}>
-                    <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 5, background: badge.bg, color: badge.color, border: `1px solid ${badge.color}25` }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: badge.bg, color: badge.color, border: `1px solid ${badge.color}30` }}>
                       {badge.label}{badge.price ? ` · ${badge.price}` : ""}
                     </span>
-                    <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 5, background: `${health.dot}12`, color: health.dot, border: `1px solid ${health.dot}20`, display: "flex", alignItems: "center", gap: 3 }}>
-                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: health.dot, display: "inline-block" }} />
-                      {health.label}
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20, background: `${health.dot}14`, color: health.dot, border: `1px solid ${health.dot}28`, display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: health.dot, flexShrink: 0 }} />{health.label}
                     </span>
-                    {job && <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 5, background: job.bg, color: job.color, border: `1px solid ${job.color}20` }}>{job.label}</span>}
-                    {(u.tags || []).map(tag => { const t = TAGS_OPTIONS.find(x => x.value === tag); return t ? <span key={tag} style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 5, background: `${t.color}12`, color: t.color, border: `1px solid ${t.color}20` }}>{t.label}</span> : null; })}
+                    {job && <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20, background: job.bg, color: job.color, border: `1px solid ${job.color}28` }}>{job.label}</span>}
+                    {(u.tags || []).map(tag => { const t = TAGS_OPTIONS.find(x => x.value === tag); return t ? <span key={tag} style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20, background: `${t.color}12`, color: t.color, border: `1px solid ${t.color}28` }}>{t.label}</span> : null; })}
                   </div>
                 </div>
               </div>
-
-              {/* Close — with ESC hint */}
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, flexShrink: 0 }}>
-                <button type="button" onClick={() => setDrawerUserWithCallback(null)}
-                  style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, transition: "all 0.15s" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = T.surfaceAlt; e.currentTarget.style.color = T.white; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}>
-                  ✕
-                </button>
-                <span style={{ fontSize: 8, color: T.textMuted, opacity: 0.5, letterSpacing: 0.3 }}>ESC</span>
-              </div>
+              <button type="button" onClick={() => setDrawerUserWithCallback(null)}
+                style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, transition: "all 0.15s", flexShrink: 0 }}
+                onMouseEnter={e => { e.currentTarget.style.background = T.surfaceAlt; e.currentTarget.style.color = T.white; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}>
+                ✕
+              </button>
             </div>
           </div>
 
-          {/* ── Stats bar ── */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", background: T.surface, borderBottom: `1px solid ${T.border}` }}>
+          {/* ── Stats bar — big value, tiny label ── */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", borderBottom: `1px solid ${T.border}`, background: T.surface }}>
             {[
-              { label: "Plan Value",  value: getUserLTV(u),    color: u.tier === "pro" || u.tier === "enterprise" ? T.green : T.white },
-              { label: "Trial Days",  value: days !== null ? `${days}d left` : u.tier === "pro" ? "Active" : "—", color: days !== null && days <= 3 ? T.red : T.white },
+              { label: "Plan",        value: getUserLTV(u),    color: u.tier === "pro" || u.tier === "enterprise" ? T.green : T.textSecondary },
+              { label: "Trial",       value: days !== null ? `${days}d left` : u.tier === "pro" ? "Active" : "—", color: days !== null && days <= 3 ? T.red : days !== null ? T.gold : T.textSecondary },
               { label: "Last Active", value: lastActiveLabel(u), color: lastActiveColor(u) },
               { label: "Joined",      value: (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { month: "short", day: "numeric" }); } catch { return "—"; } })(), color: T.white },
             ].map((s, i) => (
-              <div key={i} style={{ padding: "14px 12px", textAlign: "center", borderRight: i < 3 ? `1px solid ${T.border}` : "none" }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: s.color, fontFamily: "'Fraunces',serif", lineHeight: 1 }}>{s.value}</div>
-                <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginTop: 5 }}>{s.label}</div>
+              <div key={i} style={{ padding: "14px 8px", textAlign: "center", borderRight: i < 3 ? `1px solid ${T.border}` : "none" }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: s.color, fontFamily: "'Fraunces',serif", lineHeight: 1, letterSpacing: -0.3 }}>{s.value}</div>
+                <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginTop: 6 }}>{s.label}</div>
               </div>
             ))}
           </div>
 
-          {/* ── Tab nav ── */}
-          <div style={{ display: "flex", borderBottom: `1px solid ${T.border}`, background: T.surface }}>
+          {/* ── Tab nav — pill style, active has solid background ── */}
+          <div style={{ display: "flex", background: T.bg, borderBottom: `1px solid ${T.border}`, padding: "6px 8px", gap: 3 }}>
             {TABS.map(({ key, label, Icon }) => (
               <button key={key} type="button" onClick={() => setDrawerTab(key)}
-                style={{ flex: 1, padding: "11px 4px", border: "none", background: "transparent", color: drawerTab === key ? T.white : T.textMuted, fontSize: 11, fontWeight: drawerTab === key ? 600 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif", borderBottom: `2px solid ${drawerTab === key ? T.gold : "transparent"}`, transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                <span style={{ opacity: drawerTab === key ? 1 : 0.6 }}><Icon /></span>
+                style={{ flex: 1, padding: "7px 4px", borderRadius: 7, border: drawerTab === key ? `1px solid ${T.border}` : "1px solid transparent", background: drawerTab === key ? T.surface : "transparent", color: drawerTab === key ? T.white : T.textMuted, fontSize: 11, fontWeight: drawerTab === key ? 700 : 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                <span style={{ opacity: drawerTab === key ? 1 : 0.45, transition: "opacity 0.15s" }}><Icon /></span>
                 {label}
               </button>
             ))}
@@ -1225,10 +1215,12 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                     ["Created By",    u.createdByAdmin ? `Admin (${u.createdByAdmin})` : "Self-signup", null],
                     ["Trial End",     u.trialEnd ? new Date(u.trialEnd).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }) : "—", null],
                   ].map(([label, value, copyKey, valColor], idx, arr) => (
-                    <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: idx % 2 === 0 ? T.surfaceAlt : T.surface, borderBottom: idx < arr.length - 1 ? `1px solid ${T.border}` : "none" }}>
-                      <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 500, minWidth: 100 }}>{label}</span>
+                    <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 16px", background: "transparent", borderBottom: idx < arr.length - 1 ? `1px solid ${T.border}` : "none", transition: "background 0.1s", cursor: "default" }}
+                      onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 500, minWidth: 110 }}>{label}</span>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ fontSize: 11, color: valColor || T.textPrimary, fontWeight: 500, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
+                        <span style={{ fontSize: 12, color: valColor || T.white, fontWeight: 600, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
                         {copyKey && <button type="button" onClick={() => copyToClipboard(u[copyKey], copyKey)} style={{ background: "none", border: "none", cursor: "pointer", color: copiedId === copyKey ? T.green : T.textMuted, padding: 0, display: "flex", alignItems: "center" }} title={`Copy ${label}`}>{copiedId === copyKey ? <IconCheck /> : <CopyIcon />}</button>}
                       </div>
                     </div>
@@ -1480,11 +1472,11 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           <div style={{ position: "relative" }} className="risk-btn-wrap">
             <button type="button" onClick={sendTrialExpiryEmails} disabled={sendingTrialEmails || atRiskCount === 0}
               style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${atRiskCount > 0 ? T.red + "60" : T.border}`, background: atRiskCount > 0 ? "rgba(239,68,68,0.06)" : "transparent", color: atRiskCount > 0 ? T.red : T.textMuted, cursor: atRiskCount > 0 ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", fontWeight: 600, opacity: sendingTrialEmails ? 0.6 : 1 }}>
-              {sendingTrialEmails ? "⏳ Sending..." : `⚠️ Email At-Risk (${atRiskCount})`}
+              {sendingTrialEmails ? "Sending..." : `Email At-Risk (${atRiskCount})`}
             </button>
             {atRiskCount > 0 && (
               <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: T.surface, border: `1px solid ${T.red}30`, borderRadius: 8, padding: "8px 12px", fontSize: 11, color: T.textMuted, whiteSpace: "nowrap", zIndex: 50, pointerEvents: "none", boxShadow: "0 8px 24px rgba(0,0,0,0.4)", opacity: 0, transition: "opacity 0.2s" }} className="risk-tooltip">
-                📧 Will email: {atRisk.map(u => u.name || u.email).join(", ")} · ≤{AT_RISK_DAYS} days left
+                Will email: {atRisk.map(u => u.name || u.email).join(", ")} · ≤{AT_RISK_DAYS} days left
               </div>
             )}
           </div>
@@ -1546,10 +1538,10 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginRight: 4 }}>Quick Views:</span>
         {[
-          { label: "⚠️ At Risk",      tier: "AtRisk" },    // FIX #3
-          { label: "🏆 Enterprise",   tier: "Enterprise" },
-          { label: "👤 Free Users",   tier: "Free" },
-          { label: "🚫 Suspended",    tier: "Suspended" },
+          { label: "At Risk",      tier: "AtRisk" },    // FIX #3
+          { label: "Enterprise",   tier: "Enterprise" },
+          { label: "Free Users",   tier: "Free" },
+          { label: "Suspended",    tier: "Suspended" },
           { label: "⌛ Expired",      tier: "Expired" },
         ].map(v => (
           <button key={v.label} type="button" onClick={() => { setTierFilter(v.tier); setPage(1); }}
@@ -1583,7 +1575,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
         <button type="button" onClick={() => setShowFilters(p => !p)}
           style={{ padding: "7px 12px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", border: `1px solid ${(showFilters || activeFilterCount > 0) ? T.teal : T.border}`, background: (showFilters || activeFilterCount > 0) ? "rgba(6,182,212,0.08)" : "transparent", color: (showFilters || activeFilterCount > 0) ? T.teal : T.textMuted }}>
-          ⚙️ Filters {activeFilterCount > 0 ? `• ${activeFilterCount}` : ""}
+          Filters {activeFilterCount > 0 ? `• ${activeFilterCount}` : ""}
         </button>
       </div>
 
@@ -1657,8 +1649,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           </div>
         ) : pagedUsers.length === 0 ? (
           <div style={{ textAlign: "center", padding: "56px 20px" }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>
-              {tierFilter === "Suspended" ? "⏸" : tierFilter === "Expired" ? "⌛" : tierFilter === "AtRisk" ? "⚠️" : "🔍"}
+            <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(100,116,139,0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", color: "#64748B" }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
             <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 6 }}>
               {tierFilter === "Suspended" ? "No suspended users" :
@@ -1706,7 +1698,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                     {u.suspended && <span style={{ fontSize: 9, color: T.red, fontWeight: 700, background: "rgba(239,68,68,0.12)", padding: "1px 5px", borderRadius: 4 }}>SUSPENDED</span>}
                     {u.role === "admin" && <span style={{ fontSize: 9, color: T.gold, fontWeight: 700, background: "rgba(212,168,67,0.12)", padding: "1px 5px", borderRadius: 4 }}>ADMIN</span>}
                     {/* FIX #33: notes badge is clickable */}
-                    {u.notes && <button type="button" onClick={() => { setNoteUser(u); setNoteText(u.notes || ""); }} title="Click to view/edit note" style={{ fontSize: 9, color: "#8B5CF6", background: "rgba(139,92,246,0.12)", padding: "1px 5px", borderRadius: 4, border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>📝</button>}
+                    {u.notes && <button type="button" onClick={() => { setNoteUser(u); setNoteText(u.notes || ""); }} title="Click to view/edit note" style={{ fontSize: 9, color: "#8B5CF6", background: "rgba(139,92,246,0.12)", padding: "1px 5px", borderRadius: 4, border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>note</button>}
                   </div>
                   <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2, display: "flex", alignItems: "center", gap: 4, overflow: "hidden" }}>
                     <span style={{ width: 5, height: 5, borderRadius: "50%", background: health.dot, display: "inline-block", flexShrink: 0 }} />
@@ -1761,9 +1753,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                   <EditIcon />
                 </button>
                 <button type="button" title="Send email" onClick={() => { setSendEmailUser(u); setEmailSubject(""); setEmailBody(""); }}
-                  style={{ width: 28, height: 28, borderRadius: 7, border: "1px solid rgba(59,130,246,0.3)", background: "rgba(59,130,246,0.06)", color: "#3B82F6", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>✉️</button>
+                  style={{ width: 28, height: 28, borderRadius: 7, border: "1px solid rgba(59,130,246,0.3)", background: "rgba(59,130,246,0.06)", color: "#3B82F6", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></button>
                 <button type="button" title="Delete user" onClick={() => setConfirmDelete(u)}
-                  style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${T.red}30`, background: `${T.red}06`, color: T.red, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>🗑️</button>
+                  style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${T.red}30`, background: `${T.red}06`, color: T.red, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
               </div>
             </div>
           );
@@ -1774,7 +1766,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <div className="users-table-mobile" style={{ flexDirection: "column", gap: 10 }}>
         {pagedUsers.length === 0 ? (
           <div style={{ textAlign: "center", padding: "40px 20px", background: T.surface, borderRadius: 16, border: `1px solid ${T.border}` }}>
-            <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(100,116,139,0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", color: "#64748B" }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
             <div style={{ fontSize: 14, color: T.textMuted }}>No users found</div>
           </div>
         ) : pagedUsers.map(u => {
@@ -1811,10 +1803,10 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 <button type="button" onClick={() => { setDrawerUser(u); setDrawerTab("details"); }} style={{ flex: 1, minWidth: 60, padding: "8px", borderRadius: 8, border: `1px solid ${T.gold}40`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>View →</button>
                 <button type="button" onClick={() => openEditUser(u)} style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} title="Edit"><EditIcon /></button>
-                <button type="button" onClick={() => setTagUser(u)} style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid rgba(139,92,246,0.3)", background: "rgba(139,92,246,0.06)", color: "#8B5CF6", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }} title="Tags">🏷️</button>
-                <button type="button" onClick={() => setConfirmSuspend(u)} style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.06)", color: "#F59E0B", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }} title={u.suspended ? "Unsuspend" : "Suspend"}>{u.suspended ? "✅" : "⏸"}</button>
-                <button type="button" onClick={() => { setSendEmailUser(u); setEmailSubject(""); setEmailBody(""); }} style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid rgba(59,130,246,0.3)", background: "rgba(59,130,246,0.06)", color: "#3B82F6", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>✉️</button>
-                <button type="button" onClick={() => setConfirmDelete(u)} style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${T.red}30`, background: `${T.red}06`, color: T.red, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🗑️</button>
+                <button type="button" onClick={() => setTagUser(u)} style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid rgba(139,92,246,0.3)", background: "rgba(139,92,246,0.06)", color: "#8B5CF6", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }} title="Tags"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></button>
+                <button type="button" onClick={() => setConfirmSuspend(u)} style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.06)", color: "#F59E0B", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }} title={u.suspended ? "Unsuspend" : "Suspend"}>{u.suspended ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>}</button>
+                <button type="button" onClick={() => { setSendEmailUser(u); setEmailSubject(""); setEmailBody(""); }} style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid rgba(59,130,246,0.3)", background: "rgba(59,130,246,0.06)", color: "#3B82F6", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></button>
+                <button type="button" onClick={() => setConfirmDelete(u)} style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${T.red}30`, background: `${T.red}06`, color: T.red, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
               </div>
             </div>
           );
@@ -2043,24 +2035,24 @@ export default function AdminPanel() {
     try {
       await setDoc(doc(db, "verifications", v.id), { status: "approved", reviewedAt: new Date().toISOString(), reviewedBy: adminUser?.email || "admin" }, { merge: true });
       await setDoc(doc(db, "users", v.uid), { verified: true, verifiedLevel: v.level || "basic", verifiedAt: new Date().toISOString() }, { merge: true });
-      notify("✅ User verified successfully");
+      notify("User verified successfully");
       fetchVerifications();
       fetchUsers();
-    } catch (e) { notify("❌ " + e.message); }
+    } catch (e) { notify("Error: " + e.message); }
   };
 
   const rejectVerification = async (v) => {
-    if (!rejectReason.trim()) { notify("❌ Please enter a rejection reason"); return; }
+    if (!rejectReason.trim()) { notify("Error: Please enter a rejection reason"); return; }
     if (!window.confirm(`⚠️ REJECT VERIFICATION\n\nUser: ${v.name || v.email}\nReason: ${rejectReason}\n\nThis will:\n• Reject their verification request\n• They will be notified to resubmit\n• Documents will be marked as rejected\n\nContinue?`)) return;
     try {
       await setDoc(doc(db, "verifications", v.id), { status: "rejected", rejectReason, reviewedAt: new Date().toISOString(), reviewedBy: adminUser?.email || "admin" }, { merge: true });
       await setDoc(doc(db, "users", v.uid), { verified: false, verifiedLevel: null }, { merge: true });
-      notify("✅ Verification rejected");
+      notify("Verification rejected");
       setRejectReason("");
       setReviewingUser(null);
       fetchVerifications();
       fetchUsers();
-    } catch (e) { notify("❌ " + e.message); }
+    } catch (e) { notify("Error: " + e.message); }
   };
 
   /* ─── USER STATS ─── */
@@ -2246,7 +2238,7 @@ export default function AdminPanel() {
       .slice(0, 5)
       .forEach(u => items.push({
         type: "signup", uid: u.uid, user: u,
-        time: u.createdAt, icon: "👤",
+        time: u.createdAt, icon: "user",
         label: `${u.name || u.email?.split("@")[0] || "New user"} signed up`,
         sub: u.tier || "free", color: T.gold,
       }));
@@ -2268,14 +2260,14 @@ export default function AdminPanel() {
     // New leads
     leads.slice(0, 3).forEach(l => items.push({
       type: "lead", uid: null, user: null,
-      time: l.createdAt, icon: "📋",
+      time: l.createdAt, icon: "lead",
       label: `New lead: ${l.name || l.email || "Anonymous"}`,
       sub: l.source || "website", color: T.teal,
     }));
     // Pending verifications
     verifications.filter(v => v.status === "pending").slice(0, 3).forEach(v => items.push({
       type: "verification", uid: v.userId, user: null,
-      time: v.submittedAt, icon: "🔍",
+      time: v.submittedAt, icon: "kyc",
       label: `KYC submitted by ${v.name || v.email || "User"}`,
       sub: "Pending review", color: "#F59E0B",
     }));
@@ -2328,7 +2320,7 @@ export default function AdminPanel() {
     a.href = URL.createObjectURL(blob);
     a.download = "emaar-projects-full-" + new Date().toISOString().slice(0,10) + ".csv";
     a.click();
-    notify("✅ Full export downloaded!");
+    notify("Full export downloaded!");
   };
 
   
@@ -2407,7 +2399,7 @@ export default function AdminPanel() {
 
   const saveProjectData = async (projectId, data) => {
     const errors = validateProjectData(data);
-    if (errors.length > 0) { notify("❌ " + errors[0]); return; }
+    if (errors.length > 0) { notify("Error: " + errors[0]); return; }
     setDataSaving(true);
     try {
       const clean = {};
@@ -2425,7 +2417,7 @@ export default function AdminPanel() {
         Object.keys(clean).forEach(k => { if (k !== "updatedAt" && k !== "updatedBy" && clean[k] !== oldDoc[k]) diff[k] = { old: oldDoc[k] ?? "—", new: clean[k] }; });
         await setDoc(doc(db, "auditLog", Date.now().toString()), { action: "project_update", projectId, changes: clean, diff, changedBy: adminUser?.email, changedAt: new Date().toISOString() });
       } catch(e) {}
-      notify("✅ Project data saved");
+      notify("Project data saved");
         if (clean.price) {
           try {
             await setDoc(doc(db, "priceHistory", String(projectId) + "_" + Date.now()), {
@@ -2441,7 +2433,7 @@ export default function AdminPanel() {
       else if (clean.status) sendAlertsToAllUsers(String(projectId), "Status Updated", clean.status, "");
       setEditingProject(null);
       fetchLiveData();
-    } catch (e) { notify("❌ Error: " + e.message); }
+    } catch (e) { notify("Error: Error: " + e.message); }
     setDataSaving(false);
   };
 
@@ -2453,10 +2445,10 @@ export default function AdminPanel() {
       clean.updatedBy = adminUser?.email || "admin";
       await setDoc(doc(db, "communityROI", communityKey), clean, { merge: true });
       try { await setDoc(doc(db, "auditLog", Date.now().toString()), { action: "community_update", communityKey, changedBy: adminUser?.email, changedAt: new Date().toISOString() }); } catch(e) {}
-      notify("✅ Community ROI saved");
+      notify("Community ROI saved");
       setEditingCommunity(null);
       fetchLiveData();
-    } catch (e) { notify("❌ Error: " + e.message); }
+    } catch (e) { notify("Error: Error: " + e.message); }
     setDataSaving(false);
   };
 
@@ -2471,10 +2463,10 @@ export default function AdminPanel() {
       });
       clean.updatedAt = new Date().toISOString();
       await setDoc(doc(db, "yieldData", yieldKey), clean, { merge: true });
-      notify("✅ Yield data saved");
+      notify("Yield data saved");
       setEditingYield(null);
       fetchLiveData();
-    } catch (e) { notify("❌ Error: " + e.message); }
+    } catch (e) { notify("Error: Error: " + e.message); }
     setDataSaving(false);
   };
 
@@ -2482,18 +2474,18 @@ export default function AdminPanel() {
     if (!window.confirm(`⚠️ RESET PROJECT DATA: ${projectId}\n\nThis will:\n• Remove all live Firestore overrides for this project\n• Dashboard will revert to default data.js values\n• Any custom prices, units, or details you edited will be lost\n\nContinue?`)) return;
     try {
       await deleteDoc(doc(db, "projectData", projectId));
-      notify("✅ Reset to defaults");
+      notify("Reset to defaults");
       fetchLiveData();
-    } catch (e) { notify("❌ " + e.message); }
+    } catch (e) { notify("Error: " + e.message); }
   };
 
   const resetCommunityROI = async (key) => {
     if (!window.confirm(`⚠️ RESET COMMUNITY ROI: ${key}\n\nThis will:\n• Remove all live yield/ROI overrides for this community\n• Dashboard will show default values from data.js\n• Any custom gross/net yield or rental data will be lost\n\nContinue?`)) return;
     try {
       await deleteDoc(doc(db, "communityROI", key));
-      notify("✅ Reset to defaults");
+      notify("Reset to defaults");
       fetchLiveData();
-    } catch (e) { notify("❌ " + e.message); }
+    } catch (e) { notify("Error: " + e.message); }
   };
 
   /* Merge live data with defaults */
@@ -2506,9 +2498,9 @@ export default function AdminPanel() {
       const data = { tier };
       if (tier === "pro_trial") { const end = new Date(); end.setDate(end.getDate() + 7); data.trialEnd = end.toISOString(); }
       await setDoc(doc(db, "users", uid), data, { merge: true });
-      notify(`✅ Tier updated to ${tier}`);
+      notify(`Tier updated to ${tier}`);
       fetchUsers();
-    } catch (e) { notify("❌ Error: " + e.message); }
+    } catch (e) { notify("Error: Error: " + e.message); }
   };
 
   const deleteUser = async (uid) => {
@@ -2517,10 +2509,10 @@ export default function AdminPanel() {
     try {
       await deleteDoc(doc(db, "users", uid));
       try { await deleteDoc(doc(db, "watchlists", uid)); } catch(e) {}
-      notify("✅ User deleted");
+      notify("User deleted");
       setExpandedUser(null);
       fetchUsers();
-    } catch (e) { notify("❌ " + e.message); }
+    } catch (e) { notify("Error: " + e.message); }
   };
 
   const suspendUser = async (uid) => {
@@ -2529,16 +2521,16 @@ export default function AdminPanel() {
     if (!window.confirm(`${isSuspended ? "UNSUSPEND" : "SUSPEND"} user: ${u?.name || u?.email}?\n\n${isSuspended ? "They will regain full dashboard access." : "They will be blocked from the dashboard immediately."}`)) return;
     try {
       await setDoc(doc(db, "users", uid), { suspended: !isSuspended, suspendedAt: isSuspended ? null : new Date().toISOString() }, { merge: true });
-      notify(`✅ User ${isSuspended ? "unsuspended" : "suspended"}`);
+      notify(`User ${isSuspended ? "unsuspended" : "suspended"}`);
       fetchUsers();
-    } catch (e) { notify("❌ " + e.message); }
+    } catch (e) { notify("Error: " + e.message); }
   };
 
   const sendResetEmail = async (email) => {
     try {
       await sendPasswordResetEmail(auth, email);
-      notify(`✅ Password reset email sent to ${email}`);
-    } catch (e) { notify("❌ Failed to send reset email"); }
+      notify(`Password reset email sent to ${email}`);
+    } catch (e) { notify("Error: Failed to send reset email"); }
   };
 
   const extendTrial = async (uid, days) => {
@@ -2546,9 +2538,9 @@ export default function AdminPanel() {
       const end = new Date();
       end.setDate(end.getDate() + days);
       await setDoc(doc(db, "users", uid), { tier: "pro_trial", trialEnd: end.toISOString() }, { merge: true });
-      notify(`✅ Trial extended by ${days} days`);
+      notify(`Trial extended by ${days} days`);
       fetchUsers();
-    } catch (e) { notify("❌ " + e.message); }
+    } catch (e) { notify("Error: " + e.message); }
   };
 
   const openEditUser = (u) => {
@@ -2571,17 +2563,17 @@ export default function AdminPanel() {
       const data = { ...editUserForm };
       if (data.trialEnd) data.trialEnd = new Date(data.trialEnd).toISOString();
       await setDoc(doc(db, "users", editingUser.uid), data, { merge: true });
-      notify("✅ User updated successfully");
+      notify("User updated successfully");
       setEditingUser(null);
       fetchUsers();
-    } catch (e) { notify("❌ " + e.message); }
+    } catch (e) { notify("Error: " + e.message); }
     setEditUserLoading(false);
   };
 
   const addUserManually = async () => {
-    if (!addUserForm.name.trim()) { notify("❌ Name is required"); return; }
-    if (!addUserForm.email.trim()) { notify("❌ Email is required"); return; }
-    if (!addUserForm.password || addUserForm.password.length < 6) { notify("❌ Password must be at least 6 characters"); return; }
+    if (!addUserForm.name.trim()) { notify("Error: Name is required"); return; }
+    if (!addUserForm.email.trim()) { notify("Error: Email is required"); return; }
+    if (!addUserForm.password || addUserForm.password.length < 6) { notify("Error: Password must be at least 6 characters"); return; }
     setAddUserLoading(true);
     // FIX #14: Use a secondary Firebase app instance so the admin stays logged in
     let tempApp = null;
@@ -2606,17 +2598,17 @@ export default function AdminPanel() {
         provider: "admin",
         emailVerified: false,
       });
-      notify(`✅ User "${addUserForm.name}" created — admin session preserved`);
+      notify(`User "${addUserForm.name}" created — admin session preserved`);
       setShowAddUser(false);
       setAddUserForm({ name: "", email: "", password: "", phone: "", country: "", tier: "free", role: "user", notes: "" });
       fetchUsers();
     } catch (e) {
       const msgs = {
-        "auth/email-already-in-use": "❌ Email already registered",
-        "auth/invalid-email": "❌ Invalid email address",
-        "auth/weak-password": "❌ Password too weak (min 6 chars)",
+        "auth/email-already-in-use": "Email already registered",
+        "auth/invalid-email": "Invalid email address",
+        "auth/weak-password": "Password too weak (min 6 chars)",
       };
-      notify(msgs[e.code] || "❌ " + e.message);
+      notify(msgs[e.code] || "Error: " + e.message);
     } finally {
       if (tempApp) { try { await deleteApp(tempApp); } catch(e) {} }
     }
@@ -2626,7 +2618,7 @@ export default function AdminPanel() {
   
   const saveNewProject = async (form) => {
     const errors = validateProjectData(form, true);
-    if (errors.length > 0) { notify("❌ " + errors[0]); return; }
+    if (errors.length > 0) { notify("Error: " + errors[0]); return; }
     setDataSaving(true);
     try {
       const newId = "custom_" + Date.now();
@@ -2635,11 +2627,11 @@ export default function AdminPanel() {
       await setDoc(doc(db, "projectData", String(newId)), projectDoc);
       await setDoc(doc(db, "projects", String(newId)), projectDoc);
       await setDoc(doc(db, "auditLog", Date.now().toString()), { action: "project_create", projectId: newId, changes: form, changedBy: adminUser?.email, changedAt: new Date().toISOString() });
-      notify("✅ Project added — live on dashboard!");
+      notify("Project added — live on dashboard!");
       setEditingProject(null);
       setProjectForm({});
       fetchLiveData();
-    } catch(e) { notify("❌ Error: " + e.message); }
+    } catch(e) { notify("Error: Error: " + e.message); }
     setDataSaving(false);
   };
 
@@ -2671,7 +2663,7 @@ export default function AdminPanel() {
     const rows = users.map(u => `${u.name || ""},${u.email || ""},${u.tier || "free"},${u.trialEnd ? (new Date(u.trialEnd) > now ? "Active" : "Expired") : "—"},${u.createdAt || ""}`).join("\n");
     const blob = new Blob([headers + rows], { type: "text/csv" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `dxb-users-${now.toISOString().slice(0, 10)}.csv`; a.click();
-    notify("✅ CSV exported");
+    notify("CSV exported");
   };
 
   const notify = (msg) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
@@ -2769,7 +2761,7 @@ export default function AdminPanel() {
       <style>{css}</style>
 
       {/* Toast */}
-      {toast && <div key={toast} className="toast-notify" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : T.red, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 99999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
+      {toast && <div key={toast} className="toast-notify" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: (toast.includes("failed") || toast.includes("Error") || toast.includes("required") || toast.includes("registered") || toast.includes("weak") || toast.includes("invalid") || toast.includes("Invalid") || toast.startsWith("Error:")) ? T.red : T.green, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 99999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
 
       {/* Mobile overlay */}
       <div className={`mobile-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
@@ -2898,12 +2890,12 @@ export default function AdminPanel() {
                       const days = trialDaysLeft(u);
                       emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `⚠️ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`, new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {});
                     });
-                    notify(`✅ Sent ${stats.atRisk} at-risk emails`);
+                    notify(`Sent ${stats.atRisk} at-risk emails`);
                   }},
                   stats.suspended > 0 && { key: "suspended", color: "#F59E0B", icon: "⏸", label: `${stats.suspended} suspended`, action: () => { setTab("users"); setTierFilter("Suspended"); } },
                   stats.expired > 0   && { key: "expired",   color: T.textMuted, icon: "⌛", label: `${stats.expired} expired`,   action: () => { setTab("users"); setTierFilter("Expired"); } },
-                  pendingVerifications > 0 && { key: "verif", color: "#8B5CF6", icon: "🔍", label: `${pendingVerifications} KYC`,  action: () => setTab("verification") },
-                  newLeadsToday > 0   && { key: "leads",  color: T.teal,    icon: "📋", label: `${newLeadsToday} leads`,     action: () => setTab("leads") },
+                  pendingVerifications > 0 && { key: "verif", color: "#8B5CF6", icon: "kyc", label: `${pendingVerifications} KYC`,  action: () => setTab("verification") },
+                  newLeadsToday > 0   && { key: "leads",  color: T.teal,    icon: "lead", label: `${newLeadsToday} leads`,     action: () => setTab("leads") },
                 ].filter(Boolean);
 
                 return (
@@ -2924,14 +2916,14 @@ export default function AdminPanel() {
                         urgentAlerts.map(a => (
                           <button key={a.key} type="button" onClick={a.action}
                             style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 20, border: `1px solid ${a.color}40`, background: `${a.color}10`, color: a.color, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
-                            <span style={{ fontSize: 11 }}>{a.icon}</span> {a.label}
+                            {a.label}
                           </button>
                         ))
                       )}
                     </div>
 
                     {/* Refresh only — actions belong in their respective tabs */}
-                    <button type="button" onClick={() => { fetchUsers(); fetchLeads(); fetchVerifications(); fetchAuditLog(); notify("✅ Refreshed"); }}
+                    <button type="button" onClick={() => { fetchUsers(); fetchLeads(); fetchVerifications(); fetchAuditLog(); notify("Refreshed"); }}
                       style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
                       title="Refresh all data">
                       ↻
@@ -2998,7 +2990,7 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Active Trials</div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.gold, lineHeight: 1 }}>{stats.proTrial}</div>
                     <div style={{ fontSize: 10, color: stats.atRisk > 0 ? T.red : T.textMuted, marginTop: 6, fontWeight: stats.atRisk > 0 ? 700 : 400 }}>
-                      {stats.atRisk > 0 ? `⚠️ ${stats.atRisk} at risk` : "No at-risk trials"}
+                      {stats.atRisk > 0 ? `${stats.atRisk} at risk` : "No at-risk trials"}
                     </div>
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{stats.expired} expired</div>
                     <div style={{ fontSize: 9, color: T.gold, marginTop: 4, opacity: 0.7 }}>click to view →</div>
@@ -3171,7 +3163,7 @@ export default function AdminPanel() {
                 </div>
                 {users.length === 0 ? (
                   <div style={{ padding: "32px 20px", textAlign: "center", color: T.textMuted, fontSize: 13 }}>
-                    <div style={{ fontSize: 28, marginBottom: 8 }}>👤</div>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(100,116,139,0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", color: "#64748B" }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
                     No users yet. <span style={{ color: T.gold, cursor: "pointer" }} onClick={() => setTab("users")}>Add the first user →</span>
                   </div>
                 ) : (
@@ -3209,7 +3201,7 @@ export default function AdminPanel() {
 
                 {activityFeed.length === 0 ? (
                   <div style={{ padding: "36px 20px", textAlign: "center" }}>
-                    <div style={{ fontSize: 28, marginBottom: 8 }}>📭</div>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(100,116,139,0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", color: "#64748B" }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-6l-2 3H10l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
                     <div style={{ fontSize: 13, color: T.textMuted }}>No recent activity yet.</div>
                     <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Events will appear here as users sign up, upgrade, and interact.</div>
                   </div>
@@ -3353,7 +3345,7 @@ export default function AdminPanel() {
 
                     {auditLog.length === 0 && (
                       <div style={{ padding: 48, textAlign: "center" }}>
-                        <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
+                        <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(100,116,139,0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", color: "#64748B" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
                         <div style={{ fontSize: 14, color: T.textSecondary, fontWeight: 600, marginBottom: 6 }}>No audit events yet</div>
                         <div style={{ fontSize: 12, color: T.textMuted }}>Events are recorded automatically when you update projects, communities, or yields.</div>
                       </div>
@@ -3362,14 +3354,14 @@ export default function AdminPanel() {
                     <div style={{ maxHeight: 500, overflowY: "auto" }}>
                       {auditLog.map((log, i) => {
                         const actionMeta = {
-                          project_update:    { label: "Project Updated",    color: T.blue,    icon: "✏️" },
-                          project_create:    { label: "Project Created",    color: T.green,   icon: "➕" },
-                          community_update:  { label: "Community Updated",  color: "#8B5CF6", icon: "🏘️" },
-                          tab_visibility:    { label: "Tab Visibility",     color: T.gold,    icon: "👁️" },
-                          user_tier_change:  { label: "User Tier Changed",  color: T.orange,  icon: "👤" },
-                          yield_update:      { label: "Yield Updated",      color: T.teal,    icon: "📈" },
+                          project_update:    { label: "Project Updated",    color: T.blue,    icon: "edit" },
+                          project_create:    { label: "Project Created",    color: T.green,   icon: "add" },
+                          community_update:  { label: "Community Updated",  color: "#8B5CF6", icon: "community" },
+                          tab_visibility:    { label: "Tab Visibility",     color: T.gold,    icon: "eye" },
+                          user_tier_change:  { label: "User Tier Changed",  color: T.orange,  icon: "user" },
+                          yield_update:      { label: "Yield Updated",      color: T.teal,    icon: "chart" },
                         };
-                        const meta = actionMeta[log.action] || { label: log.action || "Unknown", color: T.textMuted, icon: "🔧" };
+                        const meta = actionMeta[log.action] || { label: log.action || "Unknown", color: T.textMuted, icon: "tool" };
                         const timeAgo = (() => {
                           if (!log.changedAt) return "—";
                           const diff = Date.now() - new Date(log.changedAt).getTime();
@@ -3620,7 +3612,7 @@ export default function AdminPanel() {
                             {hasOverride && <span style={{ marginLeft: 8, fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 600 }}>LIVE DATA</span>}
                           </div>
                           <div style={{ display: "flex", gap: 8 }}>
-                            <button type="button" onClick={() => deleteProject(p.id)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>🗑 Delete Project</button>
+                            <button type="button" onClick={() => deleteProject(p.id)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Delete Project</button>
                             {hasOverride && <button type="button" onClick={() => resetProjectData(p.id)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.3)`, background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Reset to Default</button>}
                             <button type="button" onClick={() => setEditingProject(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
                           </div>
@@ -4079,7 +4071,7 @@ export default function AdminPanel() {
                 </div>
                 {leads.length === 0 ? (
                   <div style={{ textAlign: "center", padding: 60, color: T.textMuted }}>
-                    <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.3 }}>📭</div>
+                    <div style={{ width: 56, height: 56, borderRadius: 14, background: "rgba(100,116,139,0.08)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", color: "#64748B", opacity: 0.5 }}><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-6l-2 3H10l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary, marginBottom: 8 }}>No leads yet</div>
                     <div style={{ fontSize: 12, color: T.textMuted }}>Leads are captured when Pro users click WhatsApp or Email on any project.</div>
                   </div>
@@ -4414,7 +4406,7 @@ export default function AdminPanel() {
 
                     <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "14px 16px", border: `1px solid ${T.border}`, marginBottom: 20 }}>
                       <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, marginBottom: 10 }}>EMAIL CONTENTS</div>
-                      {["📊 Market Pulse — Revenue, profit, backlog", "🏆 Top 5 Yield Opportunities", "⏰ Upcoming Handovers (next 6 months)", "🛂 Golden Visa Eligible Projects", "🔗 Link back to dashboard"].map((item, i) => (
+                      {["Market Pulse — Revenue, profit, backlog", "Top 5 Yield Opportunities", "Upcoming Handovers (next 6 months)", "Golden Visa Eligible Projects", "Link back to dashboard"].map((item, i) => (
                         <div key={i} style={{ fontSize: 12, color: T.textSecondary, padding: "6px 0", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>{item}</div>
                       ))}
                     </div>
@@ -4426,7 +4418,7 @@ export default function AdminPanel() {
                     {lastResult && (
                       <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 10, background: lastResult.success ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)", border: `1px solid ${lastResult.success ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}` }}>
                         <div style={{ fontSize: 12, color: lastResult.success ? T.green : "#EF4444", fontWeight: 700 }}>
-                          {lastResult.success ? `✅ Sent to ${lastResult.sent}/${lastResult.total} users` : `❌ Error: ${lastResult.error}`}
+                          {lastResult.success ? `Sent to ${lastResult.sent}/${lastResult.total} users` : `Error: ${lastResult.error}`}
                         </div>
                       </div>
                     )}
@@ -4680,21 +4672,21 @@ export default function AdminPanel() {
               <Section title="Growth Milestones" sub="Track your progress towards key goals">
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
                   {[
-                    { label: "Platform Launch", target: 1, current: 1, icon: "🚀", date: "Mar 2026" },
-                    { label: "First 10 Users", target: 10, current: stats.total, icon: "👥" },
-                    { label: "First 50 Users", target: 50, current: stats.total, icon: "🎯" },
-                    { label: "First Paid User", target: 1, current: stats.paid, icon: "💳" },
-                    { label: "100 Users", target: 100, current: stats.total, icon: "💯" },
-                    { label: "AED 10K MRR", target: 10000, current: mrr, icon: "🏆" },
+                    { label: "Platform Launch", target: 1, current: 1, icon: "launch", date: "Mar 2026" },
+                    { label: "First 10 Users", target: 10, current: stats.total, icon: "users" },
+                    { label: "First 50 Users", target: 50, current: stats.total, icon: "target" },
+                    { label: "First Paid User", target: 1, current: stats.paid, icon: "card" },
+                    { label: "100 Users", target: 100, current: stats.total, icon: "hundred" },
+                    { label: "AED 10K MRR", target: 10000, current: mrr, icon: "trophy" },
                     { label: "500 Users", target: 500, current: stats.total, icon: "⭐" },
-                    { label: "AED 50K MRR", target: 50000, current: mrr, icon: "🏆" },
+                    { label: "AED 50K MRR", target: 50000, current: mrr, icon: "trophy" },
                   ].map((m, i) => {
                     const done = m.current >= m.target;
                     const pct = Math.min(Math.round((m.current / m.target) * 100), 100);
                     return (
                       <div key={i} className="chart-box fade-up" style={{ padding: 16, animationDelay: `${i * 0.04}s`, border: done ? `1px solid rgba(16,185,129,0.3)` : `1px solid ${T.border}` }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                          <span style={{ fontSize: 20 }}>{m.icon}</span>
+                          <span style={{ fontSize: 10, fontWeight: 800, color: T.gold, fontFamily: "'Outfit',sans-serif", letterSpacing: 0.5 }}>{m.icon === "trophy" ? "MRR" : m.icon === "launch" ? "GO" : m.icon === "users" || m.icon === "user" ? "USR" : m.icon === "target" ? "50" : m.icon === "card" ? "PAY" : m.icon === "hundred" ? "100" : m.label.slice(0,3).toUpperCase()}</span>
                           {done
                             ? <span style={{ fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green }}>✓ Done</span>
                             : <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted }}>{pct}%</span>
@@ -4993,7 +4985,7 @@ export default function AdminPanel() {
                   {/* BOTTOM — Selected tab config (full width) */}
                   {!selectedTabControl ? (
                     <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "32px 24px", textAlign: "center" }}>
-                      <div style={{ fontSize: 28, marginBottom: 10 }}>☝️</div>
+                      
                       <div style={{ fontSize: 14, fontWeight: 600, color: T.white, marginBottom: 6 }}>Select a tab above to configure</div>
                       <div style={{ fontSize: 12, color: T.textMuted }}>Click any tab card to set tier access or edit its data table in full width</div>
                     </div>
@@ -5020,7 +5012,7 @@ export default function AdminPanel() {
                                   color: minTier === tier ? TIER_COLORS[tier] : T.textMuted,
                                   transition: "all 0.15s", fontFamily: "'Outfit',sans-serif"
                                 }}>
-                                  {tier === "free" ? "🌐 Free" : tier === "pro" ? "⭐ Pro" : "💎 Enterprise"}
+                                  {tier === "free" ? "Free" : tier === "pro" ? "Pro" : "Enterprise"}
                                 </button>
                               );
                             })}
@@ -5038,7 +5030,7 @@ export default function AdminPanel() {
                               <div style={{ display: "flex", gap: 8 }}>
                                 <button type="button" onClick={addRow} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontFamily: "'Outfit',sans-serif" }}>+ Add Row</button>
                                 <button type="button" onClick={saveTabData} disabled={tabDataSaving} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.1)", color: T.gold, fontFamily: "'Outfit',sans-serif" }}>
-                                  {tabDataSaving ? "Saving…" : "💾 Save"}
+                                  {tabDataSaving ? "Saving…" : "Save"}
                                 </button>
                               </div>
                             </div>
@@ -5091,7 +5083,7 @@ export default function AdminPanel() {
                           </div>
                         ) : (
                           <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "32px 24px", textAlign: "center" }}>
-                            <div style={{ fontSize: 24, marginBottom: 10 }}>🔒</div>
+                            <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(100,116,139,0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", color: "#64748B" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
                             <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 6 }}>No editable data for this tab</div>
                             <div style={{ fontSize: 12, color: T.textMuted }}>This tab renders dynamic or user-specific data (Portfolio, Map, DXB Estimate, etc.) that can't be edited here.</div>
                           </div>
@@ -5113,7 +5105,7 @@ export default function AdminPanel() {
                 </div>
 
                 <div style={{ fontSize: 11, color: T.textMuted, padding: "8px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
-                  💡 Tabs marked <span style={{ color: T.blue }}>DATA</span> have editable tables. Click to open. Data saved to <code style={{ fontSize: 10 }}>Firestore/tabData/</code>. Note: dashboard must read from Firestore for edits to reflect live — hook this into each tab's data source for full live control.
+                  Tip: Tabs marked <span style={{ color: T.blue }}>DATA</span> have editable tables. Click to open. Data saved to <code style={{ fontSize: 10 }}>Firestore/tabData/</code>. Note: dashboard must read from Firestore for edits to reflect live — hook this into each tab's data source for full live control.
                 </div>
               </div>
             );
