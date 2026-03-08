@@ -3,6 +3,7 @@
    Matching dashboard design DNA: sidebar nav, KPI cards, sections
    ═══════════════════════════════════════════════════════════════ */
 import React, { useState, useEffect, useCallback } from "react";
+import ReactDOM from "react-dom";
 import { auth, db, storage, firebaseConfig } from "./firebase";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
@@ -1124,12 +1125,12 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     ];
 
     return (
-      <div style={{ position: "fixed", inset: 0, zIndex: 1500 }}>
-        {/* Backdrop — absolute, sits behind panel, click to close */}
-        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.38)", animation: "fadeBackdrop 0.2s ease" }} onClick={() => setDrawerUserWithCallback(null)} />
+      {/* Portal — renders at document.body, bypasses ALL stacking contexts */}
+      {ReactDOM.createPortal(
+      <div style={{ position: "fixed", inset: 0, zIndex: 1500, background: "rgba(0,0,0,0.38)", animation: "fadeBackdrop 0.2s ease" }} onClick={() => setDrawerUserWithCallback(null)}>
 
-        {/* Panel — fixed to right edge, full height, sits above backdrop */}
-        <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 520, background: T.bg, borderLeft: `1px solid ${T.border}`, boxShadow: "-24px 0 80px rgba(0,0,0,0.5)", overflowY: "auto", display: "flex", flexDirection: "column", animation: "slideIn 0.32s cubic-bezier(0.16,1,0.3,1)", zIndex: 1 }} onClick={e => e.stopPropagation()}>
+        {/* Panel — child of backdrop, stopPropagation prevents close on panel clicks */}
+        <div style={{ position: "absolute", top: 0, right: 0, width: 520, height: "100%", background: T.bg, borderLeft: `1px solid ${T.border}`, boxShadow: "-24px 0 80px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", overflow: "hidden", animation: "slideIn 0.32s cubic-bezier(0.16,1,0.3,1)" }} onClick={e => e.stopPropagation()}>
 
           {/* ── Header ── */}
           <div style={{ padding: "22px 24px 20px", borderBottom: `1px solid ${T.border}`, position: "relative", background: `linear-gradient(160deg, ${badge.color}0a 0%, transparent 60%)` }}>
@@ -1197,7 +1198,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           </div>
 
           {/* ── Tab body ── */}
-          <div style={{ padding: "20px 24px", flex: 1, minHeight: 480 }}>
+          <div style={{ padding: "20px 24px", flex: 1, minHeight: 0, overflowY: "auto" }}>
 
             {/* DETAILS */}
             {drawerTab === "details" && (
@@ -1408,6 +1409,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           </div>
         </div>
       </div>
+      , document.body
+      )}
     );
   };
 
