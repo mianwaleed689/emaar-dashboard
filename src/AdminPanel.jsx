@@ -167,6 +167,7 @@ select option { background: ${T.surface}; color: ${T.textPrimary}; }
   .admin-mobile-btn { display: flex !important; }
   .kpi-grid-4 { grid-template-columns: 1fr 1fr !important; }
   .kpi-grid-6 { grid-template-columns: 1fr 1fr !important; }
+  .kpi-grid-overview { grid-template-columns: repeat(2, 1fr) !important; }
   .chart-grid-2 { grid-template-columns: 1fr !important; }
   .chart-grid-3 { grid-template-columns: 1fr !important; }
   .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -179,6 +180,7 @@ select option { background: ${T.surface}; color: ${T.textPrimary}; }
 @media (max-width: 480px) {
   .kpi-grid-4 { grid-template-columns: 1fr !important; }
   .kpi-grid-6 { grid-template-columns: 1fr !important; }
+  .kpi-grid-overview { grid-template-columns: 1fr 1fr !important; }
   .edit-grid-3 { grid-template-columns: 1fr !important; }
   .users-kpi-grid { grid-template-columns: 1fr 1fr !important; }
 }
@@ -2951,16 +2953,103 @@ export default function AdminPanel() {
                 );
               })()}
 
-              <Section title="Platform Overview" sub="Real-time platform health & key metrics">
-                <div className="kpi-grid-6" style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12 }}>
-                  <KPI label="Total Users" value={stats.total} sub={`+${stats.today} today`} delay={1} />
-                  <KPI label="This Week" value={stats.thisWeek} sub={`${stats.thisMonth} this month`} delay={2} />
-                  <KPI label="Pro Trial" value={stats.proTrial} sub="Active trials" color={T.gold} delay={3} />
-                  <KPI label="Free / Expired" value={stats.freeExpired} sub={`${stats.expired} expired`} color={T.textMuted} delay={4} />
-                  <KPI label="Paid Users" value={stats.paid} sub={`${stats.pro} Pro · ${stats.enterprise} Ent`} color={T.teal} delay={5} />
-                  <KPI label="MRR" value={`AED ${mrr.toLocaleString()}`} sub={`ARR: AED ${arr.toLocaleString()}`} color={T.green} delay={6} />
+              {/* ══ STEP 3 — KPI CARDS WITH TRENDS ══ */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                  <div style={{ borderLeft: `3px solid ${T.gold}`, paddingLeft: 14 }}>
+                    <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.white, margin: 0 }}>Platform Overview</h2>
+                    <p style={{ fontSize: 12, color: T.textSecondary, margin: "3px 0 0" }}>Real-time platform health & key metrics</p>
+                  </div>
                 </div>
-              </Section>
+                <div className="kpi-grid-overview" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10 }}>
+
+                  {/* 1 — MRR */}
+                  <div className="kpi-card fade-up" style={{ animationDelay: "0.00s", cursor: "default" }}>
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.green, opacity: 0.7, borderRadius: "16px 16px 0 0" }} />
+                    <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>MRR</div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.green, lineHeight: 1 }}>AED {mrr.toLocaleString()}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>ARR: AED {arr.toLocaleString()}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 5 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: mrrTrend.dir === "up" ? T.green : mrrTrend.dir === "down" ? T.red : T.textMuted }}>
+                        {mrrTrend.dir === "up" ? "↑" : mrrTrend.dir === "down" ? "↓" : "—"} {mrrTrend.label}
+                      </span>
+                      <span style={{ fontSize: 9, color: T.textMuted }}>vs last week</span>
+                    </div>
+                  </div>
+
+                  {/* 2 — Total Users */}
+                  <div className="kpi-card fade-up" style={{ animationDelay: "0.04s", cursor: "pointer" }} onClick={() => setTab("users")}>
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.7, borderRadius: "16px 16px 0 0" }} />
+                    <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Total Users</div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.gold, lineHeight: 1 }}>{stats.total}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>+{stats.today} today</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 5 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: usersTrend.dir === "up" ? T.green : usersTrend.dir === "down" ? T.red : T.textMuted }}>
+                        {usersTrend.dir === "up" ? "↑" : usersTrend.dir === "down" ? "↓" : "—"} {usersTrend.label}
+                      </span>
+                      <span style={{ fontSize: 9, color: T.textMuted }}>vs last week</span>
+                    </div>
+                    <div style={{ fontSize: 9, color: T.gold, marginTop: 4, opacity: 0.7 }}>click to view →</div>
+                  </div>
+
+                  {/* 3 — Paid Users */}
+                  <div className="kpi-card fade-up" style={{ animationDelay: "0.08s", cursor: "pointer" }} onClick={() => { setTab("users"); setTierFilter("Pro"); }}>
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.teal, opacity: 0.7, borderRadius: "16px 16px 0 0" }} />
+                    <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Paid Users</div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.teal, lineHeight: 1 }}>{stats.paid}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{stats.pro} Pro · {stats.enterprise} Ent</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 5 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: T.teal }}>{stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0}%</span>
+                      <span style={{ fontSize: 9, color: T.textMuted }}>conversion rate</span>
+                    </div>
+                    <div style={{ fontSize: 9, color: T.teal, marginTop: 4, opacity: 0.7 }}>click to view →</div>
+                  </div>
+
+                  {/* 4 — Active Trials */}
+                  <div className="kpi-card fade-up" style={{ animationDelay: "0.12s", cursor: "pointer" }} onClick={() => { setTab("users"); setTierFilter("Pro Trial"); }}>
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.5, borderRadius: "16px 16px 0 0" }} />
+                    <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Active Trials</div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.gold, lineHeight: 1 }}>{stats.proTrial}</div>
+                    <div style={{ fontSize: 10, color: stats.atRisk > 0 ? T.red : T.textMuted, marginTop: 6, fontWeight: stats.atRisk > 0 ? 700 : 400 }}>
+                      {stats.atRisk > 0 ? `⚠️ ${stats.atRisk} at risk` : "No at-risk trials"}
+                    </div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{stats.expired} expired</div>
+                    <div style={{ fontSize: 9, color: T.gold, marginTop: 4, opacity: 0.7 }}>click to view →</div>
+                  </div>
+
+                  {/* 5 — Trial Conversion */}
+                  <div className="kpi-card fade-up" style={{ animationDelay: "0.16s", cursor: "default" }}>
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "#3B82F6", opacity: 0.7, borderRadius: "16px 16px 0 0" }} />
+                    <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Trial → Paid</div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: "#3B82F6", lineHeight: 1 }}>{trialConversion}%</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{stats.pro} converted</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{stats.expired} expired</div>
+                    <div style={{ marginTop: 6, height: 3, borderRadius: 2, background: T.surfaceAlt }}>
+                      <div style={{ width: `${trialConversion}%`, height: "100%", borderRadius: 2, background: "#3B82F6", transition: "width 0.6s ease" }} />
+                    </div>
+                  </div>
+
+                  {/* 6 — ARPU */}
+                  <div className="kpi-card fade-up" style={{ animationDelay: "0.20s", cursor: "default" }}>
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "#8B5CF6", opacity: 0.7, borderRadius: "16px 16px 0 0" }} />
+                    <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>ARPU</div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: "#8B5CF6", lineHeight: 1 }}>AED {arpu}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>per paying user</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>AED {arpuAll} all users</div>
+                  </div>
+
+                  {/* 7 — Active Today */}
+                  <div className="kpi-card fade-up" style={{ animationDelay: "0.24s", cursor: "pointer" }} onClick={() => setTab("users")}>
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.teal, opacity: 0.5, borderRadius: "16px 16px 0 0" }} />
+                    <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Active Today</div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.teal, lineHeight: 1 }}>{stats.activeToday}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{stats.activeThisWeek} this week</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{stats.total > 0 ? Math.round((stats.activeToday / stats.total) * 100) : 0}% of all users</div>
+                    <div style={{ fontSize: 9, color: T.teal, marginTop: 4, opacity: 0.7 }}>click to view →</div>
+                  </div>
+
+                </div>
+              </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 16, marginBottom: 28 }}>
                 <Chart title="Signup Timeline (14 Days)" sub={`${stats.thisWeek} this week`}>
