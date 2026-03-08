@@ -1846,6 +1846,14 @@ export default function EmaarDashboardV2() {
         setUser(firebaseUser.email || "");
         // Fetch user profile from Firestore
         try {
+          // Track last login timestamp every session
+          try {
+            await setDoc(doc(db, "users", firebaseUser.uid), {
+              lastLoginAt: new Date().toISOString(),
+              emailVerified: firebaseUser.emailVerified,
+              provider: firebaseUser.providerData?.[0]?.providerId || "email",
+            }, { merge: true });
+          } catch(e) {}
           const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
           if (userDoc.exists()) {
             const data = userDoc.data();
