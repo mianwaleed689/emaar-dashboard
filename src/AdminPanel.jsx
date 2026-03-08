@@ -6026,7 +6026,7 @@ export default function AdminPanel() {
                       const comm = emaarCommunities.find(c => c.district === key);
                       return (
                         <div key={key} className="chart-box fade-up" style={{ padding: 18, cursor: "pointer", border: editingCommunity === key ? `1px solid ${T.gold}` : `1px solid ${T.border}`, transition: "all .2s" }}
-                          onClick={() => { setEditingCommunity(key); setCommunityForm(liveCommunityROI[key] || {}); }}>
+                          onClick={() => { setEditingCommunity(key); setCommunityForm({ ...defaultCommunityROI[key], ...(liveCommunityROI[key] || {}) }); }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                             <div>
                               <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{comm?.name || key}</div>

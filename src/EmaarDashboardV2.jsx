@@ -1705,7 +1705,7 @@ export default function EmaarDashboardV2() {
         // Load live communityROI (merges with static)
         if (roiSnap.size > 0) {
           const roiOverrides = {};
-          roiSnap.forEach(d => { roiOverrides[d.id] = d.data(); });
+          roiSnap.forEach(d => { roiOverrides[d.id] = { ...communityROI[d.id], ...d.data() }; });
           setLiveCommunityROI(roiOverrides);
         }
 
@@ -6612,11 +6612,25 @@ export default function EmaarDashboardV2() {
 
               {/* ROI Estimate */}
               {(() => {
-                const roi = liveCommunityROI[selectedProject_.community] || communityROI[selectedProject_.community];
-                if (!roi) return null;
+                const _staticRoi = communityROI[selectedProject_.community] || {};
+                const _liveRoi = liveCommunityROI[selectedProject_.community] || {};
+                const roi = { ..._staticRoi, ..._liveRoi };
+                if (!roi || !roi.grossYield) return null;
                 const price = selectedProject_.price || 0;
-                const gross = roi.grossYield?.apt1 || roi.grossYield?.th || roi.grossYield?.villa || 0;
-                const net = roi.netYield?.apt1 || roi.netYield?.th || roi.netYield?.villa || 0;
+                /* Pick yield based on project type for accuracy */
+                const _type = (selectedProject_.type || '').toLowerCase();
+                const _isVilla = _type.includes('villa');
+                const _isTH = _type.includes('th') || _type.includes('townhouse');
+                const gross = _isVilla
+                  ? (roi.grossYield?.villa || roi.grossYield?.th || roi.grossYield?.apt1 || 0)
+                  : _isTH
+                    ? (roi.grossYield?.th || roi.grossYield?.villa || roi.grossYield?.apt1 || 0)
+                    : (roi.grossYield?.apt1 || roi.grossYield?.th || roi.grossYield?.villa || 0);
+                const net = _isVilla
+                  ? (roi.netYield?.villa || roi.netYield?.th || roi.netYield?.apt1 || 0)
+                  : _isTH
+                    ? (roi.netYield?.th || roi.netYield?.villa || roi.netYield?.apt1 || 0)
+                    : (roi.netYield?.apt1 || roi.netYield?.th || roi.netYield?.villa || 0);
                 const appr5 = roi.appreciation5yr || 0;
                 const projValue = price > 0 ? price * (1 + appr5/100) : 0;
                 const annualRent = roi.estRent?.apt1 || roi.estRent?.th || roi.estRent?.villa || 0;
@@ -6663,8 +6677,10 @@ export default function EmaarDashboardV2() {
 
               {/* ROI Calculator */}
               {(() => {
-                const roi = liveCommunityROI[selectedProject_.community] || communityROI[selectedProject_.community];
-                if (!roi) return null;
+                const _sr2 = communityROI[selectedProject_.community] || {};
+                const _lr2 = liveCommunityROI[selectedProject_.community] || {};
+                const roi = { ..._sr2, ..._lr2 };
+                if (!roi || !roi.grossYield) return null;
                 return (
                   <ProGate isPro={isPro} message="Unlock ROI Calculator" onUpgrade={() => setShowUpgrade(true)}>
                   <RoiCalculator project={selectedProject_} roi={roi} T={T} />
