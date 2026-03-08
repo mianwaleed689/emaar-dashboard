@@ -1,4 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════
+
+
+═══════════════════════════════════════════════════════════════
    DXB ANALYTICS — ADMIN PANEL
    Matching dashboard design DNA: sidebar nav, KPI cards, sections
    ═══════════════════════════════════════════════════════════════ */
@@ -252,6 +254,53 @@ const Chart = ({ title, sub, children }) => (
     {children}
   </div>
 );
+
+/* ─── HELP TIP — inline ? icon with hover tooltip ─── */
+const HelpTip = ({ text }) => {
+  const [show, setShow] = React.useState(false);
+  return (
+    <span style={{ position: "relative", display: "inline-flex", alignItems: "center", marginLeft: 5, verticalAlign: "middle" }}
+      onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
+      <span style={{ width: 14, height: 14, borderRadius: "50%", background: "rgba(212,168,67,0.15)", border: "1px solid rgba(212,168,67,0.3)", color: T.gold, fontSize: 9, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "help", lineHeight: 1, fontFamily: "'Outfit',sans-serif" }}>?</span>
+      {show && (
+        <span style={{ position: "absolute", bottom: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)", background: "rgba(4,9,15,0.97)", border: "1px solid rgba(212,168,67,0.25)", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: T.textSecondary, whiteSpace: "pre-wrap", minWidth: 200, maxWidth: 280, zIndex: 9999, lineHeight: 1.6, boxShadow: "0 8px 24px rgba(0,0,0,0.4)", pointerEvents: "none" }}>
+          {text}
+          <span style={{ position: "absolute", bottom: -5, left: "50%", transform: "translateX(-50%)", width: 8, height: 8, background: "rgba(4,9,15,0.97)", border: "1px solid rgba(212,168,67,0.25)", borderTop: "none", borderLeft: "none", transform: "translateX(-50%) rotate(45deg)" }} />
+        </span>
+      )}
+    </span>
+  );
+};
+
+/* ─── TAB HELP — collapsible how-to banner ─── */
+const TabHelp = ({ items }) => {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div style={{ marginBottom: 20, borderRadius: 12, border: `1px solid rgba(212,168,67,0.2)`, background: "rgba(212,168,67,0.04)", overflow: "hidden" }}>
+      <button type="button" onClick={() => setOpen(o => !o)}
+        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px", background: "transparent", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 15 }}>💡</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>How to use this section</span>
+        </div>
+        <span style={{ fontSize: 12, color: T.textMuted, transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .2s", display: "inline-block" }}>▼</span>
+      </button>
+      {open && (
+        <div style={{ padding: "4px 18px 16px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 }}>
+          {items.map((item, i) => (
+            <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <span style={{ fontSize: 18, lineHeight: 1, marginTop: 1 }}>{item.icon}</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 2 }}>{item.title}</div>
+                <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>{item.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 /* ═══════════════════════════════════════
    MAIN COMPONENT
@@ -5583,6 +5632,14 @@ export default function AdminPanel() {
                   </div>
                 }>
                   {/* Search */}
+                  <TabHelp items={[
+                    { icon: "✏️", title: "Edit a Project", desc: "Click any row to open the edit drawer. Change price, status, handover date, images and more." },
+                    { icon: "💾", title: "Save Goes Live", desc: "Clicking 'Save to Firestore' updates the project instantly on the dashboard for all users." },
+                    { icon: "📸", title: "Upload Images", desc: "Upload a project image via Cloudinary. It appears on the dashboard project card." },
+                    { icon: "☑️", title: "Bulk Edit", desc: "Check multiple projects using the checkboxes, then set price or status for all at once." },
+                    { icon: "📥", title: "Export / Import", desc: "Export all project data to Excel. Import updates via CSV for bulk data changes." },
+                    { icon: "🔄", title: "Default vs Live", desc: "'Default' means data comes from data.js. 'Live' means you've saved a Firestore override." },
+                  ]} />
                   <div style={{ position: "relative", maxWidth: 400, marginBottom: 16 }}>
                     <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</span>
                     <input value={dataSearch} onChange={e => setDataSearch(e.target.value)} placeholder="Search projects..."
@@ -5627,21 +5684,21 @@ export default function AdminPanel() {
                     const merged = getMergedProject(p);
                     const hasOverride = !!liveProjects[p.id];
                     const fields = [
-                      { key: "price", label: "Price (AED)", type: "number", placeholder: "e.g. 2500000" },
-                      { key: "ppsf", label: "Price/sqft (AED)", type: "number", placeholder: "e.g. 2200" },
-                      { key: "sqft", label: "Size (sqft)", type: "number", placeholder: "e.g. 1200" },
-                      { key: "status", label: "Status", type: "select", options: ["Selling", "Upcoming", "Sold Out", "Ready"] },
-                      { key: "handover", label: "Handover", type: "text", placeholder: "e.g. Q4 2027" },
-                      { key: "type", label: "Type", type: "select", options: ["Apartment", "Townhouse", "Villa", "Penthouse", "Duplex"] },
-                      { key: "beds", label: "Bedrooms", type: "text", placeholder: "e.g. 1-3 BR" },
-                      { key: "paymentPlan", label: "Payment Plan", type: "text", placeholder: "e.g. 80/20" },
-                      { key: "dldPpsf", label: "DLD PPSF (AED)", type: "number", placeholder: "e.g. 2100" },
-                       { key: "dataSource", label: "Data Source", type: "select", options: ["Emaar IR Report", "DLD Portal", "DXBinteract", "Manual Entry", "Agent Verified", "Market Research"] },
-                       { key: "lastVerified", label: "Last Verified Date", type: "text", placeholder: "e.g. Mar 2026" },
-                       { key: "availability", label: "Availability", type: "select", options: ["Available", "Sold Out", "Limited Units", "Coming Soon"] },
-                       { key: "unitsTotal", label: "Total Units", type: "number", placeholder: "e.g. 200" },
-                       { key: "unitsAvail", label: "Units Available", type: "number", placeholder: "e.g. 45" },
-                       { key: "notes", label: "Admin Notes", type: "text", placeholder: "Internal notes..." },
+                      { key: "price", label: "Price (AED)", type: "number", placeholder: "e.g. 2500000", tip: "Starting price of the project in AED. This appears on the project card on the dashboard." },
+                      { key: "ppsf", label: "Price/sqft (AED)", type: "number", placeholder: "e.g. 2200", tip: "Price per square foot. Used in yield calculations and shown in comparison tables." },
+                      { key: "sqft", label: "Size (sqft)", type: "number", placeholder: "e.g. 1200", tip: "Unit size in square feet. Used to calculate total price from PPSF." },
+                      { key: "status", label: "Status", type: "select", options: ["Selling", "Upcoming", "Sold Out", "Ready"], tip: "Current sales status. Shown as a badge on the project card." },
+                      { key: "handover", label: "Handover", type: "text", placeholder: "e.g. Q4 2027", tip: "Expected handover/completion date. Shown on the project detail page." },
+                      { key: "type", label: "Type", type: "select", options: ["Apartment", "Townhouse", "Villa", "Penthouse", "Duplex"], tip: "Property type used for filtering on the dashboard." },
+                      { key: "beds", label: "Bedrooms", type: "text", placeholder: "e.g. 1-3 BR", tip: "Available bedroom configurations, e.g. '1-3 BR' or 'Studio-4 BR'." },
+                      { key: "paymentPlan", label: "Payment Plan", type: "text", placeholder: "e.g. 80/20", tip: "Payment split — first % during construction, second % on handover." },
+                      { key: "dldPpsf", label: "DLD PPSF (AED)", type: "number", placeholder: "e.g. 2100", tip: "Dubai Land Department's registered price per sqft. Used for comparison vs asking price." },
+                      { key: "dataSource", label: "Data Source", type: "select", options: ["Emaar IR Report", "DLD Portal", "DXBinteract", "Manual Entry", "Agent Verified", "Market Research"], tip: "Where this data came from. Helps track data quality and credibility." },
+                      { key: "lastVerified", label: "Last Verified Date", type: "text", placeholder: "e.g. Mar 2026", tip: "When this data was last checked against a source. Helps keep data fresh." },
+                      { key: "availability", label: "Availability", type: "select", options: ["Available", "Sold Out", "Limited Units", "Coming Soon"], tip: "Current unit availability shown on the project card." },
+                      { key: "unitsTotal", label: "Total Units", type: "number", placeholder: "e.g. 200", tip: "Total number of units in the development." },
+                      { key: "unitsAvail", label: "Units Available", type: "number", placeholder: "e.g. 45", tip: "Number of units currently available for purchase." },
+                      { key: "notes", label: "Admin Notes", type: "text", placeholder: "Internal notes...", tip: "Private notes only visible to admins. Never shown to users." },
                     ];
                     return (
                       <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: `1px solid ${T.gold}30` }}>
@@ -5660,7 +5717,7 @@ export default function AdminPanel() {
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                           {fields.map(f => (
                             <div key={f.key}>
-                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "flex", alignItems: "center" }}>{f.label}{f.tip && <HelpTip text={f.tip} />}</label>
                               {f.type === "select" ? (
                                 <select value={projectForm[f.key] ?? merged[f.key] ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
                                   style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
@@ -5957,6 +6014,13 @@ export default function AdminPanel() {
                   })()}
 
                   {/* Community list */}
+                  <TabHelp items={[
+                    { icon: "🏘️", title: "What is Community ROI?", desc: "Each card represents a Dubai community (e.g. Dubai Hills Estate). The data here powers the Yields & ROI section on the main dashboard." },
+                    { icon: "📈", title: "Gross vs Net Yield", desc: "Gross yield is before costs. Net yield deducts service charge and management fees. Users see both." },
+                    { icon: "🏠", title: "Unit Types", desc: "APT1 = 1BR apartment, APT2 = 2BR, TH = Townhouse. Edit each unit type's yield separately." },
+                    { icon: "💹", title: "Appreciation", desc: "5Y Appreciation = total % growth over 5 years. YoY = last 12 months. These appear on community comparison charts." },
+                    { icon: "🔄", title: "Reset", desc: "Clicking Reset removes your override and reverts to the default data.js values." },
+                  ]} />
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
                     {Object.entries(defaultCommunityROI).map(([key, roi]) => {
                       const merged = getMergedROI(key);
@@ -6000,6 +6064,12 @@ export default function AdminPanel() {
                 <Section title="Yield Table Data" sub="Edit yield table entries shown in the Yields tab" action={
                   <button type="button" onClick={fetchLiveData} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
                 }>
+                  <TabHelp items={[
+                    { icon: "📊", title: "What is this table?", desc: "This is the yield comparison table users see on the dashboard. It shows rent, price and yield by unit type per community." },
+                    { icon: "🖊️", title: "How to edit", desc: "Click any row to open the edit form. Change rent, price, gross/net yield, demand level and Golden Visa eligibility." },
+                    { icon: "✅", title: "Save Goes Live", desc: "Changes save to Firestore and update immediately on the main dashboard Yields tab." },
+                    { icon: "🟢", title: "Live vs Default", desc: "Green 'Live' badge means you have a Firestore override. Grey means it's showing default data from data.js." },
+                  ]} />
                   {/* Editing form */}
                   {editingYield !== null && (() => {
                     const y = emaarYields[editingYield];
@@ -6146,6 +6216,13 @@ export default function AdminPanel() {
 
                 return (
                   <Section title="Price History" sub="Track and log price changes per project over time">
+                    <TabHelp items={[
+                      { icon: "📉", title: "What is this?", desc: "An audit trail of every price change per project. Automatically records when you save a new price in the Projects tab." },
+                      { icon: "🔍", title: "Select a Project", desc: "Choose any of the 48 projects from the dropdown. The chart and table will load its full price history." },
+                      { icon: "📝", title: "Manual Entry", desc: "Add historical price points manually — useful for logging past prices before the system was set up." },
+                      { icon: "❌", title: "Delete Entry", desc: "Click the × button on any row to remove that price entry. A confirmation will appear first." },
+                      { icon: "📈", title: "Chart", desc: "Gold line chart shows price trend over time. Needs at least 2 data points to appear." },
+                    ]} />
 
                     {/* ── PROJECT SELECTOR ── */}
                     <div style={{ display: "flex", gap: 10, alignItems: "flex-end", marginBottom: 24, flexWrap: "wrap" }}>
