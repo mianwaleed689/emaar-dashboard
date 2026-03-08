@@ -1124,12 +1124,12 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     ];
 
     return (
-      <div style={{ position: "fixed", inset: 0, zIndex: 1500, display: "flex", pointerEvents: "none" }}>
-        {/* Backdrop — lighter so table behind stays readable */}
-        <div style={{ flex: 1, background: "rgba(0,0,0,0.38)", animation: "fadeBackdrop 0.2s ease", pointerEvents: "auto" }} onClick={() => setDrawerUserWithCallback(null)} />
+      <div style={{ position: "fixed", inset: 0, zIndex: 1500 }}>
+        {/* Backdrop — absolute, sits behind panel, click to close */}
+        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.38)", animation: "fadeBackdrop 0.2s ease" }} onClick={() => setDrawerUserWithCallback(null)} />
 
-        {/* Panel — spring animation, box shadow for depth */}
-        <div style={{ width: 520, height: "100%", background: T.bg, borderLeft: `1px solid ${T.border}`, boxShadow: "-24px 0 80px rgba(0,0,0,0.5)", overflowY: "auto", display: "flex", flexDirection: "column", animation: "slideIn 0.32s cubic-bezier(0.16,1,0.3,1)", pointerEvents: "auto" }} onClick={e => e.stopPropagation()}>
+        {/* Panel — fixed to right edge, full height, sits above backdrop */}
+        <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 520, background: T.bg, borderLeft: `1px solid ${T.border}`, boxShadow: "-24px 0 80px rgba(0,0,0,0.5)", overflowY: "auto", display: "flex", flexDirection: "column", animation: "slideIn 0.32s cubic-bezier(0.16,1,0.3,1)", zIndex: 1 }} onClick={e => e.stopPropagation()}>
 
           {/* ── Header ── */}
           <div style={{ padding: "20px 24px 16px", borderBottom: `1px solid ${T.border}`, position: "relative" }}>
