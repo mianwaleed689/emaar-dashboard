@@ -3327,85 +3327,6 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* Row 2: MRR Movement chart (full width) */}
-              <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>MRR Movement — This Month</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>New revenue vs churn vs net</div>
-                  </div>
-                  <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>New MRR</div>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: T.green, fontFamily: "'Fraunces',serif" }}>+AED {newMRRThisMonth.toLocaleString()}</div>
-                    </div>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Churned</div>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: churnedMRR > 0 ? T.red : T.textMuted, fontFamily: "'Fraunces',serif" }}>-AED {churnedMRR.toLocaleString()}</div>
-                    </div>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Net MRR</div>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: netMRR >= 0 ? T.green : T.red, fontFamily: "'Fraunces',serif" }}>{netMRR >= 0 ? "+" : ""}AED {netMRR.toLocaleString()}</div>
-                    </div>
-                  </div>
-                </div>
-                <ResponsiveContainer width="100%" height={160}>
-                  <BarChart data={mrrMovement} layout="vertical" margin={{ left: 20, right: 30 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
-                    <XAxis type="number" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `AED ${v}`} />
-                    <YAxis type="category" dataKey="label" tick={{ fill: T.textSecondary, fontSize: 11 }} axisLine={false} tickLine={false} width={110} />
-                    <Tooltip content={<CustomTooltip />} formatter={v => [`AED ${Math.abs(v).toLocaleString()}`, ""]} />
-                    <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={22}>
-                      {mrrMovement.map((entry, i) => (
-                        <Cell key={i} fill={
-                          entry.label === "New MRR" ? T.green :
-                          entry.label === "Churned MRR" ? T.red :
-                          entry.label === "Net MRR" ? (netMRR >= 0 ? T.teal : T.red) :
-                          T.textMuted
-                        } />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Recent Signups — kept, now with empty state */}
-              <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Recent Signups</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Latest platform registrations</div>
-                  </div>
-                  <button type="button" onClick={() => setTab("users")} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>View All →</button>
-                </div>
-                {users.length === 0 ? (
-                  <div style={{ padding: "32px 20px", textAlign: "center", color: T.textMuted, fontSize: 13 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(100,116,139,0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", color: "#64748B" }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-                    No users yet. <span style={{ color: T.gold, cursor: "pointer" }} onClick={() => setTab("users")}>Add the first user →</span>
-                  </div>
-                ) : (
-                  [...users].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 5).map((u, i, arr) => {
-                    const badge = tierBadge(u);
-                    return (
-                      <div key={u.uid} className="fade-up" onClick={() => setTab("users")}
-                        style={{ display: "flex", alignItems: "center", padding: "13px 20px", borderBottom: i < arr.length - 1 ? `1px solid ${T.border}` : "none", animationDelay: `${i * 0.05}s`, gap: 14, cursor: "pointer", transition: "background 0.15s" }}
-                        onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
-                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                        <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${badge.color}30, ${badge.color}10)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, color: badge.color, flexShrink: 0 }}>
-                          {(u.name || u.email || "?")[0].toUpperCase()}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || u.email?.split("@")[0] || "Unknown"}</div>
-                          <div style={{ fontSize: 11, color: T.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</div>
-                        </div>
-                        <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 9px", borderRadius: 6, background: badge.bg, color: badge.color, flexShrink: 0 }}>{badge.label}</span>
-                        <span style={{ fontSize: 11, color: T.textMuted, flexShrink: 0 }}>{timeSince(u.createdAt)}</span>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-
               {/* ══ STEP 5 — CROSS-PLATFORM ACTIVITY FEED ══ */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Live Activity</div>
               <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 14 }}>
@@ -3466,96 +3387,158 @@ export default function AdminPanel() {
                 )}
               </div>
 
-              {/* ══ GEOGRAPHIC BREAKDOWN + BULK EMAIL ══ */}
-              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Users & Outreach</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }} className="charts-row-overview">
+              {/* ══ USER INTELLIGENCE + GEO ══ */}
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>User Intelligence</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 24 }} className="charts-row-overview">
 
-                {/* Geographic Breakdown */}
-                <div className="chart-box fade-up" style={{ padding: 20 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 14 }}>Geographic Breakdown</div>
+                {/* Needs Attention — trial users expiring */}
+                <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: `1px solid ${T.border}` }}>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>Expiring Trials</div>
+                      <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>Trials ending within 7 days</div>
+                    </div>
+                    {stats.atRisk > 0 && (
+                      <span style={{ fontSize: 9, fontWeight: 700, color: T.red, background: "rgba(239,68,68,0.1)", padding: "2px 8px", borderRadius: 20, border: "1px solid rgba(239,68,68,0.2)" }}>{stats.atRisk} at risk</span>
+                    )}
+                  </div>
                   {(() => {
-                    const countryCounts = {};
-                    users.forEach(u => {
-                      const c = u.country?.trim() || "Unknown";
-                      countryCounts[c] = (countryCounts[c] || 0) + 1;
-                    });
-                    const sorted = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
-                    const total = users.length || 1;
-                    const colors = [T.gold, T.teal, "#8B5CF6", "#3B82F6", "#F97316", T.textMuted];
-                    if (sorted.length === 0 || (sorted.length === 1 && sorted[0][0] === "Unknown")) return (
-                      <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 12 }}>
-                        No country data yet — collected on signup
+                    const expiring = users
+                      .filter(u => u.tier === "pro_trial" && u.trialEnd)
+                      .map(u => ({ ...u, daysLeft: trialDaysLeft(u) }))
+                      .filter(u => u.daysLeft >= 0 && u.daysLeft <= 7)
+                      .sort((a, b) => a.daysLeft - b.daysLeft);
+                    if (expiring.length === 0) return (
+                      <div style={{ padding: "28px 18px", textAlign: "center" }}>
+                        <div style={{ fontSize: 22, color: T.green, marginBottom: 6 }}>✓</div>
+                        <div style={{ fontSize: 12, color: T.textMuted }}>No trials expiring soon</div>
                       </div>
                     );
-                    return sorted.map(([country, count], i) => {
-                      const pct = Math.round((count / total) * 100);
+                    return expiring.map((u, i) => {
+                      const urgency = u.daysLeft <= 1 ? T.red : u.daysLeft <= 3 ? "#F59E0B" : T.gold;
                       return (
-                        <div key={i} style={{ marginBottom: 10 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                            <span style={{ fontSize: 12, color: T.textSecondary }}>{country}</span>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: colors[i] }}>{count} <span style={{ fontWeight: 400, color: T.textMuted }}>({pct}%)</span></span>
+                        <div key={i}
+                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 18px", borderBottom: i < expiring.length - 1 ? `1px solid ${T.border}` : "none", cursor: "pointer", transition: "background 0.15s" }}
+                          onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                          onClick={() => { setTab("users"); setPendingOpenUid(u.uid || u.id); }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: `${urgency}15`, border: `1px solid ${urgency}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: urgency, flexShrink: 0 }}>
+                            {u.daysLeft}d
                           </div>
-                          <div style={{ height: 4, background: T.surfaceAlt, borderRadius: 2 }}>
-                            <div style={{ width: `${pct}%`, height: "100%", background: colors[i], borderRadius: 2, transition: "width 0.6s ease" }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.name || u.email?.split("@")[0]}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</div>
                           </div>
+                          <button type="button"
+                            onClick={e => {
+                              e.stopPropagation();
+                              emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `Trial Expiring in ${u.daysLeft} Day${u.daysLeft !== 1 ? "s" : ""}`, new_value: `Only ${u.daysLeft} day${u.daysLeft !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").then(() => notify(`Email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
+                            }}
+                            style={{ fontSize: 10, fontWeight: 700, color: urgency, background: `${urgency}10`, border: `1px solid ${urgency}30`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
+                            Nudge
+                          </button>
                         </div>
                       );
                     });
                   })()}
                 </div>
 
-                {/* Bulk Outreach */}
-                <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.05s" }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 14 }}>Bulk Outreach</div>
-                  {[
-                    {
-                      label: "Email All Trial Users",
-                      count: stats.proTrial,
-                      color: T.gold,
-                      note: "Remind all active trials to upgrade",
-                      fn: () => {
-                        const trials = users.filter(u => u.tier === "pro_trial");
-                        if (!trials.length) { notify("No trial users to email"); return; }
-                        trials.forEach(u => emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: "Your Pro Trial is Active", new_value: "Make the most of your trial — explore all features before it ends.", old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {}));
-                        notify(`Sent to ${trials.length} trial users`);
-                      }
-                    },
-                    {
-                      label: "Email At-Risk Users",
-                      count: stats.atRisk,
-                      color: T.red,
-                      note: "Urgent nudge to users expiring ≤3 days",
-                      fn: () => {
-                        if (!stats.atRisk) { notify("No at-risk users"); return; }
-                        stats.atRiskUsers.forEach(u => { const days = trialDaysLeft(u); emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`, new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {}); });
-                        notify(`Sent ${stats.atRisk} at-risk emails`);
-                      }
-                    },
-                    {
-                      label: "Email All Free Users",
-                      count: stats.free,
-                      color: T.teal,
-                      note: "Convert free users to trial or paid",
-                      fn: () => {
-                        const free = users.filter(u => !u.tier || u.tier === "free");
-                        if (!free.length) { notify("No free users to email"); return; }
-                        free.forEach(u => emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: "Upgrade to Pro Trial", new_value: "Start your free 7-day Pro trial — full access to all features, no credit card required.", old_value: "Free Plan", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {}));
-                        notify(`Sent to ${free.length} free users`);
-                      }
-                    },
-                  ].map((item, i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < 2 ? `1px solid ${T.border}` : "none" }}>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{item.label} <span style={{ color: item.color, fontFamily: "'Fraunces',serif" }}>({item.count})</span></div>
-                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{item.note}</div>
-                      </div>
-                      <button type="button" onClick={item.fn}
-                        disabled={item.count === 0}
-                        style={{ fontSize: 11, fontWeight: 700, color: item.count === 0 ? T.textMuted : item.color, background: item.count === 0 ? "transparent" : `${item.color}15`, border: `1px solid ${item.count === 0 ? T.border : item.color + "40"}`, borderRadius: 8, padding: "5px 12px", cursor: item.count === 0 ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap", opacity: item.count === 0 ? 0.5 : 1 }}>
-                        Send
-                      </button>
+                {/* Free users — conversion opportunity */}
+                <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", animationDelay: "0.05s" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: `1px solid ${T.border}` }}>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>Free Users</div>
+                      <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>Conversion opportunities</div>
                     </div>
-                  ))}
+                    <span style={{ fontSize: 12, fontWeight: 800, color: T.teal, fontFamily: "'Fraunces',serif" }}>{stats.free}</span>
+                  </div>
+                  {(() => {
+                    const freeUsers = users
+                      .filter(u => !u.tier || u.tier === "free")
+                      .sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0))
+                      .slice(0, 5);
+                    if (freeUsers.length === 0) return (
+                      <div style={{ padding: "28px 18px", textAlign: "center" }}>
+                        <div style={{ fontSize: 12, color: T.textMuted }}>No free users right now</div>
+                      </div>
+                    );
+                    return freeUsers.map((u, i) => {
+                      const daysSinceJoin = Math.floor((new Date() - new Date(u.createdAt || 0)) / 86400000);
+                      const isWarm = daysSinceJoin >= 3; // been around long enough
+                      return (
+                        <div key={i}
+                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 18px", borderBottom: i < freeUsers.length - 1 ? `1px solid ${T.border}` : "none", cursor: "pointer", transition: "background 0.15s" }}
+                          onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                          onClick={() => { setTab("users"); setPendingOpenUid(u.uid || u.id); }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: `${T.teal}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: T.teal, flexShrink: 0 }}>
+                            {(u.name || u.email || "?")[0].toUpperCase()}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.name || u.email?.split("@")[0]}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted }}>{daysSinceJoin}d on free · {u.country || "no country"}</div>
+                          </div>
+                          {isWarm && (
+                            <button type="button"
+                              onClick={e => {
+                                e.stopPropagation();
+                                emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: "Start Your Free Pro Trial", new_value: "Try all Pro features free for 7 days — no credit card needed.", old_value: "Free Plan", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").then(() => notify(`Email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
+                              }}
+                              style={{ fontSize: 10, fontWeight: 700, color: T.teal, background: `${T.teal}10`, border: `1px solid ${T.teal}30`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
+                              Invite
+                            </button>
+                          )}
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+
+                {/* Geographic Breakdown */}
+                <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.1s" }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 4 }}>Geographic Breakdown</div>
+                  <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 14 }}>Country filled on signup</div>
+                  {(() => {
+                    const countryCounts = {};
+                    users.forEach(u => {
+                      const c = (u.country?.trim() && u.country.trim() !== "") ? u.country.trim() : null;
+                      if (c) countryCounts[c] = (countryCounts[c] || 0) + 1;
+                    });
+                    const sorted = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+                    const knownTotal = Object.values(countryCounts).reduce((s, v) => s + v, 0);
+                    const unknownCount = users.length - knownTotal;
+                    const total = users.length || 1;
+                    const colors = [T.gold, T.teal, "#8B5CF6", "#3B82F6", "#F97316", T.green];
+                    if (sorted.length === 0) return (
+                      <div style={{ textAlign: "center", padding: "24px 0" }}>
+                        <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 4 }}>No country data yet</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>Country is collected on email signup — Google sign-ins may not have it</div>
+                      </div>
+                    );
+                    return (
+                      <div>
+                        {sorted.map(([country, count], i) => {
+                          const pct = Math.round((count / total) * 100);
+                          return (
+                            <div key={i} style={{ marginBottom: 10 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                                <span style={{ fontSize: 12, color: T.textSecondary }}>{country}</span>
+                                <span style={{ fontSize: 12, fontWeight: 700, color: colors[i] }}>{count} <span style={{ fontWeight: 400, color: T.textMuted }}>({pct}%)</span></span>
+                              </div>
+                              <div style={{ height: 4, background: T.surfaceAlt, borderRadius: 2 }}>
+                                <div style={{ width: `${pct}%`, height: "100%", background: colors[i], borderRadius: 2, transition: "width 0.6s ease" }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {unknownCount > 0 && (
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
+                            {unknownCount} user{unknownCount !== 1 ? "s" : ""} without country data
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -3840,54 +3823,47 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* Trial Expiry Countdown */}
+                {/* Expired — never converted */}
                 <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.05s" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2 }}>Expiring Trials</div>
-                    <span style={{ fontSize: 10, color: T.textMuted }}>Next 7 days</span>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2 }}>Expired — Not Converted</div>
+                    <span style={{ fontSize: 10, color: stats.expired > 0 ? T.red : T.green, fontWeight: 700, background: stats.expired > 0 ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)", padding: "2px 8px", borderRadius: 20 }}>{stats.expired} total</span>
                   </div>
                   {(() => {
-                    const expiring = users
-                      .filter(u => u.tier === "pro_trial" && u.trialEnd)
-                      .map(u => ({ ...u, daysLeft: trialDaysLeft(u) }))
-                      .filter(u => u.daysLeft >= 0 && u.daysLeft <= 7)
-                      .sort((a, b) => a.daysLeft - b.daysLeft);
-
-                    if (expiring.length === 0) return (
-                      <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 12 }}>
-                        <div style={{ fontSize: 24, color: T.green, marginBottom: 8 }}>✓</div>
-                        No trials expiring in the next 7 days
+                    const expired = users
+                      .filter(u => u.tier === "free" && u.trialEnd && new Date(u.trialEnd) < new Date())
+                      .sort((a, b) => new Date(b.trialEnd) - new Date(a.trialEnd))
+                      .slice(0, 5);
+                    if (expired.length === 0) return (
+                      <div style={{ textAlign: "center", padding: "24px 0" }}>
+                        <div style={{ fontSize: 22, color: T.green, marginBottom: 6 }}>✓</div>
+                        <div style={{ fontSize: 12, color: T.textMuted }}>No expired trials yet</div>
                       </div>
                     );
-
-                    return expiring.map((u, i) => {
-                      const urgency = u.daysLeft <= 1 ? T.red : u.daysLeft <= 3 ? "#F59E0B" : T.gold;
+                    return expired.map((u, i) => {
+                      const expiredDaysAgo = Math.floor((new Date() - new Date(u.trialEnd)) / 86400000);
+                      const isRecoverable = expiredDaysAgo <= 14;
                       return (
-                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < expiring.length - 1 ? `1px solid ${T.border}` : "none" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <div style={{ width: 30, height: 30, borderRadius: 8, background: `${urgency}20`, border: `1px solid ${urgency}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: urgency }}>
-                              {u.daysLeft}d
-                            </div>
-                            <div>
-                              <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{u.name || u.email?.split("@")[0]}</div>
-                              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>{u.email}</div>
-                            </div>
+                        <div key={i}
+                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: i < expired.length - 1 ? `1px solid ${T.border}` : "none", cursor: "pointer", transition: "background 0.15s" }}
+                          onClick={() => { setTab("users"); setPendingOpenUid(u.uid || u.id); }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(239,68,68,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: T.red, flexShrink: 0 }}>
+                            {(u.name || u.email || "?")[0].toUpperCase()}
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              emailjs.send("service_da7nshv", "template_gl1xqhy", {
-                                user_email: u.email, user_name: u.name || u.email,
-                                project_name: "DXB Analytics",
-                                change_type: `Trial Expiring in ${u.daysLeft} Day${u.daysLeft !== 1 ? "s" : ""}`,
-                                new_value: `Upgrade now to keep access.`,
-                                old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE")
-                              }, "USkwUhp0csGCVDkdQ").then(() => notify(`Email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
-                            }}
-                            style={{ fontSize: 10, fontWeight: 700, color: urgency, background: `${urgency}15`, border: `1px solid ${urgency}40`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}
-                          >
-                            Send Email
-                          </button>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.name || u.email?.split("@")[0]}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted }}>Expired {expiredDaysAgo}d ago</div>
+                          </div>
+                          {isRecoverable && (
+                            <button type="button"
+                              onClick={e => {
+                                e.stopPropagation();
+                                emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: "Come Back — Special Offer", new_value: "Your trial ended but we'd love to have you back. Contact us for a special rate.", old_value: "Expired Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").then(() => notify(`Win-back email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
+                              }}
+                              style={{ fontSize: 10, fontWeight: 700, color: T.red, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
+                              Win-back
+                            </button>
+                          )}
                         </div>
                       );
                     });
