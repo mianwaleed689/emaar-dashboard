@@ -1916,7 +1916,6 @@ function setAlertThreshold(n) { _alertThreshold = n; }
 
 async function logAudit(db, payload) {
   try {
-    const { setDoc, doc } = await import("firebase/firestore");
     const ip = await getAdminIP();
     const changedBy = auth.currentUser?.email || "admin";
     const entry = { ...payload, changedBy, changedAt: new Date().toISOString(), ip };
@@ -1932,7 +1931,6 @@ async function logAudit(db, payload) {
 
 async function checkAlerts(db) {
   try {
-    const { getDocs, collection } = await import("firebase/firestore");
     const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     const snap = await getDocs(collection(db, "auditLog"));
     const recent = [];
@@ -2549,6 +2547,12 @@ export default function AdminPanel() {
   const [auditWebhookSaved, setAuditWebhookSaved] = useState(false);
   const [auditAlertThr, setAuditAlertThr] = useState(10);
   const [auditAlertSaved, setAuditAlertSaved] = useState(false);
+  const [apiKeys, setApiKeys] = useState([]);
+  const [apiKeyLabel, setApiKeyLabel] = useState("My Integration");
+  const [apiKeyGenerating, setApiKeyGenerating] = useState(false);
+  const [newApiKey, setNewApiKey] = useState(null);
+  const [apiKeyCopied, setApiKeyCopied] = useState(false);
+  const API_BASE = "https://us-central1-dxb-analytics.cloudfunctions.net/auditLogApi";
   const [editingCommunity, setEditingCommunity] = useState(null);
   const [editingYield, setEditingYield] = useState(null);
   const [liveProjects, setLiveProjects] = useState({});
@@ -2710,9 +2714,13 @@ export default function AdminPanel() {
         // Load persisted audit settings
         try {
           const wh = await gd(dc(db, "adminSettings", "auditWebhook"));
-          if (wh.exists() && wh.data().url) setAuditWebhook(wh.data().url);
+          if (wh.exists() && wh.data().url) { setAuditWebhook(wh.data().url); setAuditWebhookUrl(wh.data().url); }
           const thr = await gd(dc(db, "adminSettings", "auditAlertThreshold"));
-          if (thr.exists() && thr.data().threshold) setAlertThreshold(thr.data().threshold);
+          if (thr.exists() && thr.data().threshold) { setAlertThreshold(thr.data().threshold); setAuditAlertThr(thr.data().threshold); }
+          const ret = await gd(dc(db, "adminSettings", "auditRetention"));
+          if (ret.exists() && ret.data().days !== undefined) setAuditRetentionDays(ret.data().days);
+          const keysDoc = await gd(dc(db, "adminSettings", "apiKeys"));
+          if (keysDoc.exists()) setApiKeys(keysDoc.data().keys || []);
         } catch {}
       } catch (e) {
         // index not ready — fall back to polling every 10s
@@ -4687,6 +4695,122 @@ export default function AdminPanel() {
                               {auditAlertSaved ? "✓ Threshold Set" : "Save Threshold"}
                             </button>
                             <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>Alert sent via EmailJS to {adminUser?.email || "admin"}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* ══ REST API PANEL ══ */}
+                      <div style={{ marginTop: 20 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5 }}>REST API</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 10px", borderRadius: 6, background: `${T.green}12`, border: `1px solid ${T.green}30` }}>
+                            <div style={{ width: 5, height: 5, borderRadius: "50%", background: T.green }} />
+                            <span style={{ fontSize: 9, fontWeight: 800, color: T.green, letterSpacing: 0.5 }}>LIVE</span>
+                          </div>
+                          <span style={{ fontSize: 10, color: T.textMuted, fontFamily: "'Courier New', monospace" }}>{API_BASE}</span>
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+
+                          {/* API Key Generator */}
+                          <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.gold}30`, padding: "18px 20px" }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, marginBottom: 4 }}>🔑 Generate API Key</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 12 }}>Keys authenticate external systems. Each key is hashed — shown once only.</div>
+
+                            <input value={apiKeyLabel} onChange={e => setApiKeyLabel(e.target.value)}
+                              placeholder="Label e.g. Splunk Integration"
+                              style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", marginBottom: 8, boxSizing: "border-box" }} />
+
+                            <button type="button" disabled={apiKeyGenerating} onClick={async () => {
+                              setApiKeyGenerating(true); setNewApiKey(null);
+                              try {
+                                // Generate locally: dxb_ + 48 hex chars
+                                const arr = new Uint8Array(24);
+                                window.crypto.getRandomValues(arr);
+                                const raw = "dxb_" + Array.from(arr).map(b => b.toString(16).padStart(2,"0")).join("");
+                                // Hash with SubtleCrypto
+                                const enc = new TextEncoder().encode(raw);
+                                const hashBuf = await window.crypto.subtle.digest("SHA-256", enc);
+                                const hash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,"0")).join("");
+                                // Save hash to Firestore
+                                const existing = apiKeys || [];
+                                const newKeys = [...existing, { hash, label: apiKeyLabel || "API Key", createdAt: new Date().toISOString(), active: true, useCount: 0 }];
+                                await setDoc(doc(db, "adminSettings", "apiKeys"), { keys: newKeys });
+                                setApiKeys(newKeys);
+                                setNewApiKey(raw);
+                                await logAudit(db, { action: "api_key_generated", label: apiKeyLabel });
+                              } catch(e) { notify("Error generating key: " + e.message); }
+                              setApiKeyGenerating(false);
+                            }}
+                              style={{ width: "100%", padding: "9px 0", borderRadius: 9, border: `1px solid ${T.gold}40`, background: `${T.gold}12`, color: T.gold, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                              {apiKeyGenerating ? "Generating..." : "✦ Generate New Key"}
+                            </button>
+
+                            {newApiKey && (
+                              <div style={{ marginTop: 12, padding: "12px 14px", borderRadius: 10, background: `${T.green}08`, border: `1px solid ${T.green}30` }}>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: T.green, marginBottom: 6 }}>⚠️ Copy now — not shown again</div>
+                                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                  <div style={{ flex: 1, fontSize: 9, fontFamily: "'Courier New', monospace", color: T.white, wordBreak: "break-all", lineHeight: 1.4, background: T.surfaceAlt, padding: "6px 8px", borderRadius: 6 }}>{newApiKey}</div>
+                                  <button type="button" onClick={() => { navigator.clipboard.writeText(newApiKey); setApiKeyCopied(true); setTimeout(() => setApiKeyCopied(false), 2000); }}
+                                    style={{ padding: "6px 10px", borderRadius: 7, border: `1px solid ${apiKeyCopied ? T.green : T.border}`, background: apiKeyCopied ? `${T.green}15` : T.surfaceAlt, color: apiKeyCopied ? T.green : T.textSecondary, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700, flexShrink: 0 }}>
+                                    {apiKeyCopied ? "✓" : "Copy"}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Active keys list */}
+                            {apiKeys.filter(k => k.active !== false).length > 0 && (
+                              <div style={{ marginTop: 12 }}>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 6 }}>Active Keys</div>
+                                {apiKeys.filter(k => k.active !== false).map((k, i) => (
+                                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: `1px solid ${T.border}` }}>
+                                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, flexShrink: 0 }} />
+                                    <div style={{ flex: 1 }}>
+                                      <div style={{ fontSize: 11, fontWeight: 600, color: T.white }}>{k.label}</div>
+                                      <div style={{ fontSize: 9, color: T.textMuted }}>{k.createdAt?.slice(0,10)} · {k.useCount || 0} uses</div>
+                                    </div>
+                                    <button type="button" onClick={async () => {
+                                      const updated = apiKeys.map((key, idx) => idx === i ? { ...key, active: false, revokedAt: new Date().toISOString() } : key);
+                                      await setDoc(doc(db, "adminSettings", "apiKeys"), { keys: updated });
+                                      setApiKeys(updated);
+                                      await logAudit(db, { action: "api_key_revoked", label: k.label });
+                                      notify("Key revoked");
+                                    }} style={{ padding: "3px 8px", borderRadius: 5, border: "1px solid rgba(239,68,68,0.25)", background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 9, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                      Revoke
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* API Docs */}
+                          <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "18px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 2 }}>📡 API Reference</div>
+                            {[
+                              { method: "GET", path: "/health", auth: false, desc: "Health check — no auth required" },
+                              { method: "GET", path: "/logs", auth: true, desc: "Fetch events. Params: from, to, action, actor, ip, limit, offset, format=csv" },
+                              { method: "GET", path: "/stats", auth: true, desc: "Summary counts by action, today, this week, IP tracked, unique actors" },
+                              { method: "POST", path: "/apikey", auth: true, desc: "Generate a new API key. Body: { label, revokeHash }" },
+                            ].map((e, i) => (
+                              <div key={i} style={{ padding: "8px 10px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+                                  <span style={{ fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 4, background: e.method === "GET" ? `${T.blue}20` : `${T.green}20`, color: e.method === "GET" ? T.blue : T.green }}>{e.method}</span>
+                                  <span style={{ fontSize: 10, fontFamily: "'Courier New', monospace", color: T.gold }}>{e.path}</span>
+                                  {!e.auth && <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>public</span>}
+                                </div>
+                                <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.4 }}>{e.desc}</div>
+                              </div>
+                            ))}
+
+                            <div style={{ marginTop: 4, padding: "10px 12px", borderRadius: 8, background: `${T.gold}06`, border: `1px solid ${T.gold}20` }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, marginBottom: 4 }}>Authentication</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, fontFamily: "'Courier New', monospace", lineHeight: 1.8 }}>
+                                curl -H "X-API-Key: dxb_xxx..." \<br/>
+                                &nbsp;&nbsp;"{API_BASE}/logs?action=tier_change&limit=50"
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
