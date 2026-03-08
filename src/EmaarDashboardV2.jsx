@@ -6165,6 +6165,7 @@ export default function EmaarDashboardV2() {
             );
           })()}
 
+        </div>
 
         <footer style={{ borderTop: `1px solid ${T.border}`, padding: "20px 24px", textAlign: "center" }}>
           <p style={{ color: T.textMuted, fontSize: 11 }}>
