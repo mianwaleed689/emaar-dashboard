@@ -1908,6 +1908,7 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [adminUser, setAdminUser] = useState(null);
   const [tab, setTab] = useState("overview");
+  const [kpiDrill, setKpiDrill] = useState(null); // { title, color, items, chart, actions }
   const [tabSettings, setTabSettings] = useState({});
   const [tabSettingsSaving, setTabSettingsSaving] = useState(false);
   const [selectedTabControl, setSelectedTabControl] = useState(null);
@@ -2741,7 +2742,56 @@ export default function AdminPanel() {
 
   const notify = (msg) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
 
-  /* ─── FILTERED USERS ─── */
+  /* ─── KPI DRILL-DOWN MODAL ─── */
+  const KpiDrillModal = () => {
+    if (!kpiDrill) return null;
+    const { title, color, subtitle, items, chart, actions } = kpiDrill;
+    return (
+      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setKpiDrill(null)}>
+        <div style={{ background: T.surface, border: `1px solid ${color}40`, borderRadius: 20, padding: 28, width: "100%", maxWidth: 520, maxHeight: "85vh", overflowY: "auto", animation: "slideUp 0.2s ease-out", position: "relative" }} onClick={e => e.stopPropagation()}>
+          {/* Top accent */}
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${color}, ${color}00)`, borderRadius: "20px 20px 0 0" }} />
+          {/* Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 4 }}>{title}</div>
+              {subtitle && <div style={{ fontSize: 12, color: T.textSecondary }}>{subtitle}</div>}
+            </div>
+            <button type="button" onClick={() => setKpiDrill(null)} style={{ background: "none", border: `1px solid ${T.border}`, borderRadius: 8, width: 28, height: 28, cursor: "pointer", color: T.textMuted, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+          </div>
+          {/* Metric items */}
+          {items && items.map((item, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 0", borderBottom: i < items.length - 1 ? `1px solid ${T.border}` : "none" }}>
+              <div>
+                <div style={{ fontSize: 12, color: T.textSecondary }}>{item.label}</div>
+                {item.note && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{item.note}</div>}
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: item.color || color, fontFamily: "'Fraunces',serif" }}>{item.value}</div>
+            </div>
+          ))}
+          {/* Chart area */}
+          {chart && (
+            <div style={{ marginTop: 16, padding: "14px 0" }}>
+              {chart}
+            </div>
+          )}
+          {/* Action buttons */}
+          {actions && actions.length > 0 && (
+            <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
+              {actions.map((a, i) => (
+                <button key={i} type="button" onClick={() => { a.fn(); setKpiDrill(null); }}
+                  style={{ flex: 1, padding: "9px 14px", borderRadius: 10, border: `1px solid ${a.color || color}40`, background: `${a.color || color}10`, color: a.color || color, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+
   const filteredUsers = users
     .filter(u => {
       const ms = !userSearch || (u.name || "").toLowerCase().includes(userSearch.toLowerCase()) || (u.email || "").toLowerCase().includes(userSearch.toLowerCase()) || (u.phone || "").toLowerCase().includes(userSearch.toLowerCase());
@@ -2834,6 +2884,7 @@ export default function AdminPanel() {
       <style>{css}</style>
 
       {/* Toast */}
+      <KpiDrillModal />
       {toast && <div key={toast} className="toast-notify" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: (toast.includes("failed") || toast.includes("Error") || toast.includes("required") || toast.includes("registered") || toast.includes("weak") || toast.includes("invalid") || toast.includes("Invalid") || toast.startsWith("Error:")) ? T.red : T.green, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 99999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
 
       {/* Mobile overlay */}
@@ -3016,7 +3067,20 @@ export default function AdminPanel() {
                 <div className="kpi-grid-overview" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10 }}>
 
                   {/* 1 — MRR */}
-                  <div className="kpi-card fade-up" style={{ animationDelay: "0.00s", cursor: "default" }}>
+                  <div className="kpi-card fade-up" style={{ animationDelay: "0.00s", cursor: "pointer" }} onClick={() => setKpiDrill({
+                    title: "MRR Breakdown", color: T.green,
+                    subtitle: `Monthly Recurring Revenue · ARR: AED ${arr.toLocaleString()}`,
+                    items: [
+                      { label: "Total MRR", value: `AED ${mrr.toLocaleString()}`, color: T.green },
+                      { label: "Enterprise (AED 499/mo)", value: `${stats.enterprise} users · AED ${(stats.enterprise * 499).toLocaleString()}`, note: "AED 499 × users" },
+                      { label: "Pro (AED 99/mo)", value: `${stats.pro} users · AED ${(stats.pro * 99).toLocaleString()}`, note: "AED 99 × users" },
+                      { label: "Annual Run Rate (ARR)", value: `AED ${arr.toLocaleString()}`, color: T.green },
+                      { label: "New MRR this month", value: `+AED ${newMRRThisMonth.toLocaleString()}`, color: T.green },
+                      { label: "Churned MRR this month", value: `-AED ${churnedMRR.toLocaleString()}`, color: churnedMRR > 0 ? T.red : T.textMuted },
+                      { label: "Net MRR Movement", value: `${netMRR >= 0 ? "+" : ""}AED ${netMRR.toLocaleString()}`, color: netMRR >= 0 ? T.green : T.red },
+                    ],
+                    actions: [{ label: "View Revenue Tab", color: T.green, fn: () => setTab("revenue") }]
+                  })}>
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.green, opacity: 0.7, borderRadius: "16px 16px 0 0" }} />
                     <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>MRR</div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.green, lineHeight: 1 }}>AED {mrr.toLocaleString()}</div>
@@ -3030,7 +3094,20 @@ export default function AdminPanel() {
                   </div>
 
                   {/* 2 — Total Users */}
-                  <div className="kpi-card fade-up" style={{ animationDelay: "0.04s", cursor: "pointer" }} onClick={() => setTab("users")}>
+                  <div className="kpi-card fade-up" style={{ animationDelay: "0.04s", cursor: "pointer" }} onClick={() => setKpiDrill({
+                    title: "Total Users Breakdown", color: T.gold,
+                    subtitle: `${stats.total} registered accounts · ${stats.today} joined today`,
+                    items: [
+                      { label: "Total Registered", value: stats.total, color: T.gold },
+                      { label: "Joined Today", value: stats.today, color: stats.today > 0 ? T.green : T.textMuted },
+                      { label: "Joined This Week", value: users.filter(u => { try { return (now - new Date(u.createdAt)) < 7*24*60*60*1000; } catch { return false; } }).length },
+                      { label: "Joined This Month", value: users.filter(u => { try { const d = new Date(u.createdAt); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); } catch { return false; } }).length },
+                      { label: "Admin Accounts", value: users.filter(u => u.role === "admin").length },
+                      { label: "Suspended", value: stats.suspended, color: stats.suspended > 0 ? T.red : T.textMuted },
+                      { label: "Email Verified", value: users.filter(u => u.emailVerified).length, note: `${stats.total > 0 ? Math.round((users.filter(u => u.emailVerified).length / stats.total) * 100) : 0}% of total` },
+                    ],
+                    actions: [{ label: "View All Users", color: T.gold, fn: () => setTab("users") }]
+                  })}>
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.7, borderRadius: "16px 16px 0 0" }} />
                     <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Total Users</div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.gold, lineHeight: 1 }}>{stats.total}</div>
@@ -3045,7 +3122,22 @@ export default function AdminPanel() {
                   </div>
 
                   {/* 3 — Paid Users */}
-                  <div className="kpi-card fade-up" style={{ animationDelay: "0.08s", cursor: "pointer" }} onClick={() => { setTab("users"); setTierFilter("Pro"); }}>
+                  <div className="kpi-card fade-up" style={{ animationDelay: "0.08s", cursor: "pointer" }} onClick={() => setKpiDrill({
+                    title: "Paid Users Breakdown", color: T.teal,
+                    subtitle: `${stats.paid} paying accounts · AED ${mrr.toLocaleString()} MRR`,
+                    items: [
+                      { label: "Total Paid", value: stats.paid, color: T.teal },
+                      { label: "Pro (AED 99/mo)", value: stats.pro, note: `AED ${(stats.pro * 99).toLocaleString()} MRR` },
+                      { label: "Enterprise (AED 499/mo)", value: stats.enterprise, note: `AED ${(stats.enterprise * 499).toLocaleString()} MRR`, color: T.gold },
+                      { label: "Conversion Rate", value: `${stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0}%`, note: "Paid ÷ Total Users" },
+                      { label: "Trial → Paid Rate", value: `${trialConversion}%`, note: "Of all who ever trialled" },
+                      { label: "ARPU (paying users)", value: `AED ${arpu}`, color: T.teal },
+                    ],
+                    actions: [
+                      { label: "View Pro Users", color: T.teal, fn: () => { setTab("users"); setTierFilter("Pro"); } },
+                      { label: "View Enterprise", color: T.gold, fn: () => { setTab("users"); setTierFilter("Enterprise"); } },
+                    ]
+                  })}>
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.teal, opacity: 0.7, borderRadius: "16px 16px 0 0" }} />
                     <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Paid Users</div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.teal, lineHeight: 1 }}>{stats.paid}</div>
@@ -3058,7 +3150,22 @@ export default function AdminPanel() {
                   </div>
 
                   {/* 4 — Active Trials */}
-                  <div className="kpi-card fade-up" style={{ animationDelay: "0.12s", cursor: "pointer" }} onClick={() => { setTab("users"); setTierFilter("Pro Trial"); }}>
+                  <div className="kpi-card fade-up" style={{ animationDelay: "0.12s", cursor: "pointer" }} onClick={() => setKpiDrill({
+                    title: "Active Trials Breakdown", color: T.gold,
+                    subtitle: `${stats.proTrial} users on 7-day Pro Trial`,
+                    items: [
+                      { label: "Active Trials", value: stats.proTrial, color: T.gold },
+                      { label: "At Risk (≤3 days left)", value: stats.atRisk, color: stats.atRisk > 0 ? T.red : T.textMuted, note: stats.atRisk > 0 ? "Need immediate attention" : "None at risk" },
+                      { label: "Expiring in 7 days", value: users.filter(u => u.tier === "pro_trial" && u.trialEnd && trialDaysLeft(u) >= 0 && trialDaysLeft(u) <= 7).length, color: T.gold },
+                      { label: "Expired (not converted)", value: stats.expired, color: stats.expired > 0 ? T.red : T.textMuted },
+                      { label: "Trial → Paid conversion", value: `${trialConversion}%`, note: `${stats.pro} converted of ${everTrialled} ever trialled` },
+                      { label: "Avg days left (active)", value: (() => { const active = users.filter(u => u.tier === "pro_trial"); if (!active.length) return "—"; const avg = active.reduce((s, u) => s + Math.max(0, trialDaysLeft(u)), 0) / active.length; return `${Math.round(avg)} days`; })() },
+                    ],
+                    actions: [
+                      { label: `Email All ${stats.atRisk} At-Risk`, color: T.red, fn: () => { stats.atRiskUsers.forEach(u => { const days = trialDaysLeft(u); emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`, new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {}); }); notify(`Sent ${stats.atRisk} at-risk emails`); } },
+                      { label: "View Trial Users", color: T.gold, fn: () => { setTab("users"); setTierFilter("Pro Trial"); } },
+                    ]
+                  })}>
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.5, borderRadius: "16px 16px 0 0" }} />
                     <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Active Trials</div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.gold, lineHeight: 1 }}>{stats.proTrial}</div>
@@ -3070,7 +3177,20 @@ export default function AdminPanel() {
                   </div>
 
                   {/* 5 — Trial Conversion */}
-                  <div className="kpi-card fade-up" style={{ animationDelay: "0.16s", cursor: "default" }}>
+                  <div className="kpi-card fade-up" style={{ animationDelay: "0.16s", cursor: "pointer" }} onClick={() => setKpiDrill({
+                    title: "Trial → Paid Conversion", color: "#3B82F6",
+                    subtitle: "How effectively trials convert to paying users",
+                    items: [
+                      { label: "Conversion Rate", value: `${trialConversion}%`, color: "#3B82F6" },
+                      { label: "Ever Trialled", value: everTrialled, note: "Unique users who started a trial" },
+                      { label: "Converted to Paid", value: stats.pro, color: T.green },
+                      { label: "Currently on Trial", value: stats.proTrial },
+                      { label: "Expired (not converted)", value: stats.expired, color: stats.expired > 0 ? T.red : T.textMuted },
+                      { label: "Industry Benchmark", value: "~25%", note: "SaaS avg trial conversion", color: T.textMuted },
+                      { label: "vs Benchmark", value: trialConversion >= 25 ? `+${trialConversion - 25}% above` : `${trialConversion - 25}% below`, color: trialConversion >= 25 ? T.green : T.red },
+                    ],
+                    actions: [{ label: "View Expired Trials", color: "#3B82F6", fn: () => { setTab("users"); setTierFilter("Expired"); } }]
+                  })}>
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "#3B82F6", opacity: 0.7, borderRadius: "16px 16px 0 0" }} />
                     <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Trial → Paid</div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: "#3B82F6", lineHeight: 1 }}>{trialConversion}%</div>
@@ -3082,7 +3202,18 @@ export default function AdminPanel() {
                   </div>
 
                   {/* 6 — ARPU */}
-                  <div className="kpi-card fade-up" style={{ animationDelay: "0.20s", cursor: "default" }}>
+                  <div className="kpi-card fade-up" style={{ animationDelay: "0.20s", cursor: "pointer" }} onClick={() => setKpiDrill({
+                    title: "ARPU Breakdown", color: "#8B5CF6",
+                    subtitle: "Average Revenue Per User",
+                    items: [
+                      { label: "ARPU (paying users)", value: `AED ${arpu}`, color: "#8B5CF6" },
+                      { label: "ARPU (all users)", value: `AED ${arpuAll}`, note: "MRR ÷ total users" },
+                      { label: "Enterprise ARPU", value: "AED 499", note: "Per enterprise user/mo" },
+                      { label: "Pro ARPU", value: "AED 99", note: "Per pro user/mo" },
+                      { label: "LTV estimate (12mo)", value: `AED ${(arpu * 12).toLocaleString()}`, note: "ARPU × 12 months", color: "#8B5CF6" },
+                      { label: "To reach AED 10K MRR", value: (() => { if (arpu === 0) return "—"; const needed = Math.ceil((10000 - mrr) / arpu); return needed > 0 ? `${needed} more paid users` : "Already exceeded"; })(), note: "At current ARPU" },
+                    ],
+                  })}>
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "#8B5CF6", opacity: 0.7, borderRadius: "16px 16px 0 0" }} />
                     <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>ARPU</div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: "#8B5CF6", lineHeight: 1 }}>AED {arpu}</div>
@@ -3091,7 +3222,19 @@ export default function AdminPanel() {
                   </div>
 
                   {/* 7 — Active Today */}
-                  <div className="kpi-card fade-up" style={{ animationDelay: "0.24s", cursor: "pointer" }} onClick={() => setTab("users")}>
+                  <div className="kpi-card fade-up" style={{ animationDelay: "0.24s", cursor: "pointer" }} onClick={() => setKpiDrill({
+                    title: "User Activity", color: T.teal,
+                    subtitle: "Login and engagement metrics",
+                    items: [
+                      { label: "Active Today", value: stats.activeToday, color: T.teal },
+                      { label: "Active This Week", value: stats.activeThisWeek },
+                      { label: "Daily Active Rate", value: `${stats.total > 0 ? Math.round((stats.activeToday / stats.total) * 100) : 0}%`, note: "Today ÷ total users" },
+                      { label: "Weekly Active Rate", value: `${stats.total > 0 ? Math.round((stats.activeThisWeek / stats.total) * 100) : 0}%`, note: "7-day ÷ total users" },
+                      { label: "Never Logged In", value: users.filter(u => !u.lastLoginAt).length, color: users.filter(u => !u.lastLoginAt).length > 0 ? "#F59E0B" : T.textMuted, note: "Registered but never signed in" },
+                      { label: "Industry DAU/MAU Benchmark", value: "~15–20%", color: T.textMuted, note: "Healthy SaaS range" },
+                    ],
+                    actions: [{ label: "View Active Users", color: T.teal, fn: () => setTab("users") }]
+                  })}>
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.teal, opacity: 0.5, borderRadius: "16px 16px 0 0" }} />
                     <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Active Today</div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.teal, lineHeight: 1 }}>{stats.activeToday}</div>
@@ -3321,6 +3464,99 @@ export default function AdminPanel() {
                     </div>
                   ))
                 )}
+              </div>
+
+              {/* ══ GEOGRAPHIC BREAKDOWN + BULK EMAIL ══ */}
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Users & Outreach</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }} className="charts-row-overview">
+
+                {/* Geographic Breakdown */}
+                <div className="chart-box fade-up" style={{ padding: 20 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 14 }}>Geographic Breakdown</div>
+                  {(() => {
+                    const countryCounts = {};
+                    users.forEach(u => {
+                      const c = u.country?.trim() || "Unknown";
+                      countryCounts[c] = (countryCounts[c] || 0) + 1;
+                    });
+                    const sorted = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+                    const total = users.length || 1;
+                    const colors = [T.gold, T.teal, "#8B5CF6", "#3B82F6", "#F97316", T.textMuted];
+                    if (sorted.length === 0 || (sorted.length === 1 && sorted[0][0] === "Unknown")) return (
+                      <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 12 }}>
+                        No country data yet — collected on signup
+                      </div>
+                    );
+                    return sorted.map(([country, count], i) => {
+                      const pct = Math.round((count / total) * 100);
+                      return (
+                        <div key={i} style={{ marginBottom: 10 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                            <span style={{ fontSize: 12, color: T.textSecondary }}>{country}</span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: colors[i] }}>{count} <span style={{ fontWeight: 400, color: T.textMuted }}>({pct}%)</span></span>
+                          </div>
+                          <div style={{ height: 4, background: T.surfaceAlt, borderRadius: 2 }}>
+                            <div style={{ width: `${pct}%`, height: "100%", background: colors[i], borderRadius: 2, transition: "width 0.6s ease" }} />
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+
+                {/* Bulk Outreach */}
+                <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.05s" }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 14 }}>Bulk Outreach</div>
+                  {[
+                    {
+                      label: "Email All Trial Users",
+                      count: stats.proTrial,
+                      color: T.gold,
+                      note: "Remind all active trials to upgrade",
+                      fn: () => {
+                        const trials = users.filter(u => u.tier === "pro_trial");
+                        if (!trials.length) { notify("No trial users to email"); return; }
+                        trials.forEach(u => emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: "Your Pro Trial is Active", new_value: "Make the most of your trial — explore all features before it ends.", old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {}));
+                        notify(`Sent to ${trials.length} trial users`);
+                      }
+                    },
+                    {
+                      label: "Email At-Risk Users",
+                      count: stats.atRisk,
+                      color: T.red,
+                      note: "Urgent nudge to users expiring ≤3 days",
+                      fn: () => {
+                        if (!stats.atRisk) { notify("No at-risk users"); return; }
+                        stats.atRiskUsers.forEach(u => { const days = trialDaysLeft(u); emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`, new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {}); });
+                        notify(`Sent ${stats.atRisk} at-risk emails`);
+                      }
+                    },
+                    {
+                      label: "Email All Free Users",
+                      count: stats.free,
+                      color: T.teal,
+                      note: "Convert free users to trial or paid",
+                      fn: () => {
+                        const free = users.filter(u => !u.tier || u.tier === "free");
+                        if (!free.length) { notify("No free users to email"); return; }
+                        free.forEach(u => emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: "Upgrade to Pro Trial", new_value: "Start your free 7-day Pro trial — full access to all features, no credit card required.", old_value: "Free Plan", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {}));
+                        notify(`Sent to ${free.length} free users`);
+                      }
+                    },
+                  ].map((item, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < 2 ? `1px solid ${T.border}` : "none" }}>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{item.label} <span style={{ color: item.color, fontFamily: "'Fraunces',serif" }}>({item.count})</span></div>
+                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{item.note}</div>
+                      </div>
+                      <button type="button" onClick={item.fn}
+                        disabled={item.count === 0}
+                        style={{ fontSize: 11, fontWeight: 700, color: item.count === 0 ? T.textMuted : item.color, background: item.count === 0 ? "transparent" : `${item.color}15`, border: `1px solid ${item.count === 0 ? T.border : item.color + "40"}`, borderRadius: 8, padding: "5px 12px", cursor: item.count === 0 ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap", opacity: item.count === 0 ? 0.5 : 1 }}>
+                        Send
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* ══ STEP 7 — CHURN & RETENTION PANEL ══ */}
