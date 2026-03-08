@@ -4760,7 +4760,7 @@ export default function AdminPanel() {
                                       <div style={{ fontSize: 9, color: T.textMuted }}>{k.createdAt?.slice(0,10)} · {k.useCount || 0} uses</div>
                                     </div>
                                     <button type="button" onClick={async () => {
-                                      const updated = apiKeys.map((key, idx) => idx === i ? { ...key, active: false, revokedAt: new Date().toISOString() } : key);
+                                      const updated = apiKeys.map(key => key.hash === k.hash ? { ...key, active: false, revokedAt: new Date().toISOString() } : key);
                                       await setDoc(doc(db, "adminSettings", "apiKeys"), { keys: updated });
                                       setApiKeys(updated);
                                       await logAudit(db, { action: "api_key_revoked", label: k.label });
