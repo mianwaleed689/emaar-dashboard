@@ -4276,7 +4276,7 @@ export default function AdminPanel() {
                               { step: "1", icon: "🌐", text: "Go to emaar.com/investor-relations",   sub: "Download the latest quarterly PDF" },
                               { step: "2", icon: "📝", text: "Update data.js",                        sub: "Revenue, profit, EBITDA, sales, backlog" },
                               { step: "3", icon: "🏗️", text: "Update construction %",               sub: "For projects nearing handover date" },
-                              { step: "4", icon: "⌨️", text: "Run git commands",                     sub: "git add . → git commit -m "..." → git push" },
+                              { step: "4", icon: "⌨️", text: "Run git commands",                     sub: "git add . → git commit -m msg → git push" },
                               { step: "5", icon: "🚀", text: "Live in 3 minutes",                    sub: "Vercel deploys automatically on push" },
                             ].map((item, i) => (
                               <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "11px 20px", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
