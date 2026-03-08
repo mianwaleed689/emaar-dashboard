@@ -2548,7 +2548,7 @@ export default function AdminPanel() {
   const [apiKeyGenerating, setApiKeyGenerating] = useState(false);
   const [newApiKey, setNewApiKey] = useState(null);
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
-  const API_BASE = "https://us-central1-dxb-analytics.cloudfunctions.net/auditLogApi";
+  const API_BASE = "https://emaar-dashboard.vercel.app/api/auditLogApi";
   const [editingCommunity, setEditingCommunity] = useState(null);
   const [editingYield, setEditingYield] = useState(null);
   const [liveProjects, setLiveProjects] = useState({});
