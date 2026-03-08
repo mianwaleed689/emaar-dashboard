@@ -2705,13 +2705,13 @@ export default function AdminPanel() {
         });
         // Load persisted audit settings
         try {
-          const wh = await gd(dc(db, "adminSettings", "auditWebhook"));
+          const wh = await getDoc(doc(db, "adminSettings", "auditWebhook"));
           if (wh.exists() && wh.data().url) { setAuditWebhook(wh.data().url); setAuditWebhookUrl(wh.data().url); }
-          const thr = await gd(dc(db, "adminSettings", "auditAlertThreshold"));
+          const thr = await getDoc(doc(db, "adminSettings", "auditAlertThreshold"));
           if (thr.exists() && thr.data().threshold) { setAlertThreshold(thr.data().threshold); setAuditAlertThr(thr.data().threshold); }
-          const ret = await gd(dc(db, "adminSettings", "auditRetention"));
+          const ret = await getDoc(doc(db, "adminSettings", "auditRetention"));
           if (ret.exists() && ret.data().days !== undefined) setAuditRetentionDays(ret.data().days);
-          const keysDoc = await gd(dc(db, "adminSettings", "apiKeys"));
+          const keysDoc = await getDoc(doc(db, "adminSettings", "apiKeys"));
           if (keysDoc.exists()) setApiKeys(keysDoc.data().keys || []);
         } catch {}
       } catch (e) {
