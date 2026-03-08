@@ -2326,7 +2326,7 @@ export default function AdminPanel() {
         type: isUpgrade ? "upgrade" : "downgrade",
         uid: l.uid, user: u,
         time: l.changedAt, icon: isUpgrade ? "⬆️" : "⬇️",
-        label: `${u?.name || u?.email?.split("@")[0] || "User"} ${isUpgrade ? "upgraded to" : "downgraded to"} ${l.to}`,
+        label: `${u?.name || u?.email?.split("@")[0] || "User"} ${l.to === "free" ? "downgraded to free" : l.from === "free" || l.from === "pro_trial" ? "upgraded to" : "downgraded to"} ${l.to}`,
         sub: isUpgrade ? l.to : l.to, color: isUpgrade ? T.green : T.red,
       });
     });
@@ -3006,7 +3006,6 @@ export default function AdminPanel() {
                 );
               })()}
               {/* ══ STEP 3 — KPI CARDS WITH TRENDS ══ */}
-              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Platform Overview</div>
               <div style={{ marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                   <div style={{ borderLeft: `3px solid ${T.gold}`, paddingLeft: 14 }}>
@@ -3405,6 +3404,105 @@ export default function AdminPanel() {
                       )}
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* ══ TRIAL EXPIRY + CONVERSION FUNNEL ══ */}
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Trial Pipeline</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }} className="charts-row-overview">
+
+                {/* Conversion Funnel */}
+                <div className="chart-box fade-up" style={{ padding: 20 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 16 }}>Conversion Funnel</div>
+                  {(() => {
+                    const funnelSteps = [
+                      { label: "Signed Up",       value: stats.total,    color: T.textSecondary },
+                      { label: "Activated Trial", value: everTrialled,   color: T.gold },
+                      { label: "Converted to Paid", value: stats.paid,   color: T.green },
+                    ];
+                    const max = stats.total || 1;
+                    return funnelSteps.map((step, i) => {
+                      const pct = Math.round((step.value / max) * 100);
+                      const convPct = i > 0 ? Math.round((step.value / (funnelSteps[i-1].value || 1)) * 100) : 100;
+                      return (
+                        <div key={i} style={{ marginBottom: 14 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <div style={{ width: 6, height: 6, borderRadius: "50%", background: step.color }} />
+                              <span style={{ fontSize: 12, color: T.textSecondary }}>{step.label}</span>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              {i > 0 && <span style={{ fontSize: 10, color: convPct >= 50 ? T.green : T.red, fontWeight: 700 }}>{convPct}% from prev</span>}
+                              <span style={{ fontSize: 13, fontWeight: 800, color: step.color, fontFamily: "'Fraunces',serif" }}>{step.value}</span>
+                            </div>
+                          </div>
+                          <div style={{ height: 6, background: T.surfaceAlt, borderRadius: 3, overflow: "hidden" }}>
+                            <div style={{ width: `${pct}%`, height: "100%", background: step.color, borderRadius: 3, transition: "width 0.8s ease", opacity: 0.85 }} />
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                  <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 11, color: T.textMuted }}>Overall conversion</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: stats.paid > 0 ? T.green : T.textMuted, fontFamily: "'Fraunces',serif" }}>
+                      {stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0}%
+                    </span>
+                  </div>
+                </div>
+
+                {/* Trial Expiry Countdown */}
+                <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.05s" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2 }}>Expiring Trials</div>
+                    <span style={{ fontSize: 10, color: T.textMuted }}>Next 7 days</span>
+                  </div>
+                  {(() => {
+                    const expiring = users
+                      .filter(u => u.tier === "pro_trial" && u.trialEnd)
+                      .map(u => ({ ...u, daysLeft: trialDaysLeft(u) }))
+                      .filter(u => u.daysLeft >= 0 && u.daysLeft <= 7)
+                      .sort((a, b) => a.daysLeft - b.daysLeft);
+
+                    if (expiring.length === 0) return (
+                      <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 12 }}>
+                        <div style={{ fontSize: 24, color: T.green, marginBottom: 8 }}>✓</div>
+                        No trials expiring in the next 7 days
+                      </div>
+                    );
+
+                    return expiring.map((u, i) => {
+                      const urgency = u.daysLeft <= 1 ? T.red : u.daysLeft <= 3 ? "#F59E0B" : T.gold;
+                      return (
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < expiring.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div style={{ width: 30, height: 30, borderRadius: 8, background: `${urgency}20`, border: `1px solid ${urgency}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: urgency }}>
+                              {u.daysLeft}d
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{u.name || u.email?.split("@")[0]}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>{u.email}</div>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              emailjs.send("service_da7nshv", "template_gl1xqhy", {
+                                user_email: u.email, user_name: u.name || u.email,
+                                project_name: "DXB Analytics",
+                                change_type: `Trial Expiring in ${u.daysLeft} Day${u.daysLeft !== 1 ? "s" : ""}`,
+                                new_value: `Upgrade now to keep access.`,
+                                old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE")
+                              }, "USkwUhp0csGCVDkdQ").then(() => notify(`Email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
+                            }}
+                            style={{ fontSize: 10, fontWeight: 700, color: urgency, background: `${urgency}15`, border: `1px solid ${urgency}40`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}
+                          >
+                            Send Email
+                          </button>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
 
