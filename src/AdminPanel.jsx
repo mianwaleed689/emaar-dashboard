@@ -4807,6 +4807,18 @@ export default function AdminPanel() {
                   );
                 })()}
               {tab === "revenue" && (() => {
+                // Load payments from Firestore on first render
+                if (!window._revenuePaymentsLoaded) {
+                  window._revenuePaymentsLoaded = true;
+                  getDocs(collection(db, "payments")).then(snap => {
+                    const list = [];
+                    snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+                    list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                    window._revenuePayments = list;
+                  }).catch(() => {});
+                  // Log revenue tab view
+                  logAudit(db, { action: "tab_view", tabId: "revenue" }).catch(() => {});
+                }
 
                 // ── CHURN RATE % ──
                 const churnRate = (() => {
@@ -5144,10 +5156,26 @@ export default function AdminPanel() {
                           <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Revenue per Customer</div>
                           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{payingUsers.length} paying users · AED {mrr.toLocaleString()} total MRR</div>
                         </div>
-                        <button type="button" onClick={() => { setTab("users"); setTierFilter("Pro"); }}
-                          style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
-                          Manage Users →
-                        </button>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                          <button type="button" onClick={() => {
+                            const rows = [["Name","Email","Plan","MRR (AED)","LTV Est. (AED)","Customer Since"]];
+                            payingUsers.forEach(u => {
+                              const isEnt = u.tier === "enterprise";
+                              rows.push([u.name || "", u.email || "", isEnt ? "Enterprise" : "Pro", isEnt ? 499 : 99, isEnt ? entLTV : proLTV, u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-AE") : ""]);
+                            });
+                            const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("
+");
+                            const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+                            a.download = `paying-customers-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+                            logAudit(db, { action: "csv_export", exportType: "paying_customers", exportedCount: payingUsers.length }).catch(() => {});
+                          }} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.teal}`, background: "transparent", color: T.teal, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                            ↓ CSV
+                          </button>
+                          <button type="button" onClick={() => { setTab("users"); setTierFilter("Pro"); }}
+                            style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                            Manage Users →
+                          </button>
+                        </div>
                       </div>
                       {payingUsers.length === 0 ? (
                         <div style={{ padding: "36px 20px", textAlign: "center" }}>
@@ -5251,7 +5279,7 @@ export default function AdminPanel() {
                     {/* ══ SECTION 7 — PAYMENT EVENTS LOG ══ */}
                     {(() => {
                       // Read from payments collection — empty until Paddle webhook is live
-                      const payments = [];  // Will be populated from Firestore payments collection
+                      const payments = (window._revenuePayments || []);
                       const hasPaddle = payments.length > 0;
                       return (
                         <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 20 }}>
