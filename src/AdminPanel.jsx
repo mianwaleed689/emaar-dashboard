@@ -1901,22 +1901,30 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   );
 }
 
-function AuditLogTable({ auditLog, users, fetchAuditLog, setTab, setPendingOpenUid, T }) {
+function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, setPendingOpenUid, T }) {
   const [auditFilter, setAuditFilter] = useState("all");
   const [auditSearch, setAuditSearch] = useState("");
 
   const actionMeta = {
-    tier_change:       { label: "Tier Changed",      color: T.orange   },
-    bulk_tier_change:  { label: "Bulk Tier Change",  color: "#8B5CF6"  },
-    project_update:    { label: "Project Updated",   color: T.blue     },
-    project_create:    { label: "Project Created",   color: T.green    },
-    community_update:  { label: "Community Updated", color: "#8B5CF6"  },
-    tab_visibility:    { label: "Tab Visibility",    color: T.gold     },
-    yield_update:      { label: "Yield Updated",     color: T.teal     },
-    role_change:       { label: "Role Changed",      color: T.red      },
+    tier_change:       { label: "Tier Changed",      color: T.orange,   icon: "👤" },
+    bulk_tier_change:  { label: "Bulk Tier Change",  color: "#8B5CF6",  icon: "👥" },
+    project_update:    { label: "Project Updated",   color: T.blue,     icon: "🏗️" },
+    project_create:    { label: "Project Created",   color: T.green,    icon: "✨" },
+    community_update:  { label: "Community Updated", color: "#8B5CF6",  icon: "🏘️" },
+    tab_visibility:    { label: "Tab Visibility",    color: T.gold,     icon: "👁️" },
+    yield_update:      { label: "Yield Updated",     color: T.teal,     icon: "📈" },
+    role_change:       { label: "Role Changed",      color: T.red,      icon: "🔑" },
   };
-  const tierColor = { free: T.textMuted, pro_trial: T.gold, pro: T.green, enterprise: T.teal, suspended: T.red, admin: T.blue, staff: T.blue };
+  const tierColor = { free: "#94A3B8", pro_trial: T.gold, pro: T.green, enterprise: T.teal, suspended: T.red, admin: T.blue, staff: T.blue };
   const tierLabel = { free: "Free", pro_trial: "Pro Trial", pro: "Pro", enterprise: "Enterprise", suspended: "Suspended", admin: "Admin", staff: "Staff" };
+
+  const filterCounts = {
+    all: auditLog.length,
+    tier: auditLog.filter(l => l.action === "tier_change").length,
+    bulk: auditLog.filter(l => l.action === "bulk_tier_change").length,
+    project: auditLog.filter(l => ["project_update","project_create"].includes(l.action)).length,
+    tab: auditLog.filter(l => l.action === "tab_visibility").length,
+  };
 
   const filteredLog = auditLog.filter(l => {
     if (auditFilter === "tier"    && l.action !== "tier_change") return false;
@@ -1926,10 +1934,13 @@ function AuditLogTable({ auditLog, users, fetchAuditLog, setTab, setPendingOpenU
     if (auditSearch) {
       const u = users.find(u => u.uid === l.uid || (l.uids || []).includes(u.uid));
       const s = auditSearch.toLowerCase();
-      const matchUser = u && ((u.name||"").toLowerCase().includes(s)||(u.email||"").toLowerCase().includes(s));
-      const matchAction = (l.action||"").toLowerCase().includes(s);
-      const matchProject = (l.projectId||"").toLowerCase().includes(s);
-      if (!matchUser && !matchAction && !matchProject) return false;
+      const proj = emaarProjects.find(p => String(p.id) === String(l.projectId));
+      if (!(
+        (u && ((u.name||"").toLowerCase().includes(s)||(u.email||"").toLowerCase().includes(s))) ||
+        (l.action||"").toLowerCase().includes(s) ||
+        (proj?.name||"").toLowerCase().includes(s) ||
+        (l.projectId||"").toLowerCase().includes(s)
+      )) return false;
     }
     return true;
   });
@@ -1944,135 +1955,236 @@ function AuditLogTable({ auditLog, users, fetchAuditLog, setTab, setPendingOpenU
     return `${days}d ago`;
   };
 
+  const dateLabel = ts => {
+    if (!ts) return "Unknown";
+    const d = new Date(ts), now = new Date();
+    const diff = Math.floor((now - d) / 86400000);
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Yesterday";
+    if (diff < 7) return `${diff} days ago`;
+    return d.toLocaleDateString("en-AE", { day: "numeric", month: "long", year: "numeric" });
+  };
+
+  // Group by date label
+  const groups = [];
+  let lastLabel = null;
+  filteredLog.forEach((log, i) => {
+    const label = dateLabel(log.changedAt);
+    if (label !== lastLabel) { groups.push({ label, items: [] }); lastLabel = label; }
+    groups[groups.length - 1].items.push({ log, idx: i });
+  });
+
   return (
     <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden" }}>
-      {/* Header */}
-      <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+      {/* ── Header ── */}
+      <div style={{ padding: "18px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Audit Log</div>
-          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{filteredLog.length} of {auditLog.length} events shown</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>Audit Log</div>
+          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
+            {filteredLog.length} of {auditLog.length} events · Complete admin action history
+          </div>
         </div>
-        <button type="button" onClick={fetchAuditLog} style={{ padding: "6px 14px", background: `${T.gold}10`, border: `1px solid ${T.gold}30`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+        <button type="button" onClick={fetchAuditLog}
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 16px", background: `${T.gold}12`, border: `1px solid ${T.gold}35`, borderRadius: 9, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}
+          onMouseEnter={e => { e.currentTarget.style.background = `${T.gold}22`; }}
+          onMouseLeave={e => { e.currentTarget.style.background = `${T.gold}12`; }}>
           ↻ Refresh
         </button>
       </div>
-      {/* Filter + Search */}
-      <div style={{ padding: "12px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        {[{id:"all",label:"All"},{id:"tier",label:"Tier Changes"},{id:"bulk",label:"Bulk Actions"},{id:"project",label:"Project Updates"},{id:"tab",label:"Tab Changes"}].map(f => (
+
+      {/* ── Filter + Search ── */}
+      <div style={{ padding: "12px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", background: `${T.surfaceAlt}` }}>
+        {[
+          { id: "all",     label: "All",             count: filterCounts.all     },
+          { id: "tier",    label: "Tier Changes",    count: filterCounts.tier    },
+          { id: "bulk",    label: "Bulk Actions",    count: filterCounts.bulk    },
+          { id: "project", label: "Project Updates", count: filterCounts.project },
+          { id: "tab",     label: "Tab Changes",     count: filterCounts.tab     },
+        ].map(f => (
           <button key={f.id} type="button" onClick={() => setAuditFilter(f.id)}
-            style={{ padding: "5px 12px", borderRadius: 8, border: `1px solid ${auditFilter===f.id ? T.gold : T.border}`, background: auditFilter===f.id ? `${T.gold}15` : "transparent", color: auditFilter===f.id ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}>
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 8, border: `1px solid ${auditFilter===f.id ? T.gold : T.border}`, background: auditFilter===f.id ? `${T.gold}18` : "transparent", color: auditFilter===f.id ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}>
             {f.label}
+            {f.count > 0 && (
+              <span style={{ fontSize: 9, fontWeight: 800, padding: "1px 5px", borderRadius: 4, background: auditFilter===f.id ? `${T.gold}30` : "rgba(255,255,255,0.06)", color: auditFilter===f.id ? T.gold : T.textMuted }}>
+                {f.count}
+              </span>
+            )}
           </button>
         ))}
         <div style={{ marginLeft: "auto" }}>
-          <input value={auditSearch} onChange={e => setAuditSearch(e.target.value)} placeholder="Search user or project..."
-            style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none", width: 200 }} />
+          <input value={auditSearch} onChange={e => setAuditSearch(e.target.value)}
+            placeholder="Search name, email or project..."
+            style={{ padding: "7px 14px", borderRadius: 9, border: `1px solid ${T.border}`, background: T.surface, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none", width: 220, transition: "border 0.15s" }}
+            onFocus={e => e.target.style.border = `1px solid ${T.gold}50`}
+            onBlur={e => e.target.style.border = `1px solid ${T.border}`}
+          />
         </div>
       </div>
-      {/* Column Headers */}
-      <div style={{ display: "grid", gridTemplateColumns: "150px 130px 1fr 120px", padding: "8px 20px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}` }}>
-        {["When","Action","Details","By"].map((h,i) => (
-          <div key={i} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{h}</div>
-        ))}
-      </div>
-      {/* Empty State */}
+
+      {/* ── Empty State ── */}
       {auditLog.length === 0 && (
-        <div style={{ padding: "48px 20px", textAlign: "center" }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
-          <div style={{ fontSize: 14, color: T.textSecondary, fontWeight: 600, marginBottom: 6 }}>No audit events yet</div>
-          <div style={{ fontSize: 12, color: T.textMuted }}>Every tier change, project update, and tab visibility change will appear here automatically.</div>
+        <div style={{ padding: "60px 24px", textAlign: "center" }}>
+          <div style={{ fontSize: 40, marginBottom: 14 }}>📋</div>
+          <div style={{ fontSize: 15, color: T.textSecondary, fontWeight: 700, marginBottom: 6, fontFamily: "'Fraunces',serif" }}>No audit events yet</div>
+          <div style={{ fontSize: 12, color: T.textMuted, maxWidth: 340, margin: "0 auto" }}>Every tier change, project update, and tab visibility change will appear here automatically the moment you make it.</div>
         </div>
       )}
       {auditLog.length > 0 && filteredLog.length === 0 && (
-        <div style={{ padding: "36px 20px", textAlign: "center" }}>
+        <div style={{ padding: "40px 24px", textAlign: "center" }}>
+          <div style={{ fontSize: 28, marginBottom: 10 }}>🔍</div>
           <div style={{ fontSize: 13, color: T.textMuted }}>No events match your filter or search.</div>
         </div>
       )}
-      {/* Rows */}
-      <div style={{ maxHeight: 520, overflowY: "auto" }}>
-        {filteredLog.map((log, i) => {
-          const meta = actionMeta[log.action] || { label: log.action || "Unknown", color: T.textMuted };
-          const isTier = log.action === "tier_change";
-          const isBulk = log.action === "bulk_tier_change";
-          const affectedUser = isTier ? users.find(u => u.uid === log.uid) : null;
-          const isClickable = isTier && affectedUser;
-          return (
-            <div key={log.id || i}
-              onClick={() => isClickable && (setTab("users"), setPendingOpenUid(log.uid))}
-              style={{ display: "grid", gridTemplateColumns: "150px 130px 1fr 120px", padding: "13px 20px", borderBottom: i < filteredLog.length-1 ? `1px solid ${T.border}` : "none", alignItems: "center", cursor: isClickable ? "pointer" : "default", transition: "background 0.15s" }}
-              onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
-              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-              {/* When */}
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary }}>{timeAgo(log.changedAt)}</div>
-                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{log.changedAt ? new Date(log.changedAt).toLocaleString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : "—"}</div>
-              </div>
-              {/* Action Badge */}
-              <div>
-                <span style={{ display: "inline-block", padding: "4px 10px", borderRadius: 7, background: `${meta.color}15`, border: `1px solid ${meta.color}30`, color: meta.color, fontSize: 10, fontWeight: 700 }}>{meta.label}</span>
-              </div>
-              {/* Details */}
-              <div>
-                {isTier && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: `${meta.color}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: meta.color, flexShrink: 0 }}>
-                      {((affectedUser?.name || affectedUser?.email || "?")[0]).toUpperCase()}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>
-                        {affectedUser?.name || affectedUser?.email?.split("@")[0] || log.uid?.slice(0,10) || "Unknown user"}
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: `${tierColor[log.from]||T.textMuted}15`, color: tierColor[log.from]||T.textMuted, border: `1px solid ${tierColor[log.from]||T.textMuted}30` }}>{tierLabel[log.from]||log.from||"—"}</span>
-                        <span style={{ fontSize: 10, color: T.textMuted }}>→</span>
-                        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: `${tierColor[log.to]||T.textMuted}15`, color: tierColor[log.to]||T.textMuted, border: `1px solid ${tierColor[log.to]||T.textMuted}30` }}>{tierLabel[log.to]||log.to||"—"}</span>
-                        {isClickable && <span style={{ fontSize: 9, color: T.textMuted, marginLeft: 2 }}>View →</span>}
-                      </div>
-                    </div>
+
+      {/* ── Timeline Feed ── */}
+      <div style={{ maxHeight: 580, overflowY: "auto", padding: "8px 0" }}>
+        {groups.map((group, gi) => (
+          <div key={gi}>
+            {/* Date Group Header */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 24px 6px" }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5 }}>{group.label}</div>
+              <div style={{ flex: 1, height: 1, background: T.border }} />
+              <div style={{ fontSize: 10, color: T.textMuted }}>{group.items.length} event{group.items.length !== 1 ? "s" : ""}</div>
+            </div>
+
+            {/* Events in this group */}
+            {group.items.map(({ log, idx }) => {
+              const meta = actionMeta[log.action] || { label: log.action || "Unknown", color: T.textMuted, icon: "⚙️" };
+              const isTier = log.action === "tier_change";
+              const isBulk = log.action === "bulk_tier_change";
+              const isProject = ["project_update","project_create"].includes(log.action);
+              const affectedUser = (isTier) ? users.find(u => u.uid === log.uid) : null;
+              const isClickable = isTier && affectedUser;
+              const projName = isProject ? (emaarProjects.find(p => String(p.id) === String(log.projectId))?.name || `Project ${log.projectId}`) : null;
+
+              return (
+                <div key={log.id || idx}
+                  onClick={() => isClickable && (setTab("users"), setPendingOpenUid(log.uid))}
+                  style={{ display: "flex", gap: 0, padding: "0 24px", cursor: isClickable ? "pointer" : "default", transition: "background 0.12s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = `${T.surfaceAlt}`}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+
+                  {/* Timeline line + dot */}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginRight: 14, paddingTop: 14, flexShrink: 0 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: meta.color, boxShadow: `0 0 8px ${meta.color}60`, flexShrink: 0, zIndex: 1 }} />
+                    <div style={{ width: 2, flex: 1, minHeight: 24, background: `${T.border}`, marginTop: 2 }} />
                   </div>
-                )}
-                {isBulk && (
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 3 }}>
-                      {(log.uids||[]).length} users → <span style={{ color: tierColor[log.newTier]||T.gold }}>{tierLabel[log.newTier]||log.newTier}</span>
-                    </div>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>
-                      {(log.uids||[]).slice(0,3).map(uid => { const u = users.find(u=>u.uid===uid); return u?.name||u?.email?.split("@")[0]||uid?.slice(0,8); }).join(", ")}
-                      {(log.uids||[]).length > 3 && ` +${(log.uids||[]).length-3} more`}
-                    </div>
-                  </div>
-                )}
-                {!isTier && !isBulk && (
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 3 }}>{log.projectId||log.communityKey||log.tabId||meta.label}</div>
-                    {log.diff && Object.keys(log.diff).length > 0 && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                        {Object.entries(log.diff).slice(0,3).map(([k,v]) => (
-                          <span key={k} style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", padding: "2px 7px", borderRadius: 4, color: T.textMuted }}>
-                            <span style={{ color: T.textSecondary }}>{k}:</span>{" "}
-                            <span style={{ color: T.red, textDecoration: "line-through" }}>{String(v.old||"—").slice(0,15)}</span>{" → "}
-                            <span style={{ color: T.green }}>{String(v.new||"—").slice(0,15)}</span>
+
+                  {/* Event card */}
+                  <div style={{ flex: 1, padding: "12px 0 16px", borderBottom: `1px solid ${T.border}` }}>
+                    {/* Top row: badge + time + admin */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 12 }}>{meta.icon}</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 10px", borderRadius: 7, background: `${meta.color}18`, border: `1px solid ${meta.color}35`, color: meta.color, fontSize: 10, fontWeight: 700, letterSpacing: 0.3 }}>
+                        {meta.label}
+                      </span>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>{timeAgo(log.changedAt)}</span>
+                      <span style={{ fontSize: 9, color: T.textMuted }}>·</span>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>{log.changedAt ? new Date(log.changedAt).toLocaleString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : "—"}</span>
+                      <span style={{ marginLeft: "auto" }}>
+                        {log.changedBy && (
+                          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 6, background: `${T.gold}12`, border: `1px solid ${T.gold}28`, color: T.gold }}>
+                            {log.changedBy.includes("@") ? log.changedBy.split("@")[0] : log.changedBy}
                           </span>
-                        ))}
-                        {Object.keys(log.diff).length > 3 && <span style={{ fontSize: 10, color: T.textMuted }}>+{Object.keys(log.diff).length-3} more</span>}
+                        )}
+                      </span>
+                    </div>
+
+                    {/* Detail body */}
+                    {isTier && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: `${meta.color}20`, border: `1px solid ${meta.color}35`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 900, color: meta.color, flexShrink: 0 }}>
+                          {((affectedUser?.name || affectedUser?.email || "?")[0]).toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>
+                            {affectedUser?.name || affectedUser?.email?.split("@")[0] || log.uid?.slice(0,12) || "Unknown user"}
+                          </div>
+                          {affectedUser?.email && affectedUser?.name && (
+                            <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 5 }}>{affectedUser.email}</div>
+                          )}
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                            <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${tierColor[log.from]||"#94A3B8"}18`, color: tierColor[log.from]||"#94A3B8", border: `1px solid ${tierColor[log.from]||"#94A3B8"}35` }}>
+                              {tierLabel[log.from]||log.from||"—"}
+                            </span>
+                            <span style={{ fontSize: 12, color: T.textMuted, fontWeight: 700 }}>→</span>
+                            <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${tierColor[log.to]||"#94A3B8"}18`, color: tierColor[log.to]||"#94A3B8", border: `1px solid ${tierColor[log.to]||"#94A3B8"}35` }}>
+                              {tierLabel[log.to]||log.to||"—"}
+                            </span>
+                            {isClickable && (
+                              <span style={{ fontSize: 10, color: T.gold, fontWeight: 600, marginLeft: 4 }}>View profile →</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {isBulk && (
+                      <div style={{ background: `${T.surfaceAlt}`, borderRadius: 10, padding: "10px 14px", border: `1px solid ${T.border}` }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 5 }}>
+                          {(log.uids||[]).length} users changed to{" "}
+                          <span style={{ color: tierColor[log.newTier]||T.gold, fontFamily: "'Fraunces',serif" }}>{tierLabel[log.newTier]||log.newTier}</span>
+                        </div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                          {(log.uids||[]).slice(0,5).map(uid => {
+                            const u = users.find(u=>u.uid===uid);
+                            return (
+                              <span key={uid} style={{ fontSize: 10, padding: "2px 8px", borderRadius: 5, background: "rgba(255,255,255,0.05)", color: T.textSecondary }}>
+                                {u?.name||u?.email?.split("@")[0]||uid?.slice(0,8)}
+                              </span>
+                            );
+                          })}
+                          {(log.uids||[]).length > 5 && <span style={{ fontSize: 10, color: T.textMuted }}>+{(log.uids||[]).length-5} more</span>}
+                        </div>
+                      </div>
+                    )}
+
+                    {isProject && (
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 6 }}>
+                          {projName}
+                        </div>
+                        {log.diff && Object.keys(log.diff).length > 0 && (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                            {Object.entries(log.diff).slice(0,4).map(([k,v]) => (
+                              <div key={k} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, background: "rgba(255,255,255,0.04)", padding: "4px 10px", borderRadius: 7, border: `1px solid ${T.border}` }}>
+                                <span style={{ color: T.textMuted, fontWeight: 600 }}>{k}:</span>
+                                <span style={{ color: "#F87171", textDecoration: "line-through", fontSize: 10 }}>{String(v.old||"—").slice(0,18)}</span>
+                                <span style={{ color: T.textMuted }}>→</span>
+                                <span style={{ color: "#4ADE80", fontSize: 10 }}>{String(v.new||"—").slice(0,18)}</span>
+                              </div>
+                            ))}
+                            {Object.keys(log.diff).length > 4 && <span style={{ fontSize: 10, color: T.textMuted, padding: "4px 8px" }}>+{Object.keys(log.diff).length-4} more fields</span>}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {!isTier && !isBulk && !isProject && (
+                      <div style={{ fontSize: 12, color: T.textSecondary }}>
+                        {log.tabId || log.communityKey || meta.label}
+                        {log.diff && Object.keys(log.diff).length > 0 && (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 5 }}>
+                            {Object.entries(log.diff).slice(0,3).map(([k,v]) => (
+                              <span key={k} style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", padding: "3px 8px", borderRadius: 5, color: T.textMuted }}>
+                                {k}: <span style={{ color: "#F87171", textDecoration: "line-through" }}>{String(v.old||"—").slice(0,12)}</span> → <span style={{ color: "#4ADE80" }}>{String(v.new||"—").slice(0,12)}</span>
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                )}
-              </div>
-              {/* By */}
-              <div style={{ textAlign: "right" }}>
-                {log.changedBy
-                  ? <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${T.gold}10`, border: `1px solid ${T.gold}25`, color: T.gold }}>{log.changedBy.includes("@") ? log.changedBy.split("@")[0] : log.changedBy}</span>
-                  : <span style={{ fontSize: 10, color: T.textMuted }}>—</span>}
-              </div>
-            </div>
-          );
-        })}
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </div>
     </div>
   );
 }
+
 
 export default function AdminPanel() {
   const { lang, setLang, t: i18t, dir, langInfo } = useI18n();
@@ -4059,117 +4171,152 @@ export default function AdminPanel() {
                   const thisWeek = auditLog.filter(l => {
                     try { return (Date.now() - new Date(l.changedAt).getTime()) < 7 * 24 * 60 * 60 * 1000; } catch { return false; }
                   }).length;
-                  const tierChanges   = auditLog.filter(l => l.action === "tier_change").length;
-                  const bulkActions   = auditLog.filter(l => l.action === "bulk_tier_change").length;
-                  const projectUpdates = auditLog.filter(l => l.action === "project_update" || l.action === "project_create").length;
+                  const tierChanges    = auditLog.filter(l => l.action === "tier_change").length;
+                  const bulkActions    = auditLog.filter(l => l.action === "bulk_tier_change").length;
+                  const projectUpdates = auditLog.filter(l => ["project_update","project_create"].includes(l.action)).length;
+
+                  // ── 7-DAY SPARKLINE ──
+                  const last7 = Array.from({length:7}, (_,i) => {
+                    const d = new Date(); d.setDate(d.getDate() - (6-i));
+                    const day = d.toDateString();
+                    return { day: d.toLocaleDateString("en-AE",{weekday:"short"}), count: auditLog.filter(l => { try { return new Date(l.changedAt).toDateString() === day; } catch { return false; }}).length };
+                  });
+                  const maxDay = Math.max(...last7.map(d=>d.count), 1);
 
                   // ── CALENDAR ──
                   const calendarItems = [
-                    { event: "Emaar Q1 2026 Results",    due: "2026-04-15", note: "Download from emaar.com/investor-relations", icon: "📊" },
-                    { event: "Dubai Market Report Q1",   due: "2026-04-30", note: "DLD and DXBinteract",                         icon: "🏙️" },
-                    { event: "Emaar Q2 2026 Results",    due: "2026-07-15", note: "Download from emaar.com/investor-relations", icon: "📊" },
-                    { event: "Dubai Market Report Q2",   due: "2026-07-30", note: "DLD and DXBinteract",                         icon: "🏙️" },
-                    { event: "Emaar Q3 2026 Results",    due: "2026-10-15", note: "Download from emaar.com/investor-relations", icon: "📊" },
-                    { event: "Emaar FY 2026 Results",    due: "2027-02-15", note: "Annual results — biggest update of the year", icon: "🏆" },
+                    { event: "Emaar Q1 2026 Results",  due: "2026-04-15", note: "Investor Relations page — emaar.com", icon: "📊", priority: "high" },
+                    { event: "Dubai Market Report Q1", due: "2026-04-30", note: "DLD Open Data + DXBinteract",          icon: "🏙️", priority: "medium" },
+                    { event: "Emaar Q2 2026 Results",  due: "2026-07-15", note: "Investor Relations page — emaar.com", icon: "📊", priority: "high" },
+                    { event: "Dubai Market Report Q2", due: "2026-07-30", note: "DLD Open Data + DXBinteract",          icon: "🏙️", priority: "medium" },
+                    { event: "Emaar Q3 2026 Results",  due: "2026-10-15", note: "Investor Relations page — emaar.com", icon: "📊", priority: "high" },
+                    { event: "Emaar FY 2026 Results",  due: "2027-02-15", note: "Annual results — biggest of the year", icon: "🏆", priority: "critical" },
                   ];
 
                   return (
                     <>
-                      {/* ══ SECTION 1 — STATS TOPBAR ══ */}
-                      <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, flexWrap: "wrap" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 14, borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
-                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.green, boxShadow: `0 0 6px ${T.green}` }} />
-                          <span style={{ fontSize: 12, fontWeight: 700, color: T.green }}>Audit Log Active</span>
+                      {/* ══ STATS TOPBAR ══ */}
+                      <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 24, overflow: "hidden" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 18px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.green, boxShadow: `0 0 8px ${T.green}` }} />
+                          <span style={{ fontSize: 11, fontWeight: 700, color: T.green }}>Audit Log Active</span>
                         </div>
                         {[
-                          { label: "Total Events",     value: auditLog.length, color: T.gold },
-                          { label: "Tier Changes",     value: tierChanges,     color: T.orange },
-                          { label: "Bulk Actions",     value: bulkActions,     color: "#8B5CF6" },
-                          { label: "Project Updates",  value: projectUpdates,  color: T.blue },
-                          { label: "This Week",        value: thisWeek,        color: T.green },
+                          { label: "Total Events",    value: auditLog.length, color: T.gold    },
+                          { label: "Tier Changes",    value: tierChanges,     color: T.orange  },
+                          { label: "Bulk Actions",    value: bulkActions,     color: "#8B5CF6" },
+                          { label: "Project Updates", value: projectUpdates,  color: T.blue    },
+                          { label: "This Week",       value: thisWeek,        color: T.green   },
                         ].map((item, i) => (
-                          <div key={i} style={{ display: "flex", flexDirection: "column", paddingRight: 14, borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
+                          <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 20px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
                             <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
-                            <span style={{ fontSize: 13, fontWeight: 800, color: item.color, fontFamily: "'Fraunces',serif" }}>{item.value}</span>
+                            <span style={{ fontSize: 18, fontWeight: 900, color: item.color, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>{item.value}</span>
                           </div>
                         ))}
+                        {/* 7-day sparkline */}
+                        <div style={{ display: "flex", alignItems: "flex-end", gap: 3, padding: "12px 20px", marginLeft: "auto", flexShrink: 0 }}>
+                          <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginRight: 6, alignSelf: "center" }}>Last 7 Days</span>
+                          {last7.map((d,i) => (
+                            <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                              <div style={{ width: 14, height: Math.max(4, Math.round((d.count/maxDay)*32)), background: d.count > 0 ? T.gold : T.border, borderRadius: "3px 3px 0 0", transition: "height 0.3s", opacity: i === 6 ? 1 : 0.6 }} />
+                              <span style={{ fontSize: 8, color: T.textMuted }}>{d.day}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
 
-                      {/* ══ SECTION 2 — DATA UPDATE CALENDAR ══ */}
-                      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Data Update Calendar</div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }}>
+                      {/* ══ SECTION LABEL ══ */}
+                      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 12 }}>Data Update Calendar</div>
+
+                      {/* ══ CALENDAR + CHECKLIST ══ */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
 
                         {/* Calendar */}
-                        <div className="chart-box fade-up" style={{ padding: 20 }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Emaar Results Schedule</div>
-                          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>When to update your dashboard data</div>
+                        <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden" }}>
+                          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Emaar Results Schedule</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>When to update your dashboard data</div>
+                          </div>
                           {calendarItems.map((item, i) => {
                             const daysLeft = Math.ceil((new Date(item.due) - now) / (1000 * 60 * 60 * 24));
                             const isPast   = daysLeft < 0;
                             const isUrgent = !isPast && daysLeft <= 30;
+                            const isSoon   = !isPast && !isUrgent && daysLeft <= 60;
                             const dotColor = isPast ? T.red : isUrgent ? T.gold : T.green;
-                            const labelColor = isPast ? T.red : isUrgent ? T.gold : T.textSecondary;
+                            const pillBg   = isPast ? `${T.red}15` : isUrgent ? `${T.gold}15` : `${T.green}10`;
+                            const pillColor= isPast ? T.red : isUrgent ? T.gold : T.green;
+                            const pillText = isPast ? "OVERDUE" : daysLeft === 0 ? "TODAY" : `${daysLeft}d`;
                             return (
-                              <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: i < calendarItems.length - 1 ? `1px solid ${T.border}` : "none" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: dotColor, flexShrink: 0, boxShadow: isPast ? `0 0 6px ${T.red}` : isUrgent ? `0 0 6px ${T.gold}` : "none" }} />
-                                  <div>
-                                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                      <span style={{ fontSize: 11 }}>{item.icon}</span>
-                                      <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{item.event}</span>
-                                    </div>
-                                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{item.note}</div>
-                                  </div>
+                              <div key={i} style={{ display: "flex", alignItems: "center", padding: "13px 20px", borderBottom: i < calendarItems.length-1 ? `1px solid ${T.border}` : "none", transition: "background 0.15s" }}
+                                onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                <div style={{ width: 8, height: 8, borderRadius: "50%", background: dotColor, flexShrink: 0, marginRight: 12, boxShadow: isPast ? `0 0 6px ${T.red}` : isUrgent ? `0 0 6px ${T.gold}` : "none" }} />
+                                <div style={{ marginRight: 8, fontSize: 14, flexShrink: 0 }}>{item.icon}</div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.event}</div>
+                                  <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>{item.note}</div>
                                 </div>
-                                <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 12 }}>
-                                  <div style={{ fontSize: 12, fontWeight: 700, color: labelColor }}>
-                                    {isPast ? "OVERDUE" : daysLeft === 0 ? "TODAY" : `${daysLeft} days`}
-                                  </div>
-                                  <div style={{ fontSize: 10, color: T.textMuted }}>{new Date(item.due).toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}</div>
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2, flexShrink: 0, marginLeft: 10 }}>
+                                  <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 5, background: pillBg, color: pillColor, border: `1px solid ${pillColor}30` }}>{pillText}</span>
+                                  <span style={{ fontSize: 9, color: T.textMuted }}>{new Date(item.due).toLocaleDateString("en-AE",{day:"numeric",month:"short",year:"numeric"})}</span>
                                 </div>
                               </div>
                             );
                           })}
                         </div>
 
-                        {/* Update Checklist */}
-                        <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.05s" }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Update Checklist</div>
-                          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Follow these steps every time Emaar releases results</div>
-                          {[
-                            { step: "1", text: "Go to emaar.com/investor-relations", sub: "Download the latest PDF results" },
-                            { step: "2", text: "Update data.js", sub: "Revenue, profit, EBITDA, sales, backlog figures" },
-                            { step: "3", text: "Update construction %", sub: "For projects nearing handover" },
-                            { step: "4", text: "Run git commands", sub: "git add . → git commit → git push" },
-                            { step: "5", text: "Live in 3 minutes", sub: "Vercel deploys automatically" },
-                          ].map((item, i) => (
-                            <div key={i} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
-                              <div style={{ width: 24, height: 24, borderRadius: 7, background: `${T.gold}15`, border: `1px solid ${T.gold}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: T.gold, flexShrink: 0 }}>{item.step}</div>
-                              <div>
-                                <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{item.text}</div>
-                                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{item.sub}</div>
+                        {/* Checklist */}
+                        <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", animationDelay: "0.05s" }}>
+                          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Update Checklist</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Follow these steps every time Emaar releases results</div>
+                          </div>
+                          <div style={{ padding: "8px 0" }}>
+                            {[
+                              { step: "1", icon: "🌐", text: "Go to emaar.com/investor-relations",   sub: "Download the latest quarterly PDF" },
+                              { step: "2", icon: "📝", text: "Update data.js",                        sub: "Revenue, profit, EBITDA, sales, backlog" },
+                              { step: "3", icon: "🏗️", text: "Update construction %",               sub: "For projects nearing handover date" },
+                              { step: "4", icon: "⌨️", text: "Run git commands",                     sub: "git add . → git commit -m "..." → git push" },
+                              { step: "5", icon: "🚀", text: "Live in 3 minutes",                    sub: "Vercel deploys automatically on push" },
+                            ].map((item, i) => (
+                              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "11px 20px", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
+                                <div style={{ width: 26, height: 26, borderRadius: 8, background: `${T.gold}15`, border: `1px solid ${T.gold}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, color: T.gold, flexShrink: 0 }}>{item.step}</div>
+                                <div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                    <span style={{ fontSize: 13 }}>{item.icon}</span>
+                                    <span style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{item.text}</span>
+                                  </div>
+                                  <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{item.sub}</div>
+                                </div>
                               </div>
+                            ))}
+                          </div>
+                          <div style={{ margin: "0 16px 16px", padding: "10px 14px", borderRadius: 9, background: `${T.green}08`, border: `1px solid ${T.green}20`, display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontSize: 16 }}>⚡</span>
+                            <div>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: T.green }}>Under 10 minutes total</div>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>From PDF download to live dashboard</div>
                             </div>
-                          ))}
-                          <div style={{ marginTop: 16, padding: "10px 12px", borderRadius: 8, background: `${T.green}08`, border: `1px solid ${T.green}20`, display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{ fontSize: 14 }}>⚡</span>
-                            <span style={{ fontSize: 11, color: T.textMuted }}>Total time from PDF to live dashboard — under 10 minutes</span>
                           </div>
                         </div>
                       </div>
-                  <AuditLogTable
-                    auditLog={auditLog}
-                    users={users}
-                    fetchAuditLog={fetchAuditLog}
-                    setTab={setTab}
-                    setPendingOpenUid={setPendingOpenUid}
-                    T={T}
-                  />
+
+                      {/* ══ SECTION LABEL ══ */}
+                      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 12 }}>Action History</div>
+
+                      {/* ══ AUDIT LOG TABLE ══ */}
+                      <AuditLogTable
+                        auditLog={auditLog}
+                        users={users}
+                        emaarProjects={emaarProjects}
+                        fetchAuditLog={fetchAuditLog}
+                        setTab={setTab}
+                        setPendingOpenUid={setPendingOpenUid}
+                        T={T}
+                      />
                     </>
                   );
                 })()}
-                })()}
-
               {tab === "revenue" && (() => {
 
                 // ── CHURN RATE % ──
