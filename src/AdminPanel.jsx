@@ -1980,63 +1980,218 @@ export default function AdminPanel() {
   };
 
   /* ─── USER STATS ─── */
-  const now = new Date();
-  const stats = {
-    total: users.length,
-    today: users.filter(u => { try { return new Date(u.createdAt).toDateString() === now.toDateString(); } catch { return false; } }).length,
-    thisWeek: users.filter(u => { try { return (now - new Date(u.createdAt)) < 7 * 86400000; } catch { return false; } }).length,
-    thisMonth: users.filter(u => { try { const d = new Date(u.createdAt); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); } catch { return false; } }).length,
-    proTrial: users.filter(u => u.tier === "pro_trial" && (!u.trialEnd || new Date(u.trialEnd) > now)).length,
-    free: users.filter(u => u.tier === "free" || !u.tier).length,
-    expired: users.filter(u => u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) <= now).length,
-    pro: users.filter(u => u.tier === "pro").length,
-    enterprise: users.filter(u => u.tier === "enterprise").length,
-  };
-  stats.paid = stats.pro + stats.enterprise;
-  stats.freeExpired = stats.free + stats.expired;
-  const mrr = (stats.pro * 99) + (stats.enterprise * 499);
-  const arr = mrr * 12;
-  const projectedMRR = mrr + Math.round(stats.proTrial * 99 * 0.3);
-  const trialConversion = (stats.pro + stats.expired) > 0 ? Math.round((stats.pro / (stats.pro + stats.expired)) * 100) : 0;
+  /* ══════════════════════════════════════════════
+     DATA FOUNDATION — Single source of truth
+     All calculations derived here once, used everywhere
+  ══════════════════════════════════════════════ */
 
-  /* ─── SIGNUP TIMELINE DATA ─── */
+  // Single now reference — all time comparisons use this exact moment
+  const now = new Date();
+  const todayStr = now.toDateString();
+  const msPerDay = 86400000;
+  const msPerWeek = 7 * msPerDay;
+
+  // ── USER COUNTS ──
+  const stats = {
+    total:     users.length,
+    today:     users.filter(u => { try { return new Date(u.createdAt).toDateString() === todayStr; } catch { return false; } }).length,
+    thisWeek:  users.filter(u => { try { return (now - new Date(u.createdAt)) < msPerWeek; } catch { return false; } }).length,
+    lastWeek:  users.filter(u => { try { const ms = now - new Date(u.createdAt); return ms >= msPerWeek && ms < msPerWeek * 2; } catch { return false; } }).length,
+    thisMonth: users.filter(u => { try { const d = new Date(u.createdAt); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); } catch { return false; } }).length,
+    proTrial:  users.filter(u => u.tier === "pro_trial" && (!u.trialEnd || new Date(u.trialEnd) > now)).length,
+    free:      users.filter(u => u.tier === "free" || !u.tier).length,
+    expired:   users.filter(u => u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) <= now).length,
+    pro:       users.filter(u => u.tier === "pro").length,
+    enterprise:users.filter(u => u.tier === "enterprise").length,
+    suspended: users.filter(u => u.suspended).length,
+    activeToday: users.filter(u => u.lastLoginAt && (now - new Date(u.lastLoginAt)) < msPerDay).length,
+    activeThisWeek: users.filter(u => u.lastLoginAt && (now - new Date(u.lastLoginAt)) < msPerWeek).length,
+  };
+  stats.paid        = stats.pro + stats.enterprise;
+  stats.freeOnly    = stats.free;   // pure free — never trialled
+  stats.atRisk      = users.filter(u => { try { const d = trialDaysLeft(u); return d !== null && d <= 3 && d >= 0; } catch { return false; } }).length;
+  stats.atRiskUsers = users.filter(u => { try { const d = trialDaysLeft(u); return d !== null && d <= 3 && d >= 0; } catch { return false; } });
+
+  // ── REVENUE — single calculation, used everywhere ──
+  const mrr  = (stats.pro * 99) + (stats.enterprise * 499);
+  const arr  = mrr * 12;
+  const arpu = stats.paid > 0 ? Math.round(mrr / stats.paid) : 0;       // per paying user
+  const arpuAll = stats.total > 0 ? Math.round(mrr / stats.total) : 0;  // per all users
+
+  // ── TRIAL CONVERSION — correct formula ──
+  // denominator = everyone who ever started a trial (active + converted + expired)
+  const everTrialled = stats.proTrial + stats.pro + stats.expired;
+  const trialConversion = everTrialled > 0 ? Math.round((stats.pro / everTrialled) * 100) : 0;
+
+  // ── WEEK-OVER-WEEK TRENDS ──
+  // Users who joined in the PREVIOUS 7-day window (7-14 days ago)
+  const usersLastWeekTotal = users.filter(u => {
+    try { const ms = now - new Date(u.createdAt); return ms >= msPerWeek && ms < msPerWeek * 2; } catch { return false; }
+  }).length;
+  const paidLastWeek = (() => {
+    // approximate: paid users whose createdAt was in last 7 days
+    const newPaidThisWeek = users.filter(u => {
+      try { return (u.tier === "pro" || u.tier === "enterprise") && (now - new Date(u.createdAt)) < msPerWeek; } catch { return false; }
+    }).length;
+    const newPaidLastWeek = users.filter(u => {
+      try { const ms = now - new Date(u.createdAt); return (u.tier === "pro" || u.tier === "enterprise") && ms >= msPerWeek && ms < msPerWeek * 2; } catch { return false; }
+    }).length;
+    return { thisWeek: newPaidThisWeek, lastWeek: newPaidLastWeek };
+  })();
+
+  const weekTrend = (current, previous) => {
+    if (previous === 0 && current === 0) return { pct: 0, dir: "flat", label: "—" };
+    if (previous === 0) return { pct: 100, dir: "up", label: `+${current} new` };
+    const pct = Math.round(((current - previous) / previous) * 100);
+    return { pct: Math.abs(pct), dir: pct > 0 ? "up" : pct < 0 ? "down" : "flat", label: pct > 0 ? `↑${Math.abs(pct)}%` : pct < 0 ? `↓${Math.abs(pct)}%` : "=" };
+  };
+  const usersTrend  = weekTrend(stats.thisWeek, usersLastWeekTotal);
+  const mrrTrend    = weekTrend(paidLastWeek.thisWeek, paidLastWeek.lastWeek);
+
+  // ── CHURN — derived from auditLog ──
+  // A churn event = tier_change where from is pro/enterprise and to is free/pro_trial
+  const churnEvents = auditLog.filter(l =>
+    l.action === "tier_change" &&
+    (l.from === "pro" || l.from === "enterprise") &&
+    (l.to === "free" || l.to === "pro_trial")
+  );
+  const churnThisMonth = churnEvents.filter(l => {
+    try { const d = new Date(l.changedAt); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); } catch { return false; }
+  });
+  const churnedMRR = churnThisMonth.reduce((sum, l) => {
+    return sum + (l.from === "enterprise" ? 499 : 99);
+  }, 0);
+  const newMRRThisMonth = users.filter(u => {
+    try {
+      const d = new Date(u.createdAt);
+      return (u.tier === "pro" || u.tier === "enterprise") &&
+             d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    } catch { return false; }
+  }).reduce((sum, u) => sum + (u.tier === "enterprise" ? 499 : 99), 0);
+  const netMRR = newMRRThisMonth - churnedMRR;
+
+  // ── PLATFORM HEALTH SCORE (0–100) ──
+  // Based on: conversion rate, at-risk %, active rate, churn
+  const healthScore = (() => {
+    let score = 100;
+    if (stats.total === 0) return 50; // no data
+    // penalise at-risk trials
+    if (stats.proTrial > 0) score -= Math.min(30, Math.round((stats.atRisk / stats.proTrial) * 30));
+    // penalise low conversion (below 20% is bad)
+    if (trialConversion < 20 && everTrialled > 2) score -= 20;
+    else if (trialConversion < 40 && everTrialled > 2) score -= 10;
+    // penalise churn
+    if (churnThisMonth.length > 0) score -= Math.min(20, churnThisMonth.length * 10);
+    // penalise suspended users
+    if (stats.suspended > 0) score -= Math.min(10, stats.suspended * 5);
+    return Math.max(0, Math.min(100, score));
+  })();
+  const healthLabel = healthScore >= 80 ? "Excellent" : healthScore >= 60 ? "Good" : healthScore >= 40 ? "Needs Attention" : "Critical";
+  const healthColor = healthScore >= 80 ? T.green : healthScore >= 60 ? T.gold : healthScore >= 40 ? "#F59E0B" : T.red;
+
+  // ── PENDING ITEMS (from other collections) ──
+  const pendingVerifications = verifications.filter(v => v.status === "pending").length;
+  const newLeadsToday = leads.filter(l => { try { return new Date(l.createdAt).toDateString() === todayStr; } catch { return false; } }).length;
+  const newLeadsThisWeek = leads.filter(l => { try { return (now - new Date(l.createdAt)) < msPerWeek; } catch { return false; } }).length;
+
+  // ── SIGNUP TIMELINE — 14 days with last-week comparison ──
   const signupTimeline = (() => {
     const days = [];
     for (let i = 13; i >= 0; i--) {
       const d = new Date(now); d.setDate(d.getDate() - i);
+      const dLastWeek = new Date(now); dLastWeek.setDate(dLastWeek.getDate() - i - 7);
       const key = d.toDateString();
+      const keyLW = dLastWeek.toDateString();
       const count = users.filter(u => { try { return new Date(u.createdAt).toDateString() === key; } catch { return false; } }).length;
-      days.push({ date: `${d.getDate()} ${d.toLocaleString("en", { month: "short" })}`, count });
+      const countLW = users.filter(u => { try { return new Date(u.createdAt).toDateString() === keyLW; } catch { return false; } }).length;
+      days.push({
+        date: `${d.getDate()} ${d.toLocaleString("en", { month: "short" })}`,
+        count,
+        lastWeek: countLW,
+      });
     }
     return days;
   })();
+  const signupThisWeek = signupTimeline.slice(-7).reduce((s, d) => s + d.count, 0);
+  const signupLastWeek = signupTimeline.slice(-7).reduce((s, d) => s + d.lastWeek, 0);
+  const signupTrend = weekTrend(signupThisWeek, signupLastWeek);
 
-  /* ─── TIER DISTRIBUTION ─── */
+  // ── TIER DISTRIBUTION ──
   const tierData = [
     { name: "Pro Trial", value: stats.proTrial, color: T.gold },
-    { name: "Free", value: stats.free, color: T.textMuted },
-    { name: "Pro", value: stats.pro, color: T.green },
-    { name: "Enterprise", value: stats.enterprise, color: T.teal },
-    { name: "Expired", value: stats.expired, color: T.red },
+    { name: "Free",      value: stats.freeOnly, color: T.textMuted },
+    { name: "Pro",       value: stats.pro,       color: T.green },
+    { name: "Enterprise",value: stats.enterprise,color: T.teal },
+    { name: "Expired",   value: stats.expired,   color: T.red },
   ].filter(d => d.value > 0);
 
-  /* ─── CUMULATIVE GROWTH ─── */
-  const cumulativeData = (() => {
-    const sorted = [...users].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
-    return sorted.map((u, i) => {
-      const d = new Date(u.createdAt || now);
-      return { date: `${d.getDate()}/${d.getMonth() + 1}`, total: i + 1 };
-    });
-  })();
-
-  /* ─── REVENUE PROJECTION ─── */
-  const revenueProjection = [
-    { month: "Now", revenue: mrr },
-    { month: "+1mo", revenue: Math.round(mrr + projectedMRR * 0.3) },
-    { month: "+2mo", revenue: Math.round(mrr + projectedMRR * 0.6) },
-    { month: "+3mo", revenue: Math.round(mrr + projectedMRR) },
-    { month: "+6mo", revenue: Math.round((mrr + projectedMRR) * 1.8) },
+  // ── MRR MOVEMENT (for chart) ──
+  const mrrMovement = [
+    { label: "Start of Month", value: mrr - netMRR },
+    { label: "New MRR",        value: newMRRThisMonth },
+    { label: "Churned MRR",    value: -churnedMRR },
+    { label: "Net MRR",        value: mrr },
   ];
+
+  // ── REVENUE PROJECTION — kept for Revenue tab, clearly labelled as estimate ──
+  const projectedMRR = mrr + Math.round(stats.proTrial * 99 * (trialConversion / 100 || 0.3));
+  const revenueProjection = [
+    { month: "Now",   revenue: mrr },
+    { month: "+1mo",  revenue: Math.round(mrr + projectedMRR * 0.3) },
+    { month: "+2mo",  revenue: Math.round(mrr + projectedMRR * 0.6) },
+    { month: "+3mo",  revenue: Math.round(mrr + projectedMRR) },
+    { month: "+6mo",  revenue: Math.round((mrr + projectedMRR) * 1.8) },
+  ];
+
+  // ── CROSS-PLATFORM ACTIVITY FEED ──
+  // Combines users, auditLog, leads, verifications into one sorted feed
+  const activityFeed = (() => {
+    const items = [];
+    // New signups
+    [...users]
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .slice(0, 5)
+      .forEach(u => items.push({
+        type: "signup", uid: u.uid, user: u,
+        time: u.createdAt, icon: "👤",
+        label: `${u.name || u.email?.split("@")[0] || "New user"} signed up`,
+        sub: u.tier || "free", color: T.gold,
+      }));
+    // Tier upgrades & downgrades from auditLog
+    auditLog.slice(0, 20).forEach(l => {
+      if (l.action !== "tier_change") return;
+      const u = users.find(x => x.uid === l.uid);
+      const isUpgrade = (l.to === "pro" || l.to === "enterprise") && (l.from === "free" || l.from === "pro_trial");
+      const isDowngrade = (l.from === "pro" || l.from === "enterprise") && (l.to === "free" || l.to === "pro_trial");
+      if (!isUpgrade && !isDowngrade) return;
+      items.push({
+        type: isUpgrade ? "upgrade" : "downgrade",
+        uid: l.uid, user: u,
+        time: l.changedAt, icon: isUpgrade ? "⬆️" : "⬇️",
+        label: `${u?.name || u?.email?.split("@")[0] || "User"} ${isUpgrade ? "upgraded to" : "downgraded to"} ${l.to}`,
+        sub: isUpgrade ? l.to : l.to, color: isUpgrade ? T.green : T.red,
+      });
+    });
+    // New leads
+    leads.slice(0, 3).forEach(l => items.push({
+      type: "lead", uid: null, user: null,
+      time: l.createdAt, icon: "📋",
+      label: `New lead: ${l.name || l.email || "Anonymous"}`,
+      sub: l.source || "website", color: T.teal,
+    }));
+    // Pending verifications
+    verifications.filter(v => v.status === "pending").slice(0, 3).forEach(v => items.push({
+      type: "verification", uid: v.userId, user: null,
+      time: v.submittedAt, icon: "🔍",
+      label: `KYC submitted by ${v.name || v.email || "User"}`,
+      sub: "Pending review", color: "#F59E0B",
+    }));
+    // Sort by time descending, take top 10
+    return items
+      .filter(i => i.time)
+      .sort((a, b) => new Date(b.time) - new Date(a.time))
+      .slice(0, 10);
+  })();
 
   /* ─── DATA MANAGER ACTIONS ─── */
   
@@ -2688,7 +2843,7 @@ export default function AdminPanel() {
                 <button type="button" onClick={() => setTab("users")} style={{ fontSize: 11, padding: "6px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>View All →</button>
               }>
                 <div className="chart-box" style={{ padding: 0, overflow: "hidden" }}>
-                  {users.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 5).map((u, i) => {
+                  {[...users].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 5).map((u, i) => {
                     const badge = tierBadge(u);
                     return (
                       <div key={u.uid} className="fade-up" style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderBottom: i < 4 ? `1px solid ${T.border}` : "none", animationDelay: `${i * 0.05}s`, gap: 14 }}>
