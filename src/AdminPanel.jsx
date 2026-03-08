@@ -186,7 +186,10 @@ select option { background: ${T.surface}; color: ${T.textPrimary}; }
   .edit-grid-3 { grid-template-columns: 1fr !important; }
   .users-kpi-grid { grid-template-columns: 1fr 1fr !important; }
 }
-@keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes fadeBackdrop { from { opacity: 0; } to { opacity: 1; } }
+.main-content-push { transition: transform 0.32s cubic-bezier(0.16,1,0.3,1), margin-right 0.32s cubic-bezier(0.16,1,0.3,1) !important; }
+.drawer-open .main-content-push { margin-right: 520px; }
 @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .users-table-mobile { display: none; flex-direction: column; gap: 10px; }
 .risk-btn-wrap:hover .risk-tooltip { opacity: 1 !important; pointer-events: auto !important; }
@@ -439,7 +442,7 @@ function EiborRatesPanel({ db, T }) {
    USERS TAB COMPONENT — Professional SaaS User Management
    Full rebuild: all 36 audit issues resolved
 ══════════════════════════════════════════════════════ */
-function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, suspendUser, sendResetEmail, extendTrial, openEditUser, saveEditUser, editingUser, setEditingUser, editUserForm, setEditUserForm, editUserLoading, showAddUser, setShowAddUser, addUserForm, setAddUserForm, addUserManually, addUserLoading, exportCSV, userSearch, setUserSearch, tierFilter, setTierFilter, notify, db, T, I, trialDaysLeft, timeSince, pendingOpenUid, setPendingOpenUid }) {
+function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, suspendUser, sendResetEmail, extendTrial, openEditUser, saveEditUser, editingUser, setEditingUser, editUserForm, setEditUserForm, editUserLoading, showAddUser, setShowAddUser, addUserForm, setAddUserForm, addUserManually, addUserLoading, exportCSV, userSearch, setUserSearch, tierFilter, setTierFilter, notify, db, T, I, trialDaysLeft, timeSince, pendingOpenUid, setPendingOpenUid, onDrawerChange }) {
 
   /* ─── STATE ─── */
   const [drawerUser,         setDrawerUser]         = useState(null);
@@ -483,11 +486,17 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const focusedRowRef = React.useRef(0);
   focusedRowRef.current = focusedRow;
 
+  // Notify parent when drawer opens/closes (for push layout effect)
+  const setDrawerUserWithCallback = (u) => {
+    setDrawerUserWithCallback(u);
+    if (onDrawerChange) onDrawerChange(!!u);
+  };
+
   // Open drawer from external trigger (e.g. Overview activity feed click)
   useEffect(() => {
     if (pendingOpenUid && users.length > 0) {
       const u = users.find(x => x.uid === pendingOpenUid);
-      if (u) { setDrawerUser(u); setDrawerTab("details"); }
+      if (u) { setDrawerUserWithCallback(u); setDrawerTab("details"); }
       setPendingOpenUid(null);
     }
   }, [pendingOpenUid, users]);
@@ -501,10 +510,10 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       const list = pagedUsersRef.current;
       if (e.key === "j" || e.key === "ArrowDown") { e.preventDefault(); setFocusedRow(r => Math.min(r + 1, list.length - 1)); }
       if (e.key === "k" || e.key === "ArrowUp")   { e.preventDefault(); setFocusedRow(r => Math.max(r - 1, 0)); }
-      if (e.key === "Enter" || e.key === "v") { const u = list[focusedRowRef.current]; if (u) { setDrawerUser(u); setDrawerTab("details"); } }
+      if (e.key === "Enter" || e.key === "v") { const u = list[focusedRowRef.current]; if (u) { setDrawerUserWithCallback(u); setDrawerTab("details"); } }
       if (e.key === "e") { const u = list[focusedRowRef.current]; if (u) openEditUser(u); }
       if (e.key === "n" || e.key === "N") { setShowAddUser(true); }  // FIX #31
-      if (e.key === "Escape") { setDrawerUser(null); setInlineTierUser(null); }
+      if (e.key === "Escape") { setDrawerUserWithCallback(null); setInlineTierUser(null); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -770,14 +779,14 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     await deleteUser(confirmDelete.uid);
     fetchUsers();
     setConfirmDelete(null);
-    if (drawerUser?.uid === confirmDelete.uid) setDrawerUser(null);
+    if (drawerUser?.uid === confirmDelete.uid) setDrawerUserWithCallback(null);
   };
 
   const handleSuspend = async () => {
     if (!confirmSuspend) return;
     await suspendUser(confirmSuspend.uid);
     setConfirmSuspend(null);
-    if (drawerUser?.uid === confirmSuspend.uid) setDrawerUser(null);
+    if (drawerUser?.uid === confirmSuspend.uid) setDrawerUserWithCallback(null);
   };
 
   // FIX #28: confirm before extending trial
@@ -1115,12 +1124,12 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     ];
 
     return (
-      <div style={{ position: "fixed", inset: 0, zIndex: 1500, display: "flex" }} onClick={() => setDrawerUser(null)}>
-        {/* Backdrop */}
-        <div style={{ flex: 1, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }} />
+      <div style={{ position: "fixed", inset: 0, zIndex: 1500, display: "flex", pointerEvents: "none" }}>
+        {/* Backdrop — lighter so table behind stays readable */}
+        <div style={{ flex: 1, background: "rgba(0,0,0,0.38)", animation: "fadeBackdrop 0.2s ease", pointerEvents: "auto" }} onClick={() => setDrawerUserWithCallback(null)} />
 
-        {/* Panel */}
-        <div style={{ width: 500, background: T.bg, borderLeft: `1px solid ${T.border}`, overflowY: "auto", display: "flex", flexDirection: "column", animation: "slideIn 0.2s cubic-bezier(0.16,1,0.3,1)" }} onClick={e => e.stopPropagation()}>
+        {/* Panel — spring animation, box shadow for depth */}
+        <div style={{ width: 520, background: T.bg, borderLeft: `1px solid ${T.border}`, boxShadow: "-24px 0 80px rgba(0,0,0,0.5)", overflowY: "auto", display: "flex", flexDirection: "column", animation: "slideIn 0.32s cubic-bezier(0.16,1,0.3,1)", pointerEvents: "auto" }} onClick={e => e.stopPropagation()}>
 
           {/* ── Header ── */}
           <div style={{ padding: "20px 24px 16px", borderBottom: `1px solid ${T.border}`, position: "relative" }}>
@@ -1158,13 +1167,16 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                 </div>
               </div>
 
-              {/* Close button */}
-              <button type="button" onClick={() => setDrawerUser(null)}
-                style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0, transition: "all 0.15s" }}
-                onMouseEnter={e => { e.currentTarget.style.background = T.surfaceAlt; e.currentTarget.style.color = T.white; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}>
-                ✕
-              </button>
+              {/* Close — with ESC hint */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, flexShrink: 0 }}>
+                <button type="button" onClick={() => setDrawerUserWithCallback(null)}
+                  style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, transition: "all 0.15s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = T.surfaceAlt; e.currentTarget.style.color = T.white; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}>
+                  ✕
+                </button>
+                <span style={{ fontSize: 8, color: T.textMuted, opacity: 0.5, letterSpacing: 0.3 }}>ESC</span>
+              </div>
             </div>
           </div>
 
@@ -1365,7 +1377,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                 <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 10 }}>Account</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 24 }}>
                   {[
-                    { label: "Edit User Details", Icon: IconEdit, color: T.teal,    action: () => { openEditUser(u); setDrawerUser(null); } },
+                    { label: "Edit User Details", Icon: IconEdit, color: T.teal,    action: () => { openEditUser(u); setDrawerUserWithCallback(null); } },
                     { label: "Add / Edit Note",   Icon: IconNote, color: T.gold,    action: () => { setNoteUser(u); setNoteText(u.notes || ""); } },
                     { label: "Manage Tags",        Icon: IconTag,  color: "#8B5CF6", action: () => setTagUser(u) },
                   ].map(btn => (
@@ -1390,7 +1402,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                       {u.suspended ? <IconPlay /> : <IconPause />}
                       {u.suspended ? "Unsuspend User" : "Suspend User"}
                     </button>
-                    <button type="button" onClick={() => { setDrawerUser(null); setConfirmDelete(u); }}
+                    <button type="button" onClick={() => { setDrawerUserWithCallback(null); setConfirmDelete(u); }}
                       style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.red}30`, background: "rgba(239,68,68,0.04)", color: T.red, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 10 }}
                       onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.08)"; }}
                       onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.04)"; }}>
@@ -1864,6 +1876,7 @@ export default function AdminPanel() {
   const [editUserForm, setEditUserForm] = useState({});
   const [showAddUser, setShowAddUser] = useState(false);
   const [pendingOpenUid, setPendingOpenUid] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [addUserForm, setAddUserForm] = useState({ name: "", email: "", password: "", phone: "", country: "", tier: "free", notes: "" });
   const [addUserLoading, setAddUserLoading] = useState(false);
   const [editUserLoading, setEditUserLoading] = useState(false);
@@ -2869,7 +2882,7 @@ export default function AdminPanel() {
           </div>
         </header>
 
-        <div style={{ padding: "28px 28px 60px" }}>
+        <div className={drawerOpen ? "main-content-push" : ""} style={{ padding: "28px 28px 60px", transition: "margin-right 0.32s cubic-bezier(0.16,1,0.3,1)" }}>
 
           {/* ═══════════════════════════════════════
              OVERVIEW TAB
@@ -3249,7 +3262,7 @@ export default function AdminPanel() {
           {/* ═══════════════════════════════════════
              USERS TAB
              ═══════════════════════════════════════ */}
-          {tab === "users" && <UsersTab users={users} filteredUsers={filteredUsers} fetchUsers={fetchUsers} changeTier={changeTier} deleteUser={deleteUser} suspendUser={suspendUser} sendResetEmail={sendResetEmail} extendTrial={extendTrial} openEditUser={openEditUser} saveEditUser={saveEditUser} editingUser={editingUser} setEditingUser={setEditingUser} editUserForm={editUserForm} setEditUserForm={setEditUserForm} editUserLoading={editUserLoading} showAddUser={showAddUser} setShowAddUser={setShowAddUser} addUserForm={addUserForm} setAddUserForm={setAddUserForm} addUserManually={addUserManually} addUserLoading={addUserLoading} exportCSV={exportCSV} userSearch={userSearch} setUserSearch={setUserSearch} tierFilter={tierFilter} setTierFilter={setTierFilter} notify={notify} db={db} T={T} I={I} trialDaysLeft={trialDaysLeft} timeSince={timeSince} pendingOpenUid={pendingOpenUid} setPendingOpenUid={setPendingOpenUid} />}
+          {tab === "users" && <UsersTab users={users} filteredUsers={filteredUsers} fetchUsers={fetchUsers} changeTier={changeTier} deleteUser={deleteUser} suspendUser={suspendUser} sendResetEmail={sendResetEmail} extendTrial={extendTrial} openEditUser={openEditUser} saveEditUser={saveEditUser} editingUser={editingUser} setEditingUser={setEditingUser} editUserForm={editUserForm} setEditUserForm={setEditUserForm} editUserLoading={editUserLoading} showAddUser={showAddUser} setShowAddUser={setShowAddUser} addUserForm={addUserForm} setAddUserForm={setAddUserForm} addUserManually={addUserManually} addUserLoading={addUserLoading} exportCSV={exportCSV} userSearch={userSearch} setUserSearch={setUserSearch} tierFilter={tierFilter} setTierFilter={setTierFilter} notify={notify} db={db} T={T} I={I} trialDaysLeft={trialDaysLeft} timeSince={timeSince} pendingOpenUid={pendingOpenUid} setPendingOpenUid={setPendingOpenUid} onDrawerChange={setDrawerOpen} />}
 
           
               {tab === "auditlog" && (
