@@ -1901,6 +1901,179 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   );
 }
 
+function AuditLogTable({ auditLog, users, fetchAuditLog, setTab, setPendingOpenUid, T }) {
+  const [auditFilter, setAuditFilter] = useState("all");
+  const [auditSearch, setAuditSearch] = useState("");
+
+  const actionMeta = {
+    tier_change:       { label: "Tier Changed",      color: T.orange   },
+    bulk_tier_change:  { label: "Bulk Tier Change",  color: "#8B5CF6"  },
+    project_update:    { label: "Project Updated",   color: T.blue     },
+    project_create:    { label: "Project Created",   color: T.green    },
+    community_update:  { label: "Community Updated", color: "#8B5CF6"  },
+    tab_visibility:    { label: "Tab Visibility",    color: T.gold     },
+    yield_update:      { label: "Yield Updated",     color: T.teal     },
+    role_change:       { label: "Role Changed",      color: T.red      },
+  };
+  const tierColor = { free: T.textMuted, pro_trial: T.gold, pro: T.green, enterprise: T.teal, suspended: T.red, admin: T.blue, staff: T.blue };
+  const tierLabel = { free: "Free", pro_trial: "Pro Trial", pro: "Pro", enterprise: "Enterprise", suspended: "Suspended", admin: "Admin", staff: "Staff" };
+
+  const filteredLog = auditLog.filter(l => {
+    if (auditFilter === "tier"    && l.action !== "tier_change") return false;
+    if (auditFilter === "bulk"    && l.action !== "bulk_tier_change") return false;
+    if (auditFilter === "project" && !["project_update","project_create"].includes(l.action)) return false;
+    if (auditFilter === "tab"     && l.action !== "tab_visibility") return false;
+    if (auditSearch) {
+      const u = users.find(u => u.uid === l.uid || (l.uids || []).includes(u.uid));
+      const s = auditSearch.toLowerCase();
+      const matchUser = u && ((u.name||"").toLowerCase().includes(s)||(u.email||"").toLowerCase().includes(s));
+      const matchAction = (l.action||"").toLowerCase().includes(s);
+      const matchProject = (l.projectId||"").toLowerCase().includes(s);
+      if (!matchUser && !matchAction && !matchProject) return false;
+    }
+    return true;
+  });
+
+  const timeAgo = ts => {
+    if (!ts) return "—";
+    const diff = Date.now() - new Date(ts).getTime();
+    const mins = Math.floor(diff/60000), hrs = Math.floor(diff/3600000), days = Math.floor(diff/86400000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${days}d ago`;
+  };
+
+  return (
+    <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden" }}>
+      {/* Header */}
+      <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Audit Log</div>
+          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{filteredLog.length} of {auditLog.length} events shown</div>
+        </div>
+        <button type="button" onClick={fetchAuditLog} style={{ padding: "6px 14px", background: `${T.gold}10`, border: `1px solid ${T.gold}30`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+          ↻ Refresh
+        </button>
+      </div>
+      {/* Filter + Search */}
+      <div style={{ padding: "12px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        {[{id:"all",label:"All"},{id:"tier",label:"Tier Changes"},{id:"bulk",label:"Bulk Actions"},{id:"project",label:"Project Updates"},{id:"tab",label:"Tab Changes"}].map(f => (
+          <button key={f.id} type="button" onClick={() => setAuditFilter(f.id)}
+            style={{ padding: "5px 12px", borderRadius: 8, border: `1px solid ${auditFilter===f.id ? T.gold : T.border}`, background: auditFilter===f.id ? `${T.gold}15` : "transparent", color: auditFilter===f.id ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}>
+            {f.label}
+          </button>
+        ))}
+        <div style={{ marginLeft: "auto" }}>
+          <input value={auditSearch} onChange={e => setAuditSearch(e.target.value)} placeholder="Search user or project..."
+            style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none", width: 200 }} />
+        </div>
+      </div>
+      {/* Column Headers */}
+      <div style={{ display: "grid", gridTemplateColumns: "150px 130px 1fr 120px", padding: "8px 20px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}` }}>
+        {["When","Action","Details","By"].map((h,i) => (
+          <div key={i} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{h}</div>
+        ))}
+      </div>
+      {/* Empty State */}
+      {auditLog.length === 0 && (
+        <div style={{ padding: "48px 20px", textAlign: "center" }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
+          <div style={{ fontSize: 14, color: T.textSecondary, fontWeight: 600, marginBottom: 6 }}>No audit events yet</div>
+          <div style={{ fontSize: 12, color: T.textMuted }}>Every tier change, project update, and tab visibility change will appear here automatically.</div>
+        </div>
+      )}
+      {auditLog.length > 0 && filteredLog.length === 0 && (
+        <div style={{ padding: "36px 20px", textAlign: "center" }}>
+          <div style={{ fontSize: 13, color: T.textMuted }}>No events match your filter or search.</div>
+        </div>
+      )}
+      {/* Rows */}
+      <div style={{ maxHeight: 520, overflowY: "auto" }}>
+        {filteredLog.map((log, i) => {
+          const meta = actionMeta[log.action] || { label: log.action || "Unknown", color: T.textMuted };
+          const isTier = log.action === "tier_change";
+          const isBulk = log.action === "bulk_tier_change";
+          const affectedUser = isTier ? users.find(u => u.uid === log.uid) : null;
+          const isClickable = isTier && affectedUser;
+          return (
+            <div key={log.id || i}
+              onClick={() => isClickable && (setTab("users"), setPendingOpenUid(log.uid))}
+              style={{ display: "grid", gridTemplateColumns: "150px 130px 1fr 120px", padding: "13px 20px", borderBottom: i < filteredLog.length-1 ? `1px solid ${T.border}` : "none", alignItems: "center", cursor: isClickable ? "pointer" : "default", transition: "background 0.15s" }}
+              onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+              {/* When */}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary }}>{timeAgo(log.changedAt)}</div>
+                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{log.changedAt ? new Date(log.changedAt).toLocaleString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : "—"}</div>
+              </div>
+              {/* Action Badge */}
+              <div>
+                <span style={{ display: "inline-block", padding: "4px 10px", borderRadius: 7, background: `${meta.color}15`, border: `1px solid ${meta.color}30`, color: meta.color, fontSize: 10, fontWeight: 700 }}>{meta.label}</span>
+              </div>
+              {/* Details */}
+              <div>
+                {isTier && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: `${meta.color}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: meta.color, flexShrink: 0 }}>
+                      {((affectedUser?.name || affectedUser?.email || "?")[0]).toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>
+                        {affectedUser?.name || affectedUser?.email?.split("@")[0] || log.uid?.slice(0,10) || "Unknown user"}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: `${tierColor[log.from]||T.textMuted}15`, color: tierColor[log.from]||T.textMuted, border: `1px solid ${tierColor[log.from]||T.textMuted}30` }}>{tierLabel[log.from]||log.from||"—"}</span>
+                        <span style={{ fontSize: 10, color: T.textMuted }}>→</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: `${tierColor[log.to]||T.textMuted}15`, color: tierColor[log.to]||T.textMuted, border: `1px solid ${tierColor[log.to]||T.textMuted}30` }}>{tierLabel[log.to]||log.to||"—"}</span>
+                        {isClickable && <span style={{ fontSize: 9, color: T.textMuted, marginLeft: 2 }}>View →</span>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {isBulk && (
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 3 }}>
+                      {(log.uids||[]).length} users → <span style={{ color: tierColor[log.newTier]||T.gold }}>{tierLabel[log.newTier]||log.newTier}</span>
+                    </div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>
+                      {(log.uids||[]).slice(0,3).map(uid => { const u = users.find(u=>u.uid===uid); return u?.name||u?.email?.split("@")[0]||uid?.slice(0,8); }).join(", ")}
+                      {(log.uids||[]).length > 3 && ` +${(log.uids||[]).length-3} more`}
+                    </div>
+                  </div>
+                )}
+                {!isTier && !isBulk && (
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 3 }}>{log.projectId||log.communityKey||log.tabId||meta.label}</div>
+                    {log.diff && Object.keys(log.diff).length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                        {Object.entries(log.diff).slice(0,3).map(([k,v]) => (
+                          <span key={k} style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", padding: "2px 7px", borderRadius: 4, color: T.textMuted }}>
+                            <span style={{ color: T.textSecondary }}>{k}:</span>{" "}
+                            <span style={{ color: T.red, textDecoration: "line-through" }}>{String(v.old||"—").slice(0,15)}</span>{" → "}
+                            <span style={{ color: T.green }}>{String(v.new||"—").slice(0,15)}</span>
+                          </span>
+                        ))}
+                        {Object.keys(log.diff).length > 3 && <span style={{ fontSize: 10, color: T.textMuted }}>+{Object.keys(log.diff).length-3} more</span>}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* By */}
+              <div style={{ textAlign: "right" }}>
+                {log.changedBy
+                  ? <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${T.gold}10`, border: `1px solid ${T.gold}25`, color: T.gold }}>{log.changedBy.includes("@") ? log.changedBy.split("@")[0] : log.changedBy}</span>
+                  : <span style={{ fontSize: 10, color: T.textMuted }}>—</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPanel() {
   const { lang, setLang, t: i18t, dir, langInfo } = useI18n();
   const [showLangPicker, setShowLangPicker] = useState(false);
@@ -3984,121 +4157,17 @@ export default function AdminPanel() {
                           </div>
                         </div>
                       </div>
-                  {/* ── ENHANCED AUDIT LOG ── */}
-                  <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden" }}>
-                    <div style={{ padding: "16px 20px", borderBottom: "2px solid rgba(212,168,67,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
-                      <div>
-                        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Audit Log</h3>
-                        <p style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{auditLog.length} events · All admin data changes · Last 100 entries</p>
-                      </div>
-                      <button onClick={fetchAuditLog} style={{ padding: "6px 14px", background: "rgba(212,168,67,0.1)", border: "1px solid rgba(212,168,67,0.25)", borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>↻ Refresh</button>
-                    </div>
-
-                    {/* Summary stats */}
-                    {auditLog.length > 0 && (
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0, borderBottom: "1px solid rgba(212,168,67,0.08)" }}>
-                        {[
-                          { label: "Total Changes", val: auditLog.length, color: T.gold },
-                          { label: "Project Updates", val: auditLog.filter(l => l.action === "project_update").length, color: T.blue },
-                          { label: "New Projects", val: auditLog.filter(l => l.action === "project_create").length, color: T.green },
-                          { label: "Community Updates", val: auditLog.filter(l => l.action === "community_update").length, color: "#8B5CF6" },
-                        ].map((s, i) => (
-                          <div key={i} style={{ padding: "12px 16px", borderRight: i < 3 ? "1px solid rgba(255,255,255,0.04)" : "none", textAlign: "center" }}>
-                            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: s.color }}>{s.val}</div>
-                            <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{s.label}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Column headers */}
-                    {auditLog.length > 0 && (
-                      <div style={{ display: "grid", gridTemplateColumns: "160px 80px 1fr 160px", gap: 8, padding: "8px 20px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(212,168,67,0.08)" }}>
-                        {["Timestamp", "Action", "Details & Changes", "Admin"].map((h, i) => (
-                          <span key={i} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{h}</span>
-                        ))}
-                      </div>
-                    )}
-
-                    {auditLog.length === 0 && (
-                      <div style={{ padding: 48, textAlign: "center" }}>
-                        <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(100,116,139,0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", color: "#64748B" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-                        <div style={{ fontSize: 14, color: T.textSecondary, fontWeight: 600, marginBottom: 6 }}>No audit events yet</div>
-                        <div style={{ fontSize: 12, color: T.textMuted }}>Events are recorded automatically when you update projects, communities, or yields.</div>
-                      </div>
-                    )}
-
-                    <div style={{ maxHeight: 500, overflowY: "auto" }}>
-                      {auditLog.map((log, i) => {
-                        const actionMeta = {
-                          project_update:    { label: "Project Updated",    color: T.blue,    icon: "edit" },
-                          project_create:    { label: "Project Created",    color: T.green,   icon: "add" },
-                          community_update:  { label: "Community Updated",  color: "#8B5CF6", icon: "community" },
-                          tab_visibility:    { label: "Tab Visibility",     color: T.gold,    icon: "eye" },
-                          user_tier_change:  { label: "User Tier Changed",  color: T.orange,  icon: "user" },
-                          yield_update:      { label: "Yield Updated",      color: T.teal,    icon: "chart" },
-                        };
-                        const meta = actionMeta[log.action] || { label: log.action || "Unknown", color: T.textMuted, icon: "tool" };
-                        const timeAgo = (() => {
-                          if (!log.changedAt) return "—";
-                          const diff = Date.now() - new Date(log.changedAt).getTime();
-                          const mins = Math.floor(diff / 60000);
-                          const hrs = Math.floor(diff / 3600000);
-                          const days = Math.floor(diff / 86400000);
-                          if (mins < 1) return "just now";
-                          if (mins < 60) return `${mins}m ago`;
-                          if (hrs < 24) return `${hrs}h ago`;
-                          return `${days}d ago`;
-                        })();
-                        const hasDiff = log.diff && Object.keys(log.diff).length > 0;
-
-                        return (
-                          <div key={log.id} style={{ display: "grid", gridTemplateColumns: "160px 80px 1fr 160px", gap: 8, padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "flex-start", transition: "background 0.15s" }}
-                            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
-                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                            {/* Time */}
-                            <div>
-                              <div style={{ fontSize: 11, color: T.textSecondary, fontWeight: 600 }}>{timeAgo}</div>
-                              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{log.changedAt ? new Date(log.changedAt).toLocaleString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}</div>
-                            </div>
-                            {/* Action badge */}
-                            <div>
-                              <span style={{ display: "inline-block", padding: "3px 8px", borderRadius: 6, background: meta.color + "18", border: `1px solid ${meta.color}33`, color: meta.color, fontSize: 10, fontWeight: 700 }}>{meta.icon}</span>
-                            </div>
-                            {/* Details */}
-                            <div>
-                              <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 4 }}>
-                                {meta.label}{log.projectId ? ` — ${log.projectId}` : ""}{log.communityKey ? ` — ${log.communityKey}` : ""}
-                              </div>
-                              {hasDiff && (
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                                  {Object.entries(log.diff).slice(0, 5).map(([k, v]) => (
-                                    <span key={k} style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", padding: "2px 8px", borderRadius: 4, color: T.textMuted }}>
-                                      <span style={{ color: T.textSecondary }}>{k}:</span> <span style={{ color: "#EF4444", textDecoration: "line-through" }}>{String(v.old || "—").slice(0, 20)}</span> → <span style={{ color: "#10B981" }}>{String(v.new || "—").slice(0, 20)}</span>
-                                    </span>
-                                  ))}
-                                  {Object.keys(log.diff).length > 5 && <span style={{ fontSize: 10, color: T.textMuted }}>+{Object.keys(log.diff).length - 5} more</span>}
-                                </div>
-                              )}
-                              {!hasDiff && log.changes && (
-                                <div style={{ fontSize: 10, color: T.textMuted }}>New record created</div>
-                              )}
-                            </div>
-                            {/* Admin */}
-                            <div style={{ fontSize: 11, color: T.textMuted, textAlign: "right" }}>
-                              {log.changedBy ? (
-                                <span style={{ background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.15)", borderRadius: 6, padding: "2px 8px", color: T.gold, fontSize: 10, fontWeight: 600 }}>
-                                  {log.changedBy.split("@")[0]}
-                                </span>
-                              ) : "—"}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <AuditLogTable
+                    auditLog={auditLog}
+                    users={users}
+                    fetchAuditLog={fetchAuditLog}
+                    setTab={setTab}
+                    setPendingOpenUid={setPendingOpenUid}
+                    T={T}
+                  />
                     </>
                   );
+                })()}
                 })()}
 
               {tab === "revenue" && (() => {
