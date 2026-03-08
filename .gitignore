@@ -31,3 +31,5 @@ checkextra.js
 
 # vercel
 .vercel
+
+functions/node_modules
