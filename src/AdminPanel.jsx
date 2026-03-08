@@ -2689,6 +2689,11 @@ export default function AdminPanel() {
   const [projectForm, setProjectForm] = useState({});
   const [communityForm, setCommunityForm] = useState({});
   const [yieldForm, setYieldForm] = useState({});
+  const [projectCommunityFilter, setProjectCommunityFilter] = useState("All");
+  const [projectStatusFilter, setProjectStatusFilter] = useState("All");
+  const [projectSortKey, setProjectSortKey] = useState("name");
+  const [projectSortDir, setProjectSortDir] = useState("asc");
+  const [validationErrors, setValidationErrors] = useState({});
 
   /* ─── KYC VERIFICATION STATE ─── */
   const [verifications, setVerifications] = useState([]);
@@ -3231,12 +3236,16 @@ export default function AdminPanel() {
 
   const validateProjectData = (data, isNew = false) => {
     const errors = [];
-    if (isNew && !data.name) errors.push("Project name is required");
-    if (isNew && !data.community) errors.push("Community is required");
+    if (isNew && !data.name?.trim()) errors.push("Project name is required");
+    if (isNew && !data.community?.trim()) errors.push("Community is required");
     if (data.price && (isNaN(data.price) || Number(data.price) <= 0)) errors.push("Price must be a positive number");
-    if (data.ppsf && (isNaN(data.ppsf) || Number(data.ppsf) <= 0)) errors.push("Price per sqft must be positive");
-    if (data.unitsAvail && data.unitsTotal && Number(data.unitsAvail) > Number(data.unitsTotal)) errors.push("Available units cannot exceed total units");
-    if (data.construction && (Number(data.construction) < 0 || Number(data.construction) > 100)) errors.push("Construction must be 0-100");
+    if (data.price && Number(data.price) > 0 && Number(data.price) < 100000) errors.push("Price looks too low (AED " + Number(data.price).toLocaleString() + "). Dubai prices are typically AED 500K+. Did you mean AED " + (Number(data.price) * 1000).toLocaleString() + "?");
+    if (data.ppsf && (isNaN(data.ppsf) || Number(data.ppsf) <= 0)) errors.push("PPSF must be positive");
+    if (data.ppsf && Number(data.ppsf) > 0 && Number(data.ppsf) < 200) errors.push("PPSF looks too low (" + Number(data.ppsf).toLocaleString() + "). Dubai PPSF is typically AED 800-5000");
+    if (data.unitsAvail && data.unitsTotal && Number(data.unitsAvail) > Number(data.unitsTotal)) errors.push("Available units (" + data.unitsAvail + ") cannot exceed total units (" + data.unitsTotal + ")");
+    if (data.construction !== undefined && data.construction !== "" && (Number(data.construction) < 0 || Number(data.construction) > 100)) errors.push("Construction % must be between 0 and 100");
+    if (data.ratingOverride !== undefined && data.ratingOverride !== "" && (Number(data.ratingOverride) < 0 || Number(data.ratingOverride) > 10)) errors.push("Rating override must be between 0 and 10");
+    // Duplicate name check — warn only (not block) for new projects
     return errors;
   };
 
@@ -5674,10 +5683,43 @@ export default function AdminPanel() {
                     { icon: "[dl]", title: "Export / Import", desc: "Export all project data to Excel. Import updates via CSV for bulk data changes." },
                     { icon: "[~]", title: "Default vs Live", desc: "'Default' means data comes from data.js. 'Live' means you've saved a Firestore override." },
                   ]} />
-                  <div style={{ position: "relative", maxWidth: 400, marginBottom: 16 }}>
-                    <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</span>
-                    <input value={dataSearch} onChange={e => setDataSearch(e.target.value)} placeholder="Search projects..."
-                      style={{ width: "100%", padding: "10px 12px 10px 36px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                  {/* ── Filter & Sort Bar ── */}
+                  <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+                    <div style={{ position: "relative", flex: "1 1 200px", minWidth: 180 }}>
+                      <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</span>
+                      <input value={dataSearch} onChange={e => setDataSearch(e.target.value)} placeholder="Search by name or community..."
+                        style={{ width: "100%", padding: "10px 12px 10px 36px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                    </div>
+                    <select value={projectCommunityFilter} onChange={e => setProjectCommunityFilter(e.target.value)}
+                      style={{ padding: "10px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: projectCommunityFilter !== "All" ? T.gold : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                      <option value="All">All Communities</option>
+                      {[...new Set(emaarProjects.map(p => p.community))].sort().map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <select value={projectStatusFilter} onChange={e => setProjectStatusFilter(e.target.value)}
+                      style={{ padding: "10px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: projectStatusFilter !== "All" ? T.gold : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                      <option value="All">All Status</option>
+                      {["Under Construction","Off-Plan","Completed","Selling","Upcoming","Sold Out","Ready"].map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    <select value={projectSortKey} onChange={e => setProjectSortKey(e.target.value)}
+                      style={{ padding: "10px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                      <option value="name">Sort: Name</option>
+                      <option value="community">Sort: Community</option>
+                      <option value="price">Sort: Price</option>
+                      <option value="ppsf">Sort: PPSF</option>
+                      <option value="handover">Sort: Handover</option>
+                      <option value="construction">Sort: Construction %</option>
+                      <option value="status">Sort: Status</option>
+                    </select>
+                    <button type="button" onClick={() => setProjectSortDir(d => d === "asc" ? "desc" : "asc")}
+                      style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: 700 }}>
+                      {projectSortDir === "asc" ? "A-Z" : "Z-A"}
+                    </button>
+                    {(dataSearch || projectCommunityFilter !== "All" || projectStatusFilter !== "All") && (
+                      <button type="button" onClick={() => { setDataSearch(""); setProjectCommunityFilter("All"); setProjectStatusFilter("All"); }}
+                        style={{ padding: "10px 14px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, color: T.red, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: 600 }}>
+                        Clear Filters
+                      </button>
+                    )}
                   </div>
 
                   {/* Editing form */}
@@ -5710,8 +5752,31 @@ export default function AdminPanel() {
                             </div>
                           ))}
                         </div>
+                        {/* Image upload for new project */}
+                        <div style={{ marginTop: 14, padding: 14, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Project Image (optional)</div>
+                          {projectForm.imageUrl && <img src={projectForm.imageUrl} alt="Preview" style={{ width: "100%", height: 100, objectFit: "cover", borderRadius: 8, marginBottom: 8 }} onError={e => e.target.style.display="none"} />}
+                          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, padding: "9px 14px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.2)", background: T.bg, color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                            {projectForm.imageUploading ? "Uploading..." : projectForm.imageUrl ? "Image Uploaded [change]" : "Upload Image"}
+                            <input type="file" accept="image/*" style={{ display: "none" }} onChange={async e => {
+                              const file = e.target.files[0]; if (!file) return;
+                              setProjectForm(prev => ({ ...prev, imageUploading: true }));
+                              const fd = new FormData(); fd.append("file", file); fd.append("upload_preset", "dxb-analytics"); fd.append("cloud_name", "dh9dd5ld0");
+                              const res = await fetch("https://api.cloudinary.com/v1_1/dh9dd5ld0/auto/upload", { method: "POST", body: fd });
+                              const data = await res.json();
+                              setProjectForm(prev => ({ ...prev, imageUrl: data.secure_url, imageUploading: false }));
+                              notify("Image uploaded!");
+                            }} />
+                          </label>
+                        </div>
+                        {/* Duplicate name warning */}
+                        {projectForm.name && emaarProjects.some(p => p.name?.toLowerCase() === projectForm.name?.toLowerCase()) && (
+                          <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 8, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", fontSize: 11, color: "#EF4444" }}>
+                            Warning: A project named "{projectForm.name}" already exists in data.js. This will create a duplicate entry.
+                          </div>
+                        )}
                         <button type="button" disabled={dataSaving} onClick={() => saveNewProject(projectForm)}
-                          style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #10B981, #059669)", color: "#FFFFFF", fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
+                          style={{ marginTop: 16, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #10B981, #059669)", color: "#FFFFFF", fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
                           {dataSaving ? "Saving..." : "+ Add Project to Firestore"}
                         </button>
                       </div>
@@ -5765,16 +5830,21 @@ export default function AdminPanel() {
                           {fields.map(f => (
                             <div key={f.key}>
                               <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "flex", alignItems: "center" }}>{f.label}{f.tip && <HelpTip text={f.tip} />}</label>
-                              {f.type === "select" ? (
-                                <select value={projectForm[f.key] ?? merged[f.key] ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                                  <option value="">—</option>
-                                  {f.options.map(o => <option key={o} value={o}>{o}</option>)}
-                                </select>
-                              ) : (
-                                <input type={f.type} value={projectForm[f.key] ?? merged[f.key] ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={f.placeholder}
-                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                              )}
+                              {(() => {
+                                const hasErr = validationErrors[f.key];
+                                const borderColor = hasErr ? "#EF4444" : T.border;
+                                return f.type === "select" ? (
+                                  <select value={projectForm[f.key] ?? merged[f.key] ?? ""} onChange={e => { setProjectForm(prev => ({ ...prev, [f.key]: e.target.value })); setValidationErrors(prev => ({ ...prev, [f.key]: null })); }}
+                                    style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${borderColor}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                                    <option value="">—</option>
+                                    {f.options.map(o => <option key={o} value={o}>{o}</option>)}
+                                  </select>
+                                ) : (
+                                  <input type={f.type} value={projectForm[f.key] ?? merged[f.key] ?? ""} onChange={e => { setProjectForm(prev => ({ ...prev, [f.key]: e.target.value })); setValidationErrors(prev => ({ ...prev, [f.key]: null })); }} placeholder={f.placeholder}
+                                    style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${borderColor}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                                );
+                              })()}
+                              {validationErrors[f.key] && <div style={{ fontSize: 10, color: "#EF4444", marginTop: 3 }}>{validationErrors[f.key]}</div>}
                               {hasOverride && liveProjects[p.id]?.[f.key] !== undefined && (
                                 <div style={{ fontSize: 9, color: T.green, marginTop: 2 }}>Live: {liveProjects[p.id][f.key]} · Default: {p[f.key] ?? "—"}</div>
                               )}
@@ -5924,8 +5994,9 @@ export default function AdminPanel() {
                     <div className="fade-up" style={{ padding: "14px 20px", marginBottom: 12, borderRadius: 10, background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.2)", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{bulkSelected.length} projects selected</span>
                       {[
-                        { key: "status", label: "Status", options: ["Selling", "Upcoming", "Sold Out", "Ready"] },
+                        { key: "status", label: "Status", options: ["Under Construction","Off-Plan","Completed","Selling", "Upcoming", "Sold Out", "Ready"] },
                         { key: "availability", label: "Availability", options: ["Available", "Sold Out", "Limited Units", "Coming Soon"] },
+                        { key: "tier", label: "Tier", options: ["Affordable","Mid-Market","Mid-Premium","Premium","Luxury","Ultra-Luxury","Luxury Branded","Ultra-Lux Branded"] },
                       ].map(f => (
                         <select key={f.key} value={bulkForm[f.key] || ""} onChange={e => setBulkForm(prev => ({ ...prev, [f.key]: e.target.value }))}
                           style={{ padding: "6px 10px", background: T.bg, border: "1px solid rgba(212,168,67,0.2)", borderRadius: 6, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>
@@ -5935,6 +6006,10 @@ export default function AdminPanel() {
                       ))}
                       <input type="number" placeholder="Set Price..." value={bulkForm.price || ""} onChange={e => setBulkForm(prev => ({ ...prev, price: e.target.value }))}
                         style={{ padding: "6px 10px", background: T.bg, border: "1px solid rgba(212,168,67,0.2)", borderRadius: 6, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif", width: 120 }} />
+                      <input type="number" placeholder="Set Construction %..." value={bulkForm.construction || ""} onChange={e => setBulkForm(prev => ({ ...prev, construction: e.target.value }))}
+                        style={{ padding: "6px 10px", background: T.bg, border: "1px solid rgba(212,168,67,0.2)", borderRadius: 6, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif", width: 160 }} />
+                      <input type="text" placeholder="Set Handover..." value={bulkForm.handover || ""} onChange={e => setBulkForm(prev => ({ ...prev, handover: e.target.value }))}
+                        style={{ padding: "6px 10px", background: T.bg, border: "1px solid rgba(212,168,67,0.2)", borderRadius: 6, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif", width: 130 }} />
                       <button type="button" onClick={saveBulkEdit} disabled={dataSaving} style={{ padding: "6px 16px", borderRadius: 6, border: "none", background: T.gold, color: T.bg, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                         Apply to All
                       </button>
@@ -5945,18 +6020,52 @@ export default function AdminPanel() {
                   )}
                   {/* Projects list */}
                   <div className="chart-box" style={{ padding: 0, overflow: "hidden" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "40px 2fr 100px 110px 100px 80px 90px 80px", gap: 8, padding: "12px 20px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt }}>
-                      {["#", "Project", "Community", "Price", "PPSF", "Status", "Source", ""].map(h => (
-                        <span key={h} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>{h}</span>
+                    <div style={{ display: "grid", gridTemplateColumns: "40px 2fr 110px 110px 90px 80px 90px 80px", gap: 8, padding: "12px 20px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt }}>
+                      {[
+                        { label: "#", key: null },
+                        { label: "Project", key: "name" },
+                        { label: "Community", key: "community" },
+                        { label: "Price", key: "price" },
+                        { label: "PPSF", key: "ppsf" },
+                        { label: "Status", key: "status" },
+                        { label: "Source", key: null },
+                        { label: "", key: null },
+                      ].map(h => (
+                        <span key={h.label} onClick={() => { if (!h.key) return; if (projectSortKey === h.key) setProjectSortDir(d => d === "asc" ? "desc" : "asc"); else { setProjectSortKey(h.key); setProjectSortDir("asc"); } }}
+                          style={{ fontSize: 9, fontWeight: 700, color: projectSortKey === h.key ? T.gold : T.textMuted, letterSpacing: 1, textTransform: "uppercase", cursor: h.key ? "pointer" : "default", userSelect: "none" }}>
+                          {h.label}{projectSortKey === h.key ? (projectSortDir === "asc" ? " ^" : " v") : ""}
+                        </span>
                       ))}
                     </div>
                     {(() => {
                         const baseIds = new Set(emaarProjects.map(p => String(p.id)));
                         const firestoreOnly = Object.entries(liveProjects).filter(([id]) => !baseIds.has(id)).map(([id, data]) => ({ id, ...data }));
-                        return [...emaarProjects, ...firestoreOnly];
-                      })()
-                      .filter(p => !dataSearch || (p.name||"").toLowerCase().includes(dataSearch.toLowerCase()) || (p.community || "").toLowerCase().includes(dataSearch.toLowerCase()))
-                      .map((p, i) => {
+                        const allProjects = [...emaarProjects, ...firestoreOnly];
+                        const filtered = allProjects
+                          .filter(p => {
+                            const merged = getMergedProject(p);
+                            const matchSearch = !dataSearch || (p.name||"").toLowerCase().includes(dataSearch.toLowerCase()) || (p.community||"").toLowerCase().includes(dataSearch.toLowerCase());
+                            const matchCommunity = projectCommunityFilter === "All" || p.community === projectCommunityFilter;
+                            const matchStatus = projectStatusFilter === "All" || (merged.status||"") === projectStatusFilter;
+                            return matchSearch && matchCommunity && matchStatus;
+                          })
+                          .sort((a, b) => {
+                            const ma = getMergedProject(a); const mb = getMergedProject(b);
+                            const va = ma[projectSortKey] ?? a[projectSortKey] ?? "";
+                            const vb = mb[projectSortKey] ?? b[projectSortKey] ?? "";
+                            const dir = projectSortDir === "asc" ? 1 : -1;
+                            if (typeof va === "number" && typeof vb === "number") return dir * (va - vb);
+                            return dir * String(va).localeCompare(String(vb));
+                          });
+                        return (
+                          <>
+                            <div style={{ padding: "6px 20px", fontSize: 11, color: T.textMuted, borderBottom: `1px solid ${T.border}`, background: T.bg }}>
+                              Showing <strong style={{ color: T.gold }}>{filtered.length}</strong> of {allProjects.length} projects
+                              {bulkSelected.length > 0 && <span style={{ marginLeft: 12, color: T.gold }}>· {bulkSelected.length} selected</span>}
+                              <button type="button" onClick={() => setBulkSelected(filtered.map(p => String(p.id)))} style={{ marginLeft: 12, fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Select All Visible</button>
+                              {bulkSelected.length > 0 && <button type="button" onClick={() => setBulkSelected([])} style={{ marginLeft: 8, fontSize: 10, color: T.red, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Deselect All</button>}
+                            </div>
+                            {filtered.map((p, i) => {
                         const merged = getMergedProject(p);
                         const hasOverride = !!liveProjects[p.id];
                         return (
@@ -5979,6 +6088,9 @@ export default function AdminPanel() {
                           </div>
                         );
                       })}
+                          </>
+                        );
+                      })()}
                   </div>
                 </Section>
               )}
