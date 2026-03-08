@@ -3,7 +3,9 @@
    Matching dashboard design DNA: sidebar nav, KPI cards, sections
    ═══════════════════════════════════════════════════════════════ */
 import React, { useState, useEffect, useCallback } from "react";
-import { auth, db, storage } from "./firebase";
+import { auth, db, storage, firebaseConfig } from "./firebase";
+import { initializeApp, deleteApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 import emailjs from "@emailjs/browser";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
@@ -1565,8 +1567,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           <ColHeader label="Actions" />
         </div>
 
-        {/* FIX #24: context-aware empty state */}
-        {pagedUsers.length === 0 ? (
+        {/* FIX #30: skeleton on initial load, FIX #24: context-aware empty state */}
+        {users.length === 0 && !userSearch && tierFilter === "All" ? (
+          // Initial load — data hasn't arrived from Firestore yet
+          <div>
+            {[...Array(5)].map((_, i) => <SkeletonRow key={i} />)}
+          </div>
+        ) : pagedUsers.length === 0 ? (
           <div style={{ textAlign: "center", padding: "56px 20px" }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>
               {tierFilter === "Suspended" ? "⏸" : tierFilter === "Expired" ? "⌛" : tierFilter === "AtRisk" ? "⚠️" : "🔍"}
@@ -2328,30 +2335,42 @@ export default function AdminPanel() {
     if (!addUserForm.email.trim()) { notify("❌ Email is required"); return; }
     if (!addUserForm.password || addUserForm.password.length < 6) { notify("❌ Password must be at least 6 characters"); return; }
     setAddUserLoading(true);
+    // FIX #14: Use a secondary Firebase app instance so the admin stays logged in
+    let tempApp = null;
     try {
-      const cred = await createUserWithEmailAndPassword(auth, addUserForm.email.trim(), addUserForm.password);
+      tempApp = initializeApp(firebaseConfig, "adminCreateUser_" + Date.now());
+      const tempAuth = getAuth(tempApp);
+      const { createUserWithEmailAndPassword: createTempUser } = await import("firebase/auth");
+      const cred = await createTempUser(tempAuth, addUserForm.email.trim(), addUserForm.password);
       const now = new Date();
       const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
       await setDoc(doc(db, "users", cred.user.uid), {
         name: addUserForm.name.trim(),
         email: addUserForm.email.trim(),
-        phone: addUserForm.phone.trim(),
-        country: addUserForm.country.trim(),
-        tier: addUserForm.tier,
-        notes: addUserForm.notes.trim(),
+        phone: (addUserForm.phone || "").trim(),
+        country: (addUserForm.country || "").trim(),
+        tier: addUserForm.tier || "free",
+        role: addUserForm.role || "user",
+        notes: (addUserForm.notes || "").trim(),
         createdAt: now.toISOString(),
         trialEnd: addUserForm.tier === "pro_trial" ? trialEnd.toISOString() : null,
-        role: "user",
-        createdByAdmin: adminUser?.email,
+        createdByAdmin: adminUser?.email || "admin",
         provider: "admin",
+        emailVerified: false,
       });
-      notify(`✅ User "${addUserForm.name}" created successfully`);
+      notify(`✅ User "${addUserForm.name}" created — admin session preserved`);
       setShowAddUser(false);
-      setAddUserForm({ name: "", email: "", password: "", phone: "", country: "", tier: "free", notes: "" });
+      setAddUserForm({ name: "", email: "", password: "", phone: "", country: "", tier: "free", role: "user", notes: "" });
       fetchUsers();
     } catch (e) {
-      const msgs = { "auth/email-already-in-use": "❌ Email already registered", "auth/invalid-email": "❌ Invalid email address", "auth/weak-password": "❌ Password too weak" };
+      const msgs = {
+        "auth/email-already-in-use": "❌ Email already registered",
+        "auth/invalid-email": "❌ Invalid email address",
+        "auth/weak-password": "❌ Password too weak (min 6 chars)",
+      };
       notify(msgs[e.code] || "❌ " + e.message);
+    } finally {
+      if (tempApp) { try { await deleteApp(tempApp); } catch(e) {} }
     }
     setAddUserLoading(false);
   };
