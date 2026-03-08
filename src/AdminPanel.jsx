@@ -10,7 +10,7 @@ import { getAuth } from "firebase/auth";
 import emailjs from "@emailjs/browser";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI } from "./data";
 import ProjectManager from "./ProjectManager";
@@ -1048,8 +1048,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const handleJobRoleChange = async (uid, newRole) => {
     try {
-      const { setDoc: sd, doc: dc } = await import("firebase/firestore");
-      await sd(dc(db, "users", uid), { role: newRole }, { merge: true });
+      await setDoc(doc(db, "users", uid), { role: newRole }, { merge: true });
       await logAudit(db, { action: "role_change", uid, to: newRole });
       setDrawerUser(prev => prev?.uid === uid ? { ...prev, role: newRole } : prev);
       fetchUsers();
@@ -1080,8 +1079,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const saveNote = async () => {
     if (!noteUser) return;
     try {
-      const { setDoc: sd, doc: dc } = await import("firebase/firestore");
-      await sd(dc(db, "users", noteUser.uid), { notes: noteText, noteUpdatedAt: new Date().toISOString() }, { merge: true });
+      await setDoc(doc(db, "users", noteUser.uid), { notes: noteText, noteUpdatedAt: new Date().toISOString() }, { merge: true });
       notify("Note saved");
       setNoteUser(null); setNoteText("");
       fetchUsers();
@@ -1090,8 +1088,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const saveTag = async (uid, tags) => {
     try {
-      const { setDoc: sd, doc: dc } = await import("firebase/firestore");
-      await sd(dc(db, "users", uid), { tags }, { merge: true });
+      await setDoc(doc(db, "users", uid), { tags }, { merge: true });
       notify("Tags updated"); fetchUsers();
     } catch(e) { notify("Error: Failed to save tags"); }
   };
@@ -1125,9 +1122,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     if (!notifTitle || !notifMessage) { notify("Error: Title and message required"); return; }
     setNotifSendingUser(true);
     try {
-      const { setDoc: sd, doc: dc } = await import("firebase/firestore");
       const id = `notif_${Date.now()}`;
-      await sd(dc(db, "notifications", id), {
+      await setDoc(doc(db, "notifications", id), {
         userId: notifUser.uid, title: notifTitle, message: notifMessage,
         icon: notifIcon, read: false, createdAt: new Date().toISOString(), sentBy: "admin",
       });
@@ -2615,8 +2611,7 @@ export default function AdminPanel() {
     let unsub;
     const setupListener = async () => {
       try {
-        const { onSnapshot, collection: col } = await import("firebase/firestore");
-        unsub = onSnapshot(col(db, "users"), (snap) => {
+        unsub = onSnapshot(collection(db, "users"), (snap) => {
           const list = [];
           snap.forEach(d => list.push({ uid: d.id, ...plainify(d.data()) }));
           setUsers(list);
@@ -2680,16 +2675,14 @@ export default function AdminPanel() {
   /* ─── FETCH AUDIT LOG ─── */
   const fetchAuditLog = useCallback(async () => {
     try {
-      const { getDocs, collection: col, query, orderBy, limit } = await import("firebase/firestore");
-      const q = query(col(db, "auditLog"), orderBy("changedAt", "desc"), limit(100));
+      const q = query(collection(db, "auditLog"), orderBy("changedAt", "desc"), limit(100));
       const snap = await getDocs(q);
       const list = [];
       snap.forEach(d => list.push({ id: d.id, ...d.data() }));
       setAuditLog(list);
     } catch (e) {
       try {
-        const { getDocs, collection: col } = await import("firebase/firestore");
-        const snap = await getDocs(col(db, "auditLog"));
+        const snap = await getDocs(collection(db, "auditLog"));
         const list = [];
         snap.forEach(d => list.push({ id: d.id, ...d.data() }));
         list.sort((a, b) => new Date(b.changedAt || 0) - new Date(a.changedAt || 0));
@@ -2704,8 +2697,7 @@ export default function AdminPanel() {
     let unsub;
     (async () => {
       try {
-        const { onSnapshot, collection: col, query, orderBy, limit, getDoc: gd, doc: dc } = await import("firebase/firestore");
-        const q = query(col(db, "auditLog"), orderBy("changedAt", "desc"), limit(100));
+        const q = query(collection(db, "auditLog"), orderBy("changedAt", "desc"), limit(100));
         unsub = onSnapshot(q, (snap) => {
           const list = [];
           snap.forEach(d => list.push({ id: d.id, ...d.data() }));
@@ -3001,8 +2993,7 @@ export default function AdminPanel() {
   const deleteProject = async (projectId) => {
     if (!window.confirm("Delete this project? This cannot be undone.")) return;
     try {
-      const { deleteDoc, doc: dDoc } = await import("firebase/firestore");
-      await deleteDoc(dDoc(db, "projectData", String(projectId)));
+      await deleteDoc(doc(db, "projectData", String(projectId)));
       notify("Project deleted");
       setEditingProject(null);
       fetchLiveData();
@@ -3067,8 +3058,7 @@ export default function AdminPanel() {
 
   const sendAlertsToAllUsers = async (projectName, changeType, newValue, oldValue) => {
     try {
-      const { getDocs, collection: col } = await import("firebase/firestore");
-      const snap = await getDocs(col(db, "users"));
+      const snap = await getDocs(collection(db, "users"));
       const proUsers = snap.docs.filter(d => d.data().plan === "pro" || d.data().plan === "Pro").map(d => d.data());
       for (const user of proUsers) {
         if (user.email) await sendAlertEmail(user.email, user.name || user.displayName, projectName, changeType, newValue, oldValue);
@@ -3080,8 +3070,7 @@ export default function AdminPanel() {
   
   const fetchPriceHistory = async (projectId) => {
     try {
-      const { getDocs, collection: col, query, where, orderBy, limit } = await import("firebase/firestore");
-      const q = query(col(db, "priceHistory"), where("projectId", "==", String(projectId)), orderBy("recordedAt", "asc"), limit(24));
+      const q = query(collection(db, "priceHistory"), where("projectId", "==", String(projectId)), orderBy("recordedAt", "asc"), limit(24));
       const snap = await getDocs(q);
       const data = snap.docs.map(d => d.data());
       setPriceHistory(prev => ({ ...prev, [projectId]: data }));
