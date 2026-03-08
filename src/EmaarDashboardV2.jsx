@@ -1500,6 +1500,7 @@ export default function EmaarDashboardV2() {
   const notify = (msg) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
   const [adminUsers, setAdminUsers] = useState([]);
   const [adminLoading, setAdminLoading] = useState(false);
+  const [adminError, setAdminError] = useState("");
   const fetchAdminUsersRef = useRef(null);
 
   // Tier access helper
@@ -2149,7 +2150,8 @@ export default function EmaarDashboardV2() {
         users.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
         setAdminUsers(users);
       } catch (err) {
-        console.log("Failed to fetch users:", err);
+        console.error("Failed to fetch users:", err.message || err);
+        setAdminError("Error: " + (err.message || JSON.stringify(err)));
       }
       setAdminLoading(false);
     };
@@ -2268,7 +2270,7 @@ export default function EmaarDashboardV2() {
           {userTier === "admin" && (
             <>
               <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Admin</div>
-              <button type="button" className={`sidebar-btn ${tab === "Admin" ? "active" : ""}`} onClick={() => setTab("Admin")}>
+              <button type="button" className={`sidebar-btn ${tab === "Admin" ? "active" : ""}`} onClick={() => handleTabChange("Admin")}>
                 {Icons.admin}
                 Admin Panel
               </button>
@@ -6164,8 +6166,16 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── ADMIN TAB ─── */}
+          {tab === "Admin" && userTier === "admin" && (() => { if (adminUsers.length === 0 && !adminLoading) fetchAdminUsers(); return null; })()}
           {tab === "Admin" && userTier === "admin" && <>
             <Section title="User Management" sub="All registered users · Real-time data from Firestore">
+              <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+                <button type="button" onClick={() => { setAdminError(""); fetchAdminUsers(); }} style={{ padding: "8px 16px", background: T.gold, border: "none", borderRadius: 8, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                  {adminLoading ? "Loading..." : "🔄 Refresh Users"}
+                </button>
+                {adminError && <span style={{ fontSize: 11, color: "#EF4444" }}>{adminError}</span>}
+                {!adminError && adminUsers.length === 0 && !adminLoading && <span style={{ fontSize: 11, color: T.textMuted }}>No users loaded yet — click Refresh</span>}
+              </div>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Total Users" value={adminUsers.length} sub="Registered accounts" delay={1} onClick={() => setSelectedKPI({ label: "Total Users", value: `${adminUsers.length}`, color: T.gold, description: "Total registered users on DXB Analytics platform.", source: "Firebase Firestore — Live", sourceUrl: "#", items: [{ label: "Total Registered", value: `${adminUsers.length}`, note: "All time" }, { label: "Pro Trial", value: `${adminUsers.filter(u => u.status === "pro_trial").length}`, note: "Active trials" }, { label: "Free / Expired", value: `${adminUsers.filter(u => u.status === "free" || u.status === "expired").length}`, note: "Conversion targets" }, { label: "Paying Customers", value: `${adminUsers.filter(u => u.tier === "pro" || u.tier === "enterprise").length}`, note: "Revenue generating" }], trend: null })} />
                 <KPI label="Pro Trial" value={adminUsers.filter(u => u.status === "pro_trial").length} sub="Active trials" delay={2} onClick={() => setSelectedKPI({ label: "Pro Trial Users", value: `${adminUsers.filter(u => u.status === "pro_trial").length}`, color: T.gold, description: "Users currently in their Pro trial period. These are your hottest leads for conversion.", source: "Firebase Firestore — Live", sourceUrl: "#", items: [{ label: "Active Trials", value: `${adminUsers.filter(u => u.status === "pro_trial").length}`, note: "In trial now" }, { label: "Conversion Target", value: "AED 99/mo each", note: "Pro plan price" }, { label: "Pipeline Value", value: `AED ${adminUsers.filter(u => u.status === "pro_trial").length * 99}/mo`, note: "If all convert" }, { label: "Action", value: "Follow up now", note: "Before trial expires" }], trend: null })} />
