@@ -168,6 +168,7 @@ select option { background: ${T.surface}; color: ${T.textPrimary}; }
   .kpi-grid-4 { grid-template-columns: 1fr 1fr !important; }
   .kpi-grid-6 { grid-template-columns: 1fr 1fr !important; }
   .kpi-grid-overview { grid-template-columns: repeat(2, 1fr) !important; }
+  .charts-row-overview { grid-template-columns: 1fr !important; }
   .chart-grid-2 { grid-template-columns: 1fr !important; }
   .chart-grid-3 { grid-template-columns: 1fr !important; }
   .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -181,6 +182,7 @@ select option { background: ${T.surface}; color: ${T.textPrimary}; }
   .kpi-grid-4 { grid-template-columns: 1fr !important; }
   .kpi-grid-6 { grid-template-columns: 1fr !important; }
   .kpi-grid-overview { grid-template-columns: 1fr 1fr !important; }
+  .charts-row-overview { grid-template-columns: 1fr !important; }
   .edit-grid-3 { grid-template-columns: 1fr !important; }
   .users-kpi-grid { grid-template-columns: 1fr 1fr !important; }
 }
@@ -3051,60 +3053,164 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 16, marginBottom: 28 }}>
-                <Chart title="Signup Timeline (14 Days)" sub={`${stats.thisWeek} this week`}>
-                  <ResponsiveContainer width="100%" height={220}>
-                    <BarChart data={signupTimeline}>
+              {/* ══ STEP 4 — THREE CHARTS ══ */}
+
+              {/* Row 1: Signup Timeline (wide) + Tier Donut (narrow) */}
+              <div className="charts-row-overview" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 14, marginBottom: 14 }}>
+
+                {/* Chart 1 — Signup Timeline with last-week comparison */}
+                <div className="chart-box fade-up" style={{ padding: 20 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Signup Timeline</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>14 days · vs prior week</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 11 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <div style={{ width: 10, height: 10, borderRadius: 2, background: T.gold }} />
+                        <span style={{ color: T.textSecondary }}>This week</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <div style={{ width: 10, height: 3, borderRadius: 2, background: T.textMuted }} />
+                        <span style={{ color: T.textMuted }}>Last week</span>
+                      </div>
+                      <div style={{ padding: "3px 10px", borderRadius: 6, background: signupTrend.dir === "up" ? "rgba(16,185,129,0.1)" : signupTrend.dir === "down" ? "rgba(239,68,68,0.1)" : T.surfaceAlt, fontSize: 11, fontWeight: 700, color: signupTrend.dir === "up" ? T.green : signupTrend.dir === "down" ? T.red : T.textMuted }}>
+                        {signupTrend.dir === "up" ? "↑" : signupTrend.dir === "down" ? "↓" : ""} {signupThisWeek} vs {signupLastWeek} last week
+                      </div>
+                    </div>
+                  </div>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={signupTimeline} barGap={2}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                      <XAxis dataKey="date" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                      <XAxis dataKey="date" tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} interval={1} angle={-30} textAnchor="end" height={36} />
+                      <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} width={24} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="count" fill={T.gold} name="Signups" radius={[4, 4, 0, 0]} barSize={20} />
+                      <Bar dataKey="count" fill={T.gold} name="This week" radius={[3, 3, 0, 0]} barSize={14} />
+                      <Bar dataKey="lastWeek" fill={T.textMuted} name="Last week" radius={[3, 3, 0, 0]} barSize={14} opacity={0.45} />
                     </BarChart>
                   </ResponsiveContainer>
-                </Chart>
-                <Chart title="Tier Distribution">
-                  <ResponsiveContainer width="100%" height={220}>
-                    <PieChart>
-                      <Pie data={tierData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value" stroke="none">
-                        {tierData.map((d, i) => <Cell key={i} fill={d.color} />)}
-                      </Pie>
-                      <Tooltip content={<CustomTooltip />} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", marginTop: 4 }}>
+                </div>
+
+                {/* Chart 2 — Tier Donut with total in centre, clickable slices */}
+                <div className="chart-box fade-up" style={{ padding: 20 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Tier Distribution</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Click a slice to filter users</div>
+                  <div style={{ position: "relative" }}>
+                    <ResponsiveContainer width="100%" height={160}>
+                      <PieChart>
+                        <Pie
+                          data={tierData}
+                          cx="50%" cy="50%"
+                          innerRadius={48} outerRadius={72}
+                          paddingAngle={3} dataKey="value" stroke="none"
+                          onClick={(d) => {
+                            const map = { "Pro Trial": "Pro Trial", "Free": "Free", "Pro": "Pro", "Enterprise": "Enterprise", "Expired": "Expired" };
+                            if (map[d.name]) { setTab("users"); setTierFilter(map[d.name]); }
+                          }}
+                          style={{ cursor: "pointer" }}
+                        >
+                          {tierData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                        </Pie>
+                        <Tooltip content={<CustomTooltip />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    {/* Total in centre */}
+                    <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", textAlign: "center", pointerEvents: "none" }}>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 900, color: T.white, lineHeight: 1 }}>{stats.total}</div>
+                      <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>total</div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 8 }}>
                     {tierData.map(d => (
-                      <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: 2, background: d.color }} />
-                        <span style={{ color: T.textSecondary }}>{d.name}: {d.value}</span>
+                      <div key={d.name} onClick={() => { setTab("users"); setTierFilter(d.name); }}
+                        style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, cursor: "pointer", padding: "3px 8px", borderRadius: 6, background: `${d.color}10`, border: `1px solid ${d.color}30` }}>
+                        <div style={{ width: 7, height: 7, borderRadius: 2, background: d.color, flexShrink: 0 }} />
+                        <span style={{ color: T.textSecondary }}>{d.name}</span>
+                        <span style={{ color: d.color, fontWeight: 700 }}>{d.value}</span>
                       </div>
                     ))}
                   </div>
-                </Chart>
+                </div>
               </div>
 
-              <Section title="Recent Signups" sub="Latest platform registrations" action={
-                <button type="button" onClick={() => setTab("users")} style={{ fontSize: 11, padding: "6px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>View All →</button>
-              }>
-                <div className="chart-box" style={{ padding: 0, overflow: "hidden" }}>
-                  {[...users].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 5).map((u, i) => {
+              {/* Row 2: MRR Movement chart (full width) */}
+              <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>MRR Movement — This Month</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>New revenue vs churn vs net</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>New MRR</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: T.green, fontFamily: "'Fraunces',serif" }}>+AED {newMRRThisMonth.toLocaleString()}</div>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Churned</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: churnedMRR > 0 ? T.red : T.textMuted, fontFamily: "'Fraunces',serif" }}>-AED {churnedMRR.toLocaleString()}</div>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Net MRR</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: netMRR >= 0 ? T.green : T.red, fontFamily: "'Fraunces',serif" }}>{netMRR >= 0 ? "+" : ""}AED {netMRR.toLocaleString()}</div>
+                    </div>
+                  </div>
+                </div>
+                <ResponsiveContainer width="100%" height={160}>
+                  <BarChart data={mrrMovement} layout="vertical" margin={{ left: 20, right: 30 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
+                    <XAxis type="number" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `AED ${v}`} />
+                    <YAxis type="category" dataKey="label" tick={{ fill: T.textSecondary, fontSize: 11 }} axisLine={false} tickLine={false} width={110} />
+                    <Tooltip content={<CustomTooltip />} formatter={v => [`AED ${Math.abs(v).toLocaleString()}`, ""]} />
+                    <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={22}>
+                      {mrrMovement.map((entry, i) => (
+                        <Cell key={i} fill={
+                          entry.label === "New MRR" ? T.green :
+                          entry.label === "Churned MRR" ? T.red :
+                          entry.label === "Net MRR" ? (netMRR >= 0 ? T.teal : T.red) :
+                          T.textMuted
+                        } />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Recent Signups — kept, now with empty state */}
+              <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Recent Signups</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Latest platform registrations</div>
+                  </div>
+                  <button type="button" onClick={() => setTab("users")} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>View All →</button>
+                </div>
+                {users.length === 0 ? (
+                  <div style={{ padding: "32px 20px", textAlign: "center", color: T.textMuted, fontSize: 13 }}>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>👤</div>
+                    No users yet. <span style={{ color: T.gold, cursor: "pointer" }} onClick={() => setTab("users")}>Add the first user →</span>
+                  </div>
+                ) : (
+                  [...users].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 5).map((u, i, arr) => {
                     const badge = tierBadge(u);
                     return (
-                      <div key={u.uid} className="fade-up" style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderBottom: i < 4 ? `1px solid ${T.border}` : "none", animationDelay: `${i * 0.05}s`, gap: 14 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${badge.color}30, ${badge.color}10)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, color: badge.color, flexShrink: 0 }}>
+                      <div key={u.uid} className="fade-up" onClick={() => setTab("users")}
+                        style={{ display: "flex", alignItems: "center", padding: "13px 20px", borderBottom: i < arr.length - 1 ? `1px solid ${T.border}` : "none", animationDelay: `${i * 0.05}s`, gap: 14, cursor: "pointer", transition: "background 0.15s" }}
+                        onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg, ${badge.color}30, ${badge.color}10)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, color: badge.color, flexShrink: 0 }}>
                           {(u.name || u.email || "?")[0].toUpperCase()}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || u.email?.split("@")[0] || "Unknown"}</div>
-                          <div style={{ fontSize: 11, color: T.textMuted }}>{u.email}</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</div>
                         </div>
-                        <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 6, background: badge.bg, color: badge.color }}>{badge.label}</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 9px", borderRadius: 6, background: badge.bg, color: badge.color, flexShrink: 0 }}>{badge.label}</span>
                         <span style={{ fontSize: 11, color: T.textMuted, flexShrink: 0 }}>{timeSince(u.createdAt)}</span>
                       </div>
                     );
-                  })}
-                </div>
-              </Section>
+                  })
+                )}
+              </div>
             </>
           )}
 
