@@ -1080,7 +1080,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   );
 
   /* ══════════════════════════════════════════════
-     PROFILE DRAWER — FIX #20, #23, #25, #35, #36
+     PROFILE DRAWER — rebuilt for professional SaaS quality
   ══════════════════════════════════════════════ */
   const ProfileDrawer = () => {
     if (!drawerUser) return null;
@@ -1090,199 +1090,246 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     const health = getHealth(u);
     const days  = trialDaysLeft(u);
 
+    // Clean SVG icons — no emojis
+    const IconUser     = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+    const IconTier     = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
+    const IconActivity = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>;
+    const IconActions  = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>;
+    const IconMail     = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>;
+    const IconBell     = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>;
+    const IconKey      = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>;
+    const IconEdit     = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>;
+    const IconNote     = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>;
+    const IconTag      = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>;
+    const IconPause    = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>;
+    const IconPlay     = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>;
+    const IconTrash    = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>;
+    const IconCheck    = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
+    const IconClock    = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+
+    const TABS = [
+      { key: "details",  label: "Details",    Icon: IconUser },
+      { key: "tier",     label: "Tier & Role", Icon: IconTier },
+      { key: "activity", label: "Activity",   Icon: IconActivity },
+      { key: "actions",  label: "Actions",    Icon: IconActions },
+    ];
+
     return (
       <div style={{ position: "fixed", inset: 0, zIndex: 1500, display: "flex" }} onClick={() => setDrawerUser(null)}>
-        <div style={{ flex: 1, background: "rgba(0,0,0,0.65)" }} />
-        <div style={{ width: 460, background: T.surface, borderLeft: `1px solid ${T.border}`, overflowY: "auto", display: "flex", flexDirection: "column", animation: "slideIn 0.25s ease-out" }} onClick={e => e.stopPropagation()}>
+        {/* Backdrop */}
+        <div style={{ flex: 1, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }} />
 
-          {/* Header */}
-          <div style={{ padding: "24px 24px 20px", borderBottom: `1px solid ${T.border}`, background: `linear-gradient(135deg, ${badge.color}10, transparent 60%)`, position: "relative" }}>
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${badge.color}, transparent)` }} />
+        {/* Panel */}
+        <div style={{ width: 500, background: T.bg, borderLeft: `1px solid ${T.border}`, overflowY: "auto", display: "flex", flexDirection: "column", animation: "slideIn 0.2s cubic-bezier(0.16,1,0.3,1)" }} onClick={e => e.stopPropagation()}>
+
+          {/* ── Header ── */}
+          <div style={{ padding: "20px 24px 16px", borderBottom: `1px solid ${T.border}`, position: "relative" }}>
+            {/* Subtle tier colour bar at top */}
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: badge.color, opacity: 0.6 }} />
+
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <div style={{ width: 56, height: 56, borderRadius: 16, background: `linear-gradient(135deg, ${badge.color}30, ${badge.color}10)`, border: `2px solid ${badge.color}50`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 800, color: badge.color, fontFamily: "'Fraunces',serif", flexShrink: 0 }}>
+                {/* Avatar */}
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: `${badge.color}18`, border: `1.5px solid ${badge.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800, color: badge.color, fontFamily: "'Fraunces',serif", flexShrink: 0 }}>
                   {(u.name || u.email || "?")[0].toUpperCase()}
                 </div>
                 <div>
-                  <div style={{ fontSize: 17, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{u.name || "No name"}</div>
-                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>
-                    {u.email}
-                    {/* FIX #36: copy email */}
-                    <button type="button" onClick={() => copyToClipboard(u.email, "email")} style={{ background: "none", border: "none", cursor: "pointer", color: copiedId === "email" ? T.green : T.textMuted, padding: 0 }} title="Copy email">
-                      {copiedId === "email" ? "✓" : <CopyIcon />}
+                  <div style={{ fontSize: 16, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>
+                    {u.name || "No name"}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
+                    <span style={{ fontSize: 12, color: T.textMuted }}>{u.email}</span>
+                    <button type="button" onClick={() => copyToClipboard(u.email, "email")} style={{ background: "none", border: "none", cursor: "pointer", color: copiedId === "email" ? T.green : T.textMuted, padding: 0, display: "flex", alignItems: "center" }} title="Copy email">
+                      {copiedId === "email" ? <IconCheck /> : <CopyIcon />}
                     </button>
                   </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 8 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: badge.bg, color: badge.color }}>{badge.label}{badge.price ? ` · ${badge.price}` : ""}</span>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${health.dot}18`, color: health.dot, display: "flex", alignItems: "center", gap: 4 }}>
-                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: health.dot, display: "inline-block" }} />{health.label}
+                  {/* Status badges — clean, no emojis */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 7 }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 5, background: badge.bg, color: badge.color, border: `1px solid ${badge.color}25` }}>
+                      {badge.label}{badge.price ? ` · ${badge.price}` : ""}
                     </span>
-                    {job && <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: job.bg, color: job.color }}>{job.label}</span>}
-                    {(u.tags || []).map(tag => { const t = TAGS_OPTIONS.find(x => x.value === tag); return t ? <span key={tag} style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${t.color}18`, color: t.color }}>{t.label}</span> : null; })}
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 5, background: `${health.dot}12`, color: health.dot, border: `1px solid ${health.dot}20`, display: "flex", alignItems: "center", gap: 3 }}>
+                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: health.dot, display: "inline-block" }} />
+                      {health.label}
+                    </span>
+                    {job && <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 5, background: job.bg, color: job.color, border: `1px solid ${job.color}20` }}>{job.label}</span>}
+                    {(u.tags || []).map(tag => { const t = TAGS_OPTIONS.find(x => x.value === tag); return t ? <span key={tag} style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 5, background: `${t.color}12`, color: t.color, border: `1px solid ${t.color}20` }}>{t.label}</span> : null; })}
                   </div>
                 </div>
               </div>
-              <button type="button" onClick={() => setDrawerUser(null)} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>✕</button>
+
+              {/* Close button */}
+              <button type="button" onClick={() => setDrawerUser(null)}
+                style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0, transition: "all 0.15s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = T.surfaceAlt; e.currentTarget.style.color = T.white; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}>
+                ✕
+              </button>
             </div>
           </div>
 
-          {/* Stats — FIX #23: user's own LTV, not global MRR */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", borderBottom: `1px solid ${T.border}`, background: T.bg }}>
+          {/* ── Stats bar ── */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", background: T.surface, borderBottom: `1px solid ${T.border}` }}>
             {[
-              { label: "Plan Value", value: getUserLTV(u), color: u.tier === "pro" || u.tier === "enterprise" ? T.green : T.textMuted },
-              { label: "Trial Days",  value: days !== null ? `${days}d left` : u.tier === "pro" ? "Active" : "—" },
+              { label: "Plan Value",  value: getUserLTV(u),    color: u.tier === "pro" || u.tier === "enterprise" ? T.green : T.white },
+              { label: "Trial Days",  value: days !== null ? `${days}d left` : u.tier === "pro" ? "Active" : "—", color: days !== null && days <= 3 ? T.red : T.white },
               { label: "Last Active", value: lastActiveLabel(u), color: lastActiveColor(u) },
-              { label: "Joined",      value: (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { month: "short", day: "numeric" }); } catch { return "—"; } })() },
+              { label: "Joined",      value: (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { month: "short", day: "numeric" }); } catch { return "—"; } })(), color: T.white },
             ].map((s, i) => (
-              <div key={i} style={{ padding: "12px 10px", textAlign: "center", borderRight: i < 3 ? `1px solid ${T.border}` : "none" }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: s.color || T.white, fontFamily: "'Fraunces',serif" }}>{s.value}</div>
-                <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 2 }}>{s.label}</div>
+              <div key={i} style={{ padding: "14px 12px", textAlign: "center", borderRight: i < 3 ? `1px solid ${T.border}` : "none" }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: s.color, fontFamily: "'Fraunces',serif", lineHeight: 1 }}>{s.value}</div>
+                <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginTop: 5 }}>{s.label}</div>
               </div>
             ))}
           </div>
 
-          {/* Sub-nav tabs */}
-          <div style={{ display: "flex", borderBottom: `1px solid ${T.border}`, background: T.surfaceAlt }}>
-            {[["details","📋 Details"],["tier","🎯 Tier & Role"],["activity","📊 Activity"],["actions","⚡ Actions"]].map(([key, label]) => (
+          {/* ── Tab nav ── */}
+          <div style={{ display: "flex", borderBottom: `1px solid ${T.border}`, background: T.surface }}>
+            {TABS.map(({ key, label, Icon }) => (
               <button key={key} type="button" onClick={() => setDrawerTab(key)}
-                style={{ flex: 1, padding: "10px 4px", border: "none", background: "transparent", color: drawerTab === key ? T.gold : T.textMuted, fontSize: 11, fontWeight: drawerTab === key ? 700 : 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", borderBottom: `2px solid ${drawerTab === key ? T.gold : "transparent"}`, transition: "all 0.15s" }}>
+                style={{ flex: 1, padding: "11px 4px", border: "none", background: "transparent", color: drawerTab === key ? T.white : T.textMuted, fontSize: 11, fontWeight: drawerTab === key ? 600 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif", borderBottom: `2px solid ${drawerTab === key ? T.gold : "transparent"}`, transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                <span style={{ opacity: drawerTab === key ? 1 : 0.6 }}><Icon /></span>
                 {label}
               </button>
             ))}
           </div>
 
-          {/* Body */}
+          {/* ── Tab body ── */}
           <div style={{ padding: "20px 24px", flex: 1 }}>
 
-            {/* ── DETAILS TAB ── */}
+            {/* DETAILS */}
             {drawerTab === "details" && (
               <>
-                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Account Details</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 12 }}>Account Details</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}`, marginBottom: 20 }}>
                   {[
-                    ["UID",             u.uid || "—",    "uid"],
-                    ["Phone",           u.phone || "—",  null],
-                    ["Country",         u.country || "—", null],
-                    ["Sign-in",         u.provider || "email", null],
-                    ["Email Verified",  u.emailVerified ? "✅ Verified" : "❌ Not verified", null],
-                    ["Last Login",      u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Never", null],
-                    ["Signed Up",       (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" }); } catch { return "—"; } })(), null],
-                    ["Created By",      u.createdByAdmin ? `Admin (${u.createdByAdmin})` : "Self-signup", null],
-                    ["Trial End",       u.trialEnd ? new Date(u.trialEnd).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }) : "—", null],
-                  ].map(([label, value, copyKey]) => (
-                    <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
-                      <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>{label}</span>
+                    ["UID",           u.uid || "—",    "uid"],
+                    ["Phone",         u.phone || "—",  null],
+                    ["Country",       u.country || "—", null],
+                    ["Sign-in",       u.provider || "email", null],
+                    ["Email Verified", u.emailVerified ? "Verified" : "Not verified", null, u.emailVerified ? T.green : T.red],
+                    ["Last Login",    u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Never", null],
+                    ["Signed Up",     (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" }); } catch { return "—"; } })(), null],
+                    ["Created By",    u.createdByAdmin ? `Admin (${u.createdByAdmin})` : "Self-signup", null],
+                    ["Trial End",     u.trialEnd ? new Date(u.trialEnd).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }) : "—", null],
+                  ].map(([label, value, copyKey, valColor], idx, arr) => (
+                    <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: idx % 2 === 0 ? T.surfaceAlt : T.surface, borderBottom: idx < arr.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                      <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 500, minWidth: 100 }}>{label}</span>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ fontSize: 11, color: T.textPrimary, fontWeight: 500, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
-                        {/* FIX #36: copy UID */}
-                        {copyKey && <button type="button" onClick={() => copyToClipboard(u[copyKey], copyKey)} style={{ background: "none", border: "none", cursor: "pointer", color: copiedId === copyKey ? T.green : T.textMuted, padding: 0 }} title={`Copy ${label}`}>{copiedId === copyKey ? "✓" : <CopyIcon />}</button>}
+                        <span style={{ fontSize: 11, color: valColor || T.textPrimary, fontWeight: 500, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
+                        {copyKey && <button type="button" onClick={() => copyToClipboard(u[copyKey], copyKey)} style={{ background: "none", border: "none", cursor: "pointer", color: copiedId === copyKey ? T.green : T.textMuted, padding: 0, display: "flex", alignItems: "center" }} title={`Copy ${label}`}>{copiedId === copyKey ? <IconCheck /> : <CopyIcon />}</button>}
                       </div>
                     </div>
                   ))}
                 </div>
 
                 {u.notes && (
-                  <div style={{ background: "rgba(212,168,67,0.05)", border: "1px solid rgba(212,168,67,0.2)", borderRadius: 10, padding: "12px 14px", marginBottom: 16 }}>
+                  <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderLeft: `3px solid ${T.gold}`, borderRadius: 8, padding: "12px 14px", marginBottom: 16 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                      <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>📝 Admin Notes</div>
-                      {/* FIX #33: notes badge clickable */}
-                      <button type="button" onClick={() => { setNoteUser(u); setNoteText(u.notes || ""); }} style={{ fontSize: 10, color: T.gold, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Edit ✏️</button>
+                      <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8 }}>Admin Note</div>
+                      <button type="button" onClick={() => { setNoteUser(u); setNoteText(u.notes || ""); }} style={{ fontSize: 10, color: T.textMuted, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                        <IconEdit /> Edit
+                      </button>
                     </div>
                     <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>{u.notes}</div>
                   </div>
                 )}
 
                 {(u.tags || []).length > 0 && (
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Tags</div>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 8 }}>Tags</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                      {(u.tags || []).map(tag => { const t = TAGS_OPTIONS.find(x => x.value === tag); return t ? <span key={tag} style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: `${t.color}18`, color: t.color, border: `1px solid ${t.color}30` }}>{t.label}</span> : null; })}
+                      {(u.tags || []).map(tag => { const t = TAGS_OPTIONS.find(x => x.value === tag); return t ? <span key={tag} style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 5, background: `${t.color}12`, color: t.color, border: `1px solid ${t.color}25` }}>{t.label}</span> : null; })}
                     </div>
                   </div>
                 )}
               </>
             )}
 
-            {/* ── TIER & ROLE TAB — FIX #20: 2 clean dropdowns ── */}
+            {/* TIER & ROLE */}
             {drawerTab === "tier" && (
               <>
-                <div style={{ marginBottom: 22 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Access Tier</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                    {BILLING_TIERS.map(r => {
-                      const isCurrent = (u.tier || "free") === r.value;
-                      return (
-                        <button key={r.value} type="button" onClick={() => handleTierChange(u.uid, r.value, u.tier)}
-                          style={{ padding: "12px 10px", borderRadius: 10, border: `2px solid ${isCurrent ? r.color : T.border}`, background: isCurrent ? r.bg : "transparent", color: isCurrent ? r.color : T.textMuted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", position: "relative", transition: "all 0.15s" }}>
-                          <div>{r.label}</div>
-                          <div style={{ fontSize: 10, fontWeight: 500, color: isCurrent ? r.color : T.textMuted, marginTop: 2 }}>{r.price || (r.value === "free" ? "No charge" : r.value === "pro_trial" ? "Limited time" : "")}</div>
-                          {isCurrent && <div style={{ position: "absolute", top: 8, right: 10, fontSize: 12 }}>✓</div>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: 22 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Job Role</div>
-                  <select value={u.role || "user"} onChange={e => handleJobRoleChange(u.uid, e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
-                    <option value="user">— No role assigned —</option>
-                    {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                  </select>
-                  {getJobRoleBadge(u) && (
-                    <div style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: getJobRoleBadge(u).bg, color: getJobRoleBadge(u).color, fontSize: 11, fontWeight: 700 }}>
-                      ✓ {getJobRoleBadge(u).label}
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Extend Trial</div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {[7, 14, 30].map(d => (
-                      <button key={d} type="button" onClick={() => confirmAndExtend(u, d)}
-                        style={{ flex: 1, padding: "9px", borderRadius: 9, border: `1px solid ${T.green}40`, background: "rgba(16,185,129,0.06)", color: T.green, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                        +{d} Days
+                <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 12 }}>Access Tier</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 24 }}>
+                  {BILLING_TIERS.map(r => {
+                    const isCurrent = (u.tier || "free") === r.value;
+                    return (
+                      <button key={r.value} type="button" onClick={() => handleTierChange(u.uid, r.value, u.tier)}
+                        style={{ padding: "12px 14px", borderRadius: 10, border: `1.5px solid ${isCurrent ? r.color : T.border}`, background: isCurrent ? `${r.color}10` : "transparent", color: isCurrent ? r.color : T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all 0.15s", position: "relative" }}
+                        onMouseEnter={e => { if (!isCurrent) { e.currentTarget.style.borderColor = `${r.color}50`; e.currentTarget.style.color = T.white; }}}
+                        onMouseLeave={e => { if (!isCurrent) { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSecondary; }}}>
+                        <div style={{ fontWeight: 700 }}>{r.label}</div>
+                        <div style={{ fontSize: 10, marginTop: 2, opacity: 0.7 }}>{r.price || (r.value === "free" ? "No charge" : r.value === "pro_trial" ? "Limited time" : "")}</div>
+                        {isCurrent && <div style={{ position: "absolute", top: 10, right: 12, color: r.color }}><IconCheck /></div>}
                       </button>
-                    ))}
-                  </div>
+                    );
+                  })}
+                </div>
+
+                <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 12 }}>Job Role</div>
+                <select value={u.role || "user"} onChange={e => handleJobRoleChange(u.uid, e.target.value)} style={{ ...inputStyle, cursor: "pointer", marginBottom: 16 }}>
+                  <option value="user">— No role assigned —</option>
+                  {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                </select>
+
+                <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 12 }}>Extend Trial</div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {[7, 14, 30].map(d => (
+                    <button key={d} type="button" onClick={() => confirmAndExtend(u, d)}
+                      style={{ flex: 1, padding: "10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = T.green; e.currentTarget.style.color = T.green; e.currentTarget.style.background = "rgba(16,185,129,0.05)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSecondary; e.currentTarget.style.background = "transparent"; }}>
+                      <IconClock /> +{d} days
+                    </button>
+                  ))}
                 </div>
               </>
             )}
 
-            {/* ── ACTIVITY TAB ── */}
+            {/* ACTIVITY */}
             {drawerTab === "activity" && (
               <>
                 {(u.loginHistory || []).length > 0 ? (
-                  <div style={{ marginBottom: 22 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Login History</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 12 }}>Login History</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}` }}>
                       {(u.loginHistory || []).slice(0, 8).map((h, i) => (
-                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: i === 0 ? "rgba(16,185,129,0.06)" : T.surfaceAlt, borderRadius: 8, border: `1px solid ${i === 0 ? "rgba(16,185,129,0.2)" : T.border}` }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{ fontSize: 14 }}>{h.device === "Mobile" ? "📱" : "🖥️"}</span>
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: i === 0 ? "rgba(16,185,129,0.04)" : i % 2 === 0 ? T.surfaceAlt : T.surface, borderBottom: i < Math.min(7, (u.loginHistory||[]).length - 1) ? `1px solid ${T.border}` : "none" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 7, background: T.surfaceAlt, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: i === 0 ? T.green : T.textMuted }}>
+                              {h.device === "Mobile" ?
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg> :
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                              }
+                            </div>
                             <div>
-                              <div style={{ fontSize: 11, color: i === 0 ? T.green : T.textSecondary, fontWeight: i === 0 ? 700 : 500 }}>{h.browser || "Browser"} · {h.device || "Desktop"}</div>
-                              {i === 0 && <div style={{ fontSize: 9, color: T.green, fontWeight: 700 }}>Most recent</div>}
+                              <div style={{ fontSize: 12, color: i === 0 ? T.white : T.textSecondary, fontWeight: i === 0 ? 600 : 400 }}>{h.browser || "Browser"} · {h.device || "Desktop"}</div>
+                              {i === 0 && <div style={{ fontSize: 9, color: T.green, fontWeight: 700, marginTop: 1, textTransform: "uppercase", letterSpacing: 0.5 }}>Most recent</div>}
                             </div>
                           </div>
-                          <span style={{ fontSize: 10, color: T.textMuted }}>{(() => { try { return new Date(h.time).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "—"; } })()}</span>
+                          <span style={{ fontSize: 11, color: T.textMuted }}>{(() => { try { return new Date(h.time).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "—"; } })()}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 ) : (
-                  <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 12 }}>No login history yet.<br /><span style={{ fontSize: 11 }}>Recorded after next login.</span></div>
+                  <div style={{ textAlign: "center", padding: "40px 0" }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", color: T.textMuted }}>
+                      <IconActivity />
+                    </div>
+                    <div style={{ fontSize: 13, color: T.textSecondary, fontWeight: 600 }}>No login history yet</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Recorded after next login.</div>
+                  </div>
                 )}
 
                 {(u.recentActivity || []).length > 0 && (
                   <div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Tab Activity</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 4, position: "relative", paddingLeft: 20 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 12 }}>Tab Activity</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 0, position: "relative", paddingLeft: 20 }}>
                       <div style={{ position: "absolute", left: 7, top: 8, bottom: 8, width: 1, background: T.border }} />
                       {(u.recentActivity || []).slice(0, 10).map((a, i) => (
-                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 10px 5px 0", position: "relative" }}>
-                          <div style={{ position: "absolute", left: -14, width: 8, height: 8, borderRadius: "50%", background: i === 0 ? T.gold : T.border, border: `2px solid ${T.surface}` }} />
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 10px 7px 0", position: "relative" }}>
+                          <div style={{ position: "absolute", left: -14, width: 7, height: 7, borderRadius: "50%", background: i === 0 ? T.gold : T.border, border: `2px solid ${T.bg}` }} />
                           <span style={{ fontSize: 12, color: i === 0 ? T.white : T.textSecondary, fontWeight: i === 0 ? 600 : 400 }}>{a.tab}</span>
                           <span style={{ fontSize: 10, color: T.textMuted }}>{(() => { try { return timeSince(a.time); } catch { return "—"; } })()}</span>
                         </div>
@@ -1293,52 +1340,62 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               </>
             )}
 
-            {/* ── ACTIONS TAB — FIX #25: group safe vs destructive ── */}
+            {/* ACTIONS */}
             {drawerTab === "actions" && (
               <>
-                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Communication</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 20 }}>
+                {/* Communication */}
+                <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 10 }}>Communication</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 24 }}>
                   {[
-                    { label: "📢  Send Notification", color: "#F59E0B", action: () => setNotifUser(u) },
-                    { label: "✉️  Send Email",        color: "#3B82F6", action: () => { setSendEmailUser(u); setEmailSubject(""); setEmailBody(""); } },
-                    { label: "🔑  Send Password Reset", color: T.textSecondary, action: () => { sendResetEmail(u.email); notify(`✅ Password reset sent to ${u.email}`); } },
+                    { label: "Send Notification", Icon: IconBell,  color: "#F59E0B", action: () => setNotifUser(u) },
+                    { label: "Send Email",         Icon: IconMail,  color: "#3B82F6", action: () => { setSendEmailUser(u); setEmailSubject(""); setEmailBody(""); } },
+                    { label: "Send Password Reset",Icon: IconKey,   color: T.textSecondary, action: () => { sendResetEmail(u.email); notify(`Password reset sent to ${u.email}`); } },
                   ].map(btn => (
                     <button key={btn.label} type="button" onClick={btn.action}
-                      style={{ padding: "10px 14px", borderRadius: 9, border: `1px solid ${btn.color}25`, background: `${btn.color}08`, color: btn.color, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "background 0.15s" }}
-                      onMouseEnter={e => e.currentTarget.style.background = `${btn.color}15`}
-                      onMouseLeave={e => e.currentTarget.style.background = `${btn.color}08`}>
+                      style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 10 }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = `${btn.color}50`; e.currentTarget.style.color = btn.color; e.currentTarget.style.background = `${btn.color}06`; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSecondary; e.currentTarget.style.background = "transparent"; }}>
+                      <span style={{ opacity: 0.7 }}><btn.Icon /></span>
                       {btn.label}
                     </button>
                   ))}
                 </div>
 
-                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Account</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 20 }}>
+                {/* Account */}
+                <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 10 }}>Account</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 24 }}>
                   {[
-                    { label: "✏️  Edit User Details",  color: T.teal,    action: () => { openEditUser(u); setDrawerUser(null); } },
-                    { label: "📝  Add / Edit Note",     color: T.gold,    action: () => { setNoteUser(u); setNoteText(u.notes || ""); } },
-                    { label: "🏷️  Manage Tags",         color: "#8B5CF6", action: () => setTagUser(u) },
+                    { label: "Edit User Details", Icon: IconEdit, color: T.teal,    action: () => { openEditUser(u); setDrawerUser(null); } },
+                    { label: "Add / Edit Note",   Icon: IconNote, color: T.gold,    action: () => { setNoteUser(u); setNoteText(u.notes || ""); } },
+                    { label: "Manage Tags",        Icon: IconTag,  color: "#8B5CF6", action: () => setTagUser(u) },
                   ].map(btn => (
                     <button key={btn.label} type="button" onClick={btn.action}
-                      style={{ padding: "10px 14px", borderRadius: 9, border: `1px solid ${btn.color}25`, background: `${btn.color}08`, color: btn.color, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "background 0.15s" }}
-                      onMouseEnter={e => e.currentTarget.style.background = `${btn.color}15`}
-                      onMouseLeave={e => e.currentTarget.style.background = `${btn.color}08`}>
+                      style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 10 }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = `${btn.color}50`; e.currentTarget.style.color = btn.color; e.currentTarget.style.background = `${btn.color}06`; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSecondary; e.currentTarget.style.background = "transparent"; }}>
+                      <span style={{ opacity: 0.7 }}><btn.Icon /></span>
                       {btn.label}
                     </button>
                   ))}
                 </div>
 
-                {/* FIX #25: destructive actions visually separated */}
-                <div style={{ borderTop: `1px solid ${T.red}20`, paddingTop: 16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: T.red, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10, opacity: 0.7 }}>Danger Zone</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                {/* Danger Zone */}
+                <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 20 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.red, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 10, opacity: 0.8 }}>Danger Zone</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     <button type="button" onClick={() => setConfirmSuspend(u)}
-                      style={{ padding: "10px 14px", borderRadius: 9, border: `1px solid #F59E0B30`, background: "rgba(245,158,11,0.06)", color: "#F59E0B", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left" }}>
-                      {u.suspended ? "✅  Unsuspend User" : "⏸  Suspend User"}
+                      style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 10 }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = "#F59E0B50"; e.currentTarget.style.color = "#F59E0B"; e.currentTarget.style.background = "rgba(245,158,11,0.05)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSecondary; e.currentTarget.style.background = "transparent"; }}>
+                      {u.suspended ? <IconPlay /> : <IconPause />}
+                      {u.suspended ? "Unsuspend User" : "Suspend User"}
                     </button>
                     <button type="button" onClick={() => { setDrawerUser(null); setConfirmDelete(u); }}
-                      style={{ padding: "10px 14px", borderRadius: 9, border: `1px solid ${T.red}40`, background: "rgba(239,68,68,0.08)", color: T.red, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left" }}>
-                      🗑️  Delete User Permanently
+                      style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.red}30`, background: "rgba(239,68,68,0.04)", color: T.red, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 10 }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.08)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.04)"; }}>
+                      <IconTrash />
+                      Delete User Permanently
                     </button>
                   </div>
                 </div>
@@ -1350,7 +1407,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     );
   };
 
-  /* ══════════════════════════════════════════════
+    /* ══════════════════════════════════════════════
      LOADING SKELETON — FIX #30
   ══════════════════════════════════════════════ */
   const SkeletonRow = () => (
