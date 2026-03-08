@@ -183,6 +183,7 @@ select option { background: ${T.surface}; color: ${T.textPrimary}; }
 @keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .users-table-mobile { display: none; flex-direction: column; gap: 10px; }
+.risk-btn-wrap:hover .risk-tooltip { opacity: 1 !important; pointer-events: auto !important; }
 
 `;
 
@@ -514,12 +515,18 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   /* ─── ROLES & TAGS ─── */
   const ROLES = [
-    { value: "free",       label: "Free",       color: "#64748B", bg: "rgba(100,116,139,0.12)", price: "" },
-    { value: "pro_trial",  label: "Pro Trial",  color: T.gold,    bg: "rgba(212,168,67,0.12)",  price: "" },
-    { value: "pro",        label: "Pro",        color: "#10B981", bg: "rgba(16,185,129,0.12)",  price: "AED 99" },
-    { value: "enterprise", label: "Enterprise", color: "#06B6D4", bg: "rgba(6,182,212,0.12)",   price: "AED 499" },
-    { value: "staff",      label: "Staff",      color: "#8B5CF6", bg: "rgba(139,92,246,0.12)",  price: "" },
-    { value: "admin",      label: "Admin",      color: T.gold,    bg: "rgba(212,168,67,0.2)",   price: "" },
+    { value: "free",             label: "Free",             color: "#64748B", bg: "rgba(100,116,139,0.12)", price: "" },
+    { value: "pro_trial",        label: "Pro Trial",        color: T.gold,    bg: "rgba(212,168,67,0.12)",  price: "" },
+    { value: "pro",              label: "Pro",              color: "#10B981", bg: "rgba(16,185,129,0.12)",  price: "AED 99" },
+    { value: "enterprise",       label: "Enterprise",       color: "#06B6D4", bg: "rgba(6,182,212,0.12)",   price: "AED 499" },
+    { value: "agent",            label: "Agent",            color: "#3B82F6", bg: "rgba(59,130,246,0.12)",  price: "" },
+    { value: "sales_manager",    label: "Sales Manager",    color: "#8B5CF6", bg: "rgba(139,92,246,0.12)",  price: "" },
+    { value: "broker",           label: "Broker",           color: "#F59E0B", bg: "rgba(245,158,11,0.12)",  price: "" },
+    { value: "property_manager", label: "Property Manager", color: "#14B8A6", bg: "rgba(20,184,166,0.12)",  price: "" },
+    { value: "investor",         label: "Investor",         color: "#10B981", bg: "rgba(16,185,129,0.1)",   price: "" },
+    { value: "developer",        label: "Developer",        color: "#EC4899", bg: "rgba(236,72,153,0.12)",  price: "" },
+    { value: "staff",            label: "Staff",            color: "#94A3B8", bg: "rgba(148,163,184,0.12)", price: "" },
+    { value: "admin",            label: "Admin",            color: T.gold,    bg: "rgba(212,168,67,0.2)",   price: "" },
   ];
 
   const TAGS_OPTIONS = [
@@ -533,11 +540,18 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   /* ─── HELPERS ─── */
   const getRoleBadge = (u) => {
-    if (u.role === "admin") return ROLES[5];
-    if (u.role === "staff") return ROLES[4];
+    if (u.role === "admin")            return ROLES.find(r => r.value === "admin");
+    // Real estate roles shown as secondary badge color
+    const realEstateRoles = ["agent","sales_manager","broker","property_manager","investor","developer"];
     const expired = u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) <= now;
     if (expired) return { value: "expired", label: "Expired", color: T.red, bg: "rgba(239,68,68,0.12)", price: "" };
     return ROLES.find(r => r.value === (u.tier || "free")) || ROLES[0];
+  };
+
+  const getRoleTag = (u) => {
+    const realEstateRoles = ["agent","sales_manager","broker","property_manager","investor","developer","staff"];
+    if (realEstateRoles.includes(u.role)) return ROLES.find(r => r.value === u.role);
+    return null;
   };
 
   const getHealth = (u) => {
@@ -902,6 +916,17 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
         </select></Field></div>
+        <div><Field label="Role / Job Title"><select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          <option value="user">User (default)</option>
+          <option value="agent">🏠 Real Estate Agent</option>
+          <option value="sales_manager">📊 Sales Manager</option>
+          <option value="broker">🤝 Broker</option>
+          <option value="property_manager">🏢 Property Manager</option>
+          <option value="investor">💰 Investor</option>
+          <option value="developer">🏗️ Developer</option>
+          <option value="staff">⚙️ Platform Staff</option>
+          <option value="admin">👑 Admin</option>
+        </select></Field></div>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
       </div>
       <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
@@ -924,8 +949,16 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
         </select></Field>
-        <Field label="Role"><select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="user">User</option><option value="staff">Staff</option><option value="admin">Admin</option>
+        <Field label="Role / Job Title"><select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          <option value="user">User (default)</option>
+          <option value="agent">🏠 Real Estate Agent</option>
+          <option value="sales_manager">📊 Sales Manager</option>
+          <option value="broker">🤝 Broker</option>
+          <option value="property_manager">🏢 Property Manager</option>
+          <option value="investor">💰 Investor</option>
+          <option value="developer">🏗️ Developer</option>
+          <option value="staff">⚙️ Platform Staff</option>
+          <option value="admin">👑 Admin</option>
         </select></Field>
         <Field label="Trial End Date"><input type="date" value={editUserForm.trialEnd || ""} onChange={e => setEditUserForm(p => ({ ...p, trialEnd: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={editUserForm.notes || ""} onChange={e => setEditUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
@@ -999,6 +1032,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                       <span style={{ width: 5, height: 5, borderRadius: "50%", background: health.dot, display: "inline-block" }} />{health.label}
                     </span>
                     {u.role === "admin" && <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: "rgba(212,168,67,0.2)", color: T.gold }}>ADMIN</span>}
+                    {getRoleTag(u) && <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: getRoleTag(u).bg, color: getRoleTag(u).color }}>{getRoleTag(u).label}</span>}
                     {(u.tags || []).map(tag => { const t = TAGS_OPTIONS.find(x => x.value === tag); return t ? <span key={tag} style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${t.color}18`, color: t.color }}>{t.label}</span> : null; })}
                   </div>
                 </div>
@@ -1105,8 +1139,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             {/* Change Tier */}
             <div style={{ marginBottom: 22 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Change Role / Tier</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 7 }}>
-                {ROLES.filter(r => r.value !== "admin").map(r => {
+              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6, fontWeight: 600 }}>Access Tier</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 12 }}>
+                {ROLES.filter(r => ["free","pro_trial","pro","enterprise"].includes(r.value)).map(r => {
                   const isCurrent = (u.tier || "free") === r.value;
                   return (
                     <button key={r.value} type="button" onClick={() => handleTierChange(u.uid, r.value, u.tier)}
@@ -1114,6 +1149,29 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                       {r.label}
                       {isCurrent && <div style={{ position: "absolute", top: -1, right: -1, width: 7, height: 7, borderRadius: "50%", background: r.color, border: `2px solid ${T.surface}` }} />}
                       {r.price && <div style={{ fontSize: 9, color: isCurrent ? r.color : T.textMuted, marginTop: 1 }}>{r.price}</div>}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6, fontWeight: 600 }}>Real Estate Role</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5 }}>
+                {ROLES.filter(r => ["agent","sales_manager","broker","property_manager","investor","developer","staff"].includes(r.value)).map(r => {
+                  const isCurrent = (u.role || "user") === r.value;
+                  return (
+                    <button key={r.value} type="button"
+                      onClick={async () => {
+                        try {
+                          const { setDoc: sd, doc: dc } = await import("firebase/firestore");
+                          await sd(dc(db, "users", u.uid), { role: r.value }, { merge: true });
+                          await sd(dc(db, "auditLog", Date.now().toString()), { action: "role_change", uid: u.uid, from: u.role, to: r.value, changedBy: "admin", changedAt: new Date().toISOString() });
+                          notify(`✅ Role updated to ${r.label}`);
+                          setDrawerUser(prev => ({ ...prev, role: r.value }));
+                          fetchUsers();
+                        } catch(e) { notify("❌ " + e.message); }
+                      }}
+                      style={{ padding: "7px 6px", borderRadius: 8, border: `1px solid ${isCurrent ? r.color : T.border}`, background: isCurrent ? r.bg : "transparent", color: isCurrent ? r.color : T.textMuted, fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", position: "relative", textAlign: "center" }}>
+                      {r.label}
+                      {isCurrent && <div style={{ position: "absolute", top: -1, right: -1, width: 6, height: 6, borderRadius: "50%", background: r.color, border: `2px solid ${T.surface}` }} />}
                     </button>
                   );
                 })}
@@ -1171,7 +1229,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div style={{ position: "fixed", inset: 0, zIndex: 900 }} onClick={() => setInlineTierUser(null)}>
           <div style={{ position: "fixed", top: inlineTierUser.y, left: inlineTierUser.x, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: 6, zIndex: 901, minWidth: 165, boxShadow: "0 16px 48px rgba(0,0,0,0.5)", animation: "slideUp 0.15s ease-out" }} onClick={e => e.stopPropagation()}>
             <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, padding: "4px 10px 6px" }}>Change Tier</div>
-            {ROLES.filter(r => r.value !== "admin").map(r => {
+            <div style={{ fontSize: 9, color: T.textMuted, padding: "2px 10px 4px", textTransform: "uppercase", letterSpacing: 0.5 }}>Access Tier</div>
+            {ROLES.filter(r => ["free","pro_trial","pro","enterprise"].includes(r.value)).map(r => {
               const isCurrent = (inlineTierUser.user.tier || "free") === r.value;
               return (
                 <button key={r.value} type="button" onClick={() => handleTierChange(inlineTierUser.user.uid, r.value, inlineTierUser.user.tier)}
@@ -1192,10 +1251,18 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           <p style={{ fontSize: 13, color: T.textMuted, margin: "4px 0 0" }}>{total} registered users · Live Firestore · {allFiltered.length} shown · <span style={{ color: T.green }}>{activeToday} active today</span></p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button type="button" onClick={sendTrialExpiryEmails} disabled={sendingTrialEmails}
-            style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${atRisk > 0 ? T.red + "60" : T.border}`, background: atRisk > 0 ? "rgba(239,68,68,0.06)" : "transparent", color: atRisk > 0 ? T.red : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, opacity: sendingTrialEmails ? 0.6 : 1 }}>
-            {sendingTrialEmails ? "Sending..." : `⚠️ Email At-Risk (${atRisk})`}
-          </button>
+          <div style={{ position: "relative" }} className="risk-btn-wrap">
+            <button type="button" onClick={sendTrialExpiryEmails} disabled={sendingTrialEmails}
+              style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${atRisk > 0 ? T.red + "60" : T.border}`, background: atRisk > 0 ? "rgba(239,68,68,0.06)" : "transparent", color: atRisk > 0 ? T.red : T.textMuted, cursor: atRisk > 0 ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", fontWeight: 600, opacity: sendingTrialEmails ? 0.6 : 1 }}
+              title={atRisk > 0 ? `Sends trial expiry warning emails to ${atRisk} user(s) with ≤3 days left on their trial` : "No at-risk trial users right now"}>
+              {sendingTrialEmails ? "⏳ Sending..." : `⚠️ Email At-Risk (${atRisk})`}
+            </button>
+            {atRisk > 0 && (
+              <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: T.surface, border: `1px solid ${T.red}30`, borderRadius: 8, padding: "8px 12px", fontSize: 11, color: T.textMuted, whiteSpace: "nowrap", zIndex: 50, pointerEvents: "none", boxShadow: "0 8px 24px rgba(0,0,0,0.4)", opacity: 0, transition: "opacity 0.2s" }} className="risk-tooltip">
+                📧 Sends to: {users.filter(u => { const d = trialDaysLeft(u); return d !== null && d <= 3; }).map(u => u.name || u.email).join(", ")}
+              </div>
+            )}
+          </div>
           <button type="button" onClick={exportFiltered} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} Export ({allFiltered.length})</button>
           <button type="button" onClick={fetchUsers} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
           <button type="button" onClick={() => setShowAddUser(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700 }}>+ Add User</button>
@@ -1205,19 +1272,23 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       {/* ══ KPI CARDS ══ */}
       <div className="users-kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10, marginBottom: 16 }}>
         {[
-          { label: "Total",       value: total,            color: T.white,     sub: "All accounts",       border: T.border },
-          { label: "Paying",      value: paid,             color: "#10B981",   sub: `AED ${mrr}/mo`,      border: "#10B98125" },
-          { label: "Trial",       value: trial,            color: T.gold,      sub: "7-day trial",        border: `${T.gold}25` },
-          { label: "Free",        value: free,             color: T.textMuted, sub: "To convert",         border: T.border },
-          { label: "At Risk",     value: atRisk,           color: T.red,       sub: "≤2 days left",       border: `${T.red}25` },
-          { label: "Active Today",value: activeToday,      color: T.teal,      sub: "Logged in today",    border: `${T.teal}25` },
-          { label: "Conversion",  value: convRate + "%",   color: "#06B6D4",   sub: "Free → Paid",        border: "#06B6D425" },
+          { label: "Total",        value: total,          color: T.white,     sub: "All accounts",    border: T.border,         filter: "All" },
+          { label: "Paying",       value: paid,           color: "#10B981",   sub: `AED ${mrr}/mo`,   border: "#10B98125",       filter: "Pro" },
+          { label: "Trial",        value: trial,          color: T.gold,      sub: "7-day trial",     border: `${T.gold}25`,    filter: "Pro Trial" },
+          { label: "Free",         value: free,           color: T.textMuted, sub: "To convert",      border: T.border,         filter: "Free" },
+          { label: "At Risk",      value: atRisk,         color: T.red,       sub: "≤2 days left",    border: `${T.red}25`,     filter: "Pro Trial" },
+          { label: "Active Today", value: activeToday,    color: T.teal,      sub: "Logged in today", border: `${T.teal}25`,    filter: null },
+          { label: "Conversion",   value: convRate + "%", color: "#06B6D4",   sub: "Free → Paid",     border: "#06B6D425",      filter: null },
         ].map(s => (
-          <div key={s.label} className="kpi-card" style={{ border: `1px solid ${s.border}`, textAlign: "center", cursor: "default" }}>
+          <div key={s.label} className="kpi-card"
+            onClick={() => { if (s.filter) { setTierFilter(s.filter); setPage(1); } }}
+            style={{ border: `1px solid ${tierFilter === s.filter && s.filter ? s.color + "60" : s.border}`, textAlign: "center", cursor: s.filter ? "pointer" : "default", transform: tierFilter === s.filter && s.filter ? "translateY(-2px)" : "none", transition: "all 0.15s" }}
+            title={s.filter ? `Click to filter by ${s.filter}` : ""}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: s.color, opacity: 0.6, borderRadius: "16px 16px 0 0" }} />
             <div style={{ fontSize: 22, fontWeight: 800, color: s.color, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>{s.value}</div>
             <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 4 }}>{s.label}</div>
             <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{s.sub}</div>
+            {s.filter && <div style={{ fontSize: 8, color: s.color, marginTop: 3, opacity: 0.7 }}>click to filter ↓</div>}
           </div>
         ))}
       </div>
@@ -1297,8 +1368,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       {showFilters && (
         <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 14, display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
           <div>
-            <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 5 }}>Country</label>
-            <input type="text" placeholder="e.g. UAE" value={filterCountry} onChange={e => { setFilterCountry(e.target.value); setPage(1); }} style={{ ...inputStyle, maxWidth: 160 }} onFocus={focusIn} onBlur={focusOut} />
+            <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 5 }}>
+              Country <span style={{ color: T.textMuted, fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(set when user fills profile)</span>
+            </label>
+            <input type="text" placeholder="e.g. UAE, Saudi..." value={filterCountry} onChange={e => { setFilterCountry(e.target.value); setPage(1); }} style={{ ...inputStyle, maxWidth: 180 }} onFocus={focusIn} onBlur={focusOut} />
+            {filterCountry && allFiltered.length === 0 && (
+              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>No users have set their country yet</div>
+            )}
           </div>
           <div>
             <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 5 }}>Sort By</label>
@@ -1311,8 +1387,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               <option value="lastActive">Last Active</option>
             </select>
           </div>
-          <button type="button" onClick={() => { setFilterCountry(""); setSortField("newest"); setPage(1); }}
-            style={{ padding: "9px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Reset</button>
+          <button type="button" onClick={() => { setFilterCountry(""); setSortField("newest"); setSortDir("desc"); setPage(1); }}
+            style={{ padding: "9px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", letterSpacing: 0.3 }}>↺ Reset</button>
         </div>
       )}
 
@@ -1386,6 +1462,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                     <span style={{ width: 5, height: 5, borderRadius: "50%", background: health.dot, display: "inline-block", flexShrink: 0 }} />
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {health.label}
+                      {getRoleTag(u) && <span style={{ marginLeft: 5, color: getRoleTag(u).color, fontWeight: 700 }}>· {getRoleTag(u).label}</span>}
                       {(u.tags || []).length > 0 && <span style={{ marginLeft: 5, color: "#8B5CF6" }}>· {(u.tags || []).map(t => TAGS_OPTIONS.find(x => x.value === t)?.label).filter(Boolean).join(", ")}</span>}
                     </span>
                   </div>
@@ -2447,8 +2524,6 @@ export default function AdminPanel() {
                 </div>
               </Section>
             </>
-          )}
-
           )}
 
           {/* ═══════════════════════════════════════
