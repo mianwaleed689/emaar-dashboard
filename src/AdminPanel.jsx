@@ -458,24 +458,30 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const PAGE_SIZE = 25;
   const now = new Date();
 
+  /* ─── REFS for keyboard nav (avoids temporal dead zone with pagedUsers) ─── */
+  const pagedUsersRef = React.useRef([]);
+  const focusedRowRef = React.useRef(0);
+  focusedRowRef.current = focusedRow;
+
   /* ─── KEYBOARD NAVIGATION ─── */
   useEffect(() => {
     const handler = (e) => {
       if (sendEmailUser || noteUser || confirmDelete || confirmSuspend || tagUser || editingUser || showAddUser) return;
+      const list = pagedUsersRef.current;
       if (e.key === "j" || e.key === "ArrowDown") {
         e.preventDefault();
-        setFocusedRow(r => Math.min(r + 1, pagedUsers.length - 1));
+        setFocusedRow(r => Math.min(r + 1, list.length - 1));
       }
       if (e.key === "k" || e.key === "ArrowUp") {
         e.preventDefault();
         setFocusedRow(r => Math.max(r - 1, 0));
       }
       if (e.key === "Enter" || e.key === "v") {
-        const u = pagedUsers[focusedRow];
+        const u = list[focusedRowRef.current];
         if (u) setDrawerUser(u);
       }
       if (e.key === "e") {
-        const u = pagedUsers[focusedRow];
+        const u = list[focusedRowRef.current];
         if (u) openEditUser(u);
       }
       if (e.key === "Escape") {
@@ -485,7 +491,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [focusedRow, pagedUsers, sendEmailUser, noteUser, confirmDelete, confirmSuspend, tagUser, editingUser, showAddUser]);
+  }, [sendEmailUser, noteUser, confirmDelete, confirmSuspend, tagUser, editingUser, showAddUser]);
 
   /* ─── ICONS ─── */
   const EditIcon = () => (
@@ -610,6 +616,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const totalPages = Math.max(1, Math.ceil(allFiltered.length / PAGE_SIZE));
   const pagedUsers = allFiltered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  pagedUsersRef.current = pagedUsers; // keep ref in sync for keyboard handler
 
   const handleSort = (field) => {
     if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
