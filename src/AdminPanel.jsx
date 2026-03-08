@@ -2820,214 +2820,56 @@ export default function AdminPanel() {
           {tab === "overview" && (
             <>
 
-              {/* ══════════════════════════════════════════
-                  STEP 2 — HEALTH SCORE + ALERT BAR
-              ══════════════════════════════════════════ */}
-
-              {/* Health Score Banner */}
-              <div className="fade-up" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 22px", borderRadius: 16, border: `1px solid ${healthColor}30`, background: `linear-gradient(135deg, ${healthColor}08, transparent 70%)`, marginBottom: 14, flexWrap: "wrap", gap: 12, position: "relative", overflow: "hidden" }}>
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${healthColor}, transparent)` }} />
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <div style={{ position: "relative", width: 54, height: 54, flexShrink: 0 }}>
-                    <svg width="54" height="54" viewBox="0 0 54 54">
-                      <circle cx="27" cy="27" r="22" fill="none" stroke={`${healthColor}20`} strokeWidth="4" />
-                      <circle cx="27" cy="27" r="22" fill="none" stroke={healthColor} strokeWidth="4"
-                        strokeDasharray={`${(healthScore / 100) * 138.2} 138.2`}
-                        strokeLinecap="round" transform="rotate(-90 27 27)" />
-                    </svg>
-                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: healthColor, fontFamily: "'Fraunces',serif" }}>{healthScore}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 17, fontWeight: 800, color: healthColor, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>
-                      Platform Health: {healthLabel}
-                    </div>
-                    <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>
-                      {healthScore >= 80 ? "All systems healthy — keep it up." :
-                       healthScore >= 60 ? "Minor issues detected — review alerts below." :
-                       healthScore >= 40 ? "Several issues need your attention today." :
-                       "Critical issues — immediate action required."}
-                    </div>
-                  </div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ fontSize: 11, color: T.textMuted, textAlign: "right" }}>
-                    <div style={{ color: T.green, fontWeight: 600, fontSize: 10 }}>● LIVE</div>
-                    <div>{new Date().toLocaleTimeString("en-AE", { hour: "2-digit", minute: "2-digit" })}</div>
-                  </div>
-                  <button type="button"
-                    onClick={() => { fetchUsers(); fetchLeads(); fetchVerifications(); fetchAuditLog(); notify("✅ All data refreshed"); }}
-                    style={{ padding: "8px 14px", borderRadius: 9, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                    ↻ Refresh All
-                  </button>
-                </div>
-              </div>
-
-              {/* Alert Bar — only renders if there is something to act on */}
+              {/* ══ OVERVIEW TOPBAR — health + alerts + actions in one row ══ */}
               {(() => {
-                const alerts = [
-                  stats.atRisk > 0 && {
-                    key: "atrisk",
-                    icon: "⚠️",
-                    color: T.red,
-                    bg: "rgba(239,68,68,0.06)",
-                    border: "rgba(239,68,68,0.2)",
-                    title: `${stats.atRisk} trial${stats.atRisk > 1 ? "s" : ""} expiring in ≤3 days`,
-                    sub: stats.atRiskUsers.slice(0,3).map(u => u.name || u.email?.split("@")[0]).join(", ") + (stats.atRiskUsers.length > 3 ? ` +${stats.atRiskUsers.length - 3} more` : ""),
-                    actionLabel: "Email All",
-                    onAction: () => {
-                      stats.atRiskUsers.forEach(u => {
-                        const days = trialDaysLeft(u);
-                        emailjs.send("service_da7nshv", "template_gl1xqhy", {
-                          user_email: u.email, user_name: u.name || u.email,
-                          project_name: "DXB Analytics",
-                          change_type: `⚠️ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
-                          new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now to keep full access.`,
-                          old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE"),
-                        }, "USkwUhp0csGCVDkdQ").catch(() => {});
-                      });
-                      notify(`✅ Sent ${stats.atRisk} at-risk email${stats.atRisk > 1 ? "s" : ""}`);
-                    },
-                  },
-                  stats.suspended > 0 && {
-                    key: "suspended",
-                    icon: "⏸",
-                    color: "#F59E0B",
-                    bg: "rgba(245,158,11,0.06)",
-                    border: "rgba(245,158,11,0.2)",
-                    title: `${stats.suspended} suspended account${stats.suspended > 1 ? "s" : ""}`,
-                    sub: "These users cannot access the dashboard",
-                    actionLabel: "View",
-                    onAction: () => { setTab("users"); setTierFilter("Suspended"); },
-                  },
-                  stats.expired > 0 && {
-                    key: "expired",
-                    icon: "⌛",
-                    color: T.textMuted,
-                    bg: "rgba(100,116,139,0.06)",
-                    border: "rgba(100,116,139,0.15)",
-                    title: `${stats.expired} expired trial${stats.expired > 1 ? "s" : ""} not converted`,
-                    sub: "Consider a winback email campaign",
-                    actionLabel: "View",
-                    onAction: () => { setTab("users"); setTierFilter("Expired"); },
-                  },
-                  pendingVerifications > 0 && {
-                    key: "verif",
-                    icon: "🔍",
-                    color: "#8B5CF6",
-                    bg: "rgba(139,92,246,0.06)",
-                    border: "rgba(139,92,246,0.2)",
-                    title: `${pendingVerifications} KYC verification${pendingVerifications > 1 ? "s" : ""} pending review`,
-                    sub: "Users waiting for identity verification",
-                    actionLabel: "Review",
-                    onAction: () => setTab("verification"),
-                  },
-                  newLeadsToday > 0 && {
-                    key: "leads",
-                    icon: "📋",
-                    color: T.teal,
-                    bg: "rgba(0,191,165,0.06)",
-                    border: "rgba(0,191,165,0.2)",
-                    title: `${newLeadsToday} new lead${newLeadsToday > 1 ? "s" : ""} today`,
-                    sub: `${newLeadsThisWeek} this week`,
-                    actionLabel: "View",
-                    onAction: () => setTab("leads"),
-                  },
+                const urgentAlerts = [
+                  stats.atRisk > 0 && { key: "atrisk", color: T.red, icon: "⚠️", label: `${stats.atRisk} at risk`, action: () => {
+                    stats.atRiskUsers.forEach(u => {
+                      const days = trialDaysLeft(u);
+                      emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `⚠️ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`, new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {});
+                    });
+                    notify(`✅ Sent ${stats.atRisk} at-risk emails`);
+                  }},
+                  stats.suspended > 0 && { key: "suspended", color: "#F59E0B", icon: "⏸", label: `${stats.suspended} suspended`, action: () => { setTab("users"); setTierFilter("Suspended"); } },
+                  stats.expired > 0   && { key: "expired",   color: T.textMuted, icon: "⌛", label: `${stats.expired} expired`,   action: () => { setTab("users"); setTierFilter("Expired"); } },
+                  pendingVerifications > 0 && { key: "verif", color: "#8B5CF6", icon: "🔍", label: `${pendingVerifications} KYC`,  action: () => setTab("verification") },
+                  newLeadsToday > 0   && { key: "leads",  color: T.teal,    icon: "📋", label: `${newLeadsToday} leads`,     action: () => setTab("leads") },
                 ].filter(Boolean);
 
-                if (alerts.length === 0) return (
-                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 20px", borderRadius: 12, border: "1px solid rgba(16,185,129,0.2)", background: "rgba(16,185,129,0.04)", marginBottom: 20 }}>
-                    <span style={{ fontSize: 18 }}>✅</span>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: T.green }}>All Clear</div>
-                      <div style={{ fontSize: 11, color: T.textMuted }}>No urgent items require your attention right now.</div>
-                    </div>
-                  </div>
-                );
-
                 return (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
-                    {alerts.map((alert, i) => (
-                      <div key={alert.key} className="fade-up" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px", borderRadius: 12, border: `1px solid ${alert.border}`, background: alert.bg, animationDelay: `${i * 0.05}s`, flexWrap: "wrap", gap: 10 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <span style={{ fontSize: 18, flexShrink: 0 }}>{alert.icon}</span>
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: alert.color }}>{alert.title}</div>
-                            {alert.sub && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{alert.sub}</div>}
-                          </div>
-                        </div>
-                        <button type="button" onClick={alert.onAction}
-                          style={{ padding: "6px 16px", borderRadius: 8, border: `1px solid ${alert.color}40`, background: `${alert.color}10`, color: alert.color, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
-                          {alert.actionLabel} →
-                        </button>
-                      </div>
-                    ))}
+                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 18, flexWrap: "wrap" }}>
+
+                    {/* Health indicator — left */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 14, borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: healthColor, boxShadow: `0 0 6px ${healthColor}` }} />
+                      <span style={{ fontSize: 12, fontWeight: 700, color: healthColor }}>{healthLabel}</span>
+                      <span style={{ fontSize: 11, color: T.textMuted }}>· Score {healthScore}</span>
+                    </div>
+
+                    {/* Alert chips — center, only shown if issues exist */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, flexWrap: "wrap" }}>
+                      {urgentAlerts.length === 0 ? (
+                        <span style={{ fontSize: 11, color: T.textMuted }}>No urgent items</span>
+                      ) : (
+                        urgentAlerts.map(a => (
+                          <button key={a.key} type="button" onClick={a.action}
+                            style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 20, border: `1px solid ${a.color}40`, background: `${a.color}10`, color: a.color, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
+                            <span style={{ fontSize: 11 }}>{a.icon}</span> {a.label}
+                          </button>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Refresh only — actions belong in their respective tabs */}
+                    <button type="button" onClick={() => { fetchUsers(); fetchLeads(); fetchVerifications(); fetchAuditLog(); notify("✅ Refreshed"); }}
+                      style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+                      title="Refresh all data">
+                      ↻
+                    </button>
+
                   </div>
                 );
               })()}
-
-              {/* ══ STEP 6 — QUICK ACTIONS BAR ══ */}
-              <div className="fade-up" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-
-                {/* Email At-Risk */}
-                <button type="button"
-                  disabled={stats.atRisk === 0}
-                  onClick={() => {
-                    stats.atRiskUsers.forEach(u => {
-                      const days = trialDaysLeft(u);
-                      emailjs.send("service_da7nshv", "template_gl1xqhy", {
-                        user_email: u.email, user_name: u.name || u.email,
-                        project_name: "DXB Analytics",
-                        change_type: `⚠️ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
-                        new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now to keep full access.`,
-                        old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE"),
-                      }, "USkwUhp0csGCVDkdQ").catch(() => {});
-                    });
-                    notify(`✅ Sent ${stats.atRisk} at-risk email${stats.atRisk > 1 ? "s" : ""}`);
-                  }}
-                  style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 10, border: `1px solid ${stats.atRisk > 0 ? T.red + "60" : T.border}`, background: stats.atRisk > 0 ? "rgba(239,68,68,0.08)" : T.surfaceAlt, color: stats.atRisk > 0 ? T.red : T.textMuted, fontSize: 12, fontWeight: 700, cursor: stats.atRisk > 0 ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", opacity: stats.atRisk === 0 ? 0.45 : 1, transition: "all 0.15s" }}>
-                  <span>⚠️</span>
-                  <span>Email At-Risk</span>
-                  {stats.atRisk > 0 && <span style={{ background: T.red, color: "#fff", borderRadius: 5, padding: "1px 6px", fontSize: 10, fontWeight: 800 }}>{stats.atRisk}</span>}
-                </button>
-
-                {/* Add User */}
-                <button type="button"
-                  onClick={() => { setTab("users"); setShowAddUser(true); }}
-                  style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 10, border: `1px solid ${T.gold}60`, background: "rgba(255,196,0,0.07)", color: T.gold, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}>
-                  <span>➕</span>
-                  <span>Add User</span>
-                </button>
-
-                {/* Pending Verifications */}
-                <button type="button"
-                  disabled={pendingVerifications === 0}
-                  onClick={() => setTab("verification")}
-                  style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 10, border: `1px solid ${pendingVerifications > 0 ? "#8B5CF6" + "60" : T.border}`, background: pendingVerifications > 0 ? "rgba(139,92,246,0.08)" : T.surfaceAlt, color: pendingVerifications > 0 ? "#8B5CF6" : T.textMuted, fontSize: 12, fontWeight: 700, cursor: pendingVerifications > 0 ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", opacity: pendingVerifications === 0 ? 0.45 : 1, transition: "all 0.15s" }}>
-                  <span>🔍</span>
-                  <span>Verifications</span>
-                  {pendingVerifications > 0 && <span style={{ background: "#8B5CF6", color: "#fff", borderRadius: 5, padding: "1px 6px", fontSize: 10, fontWeight: 800 }}>{pendingVerifications}</span>}
-                </button>
-
-                {/* New Leads */}
-                <button type="button"
-                  disabled={newLeadsThisWeek === 0}
-                  onClick={() => setTab("leads")}
-                  style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 10, border: `1px solid ${newLeadsThisWeek > 0 ? T.teal + "60" : T.border}`, background: newLeadsThisWeek > 0 ? "rgba(0,191,165,0.08)" : T.surfaceAlt, color: newLeadsThisWeek > 0 ? T.teal : T.textMuted, fontSize: 12, fontWeight: 700, cursor: newLeadsThisWeek > 0 ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", opacity: newLeadsThisWeek === 0 ? 0.45 : 1, transition: "all 0.15s" }}>
-                  <span>📋</span>
-                  <span>New Leads</span>
-                  {newLeadsThisWeek > 0 && <span style={{ background: T.teal, color: "#fff", borderRadius: 5, padding: "1px 6px", fontSize: 10, fontWeight: 800 }}>{newLeadsThisWeek}</span>}
-                </button>
-
-                {/* Export Users CSV */}
-                <button type="button"
-                  onClick={() => exportCSV()}
-                  style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s", marginLeft: "auto" }}>
-                  <span>⬇️</span>
-                  <span>Export CSV</span>
-                </button>
-
-              </div>
-
               {/* ══ STEP 3 — KPI CARDS WITH TRENDS ══ */}
               <div style={{ marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
