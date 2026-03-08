@@ -2581,7 +2581,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                           <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{projName}</div>
                           {log.action === "project_update" && (
                             <button type="button"
-                              onClick={e => { e.stopPropagation(); notify("Open the project in Data Manager and click Version History to rollback"); }}
+                              onClick={e => { e.stopPropagation(); alert("Open the project in Data Manager > Projects, click the project row, then click Version History to rollback."); }}
                               style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, border: "1px solid rgba(212,168,67,0.3)", background: "rgba(212,168,67,0.06)", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
                               View Versions
                             </button>
