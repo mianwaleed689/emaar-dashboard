@@ -3297,7 +3297,7 @@ export default function AdminPanel() {
     if (isNew && !data.name?.trim()) errors.push("Project name is required");
     if (isNew && !data.community?.trim()) errors.push("Community is required");
     if (data.price && (isNaN(data.price) || Number(data.price) <= 0)) errors.push("Price must be a positive number");
-    if (data.price && Number(data.price) > 0 && Number(data.price) < 100000) errors.push("Price looks too low (AED " + Number(data.price).toLocaleString() + "). Dubai prices are typically AED 500K+. Did you mean AED " + (Number(data.price) * 1000).toLocaleString() + "?");
+    if (data.price && Number(data.price) > 0 && Number(data.price) < 500000) errors.push("Price looks too low (AED " + Number(data.price).toLocaleString() + "). Dubai prices are typically AED 500K+. Did you mean AED " + (Number(data.price) * 10).toLocaleString() + "? Please double-check before saving.");
     if (data.ppsf && (isNaN(data.ppsf) || Number(data.ppsf) <= 0)) errors.push("PPSF must be positive");
     if (data.ppsf && Number(data.ppsf) > 0 && Number(data.ppsf) < 200) errors.push("PPSF looks too low (" + Number(data.ppsf).toLocaleString() + "). Dubai PPSF is typically AED 800-5000");
     if (data.unitsAvail && data.unitsTotal && Number(data.unitsAvail) > Number(data.unitsTotal)) errors.push("Available units (" + data.unitsAvail + ") cannot exceed total units (" + data.unitsTotal + ")");
