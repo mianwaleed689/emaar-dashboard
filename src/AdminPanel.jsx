@@ -1901,9 +1901,183 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   );
 }
 
+/* ─── DATA CALENDAR (interactive, Firestore-persisted) ─── */
+function DataCalendar({ T, now }) {
+  const [checked, setChecked] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  const calendarItems = [
+    { id: "emaar_q1_2026",  event: "Emaar Q1 2026 Results",  due: "2026-04-15", note: "emaar.com → Investor Relations",     icon: "📊", priority: "high"     },
+    { id: "market_q1_2026", event: "Dubai Market Report Q1", due: "2026-04-30", note: "DLD Open Data + DXBinteract",         icon: "🏙️", priority: "medium"   },
+    { id: "emaar_q2_2026",  event: "Emaar Q2 2026 Results",  due: "2026-07-15", note: "emaar.com → Investor Relations",     icon: "📊", priority: "high"     },
+    { id: "market_q2_2026", event: "Dubai Market Report Q2", due: "2026-07-30", note: "DLD Open Data + DXBinteract",         icon: "🏙️", priority: "medium"   },
+    { id: "emaar_q3_2026",  event: "Emaar Q3 2026 Results",  due: "2026-10-15", note: "emaar.com → Investor Relations",     icon: "📊", priority: "high"     },
+    { id: "emaar_fy_2026",  event: "Emaar FY 2026 Results",  due: "2027-02-15", note: "Annual results — biggest of the year", icon: "🏆", priority: "critical" },
+  ];
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, "adminSettings", "calendarChecks"));
+        if (snap.exists()) setChecked(snap.data() || {});
+      } catch {}
+      setLoading(false);
+    })();
+  }, []);
+
+  const toggle = async (id) => {
+    const next = { ...checked, [id]: !checked[id] };
+    setChecked(next);
+    try { await setDoc(doc(db, "adminSettings", "calendarChecks"), next, { merge: true }); } catch {}
+  };
+
+  return (
+    <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden" }}>
+      <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Emaar Results Schedule</div>
+          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Mark each item done after you update the dashboard</div>
+        </div>
+        <div style={{ fontSize: 10, color: T.textMuted }}>
+          {Object.values(checked).filter(Boolean).length}/{calendarItems.length} done
+        </div>
+      </div>
+      {loading ? (
+        <div style={{ padding: "30px 20px", textAlign: "center", fontSize: 11, color: T.textMuted }}>Loading…</div>
+      ) : calendarItems.map((item, i) => {
+        const daysLeft = Math.ceil((new Date(item.due) - now) / (1000 * 60 * 60 * 24));
+        const isPast   = daysLeft < 0;
+        const isUrgent = !isPast && daysLeft <= 30;
+        const dotColor = isPast ? T.red : isUrgent ? T.gold : T.green;
+        const pillBg   = isPast ? `${T.red}15` : isUrgent ? `${T.gold}15` : `${T.green}10`;
+        const pillColor= isPast ? T.red : isUrgent ? T.gold : T.green;
+        const pillText = isPast ? "OVERDUE" : daysLeft === 0 ? "TODAY" : `${daysLeft}d`;
+        const isDone   = !!checked[item.id];
+        return (
+          <div key={item.id} style={{ display: "flex", alignItems: "center", padding: "12px 20px", borderBottom: i < calendarItems.length - 1 ? `1px solid ${T.border}` : "none", transition: "background 0.15s", opacity: isDone ? 0.55 : 1 }}
+            onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: isDone ? T.green : dotColor, flexShrink: 0, marginRight: 12, boxShadow: isDone ? `0 0 6px ${T.green}` : isPast ? `0 0 6px ${T.red}` : isUrgent ? `0 0 6px ${T.gold}` : "none" }} />
+            <div style={{ marginRight: 8, fontSize: 14, flexShrink: 0 }}>{item.icon}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: isDone ? T.textMuted : T.white, textDecoration: isDone ? "line-through" : "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.event}</div>
+              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>{item.note}</div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: 10 }}>
+              {!isDone && (
+                <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 5, background: pillBg, color: pillColor, border: `1px solid ${pillColor}30` }}>{pillText}</span>
+              )}
+              <button type="button" onClick={() => toggle(item.id)}
+                style={{ fontSize: 10, fontWeight: 700, padding: "4px 10px", borderRadius: 7, border: `1px solid ${isDone ? T.green : T.border}`, background: isDone ? `${T.green}15` : "transparent", color: isDone ? T.green : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}>
+                {isDone ? "✓ Done" : "Mark done"}
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── UPDATE CHECKLIST (interactive, Firestore-persisted) ─── */
+function UpdateChecklist({ T }) {
+  const steps = [
+    { id: "s1", icon: "🌐", text: "Go to emaar.com/investor-relations",   sub: "Download the latest quarterly PDF" },
+    { id: "s2", icon: "📝", text: "Update data.js",                        sub: "Revenue, profit, EBITDA, sales, backlog" },
+    { id: "s3", icon: "🏗️", text: "Update construction %",               sub: "For projects nearing handover date" },
+    { id: "s4", icon: "⌨️", text: "Run git commands",                     sub: "git add . → git commit -m msg → git push" },
+    { id: "s5", icon: "🚀", text: "Live in 3 minutes",                    sub: "Vercel deploys automatically on push" },
+  ];
+  const [checked, setChecked] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, "adminSettings", "checklistState"));
+        if (snap.exists()) setChecked(snap.data() || {});
+      } catch {}
+      setLoading(false);
+    })();
+  }, []);
+
+  const toggle = async (id) => {
+    const next = { ...checked, [id]: !checked[id] };
+    setChecked(next);
+    try { await setDoc(doc(db, "adminSettings", "checklistState"), next, { merge: true }); } catch {}
+  };
+
+  const reset = async () => {
+    const cleared = {};
+    setChecked(cleared);
+    try { await setDoc(doc(db, "adminSettings", "checklistState"), cleared); } catch {}
+  };
+
+  const doneCount = steps.filter(s => checked[s.id]).length;
+  const allDone = doneCount === steps.length;
+
+  return (
+    <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", animationDelay: "0.05s" }}>
+      <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Update Checklist</div>
+          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Follow these steps every time Emaar releases results</div>
+        </div>
+        {doneCount > 0 && (
+          <button type="button" onClick={reset}
+            style={{ fontSize: 10, fontWeight: 700, padding: "4px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+            Reset
+          </button>
+        )}
+      </div>
+      {/* Progress bar */}
+      <div style={{ height: 3, background: T.border }}>
+        <div style={{ height: 3, width: `${(doneCount / steps.length) * 100}%`, background: allDone ? T.green : T.gold, transition: "width 0.4s ease, background 0.4s ease", borderRadius: "0 2px 2px 0" }} />
+      </div>
+      {loading ? (
+        <div style={{ padding: "30px 20px", textAlign: "center", fontSize: 11, color: T.textMuted }}>Loading…</div>
+      ) : (
+        <div style={{ padding: "4px 0" }}>
+          {steps.map((item, i) => {
+            const done = !!checked[item.id];
+            return (
+              <div key={item.id} onClick={() => toggle(item.id)}
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 20px", borderBottom: i < steps.length - 1 ? `1px solid ${T.border}` : "none", cursor: "pointer", transition: "background 0.12s", opacity: done ? 0.6 : 1 }}
+                onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                {/* Checkbox */}
+                <div style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${done ? T.green : T.border}`, background: done ? `${T.green}20` : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s" }}>
+                  {done && <span style={{ fontSize: 11, color: T.green, fontWeight: 900 }}>✓</span>}
+                </div>
+                {/* Step number */}
+                <div style={{ width: 22, height: 22, borderRadius: 7, background: done ? `${T.green}15` : `${T.gold}15`, border: `1px solid ${done ? T.green : T.gold}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 900, color: done ? T.green : T.gold, flexShrink: 0 }}>{i + 1}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 13 }}>{item.icon}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: done ? T.textMuted : T.white, textDecoration: done ? "line-through" : "none" }}>{item.text}</span>
+                  </div>
+                  <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{item.sub}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <div style={{ margin: "0 16px 16px", padding: "10px 14px", borderRadius: 9, background: allDone ? `${T.green}10` : `${T.green}08`, border: `1px solid ${allDone ? T.green : T.green}20`, display: "flex", alignItems: "center", gap: 8, transition: "all 0.3s" }}>
+        <span style={{ fontSize: 16 }}>{allDone ? "🎉" : "⚡"}</span>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: allDone ? T.green : T.green }}>{allDone ? "All done! Dashboard is live." : "Under 10 minutes total"}</div>
+          <div style={{ fontSize: 10, color: T.textMuted }}>{allDone ? `${doneCount}/${steps.length} steps completed` : "From PDF download to live dashboard"}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, setPendingOpenUid, T }) {
   const [auditFilter, setAuditFilter] = useState("all");
   const [auditSearch, setAuditSearch] = useState("");
+  const [dateRange, setDateRange] = useState("all");
 
   const actionMeta = {
     tier_change:       { label: "Tier Changed",      color: T.orange,   icon: "👤" },
@@ -1919,14 +2093,42 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
   const tierLabel = { free: "Free", pro_trial: "Pro Trial", pro: "Pro", enterprise: "Enterprise", suspended: "Suspended", admin: "Admin", staff: "Staff" };
 
   const filterCounts = {
-    all: auditLog.length,
-    tier: auditLog.filter(l => l.action === "tier_change").length,
-    bulk: auditLog.filter(l => l.action === "bulk_tier_change").length,
-    project: auditLog.filter(l => ["project_update","project_create"].includes(l.action)).length,
-    tab: auditLog.filter(l => l.action === "tab_visibility").length,
+    all: rangeFiltered.length,
+    tier: rangeFiltered.filter(l => l.action === "tier_change").length,
+    bulk: rangeFiltered.filter(l => l.action === "bulk_tier_change").length,
+    project: rangeFiltered.filter(l => ["project_update","project_create"].includes(l.action)).length,
+    tab: rangeFiltered.filter(l => l.action === "tab_visibility").length,
   };
 
-  const filteredLog = auditLog.filter(l => {
+  const dateRangeCutoff = { all: 0, today: 1, "7d": 7, "30d": 30 }[dateRange] || 0;
+  const rangeFiltered = dateRange === "all" ? auditLog : auditLog.filter(l => {
+    try { return (Date.now() - new Date(l.changedAt).getTime()) < dateRangeCutoff * 24 * 60 * 60 * 1000; } catch { return false; }
+  });
+
+  const exportCSV = () => {
+    const rows = [["Time", "Action", "Changed By", "User / Project", "Details"]];
+    auditLog.forEach(l => {
+      const time = l.changedAt ? new Date(l.changedAt).toLocaleString("en-AE") : "";
+      const action = l.action || "";
+      const by = l.changedBy || "";
+      const u = users.find(u => u.uid === l.uid);
+      const userStr = u ? (u.name || u.email || l.uid || "") : (l.uid || "");
+      const proj = emaarProjects.find(p => String(p.id) === String(l.projectId));
+      const detail = l.action === "tier_change" ? `${l.from} → ${l.to}`
+        : l.action === "bulk_tier_change" ? `${(l.uids||[]).length} users → ${l.newTier}`
+        : l.action?.includes("project") ? (proj?.name || l.projectId || "")
+        : (l.tabId || l.communityKey || "");
+      rows.push([time, action, by, userStr, detail]);
+    });
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `audit-log-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+  };
+
+  const filteredLog = rangeFiltered.filter(l => {
     if (auditFilter === "tier"    && l.action !== "tier_change") return false;
     if (auditFilter === "bulk"    && l.action !== "bulk_tier_change") return false;
     if (auditFilter === "project" && !["project_update","project_create"].includes(l.action)) return false;
@@ -1984,12 +2186,30 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
             {filteredLog.length} of {auditLog.length} events · Complete admin action history
           </div>
         </div>
-        <button type="button" onClick={fetchAuditLog}
-          style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 16px", background: `${T.gold}12`, border: `1px solid ${T.gold}35`, borderRadius: 9, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}
-          onMouseEnter={e => { e.currentTarget.style.background = `${T.gold}22`; }}
-          onMouseLeave={e => { e.currentTarget.style.background = `${T.gold}12`; }}>
-          ↻ Refresh
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Date range */}
+          <select value={dateRange} onChange={e => setDateRange(e.target.value)}
+            style={{ padding: "7px 12px", borderRadius: 9, border: `1px solid ${T.border}`, background: T.surface, color: T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none", cursor: "pointer" }}>
+            <option value="all">All time</option>
+            <option value="today">Today</option>
+            <option value="7d">Last 7 days</option>
+            <option value="30d">Last 30 days</option>
+          </select>
+          {/* CSV export */}
+          <button type="button" onClick={exportCSV}
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: `${T.teal}12`, border: `1px solid ${T.teal}35`, borderRadius: 9, color: T.teal, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = `${T.teal}22`; }}
+            onMouseLeave={e => { e.currentTarget.style.background = `${T.teal}12`; }}>
+            ↓ CSV
+          </button>
+          {/* Refresh */}
+          <button type="button" onClick={fetchAuditLog}
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: `${T.gold}12`, border: `1px solid ${T.gold}35`, borderRadius: 9, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = `${T.gold}22`; }}
+            onMouseLeave={e => { e.currentTarget.style.background = `${T.gold}12`; }}>
+            ↻ Refresh
+          </button>
+        </div>
       </div>
 
       {/* ── Filter + Search ── */}
@@ -4183,15 +4403,14 @@ export default function AdminPanel() {
                   });
                   const maxDay = Math.max(...last7.map(d=>d.count), 1);
 
-                  // ── CALENDAR ──
-                  const calendarItems = [
-                    { event: "Emaar Q1 2026 Results",  due: "2026-04-15", note: "Investor Relations page — emaar.com", icon: "📊", priority: "high" },
-                    { event: "Dubai Market Report Q1", due: "2026-04-30", note: "DLD Open Data + DXBinteract",          icon: "🏙️", priority: "medium" },
-                    { event: "Emaar Q2 2026 Results",  due: "2026-07-15", note: "Investor Relations page — emaar.com", icon: "📊", priority: "high" },
-                    { event: "Dubai Market Report Q2", due: "2026-07-30", note: "DLD Open Data + DXBinteract",          icon: "🏙️", priority: "medium" },
-                    { event: "Emaar Q3 2026 Results",  due: "2026-10-15", note: "Investor Relations page — emaar.com", icon: "📊", priority: "high" },
-                    { event: "Emaar FY 2026 Results",  due: "2027-02-15", note: "Annual results — biggest of the year", icon: "🏆", priority: "critical" },
-                  ];
+                  // ── 30-DAY ACTIVITY DATA ──
+                  const last30 = Array.from({ length: 30 }, (_, i) => {
+                    const d = new Date(); d.setDate(d.getDate() - (29 - i));
+                    const day = d.toDateString();
+                    const count = auditLog.filter(l => { try { return new Date(l.changedAt).toDateString() === day; } catch { return false; } }).length;
+                    return { day: d.toLocaleDateString("en-AE", { day: "2-digit", month: "short" }), count };
+                  });
+                  const max30 = Math.max(...last30.map(d => d.count), 1);
 
                   return (
                     <>
@@ -4225,80 +4444,39 @@ export default function AdminPanel() {
                         </div>
                       </div>
 
+                      {/* ══ 30-DAY ACTIVITY CHART ══ */}
+                      <div className="chart-box fade-up" style={{ marginBottom: 24, padding: "16px 20px 12px" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Activity — Last 30 Days</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{auditLog.length} total events · {last30.filter(d => d.count > 0).length} active days</div>
+                          </div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>
+                            Peak: <span style={{ color: T.gold, fontWeight: 700 }}>{max30} events/day</span>
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 52 }}>
+                          {last30.map((d, i) => (
+                            <div key={i} title={`${d.day}: ${d.count} event${d.count !== 1 ? "s" : ""}`}
+                              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 2, cursor: d.count > 0 ? "default" : "default" }}>
+                              <div style={{ width: "100%", height: Math.max(2, Math.round((d.count / max30) * 44)), background: d.count > 0 ? (i === 29 ? T.gold : `${T.gold}70`) : T.border, borderRadius: "2px 2px 0 0", transition: "height 0.3s" }} />
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+                          <span style={{ fontSize: 9, color: T.textMuted }}>{last30[0]?.day}</span>
+                          <span style={{ fontSize: 9, color: T.textMuted }}>{last30[14]?.day}</span>
+                          <span style={{ fontSize: 9, color: T.gold, fontWeight: 700 }}>Today</span>
+                        </div>
+                      </div>
+
                       {/* ══ SECTION LABEL ══ */}
                       <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 12 }}>Data Update Calendar</div>
 
                       {/* ══ CALENDAR + CHECKLIST ══ */}
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-
-                        {/* Calendar */}
-                        <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden" }}>
-                          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Emaar Results Schedule</div>
-                            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>When to update your dashboard data</div>
-                          </div>
-                          {calendarItems.map((item, i) => {
-                            const daysLeft = Math.ceil((new Date(item.due) - now) / (1000 * 60 * 60 * 24));
-                            const isPast   = daysLeft < 0;
-                            const isUrgent = !isPast && daysLeft <= 30;
-                            const isSoon   = !isPast && !isUrgent && daysLeft <= 60;
-                            const dotColor = isPast ? T.red : isUrgent ? T.gold : T.green;
-                            const pillBg   = isPast ? `${T.red}15` : isUrgent ? `${T.gold}15` : `${T.green}10`;
-                            const pillColor= isPast ? T.red : isUrgent ? T.gold : T.green;
-                            const pillText = isPast ? "OVERDUE" : daysLeft === 0 ? "TODAY" : `${daysLeft}d`;
-                            return (
-                              <div key={i} style={{ display: "flex", alignItems: "center", padding: "13px 20px", borderBottom: i < calendarItems.length-1 ? `1px solid ${T.border}` : "none", transition: "background 0.15s" }}
-                                onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
-                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                                <div style={{ width: 8, height: 8, borderRadius: "50%", background: dotColor, flexShrink: 0, marginRight: 12, boxShadow: isPast ? `0 0 6px ${T.red}` : isUrgent ? `0 0 6px ${T.gold}` : "none" }} />
-                                <div style={{ marginRight: 8, fontSize: 14, flexShrink: 0 }}>{item.icon}</div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.event}</div>
-                                  <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>{item.note}</div>
-                                </div>
-                                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2, flexShrink: 0, marginLeft: 10 }}>
-                                  <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 5, background: pillBg, color: pillColor, border: `1px solid ${pillColor}30` }}>{pillText}</span>
-                                  <span style={{ fontSize: 9, color: T.textMuted }}>{new Date(item.due).toLocaleDateString("en-AE",{day:"numeric",month:"short",year:"numeric"})}</span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* Checklist */}
-                        <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", animationDelay: "0.05s" }}>
-                          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Update Checklist</div>
-                            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Follow these steps every time Emaar releases results</div>
-                          </div>
-                          <div style={{ padding: "8px 0" }}>
-                            {[
-                              { step: "1", icon: "🌐", text: "Go to emaar.com/investor-relations",   sub: "Download the latest quarterly PDF" },
-                              { step: "2", icon: "📝", text: "Update data.js",                        sub: "Revenue, profit, EBITDA, sales, backlog" },
-                              { step: "3", icon: "🏗️", text: "Update construction %",               sub: "For projects nearing handover date" },
-                              { step: "4", icon: "⌨️", text: "Run git commands",                     sub: "git add . → git commit -m msg → git push" },
-                              { step: "5", icon: "🚀", text: "Live in 3 minutes",                    sub: "Vercel deploys automatically on push" },
-                            ].map((item, i) => (
-                              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "11px 20px", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
-                                <div style={{ width: 26, height: 26, borderRadius: 8, background: `${T.gold}15`, border: `1px solid ${T.gold}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, color: T.gold, flexShrink: 0 }}>{item.step}</div>
-                                <div>
-                                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                    <span style={{ fontSize: 13 }}>{item.icon}</span>
-                                    <span style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{item.text}</span>
-                                  </div>
-                                  <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{item.sub}</div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          <div style={{ margin: "0 16px 16px", padding: "10px 14px", borderRadius: 9, background: `${T.green}08`, border: `1px solid ${T.green}20`, display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{ fontSize: 16 }}>⚡</span>
-                            <div>
-                              <div style={{ fontSize: 11, fontWeight: 700, color: T.green }}>Under 10 minutes total</div>
-                              <div style={{ fontSize: 10, color: T.textMuted }}>From PDF download to live dashboard</div>
-                            </div>
-                          </div>
-                        </div>
+                        <DataCalendar T={T} now={now} />
+                        <UpdateChecklist T={T} />
                       </div>
 
                       {/* ══ SECTION LABEL ══ */}
