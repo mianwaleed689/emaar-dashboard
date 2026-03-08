@@ -1613,6 +1613,7 @@ export default function EmaarDashboardV2() {
   const [emaarStockPrice, setEmaarStockPrice] = useState(null);
   const [tabSettings, setTabSettings] = useState({});
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
+  const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [expandedMega, setExpandedMega] = useState(null);
@@ -1708,6 +1709,16 @@ export default function EmaarDashboardV2() {
           roiSnap.forEach(d => { roiOverrides[d.id] = { ...communityROI[d.id], ...d.data() }; });
           setLiveCommunityROI(roiOverrides);
         }
+
+        // Load live communityIntel overrides
+        try {
+          const intelSnap = await getDocs(collection(db, "communityIntel"));
+          if (intelSnap.size > 0) {
+            const intelOverrides = {};
+            intelSnap.forEach(d => { intelOverrides[d.id] = { ...communityIntel[d.id], ...d.data() }; });
+            setLiveCommunityIntel(intelOverrides);
+          }
+        } catch(e) {}
 
         // ── Load all tabData collections (set by admin Tab Control) ──
         const tabCollections = [
@@ -2975,7 +2986,7 @@ export default function EmaarDashboardV2() {
                       </div>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                      {(() => { const inv = getInvestmentScore(p); return (
+                      {(() => { const inv = p.ratingOverride != null && p.ratingOverride !== '' ? { score: parseFloat(p.ratingOverride), color: parseFloat(p.ratingOverride) >= 8 ? '#10B981' : parseFloat(p.ratingOverride) >= 6 ? '#D4A843' : parseFloat(p.ratingOverride) >= 4 ? '#F59E0B' : '#EF4444', label: parseFloat(p.ratingOverride) >= 8 ? 'Excellent' : parseFloat(p.ratingOverride) >= 6 ? 'Strong' : parseFloat(p.ratingOverride) >= 4 ? 'Good' : 'Weak', breakdown: [] } : getInvestmentScore(p); return (
                         <div title={`Investment Score: ${inv.score}/10 — ${inv.breakdown.map(b => b.label + ': ' + b.pts + '/' + b.max).join(' · ')}`}
                           style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 8, background: `${inv.color}18`, border: `1px solid ${inv.color}40`, cursor: "default" }}>
                           <span style={{ fontSize: 11, fontWeight: 900, color: inv.color, fontFamily: "'Fraunces', serif" }}>{inv.score}</span>
@@ -6447,7 +6458,8 @@ export default function EmaarDashboardV2() {
         if (!_sp) { return null; }
         /* Use _sp below but keep variable name short */
         const selectedProject_ = _sp;
-        const ci = communityIntel[selectedProject_.community] || null;
+        const ci = { ...(communityIntel[selectedProject_.community] || {}), ...(liveCommunityIntel[selectedProject_.community] || {}) };
+        const ciExists = !!(ci.famousFor || ci.tagline);
         return (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setSelectedProject(null)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 820, maxHeight: "92vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
@@ -6474,7 +6486,7 @@ export default function EmaarDashboardV2() {
                   {(selectedProject_.tagline || (ci && ci.tagline)) && <p style={{ color: T.teal, fontSize: 11, marginTop: 2, fontStyle: "italic" }}>{selectedProject_.tagline || ci.tagline}</p>}
                 </div>
                 <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                  {selectedProject_.branded && <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{selectedProject_.brand}</span>}
+                  {(selectedProject_.branded || (selectedProject_.brand && selectedProject_.brand !== '—')) && <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{selectedProject_.brand}</span>}
                   <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: selectedProject_.status === "Completed" ? "rgba(16,185,129,0.15)" : selectedProject_.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: selectedProject_.status === "Completed" ? T.green : selectedProject_.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{selectedProject_.status}</span>
                 </div>
               </div>
@@ -6532,7 +6544,7 @@ export default function EmaarDashboardV2() {
               )}
 
               {/* ─── LOCATION INTELLIGENCE SECTION ─── */}
-              {ci && (
+              {ciExists && (
                 <ProGate isPro={isPro} message="Unlock Location Intelligence" onUpgrade={() => setShowUpgrade(true)}>
                 <>
                   {/* Community Famous For */}

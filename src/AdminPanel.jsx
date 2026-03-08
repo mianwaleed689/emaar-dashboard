@@ -12,7 +12,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI } from "./data";
+import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
 import ProjectManager from "./ProjectManager";
 import { useI18n, LANGUAGES } from "./i18n";
 
@@ -5606,12 +5606,13 @@ export default function AdminPanel() {
                   { id: "communities", label: "Community ROI", count: Object.keys(defaultCommunityROI).length, icon: I.chart },
                   { id: "yields", label: "Yield Table", count: emaarYields.length, icon: I.yields },
                   { id: "pricehistory", label: "Price History", count: 0, icon: I.chart },
+                  { id: "communityintel", label: "Community Intel", count: Object.keys(defaultCommunityIntel).length, icon: I.projects },
                 ].map(st => (
-                  <button type="button" key={st.id} onClick={() => { setDataSubTab(st.id); setEditingProject(null); setEditingCommunity(null); setEditingYield(null); }}
+                  <button type="button" key={st.id} onClick={() => { setDataSubTab(st.id); setEditingProject(null); setEditingCommunity(null); setEditingYield(null); setEditingCommunityIntel(null); }}
                     style={{ flex: 1, padding: "14px 16px", borderRadius: 12, border: `1px solid ${dataSubTab === st.id ? T.gold : T.border}`, background: dataSubTab === st.id ? T.goldGlow : T.surface, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all .2s" }}>
                     <div style={{ marginBottom: 6, color: dataSubTab === st.id ? T.gold : T.textMuted }}>{st.icon}</div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: dataSubTab === st.id ? T.gold : T.white }}>{st.label}</div>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>{st.count} items · {Object.keys(st.id === "projects" ? liveProjects : st.id === "communities" ? liveCommunityROI : liveYields).length} live overrides</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>{st.count} items · {Object.keys(st.id === "projects" ? liveProjects : st.id === "communities" ? liveCommunityROI : st.id === "communityintel" ? liveCommunityIntel : liveYields).length} live overrides</div>
                   </button>
                 ))}
               </div>
@@ -5705,6 +5706,11 @@ export default function AdminPanel() {
                       { key: "unitsTotal", label: "Total Units", type: "number", placeholder: "e.g. 200", tip: "Total number of units in the development." },
                       { key: "unitsAvail", label: "Units Available", type: "number", placeholder: "e.g. 45", tip: "Number of units currently available for purchase." },
                       { key: "notes", label: "Admin Notes", type: "text", placeholder: "Internal notes...", tip: "Private notes only visible to admins. Never shown to users." },
+                      { key: "name", label: "Project Name", type: "text", placeholder: "e.g. The Golf Residence", tip: "Display name of the project shown everywhere on the dashboard." },
+                      { key: "community", label: "Community", type: "text", placeholder: "e.g. Dubai Hills Estate", tip: "Master community name. Must match exactly for ROI data to link correctly." },
+                      { key: "district", label: "District Code", type: "text", placeholder: "e.g. DHE", tip: "Short district code used for filtering (DHE, DCH, EBF, ES, GPC, TV, RYM, TO, BB, TH)." },
+                      { key: "brand", label: "Brand Name", type: "select", options: ["—", "Address", "Vida", "Palace", "Bristol"], tip: "Branded hotel/lifestyle brand. Shows as a gold badge on the project detail page." },
+                      { key: "ratingOverride", label: "Rating Override (/10)", type: "number", placeholder: "Leave blank = auto-calculated", tip: "Override the auto-calculated investment score. Set 0-10. Leave blank to use the automatic score based on yield, PPSF, handover, and payment plan." },
                     ];
                     return (
                       <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: `1px solid ${T.gold}30` }}>
@@ -5765,6 +5771,27 @@ export default function AdminPanel() {
                         </div>
                         
                           <div style={{ marginTop: 12, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Unit Inventory (per bedroom type)</div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 10 }}>Add rows for each bedroom type. Total = all units. Available = units left to sell. This shows the inventory breakdown on the project detail page.</div>
+                          {(() => {
+                            const currentUnits = projectForm.units || (merged.units ? (Array.isArray(merged.units) ? merged.units : Object.entries(merged.units).map(([type, d]) => ({ type, total: d.total || 0, available: (d.total || 0) - (d.sold || 0) }))) : []);
+                            const unitRows = currentUnits.length > 0 ? currentUnits : [{ type: "1BR", total: "", available: "" }, { type: "2BR", total: "", available: "" }, { type: "3BR", total: "", available: "" }];
+                            return (
+                              <div>
+                                {unitRows.map((u, idx) => (
+                                  <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 8, marginBottom: 8, alignItems: "center" }}>
+                                    <input placeholder="Type (e.g. 1BR)" value={u.type || ""} onChange={e => { const rows = [...unitRows]; rows[idx] = { ...rows[idx], type: e.target.value }; setProjectForm(prev => ({ ...prev, units: rows })); }} style={{ padding: "8px 10px", background: T.bg, border: "1px solid " + T.border, borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
+                                    <input type="number" placeholder="Total units" value={u.total || ""} onChange={e => { const rows = [...unitRows]; rows[idx] = { ...rows[idx], total: Number(e.target.value) }; setProjectForm(prev => ({ ...prev, units: rows })); }} style={{ padding: "8px 10px", background: T.bg, border: "1px solid " + T.border, borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
+                                    <input type="number" placeholder="Available" value={u.available || ""} onChange={e => { const rows = [...unitRows]; rows[idx] = { ...rows[idx], available: Number(e.target.value) }; setProjectForm(prev => ({ ...prev, units: rows })); }} style={{ padding: "8px 10px", background: T.bg, border: "1px solid " + T.border, borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
+                                    <button type="button" onClick={() => { const rows = unitRows.filter((_, i) => i !== idx); setProjectForm(prev => ({ ...prev, units: rows })); }} style={{ padding: "8px 10px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 7, color: T.red, cursor: "pointer", fontSize: 12 }}>x</button>
+                                  </div>
+                                ))}
+                                <button type="button" onClick={() => { const rows = [...unitRows, { type: "", total: "", available: "" }]; setProjectForm(prev => ({ ...prev, units: rows })); }} style={{ fontSize: 11, padding: "7px 14px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.3)", background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", marginTop: 4 }}>+ Add Row</button>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                        <div style={{ marginTop: 12, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
                           <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Project Documents</div>
                           </div>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -6426,6 +6453,104 @@ export default function AdminPanel() {
                     Data saved here goes to Firestore and overrides default values from data.js. The main dashboard reads Firestore first, falls back to defaults if no override exists. Click "Reset to Default" on any item to remove the live override. Last updated timestamps are tracked per entry.
                   </div>
                 </div>
+              {dataSubTab === "communityintel" && (() => {
+                const communities = Object.keys(defaultCommunityIntel);
+                return (
+                  <Section title="Community Intel Editor" sub="Edit Famous For, amenities, distances, taglines for all 11 communities">
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+                      {communities.map(key => {
+                        const hasOverride = !!liveCommunityIntel[key];
+                        const merged = { ...defaultCommunityIntel[key], ...(liveCommunityIntel[key] || {}) };
+                        return (
+                          <div key={key} className="chart-box fade-up" style={{ padding: 18, border: editingCommunityIntel === key ? "1px solid " + T.gold : "1px solid " + T.border, transition: "all .2s", cursor: "pointer" }}
+                            onClick={() => { if (editingCommunityIntel !== key) { setEditingCommunityIntel(key); setCommunityIntelForm({ ...defaultCommunityIntel[key], ...(liveCommunityIntel[key] || {}) }); } }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                              <div>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{key}</div>
+                                <div style={{ fontSize: 11, color: T.teal, fontStyle: "italic", marginTop: 2 }}>{merged.tagline}</div>
+                              </div>
+                              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                                {hasOverride && <button type="button" onClick={e => { e.stopPropagation(); resetCommunityIntel(key); }} style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer" }}>Reset</button>}
+                                <span style={{ fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: hasOverride ? "rgba(16,185,129,0.12)" : "rgba(148,163,184,0.08)", color: hasOverride ? T.green : T.textMuted }}>{hasOverride ? "Live" : "Default"}</span>
+                              </div>
+                            </div>
+                            {editingCommunityIntel === key && (
+                              <div onClick={e => e.stopPropagation()} style={{ marginTop: 12, borderTop: "1px solid " + T.border, paddingTop: 16 }}>
+                                {[
+                                  { key: "tagline", label: "Tagline", type: "text", placeholder: "e.g. Golf-Side Family Living..." },
+                                  { key: "famousFor", label: "Famous For", type: "textarea", placeholder: "What this community is known for..." },
+                                  { key: "masterDev", label: "Master Developer", type: "text", placeholder: "e.g. Emaar & Meraas joint venture..." },
+                                  { key: "lifestyle", label: "Lifestyle", type: "text", placeholder: "e.g. Family-oriented, golf lifestyle..." },
+                                  { key: "roads", label: "Road Access", type: "text", placeholder: "e.g. Al Khail Road (E44), E311..." },
+                                  { key: "avgYield", label: "Avg Yield Range", type: "text", placeholder: "e.g. 4.5-5.5%" },
+                                ].map(f => (
+                                  <div key={f.key} style={{ marginBottom: 10 }}>
+                                    <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                                    {f.type === "textarea"
+                                      ? <textarea value={communityIntelForm[f.key] ?? ""} onChange={e => setCommunityIntelForm(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={f.placeholder} rows={3}
+                                          style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid " + T.border, borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
+                                      : <input type="text" value={communityIntelForm[f.key] ?? ""} onChange={e => setCommunityIntelForm(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={f.placeholder}
+                                          style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid " + T.border, borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
+                                    }
+                                  </div>
+                                ))}
+                                <div style={{ marginBottom: 12 }}>
+                                  <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Golden Visa Eligible</label>
+                                  <div style={{ display: "flex", gap: 8 }}>
+                                    {[true, false].map(v => (
+                                      <button key={String(v)} type="button" onClick={() => setCommunityIntelForm(prev => ({ ...prev, goldenVisa: v }))}
+                                        style={{ padding: "8px 18px", borderRadius: 8, border: "1px solid " + ((communityIntelForm.goldenVisa ?? merged.goldenVisa) === v ? T.gold : T.border), background: (communityIntelForm.goldenVisa ?? merged.goldenVisa) === v ? T.goldGlow : "transparent", color: (communityIntelForm.goldenVisa ?? merged.goldenVisa) === v ? T.gold : T.textSecondary, cursor: "pointer", fontSize: 12, fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                                        {v ? "Yes - Eligible" : "No - Not Eligible"}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div style={{ marginBottom: 12 }}>
+                                  <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, display: "block" }}>Key Amenities (Schools / Healthcare / Malls / Leisure)</label>
+                                  {(communityIntelForm.keyAmenities || merged.keyAmenities || []).map((a, idx) => (
+                                    <div key={idx} style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: 8, marginBottom: 8 }}>
+                                      <input placeholder="Label" value={a.label || ""} onChange={e => { const arr = JSON.parse(JSON.stringify(communityIntelForm.keyAmenities || merged.keyAmenities)); arr[idx] = { ...arr[idx], label: e.target.value }; setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr })); }}
+                                        style={{ padding: "8px 10px", background: T.bg, border: "1px solid " + T.border, borderRadius: 7, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif" }} />
+                                      <input placeholder="Items (e.g. GEMS Wellington, Kings School)" value={a.items || ""} onChange={e => { const arr = JSON.parse(JSON.stringify(communityIntelForm.keyAmenities || merged.keyAmenities)); arr[idx] = { ...arr[idx], items: e.target.value }; setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr })); }}
+                                        style={{ padding: "8px 10px", background: T.bg, border: "1px solid " + T.border, borderRadius: 7, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif" }} />
+                                    </div>
+                                  ))}
+                                </div>
+                                <div style={{ marginBottom: 12 }}>
+                                  <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, display: "block" }}>Distance Table (dest / km / min)</label>
+                                  {(communityIntelForm.distances || merged.distances || []).map((d, idx) => (
+                                    <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 55px 55px auto", gap: 6, marginBottom: 6 }}>
+                                      <input placeholder="Destination" value={d.dest || ""} onChange={e => { const arr = JSON.parse(JSON.stringify(communityIntelForm.distances || merged.distances)); arr[idx] = { ...arr[idx], dest: e.target.value }; setCommunityIntelForm(prev => ({ ...prev, distances: arr })); }}
+                                        style={{ padding: "7px 10px", background: T.bg, border: "1px solid " + T.border, borderRadius: 7, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif" }} />
+                                      <input type="number" placeholder="km" value={d.km || ""} onChange={e => { const arr = JSON.parse(JSON.stringify(communityIntelForm.distances || merged.distances)); arr[idx] = { ...arr[idx], km: Number(e.target.value) }; setCommunityIntelForm(prev => ({ ...prev, distances: arr })); }}
+                                        style={{ padding: "7px 10px", background: T.bg, border: "1px solid " + T.border, borderRadius: 7, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif" }} />
+                                      <input type="number" placeholder="min" value={d.min || ""} onChange={e => { const arr = JSON.parse(JSON.stringify(communityIntelForm.distances || merged.distances)); arr[idx] = { ...arr[idx], min: Number(e.target.value) }; setCommunityIntelForm(prev => ({ ...prev, distances: arr })); }}
+                                        style={{ padding: "7px 10px", background: T.bg, border: "1px solid " + T.border, borderRadius: 7, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif" }} />
+                                      <button type="button" onClick={() => { const arr = (communityIntelForm.distances || merged.distances).filter((_, i) => i !== idx); setCommunityIntelForm(prev => ({ ...prev, distances: arr })); }}
+                                        style={{ padding: "7px 10px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 7, color: T.red, cursor: "pointer", fontSize: 11 }}>x</button>
+                                    </div>
+                                  ))}
+                                  <button type="button" onClick={() => setCommunityIntelForm(prev => ({ ...prev, distances: [...(prev.distances || merged.distances || []), { dest: "", km: 0, min: 0 }] }))}
+                                    style={{ fontSize: 11, padding: "6px 12px", borderRadius: 7, border: "1px solid rgba(212,168,67,0.3)", background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", marginTop: 4 }}>+ Add Row</button>
+                                </div>
+                                <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                                  <button type="button" disabled={dataSaving} onClick={() => saveCommunityIntel(key, communityIntelForm)}
+                                    style={{ flex: 1, padding: "10px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, " + T.gold + ", #B8860B)", color: "#000", fontSize: 13, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                    {dataSaving ? "Saving..." : "Save Community Intel"}
+                                  </button>
+                                  <button type="button" onClick={() => setEditingCommunityIntel(null)}
+                                    style={{ padding: "10px 18px", borderRadius: 8, border: "1px solid " + T.border, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </Section>
+                );
+              })()}
+
               </div>
             </>
           )}
