@@ -2680,6 +2680,9 @@ export default function AdminPanel() {
   const [editingYield, setEditingYield] = useState(null);
   const [liveProjects, setLiveProjects] = useState({});
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
+  const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
+  const [editingCommunityIntel, setEditingCommunityIntel] = useState(null);
+  const [communityIntelForm, setCommunityIntelForm] = useState({});
   const [liveYields, setLiveYields] = useState({});
   const [dataSearch, setDataSearch] = useState("");
   const [dataSaving, setDataSaving] = useState(false);
@@ -2763,6 +2766,14 @@ export default function AdminPanel() {
       const roiMap = {};
       roiSnap.forEach(d => { roiMap[d.id] = plainify(d.data()); });
       setLiveCommunityROI(roiMap);
+
+      // Fetch community intel overrides
+      try {
+        const intelSnap = await getDocs(collection(db, "communityIntel"));
+        const intelMap = {};
+        intelSnap.forEach(d => { intelMap[d.id] = plainify(d.data()); });
+        setLiveCommunityIntel(intelMap);
+      } catch(e) {}
 
       // Fetch yield overrides
       const yieldSnap = await getDocs(collection(db, "yieldData"));
