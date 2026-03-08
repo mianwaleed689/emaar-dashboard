@@ -1129,7 +1129,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div style={{ flex: 1, background: "rgba(0,0,0,0.38)", animation: "fadeBackdrop 0.2s ease", pointerEvents: "auto" }} onClick={() => setDrawerUserWithCallback(null)} />
 
         {/* Panel — spring animation, box shadow for depth */}
-        <div style={{ width: 520, background: T.bg, borderLeft: `1px solid ${T.border}`, boxShadow: "-24px 0 80px rgba(0,0,0,0.5)", overflowY: "auto", display: "flex", flexDirection: "column", animation: "slideIn 0.32s cubic-bezier(0.16,1,0.3,1)", pointerEvents: "auto" }} onClick={e => e.stopPropagation()}>
+        <div style={{ width: 520, height: "100%", background: T.bg, borderLeft: `1px solid ${T.border}`, boxShadow: "-24px 0 80px rgba(0,0,0,0.5)", overflowY: "auto", display: "flex", flexDirection: "column", animation: "slideIn 0.32s cubic-bezier(0.16,1,0.3,1)", pointerEvents: "auto" }} onClick={e => e.stopPropagation()}>
 
           {/* ── Header ── */}
           <div style={{ padding: "20px 24px 16px", borderBottom: `1px solid ${T.border}`, position: "relative" }}>
@@ -1207,7 +1207,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           </div>
 
           {/* ── Tab body ── */}
-          <div style={{ padding: "20px 24px", flex: 1 }}>
+          <div style={{ padding: "20px 24px", flex: 1, minHeight: 480 }}>
 
             {/* DETAILS */}
             {drawerTab === "details" && (
