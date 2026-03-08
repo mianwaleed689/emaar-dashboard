@@ -326,6 +326,349 @@ function NotificationsTab({ T, notify, adminUser }) {
   );
 }
 
+function RevenueTab({ mrr, arr, projectedMRR, trialConversion, stats, revenueProjection, users, T, I }) {
+  const now = new Date();
+
+  /* ── LTV per paid user ── */
+  const paidUsers = users.filter(u => u.tier === "pro" || u.tier === "enterprise");
+  const avgLTV = paidUsers.length > 0
+    ? Math.round(paidUsers.reduce((sum, u) => {
+        const months = u.createdAt ? Math.max(1, Math.round((now - new Date(u.createdAt)) / (30 * 86400000))) : 1;
+        const monthly = u.tier === "enterprise" ? 499 : 99;
+        return sum + months * monthly;
+      }, 0) / paidUsers.length)
+    : 0;
+
+  const arpu = stats.total > 0 ? Math.round(mrr / stats.total) : 0;
+  const churnRisk = users.filter(u => u.tier === "pro_trial" && u.trialEnd && ((new Date(u.trialEnd) - now) / 86400000) <= 3 && new Date(u.trialEnd) > now);
+  const mrrGrowthPct = mrr > 0 ? Math.round(((projectedMRR - mrr) / mrr) * 100) : 0;
+
+  /* ── Simulated 6-month MRR history from user join dates ── */
+  const mrrHistory = (() => {
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const label = d.toLocaleString("en", { month: "short" });
+      const usersAtMonth = users.filter(u => {
+        if (!u.createdAt) return false;
+        const joined = new Date(u.createdAt);
+        return joined <= new Date(d.getFullYear(), d.getMonth() + 1, 0);
+      });
+      const mrrVal = (usersAtMonth.filter(u => u.tier === "pro").length * 99) +
+                     (usersAtMonth.filter(u => u.tier === "enterprise").length * 499);
+      months.push({ month: label, mrr: mrrVal });
+    }
+    return months;
+  })();
+
+  /* ── Revenue by tier for bar chart ── */
+  const tierRevData = [
+    { tier: "Pro", revenue: stats.pro * 99, users: stats.pro, color: T.green },
+    { tier: "Enterprise", revenue: stats.enterprise * 499, users: stats.enterprise, color: T.teal },
+    { tier: "Pipeline", revenue: stats.proTrial * 99, users: stats.proTrial, color: T.gold },
+  ];
+
+  /* ── Milestones ── */
+  const milestones = [
+    { label: "AED 1K MRR", target: 1000, icon: "🥉" },
+    { label: "AED 5K MRR", target: 5000, icon: "🥈" },
+    { label: "AED 10K MRR", target: 10000, icon: "🥇" },
+    { label: "AED 50K MRR", target: 50000, icon: "🏆" },
+  ];
+
+  const KpiCard = ({ label, value, sub, color, icon, delay = 0 }) => (
+    <div className="kpi-card fade-up" style={{ animationDelay: `${delay * 0.08}s` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase" }}>{label}</span>
+        {icon && <span style={{ fontSize: 18 }}>{icon}</span>}
+      </div>
+      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 900, color, lineHeight: 1, marginBottom: 6 }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: T.textSecondary }}>{sub}</div>}
+    </div>
+  );
+
+  const SectionHeader = ({ title, sub }) => (
+    <div style={{ marginBottom: 16 }}>
+      <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 2 }}>{title}</h3>
+      {sub && <p style={{ fontSize: 11, color: T.textMuted }}>{sub}</p>}
+    </div>
+  );
+
+  const ChartBox = ({ title, sub, children, style = {} }) => (
+    <div className="chart-box fade-up" style={{ padding: 20, ...style }}>
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{title}</div>
+        {sub && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{sub}</div>}
+      </div>
+      {children}
+    </div>
+  );
+
+  return (
+    <div style={{ animation: "fadeUp 0.4s ease-out" }}>
+
+      {/* ── Row 1: 6 KPI Cards ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 24 }}>
+        <KpiCard label="MRR" value={`AED ${mrr.toLocaleString()}`} sub={`${stats.paid} paying users`} color={T.green} icon="💰" delay={0} />
+        <KpiCard label="ARR" value={`AED ${arr.toLocaleString()}`} sub="Annualized revenue" color={T.teal} icon="📅" delay={1} />
+        <KpiCard label="Projected MRR" value={`AED ${projectedMRR.toLocaleString()}`} sub="If 30% trials convert" color={T.gold} icon="📈" delay={2} />
+        <KpiCard label="Avg LTV" value={`AED ${avgLTV.toLocaleString()}`} sub="Per paid user" color={T.purple} icon="⭐" delay={3} />
+        <KpiCard label="ARPU" value={`AED ${arpu}`} sub="Per total user" color={T.blue} icon="👤" delay={4} />
+        <KpiCard label="Trial → Paid" value={`${trialConversion}%`} sub={`${stats.pro} converted · ${stats.expired} expired`} color={trialConversion >= 50 ? T.green : trialConversion >= 25 ? T.gold : T.red} icon="🔄" delay={5} />
+      </div>
+
+      {/* ── Row 2: MRR History + Forecast ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+        <ChartBox title="MRR History" sub="6-month trend based on user data">
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={mrrHistory}>
+              <defs>
+                <linearGradient id="gMrrHist" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={T.gold} stopOpacity={0.3} />
+                  <stop offset="100%" stopColor={T.gold} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+              <XAxis dataKey="month" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}`} />
+              <Tooltip contentStyle={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, fontFamily: "'Outfit',sans-serif", fontSize: 12, color: T.textPrimary }} formatter={v => [`AED ${v}`, "MRR"]} />
+              <Area type="monotone" dataKey="mrr" stroke={T.gold} fill="url(#gMrrHist)" strokeWidth={2.5} dot={{ fill: T.gold, r: 3 }} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartBox>
+
+        <ChartBox title="Revenue Forecast" sub="Projected MRR if trial pipeline converts">
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={revenueProjection}>
+              <defs>
+                <linearGradient id="gRevForecast" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={T.green} stopOpacity={0.3} />
+                  <stop offset="100%" stopColor={T.green} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+              <XAxis dataKey="month" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, fontFamily: "'Outfit',sans-serif", fontSize: 12, color: T.textPrimary }} formatter={v => [`AED ${v}`, "Projected MRR"]} />
+              <Area type="monotone" dataKey="revenue" stroke={T.green} fill="url(#gRevForecast)" strokeWidth={2.5} dot={{ fill: T.green, r: 4 }} />
+            </AreaChart>
+          </ResponsiveContainer>
+          <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: "rgba(16,185,129,0.06)", borderRadius: 8, border: "1px solid rgba(16,185,129,0.15)" }}>
+            <span style={{ fontSize: 18 }}>🚀</span>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.green }}>+{mrrGrowthPct}% potential growth</div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>If all {stats.proTrial} active trials convert to Pro</div>
+            </div>
+          </div>
+        </ChartBox>
+      </div>
+
+      {/* ── Row 3: Revenue Breakdown + Conversion Funnel ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+
+        {/* Revenue by Tier */}
+        <ChartBox title="Revenue by Tier" sub="Current MRR and pipeline per plan">
+          {tierRevData.map((t, i) => (
+            <div key={i} style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: t.color }} />
+                  <span style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{t.tier}</span>
+                  <span style={{ fontSize: 10, color: T.textMuted }}>({t.users} users)</span>
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 800, color: t.color, fontFamily: "'Fraunces',serif" }}>
+                  AED {t.revenue.toLocaleString()}
+                </span>
+              </div>
+              <div style={{ height: 6, borderRadius: 3, background: T.surfaceAlt, overflow: "hidden" }}>
+                <div style={{
+                  height: "100%",
+                  borderRadius: 3,
+                  background: t.color,
+                  width: mrr + stats.proTrial * 99 > 0
+                    ? `${Math.round((t.revenue / (mrr + stats.proTrial * 99)) * 100)}%`
+                    : "2%",
+                  transition: "width 0.8s ease",
+                  opacity: t.tier === "Pipeline" ? 0.5 : 1,
+                }} />
+              </div>
+              {t.tier === "Pipeline" && (
+                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4, fontStyle: "italic" }}>Potential — not yet collected</div>
+              )}
+            </div>
+          ))}
+
+          <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 14, marginTop: 4, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>ARPU (Paid)</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: T.gold, fontFamily: "'Fraunces',serif" }}>
+                AED {stats.paid > 0 ? Math.round(mrr / stats.paid) : 0}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>MRR / User</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: T.teal, fontFamily: "'Fraunces',serif" }}>
+                AED {arpu}
+              </div>
+            </div>
+          </div>
+        </ChartBox>
+
+        {/* Conversion Funnel */}
+        <ChartBox title="Conversion Funnel" sub="Signup → Trial → Paid breakdown">
+          {[
+            { label: "Signed Up", value: stats.total, pct: 100, color: T.textSecondary, icon: "👤" },
+            { label: "Started Trial", value: stats.proTrial + stats.pro + stats.expired, pct: stats.total > 0 ? Math.round(((stats.proTrial + stats.pro + stats.expired) / stats.total) * 100) : 0, color: T.gold, icon: "🔬" },
+            { label: "Converted to Paid", value: stats.paid, pct: stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0, color: T.green, icon: "💳" },
+          ].map((step, i) => (
+            <div key={i} style={{ marginBottom: 18 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 7 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <span style={{ fontSize: 14 }}>{step.icon}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{step.label}</span>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: step.color, fontFamily: "'Fraunces',serif" }}>{step.value}</span>
+                  <span style={{ fontSize: 10, color: T.textMuted, marginLeft: 5 }}>({step.pct}%)</span>
+                </div>
+              </div>
+              <div style={{ height: 8, borderRadius: 4, background: T.surfaceAlt }}>
+                <div style={{
+                  width: `${Math.max(step.pct, 2)}%`,
+                  height: "100%",
+                  borderRadius: 4,
+                  background: step.color,
+                  transition: "width 0.8s ease",
+                }} />
+              </div>
+            </div>
+          ))}
+
+          <div style={{ padding: "14px 0 0", borderTop: `1px solid ${T.border}`, marginTop: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Drop-off Analysis</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              {[
+                { label: "Never Trialed", value: stats.free, color: T.textMuted },
+                { label: "Trial → Churned", value: stats.expired, color: T.red },
+              ].map((item, i) => (
+                <div key={i} style={{ padding: "10px 12px", borderRadius: 8, background: T.surfaceAlt }}>
+                  <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>{item.label}</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: item.color, fontFamily: "'Fraunces',serif" }}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </ChartBox>
+      </div>
+
+      {/* ── Row 4: Milestones + Churn Risk + Paid User LTV ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+
+        {/* Revenue Milestones */}
+        <ChartBox title="Revenue Milestones" sub="MRR growth goals">
+          {milestones.map((m, i) => {
+            const pct = Math.min(100, Math.round((mrr / m.target) * 100));
+            const reached = mrr >= m.target;
+            return (
+              <div key={i} style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 14, filter: reached ? "none" : "grayscale(1)" }}>{m.icon}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: reached ? T.green : T.white }}>{m.label}</span>
+                    {reached && <span style={{ fontSize: 9, fontWeight: 700, color: T.green, letterSpacing: 0.5, padding: "2px 6px", background: "rgba(16,185,129,0.12)", borderRadius: 4 }}>REACHED</span>}
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: reached ? T.green : T.textMuted }}>{pct}%</span>
+                </div>
+                <div style={{ height: 6, borderRadius: 3, background: T.surfaceAlt, overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%",
+                    borderRadius: 3,
+                    background: reached ? T.green : `linear-gradient(90deg, ${T.gold}, ${T.goldDim})`,
+                    width: `${Math.max(pct, 2)}%`,
+                    transition: "width 1s ease",
+                  }} />
+                </div>
+                {!reached && (
+                  <div style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>
+                    AED {(m.target - mrr).toLocaleString()} to go
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </ChartBox>
+
+        {/* Churn Risk + Paid Users */}
+        <ChartBox title="Churn Risk & Paid Users" sub="Trials expiring soon + current revenue contributors">
+          {churnRisk.length === 0 ? (
+            <div style={{ padding: "12px 14px", background: "rgba(16,185,129,0.06)", borderRadius: 10, border: "1px solid rgba(16,185,129,0.15)", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 18 }}>✅</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.green }}>No immediate churn risk</div>
+                <div style={{ fontSize: 11, color: T.textMuted }}>No trials expiring within 3 days</div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: T.red, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                <span>⚠️</span> {churnRisk.length} trial{churnRisk.length > 1 ? "s" : ""} expiring within 3 days
+              </div>
+              {churnRisk.map((u, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "rgba(239,68,68,0.06)", borderRadius: 8, marginBottom: 6, border: "1px solid rgba(239,68,68,0.15)" }}>
+                  <span style={{ fontSize: 12, color: T.white }}>{u.name || u.email || "Unknown"}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: T.red }}>
+                    {Math.ceil((new Date(u.trialEnd) - now) / 86400000)}d left
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
+            Paid Users
+          </div>
+          {paidUsers.length === 0 ? (
+            <div style={{ fontSize: 12, color: T.textMuted, fontStyle: "italic" }}>No paid users yet</div>
+          ) : (
+            paidUsers.map((u, i) => {
+              const months = u.createdAt ? Math.max(1, Math.round((now - new Date(u.createdAt)) / (30 * 86400000))) : 1;
+              const monthly = u.tier === "enterprise" ? 499 : 99;
+              const ltv = months * monthly;
+              const tierColor = u.tier === "enterprise" ? T.teal : T.green;
+              return (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: T.surfaceAlt, borderRadius: 10, marginBottom: 8, border: `1px solid ${T.border}` }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg, ${tierColor}22, ${tierColor}44)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: tierColor }}>
+                      {(u.name || u.email || "?")[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>{u.name || u.email?.split("@")[0] || "User"}</div>
+                      <div style={{ fontSize: 10, color: T.textMuted }}>AED {monthly}/mo · {months}mo tenure</div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: tierColor, fontFamily: "'Fraunces',serif" }}>AED {ltv.toLocaleString()}</div>
+                    <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>LTV</div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+
+          {/* Paddle status notice */}
+          <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 16 }}>⏳</span>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: T.orange }}>Paddle approval pending</div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>Real payments will flow once approved</div>
+            </div>
+          </div>
+        </ChartBox>
+      </div>
+    </div>
+  );
+}
+
 function EiborRatesPanel({ db, T }) {
   const EIBOR_FALLBACK = { "1m": 3.635, "3m": 3.593, "6m": 3.676, "1y": 3.674, on: 3.473, "1w": 3.577 };
   const [eiborEdit, setEiborEdit] = React.useState({ "1m": "", "3m": "", "6m": "", "1y": "", asOf: "" });
@@ -2029,89 +2372,18 @@ export default function AdminPanel() {
               )}
 
               {tab === "revenue" && (
-            <>
-              <Section title="Revenue Intelligence" sub="MRR, ARR, conversion metrics & projections">
-                <div className="kpi-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-                  <KPI label="Monthly Revenue" value={`AED ${mrr.toLocaleString()}`} sub={`${stats.pro} Pro · ${stats.enterprise} Enterprise`} color={T.green} delay={1} />
-                  <KPI label="Annual Revenue" value={`AED ${arr.toLocaleString()}`} sub="Projected annualized" color={T.teal} delay={2} />
-                  <KPI label="Projected MRR" value={`AED ${projectedMRR.toLocaleString()}`} sub={`30% trial conversion assumption`} color={T.gold} delay={3} />
-                  <KPI label="Trial Conversion" value={`${trialConversion}%`} sub={`${stats.pro} converted · ${stats.expired} expired`} color={T.blue} delay={4} />
-                </div>
-              </Section>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 28 }}>
-                <Chart title="Revenue Projection (6 Months)">
-                  <ResponsiveContainer width="100%" height={240}>
-                    <AreaChart data={revenueProjection}>
-                      <defs>
-                        <linearGradient id="gRev" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={T.green} stopOpacity={0.25} />
-                          <stop offset="100%" stopColor={T.green} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                      <XAxis dataKey="month" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Area type="monotone" dataKey="revenue" stroke={T.green} fill="url(#gRev)" strokeWidth={2.5} name="MRR (AED)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </Chart>
-                <Chart title="Conversion Funnel">
-                  <div style={{ padding: "10px 0" }}>
-                    {[
-                      { label: "Total Signups", value: stats.total, pct: 100, color: T.textSecondary, width: 100 },
-                      { label: "Started Trial", value: stats.proTrial + stats.pro + stats.expired, pct: stats.total > 0 ? Math.round(((stats.proTrial + stats.pro + stats.expired) / stats.total) * 100) : 0, color: T.gold, width: stats.total > 0 ? ((stats.proTrial + stats.pro + stats.expired) / stats.total) * 100 : 0 },
-                      { label: "Converted to Paid", value: stats.paid, pct: stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0, color: T.green, width: stats.total > 0 ? (stats.paid / stats.total) * 100 : 0 },
-                    ].map((step, i) => (
-                      <div key={i} className="fade-up" style={{ marginBottom: 20, animationDelay: `${i * 0.1}s` }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                          <span style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{step.label}</span>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: step.color }}>{step.value} ({step.pct}%)</span>
-                        </div>
-                        <div style={{ height: 8, borderRadius: 4, background: T.surfaceAlt }}>
-                          <div style={{ width: `${Math.max(step.width, 2)}%`, height: "100%", borderRadius: 4, background: step.color, transition: "width 0.6s ease" }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ padding: "12px 0", borderTop: `1px solid ${T.border}`, marginTop: 8 }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                      <div>
-                        <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>ARPU</div>
-                        <div style={{ fontSize: 18, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>AED {stats.total > 0 ? Math.round(mrr / stats.total) : 0}</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>Lead Value</div>
-                        <div style={{ fontSize: 18, fontWeight: 800, color: T.teal, fontFamily: "'Fraunces',serif" }}>AED 125</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>Per inquiry avg</div>
-                      </div>
-                    </div>
-                  </div>
-                </Chart>
-              </div>
-
-              <Section title="Revenue Breakdown" sub="Revenue by tier and source">
-                <div className="chart-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-                  <div className="chart-box fade-up" style={{ padding: 20 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Pro Plan Revenue</div>
-                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: T.green }}>AED {(stats.pro * 99).toLocaleString()}</div>
-                    <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 4 }}>{stats.pro} users × AED 99/mo</div>
-                  </div>
-                  <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.05s" }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Enterprise Revenue</div>
-                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: T.teal }}>AED {(stats.enterprise * 499).toLocaleString()}</div>
-                    <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 4 }}>{stats.enterprise} users × AED 499/mo</div>
-                  </div>
-                  <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.1s" }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Potential Pipeline</div>
-                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: T.gold }}>AED {(stats.proTrial * 99).toLocaleString()}</div>
-                    <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 4 }}>{stats.proTrial} trials × AED 99 if converted</div>
-                  </div>
-                </div>
-              </Section>
-            </>
-          )}
+                <RevenueTab
+                  mrr={mrr}
+                  arr={arr}
+                  projectedMRR={projectedMRR}
+                  trialConversion={trialConversion}
+                  stats={stats}
+                  revenueProjection={revenueProjection}
+                  users={users}
+                  T={T}
+                  I={I}
+                />
+              )}
 
           {/* ═══════════════════════════════════════
              DATA MANAGER TAB
