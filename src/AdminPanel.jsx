@@ -5540,6 +5540,7 @@ export default function AdminPanel() {
                   { id: "projects", label: "Projects", count: emaarProjects.length, icon: I.projects },
                   { id: "communities", label: "Community ROI", count: Object.keys(defaultCommunityROI).length, icon: I.chart },
                   { id: "yields", label: "Yield Table", count: emaarYields.length, icon: I.yields },
+                  { id: "pricehistory", label: "Price History", count: 0, icon: I.chart },
                 ].map(st => (
                   <button type="button" key={st.id} onClick={() => { setDataSubTab(st.id); setEditingProject(null); setEditingCommunity(null); setEditingYield(null); }}
                     style={{ flex: 1, padding: "14px 16px", borderRadius: 12, border: `1px solid ${dataSubTab === st.id ? T.gold : T.border}`, background: dataSubTab === st.id ? T.goldGlow : T.surface, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all .2s" }}>
@@ -6060,6 +6061,19 @@ export default function AdminPanel() {
                         );
                       })}
                     </div>
+                  </div>
+                </Section>
+              )}
+
+              {/* ─── PRICE HISTORY SUB-TAB ─── */}
+              {dataSubTab === "pricehistory" && (
+                <Section title="Price History" sub="Track price changes per project over time">
+                  <div style={{ textAlign: "center", padding: "60px 20px" }}>
+                    <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", color: T.gold }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 6 }}>Price History — Coming in Step 2</div>
+                    <div style={{ fontSize: 12, color: T.textMuted }}>Project selector, chart, table and manual entry will be built here.</div>
                   </div>
                 </Section>
               )}
