@@ -3331,6 +3331,30 @@ export default function AdminPanel() {
     } catch (e) { notify("Error: " + e.message); }
   };
 
+  const saveCommunityIntel = async (communityKey, data) => {
+    setDataSaving(true);
+    try {
+      const clean = JSON.parse(JSON.stringify(data));
+      clean.updatedAt = new Date().toISOString();
+      clean.updatedBy = adminUser?.email || "admin";
+      await setDoc(doc(db, "communityIntel", communityKey), clean, { merge: true });
+      try { await logAudit(db, { action: "community_intel_update", communityKey }); } catch(e) {}
+      notify("Community Intel saved");
+      setEditingCommunityIntel(null);
+      fetchLiveData();
+    } catch (e) { notify("Error: " + e.message); }
+    setDataSaving(false);
+  };
+
+  const resetCommunityIntel = async (key) => {
+    if (!window.confirm("Reset " + key + " community intel to data.js defaults?")) return;
+    try {
+      await deleteDoc(doc(db, "communityIntel", key));
+      notify("Reset to defaults");
+      fetchLiveData();
+    } catch (e) { notify("Error: " + e.message); }
+  };
+
   /* Merge live data with defaults */
   const getMergedProject = (p) => ({ ...p, ...(liveProjects[p.id] || {}) });
   const getMergedROI = (key) => ({ ...(defaultCommunityROI[key] || {}), ...(liveCommunityROI[key] || {}) });
