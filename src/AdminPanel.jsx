@@ -5663,6 +5663,9 @@ export default function AdminPanel() {
                             { key: "paymentPlan", label: "Payment Plan", placeholder: "e.g. 80/20" },
                             { key: "type", label: "Type", placeholder: "e.g. Apartments" },
                             { key: "status", label: "Status", placeholder: "e.g. Off-Plan" },
+                            { key: "tier", label: "Tier", placeholder: "e.g. Mid-Premium" },
+                            { key: "construction", label: "Construction %", placeholder: "e.g. 0" },
+                            { key: "emaarUrl", label: "Source URL", placeholder: "e.g. https://propertyfinder.ae/..." },
                           ].map(f => (
                             <div key={f.key}>
                               <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
@@ -5684,12 +5687,17 @@ export default function AdminPanel() {
                     const fields = [
                       { key: "price", label: "Price (AED)", type: "number", placeholder: "e.g. 2500000", tip: "Starting price of the project in AED. This appears on the project card on the dashboard." },
                       { key: "ppsf", label: "Price/sqft (AED)", type: "number", placeholder: "e.g. 2200", tip: "Price per square foot. Used in yield calculations and shown in comparison tables." },
-                      { key: "sqft", label: "Size (sqft)", type: "number", placeholder: "e.g. 1200", tip: "Unit size in square feet. Used to calculate total price from PPSF." },
-                      { key: "status", label: "Status", type: "select", options: ["Selling", "Upcoming", "Sold Out", "Ready"], tip: "Current sales status. Shown as a badge on the project card." },
-                      { key: "handover", label: "Handover", type: "text", placeholder: "e.g. Q4 2027", tip: "Expected handover/completion date. Shown on the project detail page." },
-                      { key: "type", label: "Type", type: "select", options: ["Apartment", "Townhouse", "Villa", "Penthouse", "Duplex"], tip: "Property type used for filtering on the dashboard." },
+                      { key: "sizeFrom", label: "Size From (sqft)", type: "number", placeholder: "e.g. 750", tip: "Minimum unit size in sqft. Shown as size range on the project detail page." },
+                      { key: "sizeTo", label: "Size To (sqft)", type: "number", placeholder: "e.g. 2200", tip: "Maximum unit size in sqft. Shown as size range on the project detail page." },
+                      { key: "status", label: "Status", type: "select", options: ["Under Construction", "Off-Plan", "Completed", "Selling", "Upcoming", "Sold Out", "Ready"], tip: "Current project status shown as a badge on the project card and detail page." },
+                      { key: "handover", label: "Handover", type: "text", placeholder: "e.g. Q4 2027", tip: "Expected handover/completion date. Shown on the project detail page with countdown." },
+                      { key: "type", label: "Type", type: "select", options: ["Apartments", "Apts & TH", "Apts & Villas", "Apts & PH", "Townhouses", "Villas", "Branded Res."], tip: "Property type used for filtering on the dashboard and yield calculations." },
                       { key: "beds", label: "Bedrooms", type: "text", placeholder: "e.g. 1-3 BR", tip: "Available bedroom configurations, e.g. '1-3 BR' or 'Studio-4 BR'." },
-                      { key: "paymentPlan", label: "Payment Plan", type: "text", placeholder: "e.g. 80/20", tip: "Payment split — first % during construction, second % on handover." },
+                      { key: "paymentPlan", label: "Payment Plan", type: "text", placeholder: "e.g. 80/20", tip: "Payment split — affects investment score rating on project cards." },
+                      { key: "construction", label: "Construction %", type: "number", placeholder: "e.g. 75", tip: "Construction progress percentage (0-100). Shown as a progress bar on the project card and detail page." },
+                      { key: "tier", label: "Tier", type: "select", options: ["Affordable", "Mid-Market", "Mid-Premium", "Premium", "Luxury", "Ultra-Luxury", "Luxury Branded", "Ultra-Lux Branded"], tip: "Price/quality tier badge shown on project cards and in the tier filter on the dashboard." },
+                      { key: "emaarUrl", label: "PropertyFinder / Source URL", type: "text", placeholder: "e.g. https://www.propertyfinder.ae/...", tip: "Official listing URL shown as the SOURCE button on the project detail page." },
+                      { key: "tagline", label: "Project Tagline", type: "text", placeholder: "e.g. Golf-Side Family Living...", tip: "Short italic tagline shown on the project detail page under the community name. Leave blank to use community default." },
                       { key: "dldPpsf", label: "DLD PPSF (AED)", type: "number", placeholder: "e.g. 2100", tip: "Dubai Land Department's registered price per sqft. Used for comparison vs asking price." },
                       { key: "dataSource", label: "Data Source", type: "select", options: ["Emaar IR Report", "DLD Portal", "DXBinteract", "Manual Entry", "Agent Verified", "Market Research"], tip: "Where this data came from. Helps track data quality and credibility." },
                       { key: "lastVerified", label: "Last Verified Date", type: "text", placeholder: "e.g. Mar 2026", tip: "When this data was last checked against a source. Helps keep data fresh." },

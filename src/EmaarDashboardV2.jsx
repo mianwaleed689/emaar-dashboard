@@ -6471,7 +6471,7 @@ export default function EmaarDashboardV2() {
                     <Link to={`/project/${selectedProject_.id}`} style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(0,191,165,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(0,191,165,0.08)", whiteSpace: "nowrap" }} title="Open full page">FULL PAGE ↗</Link>
                   </div>
                   <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject_.community} · {selectedProject_.district} · {selectedProject_.type}</p>
-                  {ci && <p style={{ color: T.teal, fontSize: 11, marginTop: 2, fontStyle: "italic" }}>{ci.tagline}</p>}
+                  {(selectedProject_.tagline || (ci && ci.tagline)) && <p style={{ color: T.teal, fontSize: 11, marginTop: 2, fontStyle: "italic" }}>{selectedProject_.tagline || ci.tagline}</p>}
                 </div>
                 <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                   {selectedProject_.branded && <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{selectedProject_.brand}</span>}
