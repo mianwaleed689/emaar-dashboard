@@ -5754,40 +5754,37 @@ export default function AdminPanel() {
                     { icon: "[~]", title: "Default vs Live", desc: "'Default' means data comes from data.js. 'Live' means you've saved a Firestore override." },
                   ]} />
                   {/* ── Filter & Sort Bar ── */}
-                  <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-                    <div style={{ position: "relative", flex: "1 1 200px", minWidth: 180 }}>
-                      <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</span>
-                      <input value={dataSearch} onChange={e => setDataSearch(e.target.value)} placeholder="Search by name or community..."
-                        style={{ width: "100%", padding: "10px 12px 10px 36px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                  <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", alignItems: "center", padding: "10px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                    <div style={{ position: "relative", flex: "1 1 200px", minWidth: 160 }}>
+                      <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.textMuted, fontSize: 13, pointerEvents: "none" }}>⌕</span>
+                      <input value={dataSearch} onChange={e => setDataSearch(e.target.value)} placeholder="Search projects..."
+                        style={{ width: "100%", padding: "8px 10px 8px 28px", background: T.surface, border: `1px solid ${dataSearch ? T.gold : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
                     </div>
                     <select value={projectCommunityFilter} onChange={e => setProjectCommunityFilter(e.target.value)}
-                      style={{ padding: "10px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: projectCommunityFilter !== "All" ? T.gold : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                      style={{ padding: "8px 10px", background: projectCommunityFilter !== "All" ? `${T.gold}15` : T.surface, border: `1px solid ${projectCommunityFilter !== "All" ? T.gold : T.border}`, borderRadius: 8, color: projectCommunityFilter !== "All" ? T.gold : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: projectCommunityFilter !== "All" ? 700 : 400, maxWidth: 180 }}>
                       <option value="All">All Communities</option>
                       {[...new Set(emaarProjects.map(p => p.community))].sort().map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                     <select value={projectStatusFilter} onChange={e => setProjectStatusFilter(e.target.value)}
-                      style={{ padding: "10px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: projectStatusFilter !== "All" ? T.gold : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                      style={{ padding: "8px 10px", background: projectStatusFilter !== "All" ? `${T.gold}15` : T.surface, border: `1px solid ${projectStatusFilter !== "All" ? T.gold : T.border}`, borderRadius: 8, color: projectStatusFilter !== "All" ? T.gold : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: projectStatusFilter !== "All" ? 700 : 400 }}>
                       <option value="All">All Status</option>
                       {["Under Construction","Off-Plan","Completed","Selling","Upcoming","Sold Out","Ready"].map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
-                    <select value={projectSortKey} onChange={e => setProjectSortKey(e.target.value)}
-                      style={{ padding: "10px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                      <option value="name">Sort: Name</option>
-                      <option value="community">Sort: Community</option>
-                      <option value="price">Sort: Price</option>
-                      <option value="ppsf">Sort: PPSF</option>
-                      <option value="handover">Sort: Handover</option>
-                      <option value="construction">Sort: Construction %</option>
-                      <option value="status">Sort: Status</option>
+                    <select value={projectSortKey + "_" + projectSortDir} onChange={e => { const [k,d] = e.target.value.split("_"); setProjectSortKey(k); setProjectSortDir(d); }}
+                      style={{ padding: "8px 10px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                      <option value="name_asc">Name A→Z</option>
+                      <option value="name_desc">Name Z→A</option>
+                      <option value="price_asc">Price Low→High</option>
+                      <option value="price_desc">Price High→Low</option>
+                      <option value="ppsf_desc">PPSF High→Low</option>
+                      <option value="construction_desc">Construction % High</option>
+                      <option value="status_asc">Status A→Z</option>
+                      <option value="community_asc">Community A→Z</option>
                     </select>
-                    <button type="button" onClick={() => setProjectSortDir(d => d === "asc" ? "desc" : "asc")}
-                      style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: 700 }}>
-                      {projectSortDir === "asc" ? "A-Z" : "Z-A"}
-                    </button>
                     {(dataSearch || projectCommunityFilter !== "All" || projectStatusFilter !== "All") && (
                       <button type="button" onClick={() => { setDataSearch(""); setProjectCommunityFilter("All"); setProjectStatusFilter("All"); }}
-                        style={{ padding: "10px 14px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, color: T.red, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: 600 }}>
-                        Clear Filters
+                        style={{ padding: "8px 12px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, color: T.red, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" }}>
+                        ✕ Clear filters
                       </button>
                     )}
                   </div>
@@ -6135,33 +6132,57 @@ export default function AdminPanel() {
                     );
                   })()}
 
-                  {/* Bulk Edit Bar */}
+                  {/* ── Bulk Edit Bar — only visible when rows are checked ── */}
                   {bulkSelected.length > 0 && (
-                    <div className="fade-up" style={{ padding: "14px 20px", marginBottom: 12, borderRadius: 10, background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.2)", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{bulkSelected.length} projects selected</span>
-                      {[
-                        { key: "status", label: "Status", options: ["Under Construction","Off-Plan","Completed","Selling", "Upcoming", "Sold Out", "Ready"] },
-                        { key: "availability", label: "Availability", options: ["Available", "Sold Out", "Limited Units", "Coming Soon"] },
-                        { key: "tier", label: "Tier", options: ["Affordable","Mid-Market","Mid-Premium","Premium","Luxury","Ultra-Luxury","Luxury Branded","Ultra-Lux Branded"] },
-                      ].map(f => (
-                        <select key={f.key} value={bulkForm[f.key] || ""} onChange={e => setBulkForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                          style={{ padding: "6px 10px", background: T.bg, border: "1px solid rgba(212,168,67,0.2)", borderRadius: 6, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>
-                          <option value="">Set {f.label}...</option>
-                          {f.options.map(o => <option key={o} value={o}>{o}</option>)}
-                        </select>
-                      ))}
-                      <input type="number" placeholder="Set Price..." value={bulkForm.price || ""} onChange={e => setBulkForm(prev => ({ ...prev, price: e.target.value }))}
-                        style={{ padding: "6px 10px", background: T.bg, border: "1px solid rgba(212,168,67,0.2)", borderRadius: 6, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif", width: 120 }} />
-                      <input type="number" placeholder="Set Construction %..." value={bulkForm.construction || ""} onChange={e => setBulkForm(prev => ({ ...prev, construction: e.target.value }))}
-                        style={{ padding: "6px 10px", background: T.bg, border: "1px solid rgba(212,168,67,0.2)", borderRadius: 6, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif", width: 160 }} />
-                      <input type="text" placeholder="Set Handover..." value={bulkForm.handover || ""} onChange={e => setBulkForm(prev => ({ ...prev, handover: e.target.value }))}
-                        style={{ padding: "6px 10px", background: T.bg, border: "1px solid rgba(212,168,67,0.2)", borderRadius: 6, color: T.textPrimary, fontSize: 11, fontFamily: "'Outfit',sans-serif", width: 130 }} />
-                      <button type="button" onClick={saveBulkEdit} disabled={dataSaving} style={{ padding: "6px 16px", borderRadius: 6, border: "none", background: T.gold, color: T.bg, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                        Apply to All
-                      </button>
-                      <button type="button" onClick={() => { setBulkSelected([]); setBulkForm({}); }} style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid rgba(100,116,139,0.3)", background: "transparent", color: T.textSecondary, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                        Clear
-                      </button>
+                    <div className="fade-up" style={{ marginBottom: 12, borderRadius: 10, background: "#0C1B2E", border: `2px solid ${T.gold}`, overflow: "hidden" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px 8px", borderBottom: "1px solid rgba(212,168,67,0.2)" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 7, background: T.gold, fontSize: 12, fontWeight: 900, color: T.bg, flexShrink: 0 }}>{bulkSelected.length}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>projects selected</span>
+                        <span style={{ fontSize: 11, color: T.textMuted }}>Set a value below, then click Apply to All</span>
+                        <button type="button" onClick={() => { setBulkSelected([]); setBulkForm({}); }} style={{ marginLeft: "auto", fontSize: 11, padding: "4px 12px", borderRadius: 7, border: "1px solid rgba(100,116,139,0.3)", background: "transparent", color: T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>✕ Deselect all</button>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 8, padding: "12px 16px" }}>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Status</div>
+                          <select value={bulkForm.status || ""} onChange={e => setBulkForm(prev => ({ ...prev, status: e.target.value }))}
+                            style={{ width: "100%", padding: "7px 10px", background: bulkForm.status ? `${T.gold}15` : T.surface, border: `1px solid ${bulkForm.status ? T.gold : T.border}`, borderRadius: 8, color: bulkForm.status ? T.gold : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                            <option value="">— unchanged —</option>
+                            {["Under Construction","Off-Plan","Completed","Selling","Upcoming","Sold Out","Ready"].map(o => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Tier</div>
+                          <select value={bulkForm.tier || ""} onChange={e => setBulkForm(prev => ({ ...prev, tier: e.target.value }))}
+                            style={{ width: "100%", padding: "7px 10px", background: bulkForm.tier ? `${T.gold}15` : T.surface, border: `1px solid ${bulkForm.tier ? T.gold : T.border}`, borderRadius: 8, color: bulkForm.tier ? T.gold : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                            <option value="">— unchanged —</option>
+                            {["Affordable","Mid-Market","Mid-Premium","Premium","Luxury","Ultra-Luxury","Luxury Branded","Ultra-Lux Branded"].map(o => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Availability</div>
+                          <select value={bulkForm.availability || ""} onChange={e => setBulkForm(prev => ({ ...prev, availability: e.target.value }))}
+                            style={{ width: "100%", padding: "7px 10px", background: bulkForm.availability ? `${T.gold}15` : T.surface, border: `1px solid ${bulkForm.availability ? T.gold : T.border}`, borderRadius: 8, color: bulkForm.availability ? T.gold : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                            <option value="">— unchanged —</option>
+                            {["Available","Sold Out","Limited Units","Coming Soon"].map(o => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Construction %</div>
+                          <input type="number" min="0" max="100" placeholder="e.g. 75" value={bulkForm.construction || ""} onChange={e => setBulkForm(prev => ({ ...prev, construction: e.target.value }))}
+                            style={{ width: "100%", padding: "7px 10px", background: bulkForm.construction ? `${T.gold}15` : T.surface, border: `1px solid ${bulkForm.construction ? T.gold : T.border}`, borderRadius: 8, color: bulkForm.construction ? T.gold : T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Handover</div>
+                          <input type="text" placeholder="e.g. Q4 2027" value={bulkForm.handover || ""} onChange={e => setBulkForm(prev => ({ ...prev, handover: e.target.value }))}
+                            style={{ width: "100%", padding: "7px 10px", background: bulkForm.handover ? `${T.gold}15` : T.surface, border: `1px solid ${bulkForm.handover ? T.gold : T.border}`, borderRadius: 8, color: bulkForm.handover ? T.gold : T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+                          <button type="button" onClick={saveBulkEdit} disabled={dataSaving || Object.values(bulkForm).every(v => !v)}
+                            style={{ padding: "9px 16px", borderRadius: 8, border: "none", background: Object.values(bulkForm).some(v => v) ? T.gold : "rgba(212,168,67,0.15)", color: Object.values(bulkForm).some(v => v) ? T.bg : T.textMuted, fontSize: 12, fontWeight: 800, cursor: Object.values(bulkForm).some(v => v) ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif" }}>
+                            {dataSaving ? "Saving..." : `Apply to All ${bulkSelected.length}`}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   )}
                   {/* Projects list */}
@@ -6184,9 +6205,9 @@ export default function AdminPanel() {
                       ))}
                     </div>
                     {(() => {
-                        const baseIds = new Set(emaarProjects.map(p => String(p.id)));
-                        const firestoreOnly = Object.entries(liveProjects).filter(([id]) => !baseIds.has(id)).map(([id, data]) => ({ id, ...data }));
-                        const allProjects = [...emaarProjects, ...firestoreOnly];
+                        // Deduplicate by id — safety net in case data.js has duplicates
+                        const _seen = new Set();
+                        const allProjects = emaarProjects.filter(p => { if (_seen.has(p.id)) return false; _seen.add(p.id); return true; });
                         const filtered = allProjects
                           .filter(p => {
                             const merged = getMergedProject(p);
