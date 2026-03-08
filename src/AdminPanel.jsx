@@ -3155,6 +3155,7 @@ export default function AdminPanel() {
       const data = snap.docs
         .map(d => ({ id: d.id, ...d.data() }))
         .sort((a, b) => new Date(a.recordedAt) - new Date(b.recordedAt));
+      notify("Debug: found " + snap.docs.length + " docs for ID=" + String(projectId));
       setPriceHistory(prev => ({ ...prev, [projectId]: data }));
     } catch(e) {
       console.log("fetchPriceHistory error:", e);
