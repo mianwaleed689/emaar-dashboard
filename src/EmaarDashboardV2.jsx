@@ -4458,7 +4458,12 @@ export default function EmaarDashboardV2() {
                           <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 6px #10B981" }} />
                           <span style={{ fontSize: 11, fontWeight: 700, color: "#10B981", letterSpacing: 1, textTransform: "uppercase" }}>EIBOR · {eiborSource}</span>
                         </div>
-                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Emirates Interbank Offered Rate · UAE Central Bank benchmark</div>
+                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>Emirates Interbank Offered Rate · UAE Central Bank benchmark</div>
+                        <div style={{ display: "flex", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
+                          <a href="https://www.centralbank.ae/en/forex-eibor/eibor-rates/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#10B981", textDecoration: "none" }}>🔗 CBUAE Official ↗</a>
+                          <a href="https://fcmb.ae/eibor-rate-today" target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#10B981", textDecoration: "none" }}>🔗 FCMB Live Rates ↗</a>
+                          <a href="https://www.mortgagemarket.ae/mortgage-guides/eibor-rate" target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#10B981", textDecoration: "none" }}>🔗 Mortgage Market ↗</a>
+                        </div>
                         <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                           {[["1M", liveEibor?.["1m"]], ["3M", liveEibor?.["3m"]], ["6M", liveEibor?.["6m"]], ["1Y", liveEibor?.["1y"]]].map(([label, val]) => (
                             <div key={label} style={{ textAlign: "center" }}>
