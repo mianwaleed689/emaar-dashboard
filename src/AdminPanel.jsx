@@ -439,7 +439,7 @@ function EiborRatesPanel({ db, T }) {
    USERS TAB COMPONENT — Professional SaaS User Management
    Full rebuild: all 36 audit issues resolved
 ══════════════════════════════════════════════════════ */
-function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, suspendUser, sendResetEmail, extendTrial, openEditUser, saveEditUser, editingUser, setEditingUser, editUserForm, setEditUserForm, editUserLoading, showAddUser, setShowAddUser, addUserForm, setAddUserForm, addUserManually, addUserLoading, exportCSV, userSearch, setUserSearch, tierFilter, setTierFilter, notify, db, T, I, trialDaysLeft, timeSince }) {
+function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, suspendUser, sendResetEmail, extendTrial, openEditUser, saveEditUser, editingUser, setEditingUser, editUserForm, setEditUserForm, editUserLoading, showAddUser, setShowAddUser, addUserForm, setAddUserForm, addUserManually, addUserLoading, exportCSV, userSearch, setUserSearch, tierFilter, setTierFilter, notify, db, T, I, trialDaysLeft, timeSince, pendingOpenUid, setPendingOpenUid }) {
 
   /* ─── STATE ─── */
   const [drawerUser,         setDrawerUser]         = useState(null);
@@ -482,6 +482,15 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const pagedUsersRef = React.useRef([]);
   const focusedRowRef = React.useRef(0);
   focusedRowRef.current = focusedRow;
+
+  // Open drawer from external trigger (e.g. Overview activity feed click)
+  useEffect(() => {
+    if (pendingOpenUid && users.length > 0) {
+      const u = users.find(x => x.uid === pendingOpenUid);
+      if (u) { setDrawerUser(u); setDrawerTab("details"); }
+      setPendingOpenUid(null);
+    }
+  }, [pendingOpenUid, users]);
 
   /* ─── KEYBOARD NAVIGATION ─── */
   useEffect(() => {
@@ -1797,6 +1806,7 @@ export default function AdminPanel() {
   const [editingUser, setEditingUser] = useState(null);
   const [editUserForm, setEditUserForm] = useState({});
   const [showAddUser, setShowAddUser] = useState(false);
+  const [pendingOpenUid, setPendingOpenUid] = useState(null);
   const [addUserForm, setAddUserForm] = useState({ name: "", email: "", password: "", phone: "", country: "", tier: "free", notes: "" });
   const [addUserLoading, setAddUserLoading] = useState(false);
   const [editUserLoading, setEditUserLoading] = useState(false);
@@ -2955,6 +2965,69 @@ export default function AdminPanel() {
                 );
               })()}
 
+              {/* ══ STEP 6 — QUICK ACTIONS BAR ══ */}
+              <div className="fade-up" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+
+                {/* Email At-Risk */}
+                <button type="button"
+                  disabled={stats.atRisk === 0}
+                  onClick={() => {
+                    stats.atRiskUsers.forEach(u => {
+                      const days = trialDaysLeft(u);
+                      emailjs.send("service_da7nshv", "template_gl1xqhy", {
+                        user_email: u.email, user_name: u.name || u.email,
+                        project_name: "DXB Analytics",
+                        change_type: `⚠️ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
+                        new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now to keep full access.`,
+                        old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE"),
+                      }, "USkwUhp0csGCVDkdQ").catch(() => {});
+                    });
+                    notify(`✅ Sent ${stats.atRisk} at-risk email${stats.atRisk > 1 ? "s" : ""}`);
+                  }}
+                  style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 10, border: `1px solid ${stats.atRisk > 0 ? T.red + "60" : T.border}`, background: stats.atRisk > 0 ? "rgba(239,68,68,0.08)" : T.surfaceAlt, color: stats.atRisk > 0 ? T.red : T.textMuted, fontSize: 12, fontWeight: 700, cursor: stats.atRisk > 0 ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", opacity: stats.atRisk === 0 ? 0.45 : 1, transition: "all 0.15s" }}>
+                  <span>⚠️</span>
+                  <span>Email At-Risk</span>
+                  {stats.atRisk > 0 && <span style={{ background: T.red, color: "#fff", borderRadius: 5, padding: "1px 6px", fontSize: 10, fontWeight: 800 }}>{stats.atRisk}</span>}
+                </button>
+
+                {/* Add User */}
+                <button type="button"
+                  onClick={() => { setTab("users"); setShowAddUser(true); }}
+                  style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 10, border: `1px solid ${T.gold}60`, background: "rgba(255,196,0,0.07)", color: T.gold, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}>
+                  <span>➕</span>
+                  <span>Add User</span>
+                </button>
+
+                {/* Pending Verifications */}
+                <button type="button"
+                  disabled={pendingVerifications === 0}
+                  onClick={() => setTab("verification")}
+                  style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 10, border: `1px solid ${pendingVerifications > 0 ? "#8B5CF6" + "60" : T.border}`, background: pendingVerifications > 0 ? "rgba(139,92,246,0.08)" : T.surfaceAlt, color: pendingVerifications > 0 ? "#8B5CF6" : T.textMuted, fontSize: 12, fontWeight: 700, cursor: pendingVerifications > 0 ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", opacity: pendingVerifications === 0 ? 0.45 : 1, transition: "all 0.15s" }}>
+                  <span>🔍</span>
+                  <span>Verifications</span>
+                  {pendingVerifications > 0 && <span style={{ background: "#8B5CF6", color: "#fff", borderRadius: 5, padding: "1px 6px", fontSize: 10, fontWeight: 800 }}>{pendingVerifications}</span>}
+                </button>
+
+                {/* New Leads */}
+                <button type="button"
+                  disabled={newLeadsThisWeek === 0}
+                  onClick={() => setTab("leads")}
+                  style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 10, border: `1px solid ${newLeadsThisWeek > 0 ? T.teal + "60" : T.border}`, background: newLeadsThisWeek > 0 ? "rgba(0,191,165,0.08)" : T.surfaceAlt, color: newLeadsThisWeek > 0 ? T.teal : T.textMuted, fontSize: 12, fontWeight: 700, cursor: newLeadsThisWeek > 0 ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", opacity: newLeadsThisWeek === 0 ? 0.45 : 1, transition: "all 0.15s" }}>
+                  <span>📋</span>
+                  <span>New Leads</span>
+                  {newLeadsThisWeek > 0 && <span style={{ background: T.teal, color: "#fff", borderRadius: 5, padding: "1px 6px", fontSize: 10, fontWeight: 800 }}>{newLeadsThisWeek}</span>}
+                </button>
+
+                {/* Export Users CSV */}
+                <button type="button"
+                  onClick={() => exportCSV()}
+                  style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s", marginLeft: "auto" }}>
+                  <span>⬇️</span>
+                  <span>Export CSV</span>
+                </button>
+
+              </div>
+
               {/* ══ STEP 3 — KPI CARDS WITH TRENDS ══ */}
               <div style={{ marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
@@ -3233,7 +3306,7 @@ export default function AdminPanel() {
                     <div key={`${item.type}-${i}`}
                       className="fade-up"
                       onClick={() => {
-                        if (item.uid) { setTab("users"); }
+                        if (item.uid) { setTab("users"); setPendingOpenUid(item.uid); }
                         else if (item.type === "lead") setTab("leads");
                         else if (item.type === "verification") setTab("verification");
                       }}
@@ -3277,7 +3350,7 @@ export default function AdminPanel() {
           {/* ═══════════════════════════════════════
              USERS TAB
              ═══════════════════════════════════════ */}
-          {tab === "users" && <UsersTab users={users} filteredUsers={filteredUsers} fetchUsers={fetchUsers} changeTier={changeTier} deleteUser={deleteUser} suspendUser={suspendUser} sendResetEmail={sendResetEmail} extendTrial={extendTrial} openEditUser={openEditUser} saveEditUser={saveEditUser} editingUser={editingUser} setEditingUser={setEditingUser} editUserForm={editUserForm} setEditUserForm={setEditUserForm} editUserLoading={editUserLoading} showAddUser={showAddUser} setShowAddUser={setShowAddUser} addUserForm={addUserForm} setAddUserForm={setAddUserForm} addUserManually={addUserManually} addUserLoading={addUserLoading} exportCSV={exportCSV} userSearch={userSearch} setUserSearch={setUserSearch} tierFilter={tierFilter} setTierFilter={setTierFilter} notify={notify} db={db} T={T} I={I} trialDaysLeft={trialDaysLeft} timeSince={timeSince} />}
+          {tab === "users" && <UsersTab users={users} filteredUsers={filteredUsers} fetchUsers={fetchUsers} changeTier={changeTier} deleteUser={deleteUser} suspendUser={suspendUser} sendResetEmail={sendResetEmail} extendTrial={extendTrial} openEditUser={openEditUser} saveEditUser={saveEditUser} editingUser={editingUser} setEditingUser={setEditingUser} editUserForm={editUserForm} setEditUserForm={setEditUserForm} editUserLoading={editUserLoading} showAddUser={showAddUser} setShowAddUser={setShowAddUser} addUserForm={addUserForm} setAddUserForm={setAddUserForm} addUserManually={addUserManually} addUserLoading={addUserLoading} exportCSV={exportCSV} userSearch={userSearch} setUserSearch={setUserSearch} tierFilter={tierFilter} setTierFilter={setTierFilter} notify={notify} db={db} T={T} I={I} trialDaysLeft={trialDaysLeft} timeSince={timeSince} pendingOpenUid={pendingOpenUid} setPendingOpenUid={setPendingOpenUid} />}
 
           
               {tab === "auditlog" && (
