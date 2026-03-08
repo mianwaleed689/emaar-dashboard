@@ -3155,12 +3155,20 @@ export default function AdminPanel() {
       const data = snap.docs
         .map(d => ({ id: d.id, ...d.data() }))
         .sort((a, b) => new Date(a.recordedAt) - new Date(b.recordedAt));
-      notify("Debug: found " + snap.docs.length + " docs for ID=" + String(projectId));
       setPriceHistory(prev => ({ ...prev, [projectId]: data }));
     } catch(e) {
       console.log("fetchPriceHistory error:", e);
       notify("Error loading history: " + e.message);
     }
+  };
+
+  const deletePriceHistoryEntry = async (entryId, projectId) => {
+    if (!window.confirm("Delete this price entry? This cannot be undone.")) return;
+    try {
+      await deleteDoc(doc(db, "priceHistory", entryId));
+      notify("Entry deleted");
+      await fetchPriceHistory(projectId);
+    } catch(e) { notify("Error: " + e.message); }
   };
 
   const validateProjectData = (data, isNew = false) => {
@@ -6262,8 +6270,8 @@ export default function AdminPanel() {
                               <div style={{ fontSize: 11, color: T.textMuted }}>{history.length} entries</div>
                             </div>
                             {/* Header */}
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, padding: "10px 20px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}` }}>
-                              {["Date", "Price (AED)", "PPSF", "Change", "Recorded By"].map(h => (
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 40px", gap: 8, padding: "10px 20px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}` }}>
+                              {["Date", "Price (AED)", "PPSF", "Change", "Recorded By", ""].map(h => (
                                 <span key={h} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{h}</span>
                               ))}
                             </div>
@@ -6271,7 +6279,7 @@ export default function AdminPanel() {
                               const prev     = arr[i + 1];
                               const changePct = prev ? (((h.price - prev.price) / prev.price) * 100).toFixed(1) : null;
                               return (
-                                <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, padding: "11px 20px", borderBottom: i < arr.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : T.surfaceAlt }}>
+                                <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 40px", gap: 8, padding: "11px 20px", borderBottom: i < arr.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : T.surfaceAlt, alignItems: "center" }}>
                                   <span style={{ fontSize: 12, color: T.textSecondary }}>{new Date(h.recordedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}</span>
                                   <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>AED {h.price.toLocaleString()}</span>
                                   <span style={{ fontSize: 12, color: T.textSecondary }}>{h.ppsf ? h.ppsf.toLocaleString() : "—"}</span>
@@ -6279,6 +6287,10 @@ export default function AdminPanel() {
                                     {changePct === null ? "—" : `${changePct >= 0 ? "+" : ""}${changePct}%`}
                                   </span>
                                   <span style={{ fontSize: 11, color: T.textMuted }}>{h.recordedBy || "—"}{h.manual ? " (manual)" : ""}</span>
+                                  <button type="button" onClick={() => deletePriceHistoryEntry(h.id, phSelId)}
+                                    style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+                                    ×
+                                  </button>
                                 </div>
                               );
                             })}
