@@ -2270,13 +2270,9 @@ export default function EmaarDashboardV2() {
           {userTier === "admin" && (
             <>
               <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Admin</div>
-              <button type="button" className={`sidebar-btn ${tab === "Admin" ? "active" : ""}`} onClick={() => handleTabChange("Admin")}>
+              <button type="button" className={`sidebar-btn`} onClick={() => window.location.href = "/admin"}>
                 {Icons.admin}
-                EIBOR Editor
-              </button>
-              <button type="button" className="sidebar-btn" onClick={() => window.open("/admin", "_blank")} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                Admin Console ↗
+                Admin Panel
               </button>
             </>
           )}
