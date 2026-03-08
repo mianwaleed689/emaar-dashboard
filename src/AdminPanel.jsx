@@ -5163,8 +5163,7 @@ export default function AdminPanel() {
                               const isEnt = u.tier === "enterprise";
                               rows.push([u.name || "", u.email || "", isEnt ? "Enterprise" : "Pro", isEnt ? 499 : 99, isEnt ? entLTV : proLTV, u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-AE") : ""]);
                             });
-                            const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("
-");
+                            const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
                             const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
                             a.download = `paying-customers-${new Date().toISOString().slice(0,10)}.csv`; a.click();
                             logAudit(db, { action: "csv_export", exportType: "paying_customers", exportedCount: payingUsers.length }).catch(() => {});
