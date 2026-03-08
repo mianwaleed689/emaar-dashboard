@@ -2927,7 +2927,7 @@ export default function AdminPanel() {
           </div>
         </header>
 
-        <div  style={{ padding: "28px 28px 60px" }}>
+        <div style={{ padding: "28px 28px 60px" }}>
 
           {/* ═══════════════════════════════════════
              OVERVIEW TAB
@@ -2938,15 +2938,15 @@ export default function AdminPanel() {
               {/* ══ OVERVIEW TOPBAR — health + alerts + actions in one row ══ */}
               {(() => {
                 const urgentAlerts = [
-                  stats.atRisk > 0 && { key: "atrisk", color: T.red, icon: "⚠️", label: `${stats.atRisk} at risk`, action: () => {
+                  stats.atRisk > 0 && { key: "atrisk", color: T.red, icon: "", label: `${stats.atRisk} at risk`, action: () => {
                     stats.atRiskUsers.forEach(u => {
                       const days = trialDaysLeft(u);
                       emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `⚠️ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`, new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {});
                     });
                     notify(`Sent ${stats.atRisk} at-risk emails`);
                   }},
-                  stats.suspended > 0 && { key: "suspended", color: "#F59E0B", icon: "⏸", label: `${stats.suspended} suspended`, action: () => { setTab("users"); setTierFilter("Suspended"); } },
-                  stats.expired > 0   && { key: "expired",   color: T.textMuted, icon: "⌛", label: `${stats.expired} expired`,   action: () => { setTab("users"); setTierFilter("Expired"); } },
+                  stats.suspended > 0 && { key: "suspended", color: "#F59E0B", icon: "", label: `${stats.suspended} suspended`, action: () => { setTab("users"); setTierFilter("Suspended"); } },
+                  stats.expired > 0   && { key: "expired",   color: T.textMuted, icon: "", label: `${stats.expired} expired`,   action: () => { setTab("users"); setTierFilter("Expired"); } },
                   pendingVerifications > 0 && { key: "verif", color: "#8B5CF6", icon: "kyc", label: `${pendingVerifications} KYC`,  action: () => setTab("verification") },
                   newLeadsToday > 0   && { key: "leads",  color: T.teal,    icon: "lead", label: `${newLeadsToday} leads`,     action: () => setTab("leads") },
                 ].filter(Boolean);
@@ -2986,6 +2986,7 @@ export default function AdminPanel() {
                 );
               })()}
               {/* ══ STEP 3 — KPI CARDS WITH TRENDS ══ */}
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Platform Overview</div>
               <div style={{ marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                   <div style={{ borderLeft: `3px solid ${T.gold}`, paddingLeft: 14 }}>
@@ -3084,6 +3085,7 @@ export default function AdminPanel() {
               </div>
 
               {/* ══ STEP 4 — THREE CHARTS ══ */}
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Growth & Distribution</div>
 
               {/* Row 1: Signup Timeline (wide) + Tier Donut (narrow) */}
               <div className="charts-row-overview" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 14, marginBottom: 14 }}>
@@ -3243,6 +3245,7 @@ export default function AdminPanel() {
               </div>
 
               {/* ══ STEP 5 — CROSS-PLATFORM ACTIVITY FEED ══ */}
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Live Activity</div>
               <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
                   <div>
@@ -3302,6 +3305,7 @@ export default function AdminPanel() {
               </div>
 
               {/* ══ STEP 7 — CHURN & RETENTION PANEL ══ */}
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Churn & Retention</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 24 }} className="charts-row-overview">
 
                 {/* MRR Movement */}
