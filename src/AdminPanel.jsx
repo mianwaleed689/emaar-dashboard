@@ -459,11 +459,12 @@ const ProfileDrawerComponent = ({
   drawerUser, onClose, drawerTab, setDrawerTab,
   T, getTierBadge, getJobRoleBadge, getHealth, trialDaysLeft,
   copyToClipboard, copiedId, TAGS_OPTIONS, BILLING_TIERS, JOB_ROLES,
-  handleTierChange, setNoteUser, setNoteText, setTagUser,
+  handleTierChange, handleJobRoleChange, setNoteUser, setNoteText, setTagUser,
   setConfirmSuspend, setConfirmDelete, sendResetEmail,
   setNotifUser, setNotifTitle, setNotifMessage,
   setSendEmailUser, setEmailSubject, setEmailBody,
   timeSince, lastActiveLabel, lastActiveColor, getUserLTV, AT_RISK_DAYS,
+  inputStyle, confirmAndExtend, notify, openEditUser,
 }) => {
   if (!drawerUser) return null;
     const u     = drawerUser;
@@ -1485,6 +1486,11 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         lastActiveColor={lastActiveColor}
         getUserLTV={getUserLTV}
         AT_RISK_DAYS={AT_RISK_DAYS}
+        handleJobRoleChange={handleJobRoleChange}
+        inputStyle={inputStyle}
+        confirmAndExtend={confirmAndExtend}
+        notify={notify}
+        openEditUser={openEditUser}
       />
 
       {/* Inline tier dropdown */}
