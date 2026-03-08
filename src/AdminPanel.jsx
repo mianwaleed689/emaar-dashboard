@@ -465,7 +465,7 @@ const ProfileDrawerComponent = ({
   setNotifUser, setNotifTitle, setNotifMessage,
   setSendEmailUser, setEmailSubject, setEmailBody,
   timeSince, lastActiveLabel, lastActiveColor, getUserLTV, AT_RISK_DAYS,
-  inputStyle, confirmAndExtend, notify, openEditUser,
+  inputStyle, confirmAndExtend, notify, openEditUser, auditLog,
 }) => {
   if (!drawerUser) return null;
     const u     = drawerUser;
@@ -661,58 +661,133 @@ const ProfileDrawerComponent = ({
             )}
 
             {/* ACTIVITY */}
-            {drawerTab === "activity" && (
-              <>
-                {(u.loginHistory || []).length > 0 ? (
-                  <div style={{ marginBottom: 24 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 12 }}>Login History</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}` }}>
-                      {(u.loginHistory || []).slice(0, 8).map((h, i) => (
-                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: i === 0 ? "rgba(16,185,129,0.04)" : i % 2 === 0 ? T.surfaceAlt : T.surface, borderBottom: i < Math.min(7, (u.loginHistory||[]).length - 1) ? `1px solid ${T.border}` : "none" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: 7, background: T.surfaceAlt, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: i === 0 ? T.green : T.textMuted }}>
-                              {h.device === "Mobile" ?
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg> :
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                              }
-                            </div>
-                            <div>
-                              <div style={{ fontSize: 12, color: i === 0 ? T.white : T.textSecondary, fontWeight: i === 0 ? 600 : 400 }}>{h.browser || "Browser"} · {h.device || "Desktop"}</div>
-                              {i === 0 && <div style={{ fontSize: 9, color: T.green, fontWeight: 700, marginTop: 1, textTransform: "uppercase", letterSpacing: 0.5 }}>Most recent</div>}
+            {drawerTab === "activity" && (() => {
+              const userLog = (auditLog || [])
+                .filter(l => l.uid === u.uid || l.userId === u.uid)
+                .slice(0, 20);
+
+              const actionLabel = (action) => {
+                const map = {
+                  tier_change:       "Tier changed",
+                  bulk_tier_change:  "Bulk tier change",
+                  user_created:      "Account created",
+                  user_deleted:      "Account deleted",
+                  user_suspended:    "Account suspended",
+                  user_unsuspended:  "Account unsuspended",
+                  password_reset:    "Password reset sent",
+                  trial_extended:    "Trial extended",
+                  email_sent:        "Email sent",
+                  note_saved:        "Admin note saved",
+                  role_change:       "Role changed",
+                  kyc_approved:      "KYC approved",
+                  kyc_rejected:      "KYC rejected",
+                  tab_view:          "Tab viewed",
+                  project_update:    "Project updated",
+                  notification_sent: "Notification sent",
+                };
+                return map[action] || action?.replace(/_/g, " ") || "Action";
+              };
+
+              const actionColor = (action) => {
+                if (!action) return T.textMuted;
+                if (action.includes("delet") || action.includes("suspend") || action.includes("reject")) return T.red;
+                if (action.includes("creat") || action.includes("approv") || action.includes("unsuspend")) return T.green;
+                if (action.includes("tier") || action.includes("trial") || action.includes("extend")) return T.gold;
+                if (action.includes("email") || action.includes("notif") || action.includes("password")) return T.blue;
+                return T.textMuted;
+              };
+
+              return (
+                <>
+                  {/* Header row */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2 }}>
+                      Admin Activity Log
+                    </div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>
+                      {userLog.length} event{userLog.length !== 1 ? "s" : ""}
+                    </div>
+                  </div>
+
+                  {userLog.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "40px 0" }}>
+                      <div style={{ width: 44, height: 44, borderRadius: 12, background: T.surfaceAlt, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", color: T.textMuted }}>
+                        <IconActivity />
+                      </div>
+                      <div style={{ fontSize: 13, color: T.textSecondary, fontWeight: 600, marginBottom: 4 }}>No admin actions yet</div>
+                      <div style={{ fontSize: 11, color: T.textMuted }}>Actions taken on this user will appear here.</div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 12, overflow: "hidden", border: `1px solid ${T.border}` }}>
+                      {userLog.map((l, i) => {
+                        const color = actionColor(l.action);
+                        const isFirst = i === 0;
+                        return (
+                          <div key={l.id || i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "11px 14px", background: isFirst ? `${color}06` : i % 2 === 0 ? T.surfaceAlt : T.surface, borderBottom: i < userLog.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                            {/* Color dot */}
+                            <div style={{ width: 7, height: 7, borderRadius: "50%", background: color, marginTop: 5, flexShrink: 0 }} />
+                            {/* Content */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                                <div style={{ fontSize: 12, fontWeight: isFirst ? 700 : 500, color: isFirst ? T.white : T.textSecondary }}>
+                                  {actionLabel(l.action)}
+                                </div>
+                                <div style={{ fontSize: 10, color: T.textMuted, whiteSpace: "nowrap", flexShrink: 0 }}>
+                                  {(() => { try { return new Date(l.changedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "—"; } })()}
+                                </div>
+                              </div>
+                              {/* from → to */}
+                              {(l.from || l.to) && (
+                                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
+                                  {l.from && <span style={{ color: T.red }}>{l.from}</span>}
+                                  {l.from && l.to && <span style={{ margin: "0 5px", color: T.textMuted }}>→</span>}
+                                  {l.to && <span style={{ color: T.green }}>{l.to}</span>}
+                                </div>
+                              )}
+                              {/* changed by */}
+                              {l.adminEmail && (
+                                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>
+                                  by {l.adminEmail}
+                                </div>
+                              )}
+                              {/* details */}
+                              {l.details && (
+                                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2, fontStyle: "italic" }}>
+                                  {l.details}
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <span style={{ fontSize: 11, color: T.textMuted }}>{(() => { try { return new Date(h.time).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "—"; } })()}</span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
-                  </div>
-                ) : (
-                  <div style={{ textAlign: "center", padding: "40px 0" }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", color: T.textMuted }}>
-                      <IconActivity />
-                    </div>
-                    <div style={{ fontSize: 13, color: T.textSecondary, fontWeight: 600 }}>No login history yet</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Recorded after next login.</div>
-                  </div>
-                )}
+                  )}
 
-                {(u.recentActivity || []).length > 0 && (
-                  <div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 12 }}>Tab Activity</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 0, position: "relative", paddingLeft: 20 }}>
-                      <div style={{ position: "absolute", left: 7, top: 8, bottom: 8, width: 1, background: T.border }} />
-                      {(u.recentActivity || []).slice(0, 10).map((a, i) => (
-                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 10px 7px 0", position: "relative" }}>
-                          <div style={{ position: "absolute", left: -14, width: 7, height: 7, borderRadius: "50%", background: i === 0 ? T.gold : T.border, border: `2px solid ${T.bg}` }} />
-                          <span style={{ fontSize: 12, color: i === 0 ? T.white : T.textSecondary, fontWeight: i === 0 ? 600 : 400 }}>{a.tab}</span>
-                          <span style={{ fontSize: 10, color: T.textMuted }}>{(() => { try { return timeSince(a.time); } catch { return "—"; } })()}</span>
-                        </div>
-                      ))}
+                  {/* Login history below audit log — kept as secondary info */}
+                  {(u.loginHistory || []).length > 0 && (
+                    <div style={{ marginTop: 20 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 10 }}>Login History</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}` }}>
+                        {(u.loginHistory || []).slice(0, 5).map((h, i) => (
+                          <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 14px", background: i % 2 === 0 ? T.surfaceAlt : T.surface, borderBottom: i < Math.min(4, (u.loginHistory||[]).length - 1) ? `1px solid ${T.border}` : "none" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <div style={{ width: 24, height: 24, borderRadius: 6, background: T.surfaceAlt, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.textMuted }}>
+                                {h.device === "Mobile"
+                                  ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                                  : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                                }
+                              </div>
+                              <span style={{ fontSize: 11, color: T.textSecondary }}>{h.browser || "Browser"} · {h.device || "Desktop"}</span>
+                            </div>
+                            <span style={{ fontSize: 10, color: T.textMuted }}>{(() => { try { return new Date(h.time).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "—"; } })()}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </>
-            )}
+                  )}
+                </>
+              );
+            })()}
 
             {/* ACTIONS */}
             {drawerTab === "actions" && (
@@ -781,7 +856,7 @@ const ProfileDrawerComponent = ({
     );
 };
 
-function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, suspendUser, sendResetEmail, extendTrial, openEditUser, saveEditUser, editingUser, setEditingUser, editUserForm, setEditUserForm, editUserLoading, showAddUser, setShowAddUser, addUserForm, setAddUserForm, addUserManually, addUserLoading, exportCSV, userSearch, setUserSearch, tierFilter, setTierFilter, notify, db, T, I, trialDaysLeft, timeSince, pendingOpenUid, setPendingOpenUid, onDrawerChange }) {
+function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, suspendUser, sendResetEmail, extendTrial, openEditUser, saveEditUser, editingUser, setEditingUser, editUserForm, setEditUserForm, editUserLoading, showAddUser, setShowAddUser, addUserForm, setAddUserForm, addUserManually, addUserLoading, exportCSV, userSearch, setUserSearch, tierFilter, setTierFilter, notify, db, T, I, trialDaysLeft, timeSince, pendingOpenUid, setPendingOpenUid, onDrawerChange, auditLog }) {
 
   /* ─── STATE ─── */
   const [drawerUser,         setDrawerUser]         = useState(null);
@@ -1476,6 +1551,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         confirmAndExtend={confirmAndExtend}
         notify={notify}
         openEditUser={openEditUser}
+        auditLog={auditLog}
       />
 
       {/* Inline tier dropdown */}
@@ -4497,7 +4573,7 @@ export default function AdminPanel() {
           {/* ═══════════════════════════════════════
              USERS TAB
              ═══════════════════════════════════════ */}
-          {tab === "users" && <UsersTab users={users} filteredUsers={filteredUsers} fetchUsers={fetchUsers} changeTier={changeTier} deleteUser={deleteUser} suspendUser={suspendUser} sendResetEmail={sendResetEmail} extendTrial={extendTrial} openEditUser={openEditUser} saveEditUser={saveEditUser} editingUser={editingUser} setEditingUser={setEditingUser} editUserForm={editUserForm} setEditUserForm={setEditUserForm} editUserLoading={editUserLoading} showAddUser={showAddUser} setShowAddUser={setShowAddUser} addUserForm={addUserForm} setAddUserForm={setAddUserForm} addUserManually={addUserManually} addUserLoading={addUserLoading} exportCSV={exportCSV} userSearch={userSearch} setUserSearch={setUserSearch} tierFilter={tierFilter} setTierFilter={setTierFilter} notify={notify} db={db} T={T} I={I} trialDaysLeft={trialDaysLeft} timeSince={timeSince} pendingOpenUid={pendingOpenUid} setPendingOpenUid={setPendingOpenUid} onDrawerChange={setDrawerOpen} />}
+          {tab === "users" && <UsersTab users={users} filteredUsers={filteredUsers} fetchUsers={fetchUsers} changeTier={changeTier} deleteUser={deleteUser} suspendUser={suspendUser} sendResetEmail={sendResetEmail} extendTrial={extendTrial} openEditUser={openEditUser} saveEditUser={saveEditUser} editingUser={editingUser} setEditingUser={setEditingUser} editUserForm={editUserForm} setEditUserForm={setEditUserForm} editUserLoading={editUserLoading} showAddUser={showAddUser} setShowAddUser={setShowAddUser} addUserForm={addUserForm} setAddUserForm={setAddUserForm} addUserManually={addUserManually} addUserLoading={addUserLoading} exportCSV={exportCSV} userSearch={userSearch} setUserSearch={setUserSearch} tierFilter={tierFilter} setTierFilter={setTierFilter} notify={notify} db={db} T={T} I={I} trialDaysLeft={trialDaysLeft} timeSince={timeSince} pendingOpenUid={pendingOpenUid} setPendingOpenUid={setPendingOpenUid} onDrawerChange={setDrawerOpen} auditLog={auditLog} />
 
           
               {tab === "auditlog" && (() => {
