@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import EmaarDashboardV2 from "./EmaarDashboardV2";
 import AdminPanel from "./AdminPanel";
 import ProjectManager from "./ProjectManager";
+import LandingPage from "./LandingPage";
 import Terms from "./Terms";
 import Privacy from "./Privacy";
 import ErrorBoundary from "./ErrorBoundary";
@@ -13,6 +14,15 @@ import NotFound from "./NotFound";
 import ProjectDetail from "./ProjectDetail";
 import { I18nProvider } from "./i18n";
 
+// ── Spinner shared ──
+const Spinner = () => (
+  <div style={{ minHeight: "100vh", background: "#04090F", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ width: 24, height: 24, border: "2px solid rgba(212,168,67,0.3)", borderTopColor: "#D4A843", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+);
+
+// ── Admin guard — checks role === "admin" ──
 function AuthGuard({ children }) {
   const [status, setStatus] = useState("loading");
 
@@ -30,14 +40,32 @@ function AuthGuard({ children }) {
     return () => unsub();
   }, []);
 
-  if (status === "loading") return (
-    <div style={{ minHeight: "100vh", background: "#04090F", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ width: 24, height: 24, border: "2px solid rgba(212,168,67,0.3)", borderTopColor: "#D4A843", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-  );
+  if (status === "loading") return <Spinner />;
   if (status === "denied") return <Navigate to="/" replace />;
   return children;
+}
+
+// ── Home route — landing page for guests, redirect to /dashboard if logged in ──
+function HomeRoute() {
+  const [status, setStatus] = useState("loading");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (firebaseUser) => {
+      setStatus(firebaseUser ? "loggedin" : "guest");
+    });
+    return () => unsub();
+  }, []);
+
+  if (status === "loading") return <Spinner />;
+  if (status === "loggedin") return <Navigate to="/dashboard" replace />;
+
+  return (
+    <LandingPage
+      onLoginClick={() => navigate("/dashboard")}
+      onSignUpClick={() => navigate("/dashboard")}
+    />
+  );
 }
 
 function App() {
@@ -46,7 +74,7 @@ function App() {
       <I18nProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<EmaarDashboardV2 />} />
+            <Route path="/" element={<HomeRoute />} />
             <Route path="/dashboard" element={<EmaarDashboardV2 />} />
             <Route path="/admin" element={<AuthGuard><AdminPanel /></AuthGuard>} />
             <Route path="/manage" element={<AuthGuard><ProjectManager /></AuthGuard>} />
