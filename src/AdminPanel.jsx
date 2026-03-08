@@ -3880,56 +3880,110 @@ export default function AdminPanel() {
           {tab === "users" && <UsersTab users={users} filteredUsers={filteredUsers} fetchUsers={fetchUsers} changeTier={changeTier} deleteUser={deleteUser} suspendUser={suspendUser} sendResetEmail={sendResetEmail} extendTrial={extendTrial} openEditUser={openEditUser} saveEditUser={saveEditUser} editingUser={editingUser} setEditingUser={setEditingUser} editUserForm={editUserForm} setEditUserForm={setEditUserForm} editUserLoading={editUserLoading} showAddUser={showAddUser} setShowAddUser={setShowAddUser} addUserForm={addUserForm} setAddUserForm={setAddUserForm} addUserManually={addUserManually} addUserLoading={addUserLoading} exportCSV={exportCSV} userSearch={userSearch} setUserSearch={setUserSearch} tierFilter={tierFilter} setTierFilter={setTierFilter} notify={notify} db={db} T={T} I={I} trialDaysLeft={trialDaysLeft} timeSince={timeSince} pendingOpenUid={pendingOpenUid} setPendingOpenUid={setPendingOpenUid} onDrawerChange={setDrawerOpen} />}
 
           
-              {tab === "auditlog" && (
-                <>
-                  <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20 }}>
-                    <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold, marginBottom: 4 }}>Upcoming Data Updates</h3>
-                    <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 20 }}>Scheduled Emaar results and market data refresh dates</p>
-                    {[
-                      { event: "Emaar Q1 2026 Results", due: "2026-04-15", note: "Download from emaar.com/investor-relations" },
-                      { event: "Dubai Market Report Q1", due: "2026-04-30", note: "DLD and DXBinteract" },
-                      { event: "Emaar Q2 2026 Results", due: "2026-07-15", note: "Download from emaar.com/investor-relations" },
-                      { event: "Dubai Market Report Q2", due: "2026-07-30", note: "DLD and DXBinteract" },
-                      { event: "Emaar Q3 2026 Results", due: "2026-10-15", note: "Download from emaar.com/investor-relations" },
-                      { event: "Emaar FY 2026 Results", due: "2027-02-15", note: "Annual results — biggest update of the year" },
+              {tab === "auditlog" && (() => {
 
-                      { event: "Emaar Q1 2026 Results", due: "2026-04-15", note: "Download from emaar.com/investor-relations" },
-                      { event: "Dubai Market Report Q1", due: "2026-04-30", note: "DLD and DXBinteract" },
-                      { event: "Emaar Q2 2026 Results", due: "2026-07-15", note: "Download from emaar.com/investor-relations" },
-                      { event: "Dubai Market Report Q2", due: "2026-07-30", note: "DLD and DXBinteract" },
-                      { event: "Emaar Q3 2026 Results", due: "2026-10-15", note: "Download from emaar.com/investor-relations" },
-                      { event: "Emaar FY 2026 Results", due: "2027-02-15", note: "Annual results — biggest update of the year" },
-                    ].map((item, i) => {
-                      const daysLeft = Math.ceil((new Date(item.due) - new Date()) / (1000 * 60 * 60 * 24));
-                      const isUrgent = daysLeft <= 30;
-                      const isPast = daysLeft < 0;
-                      return (
-                        <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: "1px solid rgba(212,168,67,0.1)" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                            <div style={{ width: 10, height: 10, borderRadius: "50%", background: isPast ? "#EF4444" : isUrgent ? "#D4A843" : "#10B981", flexShrink: 0 }} />
-                            <div>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{item.event}</div>
-                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{item.note}</div>
-                            </div>
+                  // ── STATS ──
+                  const thisWeek = auditLog.filter(l => {
+                    try { return (Date.now() - new Date(l.changedAt).getTime()) < 7 * 24 * 60 * 60 * 1000; } catch { return false; }
+                  }).length;
+                  const tierChanges   = auditLog.filter(l => l.action === "tier_change").length;
+                  const bulkActions   = auditLog.filter(l => l.action === "bulk_tier_change").length;
+                  const projectUpdates = auditLog.filter(l => l.action === "project_update" || l.action === "project_create").length;
+
+                  // ── CALENDAR ──
+                  const calendarItems = [
+                    { event: "Emaar Q1 2026 Results",    due: "2026-04-15", note: "Download from emaar.com/investor-relations", icon: "📊" },
+                    { event: "Dubai Market Report Q1",   due: "2026-04-30", note: "DLD and DXBinteract",                         icon: "🏙️" },
+                    { event: "Emaar Q2 2026 Results",    due: "2026-07-15", note: "Download from emaar.com/investor-relations", icon: "📊" },
+                    { event: "Dubai Market Report Q2",   due: "2026-07-30", note: "DLD and DXBinteract",                         icon: "🏙️" },
+                    { event: "Emaar Q3 2026 Results",    due: "2026-10-15", note: "Download from emaar.com/investor-relations", icon: "📊" },
+                    { event: "Emaar FY 2026 Results",    due: "2027-02-15", note: "Annual results — biggest update of the year", icon: "🏆" },
+                  ];
+
+                  return (
+                    <>
+                      {/* ══ SECTION 1 — STATS TOPBAR ══ */}
+                      <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 14, borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.green, boxShadow: `0 0 6px ${T.green}` }} />
+                          <span style={{ fontSize: 12, fontWeight: 700, color: T.green }}>Audit Log Active</span>
+                        </div>
+                        {[
+                          { label: "Total Events",     value: auditLog.length, color: T.gold },
+                          { label: "Tier Changes",     value: tierChanges,     color: T.orange },
+                          { label: "Bulk Actions",     value: bulkActions,     color: "#8B5CF6" },
+                          { label: "Project Updates",  value: projectUpdates,  color: T.blue },
+                          { label: "This Week",        value: thisWeek,        color: T.green },
+                        ].map((item, i) => (
+                          <div key={i} style={{ display: "flex", flexDirection: "column", paddingRight: 14, borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
+                            <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: item.color, fontFamily: "'Fraunces',serif" }}>{item.value}</span>
                           </div>
-                          <div style={{ textAlign: "right" }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: isPast ? "#EF4444" : isUrgent ? "#D4A843" : T.textSecondary }}>{isPast ? "OVERDUE" : daysLeft + " days"}</div>
-                            <div style={{ fontSize: 10, color: T.textMuted }}>{new Date(item.due).toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}</div>
+                        ))}
+                      </div>
+
+                      {/* ══ SECTION 2 — DATA UPDATE CALENDAR ══ */}
+                      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Data Update Calendar</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }}>
+
+                        {/* Calendar */}
+                        <div className="chart-box fade-up" style={{ padding: 20 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Emaar Results Schedule</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>When to update your dashboard data</div>
+                          {calendarItems.map((item, i) => {
+                            const daysLeft = Math.ceil((new Date(item.due) - now) / (1000 * 60 * 60 * 24));
+                            const isPast   = daysLeft < 0;
+                            const isUrgent = !isPast && daysLeft <= 30;
+                            const dotColor = isPast ? T.red : isUrgent ? T.gold : T.green;
+                            const labelColor = isPast ? T.red : isUrgent ? T.gold : T.textSecondary;
+                            return (
+                              <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: i < calendarItems.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: dotColor, flexShrink: 0, boxShadow: isPast ? `0 0 6px ${T.red}` : isUrgent ? `0 0 6px ${T.gold}` : "none" }} />
+                                  <div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                      <span style={{ fontSize: 11 }}>{item.icon}</span>
+                                      <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{item.event}</span>
+                                    </div>
+                                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{item.note}</div>
+                                  </div>
+                                </div>
+                                <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 12 }}>
+                                  <div style={{ fontSize: 12, fontWeight: 700, color: labelColor }}>
+                                    {isPast ? "OVERDUE" : daysLeft === 0 ? "TODAY" : `${daysLeft} days`}
+                                  </div>
+                                  <div style={{ fontSize: 10, color: T.textMuted }}>{new Date(item.due).toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}</div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Update Checklist */}
+                        <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.05s" }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Update Checklist</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Follow these steps every time Emaar releases results</div>
+                          {[
+                            { step: "1", text: "Go to emaar.com/investor-relations", sub: "Download the latest PDF results" },
+                            { step: "2", text: "Update data.js", sub: "Revenue, profit, EBITDA, sales, backlog figures" },
+                            { step: "3", text: "Update construction %", sub: "For projects nearing handover" },
+                            { step: "4", text: "Run git commands", sub: "git add . → git commit → git push" },
+                            { step: "5", text: "Live in 3 minutes", sub: "Vercel deploys automatically" },
+                          ].map((item, i) => (
+                            <div key={i} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
+                              <div style={{ width: 24, height: 24, borderRadius: 7, background: `${T.gold}15`, border: `1px solid ${T.gold}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: T.gold, flexShrink: 0 }}>{item.step}</div>
+                              <div>
+                                <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{item.text}</div>
+                                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{item.sub}</div>
+                              </div>
+                            </div>
+                          ))}
+                          <div style={{ marginTop: 16, padding: "10px 12px", borderRadius: 8, background: `${T.green}08`, border: `1px solid ${T.green}20`, display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontSize: 14 }}>⚡</span>
+                            <span style={{ fontSize: 11, color: T.textMuted }}>Total time from PDF to live dashboard — under 10 minutes</span>
                           </div>
                         </div>
-                      );
-                    })}
-                    <div style={{ marginTop: 20, padding: 16, borderRadius: 10, background: "rgba(212,168,67,0.06)", border: "1px solid rgba(212,168,67,0.2)" }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, marginBottom: 8 }}>Update Checklist</div>
-                      <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 2 }}>
-                        1. Download PDF from emaar.com/investor-relations<br/>
-                        2. Update revenue, profit, EBITDA, sales, backlog in data.js<br/>
-                        3. Update construction % for projects nearing handover<br/>
-                        4. git add . then git commit then git push<br/>
-                        5. Live in 3 minutes
                       </div>
-                    </div>
-                  </div>
                   {/* ── ENHANCED AUDIT LOG ── */}
                   <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden" }}>
                     <div style={{ padding: "16px 20px", borderBottom: "2px solid rgba(212,168,67,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
@@ -4043,8 +4097,9 @@ export default function AdminPanel() {
                       })}
                     </div>
                   </div>
-                </>
-              )}
+                    </>
+                  );
+                })()}
 
               {tab === "revenue" && (() => {
 
