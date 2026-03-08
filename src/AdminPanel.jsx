@@ -377,6 +377,7 @@ function EiborRatesPanel({ db, T }) {
       setEiborEdit({ "1m": "", "3m": "", "6m": "", "1y": "", asOf: "" });
       getDoc(doc(db, "tabData", "eiborRates")).then(snap => { if (snap.exists()) setEiborCurrent(snap.data()); });
       setTimeout(() => setEiborSaved(false), 3000);
+      logAudit(db, { action: "eibor_update", rates: { "3m": eiborEdit["3m"], "6m": eiborEdit["6m"], "1y": eiborEdit["1y"] }, asOf: eiborEdit.asOf }).catch(() => {});
     } catch(e) { console.error("EIBOR save error:", e); }
     setEiborSaving(false);
   };
@@ -1031,26 +1032,16 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const handleBulkAction = async () => {
     if (!bulkTier || bulkSel.length === 0) return;
     for (const uid of bulkSel) await changeTier(uid, bulkTier);
-    try {
-      const { setDoc: sd, doc: dc } = await import("firebase/firestore");
-      await sd(dc(db, "auditLog", Date.now().toString()), {
-        action: "bulk_tier_change", uids: bulkSel, newTier: bulkTier,
-        changedBy: "admin", changedAt: new Date().toISOString(),
-      });
-    } catch(e) {}
+    await logAudit(db, { action: "bulk_tier_change", uids: bulkSel, newTier: bulkTier });
+    await checkAlerts(db);
     setBulkSel([]); setBulkTier("");
     notify(`Updated ${bulkSel.length} users to ${bulkTier}`);
   };
 
   const handleTierChange = async (uid, newTier, oldTier) => {
     await changeTier(uid, newTier);
-    try {
-      const { setDoc: sd, doc: dc } = await import("firebase/firestore");
-      await sd(dc(db, "auditLog", Date.now().toString()), {
-        action: "tier_change", uid, from: oldTier, to: newTier,
-        changedBy: "admin", changedAt: new Date().toISOString(),
-      });
-    } catch(e) {}
+    await logAudit(db, { action: "tier_change", uid, from: oldTier, to: newTier });
+    await checkAlerts(db);
     setDrawerUser(prev => prev?.uid === uid ? { ...prev, tier: newTier } : prev);
     setInlineTierUser(null);
   };
@@ -1059,9 +1050,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     try {
       const { setDoc: sd, doc: dc } = await import("firebase/firestore");
       await sd(dc(db, "users", uid), { role: newRole }, { merge: true });
-      await sd(dc(db, "auditLog", Date.now().toString()), {
-        action: "role_change", uid, to: newRole, changedBy: "admin", changedAt: new Date().toISOString(),
-      });
+      await logAudit(db, { action: "role_change", uid, to: newRole });
       setDrawerUser(prev => prev?.uid === uid ? { ...prev, role: newRole } : prev);
       fetchUsers();
       notify(`Role updated`);
@@ -1901,6 +1890,69 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   );
 }
 
+/* ═══════════════════════════════════════════════════════
+   CENTRAL AUDIT INFRASTRUCTURE
+   - getAdminIP()   : cached IP fetch from ipify
+   - _webhookUrl    : module-level webhook target (set from Firestore)
+   - logAudit()     : single write point for ALL audit events
+   - checkAlerts()  : suspicious-activity email trigger
+   ═══════════════════════════════════════════════════════ */
+
+let _cachedIP = null;
+async function getAdminIP() {
+  if (_cachedIP) return _cachedIP;
+  try {
+    const r = await fetch("https://api.ipify.org?format=json");
+    const d = await r.json();
+    _cachedIP = d.ip;
+    return _cachedIP;
+  } catch { return "unknown"; }
+}
+
+let _webhookUrl = null;
+let _alertThreshold = 10; // tier changes in 5 min before alert fires
+function setAuditWebhook(url) { _webhookUrl = url; }
+function setAlertThreshold(n) { _alertThreshold = n; }
+
+async function logAudit(db, payload) {
+  try {
+    const { setDoc, doc } = await import("firebase/firestore");
+    const ip = await getAdminIP();
+    const changedBy = auth.currentUser?.email || "admin";
+    const entry = { ...payload, changedBy, changedAt: new Date().toISOString(), ip };
+    const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    await setDoc(doc(db, "auditLog", id), entry);
+    // SIEM webhook push (fire-and-forget)
+    if (_webhookUrl) {
+      try { fetch(_webhookUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(entry) }); } catch {}
+    }
+    return entry;
+  } catch (e) { console.error("logAudit:", e); }
+}
+
+async function checkAlerts(db) {
+  try {
+    const { getDocs, collection } = await import("firebase/firestore");
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const snap = await getDocs(collection(db, "auditLog"));
+    const recent = [];
+    snap.forEach(d => {
+      const data = d.data();
+      if (data.changedAt >= fiveMinAgo && ["tier_change", "bulk_tier_change"].includes(data.action)) recent.push(data);
+    });
+    if (recent.length >= _alertThreshold) {
+      const adminEmail = auth.currentUser?.email;
+      if (adminEmail) {
+        emailjs.send("service_da7nshv", "template_gl1xqhy", {
+          user_email: adminEmail,
+          user_name: "DXB Admin",
+          message: `⚠️ SUSPICIOUS ACTIVITY: ${recent.length} tier changes in the last 5 minutes by ${adminEmail}. Please review the Audit Log immediately.`,
+        }, "USkwUhp0csGCVDkdQ");
+      }
+    }
+  } catch {}
+}
+
 /* ─── DATA CALENDAR (interactive, Firestore-persisted) ─── */
 function DataCalendar({ T, now }) {
   const [checked, setChecked] = useState({});
@@ -2088,6 +2140,14 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
     tab_visibility:    { label: "Tab Visibility",    color: T.gold,     icon: "👁️" },
     yield_update:      { label: "Yield Updated",     color: T.teal,     icon: "📈" },
     role_change:       { label: "Role Changed",      color: T.red,      icon: "🔑" },
+    admin_login:       { label: "Admin Login",       color: T.green,    icon: "🔓" },
+    admin_logout:      { label: "Admin Logout",      color: T.textMuted,icon: "🔒" },
+    user_created:      { label: "User Created",      color: T.teal,     icon: "➕" },
+    user_deleted:      { label: "User Deleted",      color: T.red,      icon: "🗑️" },
+    user_suspended:    { label: "User Suspended",    color: T.orange,   icon: "⏸️" },
+    user_unsuspended:  { label: "User Unsuspended",  color: T.green,    icon: "▶️" },
+    eibor_update:      { label: "EIBOR Updated",     color: "#14B8A6",  icon: "📊" },
+    csv_export:        { label: "Export",            color: T.cyan,     icon: "📤" },
   };
   const tierColor = { free: "#94A3B8", pro_trial: T.gold, pro: T.green, enterprise: T.teal, suspended: T.red, admin: T.blue, staff: T.blue };
   const tierLabel = { free: "Free", pro_trial: "Pro Trial", pro: "Pro", enterprise: "Enterprise", suspended: "Suspended", admin: "Admin", staff: "Staff" };
@@ -2098,6 +2158,8 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
     bulk: rangeFiltered.filter(l => l.action === "bulk_tier_change").length,
     project: rangeFiltered.filter(l => ["project_update","project_create"].includes(l.action)).length,
     tab: rangeFiltered.filter(l => l.action === "tab_visibility").length,
+    logins: rangeFiltered.filter(l => ["admin_login","admin_logout"].includes(l.action)).length,
+    users: rangeFiltered.filter(l => ["user_created","user_deleted","user_suspended","user_unsuspended"].includes(l.action)).length,
   };
 
   const dateRangeCutoff = { all: 0, today: 1, "7d": 7, "30d": 30 }[dateRange] || 0;
@@ -2106,11 +2168,12 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
   });
 
   const exportCSV = () => {
-    const rows = [["Time", "Action", "Changed By", "User / Project", "Details"]];
+    const rows = [["Time", "Action", "Changed By", "IP Address", "User / Project", "Details", "From Tier", "To Tier"]];
     auditLog.forEach(l => {
       const time = l.changedAt ? new Date(l.changedAt).toLocaleString("en-AE") : "";
       const action = l.action || "";
       const by = l.changedBy || "";
+      const ip = l.ip || "";
       const u = users.find(u => u.uid === l.uid);
       const userStr = u ? (u.name || u.email || l.uid || "") : (l.uid || "");
       const proj = emaarProjects.find(p => String(p.id) === String(l.projectId));
@@ -2118,7 +2181,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
         : l.action === "bulk_tier_change" ? `${(l.uids||[]).length} users → ${l.newTier}`
         : l.action?.includes("project") ? (proj?.name || l.projectId || "")
         : (l.tabId || l.communityKey || "");
-      rows.push([time, action, by, userStr, detail]);
+      rows.push([time, action, by, ip, userStr, detail, l.from || "", l.to || l.newTier || ""]);
     });
     const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -2126,6 +2189,17 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
     a.href = URL.createObjectURL(blob);
     a.download = `audit-log-${new Date().toISOString().slice(0,10)}.csv`;
     a.click();
+    // Log the export action itself
+    logAudit(db, { action: "csv_export", exportedCount: auditLog.length }).catch(() => {});
+  };
+
+  const exportJSON = () => {
+    const blob = new Blob([JSON.stringify(auditLog, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `audit-log-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    logAudit(db, { action: "csv_export", format: "json", exportedCount: auditLog.length }).catch(() => {});
   };
 
   const filteredLog = rangeFiltered.filter(l => {
@@ -2133,19 +2207,29 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
     if (auditFilter === "bulk"    && l.action !== "bulk_tier_change") return false;
     if (auditFilter === "project" && !["project_update","project_create"].includes(l.action)) return false;
     if (auditFilter === "tab"     && l.action !== "tab_visibility") return false;
+    if (auditFilter === "logins"  && !["admin_login","admin_logout"].includes(l.action)) return false;
+    if (auditFilter === "users"   && !["user_created","user_deleted","user_suspended","user_unsuspended"].includes(l.action)) return false;
     if (auditSearch) {
       const u = users.find(u => u.uid === l.uid || (l.uids || []).includes(u.uid));
       const s = auditSearch.toLowerCase();
       const proj = emaarProjects.find(p => String(p.id) === String(l.projectId));
+      const diffStr = l.diff ? JSON.stringify(l.diff).toLowerCase() : "";
+      const rateStr = l.rates ? JSON.stringify(l.rates).toLowerCase() : "";
       if (!(
         (u && ((u.name||"").toLowerCase().includes(s)||(u.email||"").toLowerCase().includes(s))) ||
         (l.action||"").toLowerCase().includes(s) ||
+        (l.changedBy||"").toLowerCase().includes(s) ||
+        (l.ip||"").toLowerCase().includes(s) ||
+        (l.userName||"").toLowerCase().includes(s) ||
+        (l.userEmail||"").toLowerCase().includes(s) ||
         (proj?.name||"").toLowerCase().includes(s) ||
-        (l.projectId||"").toLowerCase().includes(s)
+        (l.projectId||"").toLowerCase().includes(s) ||
+        diffStr.includes(s) || rateStr.includes(s)
       )) return false;
     }
     return true;
   });
+
 
   const timeAgo = ts => {
     if (!ts) return "—";
@@ -2202,6 +2286,13 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
             onMouseLeave={e => { e.currentTarget.style.background = `${T.teal}12`; }}>
             ↓ CSV
           </button>
+          {/* JSON export */}
+          <button type="button" onClick={exportJSON}
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: `${T.purple}12`, border: `1px solid ${T.purple}35`, borderRadius: 9, color: T.purple, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = `${T.purple}22`; }}
+            onMouseLeave={e => { e.currentTarget.style.background = `${T.purple}12`; }}>
+            ↓ JSON
+          </button>
           {/* Refresh */}
           <button type="button" onClick={fetchAuditLog}
             style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: `${T.gold}12`, border: `1px solid ${T.gold}35`, borderRadius: 9, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}
@@ -2220,6 +2311,8 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
           { id: "bulk",    label: "Bulk Actions",    count: filterCounts.bulk    },
           { id: "project", label: "Project Updates", count: filterCounts.project },
           { id: "tab",     label: "Tab Changes",     count: filterCounts.tab     },
+          { id: "logins",  label: "🔓 Logins",       count: filterCounts.logins  },
+          { id: "users",   label: "👤 User Events",  count: filterCounts.users   },
         ].map(f => (
           <button key={f.id} type="button" onClick={() => setAuditFilter(f.id)}
             style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 8, border: `1px solid ${auditFilter===f.id ? T.gold : T.border}`, background: auditFilter===f.id ? `${T.gold}18` : "transparent", color: auditFilter===f.id ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}>
@@ -2301,7 +2394,12 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                       <span style={{ fontSize: 10, color: T.textMuted }}>{timeAgo(log.changedAt)}</span>
                       <span style={{ fontSize: 9, color: T.textMuted }}>·</span>
                       <span style={{ fontSize: 10, color: T.textMuted }}>{log.changedAt ? new Date(log.changedAt).toLocaleString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : "—"}</span>
-                      <span style={{ marginLeft: "auto" }}>
+                      <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
+                        {log.ip && log.ip !== "unknown" && (
+                          <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: T.textMuted, fontFamily: "'Courier New', monospace" }}>
+                            🌍 {log.ip}
+                          </span>
+                        )}
                         {log.changedBy && (
                           <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 9px", borderRadius: 6, background: `${T.gold}12`, border: `1px solid ${T.gold}28`, color: T.gold }}>
                             {log.changedBy.includes("@") ? log.changedBy.split("@")[0] : log.changedBy}
@@ -2445,6 +2543,12 @@ export default function AdminPanel() {
   const [bulkEdit, setBulkEdit] = useState(false);
   const [bulkForm, setBulkForm] = useState({});
   const [auditLog, setAuditLog] = useState([]);
+  const [auditRetentionDays, setAuditRetentionDays] = useState(0);
+  const [auditRetentionSaved, setAuditRetentionSaved] = useState(false);
+  const [auditWebhookUrl, setAuditWebhookUrl] = useState("");
+  const [auditWebhookSaved, setAuditWebhookSaved] = useState(false);
+  const [auditAlertThr, setAuditAlertThr] = useState(10);
+  const [auditAlertSaved, setAuditAlertSaved] = useState(false);
   const [editingCommunity, setEditingCommunity] = useState(null);
   const [editingYield, setEditingYield] = useState(null);
   const [liveProjects, setLiveProjects] = useState({});
@@ -2478,7 +2582,11 @@ export default function AdminPanel() {
         setAdminUser(u);
         try {
           const snap = await getDoc(doc(db, "users", u.uid));
-          if (snap.exists() && snap.data().role === "admin") setIsAdmin(true);
+          if (snap.exists() && snap.data().role === "admin") {
+            setIsAdmin(true);
+            // Log admin login (best-effort — audit infra may not be ready yet)
+            logAudit(db, { action: "admin_login", uid: u.uid }).catch(() => {});
+          }
           else setIsAdmin(false);
         } catch (err) { console.error("Admin auth check failed:", err); setIsAdmin(false); }
       }
@@ -2592,13 +2700,20 @@ export default function AdminPanel() {
     let unsub;
     (async () => {
       try {
-        const { onSnapshot, collection: col, query, orderBy, limit } = await import("firebase/firestore");
+        const { onSnapshot, collection: col, query, orderBy, limit, getDoc: gd, doc: dc } = await import("firebase/firestore");
         const q = query(col(db, "auditLog"), orderBy("changedAt", "desc"), limit(100));
         unsub = onSnapshot(q, (snap) => {
           const list = [];
           snap.forEach(d => list.push({ id: d.id, ...d.data() }));
           setAuditLog(list);
         });
+        // Load persisted audit settings
+        try {
+          const wh = await gd(dc(db, "adminSettings", "auditWebhook"));
+          if (wh.exists() && wh.data().url) setAuditWebhook(wh.data().url);
+          const thr = await gd(dc(db, "adminSettings", "auditAlertThreshold"));
+          if (thr.exists() && thr.data().threshold) setAlertThreshold(thr.data().threshold);
+        } catch {}
       } catch (e) {
         // index not ready — fall back to polling every 10s
         fetchAuditLog();
@@ -2994,7 +3109,7 @@ export default function AdminPanel() {
         const oldDoc = liveProjects[projectId] || {};
         const diff = {};
         Object.keys(clean).forEach(k => { if (k !== "updatedAt" && k !== "updatedBy" && clean[k] !== oldDoc[k]) diff[k] = { old: oldDoc[k] ?? "—", new: clean[k] }; });
-        await setDoc(doc(db, "auditLog", Date.now().toString()), { action: "project_update", projectId, changes: clean, diff, changedBy: adminUser?.email, changedAt: new Date().toISOString() });
+        await logAudit(db, { action: "project_update", projectId, changes: clean, diff });
       } catch(e) {}
       notify("Project data saved");
         if (clean.price) {
@@ -3023,7 +3138,7 @@ export default function AdminPanel() {
       clean.updatedAt = new Date().toISOString();
       clean.updatedBy = adminUser?.email || "admin";
       await setDoc(doc(db, "communityROI", communityKey), clean, { merge: true });
-      try { await setDoc(doc(db, "auditLog", Date.now().toString()), { action: "community_update", communityKey, changedBy: adminUser?.email, changedAt: new Date().toISOString() }); } catch(e) {}
+      try { await logAudit(db, { action: "community_update", communityKey }); } catch(e) {}
       notify("Community ROI saved");
       setEditingCommunity(null);
       fetchLiveData();
@@ -3088,6 +3203,7 @@ export default function AdminPanel() {
     try {
       await deleteDoc(doc(db, "users", uid));
       try { await deleteDoc(doc(db, "watchlists", uid)); } catch(e) {}
+      await logAudit(db, { action: "user_deleted", uid, userName: u?.name || "", userEmail: u?.email || "", userTier: u?.tier || "free" });
       notify("User deleted");
       setExpandedUser(null);
       fetchUsers();
@@ -3100,6 +3216,7 @@ export default function AdminPanel() {
     if (!window.confirm(`${isSuspended ? "UNSUSPEND" : "SUSPEND"} user: ${u?.name || u?.email}?\n\n${isSuspended ? "They will regain full dashboard access." : "They will be blocked from the dashboard immediately."}`)) return;
     try {
       await setDoc(doc(db, "users", uid), { suspended: !isSuspended, suspendedAt: isSuspended ? null : new Date().toISOString() }, { merge: true });
+      await logAudit(db, { action: isSuspended ? "user_unsuspended" : "user_suspended", uid, userName: u?.name || "", userEmail: u?.email || "" });
       notify(`User ${isSuspended ? "unsuspended" : "suspended"}`);
       fetchUsers();
     } catch (e) { notify("Error: " + e.message); }
@@ -3177,6 +3294,7 @@ export default function AdminPanel() {
         provider: "admin",
         emailVerified: false,
       });
+      await logAudit(db, { action: "user_created", uid: cred.user.uid, userName: addUserForm.name.trim(), userEmail: addUserForm.email.trim(), tier: addUserForm.tier || "free" });
       notify(`User "${addUserForm.name}" created — admin session preserved`);
       setShowAddUser(false);
       setAddUserForm({ name: "", email: "", password: "", phone: "", country: "", tier: "free", role: "user", notes: "" });
@@ -3205,7 +3323,7 @@ export default function AdminPanel() {
       const projectDoc = { ...form, id: newId, createdAt: new Date().toISOString(), createdBy: adminUser?.email, updatedAt: new Date().toISOString(), updatedBy: adminUser?.email, isCustom: true };
       await setDoc(doc(db, "projectData", String(newId)), projectDoc);
       await setDoc(doc(db, "projects", String(newId)), projectDoc);
-      await setDoc(doc(db, "auditLog", Date.now().toString()), { action: "project_create", projectId: newId, changes: form, changedBy: adminUser?.email, changedAt: new Date().toISOString() });
+      await logAudit(db, { action: "project_create", projectId: newId, changes: form });
       notify("Project added — live on dashboard!");
       setEditingProject(null);
       setProjectForm({});
@@ -3438,7 +3556,7 @@ export default function AdminPanel() {
               <div style={{ fontSize: 10, color: T.gold, fontWeight: 600 }}>{i18t("sidebar", "admin")}</div>
             </div>
             <button type="button" onClick={() => setShowProfile(true)} style={{ background: "none", border: `1px solid ${T.border}`, cursor: "pointer", color: T.gold, padding: "3px 8px", borderRadius: 6, fontSize: 10, fontWeight: 600, fontFamily: "'Outfit', sans-serif" }}>{i18t("ui", "profile")}</button>
-            <button type="button" onClick={() => signOut(auth)} title="Logout" style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", padding: 4 }}>{I.logout}</button>
+            <button type="button" onClick={() => { logAudit(db, { action: "admin_logout", uid: adminUser?.uid }).finally(() => signOut(auth)); }} title="Logout" style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", padding: 4 }}>{I.logout}</button>
           </div>
         </div>
       </aside>
@@ -4421,11 +4539,13 @@ export default function AdminPanel() {
                           <span style={{ fontSize: 11, fontWeight: 700, color: T.green }}>Audit Log Active</span>
                         </div>
                         {[
-                          { label: "Total Events",    value: auditLog.length, color: T.gold    },
-                          { label: "Tier Changes",    value: tierChanges,     color: T.orange  },
-                          { label: "Bulk Actions",    value: bulkActions,     color: "#8B5CF6" },
-                          { label: "Project Updates", value: projectUpdates,  color: T.blue    },
-                          { label: "This Week",       value: thisWeek,        color: T.green   },
+                          { label: "Total Events",    value: auditLog.length,                                                                   color: T.gold    },
+                          { label: "Tier Changes",    value: tierChanges,                                                                        color: T.orange  },
+                          { label: "Bulk Actions",    value: bulkActions,                                                                        color: "#8B5CF6" },
+                          { label: "Project Updates", value: projectUpdates,                                                                     color: T.blue    },
+                          { label: "This Week",       value: thisWeek,                                                                           color: T.green   },
+                          { label: "Logins",          value: auditLog.filter(l => l.action === "admin_login").length,                           color: T.teal    },
+                          { label: "IP Tracked",      value: auditLog.filter(l => l.ip && l.ip !== "unknown").length,                          color: "#14B8A6" },
                         ].map((item, i) => (
                           <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 20px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
                             <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
@@ -4492,6 +4612,84 @@ export default function AdminPanel() {
                         setPendingOpenUid={setPendingOpenUid}
                         T={T}
                       />
+
+                      {/* ══ AUDIT SETTINGS PANEL ══ */}
+                      <div style={{ marginTop: 28 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 14 }}>Audit Settings & Integrations</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+
+                          {/* Retention Policy */}
+                          <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 18px" }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>🗄️ Log Retention</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Auto-delete logs older than:</div>
+                            <select value={auditRetentionDays} onChange={e => setAuditRetentionDays(parseInt(e.target.value))}
+                              style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", marginBottom: 8 }}>
+                              <option value={0}>Forever (no auto-delete)</option>
+                              <option value={30}>30 days</option>
+                              <option value={90}>90 days</option>
+                              <option value={365}>1 year</option>
+                              <option value={730}>2 years</option>
+                            </select>
+                            <button type="button" onClick={async () => {
+                              try {
+                                await setDoc(doc(db, "adminSettings", "auditRetention"), { days: auditRetentionDays, updatedAt: new Date().toISOString() });
+                                await logAudit(db, { action: "retention_policy_updated", days: auditRetentionDays });
+                                setAuditRetentionSaved(true);
+                                setTimeout(() => setAuditRetentionSaved(false), 2000);
+                              } catch(e) {}
+                            }}
+                              style={{ width: "100%", padding: "7px 0", borderRadius: 8, border: `1px solid ${auditRetentionSaved ? T.green : T.border}`, background: auditRetentionSaved ? `${T.green}15` : "transparent", color: auditRetentionSaved ? T.green : T.textSecondary, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                              {auditRetentionSaved ? "✓ Saved" : "Save Policy"}
+                            </button>
+                          </div>
+
+                          {/* Webhook / SIEM */}
+                          <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 18px" }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>🌊 Webhook / SIEM</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Push each audit event to your SIEM in real-time:</div>
+                            <input value={auditWebhookUrl} onChange={e => setAuditWebhookUrl(e.target.value)}
+                              placeholder="https://hooks.splunk.com/..."
+                              style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 11, fontFamily: "'Courier New',monospace", marginBottom: 8, boxSizing: "border-box" }} />
+                            <button type="button" onClick={async () => {
+                              setAuditWebhook(auditWebhookUrl || null);
+                              try {
+                                await setDoc(doc(db, "adminSettings", "auditWebhook"), { url: auditWebhookUrl, updatedAt: new Date().toISOString() });
+                                await logAudit(db, { action: "webhook_updated", urlSet: !!auditWebhookUrl });
+                                setAuditWebhookSaved(true);
+                                setTimeout(() => setAuditWebhookSaved(false), 2000);
+                              } catch(e) {}
+                            }}
+                              style={{ width: "100%", padding: "7px 0", borderRadius: 8, border: `1px solid ${auditWebhookSaved ? T.green : T.border}`, background: auditWebhookSaved ? `${T.green}15` : "transparent", color: auditWebhookSaved ? T.green : T.textSecondary, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                              {auditWebhookSaved ? "✓ Webhook Active" : "Save Webhook"}
+                            </button>
+                            <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>Compatible: Splunk HEC · Datadog · Azure Event Hub · custom endpoints</div>
+                          </div>
+
+                          {/* Alert Threshold */}
+                          <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 18px" }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>🚨 Alert Threshold</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Email alert if this many tier changes happen in 5 min:</div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                              <input type="range" min={1} max={50} value={auditAlertThr} onChange={e => setAuditAlertThr(parseInt(e.target.value))}
+                                style={{ flex: 1, accentColor: T.gold }} />
+                              <span style={{ fontSize: 14, fontWeight: 800, color: T.gold, minWidth: 28, textAlign: "right" }}>{auditAlertThr}</span>
+                            </div>
+                            <button type="button" onClick={async () => {
+                              setAlertThreshold(auditAlertThr);
+                              try {
+                                await setDoc(doc(db, "adminSettings", "auditAlertThreshold"), { threshold: auditAlertThr, updatedAt: new Date().toISOString() });
+                                await logAudit(db, { action: "alert_threshold_updated", threshold: auditAlertThr });
+                                setAuditAlertSaved(true);
+                                setTimeout(() => setAuditAlertSaved(false), 2000);
+                              } catch(e) {}
+                            }}
+                              style={{ width: "100%", padding: "7px 0", borderRadius: 8, border: `1px solid ${auditAlertSaved ? T.green : T.border}`, background: auditAlertSaved ? `${T.green}15` : "transparent", color: auditAlertSaved ? T.green : T.textSecondary, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                              {auditAlertSaved ? "✓ Threshold Set" : "Save Threshold"}
+                            </button>
+                            <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>Alert sent via EmailJS to {adminUser?.email || "admin"}</div>
+                          </div>
+                        </div>
+                      </div>
                     </>
                   );
                 })()}
@@ -6334,6 +6532,7 @@ export default function AdminPanel() {
               setTabSettings(updated);
               setTabSettingsSaving(true);
               try { await setDoc(doc(db, "platformSettings", "tabs"), updated); } catch(e) {}
+              logAudit(db, { action: "tab_visibility", tabKey, field, value }).catch(() => {});
               setTimeout(() => setTabSettingsSaving(false), 800);
             };
 
@@ -6762,7 +6961,7 @@ export default function AdminPanel() {
               </div>
             </div>
             {/* Sign Out */}
-            <button type="button" onClick={() => { signOut(auth); setShowProfile(false); }} style={{ width: "100%", marginTop: 20, padding: "10px 0", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, color: "#EF4444", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{i18t("ui", "signOut")}</button>
+            <button type="button" onClick={() => { logAudit(db, { action: "admin_logout", uid: adminUser?.uid }).finally(() => { signOut(auth); setShowProfile(false); }); }} style={{ width: "100%", marginTop: 20, padding: "10px 0", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, color: "#EF4444", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{i18t("ui", "signOut")}</button>
           </div>
         </div>
       )}
