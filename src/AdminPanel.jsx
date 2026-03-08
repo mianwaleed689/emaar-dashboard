@@ -2252,6 +2252,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
     tier_change:       { label: "Tier Changed",      color: T.orange,   icon: "" },
     bulk_tier_change:  { label: "Bulk Tier Change",  color: "#8B5CF6",  icon: "" },
     project_update:    { label: "Project Updated",   color: T.blue,     icon: "" },
+    project_rollback:  { label: "Version Rollback",  color: "#8B5CF6",  icon: "[<]" },
     project_create:    { label: "Project Created",   color: T.green,    icon: "✨" },
     community_update:  { label: "Community Updated", color: "#8B5CF6",  icon: "[c]" },
     tab_visibility:    { label: "Tab Visibility",    color: T.gold,     icon: "" },
@@ -2576,22 +2577,35 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
 
                     {isProject && (
                       <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 6 }}>
-                          {projName}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{projName}</div>
+                          {log.action === "project_update" && (
+                            <button type="button"
+                              onClick={e => { e.stopPropagation(); notify("Open the project in Data Manager and click Version History to rollback"); }}
+                              style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, border: "1px solid rgba(212,168,67,0.3)", background: "rgba(212,168,67,0.06)", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                              View Versions
+                            </button>
+                          )}
                         </div>
-                        {log.diff && Object.keys(log.diff).length > 0 && (
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                            {Object.entries(log.diff).slice(0,4).map(([k,v]) => (
-                              <div key={k} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, background: "rgba(255,255,255,0.04)", padding: "4px 10px", borderRadius: 7, border: `1px solid ${T.border}` }}>
-                                <span style={{ color: T.textMuted, fontWeight: 600 }}>{k}:</span>
-                                <span style={{ color: "#F87171", textDecoration: "line-through", fontSize: 10 }}>{String(v.old||"—").slice(0,18)}</span>
-                                <span style={{ color: T.textMuted }}>→</span>
-                                <span style={{ color: "#4ADE80", fontSize: 10 }}>{String(v.new||"—").slice(0,18)}</span>
+                        {log.diff && Object.keys(log.diff).length > 0 && (() => {
+                          const entries = Object.entries(log.diff);
+                          const shown = entries.slice(0, 4);
+                          return (
+                            <div>
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                                {shown.map(([k,v]) => (
+                                  <div key={k} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, background: "rgba(255,255,255,0.04)", padding: "4px 10px", borderRadius: 7, border: `1px solid ${T.border}` }}>
+                                    <span style={{ color: T.textMuted, fontWeight: 700, fontSize: 10, textTransform: "uppercase" }}>{k}:</span>
+                                    <span style={{ color: "#F87171", textDecoration: "line-through", fontSize: 10 }}>{String(v.old||"—").slice(0,20)}</span>
+                                    <span style={{ color: T.textMuted, fontSize: 10 }}>→</span>
+                                    <span style={{ color: "#4ADE80", fontSize: 10, fontWeight: 600 }}>{String(v.new||"—").slice(0,20)}</span>
+                                  </div>
+                                ))}
+                                {entries.length > 4 && <span style={{ fontSize: 10, color: T.textMuted, padding: "4px 8px" }}>+{entries.length - 4} more fields</span>}
                               </div>
-                            ))}
-                            {Object.keys(log.diff).length > 4 && <span style={{ fontSize: 10, color: T.textMuted, padding: "4px 8px" }}>+{Object.keys(log.diff).length-4} more fields</span>}
-                          </div>
-                        )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
 
@@ -2680,6 +2694,9 @@ export default function AdminPanel() {
   const [editingYield, setEditingYield] = useState(null);
   const [liveProjects, setLiveProjects] = useState({});
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
+  const [projectVersions, setProjectVersions] = useState({}); // projectId -> [versions]
+  const [viewingVersions, setViewingVersions] = useState(null); // projectId
+  const [rollbackLoading, setRollbackLoading] = useState(false);
   const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
   const [editingCommunityIntel, setEditingCommunityIntel] = useState(null);
   const [communityIntelForm, setCommunityIntelForm] = useState({});
@@ -3234,6 +3251,47 @@ export default function AdminPanel() {
     } catch(e) { notify("Error: " + e.message); }
   };
 
+  /* ─── VERSION HISTORY ─── */
+  const fetchProjectVersions = async (projectId) => {
+    try {
+      const snap = await getDocs(collection(db, "projectVersions"));
+      const versions = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if (String(data.projectId) === String(projectId)) {
+          versions.push({ id: d.id, ...data });
+        }
+      });
+      versions.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+      setProjectVersions(prev => ({ ...prev, [String(projectId)]: versions }));
+    } catch(e) { console.error("fetchProjectVersions:", e); }
+  };
+
+  const rollbackToVersion = async (projectId, version) => {
+    if (!window.confirm("Rollback " + (version.projectName || "project") + " to version from " + new Date(version.savedAt).toLocaleString("en-AE") + "?\n\nThis will overwrite the current live data.")) return;
+    setRollbackLoading(true);
+    try {
+      const snapshot = { ...version.snapshot };
+      delete snapshot.id;
+      snapshot.updatedAt = new Date().toISOString();
+      snapshot.updatedBy = adminUser?.email || "admin";
+      snapshot.rolledBackFrom = version.savedAt;
+      await setDoc(doc(db, "projectData", String(projectId)), snapshot, { merge: false });
+      await logAudit(db, {
+        action: "project_rollback",
+        projectId: String(projectId),
+        projectName: version.projectName || String(projectId),
+        rolledBackTo: version.savedAt,
+        changedBy: adminUser?.email || "admin"
+      });
+      notify("Rolled back successfully — changes are live");
+      setViewingVersions(null);
+      fetchLiveData();
+      fetchProjectVersions(projectId);
+    } catch(e) { notify("Rollback failed: " + e.message); }
+    setRollbackLoading(false);
+  };
+
   const validateProjectData = (data, isNew = false) => {
     const errors = [];
     if (isNew && !data.name?.trim()) errors.push("Project name is required");
@@ -3268,6 +3326,18 @@ export default function AdminPanel() {
         const diff = {};
         Object.keys(clean).forEach(k => { if (k !== "updatedAt" && k !== "updatedBy" && clean[k] !== oldDoc[k]) diff[k] = { old: oldDoc[k] ?? "—", new: clean[k] }; });
         await logAudit(db, { action: "project_update", projectId, changes: clean, diff });
+        // Save full version snapshot for rollback
+        const p = emaarProjects.find(x => String(x.id) === String(projectId));
+        const versionId = String(projectId) + "_v_" + Date.now();
+        await setDoc(doc(db, "projectVersions", versionId), {
+          projectId: String(projectId),
+          projectName: p?.name || clean.name || String(projectId),
+          savedAt: new Date().toISOString(),
+          savedBy: adminUser?.email || "admin",
+          diff,
+          snapshot: { ...oldDoc }, // snapshot of BEFORE state for rollback
+          fieldsChanged: Object.keys(diff).length
+        });
       } catch(e) {}
       notify("Project data saved");
         if (clean.price) {
@@ -5814,18 +5884,27 @@ export default function AdminPanel() {
                     ];
                     return (
                       <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: `1px solid ${T.gold}30` }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                           <div>
-                            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{p.name}</h3>
+                            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{merged.name || p.name}</h3>
                             <span style={{ fontSize: 12, color: T.textMuted }}>{p.community} · ID: {p.id}</span>
                             {hasOverride && <span style={{ marginLeft: 8, fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 600 }}>LIVE DATA</span>}
                           </div>
-                          <div style={{ display: "flex", gap: 8 }}>
-                            <button type="button" onClick={() => deleteProject(p.id)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Delete Project</button>
-                            {hasOverride && <button type="button" onClick={() => resetProjectData(p.id)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.3)`, background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Reset to Default</button>}
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            <button type="button" onClick={() => { setViewingVersions(String(p.id)); fetchProjectVersions(p.id); }} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.3)", background: "rgba(212,168,67,0.06)", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Version History</button>
+                            <button type="button" onClick={() => deleteProject(p.id)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Delete</button>
+                            {hasOverride && <button type="button" onClick={() => resetProjectData(p.id)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.3)`, background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Reset</button>}
                             <button type="button" onClick={() => setEditingProject(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
                           </div>
                         </div>
+                        {hasOverride && (merged.updatedBy || merged.updatedAt) && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 14px", borderRadius: 8, background: "rgba(212,168,67,0.05)", border: "1px solid rgba(212,168,67,0.1)", marginBottom: 16, fontSize: 11, flexWrap: "wrap" }}>
+                            <span style={{ color: T.textMuted }}>Last saved by</span>
+                            <span style={{ color: T.gold, fontWeight: 700 }}>{merged.updatedBy || "—"}</span>
+                            {merged.updatedAt && <><span style={{ color: T.textMuted }}>·</span><span style={{ color: T.textSecondary }}>{new Date(merged.updatedAt).toLocaleString("en-AE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span></>}
+                            {merged.rolledBackFrom && <span style={{ color: T.teal, fontSize: 10, fontWeight: 700 }}>[Rolled back from {new Date(merged.rolledBackFrom).toLocaleString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}]</span>}
+                          </div>
+                        )}
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                           {fields.map(f => (
                             <div key={f.key}>
@@ -5985,6 +6064,73 @@ export default function AdminPanel() {
                           style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
                           {dataSaving ? "Saving..." : "Save to Firestore — Goes Live Instantly"}
                         </button>
+                      </div>
+                    );
+                  })()}
+
+                  {/* ── VERSION HISTORY MODAL ── */}
+                  {viewingVersions && (() => {
+                    const pid = viewingVersions;
+                    const p = emaarProjects.find(x => String(x.id) === pid) || { name: "Project " + pid, id: pid };
+                    const versions = projectVersions[pid] || null;
+                    return (
+                      <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setViewingVersions(null)}>
+                        <div style={{ background: "#0C1B2E", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 16, width: "95%", maxWidth: 780, maxHeight: "88vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
+                          <div style={{ padding: "20px 24px", borderBottom: "1px solid rgba(212,168,67,0.15)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div>
+                              <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold, margin: 0 }}>Version History</h3>
+                              <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{p.name} · Every save is captured. Click Rollback to restore any version.</p>
+                            </div>
+                            <button type="button" onClick={() => setViewingVersions(null)} style={{ background: "transparent", border: "none", color: T.textMuted, fontSize: 20, cursor: "pointer", padding: "4px 10px" }}>x</button>
+                          </div>
+                          <div style={{ padding: "16px 24px" }}>
+                            {versions === null && (
+                              <div style={{ textAlign: "center", padding: 40, color: T.textMuted }}>Loading versions...</div>
+                            )}
+                            {versions !== null && versions.length === 0 && (
+                              <div style={{ textAlign: "center", padding: 40 }}>
+                                <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 8 }}>No version history yet.</div>
+                                <div style={{ fontSize: 11, color: T.textMuted }}>Versions are saved automatically every time you click "Save to Firestore".</div>
+                              </div>
+                            )}
+                            {versions !== null && versions.length > 0 && versions.map((v, i) => (
+                              <div key={v.id} style={{ padding: "16px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                                  <div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                      {i === 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "rgba(16,185,129,0.15)", color: "#10B981" }}>CURRENT</span>}
+                                      <span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{new Date(v.savedAt).toLocaleString("en-AE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                                      <span style={{ fontSize: 11, color: T.textMuted }}>·</span>
+                                      <span style={{ fontSize: 11, color: T.gold }}>{v.savedBy || "admin"}</span>
+                                      <span style={{ fontSize: 10, color: T.textMuted }}>· {v.fieldsChanged || 0} field{v.fieldsChanged !== 1 ? "s" : ""} changed</span>
+                                    </div>
+                                  </div>
+                                  {i !== 0 && (
+                                    <button type="button" disabled={rollbackLoading} onClick={() => rollbackToVersion(pid, v)}
+                                      style={{ fontSize: 11, padding: "6px 16px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.4)", background: "rgba(212,168,67,0.08)", color: T.gold, cursor: rollbackLoading ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700, flexShrink: 0 }}>
+                                      {rollbackLoading ? "Rolling back..." : "Rollback to This"}
+                                    </button>
+                                  )}
+                                </div>
+                                {v.diff && Object.keys(v.diff).length > 0 && (
+                                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                                    {Object.entries(v.diff).map(([field, change]) => (
+                                      <div key={field} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", padding: "5px 10px", borderRadius: 8 }}>
+                                        <span style={{ color: T.textMuted, fontWeight: 700, fontSize: 10, textTransform: "uppercase" }}>{field}</span>
+                                        <span style={{ color: "#F87171", fontSize: 11, textDecoration: "line-through" }}>{String(change.old || "—").slice(0, 22)}</span>
+                                        <span style={{ color: T.textMuted, fontSize: 10 }}>→</span>
+                                        <span style={{ color: "#4ADE80", fontSize: 11 }}>{String(change.new || "—").slice(0, 22)}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {(!v.diff || Object.keys(v.diff).length === 0) && (
+                                  <div style={{ fontSize: 11, color: T.textMuted, fontStyle: "italic" }}>Initial save — full snapshot stored</div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     );
                   })()}
