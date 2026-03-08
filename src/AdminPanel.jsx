@@ -2805,6 +2805,152 @@ export default function AdminPanel() {
              ═══════════════════════════════════════ */}
           {tab === "overview" && (
             <>
+
+              {/* ══════════════════════════════════════════
+                  STEP 2 — HEALTH SCORE + ALERT BAR
+              ══════════════════════════════════════════ */}
+
+              {/* Health Score Banner */}
+              <div className="fade-up" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 22px", borderRadius: 16, border: `1px solid ${healthColor}30`, background: `linear-gradient(135deg, ${healthColor}08, transparent 70%)`, marginBottom: 14, flexWrap: "wrap", gap: 12, position: "relative", overflow: "hidden" }}>
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${healthColor}, transparent)` }} />
+                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                  <div style={{ position: "relative", width: 54, height: 54, flexShrink: 0 }}>
+                    <svg width="54" height="54" viewBox="0 0 54 54">
+                      <circle cx="27" cy="27" r="22" fill="none" stroke={`${healthColor}20`} strokeWidth="4" />
+                      <circle cx="27" cy="27" r="22" fill="none" stroke={healthColor} strokeWidth="4"
+                        strokeDasharray={`${(healthScore / 100) * 138.2} 138.2`}
+                        strokeLinecap="round" transform="rotate(-90 27 27)" />
+                    </svg>
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: healthColor, fontFamily: "'Fraunces',serif" }}>{healthScore}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 17, fontWeight: 800, color: healthColor, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>
+                      Platform Health: {healthLabel}
+                    </div>
+                    <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>
+                      {healthScore >= 80 ? "All systems healthy — keep it up." :
+                       healthScore >= 60 ? "Minor issues detected — review alerts below." :
+                       healthScore >= 40 ? "Several issues need your attention today." :
+                       "Critical issues — immediate action required."}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ fontSize: 11, color: T.textMuted, textAlign: "right" }}>
+                    <div style={{ color: T.green, fontWeight: 600, fontSize: 10 }}>● LIVE</div>
+                    <div>{new Date().toLocaleTimeString("en-AE", { hour: "2-digit", minute: "2-digit" })}</div>
+                  </div>
+                  <button type="button"
+                    onClick={() => { fetchUsers(); fetchLeads(); fetchVerifications(); fetchAuditLog(); notify("✅ All data refreshed"); }}
+                    style={{ padding: "8px 14px", borderRadius: 9, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                    ↻ Refresh All
+                  </button>
+                </div>
+              </div>
+
+              {/* Alert Bar — only renders if there is something to act on */}
+              {(() => {
+                const alerts = [
+                  stats.atRisk > 0 && {
+                    key: "atrisk",
+                    icon: "⚠️",
+                    color: T.red,
+                    bg: "rgba(239,68,68,0.06)",
+                    border: "rgba(239,68,68,0.2)",
+                    title: `${stats.atRisk} trial${stats.atRisk > 1 ? "s" : ""} expiring in ≤3 days`,
+                    sub: stats.atRiskUsers.slice(0,3).map(u => u.name || u.email?.split("@")[0]).join(", ") + (stats.atRiskUsers.length > 3 ? ` +${stats.atRiskUsers.length - 3} more` : ""),
+                    actionLabel: "Email All",
+                    onAction: () => {
+                      stats.atRiskUsers.forEach(u => {
+                        const days = trialDaysLeft(u);
+                        emailjs.send("service_da7nshv", "template_gl1xqhy", {
+                          user_email: u.email, user_name: u.name || u.email,
+                          project_name: "DXB Analytics",
+                          change_type: `⚠️ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
+                          new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now to keep full access.`,
+                          old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE"),
+                        }, "USkwUhp0csGCVDkdQ").catch(() => {});
+                      });
+                      notify(`✅ Sent ${stats.atRisk} at-risk email${stats.atRisk > 1 ? "s" : ""}`);
+                    },
+                  },
+                  stats.suspended > 0 && {
+                    key: "suspended",
+                    icon: "⏸",
+                    color: "#F59E0B",
+                    bg: "rgba(245,158,11,0.06)",
+                    border: "rgba(245,158,11,0.2)",
+                    title: `${stats.suspended} suspended account${stats.suspended > 1 ? "s" : ""}`,
+                    sub: "These users cannot access the dashboard",
+                    actionLabel: "View",
+                    onAction: () => { setTab("users"); setTierFilter("Suspended"); },
+                  },
+                  stats.expired > 0 && {
+                    key: "expired",
+                    icon: "⌛",
+                    color: T.textMuted,
+                    bg: "rgba(100,116,139,0.06)",
+                    border: "rgba(100,116,139,0.15)",
+                    title: `${stats.expired} expired trial${stats.expired > 1 ? "s" : ""} not converted`,
+                    sub: "Consider a winback email campaign",
+                    actionLabel: "View",
+                    onAction: () => { setTab("users"); setTierFilter("Expired"); },
+                  },
+                  pendingVerifications > 0 && {
+                    key: "verif",
+                    icon: "🔍",
+                    color: "#8B5CF6",
+                    bg: "rgba(139,92,246,0.06)",
+                    border: "rgba(139,92,246,0.2)",
+                    title: `${pendingVerifications} KYC verification${pendingVerifications > 1 ? "s" : ""} pending review`,
+                    sub: "Users waiting for identity verification",
+                    actionLabel: "Review",
+                    onAction: () => setTab("verification"),
+                  },
+                  newLeadsToday > 0 && {
+                    key: "leads",
+                    icon: "📋",
+                    color: T.teal,
+                    bg: "rgba(0,191,165,0.06)",
+                    border: "rgba(0,191,165,0.2)",
+                    title: `${newLeadsToday} new lead${newLeadsToday > 1 ? "s" : ""} today`,
+                    sub: `${newLeadsThisWeek} this week`,
+                    actionLabel: "View",
+                    onAction: () => setTab("leads"),
+                  },
+                ].filter(Boolean);
+
+                if (alerts.length === 0) return (
+                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 20px", borderRadius: 12, border: "1px solid rgba(16,185,129,0.2)", background: "rgba(16,185,129,0.04)", marginBottom: 20 }}>
+                    <span style={{ fontSize: 18 }}>✅</span>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: T.green }}>All Clear</div>
+                      <div style={{ fontSize: 11, color: T.textMuted }}>No urgent items require your attention right now.</div>
+                    </div>
+                  </div>
+                );
+
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                    {alerts.map((alert, i) => (
+                      <div key={alert.key} className="fade-up" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px", borderRadius: 12, border: `1px solid ${alert.border}`, background: alert.bg, animationDelay: `${i * 0.05}s`, flexWrap: "wrap", gap: 10 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <span style={{ fontSize: 18, flexShrink: 0 }}>{alert.icon}</span>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: alert.color }}>{alert.title}</div>
+                            {alert.sub && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{alert.sub}</div>}
+                          </div>
+                        </div>
+                        <button type="button" onClick={alert.onAction}
+                          style={{ padding: "6px 16px", borderRadius: 8, border: `1px solid ${alert.color}40`, background: `${alert.color}10`, color: alert.color, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
+                          {alert.actionLabel} →
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
               <Section title="Platform Overview" sub="Real-time platform health & key metrics">
                 <div className="kpi-grid-6" style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12 }}>
                   <KPI label="Total Users" value={stats.total} sub={`+${stats.today} today`} delay={1} />
