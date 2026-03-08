@@ -1125,12 +1125,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     ];
 
     return ReactDOM.createPortal(
-      <div
-        style={{ position: "fixed", inset: 0, zIndex: 1500, background: "rgba(0,0,0,0.38)", animation: "fadeBackdrop 0.2s ease" }}
-        onMouseDown={e => { if (e.target === e.currentTarget) setDrawerUserWithCallback(null); }}
-      >
-        {/* Panel — CSS class animation so it never replays on tab switch */}
-        <div className="drawer-panel" style={{ position: "absolute", top: 0, right: 0, width: 520, height: "100%", background: T.bg, borderLeft: `1px solid ${T.border}`, boxShadow: "-24px 0 80px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div className="drawer-panel" style={{ position: "fixed", top: 0, right: 0, width: 520, height: "100%", zIndex: 1500, background: T.bg, borderLeft: `1px solid ${T.border}`, boxShadow: "-24px 0 80px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
           {/* ── Header ── */}
           <div style={{ padding: "22px 24px 20px", borderBottom: `1px solid ${T.border}`, position: "relative", background: `linear-gradient(160deg, ${badge.color}0a 0%, transparent 60%)` }}>
@@ -1408,7 +1403,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             )}
           </div>
         </div>
-      </div>
       , document.body
     );
   };
