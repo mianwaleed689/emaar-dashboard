@@ -300,6 +300,419 @@ const TabHelp = ({ items }) => {
   );
 };
 
+/* ═══════════════════════════════════════════════════════════════════
+   SUPPORT TAB COMPONENT — TAB 14
+   Ticket system, conversation threads, SLA tracking, response templates
+   Collections: supportTickets
+   Benchmark: Intercom + Zendesk + Freshdesk
+═══════════════════════════════════════════════════════════════════ */
+function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpenUid }) {
+  // State
+  const [supportSubTab, setSupportSubTab] = useState("open");
+  const [tickets, setTickets] = useState([]);
+  const [ticketDrawer, setTicketDrawer] = useState(null);
+  const [ticketReply, setTicketReply] = useState("");
+  const [ticketReplying, setTicketReplying] = useState(false);
+  const [ticketFilter, setTicketFilter] = useState("all");
+  const [ticketPriorityFilter, setTicketPriorityFilter] = useState("all");
+  const [ticketSearch, setTicketSearch] = useState("");
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [ticketsLoading, setTicketsLoading] = useState(true);
+
+  // Response templates
+  const responseTemplates = [
+    { id: 1, name: "Acknowledge", text: "Thank you for reaching out! I've received your request and will look into it right away. I'll get back to you within 24 hours with an update." },
+    { id: 2, name: "Need More Info", text: "Thanks for contacting us. To help resolve this faster, could you please provide more details? Specifically: [what exactly you were trying to do, any error messages you saw, and which browser/device you're using]." },
+    { id: 3, name: "Bug Confirmed", text: "Thank you for reporting this issue. I've confirmed the bug and our team is working on a fix. I'll update you as soon as it's resolved." },
+    { id: 4, name: "Feature Noted", text: "Great suggestion! I've added this to our feature request list and shared it with the product team. We'll consider it for future updates." },
+    { id: 5, name: "Data Updated", text: "The data has been updated as requested. Please refresh your dashboard to see the changes. Let me know if you need anything else!" },
+    { id: 6, name: "Billing Help", text: "I'd be happy to help with your billing question. [Insert specific response]. If you need further assistance, just let me know." },
+    { id: 7, name: "Issue Resolved", text: "Great news! The issue has been resolved. Please try again and let me know if everything is working correctly now." },
+  ];
+
+  // Categories and statuses
+  const categories = [
+    { id: "bug", label: "Bug Report", color: T.red, icon: "🐛" },
+    { id: "data", label: "Data Question", color: T.orange, icon: "📊" },
+    { id: "feature", label: "Feature Request", color: T.purple, icon: "✨" },
+    { id: "billing", label: "Billing Query", color: T.green, icon: "💳" },
+    { id: "account", label: "Account Issue", color: T.blue, icon: "👤" },
+    { id: "other", label: "Other", color: T.textMuted, icon: "📝" },
+  ];
+
+  const statuses = {
+    open: { label: "Open", color: T.orange, bg: `${T.orange}20` },
+    in_progress: { label: "In Progress", color: T.blue, bg: `${T.blue}20` },
+    resolved: { label: "Resolved", color: T.green, bg: `${T.green}20` },
+    closed: { label: "Closed", color: T.textMuted, bg: `${T.textMuted}20` },
+  };
+
+  const priorities = {
+    urgent: { label: "Urgent", color: T.red, bg: `${T.red}20` },
+    high: { label: "High", color: T.orange, bg: `${T.orange}20` },
+    normal: { label: "Normal", color: T.textMuted, bg: `${T.textMuted}20` },
+  };
+
+  // Fetch tickets
+  useEffect(() => {
+    const fetchTickets = async () => {
+      setTicketsLoading(true);
+      try {
+        const snap = await getDocs(query(collection(db, "supportTickets"), orderBy("createdAt", "desc"), limit(100)));
+        setTickets(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      } catch (e) {
+        console.error("Fetch tickets:", e);
+        setTickets([
+          { id: "ticket_1", userId: "user1", userEmail: "ahmed@example.com", userName: "Ahmed", userTier: "pro", subject: "Yield calculation seems incorrect", category: "data", priority: "high", status: "open", messages: [{ from: "user", text: "The yield for Creek Waters shows 6.2% but my calculation gives 5.8%. Can you check?", at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() }], createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
+          { id: "ticket_2", userId: "user2", userEmail: "sarah@realty.ae", userName: "Sarah", userTier: "enterprise", subject: "Can't access EIBOR calculator", category: "bug", priority: "urgent", status: "in_progress", messages: [{ from: "user", text: "Getting error when trying to open EIBOR calculator. Screen goes blank.", at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString() }, { from: "admin", text: "Thanks for reporting. We're looking into this now.", at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() }], createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), respondedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() },
+          { id: "ticket_3", userId: "user3", userEmail: "mike@invest.com", userName: "Mike", userTier: "pro", subject: "Request: Add ROI projections", category: "feature", priority: "normal", status: "open", messages: [{ from: "user", text: "Would be great to have ROI projections based on historical data. Is this planned?", at: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString() }], createdAt: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString() },
+          { id: "ticket_4", userId: "user4", userEmail: "lisa@properties.ae", userName: "Lisa", userTier: "pro_trial", subject: "How to upgrade to Pro?", category: "billing", priority: "normal", status: "resolved", messages: [{ from: "user", text: "My trial ends in 2 days. How do I upgrade?", at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString() }, { from: "admin", text: "Click on 'Upgrade' in the top right corner. You can pay via card. Let me know if you need help!", at: new Date(Date.now() - 47 * 60 * 60 * 1000).toISOString() }, { from: "user", text: "Got it, thanks!", at: new Date(Date.now() - 46 * 60 * 60 * 1000).toISOString() }], createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(), respondedAt: new Date(Date.now() - 47 * 60 * 60 * 1000).toISOString(), resolvedAt: new Date(Date.now() - 45 * 60 * 60 * 1000).toISOString() },
+        ]);
+      }
+      setTicketsLoading(false);
+    };
+    fetchTickets();
+  }, [db]);
+
+  // Computed stats
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const openTickets = tickets.filter(t => t.status === "open" || t.status === "in_progress");
+  const resolvedToday = tickets.filter(t => t.resolvedAt && new Date(t.resolvedAt) >= todayStart).length;
+  const slaBreached = tickets.filter(t => {
+    if (t.status === "resolved" || t.status === "closed") return false;
+    const created = new Date(t.createdAt);
+    return (now.getTime() - created.getTime()) > 24 * 60 * 60 * 1000;
+  });
+
+  const respondedTickets = tickets.filter(t => t.respondedAt && t.createdAt);
+  const avgResponseHrs = respondedTickets.length > 0
+    ? Math.round(respondedTickets.reduce((sum, t) => sum + (new Date(t.respondedAt) - new Date(t.createdAt)), 0) / respondedTickets.length / 1000 / 60 / 60 * 10) / 10
+    : null;
+
+  // Filter tickets
+  const filteredTickets = tickets.filter(t => {
+    if (supportSubTab === "open" && t.status !== "open" && t.status !== "in_progress") return false;
+    if (supportSubTab === "resolved" && t.status !== "resolved" && t.status !== "closed") return false;
+    if (ticketFilter !== "all" && t.category !== ticketFilter) return false;
+    if (ticketPriorityFilter !== "all" && t.priority !== ticketPriorityFilter) return false;
+    if (ticketSearch) {
+      const s = ticketSearch.toLowerCase();
+      if (!((t.subject || "").toLowerCase().includes(s) || (t.userEmail || "").toLowerCase().includes(s) || (t.userName || "").toLowerCase().includes(s))) return false;
+    }
+    return true;
+  });
+
+  // Update ticket status
+  const updateTicketStatus = async (ticketId, newStatus) => {
+    try {
+      const update = { status: newStatus, updatedAt: new Date().toISOString() };
+      if (newStatus === "resolved") update.resolvedAt = new Date().toISOString();
+      await setDoc(doc(db, "supportTickets", ticketId), update, { merge: true });
+      setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, ...update } : t));
+      if (ticketDrawer?.id === ticketId) setTicketDrawer(prev => ({ ...prev, ...update }));
+      notify(`Ticket marked as ${newStatus}`);
+      if (newStatus === "resolved" && ticketDrawer) {
+        try {
+          await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+            to_email: ticketDrawer.userEmail,
+            to_name: ticketDrawer.userName || ticketDrawer.userEmail,
+            subject: `Your support ticket has been resolved: ${ticketDrawer.subject}`,
+            message: `Hi ${ticketDrawer.userName || "there"},\n\nYour support ticket "${ticketDrawer.subject}" has been marked as resolved.\n\nIf you have any further questions, feel free to reply to this email or open a new ticket.\n\nBest regards,\nDXB Analytics Support`,
+            project_name: "DXB Analytics",
+          }, "USkwUhp0csGCVDkdQ");
+        } catch (e) { console.error("Email failed:", e); }
+      }
+    } catch (e) { notify("Error: " + e.message); }
+  };
+
+  // Update ticket priority
+  const updateTicketPriority = async (ticketId, newPriority) => {
+    try {
+      await setDoc(doc(db, "supportTickets", ticketId), { priority: newPriority, updatedAt: new Date().toISOString() }, { merge: true });
+      setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, priority: newPriority } : t));
+      if (ticketDrawer?.id === ticketId) setTicketDrawer(prev => ({ ...prev, priority: newPriority }));
+      notify(`Priority set to ${newPriority}`);
+    } catch (e) { notify("Error: " + e.message); }
+  };
+
+  // Send reply
+  const sendReply = async () => {
+    if (!ticketReply.trim() || !ticketDrawer) return;
+    setTicketReplying(true);
+    try {
+      const newMessage = { from: "admin", text: ticketReply, at: new Date().toISOString(), by: adminUser?.email || "admin" };
+      const messages = [...(ticketDrawer.messages || []), newMessage];
+      const update = {
+        messages,
+        status: ticketDrawer.status === "open" ? "in_progress" : ticketDrawer.status,
+        updatedAt: new Date().toISOString(),
+        respondedAt: ticketDrawer.respondedAt || new Date().toISOString(),
+      };
+      await setDoc(doc(db, "supportTickets", ticketDrawer.id), update, { merge: true });
+      setTickets(prev => prev.map(t => t.id === ticketDrawer.id ? { ...t, ...update } : t));
+      setTicketDrawer(prev => ({ ...prev, ...update }));
+      try {
+        await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+          to_email: ticketDrawer.userEmail,
+          to_name: ticketDrawer.userName || ticketDrawer.userEmail,
+          subject: `Re: ${ticketDrawer.subject}`,
+          message: `Hi ${ticketDrawer.userName || "there"},\n\n${ticketReply}\n\n---\nDXB Analytics Support`,
+          project_name: "DXB Analytics",
+        }, "USkwUhp0csGCVDkdQ");
+      } catch (e) { console.error("Email failed:", e); }
+      await logAudit(db, { action: "ticket_replied", ticketId: ticketDrawer.id, userId: ticketDrawer.userId });
+      setTicketReply("");
+      notify("Reply sent!");
+    } catch (e) { notify("Error: " + e.message); }
+    setTicketReplying(false);
+  };
+
+  const insertTemplate = (text) => { setTicketReply(text); setShowTemplates(false); };
+  const timeAgo = (date) => {
+    if (!date) return "—";
+    const seconds = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);
+    if (seconds < 60) return "Just now";
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
+  const isSlaBreached = (ticket) => {
+    if (ticket.status === "resolved" || ticket.status === "closed") return false;
+    return (now.getTime() - new Date(ticket.createdAt).getTime()) > 24 * 60 * 60 * 1000;
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* KPI TOPBAR */}
+      <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+        <button type="button" onClick={() => { setTicketsLoading(true); setTimeout(() => setTicketsLoading(false), 500); notify("Tickets refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
+        {[
+          { label: "Open Tickets", value: openTickets.length, color: openTickets.length > 0 ? T.orange : T.green },
+          { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "—", color: avgResponseHrs !== null && avgResponseHrs > 24 ? T.red : T.green },
+          { label: "Resolved Today", value: resolvedToday, color: T.green },
+          { label: "SLA Breached", value: slaBreached.length, color: slaBreached.length > 0 ? T.red : T.green },
+          { label: "Total Tickets", value: tickets.length, color: T.textSecondary },
+        ].map((item, i) => (
+          <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 20px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
+            <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
+            <span style={{ fontSize: 18, fontWeight: 900, color: item.color, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>{item.value}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* SUB-TABS + FILTERS */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+        <div style={{ display: "flex", gap: 8 }}>
+          {[
+            { id: "open", label: `Open (${tickets.filter(t => t.status === "open" || t.status === "in_progress").length})` },
+            { id: "resolved", label: `Resolved (${tickets.filter(t => t.status === "resolved" || t.status === "closed").length})` },
+            { id: "all", label: `All (${tickets.length})` },
+          ].map(t => (
+            <button key={t.id} type="button" onClick={() => setSupportSubTab(t.id)}
+              style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${supportSubTab === t.id ? T.gold : T.border}`, background: supportSubTab === t.id ? T.goldGlow : "transparent", color: supportSubTab === t.id ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input value={ticketSearch} onChange={e => setTicketSearch(e.target.value)} placeholder="Search tickets..."
+            style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, width: 180, fontFamily: "'Outfit',sans-serif" }} />
+          <select value={ticketFilter} onChange={e => setTicketFilter(e.target.value)}
+            style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+            <option value="all">All Categories</option>
+            {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}
+          </select>
+          <select value={ticketPriorityFilter} onChange={e => setTicketPriorityFilter(e.target.value)}
+            style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+            <option value="all">All Priorities</option>
+            <option value="urgent">🔴 Urgent</option>
+            <option value="high">🟠 High</option>
+            <option value="normal">⚪ Normal</option>
+          </select>
+        </div>
+      </div>
+
+      {/* TICKETS LIST */}
+      <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+        {ticketsLoading ? (
+          <div style={{ padding: 60, textAlign: "center" }}>
+            <div style={{ fontSize: 14, color: T.textMuted }}>Loading tickets...</div>
+          </div>
+        ) : filteredTickets.length === 0 ? (
+          <div style={{ padding: 60, textAlign: "center", color: T.textMuted }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📭</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>No tickets found</div>
+            <div style={{ fontSize: 12 }}>{supportSubTab === "open" ? "All caught up!" : "Try adjusting your filters"}</div>
+          </div>
+        ) : (
+          <div style={{ maxHeight: 500, overflowY: "auto" }}>
+            {filteredTickets.map((ticket) => {
+              const cat = categories.find(c => c.id === ticket.category) || categories[5];
+              const status = statuses[ticket.status] || statuses.open;
+              const priority = priorities[ticket.priority] || priorities.normal;
+              const breached = isSlaBreached(ticket);
+              return (
+                <div key={ticket.id} onClick={() => setTicketDrawer(ticket)}
+                  style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", gap: 14, borderLeft: breached ? `3px solid ${T.red}` : "3px solid transparent", transition: "all 0.15s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: priority.color, flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ticket.subject}</span>
+                      {breached && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>⏰ SLA</span>}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: T.textMuted }}>
+                      <span>{ticket.userName || ticket.userEmail}</span>
+                      <span>·</span>
+                      <span style={{ padding: "2px 6px", borderRadius: 4, background: `${cat.color}20`, color: cat.color, fontSize: 10 }}>{cat.icon} {cat.label}</span>
+                      <span>·</span>
+                      <span>{timeAgo(ticket.createdAt)}</span>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 4, background: `${T.gold}20`, color: T.gold, fontWeight: 600, textTransform: "uppercase" }}>{ticket.userTier}</span>
+                    <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: status.bg, color: status.color, fontWeight: 600 }}>{status.label}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* TICKET DRAWER */}
+      {ticketDrawer && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 8000, background: "rgba(4,9,15,0.85)", backdropFilter: "blur(4px)" }} onClick={() => setTicketDrawer(null)}>
+          <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "100%", maxWidth: 560, background: T.surface, borderLeft: `1px solid ${T.gold}30`, display: "flex", flexDirection: "column", animation: "slideIn 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
+            {/* Drawer Header */}
+            <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${(categories.find(c => c.id === ticketDrawer.category) || categories[5]).color}20`, color: (categories.find(c => c.id === ticketDrawer.category) || categories[5]).color }}>{(categories.find(c => c.id === ticketDrawer.category) || categories[5]).icon} {(categories.find(c => c.id === ticketDrawer.category) || categories[5]).label}</span>
+                    {isSlaBreached(ticketDrawer) && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>⏰ SLA Breached</span>}
+                  </div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{ticketDrawer.subject}</div>
+                </div>
+                <button type="button" onClick={() => setTicketDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>×</button>
+              </div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <select value={ticketDrawer.status} onChange={e => updateTicketStatus(ticketDrawer.id, e.target.value)}
+                  style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${(statuses[ticketDrawer.status] || statuses.open).color}40`, background: (statuses[ticketDrawer.status] || statuses.open).bg, color: (statuses[ticketDrawer.status] || statuses.open).color, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                  <option value="open">Open</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </select>
+                <select value={ticketDrawer.priority || "normal"} onChange={e => updateTicketPriority(ticketDrawer.id, e.target.value)}
+                  style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${(priorities[ticketDrawer.priority] || priorities.normal).color}40`, background: (priorities[ticketDrawer.priority] || priorities.normal).bg, color: (priorities[ticketDrawer.priority] || priorities.normal).color, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+            </div>
+            {/* User Context Panel */}
+            <div style={{ padding: "12px 24px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${T.gold}20`, display: "flex", alignItems: "center", justifyContent: "center", color: T.gold, fontWeight: 700, fontSize: 14 }}>
+                  {(ticketDrawer.userName || ticketDrawer.userEmail || "?")[0].toUpperCase()}
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{ticketDrawer.userName || "Unknown"}</div>
+                  <div style={{ fontSize: 11, color: T.textMuted }}>{ticketDrawer.userEmail}</div>
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 10, color: T.textMuted }}>Tier</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: T.gold, textTransform: "uppercase" }}>{ticketDrawer.userTier}</div>
+                </div>
+                <button type="button" onClick={() => { setTab("users"); setPendingOpenUid(ticketDrawer.userId); setTicketDrawer(null); }}
+                  style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>View User</button>
+              </div>
+            </div>
+            {/* Conversation Thread */}
+            <div style={{ flex: 1, padding: "16px 24px", overflowY: "auto" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {(ticketDrawer.messages || []).map((msg, i) => (
+                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.from === "admin" ? "flex-end" : "flex-start" }}>
+                    <div style={{ maxWidth: "85%", padding: "12px 16px", borderRadius: 12, background: msg.from === "admin" ? T.gold : T.surfaceAlt, color: msg.from === "admin" ? T.bg : T.white, fontSize: 13, lineHeight: 1.5, borderBottomRightRadius: msg.from === "admin" ? 4 : 12, borderBottomLeftRadius: msg.from === "admin" ? 12 : 4 }}>
+                      {msg.text}
+                    </div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                      <span>{msg.from === "admin" ? (msg.by || "Admin") : ticketDrawer.userName}</span>
+                      <span>·</span>
+                      <span>{timeAgo(msg.at)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Reply Input */}
+            {ticketDrawer.status !== "closed" && (
+              <div style={{ padding: "16px 24px", borderTop: `1px solid ${T.border}`, background: T.surfaceAlt }}>
+                <div style={{ marginBottom: 10 }}>
+                  <button type="button" onClick={() => setShowTemplates(!showTemplates)}
+                    style={{ fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+                    {showTemplates ? "Hide Templates" : "📝 Quick Templates"}
+                  </button>
+                  {showTemplates && (
+                    <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {responseTemplates.map(t => (
+                        <button key={t.id} type="button" onClick={() => insertTemplate(t.text)}
+                          style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surface, color: T.textSecondary, fontSize: 10, cursor: "pointer" }}>
+                          {t.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <textarea value={ticketReply} onChange={e => setTicketReply(e.target.value)} placeholder="Type your reply..."
+                    rows={3} style={{ flex: 1, padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "none" }} />
+                  <button type="button" onClick={sendReply} disabled={ticketReplying || !ticketReply.trim()}
+                    style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: ticketReplying || !ticketReply.trim() ? T.border : T.gold, color: T.bg, fontSize: 13, fontWeight: 700, cursor: ticketReplying || !ticketReply.trim() ? "not-allowed" : "pointer", alignSelf: "flex-end" }}>
+                    {ticketReplying ? "..." : "Send"}
+                  </button>
+                </div>
+                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                  {ticketDrawer.status !== "resolved" && (
+                    <button type="button" onClick={() => updateTicketStatus(ticketDrawer.id, "resolved")}
+                      style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.green}`, background: `${T.green}10`, color: T.green, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
+                      ✓ Mark Resolved
+                    </button>
+                  )}
+                  {ticketDrawer.status === "resolved" && (
+                    <button type="button" onClick={() => updateTicketStatus(ticketDrawer.id, "closed")}
+                      style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.textMuted}`, background: `${T.textMuted}10`, color: T.textMuted, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
+                      Archive (Close)
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+            {ticketDrawer.status === "closed" && (
+              <div style={{ padding: "16px 24px", borderTop: `1px solid ${T.border}`, background: T.surfaceAlt, textAlign: "center" }}>
+                <div style={{ fontSize: 12, color: T.textMuted }}>This ticket is closed. Reopen to reply.</div>
+                <button type="button" onClick={() => updateTicketStatus(ticketDrawer.id, "open")}
+                  style={{ marginTop: 8, padding: "6px 16px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                  Reopen Ticket
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════ */
@@ -10854,462 +11267,8 @@ export default function AdminPanel() {
             );
           })()}
 
-          {/* ═══════════════════════════════════════
-             SUPPORT / INBOX TAB
-             ═══════════════════════════════════════ */}
-          {tab === "support" && (() => {
-            /* ═══════════════════════════════════════════════════════════════════
-               TAB 14: SUPPORT / INBOX — PRO LEVEL
-               Ticket system, conversation threads, SLA tracking, response templates
-               Collections: supportTickets
-               Benchmark: Intercom + Zendesk + Freshdesk
-            ═══════════════════════════════════════════════════════════════════ */
-            
-            // State
-            const [supportSubTab, setSupportSubTab] = React.useState("open"); // open | resolved | all
-            const [tickets, setTickets] = React.useState([]);
-            const [ticketDrawer, setTicketDrawer] = React.useState(null);
-            const [ticketReply, setTicketReply] = React.useState("");
-            const [ticketReplying, setTicketReplying] = React.useState(false);
-            const [ticketFilter, setTicketFilter] = React.useState("all"); // all | bug | data | feature | billing | account | other
-            const [ticketPriorityFilter, setTicketPriorityFilter] = React.useState("all"); // all | urgent | high | normal
-            const [ticketSearch, setTicketSearch] = React.useState("");
-            const [showTemplates, setShowTemplates] = React.useState(false);
-            const [ticketsLoading, setTicketsLoading] = React.useState(true);
-            
-            // Response templates
-            const responseTemplates = [
-              { id: 1, name: "Acknowledge", text: "Thank you for reaching out! I've received your request and will look into it right away. I'll get back to you within 24 hours with an update." },
-              { id: 2, name: "Need More Info", text: "Thanks for contacting us. To help resolve this faster, could you please provide more details? Specifically: [what exactly you were trying to do, any error messages you saw, and which browser/device you're using]." },
-              { id: 3, name: "Bug Confirmed", text: "Thank you for reporting this issue. I've confirmed the bug and our team is working on a fix. I'll update you as soon as it's resolved." },
-              { id: 4, name: "Feature Noted", text: "Great suggestion! I've added this to our feature request list and shared it with the product team. We'll consider it for future updates." },
-              { id: 5, name: "Data Updated", text: "The data has been updated as requested. Please refresh your dashboard to see the changes. Let me know if you need anything else!" },
-              { id: 6, name: "Billing Help", text: "I'd be happy to help with your billing question. [Insert specific response]. If you need further assistance, just let me know." },
-              { id: 7, name: "Issue Resolved", text: "Great news! The issue has been resolved. Please try again and let me know if everything is working correctly now." },
-            ];
-            
-            // Categories and statuses
-            const categories = [
-              { id: "bug", label: "Bug Report", color: T.red, icon: "🐛" },
-              { id: "data", label: "Data Question", color: T.orange, icon: "📊" },
-              { id: "feature", label: "Feature Request", color: T.purple, icon: "✨" },
-              { id: "billing", label: "Billing Query", color: T.green, icon: "💳" },
-              { id: "account", label: "Account Issue", color: T.blue, icon: "👤" },
-              { id: "other", label: "Other", color: T.textMuted, icon: "📝" },
-            ];
-            
-            const statuses = {
-              open: { label: "Open", color: T.orange, bg: `${T.orange}20` },
-              in_progress: { label: "In Progress", color: T.blue, bg: `${T.blue}20` },
-              resolved: { label: "Resolved", color: T.green, bg: `${T.green}20` },
-              closed: { label: "Closed", color: T.textMuted, bg: `${T.textMuted}20` },
-            };
-            
-            const priorities = {
-              urgent: { label: "Urgent", color: T.red, bg: `${T.red}20` },
-              high: { label: "High", color: T.orange, bg: `${T.orange}20` },
-              normal: { label: "Normal", color: T.textMuted, bg: `${T.textMuted}20` },
-            };
-            
-            // Fetch tickets
-            React.useEffect(() => {
-              const fetchTickets = async () => {
-                setTicketsLoading(true);
-                try {
-                  const snap = await getDocs(query(collection(db, "supportTickets"), orderBy("createdAt", "desc"), limit(100)));
-                  setTickets(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-                } catch (e) { 
-                  console.error("Fetch tickets:", e);
-                  // Use sample data if collection doesn't exist
-                  setTickets([
-                    { id: "ticket_1", userId: "user1", userEmail: "ahmed@example.com", userName: "Ahmed", userTier: "pro", subject: "Yield calculation seems incorrect", category: "data", priority: "high", status: "open", messages: [{ from: "user", text: "The yield for Creek Waters shows 6.2% but my calculation gives 5.8%. Can you check?", at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() }], createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
-                    { id: "ticket_2", userId: "user2", userEmail: "sarah@realty.ae", userName: "Sarah", userTier: "enterprise", subject: "Can't access EIBOR calculator", category: "bug", priority: "urgent", status: "in_progress", messages: [{ from: "user", text: "Getting error when trying to open EIBOR calculator. Screen goes blank.", at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString() }, { from: "admin", text: "Thanks for reporting. We're looking into this now.", at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() }], createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), respondedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() },
-                    { id: "ticket_3", userId: "user3", userEmail: "mike@invest.com", userName: "Mike", userTier: "pro", subject: "Request: Add ROI projections", category: "feature", priority: "normal", status: "open", messages: [{ from: "user", text: "Would be great to have ROI projections based on historical data. Is this planned?", at: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString() }], createdAt: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString() },
-                    { id: "ticket_4", userId: "user4", userEmail: "lisa@properties.ae", userName: "Lisa", userTier: "pro_trial", subject: "How to upgrade to Pro?", category: "billing", priority: "normal", status: "resolved", messages: [{ from: "user", text: "My trial ends in 2 days. How do I upgrade?", at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString() }, { from: "admin", text: "Click on 'Upgrade' in the top right corner. You can pay via card. Let me know if you need help!", at: new Date(Date.now() - 47 * 60 * 60 * 1000).toISOString() }, { from: "user", text: "Got it, thanks!", at: new Date(Date.now() - 46 * 60 * 60 * 1000).toISOString() }], createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(), respondedAt: new Date(Date.now() - 47 * 60 * 60 * 1000).toISOString(), resolvedAt: new Date(Date.now() - 45 * 60 * 60 * 1000).toISOString() },
-                  ]);
-                }
-                setTicketsLoading(false);
-              };
-              fetchTickets();
-            }, []);
-            
-            // Computed stats
-            const now = new Date();
-            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const openTickets = tickets.filter(t => t.status === "open" || t.status === "in_progress");
-            const resolvedToday = tickets.filter(t => t.resolvedAt && new Date(t.resolvedAt) >= todayStart).length;
-            const slaBreached = tickets.filter(t => {
-              if (t.status === "resolved" || t.status === "closed") return false;
-              const created = new Date(t.createdAt);
-              return (now.getTime() - created.getTime()) > 24 * 60 * 60 * 1000;
-            });
-            
-            // Avg response time (hours)
-            const respondedTickets = tickets.filter(t => t.respondedAt && t.createdAt);
-            const avgResponseHrs = respondedTickets.length > 0
-              ? Math.round(respondedTickets.reduce((sum, t) => sum + (new Date(t.respondedAt) - new Date(t.createdAt)), 0) / respondedTickets.length / 1000 / 60 / 60 * 10) / 10
-              : null;
-            
-            // Filter tickets
-            const filteredTickets = tickets.filter(t => {
-              // Sub-tab filter
-              if (supportSubTab === "open" && t.status !== "open" && t.status !== "in_progress") return false;
-              if (supportSubTab === "resolved" && t.status !== "resolved" && t.status !== "closed") return false;
-              // Category filter
-              if (ticketFilter !== "all" && t.category !== ticketFilter) return false;
-              // Priority filter
-              if (ticketPriorityFilter !== "all" && t.priority !== ticketPriorityFilter) return false;
-              // Search
-              if (ticketSearch) {
-                const s = ticketSearch.toLowerCase();
-                if (!((t.subject || "").toLowerCase().includes(s) || (t.userEmail || "").toLowerCase().includes(s) || (t.userName || "").toLowerCase().includes(s))) return false;
-              }
-              return true;
-            });
-            
-            // Update ticket status
-            const updateTicketStatus = async (ticketId, newStatus) => {
-              try {
-                const update = { status: newStatus, updatedAt: new Date().toISOString() };
-                if (newStatus === "resolved") update.resolvedAt = new Date().toISOString();
-                await setDoc(doc(db, "supportTickets", ticketId), update, { merge: true });
-                setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, ...update } : t));
-                if (ticketDrawer?.id === ticketId) setTicketDrawer(prev => ({ ...prev, ...update }));
-                notify(`Ticket marked as ${newStatus}`);
-                
-                // Send email if resolved
-                if (newStatus === "resolved" && ticketDrawer) {
-                  try {
-                    await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-                      to_email: ticketDrawer.userEmail,
-                      to_name: ticketDrawer.userName || ticketDrawer.userEmail,
-                      subject: `Your support ticket has been resolved: ${ticketDrawer.subject}`,
-                      message: `Hi ${ticketDrawer.userName || "there"},\n\nYour support ticket "${ticketDrawer.subject}" has been marked as resolved.\n\nIf you have any further questions, feel free to reply to this email or open a new ticket.\n\nBest regards,\nDXB Analytics Support`,
-                      project_name: "DXB Analytics",
-                    }, "USkwUhp0csGCVDkdQ");
-                  } catch (e) { console.error("Email failed:", e); }
-                }
-              } catch (e) { notify("Error: " + e.message); }
-            };
-            
-            // Update ticket priority
-            const updateTicketPriority = async (ticketId, newPriority) => {
-              try {
-                await setDoc(doc(db, "supportTickets", ticketId), { priority: newPriority, updatedAt: new Date().toISOString() }, { merge: true });
-                setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, priority: newPriority } : t));
-                if (ticketDrawer?.id === ticketId) setTicketDrawer(prev => ({ ...prev, priority: newPriority }));
-                notify(`Priority set to ${newPriority}`);
-              } catch (e) { notify("Error: " + e.message); }
-            };
-            
-            // Send reply
-            const sendReply = async () => {
-              if (!ticketReply.trim() || !ticketDrawer) return;
-              setTicketReplying(true);
-              try {
-                const newMessage = { from: "admin", text: ticketReply, at: new Date().toISOString(), by: adminUser?.email || "admin" };
-                const messages = [...(ticketDrawer.messages || []), newMessage];
-                const update = { 
-                  messages, 
-                  status: ticketDrawer.status === "open" ? "in_progress" : ticketDrawer.status,
-                  updatedAt: new Date().toISOString(),
-                  respondedAt: ticketDrawer.respondedAt || new Date().toISOString(),
-                };
-                await setDoc(doc(db, "supportTickets", ticketDrawer.id), update, { merge: true });
-                setTickets(prev => prev.map(t => t.id === ticketDrawer.id ? { ...t, ...update } : t));
-                setTicketDrawer(prev => ({ ...prev, ...update }));
-                
-                // Send email to user
-                try {
-                  await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-                    to_email: ticketDrawer.userEmail,
-                    to_name: ticketDrawer.userName || ticketDrawer.userEmail,
-                    subject: `Re: ${ticketDrawer.subject}`,
-                    message: `Hi ${ticketDrawer.userName || "there"},\n\n${ticketReply}\n\n---\nDXB Analytics Support`,
-                    project_name: "DXB Analytics",
-                  }, "USkwUhp0csGCVDkdQ");
-                } catch (e) { console.error("Email failed:", e); }
-                
-                await logAudit(db, { action: "ticket_replied", ticketId: ticketDrawer.id, userId: ticketDrawer.userId });
-                setTicketReply("");
-                notify("Reply sent!");
-              } catch (e) { notify("Error: " + e.message); }
-              setTicketReplying(false);
-            };
-            
-            // Insert template
-            const insertTemplate = (text) => {
-              setTicketReply(text);
-              setShowTemplates(false);
-            };
-            
-            // Get user from users array
-            const getUser = (userId) => users.find(u => u.uid === userId || u.id === userId);
-            
-            // Time ago helper
-            const timeAgo = (date) => {
-              if (!date) return "—";
-              const seconds = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);
-              if (seconds < 60) return "Just now";
-              const minutes = Math.floor(seconds / 60);
-              if (minutes < 60) return `${minutes}m ago`;
-              const hours = Math.floor(minutes / 60);
-              if (hours < 24) return `${hours}h ago`;
-              const days = Math.floor(hours / 24);
-              return `${days}d ago`;
-            };
-            
-            // Check SLA breach
-            const isSlaBreached = (ticket) => {
-              if (ticket.status === "resolved" || ticket.status === "closed") return false;
-              return (now.getTime() - new Date(ticket.createdAt).getTime()) > 24 * 60 * 60 * 1000;
-            };
-            
-            return (
-              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                {/* KPI TOPBAR */}
-                <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-                  <button type="button" onClick={() => { setTicketsLoading(true); setTimeout(() => setTicketsLoading(false), 500); notify("Tickets refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
-                  {[
-                    { label: "Open Tickets", value: openTickets.length, color: openTickets.length > 0 ? T.orange : T.green },
-                    { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "—", color: avgResponseHrs !== null && avgResponseHrs > 24 ? T.red : T.green },
-                    { label: "Resolved Today", value: resolvedToday, color: T.green },
-                    { label: "SLA Breached", value: slaBreached.length, color: slaBreached.length > 0 ? T.red : T.green },
-                    { label: "Total Tickets", value: tickets.length, color: T.textSecondary },
-                  ].map((item, i) => (
-                    <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 20px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
-                      <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
-                      <span style={{ fontSize: 18, fontWeight: 900, color: item.color, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* SUB-TABS + FILTERS */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {[
-                      { id: "open", label: `Open (${tickets.filter(t => t.status === "open" || t.status === "in_progress").length})` },
-                      { id: "resolved", label: `Resolved (${tickets.filter(t => t.status === "resolved" || t.status === "closed").length})` },
-                      { id: "all", label: `All (${tickets.length})` },
-                    ].map(t => (
-                      <button key={t.id} type="button" onClick={() => setSupportSubTab(t.id)}
-                        style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${supportSubTab === t.id ? T.gold : T.border}`, background: supportSubTab === t.id ? T.goldGlow : "transparent", color: supportSubTab === t.id ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                        {t.label}
-                      </button>
-                    ))}
-                  </div>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <input value={ticketSearch} onChange={e => setTicketSearch(e.target.value)} placeholder="Search tickets..."
-                      style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, width: 180, fontFamily: "'Outfit',sans-serif" }} />
-                    <select value={ticketFilter} onChange={e => setTicketFilter(e.target.value)}
-                      style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                      <option value="all">All Categories</option>
-                      {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}
-                    </select>
-                    <select value={ticketPriorityFilter} onChange={e => setTicketPriorityFilter(e.target.value)}
-                      style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                      <option value="all">All Priorities</option>
-                      <option value="urgent">🔴 Urgent</option>
-                      <option value="high">🟠 High</option>
-                      <option value="normal">⚪ Normal</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* TICKETS LIST */}
-                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-                  {ticketsLoading ? (
-                    <div style={{ padding: 60, textAlign: "center" }}>
-                      <div style={{ fontSize: 14, color: T.textMuted }}>Loading tickets...</div>
-                    </div>
-                  ) : filteredTickets.length === 0 ? (
-                    <div style={{ padding: 60, textAlign: "center", color: T.textMuted }}>
-                      <div style={{ fontSize: 32, marginBottom: 12 }}>📭</div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>No tickets found</div>
-                      <div style={{ fontSize: 12 }}>{supportSubTab === "open" ? "All caught up!" : "Try adjusting your filters"}</div>
-                    </div>
-                  ) : (
-                    <div style={{ maxHeight: 500, overflowY: "auto" }}>
-                      {filteredTickets.map((ticket, i) => {
-                        const cat = categories.find(c => c.id === ticket.category) || categories[5];
-                        const status = statuses[ticket.status] || statuses.open;
-                        const priority = priorities[ticket.priority] || priorities.normal;
-                        const breached = isSlaBreached(ticket);
-                        
-                        return (
-                          <div key={ticket.id} onClick={() => setTicketDrawer(ticket)}
-                            style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", gap: 14, borderLeft: breached ? `3px solid ${T.red}` : "3px solid transparent", transition: "all 0.15s" }}
-                            onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
-                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                            {/* Priority indicator */}
-                            <div style={{ width: 8, height: 8, borderRadius: "50%", background: priority.color, flexShrink: 0 }} />
-                            
-                            {/* Main content */}
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                                <span style={{ fontSize: 13, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ticket.subject}</span>
-                                {breached && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>⏰ SLA</span>}
-                              </div>
-                              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: T.textMuted }}>
-                                <span>{ticket.userName || ticket.userEmail}</span>
-                                <span>·</span>
-                                <span style={{ padding: "2px 6px", borderRadius: 4, background: `${cat.color}20`, color: cat.color, fontSize: 10 }}>{cat.icon} {cat.label}</span>
-                                <span>·</span>
-                                <span>{timeAgo(ticket.createdAt)}</span>
-                              </div>
-                            </div>
-                            
-                            {/* Status + tier */}
-                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 4, background: `${T.gold}20`, color: T.gold, fontWeight: 600, textTransform: "uppercase" }}>{ticket.userTier}</span>
-                              <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: status.bg, color: status.color, fontWeight: 600 }}>{status.label}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {/* TICKET DRAWER */}
-                {ticketDrawer && (
-                  <div style={{ position: "fixed", inset: 0, zIndex: 8000, background: "rgba(4,9,15,0.85)", backdropFilter: "blur(4px)" }} onClick={() => setTicketDrawer(null)}>
-                    <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "100%", maxWidth: 560, background: T.surface, borderLeft: `1px solid ${T.gold}30`, display: "flex", flexDirection: "column", animation: "slideIn 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
-                      
-                      {/* Drawer Header */}
-                      <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}` }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                              <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${(categories.find(c => c.id === ticketDrawer.category) || categories[5]).color}20`, color: (categories.find(c => c.id === ticketDrawer.category) || categories[5]).color }}>{(categories.find(c => c.id === ticketDrawer.category) || categories[5]).icon} {(categories.find(c => c.id === ticketDrawer.category) || categories[5]).label}</span>
-                              {isSlaBreached(ticketDrawer) && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>⏰ SLA Breached</span>}
-                            </div>
-                            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{ticketDrawer.subject}</div>
-                          </div>
-                          <button type="button" onClick={() => setTicketDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>×</button>
-                        </div>
-                        
-                        {/* Status + Priority controls */}
-                        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                          <select value={ticketDrawer.status} onChange={e => updateTicketStatus(ticketDrawer.id, e.target.value)}
-                            style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${(statuses[ticketDrawer.status] || statuses.open).color}40`, background: (statuses[ticketDrawer.status] || statuses.open).bg, color: (statuses[ticketDrawer.status] || statuses.open).color, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="open">Open</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="resolved">Resolved</option>
-                            <option value="closed">Closed</option>
-                          </select>
-                          <select value={ticketDrawer.priority || "normal"} onChange={e => updateTicketPriority(ticketDrawer.id, e.target.value)}
-                            style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${(priorities[ticketDrawer.priority] || priorities.normal).color}40`, background: (priorities[ticketDrawer.priority] || priorities.normal).bg, color: (priorities[ticketDrawer.priority] || priorities.normal).color, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="normal">Normal</option>
-                            <option value="high">High</option>
-                            <option value="urgent">Urgent</option>
-                          </select>
-                        </div>
-                      </div>
-                      
-                      {/* User Context Panel */}
-                      <div style={{ padding: "12px 24px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${T.gold}20`, display: "flex", alignItems: "center", justifyContent: "center", color: T.gold, fontWeight: 700, fontSize: 14 }}>
-                            {(ticketDrawer.userName || ticketDrawer.userEmail || "?")[0].toUpperCase()}
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{ticketDrawer.userName || "Unknown"}</div>
-                            <div style={{ fontSize: 11, color: T.textMuted }}>{ticketDrawer.userEmail}</div>
-                          </div>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <div style={{ textAlign: "right" }}>
-                            <div style={{ fontSize: 10, color: T.textMuted }}>Tier</div>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: T.gold, textTransform: "uppercase" }}>{ticketDrawer.userTier}</div>
-                          </div>
-                          <button type="button" onClick={() => { setTab("users"); setPendingOpenUid(ticketDrawer.userId); setTicketDrawer(null); }}
-                            style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>View User</button>
-                        </div>
-                      </div>
-                      
-                      {/* Conversation Thread */}
-                      <div style={{ flex: 1, padding: "16px 24px", overflowY: "auto" }}>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                          {(ticketDrawer.messages || []).map((msg, i) => (
-                            <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.from === "admin" ? "flex-end" : "flex-start" }}>
-                              <div style={{ maxWidth: "85%", padding: "12px 16px", borderRadius: 12, background: msg.from === "admin" ? T.gold : T.surfaceAlt, color: msg.from === "admin" ? T.bg : T.white, fontSize: 13, lineHeight: 1.5, borderBottomRightRadius: msg.from === "admin" ? 4 : 12, borderBottomLeftRadius: msg.from === "admin" ? 12 : 4 }}>
-                                {msg.text}
-                              </div>
-                              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
-                                <span>{msg.from === "admin" ? (msg.by || "Admin") : ticketDrawer.userName}</span>
-                                <span>·</span>
-                                <span>{timeAgo(msg.at)}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      {/* Reply Input */}
-                      {ticketDrawer.status !== "closed" && (
-                        <div style={{ padding: "16px 24px", borderTop: `1px solid ${T.border}`, background: T.surfaceAlt }}>
-                          {/* Templates Toggle */}
-                          <div style={{ marginBottom: 10 }}>
-                            <button type="button" onClick={() => setShowTemplates(!showTemplates)}
-                              style={{ fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
-                              {showTemplates ? "Hide Templates" : "📝 Quick Templates"}
-                            </button>
-                            {showTemplates && (
-                              <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
-                                {responseTemplates.map(t => (
-                                  <button key={t.id} type="button" onClick={() => insertTemplate(t.text)}
-                                    style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surface, color: T.textSecondary, fontSize: 10, cursor: "pointer" }}>
-                                    {t.name}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          
-                          <div style={{ display: "flex", gap: 10 }}>
-                            <textarea value={ticketReply} onChange={e => setTicketReply(e.target.value)} placeholder="Type your reply..."
-                              rows={3} style={{ flex: 1, padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "none" }} />
-                            <button type="button" onClick={sendReply} disabled={ticketReplying || !ticketReply.trim()}
-                              style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: ticketReplying || !ticketReply.trim() ? T.border : T.gold, color: T.bg, fontSize: 13, fontWeight: 700, cursor: ticketReplying || !ticketReply.trim() ? "not-allowed" : "pointer", alignSelf: "flex-end" }}>
-                              {ticketReplying ? "..." : "Send"}
-                            </button>
-                          </div>
-                          
-                          {/* Quick Actions */}
-                          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                            {ticketDrawer.status !== "resolved" && (
-                              <button type="button" onClick={() => updateTicketStatus(ticketDrawer.id, "resolved")}
-                                style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.green}`, background: `${T.green}10`, color: T.green, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
-                                ✓ Mark Resolved
-                              </button>
-                            )}
-                            {ticketDrawer.status === "resolved" && (
-                              <button type="button" onClick={() => updateTicketStatus(ticketDrawer.id, "closed")}
-                                style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.textMuted}`, background: `${T.textMuted}10`, color: T.textMuted, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
-                                Archive (Close)
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Closed ticket notice */}
-                      {ticketDrawer.status === "closed" && (
-                        <div style={{ padding: "16px 24px", borderTop: `1px solid ${T.border}`, background: T.surfaceAlt, textAlign: "center" }}>
-                          <div style={{ fontSize: 12, color: T.textMuted }}>This ticket is closed. Reopen to reply.</div>
-                          <button type="button" onClick={() => updateTicketStatus(ticketDrawer.id, "open")}
-                            style={{ marginTop: 8, padding: "6px 16px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                            Reopen Ticket
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
+          {/* SUPPORT TAB */}
+          {tab === "support" && <SupportTab T={T} I={I} db={db} notify={notify} adminUser={adminUser} users={users} setTab={setTab} setPendingOpenUid={setPendingOpenUid} />}
 
           {tab === "tabcontrol" && (() => {
             /* ═══════════════════════════════════════════════════════════════════
