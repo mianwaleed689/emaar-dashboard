@@ -304,10 +304,20 @@ const TabHelp = ({ items }) => {
    MAIN COMPONENT
    ═══════════════════════════════════════ */
 /* ─── NOTIFICATIONS TAB COMPONENT ─── */
-function NotificationsTab({ T, notify, adminUser }) {
+function NotificationsTab({ T, notify, adminUser, I, fetchNotificationsExternal }) {
   const [notifForm, setNotifForm] = useState({ title: "", message: "", icon: "", target: "all" });
   const [notifSending, setNotifSending] = useState(false);
   const [sentNotifs, setSentNotifs] = useState([]);
+
+  const fetchNotifications = useCallback(() => {
+    getDocs(collection(db, "notifications")).then(snap => {
+      const list = [];
+      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      setSentNotifs(list.slice(0, 20));
+      notify("Notifications refreshed");
+    }).catch(() => {});
+  }, [notify]);
 
   useEffect(() => {
     getDocs(collection(db, "notifications")).then(snap => {
@@ -337,7 +347,9 @@ function NotificationsTab({ T, notify, adminUser }) {
   const ICONS = ["","","","[^]","⚠","","[v]","","",""];
 
   return (
-    <Section title="Send Notification" sub="Broadcast alerts to all users on the dashboard">
+    <Section title="Send Notification" sub="Broadcast alerts to all users on the dashboard" action={
+      <button type="button" onClick={fetchNotifications} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.08)", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I?.refresh || "↻"} Refresh</button>
+    }>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
         <div>
           <div style={{ marginBottom: 14 }}>
@@ -392,12 +404,19 @@ function NotificationsTab({ T, notify, adminUser }) {
   );
 }
 
-function EiborRatesPanel({ db, T }) {
+function EiborRatesPanel({ db, T, I, notify }) {
   const EIBOR_FALLBACK = { "1m": 3.635, "3m": 3.593, "6m": 3.676, "1y": 3.674, on: 3.473, "1w": 3.577 };
   const [eiborEdit, setEiborEdit] = React.useState({ "1m": "", "3m": "", "6m": "", "1y": "", asOf: "" });
   const [eiborSaving, setEiborSaving] = React.useState(false);
   const [eiborSaved, setEiborSaved] = React.useState(false);
   const [eiborCurrent, setEiborCurrent] = React.useState(null);
+
+  const fetchEibor = React.useCallback(() => {
+    getDoc(doc(db, "tabData", "eiborRates")).then(snap => {
+      if (snap.exists()) setEiborCurrent(snap.data());
+      if (notify) notify("EIBOR rates refreshed");
+    }).catch(() => {});
+  }, [db, notify]);
 
   React.useEffect(() => {
     getDoc(doc(db, "tabData", "eiborRates")).then(snap => {
@@ -431,7 +450,10 @@ function EiborRatesPanel({ db, T }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.gold }}>EIBOR Rate Update</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.gold }}>EIBOR Rate Update</div>
+        <button type="button" onClick={fetchEibor} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.08)", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I?.refresh || "↻"} Refresh</button>
+      </div>
       <div style={{ fontSize: 13, color: T.textMuted }}>
         Check latest rates at{" "}
         <a href="https://www.centralbank.ae/en/forex-eibor/eibor-rates/" target="_blank" rel="noopener noreferrer" style={{ color: T.gold }}>centralbank.ae ↗</a>
@@ -1629,7 +1651,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {/* FIX #6: consistent threshold in tooltip, FIX #17: remove Refresh */}
+          {/* Refresh button */}
+          <button type="button" onClick={() => { fetchUsers(); notify("Users refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
           <div style={{ position: "relative" }} className="risk-btn-wrap">
             <button type="button" onClick={sendTrialExpiryEmails} disabled={sendingTrialEmails || atRiskCount === 0}
               style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${atRiskCount > 0 ? T.red + "60" : T.border}`, background: atRiskCount > 0 ? "rgba(239,68,68,0.06)" : "transparent", color: atRiskCount > 0 ? T.red : T.textMuted, cursor: atRiskCount > 0 ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", fontWeight: 600, opacity: sendingTrialEmails ? 0.6 : 1 }}>
@@ -2244,7 +2267,9 @@ function UpdateChecklist({ T }) {
 }
 
 function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, setPendingOpenUid, T }) {
-  const [auditFilter, setAuditFilter] = useState("all");
+  const [auditFilter, setAuditFilter] = useState(() => {
+    try { return localStorage.getItem("admin_auditFilter") || "all"; } catch { return "all"; }
+  });
   const [auditSearch, setAuditSearch] = useState("");
   const [dateRange, setDateRange] = useState("all");
 
@@ -2798,6 +2823,11 @@ export default function AdminPanel() {
     if (!isHydrated.current) return;
     try { localStorage.setItem("admin_verifyFilter", verifyFilter); } catch {}
   }, [verifyFilter]);
+
+  useEffect(() => {
+    if (!isHydrated.current) return;
+    try { localStorage.setItem("admin_auditFilter", auditFilter); } catch {}
+  }, [auditFilter]);
 
   /* ─── ESCAPE KEY ─── */
   useEffect(() => {
@@ -7358,7 +7388,7 @@ export default function AdminPanel() {
           {/* ═══════════════════════════════════════
              NOTIFICATIONS TAB
              ═══════════════════════════════════════ */}
-          {tab === "notifications" && <NotificationsTab T={T} notify={notify} adminUser={adminUser} />}
+          {tab === "notifications" && <NotificationsTab T={T} notify={notify} adminUser={adminUser} I={I} />}
 
           {/* ═══════════════════════════════════════
              VERIFICATION TAB (Binance-style KYC)
@@ -7609,7 +7639,10 @@ export default function AdminPanel() {
               return (
                 <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                   <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: 24 }}>
-                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: T.gold, marginBottom: 6 }}>Weekly Email Digest</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: T.gold }}>Weekly Email Digest</div>
+                      <button type="button" onClick={() => { setProUsers(users.filter(u => ["pro", "pro_trial", "enterprise", "admin"].includes(u.tier))); notify("Digest data refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
+                    </div>
                     <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 20 }}>Automatically sends every Monday at 8:00 AM UAE time to all Pro users. You can also trigger it manually below.</div>
 
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 24 }}>
@@ -8143,6 +8176,11 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Toggle visibility, set tier access, and edit tab data · All saved to Firestore instantly</div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <button type="button" onClick={async () => {
+                      const snap = await getDoc(doc(db, "platformSettings", "tabs"));
+                      if (snap.exists()) setTabSettings(snap.data());
+                      notify("Tab settings refreshed");
+                    }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
                     {tabSettingsSaving && <div style={{ fontSize: 11, color: T.green, display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 6, height: 6, borderRadius: "50%", background: T.green }} />Saved ✓</div>}
                     <div style={{ fontSize: 11, color: T.textMuted, padding: "5px 10px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                       {hiddenCount} hidden · {proCount} Pro · {entCount} Ent
@@ -8335,7 +8373,7 @@ export default function AdminPanel() {
             );
           })()}
 
-          {tab === "eibor" && <EiborRatesPanel db={db} T={T} />}
+          {tab === "eibor" && <EiborRatesPanel db={db} T={T} I={I} notify={notify} />}
 
         </div>
       </main>
