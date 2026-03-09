@@ -2711,6 +2711,9 @@ export default function AdminPanel() {
   const [projectSortKey, setProjectSortKey] = useState("name");
   const [projectSortDir, setProjectSortDir] = useState("asc");
   const [validationErrors, setValidationErrors] = useState({});
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [priceHistory, setPriceHistory] = useState([]);
 
   /* ─── KYC VERIFICATION STATE ─── */
   const [verifications, setVerifications] = useState([]);
@@ -2802,6 +2805,15 @@ export default function AdminPanel() {
       const yieldMap = {};
       yieldSnap.forEach(d => { yieldMap[d.id] = plainify(d.data()); });
       setLiveYields(yieldMap);
+
+      // Fetch price history
+      try {
+        const histSnap = await getDocs(collection(db, "priceHistory"));
+        const histList = [];
+        histSnap.forEach(d => histList.push({ id: d.id, ...plainify(d.data()) }));
+        histList.sort((a, b) => new Date(b.changedAt || 0) - new Date(a.changedAt || 0));
+        setPriceHistory(histList);
+      } catch(e) { console.error("Fetch price history:", e); }
     } catch (e) { console.error("Fetch live data:", e); }
   }, []);
 
@@ -3390,6 +3402,68 @@ export default function AdminPanel() {
       fetchLiveData();
     } catch (e) { notify("Error: Error: " + e.message); }
     setDataSaving(false);
+  };
+
+  /* ─── BULK PRICE UPDATE ─── */
+  const handleBulkPriceUpdate = async ({ changeType, priceChange }) => {
+    if (bulkSelected.length === 0) { notify("No projects selected"); return; }
+    setBulkLoading(true);
+    try {
+      const timestamp = new Date().toISOString();
+      for (const projectId of bulkSelected) {
+        const p = emaarProjects.find(x => String(x.id) === String(projectId));
+        const merged = getMergedProject(p || { id: projectId });
+        const oldPrice = merged.price || 0;
+        const newPrice = changeType === 'percent' 
+          ? Math.round(oldPrice * (1 + priceChange / 100))
+          : oldPrice + priceChange;
+        
+        // Save project data
+        await setDoc(doc(db, "projectData", String(projectId)), {
+          price: newPrice,
+          updatedAt: timestamp,
+          updatedBy: adminUser?.email || "admin"
+        }, { merge: true });
+        
+        // Save price history
+        await setDoc(doc(db, "priceHistory", String(projectId) + "_" + Date.now()), {
+          projectId: String(projectId),
+          projectName: p?.name || String(projectId),
+          oldPrice,
+          newPrice,
+          changedAt: timestamp,
+          changedBy: adminUser?.email || "admin (Bulk Update)"
+        });
+        
+        // Log audit
+        await logAudit(db, { 
+          action: "bulk_price_update", 
+          projectId: String(projectId),
+          projectName: p?.name,
+          oldPrice, 
+          newPrice, 
+          changeType,
+          priceChange 
+        }).catch(() => {});
+      }
+      notify(`${bulkSelected.length} projects updated successfully`);
+      setBulkSelected([]);
+      setShowBulkModal(false);
+      fetchLiveData();
+    } catch (e) { notify("Error: " + e.message); }
+    setBulkLoading(false);
+  };
+
+  /* ─── ADD MANUAL PRICE HISTORY ENTRY ─── */
+  const addManualPriceHistory = async (entry) => {
+    try {
+      await setDoc(doc(db, "priceHistory", entry.projectId + "_" + Date.now()), {
+        ...entry,
+        changedAt: entry.changedAt || new Date().toISOString()
+      });
+      notify("Price history entry added");
+      fetchLiveData();
+    } catch (e) { notify("Error: " + e.message); }
   };
 
   const resetProjectData = async (projectId) => {
@@ -5709,24 +5783,72 @@ export default function AdminPanel() {
               })()}
 
           {/* ═══════════════════════════════════════
-             DATA MANAGER TAB
+             DATA MANAGER TAB (Bloomberg-Level Design)
              ═══════════════════════════════════════ */}
           {tab === "data" && (
             <>
-              {/* Sub-tab navigation */}
-              <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+              {/* Section Header */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+                  <div style={{ width: 4, height: 28, background: T.gold, borderRadius: 2 }} />
+                  {I.data}
+                  <h1 style={{ fontSize: 24, fontWeight: 700, color: T.white, fontFamily: "'Outfit',sans-serif" }}>Data Manager</h1>
+                </div>
+                <p style={{ fontSize: 13, color: T.textMuted, marginLeft: 16 }}>Manage all project data, yields, communities, and price history</p>
+              </div>
+
+              {/* KPI Cards Row */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+                <div className="kpi-card fade-up" style={{ position: "relative", overflow: "hidden" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.7 }} />
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>Total Projects</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.white }}>{emaarProjects.length}</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>Emaar projects</div>
+                </div>
+                <div className="kpi-card fade-up" style={{ position: "relative", overflow: "hidden", animationDelay: "0.05s" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.7 }} />
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>Communities</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.teal }}>{Object.keys(defaultCommunityROI).length}</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>ROI entries</div>
+                </div>
+                <div className="kpi-card fade-up" style={{ position: "relative", overflow: "hidden", animationDelay: "0.1s" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.7 }} />
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>Avg Yield</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.green }}>{(emaarYields.reduce((sum, y) => sum + (y.gross || 0), 0) / (emaarYields.length || 1)).toFixed(1)}%</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>portfolio average</div>
+                </div>
+                <div className="kpi-card fade-up" style={{ position: "relative", overflow: "hidden", animationDelay: "0.15s" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.7 }} />
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>Live Overrides</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.blue }}>{Object.keys(liveProjects).length}</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>Firestore updates</div>
+                </div>
+              </div>
+
+              {/* Sub-tab navigation - Enhanced */}
+              <div style={{ display: "flex", gap: 4, background: T.surfaceAlt, padding: 4, borderRadius: 10, marginBottom: 24 }}>
                 {[
                   { id: "projects", label: "Projects", count: emaarProjects.length, icon: I.projects },
-                  { id: "communities", label: "Community ROI", count: Object.keys(defaultCommunityROI).length, icon: I.chart },
-                  { id: "yields", label: "Yield Table", count: emaarYields.length, icon: I.yields },
-                  { id: "pricehistory", label: "Price History", count: 0, icon: I.chart },
-                  { id: "communityintel", label: "Community Intel", count: Object.keys(defaultCommunityIntel).length, icon: I.projects },
+                  { id: "yields", label: "Yields", count: emaarYields.length, icon: I.yields },
+                  { id: "communities", label: "Communities", count: Object.keys(defaultCommunityROI).length, icon: I.chart },
+                  { id: "pricehistory", label: "Price History", count: priceHistory.length, icon: I.chart },
+                  { id: "communityintel", label: "Intel", count: Object.keys(defaultCommunityIntel).length, icon: I.projects },
                 ].map(st => (
-                  <button type="button" key={st.id} onClick={() => { setDataSubTab(st.id); setEditingProject(null); setEditingCommunity(null); setEditingYield(null); setEditingCommunityIntel(null); }}
-                    style={{ flex: 1, padding: "14px 16px", borderRadius: 12, border: `1px solid ${dataSubTab === st.id ? T.gold : T.border}`, background: dataSubTab === st.id ? T.goldGlow : T.surface, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all .2s" }}>
-                    <div style={{ marginBottom: 6, color: dataSubTab === st.id ? T.gold : T.textMuted }}>{st.icon}</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: dataSubTab === st.id ? T.gold : T.white }}>{st.label}</div>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>{st.count} items · {Object.keys(st.id === "projects" ? liveProjects : st.id === "communities" ? liveCommunityROI : st.id === "communityintel" ? liveCommunityIntel : liveYields).length} live overrides</div>
+                  <button type="button" key={st.id} onClick={() => { setDataSubTab(st.id); setEditingProject(null); setEditingCommunity(null); setEditingYield(null); setEditingCommunityIntel(null); setBulkSelected([]); }}
+                    style={{ 
+                      padding: "10px 20px", borderRadius: 8, border: "none",
+                      background: dataSubTab === st.id ? T.surface : "transparent",
+                      color: dataSubTab === st.id ? T.white : T.textMuted,
+                      fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif",
+                      transition: "all 0.2s", display: "flex", alignItems: "center", gap: 8
+                    }}>
+                    <span style={{ opacity: dataSubTab === st.id ? 1 : 0.6 }}>{st.icon}</span>
+                    {st.label}
+                    <span style={{ 
+                      background: dataSubTab === st.id ? T.gold : T.border,
+                      color: dataSubTab === st.id ? T.surface : T.textMuted,
+                      padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 700
+                    }}>{st.count}</span>
                   </button>
                 ))}
               </div>
@@ -5788,6 +5910,27 @@ export default function AdminPanel() {
                       </button>
                     )}
                   </div>
+
+                  {/* Bulk Selection Action Bar */}
+                  {bulkSelected.length > 0 && (
+                    <div style={{ 
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "12px 16px", borderRadius: 10, marginBottom: 16,
+                      background: `${T.gold}15`, border: `1px solid ${T.gold}30`
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <span style={{ fontWeight: 700, color: T.gold, fontSize: 14 }}>{bulkSelected.length} selected</span>
+                        <button type="button" onClick={() => setBulkSelected([])}
+                          style={{ padding: "4px 10px", borderRadius: 4, border: `1px solid ${T.gold}50`, background: "transparent", color: T.gold, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button type="button" onClick={() => setShowBulkModal(true)}
+                          style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
+                          {I.revenue} Bulk Price Update
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Editing form */}
                   {editingProject && (() => {
@@ -8163,6 +8306,77 @@ export default function AdminPanel() {
             </div>
             {/* Sign Out */}
             <button type="button" onClick={() => { logAudit(db, { action: "admin_logout", uid: adminUser?.uid }).finally(() => { signOut(auth); setShowProfile(false); }); }} style={{ width: "100%", marginTop: 20, padding: "10px 0", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, color: "#EF4444", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{i18t("ui", "signOut")}</button>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════
+         BULK PRICE UPDATE MODAL
+         ═══════════════════════════════════════ */}
+      {showBulkModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
+          <div style={{ width: 420, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+            {/* Header */}
+            <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>Bulk Price Update</h3>
+                <p style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Apply to {bulkSelected.length} selected projects</p>
+              </div>
+              <button type="button" onClick={() => setShowBulkModal(false)} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>&times;</button>
+            </div>
+            
+            {/* Content */}
+            <div style={{ padding: 24 }}>
+              {(() => {
+                const [bulkChangeType, setBulkChangeType] = React.useState("percent");
+                const [bulkPriceChange, setBulkPriceChange] = React.useState(0);
+                
+                return (
+                  <>
+                    <div style={{ marginBottom: 20 }}>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Change Type</label>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button type="button" onClick={() => setBulkChangeType("percent")}
+                          style={{ flex: 1, padding: 10, borderRadius: 8, border: `1px solid ${bulkChangeType === "percent" ? T.gold : T.border}`, background: bulkChangeType === "percent" ? `${T.gold}15` : "transparent", color: bulkChangeType === "percent" ? T.gold : T.textMuted, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          Percentage (%)
+                        </button>
+                        <button type="button" onClick={() => setBulkChangeType("fixed")}
+                          style={{ flex: 1, padding: 10, borderRadius: 8, border: `1px solid ${bulkChangeType === "fixed" ? T.gold : T.border}`, background: bulkChangeType === "fixed" ? `${T.gold}15` : "transparent", color: bulkChangeType === "fixed" ? T.gold : T.textMuted, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          Fixed (AED)
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div style={{ marginBottom: 20 }}>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>{bulkChangeType === "percent" ? "Price Change (%)" : "Price Change (AED)"}</label>
+                      <input type="number" value={bulkPriceChange} onChange={e => setBulkPriceChange(parseFloat(e.target.value) || 0)} placeholder={bulkChangeType === "percent" ? "+5 or -5" : "+50000 or -50000"}
+                        style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: bulkPriceChange >= 0 ? T.green : T.red, fontSize: 18, fontWeight: 700, textAlign: "center", fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                    </div>
+                    
+                    <div style={{ padding: 12, borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}`, marginBottom: 20 }}>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8 }}>PREVIEW</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 13, color: T.textSecondary }}>Original: AED 1,000,000</span>
+                        <span style={{ color: bulkPriceChange >= 0 ? T.green : T.red }}>→</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: bulkPriceChange >= 0 ? T.green : T.red }}>
+                          New: AED {bulkChangeType === "percent" ? (1000000 * (1 + bulkPriceChange / 100)).toLocaleString() : (1000000 + bulkPriceChange).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Actions */}
+                    <div style={{ display: "flex", gap: 12 }}>
+                      <button type="button" onClick={() => setShowBulkModal(false)}
+                        style={{ flex: 1, padding: 12, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                      <button type="button" onClick={() => handleBulkPriceUpdate({ changeType: bulkChangeType, priceChange: bulkPriceChange })} disabled={bulkLoading || bulkPriceChange === 0}
+                        style={{ flex: 2, padding: 12, borderRadius: 8, border: "none", background: bulkPriceChange === 0 ? T.border : T.gold, color: T.surface, fontSize: 14, fontWeight: 700, cursor: bulkLoading || bulkPriceChange === 0 ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                        {bulkLoading ? "Updating..." : `Apply to ${bulkSelected.length} Projects`}
+                      </button>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
           </div>
         </div>
       )}
