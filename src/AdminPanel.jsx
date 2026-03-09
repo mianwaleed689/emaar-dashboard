@@ -376,6 +376,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   // Phase 4: Analytics & Reporting
   const [analyticsRange, setAnalyticsRange] = useState("7d"); // 7d | 30d | 90d
 
+  // Phase 5A: CSAT (Customer Satisfaction)
+  const [csatRatings, setCsatRatings] = useState([]);
+  const [showCsatModal, setShowCsatModal] = useState(false);
+  const [csatForm, setCsatForm] = useState({ ticketId: "", rating: 5, comment: "" });
+
   // Predefined tags
   const availableTags = [
     { id: "urgent", label: "Urgent", color: T.red },
@@ -496,6 +501,10 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         // Fetch workflow triggers
         const workflowSnap = await getDocs(collection(db, "supportWorkflowTriggers"));
         setWorkflowTriggers(workflowSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        
+        // Fetch CSAT ratings
+        const csatSnap = await getDocs(collection(db, "supportCSAT"));
+        setCsatRatings(csatSnap.docs.map(d => ({ id: d.id, ...d.data() })));
       } catch (e) {
         console.error("Fetch automation settings:", e);
         // Default sample rules
@@ -508,6 +517,16 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         setWorkflowTriggers([
           { id: "wf_1", name: "Resolved → Add Tag", trigger: "status_change", triggerValue: "resolved", actions: [{ type: "add_tag", value: "resolved" }], enabled: true },
           { id: "wf_2", name: "VIP Auto-Priority", trigger: "tier_is", triggerValue: "enterprise", actions: [{ type: "set_priority", value: "high" }, { type: "add_tag", value: "vip" }], enabled: true },
+        ]);
+        // Default sample CSAT
+        setCsatRatings([
+          { id: "csat_1", ticketId: "ticket_1", rating: 5, comment: "Ahmed was incredibly helpful and resolved my issue quickly!", agentId: "agent_1", agentName: "Ahmed", userName: "John Smith", createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "csat_2", ticketId: "ticket_2", rating: 4, comment: "Good support but took a bit longer than expected", agentId: "agent_2", agentName: "Sarah", userName: "Emma Wilson", createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "csat_3", ticketId: "ticket_3", rating: 5, comment: "Excellent service!", agentId: "agent_1", agentName: "Ahmed", userName: "Mike Johnson", createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "csat_4", ticketId: "ticket_4", rating: 3, comment: "Issue was resolved but communication could be better", agentId: "agent_3", agentName: "Dev Team", userName: "Lisa Brown", createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "csat_5", ticketId: "ticket_5", rating: 5, comment: "", agentId: "agent_2", agentName: "Sarah", userName: "Tom Davis", createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "csat_6", ticketId: "ticket_6", rating: 2, comment: "Not fully resolved, had to follow up multiple times", agentId: "agent_3", agentName: "Dev Team", userName: "Anna Lee", createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "csat_7", ticketId: "ticket_7", rating: 4, comment: "Quick response time", agentId: "agent_1", agentName: "Ahmed", userName: "Chris Martin", createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() },
         ]);
       }
     };
@@ -775,6 +794,78 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     });
     const workloadDistribution = Object.values(workloadMap).sort((a, b) => b.count - a.count);
     
+    // Phase 5A: CSAT Analytics
+    const rangeCSAT = csatRatings.filter(c => new Date(c.createdAt) >= rangeStart);
+    const prevRangeCSAT = csatRatings.filter(c => {
+      const created = new Date(c.createdAt);
+      return created >= prevRangeStart && created < rangeStart;
+    });
+    
+    // Average CSAT score
+    const avgCsat = rangeCSAT.length > 0 
+      ? Math.round(rangeCSAT.reduce((sum, c) => sum + c.rating, 0) / rangeCSAT.length * 10) / 10 
+      : null;
+    const prevAvgCsat = prevRangeCSAT.length > 0 
+      ? Math.round(prevRangeCSAT.reduce((sum, c) => sum + c.rating, 0) / prevRangeCSAT.length * 10) / 10 
+      : null;
+    const csatChange = avgCsat && prevAvgCsat ? Math.round((avgCsat - prevAvgCsat) * 10) / 10 : 0;
+    
+    // CSAT response rate (ratings received / resolved tickets)
+    const csatResponseRate = resolvedInRange.length > 0 
+      ? Math.round(rangeCSAT.length / resolvedInRange.length * 100) 
+      : 0;
+    
+    // Rating distribution
+    const ratingDistribution = [5, 4, 3, 2, 1].map(rating => ({
+      rating,
+      count: rangeCSAT.filter(c => c.rating === rating).length,
+      percent: rangeCSAT.length > 0 ? Math.round(rangeCSAT.filter(c => c.rating === rating).length / rangeCSAT.length * 100) : 0,
+      color: rating >= 4 ? T.green : rating === 3 ? T.orange : T.red,
+    }));
+    
+    // Agent CSAT scores
+    const agentCsatMap = {};
+    rangeCSAT.forEach(c => {
+      if (c.agentId) {
+        if (!agentCsatMap[c.agentId]) {
+          agentCsatMap[c.agentId] = { id: c.agentId, name: c.agentName || c.agentId, ratings: [], comments: [] };
+        }
+        agentCsatMap[c.agentId].ratings.push(c.rating);
+        if (c.comment) agentCsatMap[c.agentId].comments.push({ text: c.comment, rating: c.rating, date: c.createdAt });
+      }
+    });
+    const agentCsat = Object.values(agentCsatMap).map(agent => ({
+      ...agent,
+      avgRating: Math.round(agent.ratings.reduce((sum, r) => sum + r, 0) / agent.ratings.length * 10) / 10,
+      totalRatings: agent.ratings.length,
+      recentComment: agent.comments.sort((a, b) => new Date(b.date) - new Date(a.date))[0],
+    })).sort((a, b) => b.avgRating - a.avgRating);
+    
+    // CSAT trend (daily average)
+    const csatTrend = [];
+    for (let i = Math.min(rangeDays, 14) - 1; i >= 0; i--) {
+      const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+      const dayRatings = csatRatings.filter(c => {
+        const created = new Date(c.createdAt);
+        return created >= dayStart && created < dayEnd;
+      });
+      const dayAvg = dayRatings.length > 0 
+        ? Math.round(dayRatings.reduce((sum, c) => sum + c.rating, 0) / dayRatings.length * 10) / 10 
+        : null;
+      csatTrend.push({
+        date: dayStart.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        avgRating: dayAvg,
+        count: dayRatings.length,
+      });
+    }
+    
+    // Recent feedback (with comments)
+    const recentFeedback = rangeCSAT
+      .filter(c => c.comment)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 10);
+    
     return {
       total: rangeTickets.length,
       volumeChange,
@@ -790,6 +881,15 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
       agentPerformance,
       slaTrend,
       workloadDistribution,
+      // CSAT data
+      avgCsat,
+      csatChange,
+      csatResponseRate,
+      totalRatings: rangeCSAT.length,
+      ratingDistribution,
+      agentCsat,
+      csatTrend,
+      recentFeedback,
     };
   };
   
@@ -2153,6 +2253,204 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               )}
             </div>
           </div>
+
+          {/* CSAT Section Header */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>😊 Customer Satisfaction</div>
+            <div style={{ flex: 1, height: 1, background: T.border }} />
+          </div>
+
+          {/* CSAT KPI Cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Avg CSAT Score</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                <span style={{ fontSize: 32, fontWeight: 900, color: analytics.avgCsat && analytics.avgCsat >= 4 ? T.green : analytics.avgCsat && analytics.avgCsat >= 3 ? T.orange : T.red, fontFamily: "'Fraunces',serif" }}>
+                  {analytics.avgCsat ? `${analytics.avgCsat}★` : "—"}
+                </span>
+                {analytics.csatChange !== 0 && (
+                  <span style={{ fontSize: 12, fontWeight: 600, color: analytics.csatChange > 0 ? T.green : T.red }}>
+                    {analytics.csatChange > 0 ? "↑" : "↓"} {Math.abs(analytics.csatChange)}
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>out of 5 stars</div>
+            </div>
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Response Rate</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                <span style={{ fontSize: 32, fontWeight: 900, color: analytics.csatResponseRate >= 50 ? T.green : analytics.csatResponseRate >= 25 ? T.orange : T.textSecondary, fontFamily: "'Fraunces',serif" }}>
+                  {analytics.csatResponseRate}%
+                </span>
+              </div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>of resolved tickets rated</div>
+            </div>
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Total Ratings</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                <span style={{ fontSize: 32, fontWeight: 900, color: T.white, fontFamily: "'Fraunces',serif" }}>
+                  {analytics.totalRatings}
+                </span>
+              </div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>feedback received</div>
+            </div>
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Promoters</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                <span style={{ fontSize: 32, fontWeight: 900, color: T.green, fontFamily: "'Fraunces',serif" }}>
+                  {analytics.totalRatings > 0 ? Math.round((analytics.ratingDistribution.filter(r => r.rating >= 4).reduce((s, r) => s + r.count, 0) / analytics.totalRatings) * 100) : 0}%
+                </span>
+              </div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>rated 4-5 stars</div>
+            </div>
+          </div>
+
+          {/* CSAT Charts Row */}
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
+            {/* CSAT Trend */}
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>📈 CSAT Trend</div>
+              <div style={{ height: 180 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={analytics.csatTrend.filter(d => d.avgRating !== null)} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
+                    <defs>
+                      <linearGradient id="colorCsat" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={T.gold} stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor={T.gold} stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+                    <XAxis dataKey="date" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={{ stroke: T.border }} tickLine={false} />
+                    <YAxis domain={[1, 5]} tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={{ stroke: T.border }} tickLine={false} ticks={[1, 2, 3, 4, 5]} />
+                    <Tooltip 
+                      contentStyle={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: T.white, fontWeight: 600 }}
+                      formatter={(value) => [`${value} ★`, "Avg Rating"]}
+                    />
+                    <Area type="monotone" dataKey="avgRating" name="Avg Rating" stroke={T.gold} fillOpacity={1} fill="url(#colorCsat)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginTop: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 12, height: 3, background: T.gold, borderRadius: 2 }} />
+                  <span style={{ fontSize: 10, color: T.textMuted }}>Daily Average</span>
+                </div>
+                {analytics.avgCsat && (
+                  <div style={{ padding: "4px 10px", borderRadius: 6, background: analytics.avgCsat >= 4 ? `${T.green}20` : analytics.avgCsat >= 3 ? `${T.orange}20` : `${T.red}20`, color: analytics.avgCsat >= 4 ? T.green : analytics.avgCsat >= 3 ? T.orange : T.red, fontSize: 11, fontWeight: 700 }}>
+                    Period Avg: {analytics.avgCsat}★
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Rating Distribution */}
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>⭐ Rating Distribution</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {analytics.ratingDistribution.map(r => (
+                  <div key={r.rating}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                      <span style={{ fontSize: 11, color: T.textSecondary }}>{"⭐".repeat(r.rating)}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: r.color }}>{r.count} ({r.percent}%)</span>
+                    </div>
+                    <div style={{ height: 6, background: T.border, borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${r.percent}%`, background: r.color, borderRadius: 3 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Agent CSAT Scores */}
+          <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>👥 Agent CSAT Scores</div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>Based on customer feedback</div>
+            </div>
+            {analytics.agentCsat.length === 0 ? (
+              <div style={{ padding: 30, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No CSAT data available</div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ borderBottom: `1px solid ${T.border}` }}>
+                      <th style={{ textAlign: "left", padding: "10px 12px", color: T.textMuted, fontWeight: 600, fontSize: 10, textTransform: "uppercase" }}>Agent</th>
+                      <th style={{ textAlign: "center", padding: "10px 12px", color: T.textMuted, fontWeight: 600, fontSize: 10, textTransform: "uppercase" }}>Avg Score</th>
+                      <th style={{ textAlign: "center", padding: "10px 12px", color: T.textMuted, fontWeight: 600, fontSize: 10, textTransform: "uppercase" }}>Ratings</th>
+                      <th style={{ textAlign: "left", padding: "10px 12px", color: T.textMuted, fontWeight: 600, fontSize: 10, textTransform: "uppercase" }}>Recent Feedback</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {analytics.agentCsat.slice(0, 8).map((agent, idx) => (
+                      <tr key={agent.id} style={{ borderBottom: `1px solid ${T.border}20` }}>
+                        <td style={{ padding: "12px", display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: "50%", background: `${T.gold}20`, display: "flex", alignItems: "center", justifyContent: "center", color: T.gold, fontWeight: 700, fontSize: 12 }}>
+                            {agent.name?.[0]?.toUpperCase() || "?"}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, color: T.white }}>{agent.name}</div>
+                            {idx === 0 && analytics.agentCsat.length > 1 && (
+                              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold }}>⭐ Highest Rated</span>
+                            )}
+                          </div>
+                        </td>
+                        <td style={{ textAlign: "center", padding: "12px" }}>
+                          <span style={{ padding: "6px 12px", borderRadius: 8, background: agent.avgRating >= 4 ? `${T.green}20` : agent.avgRating >= 3 ? `${T.orange}20` : `${T.red}20`, color: agent.avgRating >= 4 ? T.green : agent.avgRating >= 3 ? T.orange : T.red, fontWeight: 700, fontSize: 14 }}>
+                            {agent.avgRating}★
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center", padding: "12px", color: T.textSecondary }}>{agent.totalRatings}</td>
+                        <td style={{ padding: "12px", maxWidth: 250 }}>
+                          {agent.recentComment ? (
+                            <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                              <span style={{ fontSize: 10, color: agent.recentComment.rating >= 4 ? T.green : agent.recentComment.rating >= 3 ? T.orange : T.red }}>
+                                {"★".repeat(agent.recentComment.rating)}
+                              </span>
+                              <span style={{ fontSize: 11, color: T.textSecondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                "{agent.recentComment.text.length > 40 ? agent.recentComment.text.slice(0, 40) + "..." : agent.recentComment.text}"
+                              </span>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: 11, color: T.textMuted, fontStyle: "italic" }}>No comments</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Recent Feedback */}
+          <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>💬 Recent Feedback</div>
+            {analytics.recentFeedback.length === 0 ? (
+              <div style={{ padding: 30, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No feedback with comments yet</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {analytics.recentFeedback.slice(0, 5).map(feedback => (
+                  <div key={feedback.id} style={{ padding: 14, background: T.surfaceAlt, borderRadius: 10, borderLeft: `3px solid ${feedback.rating >= 4 ? T.green : feedback.rating >= 3 ? T.orange : T.red}` }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 14, color: feedback.rating >= 4 ? T.green : feedback.rating >= 3 ? T.orange : T.red }}>
+                          {"★".repeat(feedback.rating)}{"☆".repeat(5 - feedback.rating)}
+                        </span>
+                        <span style={{ fontSize: 11, color: T.textMuted }}>by {feedback.userName || "Customer"}</span>
+                      </div>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>{new Date(feedback.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>"{feedback.comment}"</p>
+                    <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>
+                      Agent: <span style={{ color: T.purple }}>{feedback.agentName || "—"}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       ) : (
       /* TICKETS LIST */
@@ -2419,6 +2717,41 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>View User</button>
               </div>
             </div>
+            
+            {/* CSAT Section - for resolved tickets */}
+            {(ticketDrawer.status === "resolved" || ticketDrawer.status === "closed") && (() => {
+              const ticketCsat = csatRatings.find(c => c.ticketId === ticketDrawer.id);
+              return (
+                <div style={{ padding: "12px 24px", background: `${T.gold}08`, borderBottom: `1px solid ${T.gold}20` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: T.gold }}>😊 Customer Satisfaction</span>
+                      {ticketCsat ? (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontSize: 14, color: ticketCsat.rating >= 4 ? T.green : ticketCsat.rating >= 3 ? T.orange : T.red }}>
+                            {"★".repeat(ticketCsat.rating)}{"☆".repeat(5 - ticketCsat.rating)}
+                          </span>
+                          <span style={{ fontSize: 11, color: T.textMuted }}>({ticketCsat.rating}/5)</span>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: T.surfaceAlt, color: T.textMuted }}>Awaiting feedback</span>
+                      )}
+                    </div>
+                    {!ticketCsat && (
+                      <button type="button" onClick={() => { setCsatForm({ ticketId: ticketDrawer.id, rating: 5, comment: "" }); setShowCsatModal(true); }}
+                        style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.gold}40`, background: `${T.gold}10`, color: T.gold, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
+                        + Add Rating
+                      </button>
+                    )}
+                  </div>
+                  {ticketCsat?.comment && (
+                    <div style={{ marginTop: 8, padding: 10, background: T.surface, borderRadius: 6, borderLeft: `2px solid ${ticketCsat.rating >= 4 ? T.green : ticketCsat.rating >= 3 ? T.orange : T.red}` }}>
+                      <p style={{ margin: 0, fontSize: 11, color: T.textSecondary, fontStyle: "italic" }}>"{ticketCsat.comment}"</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             
             {/* Conversation Thread + Internal Notes */}
             <div style={{ flex: 1, overflowY: "auto" }}>
@@ -3273,6 +3606,85 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CSAT MODAL - Add Rating */}
+      {showCsatModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9100, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowCsatModal(false)}>
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 420 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>😊 Add CSAT Rating</h3>
+              <button type="button" onClick={() => setShowCsatModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+            </div>
+            
+            <div style={{ padding: 12, background: `${T.gold}10`, borderRadius: 8, marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: T.textSecondary }}>
+                Add customer satisfaction rating for demo purposes. In production, this would come from customer feedback emails.
+              </div>
+            </div>
+            
+            {/* Star Rating */}
+            <div style={{ marginBottom: 20, textAlign: "center" }}>
+              <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Rating</div>
+              <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
+                {[1, 2, 3, 4, 5].map(star => (
+                  <button key={star} type="button" onClick={() => setCsatForm(prev => ({ ...prev, rating: star }))}
+                    style={{ background: "none", border: "none", cursor: "pointer", fontSize: 32, color: star <= csatForm.rating ? T.gold : T.border, transition: "transform 0.1s", transform: star <= csatForm.rating ? "scale(1.1)" : "scale(1)" }}>
+                    ★
+                  </button>
+                ))}
+              </div>
+              <div style={{ marginTop: 8, fontSize: 12, fontWeight: 600, color: csatForm.rating >= 4 ? T.green : csatForm.rating >= 3 ? T.orange : T.red }}>
+                {csatForm.rating === 5 ? "Excellent!" : csatForm.rating === 4 ? "Good" : csatForm.rating === 3 ? "Average" : csatForm.rating === 2 ? "Poor" : "Very Poor"}
+              </div>
+            </div>
+            
+            {/* Comment */}
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Feedback Comment (optional)</label>
+              <textarea value={csatForm.comment} onChange={e => setCsatForm(prev => ({ ...prev, comment: e.target.value }))}
+                placeholder="Add customer feedback..."
+                rows={3}
+                style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "none", boxSizing: "border-box" }} />
+            </div>
+            
+            <div style={{ display: "flex", gap: 10 }}>
+              <button type="button" onClick={() => setShowCsatModal(false)}
+                style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button type="button" onClick={async () => {
+                if (!csatForm.ticketId) return;
+                const ticket = tickets.find(t => t.id === csatForm.ticketId);
+                if (!ticket) return;
+                
+                try {
+                  const csatData = {
+                    ticketId: csatForm.ticketId,
+                    rating: csatForm.rating,
+                    comment: csatForm.comment.trim(),
+                    agentId: ticket.assignedTo || null,
+                    agentName: ticket.assignedToName || null,
+                    userId: ticket.userId,
+                    userName: ticket.userName || ticket.userEmail,
+                    createdAt: new Date().toISOString()
+                  };
+                  
+                  const docRef = await addDoc(collection(db, "supportCSAT"), csatData);
+                  setCsatRatings(prev => [...prev, { id: docRef.id, ...csatData }]);
+                  notify("CSAT rating added");
+                  setShowCsatModal(false);
+                  setCsatForm({ ticketId: "", rating: 5, comment: "" });
+                } catch (e) {
+                  notify("Error: " + e.message);
+                }
+              }}
+                style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                Save Rating
+              </button>
             </div>
           </div>
         </div>
