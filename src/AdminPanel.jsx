@@ -2273,6 +2273,11 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
   const [auditSearch, setAuditSearch] = useState("");
   const [dateRange, setDateRange] = useState("all");
 
+  // Persist auditFilter to localStorage
+  useEffect(() => {
+    try { localStorage.setItem("admin_auditFilter", auditFilter); } catch {}
+  }, [auditFilter]);
+
   const actionMeta = {
     tier_change:       { label: "Tier Changed",      color: T.orange,   icon: "" },
     bulk_tier_change:  { label: "Bulk Tier Change",  color: "#8B5CF6",  icon: "" },
@@ -2823,11 +2828,6 @@ export default function AdminPanel() {
     if (!isHydrated.current) return;
     try { localStorage.setItem("admin_verifyFilter", verifyFilter); } catch {}
   }, [verifyFilter]);
-
-  useEffect(() => {
-    if (!isHydrated.current) return;
-    try { localStorage.setItem("admin_auditFilter", auditFilter); } catch {}
-  }, [auditFilter]);
 
   /* ─── ESCAPE KEY ─── */
   useEffect(() => {
