@@ -2694,7 +2694,9 @@ export default function AdminPanel() {
   const [newApiKey, setNewApiKey] = useState(null);
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
   const API_BASE = "https://emaar-dashboard.vercel.app/api/auditLogApi";
-  const [editingCommunity, setEditingCommunity] = useState(null);
+  const [editingCommunity, setEditingCommunity] = useState(() => {
+    try { return localStorage.getItem("admin_editingCommunity") || null; } catch { return null; }
+  });
   const [editingYield, setEditingYield] = useState(null);
   const [liveProjects, setLiveProjects] = useState({});
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
@@ -2736,6 +2738,13 @@ export default function AdminPanel() {
   useEffect(() => {
     try { localStorage.setItem("admin_dataSubTab", dataSubTab); } catch {}
   }, [dataSubTab]);
+
+  useEffect(() => {
+    try { 
+      if (editingCommunity) localStorage.setItem("admin_editingCommunity", editingCommunity);
+      else localStorage.removeItem("admin_editingCommunity");
+    } catch {}
+  }, [editingCommunity]);
 
   /* ─── ESCAPE KEY ─── */
   useEffect(() => {
@@ -6482,13 +6491,22 @@ export default function AdminPanel() {
                 const hasIntel = !!liveCommunityIntel[activeKey];
                 const hasAnyOverride = hasROI || hasIntel;
                 
-                // Initialize forms when switching communities
-                if (!editingCommunity && communities.length > 0) {
-                  setTimeout(() => {
-                    setEditingCommunity(communities[0]);
-                    setCommunityForm({ ...(defaultCommunityROI[communities[0]] || {}), ...(liveCommunityROI[communities[0]] || {}) });
-                    setCommunityIntelForm({ ...(defaultCommunityIntel[communities[0]] || {}), ...(liveCommunityIntel[communities[0]] || {}) });
-                  }, 0);
+                // Initialize forms when switching communities or on first load
+                if (communities.length > 0) {
+                  const targetKey = editingCommunity && communities.includes(editingCommunity) ? editingCommunity : communities[0];
+                  if (!editingCommunity || !communities.includes(editingCommunity)) {
+                    setTimeout(() => {
+                      setEditingCommunity(targetKey);
+                      setCommunityForm({ ...(defaultCommunityROI[targetKey] || {}), ...(liveCommunityROI[targetKey] || {}) });
+                      setCommunityIntelForm({ ...(defaultCommunityIntel[targetKey] || {}), ...(liveCommunityIntel[targetKey] || {}) });
+                    }, 0);
+                  } else if (Object.keys(communityForm).length === 0) {
+                    // Forms not initialized yet (e.g., page refresh with localStorage)
+                    setTimeout(() => {
+                      setCommunityForm({ ...(defaultCommunityROI[targetKey] || {}), ...(liveCommunityROI[targetKey] || {}) });
+                      setCommunityIntelForm({ ...(defaultCommunityIntel[targetKey] || {}), ...(liveCommunityIntel[targetKey] || {}) });
+                    }, 0);
+                  }
                 }
 
                 const inp = (val, ph, onChange, extra) => (
@@ -6513,8 +6531,14 @@ export default function AdminPanel() {
                     ══════════════════════════════ */}
                     <div style={{ width: 280, flexShrink: 0, background: "#060D1A", borderRight: "1px solid rgba(212,168,67,0.1)", display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
 
+                      {/* Back Button */}
+                      <button type="button" onClick={() => setDataSubTab("projects")}
+                        style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 20px", background: "rgba(212,168,67,0.06)", border: "none", borderBottom: "1px solid rgba(212,168,67,0.1)", color: "#D4A843", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left" }}>
+                        <span style={{ fontSize: 16 }}>←</span> Back to Data Manager
+                      </button>
+
                       {/* Nav Header */}
-                      <div style={{ padding: "22px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                      <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                         <div style={{ fontSize: 10, fontWeight: 700, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Communities</div>
                         <div style={{ fontSize: 12, color: "#64748B" }}>{communities.length} areas · {Object.keys(liveCommunityROI).length + Object.keys(liveCommunityIntel).length} live overrides</div>
                       </div>
