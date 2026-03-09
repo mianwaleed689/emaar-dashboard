@@ -307,6 +307,7 @@ const TabHelp = ({ items }) => {
    Benchmark: Intercom + Zendesk + Freshdesk
    PHASE 1: Internal Notes, Tags, Assignment
    PHASE 1B: Collision Detection, Attachments, @Mentions
+   PHASE 2: Merge Tickets, Link Related, Custom Fields
 ═══════════════════════════════════════════════════════════════════ */
 function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpenUid }) {
   // State
@@ -336,6 +337,14 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   const [mentionSearch, setMentionSearch] = useState("");
   const fileInputRef = React.useRef(null);
   const noteInputRef = React.useRef(null);
+
+  // Phase 2: Merge tickets, link related
+  const [showMergeModal, setShowMergeModal] = useState(false);
+  const [mergeTargetId, setMergeTargetId] = useState("");
+  const [merging, setMerging] = useState(false);
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkTargetId, setLinkTargetId] = useState("");
+  const [linking, setLinking] = useState(false);
 
   // Predefined tags
   const availableTags = [
@@ -794,6 +803,178 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     return (now.getTime() - new Date(ticket.createdAt).getTime()) > 24 * 60 * 60 * 1000;
   };
 
+  // Phase 2: Merge Tickets - Combine duplicate tickets
+  const mergeTickets = async () => {
+    if (!ticketDrawer || !mergeTargetId || mergeTargetId === ticketDrawer.id) {
+      notify("Please select a different ticket to merge into");
+      return;
+    }
+    
+    setMerging(true);
+    try {
+      const targetTicket = tickets.find(t => t.id === mergeTargetId);
+      if (!targetTicket) {
+        notify("Target ticket not found");
+        setMerging(false);
+        return;
+      }
+      
+      // Combine messages from both tickets
+      const combinedMessages = [
+        ...(targetTicket.messages || []),
+        { from: "system", text: `--- Merged from ticket: ${ticketDrawer.subject} ---`, at: new Date().toISOString() },
+        ...(ticketDrawer.messages || [])
+      ].sort((a, b) => new Date(a.at) - new Date(b.at));
+      
+      // Combine internal notes
+      const combinedNotes = [
+        ...(targetTicket.internalNotes || []),
+        { text: `Merged ticket "${ticketDrawer.subject}" (${ticketDrawer.id}) into this ticket`, by: adminUser?.email || "admin", at: new Date().toISOString() },
+        ...(ticketDrawer.internalNotes || [])
+      ];
+      
+      // Combine tags (unique)
+      const combinedTags = [...new Set([...(targetTicket.tags || []), ...(ticketDrawer.tags || [])])];
+      
+      // Add link to merged ticket
+      const linkedTickets = [...(targetTicket.linkedTickets || []), { id: ticketDrawer.id, type: "merged", subject: ticketDrawer.subject }];
+      
+      // Update target ticket
+      const targetUpdate = {
+        messages: combinedMessages,
+        internalNotes: combinedNotes,
+        tags: combinedTags,
+        linkedTickets,
+        updatedAt: new Date().toISOString()
+      };
+      await setDoc(doc(db, "supportTickets", mergeTargetId), targetUpdate, { merge: true });
+      
+      // Mark source ticket as merged (closed)
+      const sourceUpdate = {
+        status: "closed",
+        mergedInto: mergeTargetId,
+        mergedAt: new Date().toISOString(),
+        tags: [...(ticketDrawer.tags || []), "duplicate"],
+        internalNotes: [
+          ...(ticketDrawer.internalNotes || []),
+          { text: `This ticket was merged into ticket ${mergeTargetId}`, by: adminUser?.email || "admin", at: new Date().toISOString() }
+        ],
+        updatedAt: new Date().toISOString()
+      };
+      await setDoc(doc(db, "supportTickets", ticketDrawer.id), sourceUpdate, { merge: true });
+      
+      // Update local state
+      setTickets(prev => prev.map(t => {
+        if (t.id === mergeTargetId) return { ...t, ...targetUpdate };
+        if (t.id === ticketDrawer.id) return { ...t, ...sourceUpdate };
+        return t;
+      }));
+      
+      await logAudit(db, { action: "tickets_merged", sourceId: ticketDrawer.id, targetId: mergeTargetId });
+      
+      notify(`Ticket merged into "${targetTicket.subject}"`);
+      setShowMergeModal(false);
+      setMergeTargetId("");
+      setTicketDrawer(null);
+    } catch (e) {
+      notify("Merge failed: " + e.message);
+    }
+    setMerging(false);
+  };
+
+  // Phase 2: Link Related Tickets
+  const linkTicket = async () => {
+    if (!ticketDrawer || !linkTargetId || linkTargetId === ticketDrawer.id) {
+      notify("Please select a different ticket to link");
+      return;
+    }
+    
+    setLinking(true);
+    try {
+      const targetTicket = tickets.find(t => t.id === linkTargetId);
+      if (!targetTicket) {
+        notify("Target ticket not found");
+        setLinking(false);
+        return;
+      }
+      
+      // Add link to current ticket
+      const currentLinks = ticketDrawer.linkedTickets || [];
+      if (currentLinks.some(l => l.id === linkTargetId)) {
+        notify("Tickets already linked");
+        setLinking(false);
+        return;
+      }
+      
+      const newCurrentLinks = [...currentLinks, { id: linkTargetId, type: "related", subject: targetTicket.subject, linkedAt: new Date().toISOString() }];
+      
+      // Add reciprocal link to target ticket
+      const targetLinks = targetTicket.linkedTickets || [];
+      const newTargetLinks = [...targetLinks, { id: ticketDrawer.id, type: "related", subject: ticketDrawer.subject, linkedAt: new Date().toISOString() }];
+      
+      // Update both tickets
+      await setDoc(doc(db, "supportTickets", ticketDrawer.id), { linkedTickets: newCurrentLinks, updatedAt: new Date().toISOString() }, { merge: true });
+      await setDoc(doc(db, "supportTickets", linkTargetId), { linkedTickets: newTargetLinks, updatedAt: new Date().toISOString() }, { merge: true });
+      
+      // Update local state
+      setTickets(prev => prev.map(t => {
+        if (t.id === ticketDrawer.id) return { ...t, linkedTickets: newCurrentLinks };
+        if (t.id === linkTargetId) return { ...t, linkedTickets: newTargetLinks };
+        return t;
+      }));
+      setTicketDrawer(prev => ({ ...prev, linkedTickets: newCurrentLinks }));
+      
+      await logAudit(db, { action: "tickets_linked", ticketId: ticketDrawer.id, linkedTo: linkTargetId });
+      
+      notify(`Linked to "${targetTicket.subject}"`);
+      setShowLinkModal(false);
+      setLinkTargetId("");
+    } catch (e) {
+      notify("Link failed: " + e.message);
+    }
+    setLinking(false);
+  };
+
+  // Unlink tickets
+  const unlinkTicket = async (linkedId) => {
+    if (!ticketDrawer) return;
+    
+    try {
+      // Remove from current ticket
+      const newCurrentLinks = (ticketDrawer.linkedTickets || []).filter(l => l.id !== linkedId);
+      
+      // Remove reciprocal link from target
+      const targetTicket = tickets.find(t => t.id === linkedId);
+      const newTargetLinks = targetTicket ? (targetTicket.linkedTickets || []).filter(l => l.id !== ticketDrawer.id) : [];
+      
+      await setDoc(doc(db, "supportTickets", ticketDrawer.id), { linkedTickets: newCurrentLinks, updatedAt: new Date().toISOString() }, { merge: true });
+      if (targetTicket) {
+        await setDoc(doc(db, "supportTickets", linkedId), { linkedTickets: newTargetLinks, updatedAt: new Date().toISOString() }, { merge: true });
+      }
+      
+      setTickets(prev => prev.map(t => {
+        if (t.id === ticketDrawer.id) return { ...t, linkedTickets: newCurrentLinks };
+        if (t.id === linkedId) return { ...t, linkedTickets: newTargetLinks };
+        return t;
+      }));
+      setTicketDrawer(prev => ({ ...prev, linkedTickets: newCurrentLinks }));
+      
+      notify("Ticket unlinked");
+    } catch (e) {
+      notify("Unlink failed: " + e.message);
+    }
+  };
+
+  // Get mergeable/linkable tickets (exclude current, already linked, and merged)
+  const getAvailableTickets = (excludeId) => {
+    return tickets.filter(t => 
+      t.id !== excludeId && 
+      t.status !== "closed" && 
+      !t.mergedInto &&
+      !(ticketDrawer?.linkedTickets || []).some(l => l.id === t.id)
+    );
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* KPI TOPBAR */}
@@ -887,6 +1068,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ticket.subject}</span>
                       {breached && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>⏰ SLA</span>}
+                      {ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.textMuted}20`, color: T.textMuted, fontWeight: 600 }}>↪️ MERGED</span>}
+                      {(ticket.linkedTickets || []).length > 0 && !ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal, fontWeight: 600 }}>🔗 {ticket.linkedTickets.length}</span>}
                       {ticketTags.slice(0, 2).map(tagId => {
                         const tag = availableTags.find(t => t.id === tagId);
                         return tag ? <span key={tagId} style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${tag.color}20`, color: tag.color, fontWeight: 600 }}>{tag.label}</span> : null;
@@ -987,6 +1170,56 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   {availableTags.filter(t => !(ticketDrawer.tags || []).includes(t.id)).map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                 </select>
               </div>
+
+              {/* Merge & Link Actions Row */}
+              <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button type="button" onClick={() => setShowMergeModal(true)}
+                  style={{ padding: "5px 10px", borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                  🔀 Merge Ticket
+                </button>
+                <button type="button" onClick={() => setShowLinkModal(true)}
+                  style={{ padding: "5px 10px", borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                  🔗 Link Related
+                </button>
+                {ticketDrawer.mergedInto && (
+                  <span style={{ fontSize: 10, color: T.textMuted, fontStyle: "italic" }}>
+                    ↪️ Merged into ticket {ticketDrawer.mergedInto}
+                  </span>
+                )}
+              </div>
+
+              {/* Linked Tickets Section */}
+              {(ticketDrawer.linkedTickets || []).length > 0 && (
+                <div style={{ marginTop: 12, padding: "10px 12px", background: `${T.teal}08`, borderRadius: 8, border: `1px solid ${T.teal}20` }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: T.teal, marginBottom: 8, display: "flex", alignItems: "center", gap: 4 }}>
+                    🔗 Linked Tickets ({ticketDrawer.linkedTickets.length})
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {ticketDrawer.linkedTickets.map((link, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: T.surface, borderRadius: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: link.type === "merged" ? `${T.orange}20` : `${T.teal}20`, color: link.type === "merged" ? T.orange : T.teal, fontWeight: 600 }}>
+                            {link.type === "merged" ? "MERGED" : "RELATED"}
+                          </span>
+                          <button type="button" onClick={() => { 
+                            const linkedTicket = tickets.find(t => t.id === link.id);
+                            if (linkedTicket) setTicketDrawer(linkedTicket);
+                          }}
+                            style={{ fontSize: 11, color: T.white, background: "none", border: "none", cursor: "pointer", textAlign: "left", textDecoration: "underline", textDecorationColor: `${T.teal}50` }}>
+                            {link.subject || link.id}
+                          </button>
+                        </div>
+                        {link.type !== "merged" && (
+                          <button type="button" onClick={() => unlinkTicket(link.id)}
+                            style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 12, padding: 2 }}>
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             
             {/* User Context Panel */}
@@ -1217,6 +1450,107 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* MERGE TICKET MODAL */}
+      {showMergeModal && ticketDrawer && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowMergeModal(false)}>
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>🔀 Merge Ticket</h3>
+              <button type="button" onClick={() => setShowMergeModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+            </div>
+            
+            <div style={{ padding: 12, background: `${T.orange}15`, borderRadius: 8, marginBottom: 16 }}>
+              <div style={{ fontSize: 11, color: T.orange, fontWeight: 600, marginBottom: 4 }}>⚠️ Warning</div>
+              <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
+                Merging will close this ticket and move all messages and notes to the target ticket. This action cannot be undone.
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>Current Ticket:</div>
+              <div style={{ padding: 12, background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 4 }}>{ticketDrawer.subject}</div>
+                <div style={{ fontSize: 11, color: T.textMuted }}>{ticketDrawer.userEmail} • {(ticketDrawer.messages || []).length} messages</div>
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>Merge into:</div>
+              <select value={mergeTargetId} onChange={e => setMergeTargetId(e.target.value)}
+                style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                <option value="">Select a ticket...</option>
+                {getAvailableTickets(ticketDrawer.id).map(t => (
+                  <option key={t.id} value={t.id}>{t.subject} ({t.userEmail})</option>
+                ))}
+              </select>
+              {mergeTargetId && (
+                <div style={{ marginTop: 10, padding: 10, background: `${T.green}10`, borderRadius: 6, border: `1px solid ${T.green}30` }}>
+                  <div style={{ fontSize: 11, color: T.green }}>✓ Messages and notes will be combined into this ticket</div>
+                </div>
+              )}
+            </div>
+            
+            <div style={{ display: "flex", gap: 10 }}>
+              <button type="button" onClick={() => setShowMergeModal(false)}
+                style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button type="button" onClick={mergeTickets} disabled={!mergeTargetId || merging}
+                style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: !mergeTargetId || merging ? T.border : T.orange, color: T.bg, fontSize: 13, fontWeight: 700, cursor: !mergeTargetId || merging ? "not-allowed" : "pointer" }}>
+                {merging ? "Merging..." : "🔀 Merge Tickets"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LINK TICKET MODAL */}
+      {showLinkModal && ticketDrawer && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowLinkModal(false)}>
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>🔗 Link Related Ticket</h3>
+              <button type="button" onClick={() => setShowLinkModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+            </div>
+            
+            <div style={{ padding: 12, background: `${T.teal}15`, borderRadius: 8, marginBottom: 16 }}>
+              <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
+                Link related tickets together to track dependencies and similar issues. Both tickets will show the link.
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>Current Ticket:</div>
+              <div style={{ padding: 12, background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{ticketDrawer.subject}</div>
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>Link to:</div>
+              <select value={linkTargetId} onChange={e => setLinkTargetId(e.target.value)}
+                style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                <option value="">Select a ticket...</option>
+                {getAvailableTickets(ticketDrawer.id).map(t => (
+                  <option key={t.id} value={t.id}>{t.subject} ({t.userName || t.userEmail})</option>
+                ))}
+              </select>
+            </div>
+            
+            <div style={{ display: "flex", gap: 10 }}>
+              <button type="button" onClick={() => setShowLinkModal(false)}
+                style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button type="button" onClick={linkTicket} disabled={!linkTargetId || linking}
+                style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: !linkTargetId || linking ? T.border : T.teal, color: T.bg, fontSize: 13, fontWeight: 700, cursor: !linkTargetId || linking ? "not-allowed" : "pointer" }}>
+                {linking ? "Linking..." : "🔗 Link Tickets"}
+              </button>
+            </div>
           </div>
         </div>
       )}
