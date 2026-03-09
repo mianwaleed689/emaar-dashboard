@@ -361,6 +361,18 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   const [slaSettings, setSlaSettings] = useState({ defaultHours: 24, warningPercent: 75, escalateOnBreach: true, escalateTo: "", notifyAgent: true, notifyManager: true });
   const [showSlaModal, setShowSlaModal] = useState(false);
 
+  // Phase 3B: Workflow Triggers
+  const [workflowTriggers, setWorkflowTriggers] = useState([]);
+  const [showWorkflowModal, setShowWorkflowModal] = useState(false);
+  const [editingWorkflow, setEditingWorkflow] = useState(null);
+  const [newWorkflowForm, setNewWorkflowForm] = useState({ 
+    name: "", 
+    trigger: "status_change", 
+    triggerValue: "", 
+    actions: [{ type: "add_tag", value: "" }],
+    enabled: true 
+  });
+
   // Predefined tags
   const availableTags = [
     { id: "urgent", label: "Urgent", color: T.red },
@@ -477,6 +489,10 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         if (slaDoc.exists()) {
           setSlaSettings(prev => ({ ...prev, ...slaDoc.data() }));
         }
+        
+        // Fetch workflow triggers
+        const workflowSnap = await getDocs(collection(db, "supportWorkflowTriggers"));
+        setWorkflowTriggers(workflowSnap.docs.map(d => ({ id: d.id, ...d.data() })));
       } catch (e) {
         console.error("Fetch automation settings:", e);
         // Default sample rules
@@ -484,6 +500,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           { id: "rule_1", name: "Bugs to Dev Team", condition: "category", conditionValue: "bug", assignTo: "dev_team", assignToName: "Dev Team", enabled: true },
           { id: "rule_2", name: "VIP Customers", condition: "tier", conditionValue: "enterprise", assignTo: "vip_support", assignToName: "VIP Support", enabled: true },
           { id: "rule_3", name: "Urgent Priority", condition: "priority", conditionValue: "urgent", assignTo: "senior_agent", assignToName: "Senior Agent", enabled: false },
+        ]);
+        // Default sample workflows
+        setWorkflowTriggers([
+          { id: "wf_1", name: "Resolved → Add Tag", trigger: "status_change", triggerValue: "resolved", actions: [{ type: "add_tag", value: "resolved" }], enabled: true },
+          { id: "wf_2", name: "VIP Auto-Priority", trigger: "tier_is", triggerValue: "enterprise", actions: [{ type: "set_priority", value: "high" }, { type: "add_tag", value: "vip" }], enabled: true },
         ]);
       }
     };
@@ -592,9 +613,14 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
       const update = { status: newStatus, updatedAt: new Date().toISOString() };
       if (newStatus === "resolved") update.resolvedAt = new Date().toISOString();
       await setDoc(doc(db, "supportTickets", ticketId), update, { merge: true });
-      setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, ...update } : t));
-      if (ticketDrawer?.id === ticketId) setTicketDrawer(prev => ({ ...prev, ...update }));
+      const updatedTicket = { ...(tickets.find(t => t.id === ticketId) || ticketDrawer), ...update };
+      setTickets(prev => prev.map(t => t.id === ticketId ? updatedTicket : t));
+      if (ticketDrawer?.id === ticketId) setTicketDrawer(updatedTicket);
       notify(`Ticket marked as ${newStatus}`);
+      
+      // Execute workflow triggers for status change
+      executeWorkflowActions(updatedTicket, "status_change", newStatus);
+      
       if (newStatus === "resolved" && ticketDrawer) {
         try {
           await emailjs.send("service_da7nshv", "template_gl1xqhy", {
@@ -613,9 +639,13 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   const updateTicketPriority = async (ticketId, newPriority) => {
     try {
       await setDoc(doc(db, "supportTickets", ticketId), { priority: newPriority, updatedAt: new Date().toISOString() }, { merge: true });
-      setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, priority: newPriority } : t));
-      if (ticketDrawer?.id === ticketId) setTicketDrawer(prev => ({ ...prev, priority: newPriority }));
+      const updatedTicket = { ...(tickets.find(t => t.id === ticketId) || ticketDrawer), priority: newPriority };
+      setTickets(prev => prev.map(t => t.id === ticketId ? updatedTicket : t));
+      if (ticketDrawer?.id === ticketId) setTicketDrawer(updatedTicket);
       notify(`Priority set to ${newPriority}`);
+      
+      // Execute workflow triggers for priority change
+      executeWorkflowActions(updatedTicket, "priority_change", newPriority);
     } catch (e) { notify("Error: " + e.message); }
   };
 
@@ -624,9 +654,15 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     try {
       const update = { assignedTo: agentId === "unassigned" ? null : agentId, assignedToName: agentId === "unassigned" ? null : agentName, updatedAt: new Date().toISOString() };
       await setDoc(doc(db, "supportTickets", ticketId), update, { merge: true });
-      setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, ...update } : t));
-      if (ticketDrawer?.id === ticketId) setTicketDrawer(prev => ({ ...prev, ...update }));
+      const updatedTicket = { ...(tickets.find(t => t.id === ticketId) || ticketDrawer), ...update };
+      setTickets(prev => prev.map(t => t.id === ticketId ? updatedTicket : t));
+      if (ticketDrawer?.id === ticketId) setTicketDrawer(updatedTicket);
       notify(agentId === "unassigned" ? "Ticket unassigned" : `Assigned to ${agentName}`);
+      
+      // Execute workflow triggers for assignment
+      if (agentId !== "unassigned") {
+        executeWorkflowActions(updatedTicket, "assigned", agentId);
+      }
     } catch (e) { notify("Error: " + e.message); }
   };
 
@@ -639,9 +675,13 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     const newTags = [...currentTags, tagId];
     try {
       await setDoc(doc(db, "supportTickets", ticketId), { tags: newTags, updatedAt: new Date().toISOString() }, { merge: true });
-      setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, tags: newTags } : t));
-      if (ticketDrawer?.id === ticketId) setTicketDrawer(prev => ({ ...prev, tags: newTags }));
+      const updatedTicket = { ...ticket, tags: newTags };
+      setTickets(prev => prev.map(t => t.id === ticketId ? updatedTicket : t));
+      if (ticketDrawer?.id === ticketId) setTicketDrawer(updatedTicket);
       notify(`Tag added: ${tagId}`);
+      
+      // Execute workflow triggers for tag added
+      executeWorkflowActions(updatedTicket, "tag_added", tagId);
     } catch (e) { notify("Error: " + e.message); }
   };
 
@@ -1323,6 +1363,171 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     { id: "keyword", label: "Subject Contains", values: [] },
   ];
 
+  // Phase 3B: Workflow Trigger Options
+  const triggerOptions = [
+    { id: "status_change", label: "Status Changes To", values: [{ id: "open", label: "Open" }, { id: "in_progress", label: "In Progress" }, { id: "resolved", label: "Resolved" }, { id: "closed", label: "Closed" }] },
+    { id: "priority_change", label: "Priority Changes To", values: [{ id: "urgent", label: "Urgent" }, { id: "high", label: "High" }, { id: "normal", label: "Normal" }] },
+    { id: "tier_is", label: "User Tier Is", values: [{ id: "enterprise", label: "Enterprise" }, { id: "pro", label: "Pro" }, { id: "pro_trial", label: "Pro Trial" }, { id: "free", label: "Free" }] },
+    { id: "category_is", label: "Category Is", values: categories.map(c => ({ id: c.id, label: c.label })) },
+    { id: "tag_added", label: "Tag Added", values: availableTags.map(t => ({ id: t.id, label: t.label })) },
+    { id: "assigned", label: "Ticket Assigned", values: [] },
+    { id: "new_ticket", label: "New Ticket Created", values: [] },
+  ];
+
+  const actionOptions = [
+    { id: "add_tag", label: "Add Tag", needsValue: true, valueType: "tag" },
+    { id: "remove_tag", label: "Remove Tag", needsValue: true, valueType: "tag" },
+    { id: "set_priority", label: "Set Priority", needsValue: true, valueType: "priority" },
+    { id: "set_status", label: "Set Status", needsValue: true, valueType: "status" },
+    { id: "add_note", label: "Add Internal Note", needsValue: true, valueType: "text" },
+    { id: "send_notification", label: "Send Notification", needsValue: true, valueType: "text" },
+  ];
+
+  // Save workflow trigger
+  const saveWorkflowTrigger = async () => {
+    if (!newWorkflowForm.name.trim() || newWorkflowForm.actions.length === 0) {
+      notify("Please fill all required fields");
+      return;
+    }
+    
+    try {
+      const workflowData = {
+        name: newWorkflowForm.name.trim(),
+        trigger: newWorkflowForm.trigger,
+        triggerValue: newWorkflowForm.triggerValue,
+        actions: newWorkflowForm.actions.filter(a => a.type && (a.value || !actionOptions.find(o => o.id === a.type)?.needsValue)),
+        enabled: newWorkflowForm.enabled,
+        updatedAt: new Date().toISOString()
+      };
+      
+      if (editingWorkflow) {
+        await setDoc(doc(db, "supportWorkflowTriggers", editingWorkflow.id), workflowData, { merge: true });
+        setWorkflowTriggers(prev => prev.map(w => w.id === editingWorkflow.id ? { ...w, ...workflowData } : w));
+        notify("Workflow updated");
+      } else {
+        workflowData.createdAt = new Date().toISOString();
+        const docRef = await addDoc(collection(db, "supportWorkflowTriggers"), workflowData);
+        setWorkflowTriggers(prev => [...prev, { id: docRef.id, ...workflowData }]);
+        notify("Workflow created");
+      }
+      
+      setNewWorkflowForm({ name: "", trigger: "status_change", triggerValue: "", actions: [{ type: "add_tag", value: "" }], enabled: true });
+      setEditingWorkflow(null);
+    } catch (e) {
+      notify("Error: " + e.message);
+    }
+  };
+
+  const deleteWorkflowTrigger = async (wfId) => {
+    if (!window.confirm("Delete this workflow trigger?")) return;
+    
+    try {
+      await deleteDoc(doc(db, "supportWorkflowTriggers", wfId));
+      setWorkflowTriggers(prev => prev.filter(w => w.id !== wfId));
+      notify("Workflow deleted");
+    } catch (e) {
+      notify("Error: " + e.message);
+    }
+  };
+
+  const toggleWorkflowEnabled = async (wfId, enabled) => {
+    try {
+      await setDoc(doc(db, "supportWorkflowTriggers", wfId), { enabled, updatedAt: new Date().toISOString() }, { merge: true });
+      setWorkflowTriggers(prev => prev.map(w => w.id === wfId ? { ...w, enabled } : w));
+      notify(enabled ? "Workflow enabled" : "Workflow disabled");
+    } catch (e) {
+      notify("Error: " + e.message);
+    }
+  };
+
+  const editWorkflowTrigger = (wf) => {
+    setEditingWorkflow(wf);
+    setNewWorkflowForm({
+      name: wf.name,
+      trigger: wf.trigger,
+      triggerValue: wf.triggerValue || "",
+      actions: wf.actions?.length > 0 ? wf.actions : [{ type: "add_tag", value: "" }],
+      enabled: wf.enabled
+    });
+  };
+
+  // Execute workflow actions on a ticket
+  const executeWorkflowActions = async (ticket, triggeredBy, triggerValue) => {
+    const enabledWorkflows = workflowTriggers.filter(w => w.enabled && w.trigger === triggeredBy && (!w.triggerValue || w.triggerValue === triggerValue));
+    
+    for (const workflow of enabledWorkflows) {
+      const updates = {};
+      const newTags = [...(ticket.tags || [])];
+      const newNotes = [...(ticket.internalNotes || [])];
+      
+      for (const action of workflow.actions) {
+        switch (action.type) {
+          case "add_tag":
+            if (action.value && !newTags.includes(action.value)) newTags.push(action.value);
+            break;
+          case "remove_tag":
+            const tagIdx = newTags.indexOf(action.value);
+            if (tagIdx > -1) newTags.splice(tagIdx, 1);
+            break;
+          case "set_priority":
+            updates.priority = action.value;
+            break;
+          case "set_status":
+            updates.status = action.value;
+            if (action.value === "resolved") updates.resolvedAt = new Date().toISOString();
+            break;
+          case "add_note":
+            newNotes.push({ text: `🤖 ${action.value}`, by: "System", at: new Date().toISOString(), isSystem: true });
+            break;
+          case "send_notification":
+            // Would integrate with notification system
+            console.log(`Workflow notification: ${action.value}`);
+            break;
+          default:
+            break;
+        }
+      }
+      
+      updates.tags = newTags;
+      updates.internalNotes = newNotes;
+      updates.updatedAt = new Date().toISOString();
+      updates.lastWorkflowRun = { name: workflow.name, at: new Date().toISOString() };
+      
+      try {
+        await setDoc(doc(db, "supportTickets", ticket.id), updates, { merge: true });
+        setTickets(prev => prev.map(t => t.id === ticket.id ? { ...t, ...updates } : t));
+        if (ticketDrawer?.id === ticket.id) setTicketDrawer(prev => ({ ...prev, ...updates }));
+        console.log(`Workflow "${workflow.name}" executed on ticket ${ticket.id}`);
+      } catch (e) {
+        console.error("Workflow execution failed:", e);
+      }
+    }
+  };
+
+  // Add workflow action
+  const addWorkflowAction = () => {
+    setNewWorkflowForm(prev => ({
+      ...prev,
+      actions: [...prev.actions, { type: "add_tag", value: "" }]
+    }));
+  };
+
+  // Remove workflow action
+  const removeWorkflowAction = (idx) => {
+    setNewWorkflowForm(prev => ({
+      ...prev,
+      actions: prev.actions.filter((_, i) => i !== idx)
+    }));
+  };
+
+  // Update workflow action
+  const updateWorkflowAction = (idx, field, value) => {
+    setNewWorkflowForm(prev => ({
+      ...prev,
+      actions: prev.actions.map((a, i) => i === idx ? { ...a, [field]: value } : a)
+    }));
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* KPI TOPBAR */}
@@ -1409,6 +1614,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
             title="SLA Settings">
             ⏱️
+          </button>
+          <button type="button" onClick={() => setShowWorkflowModal(true)}
+            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${workflowTriggers.filter(w => w.enabled).length > 0 ? T.purple : T.border}`, background: workflowTriggers.filter(w => w.enabled).length > 0 ? `${T.purple}15` : "transparent", color: workflowTriggers.filter(w => w.enabled).length > 0 ? T.purple : T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+            title="Workflow Triggers">
+            ⚡ {workflowTriggers.filter(w => w.enabled).length > 0 && <span style={{ fontSize: 9 }}>{workflowTriggers.filter(w => w.enabled).length}</span>}
           </button>
         </div>
       </div>
@@ -2344,6 +2554,192 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 Save Settings
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WORKFLOW TRIGGERS MODAL */}
+      {showWorkflowModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowWorkflowModal(false)}>
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 650, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>⚡ Workflow Triggers</h3>
+              <button type="button" onClick={() => setShowWorkflowModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+            </div>
+            
+            <div style={{ padding: 12, background: `${T.purple}15`, borderRadius: 8, marginBottom: 20 }}>
+              <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
+                Create automated workflows that trigger actions when certain conditions are met. Example: When status changes to "resolved" → add "resolved" tag.
+              </div>
+            </div>
+            
+            {/* Add/Edit Workflow Form */}
+            <div style={{ padding: 16, background: T.surfaceAlt, borderRadius: 10, marginBottom: 20 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
+                {editingWorkflow ? "✏️ Edit Workflow" : "➕ Create Workflow"}
+              </div>
+              
+              {/* Workflow Name */}
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Workflow Name</label>
+                <input value={newWorkflowForm.name} onChange={e => setNewWorkflowForm(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Resolved → Add Tag..."
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+              </div>
+              
+              {/* Trigger Condition */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                <div>
+                  <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>When (Trigger)</label>
+                  <select value={newWorkflowForm.trigger} onChange={e => setNewWorkflowForm(prev => ({ ...prev, trigger: e.target.value, triggerValue: "" }))}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                    {triggerOptions.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Value</label>
+                  {triggerOptions.find(t => t.id === newWorkflowForm.trigger)?.values.length > 0 ? (
+                    <select value={newWorkflowForm.triggerValue} onChange={e => setNewWorkflowForm(prev => ({ ...prev, triggerValue: e.target.value }))}
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                      <option value="">Any...</option>
+                      {triggerOptions.find(t => t.id === newWorkflowForm.trigger)?.values.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}
+                    </select>
+                  ) : (
+                    <input value={newWorkflowForm.triggerValue || ""} onChange={e => setNewWorkflowForm(prev => ({ ...prev, triggerValue: e.target.value }))} placeholder="(Any)"
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} disabled />
+                  )}
+                </div>
+              </div>
+              
+              {/* Actions */}
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <label style={{ fontSize: 10, color: T.textMuted }}>Then (Actions)</label>
+                  <button type="button" onClick={addWorkflowAction}
+                    style={{ padding: "4px 10px", borderRadius: 4, border: `1px dashed ${T.purple}`, background: "transparent", color: T.purple, fontSize: 10, cursor: "pointer" }}>
+                    + Add Action
+                  </button>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {newWorkflowForm.actions.map((action, idx) => (
+                    <div key={idx} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span style={{ fontSize: 11, color: T.purple, fontWeight: 600, minWidth: 20 }}>{idx + 1}.</span>
+                      <select value={action.type} onChange={e => updateWorkflowAction(idx, "type", e.target.value)}
+                        style={{ flex: 1, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
+                        {actionOptions.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
+                      </select>
+                      {actionOptions.find(a => a.id === action.type)?.needsValue && (
+                        actionOptions.find(a => a.id === action.type)?.valueType === "tag" ? (
+                          <select value={action.value} onChange={e => updateWorkflowAction(idx, "value", e.target.value)}
+                            style={{ flex: 1, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
+                            <option value="">Select tag...</option>
+                            {availableTags.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                          </select>
+                        ) : actionOptions.find(a => a.id === action.type)?.valueType === "priority" ? (
+                          <select value={action.value} onChange={e => updateWorkflowAction(idx, "value", e.target.value)}
+                            style={{ flex: 1, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
+                            <option value="">Select priority...</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="high">High</option>
+                            <option value="normal">Normal</option>
+                          </select>
+                        ) : actionOptions.find(a => a.id === action.type)?.valueType === "status" ? (
+                          <select value={action.value} onChange={e => updateWorkflowAction(idx, "value", e.target.value)}
+                            style={{ flex: 1, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
+                            <option value="">Select status...</option>
+                            <option value="open">Open</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="closed">Closed</option>
+                          </select>
+                        ) : (
+                          <input value={action.value || ""} onChange={e => updateWorkflowAction(idx, "value", e.target.value)} placeholder="Enter value..."
+                            style={{ flex: 1, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
+                        )
+                      )}
+                      {newWorkflowForm.actions.length > 1 && (
+                        <button type="button" onClick={() => removeWorkflowAction(idx)}
+                          style={{ padding: "6px 10px", borderRadius: 4, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 12, cursor: "pointer" }}>
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Enable + Save */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16 }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                  <input type="checkbox" checked={newWorkflowForm.enabled} onChange={e => setNewWorkflowForm(prev => ({ ...prev, enabled: e.target.checked }))}
+                    style={{ width: 16, height: 16 }} />
+                  <span style={{ fontSize: 12, color: T.textSecondary }}>Enabled</span>
+                </label>
+                <div style={{ display: "flex", gap: 10 }}>
+                  {editingWorkflow && (
+                    <button type="button" onClick={() => { setEditingWorkflow(null); setNewWorkflowForm({ name: "", trigger: "status_change", triggerValue: "", actions: [{ type: "add_tag", value: "" }], enabled: true }); }}
+                      style={{ padding: "10px 16px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                      Cancel
+                    </button>
+                  )}
+                  <button type="button" onClick={saveWorkflowTrigger}
+                    style={{ padding: "10px 20px", borderRadius: 6, border: "none", background: T.purple, color: T.white, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                    {editingWorkflow ? "Update Workflow" : "Create Workflow"}
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Existing Workflows List */}
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
+                📋 Active Workflows ({workflowTriggers.length})
+              </div>
+              {workflowTriggers.length === 0 ? (
+                <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>
+                  No workflows yet. Create one above!
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {workflowTriggers.map((wf) => (
+                    <div key={wf.id} style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${wf.enabled ? T.purple : T.border}40`, opacity: wf.enabled ? 1 : 0.6 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: T.white, display: "flex", alignItems: "center", gap: 6 }}>
+                            ⚡ {wf.name}
+                            {!wf.enabled && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.textMuted}20`, color: T.textMuted }}>DISABLED</span>}
+                          </div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>
+                            When <span style={{ color: T.cyan }}>{triggerOptions.find(t => t.id === wf.trigger)?.label || wf.trigger}</span>
+                            {wf.triggerValue && <> = <span style={{ color: T.gold }}>{wf.triggerValue}</span></>}
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <button type="button" onClick={() => toggleWorkflowEnabled(wf.id, !wf.enabled)}
+                            style={{ padding: "5px 8px", borderRadius: 4, border: `1px solid ${wf.enabled ? T.orange : T.green}40`, background: wf.enabled ? `${T.orange}10` : `${T.green}10`, color: wf.enabled ? T.orange : T.green, fontSize: 9, cursor: "pointer" }}>
+                            {wf.enabled ? "Disable" : "Enable"}
+                          </button>
+                          <button type="button" onClick={() => editWorkflowTrigger(wf)}
+                            style={{ padding: "5px 8px", borderRadius: 4, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 9, cursor: "pointer" }}>
+                            Edit
+                          </button>
+                          <button type="button" onClick={() => deleteWorkflowTrigger(wf.id)}
+                            style={{ padding: "5px 8px", borderRadius: 4, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 9, cursor: "pointer" }}>
+                            Del
+                          </button>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {(wf.actions || []).map((action, aIdx) => (
+                          <span key={aIdx} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 4, background: `${T.purple}20`, color: T.purple }}>
+                            {actionOptions.find(a => a.id === action.type)?.label || action.type}: {action.value || "—"}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
