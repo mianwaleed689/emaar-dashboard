@@ -3239,6 +3239,39 @@ export default function AdminPanel() {
 
   useEffect(() => { if (isAdmin) fetchLiveData(); }, [isAdmin, fetchLiveData]);
 
+  // Real-time listeners for project and community data
+  useEffect(() => {
+    if (!isAdmin) return;
+    const unsubs = [];
+    try {
+      // Projects listener
+      unsubs.push(onSnapshot(collection(db, "projectData"), (snap) => {
+        const projMap = {};
+        snap.forEach(d => { projMap[d.id] = plainify(d.data()); });
+        setLiveProjects(projMap);
+      }));
+      // Community ROI listener
+      unsubs.push(onSnapshot(collection(db, "communityROI"), (snap) => {
+        const roiMap = {};
+        snap.forEach(d => { roiMap[d.id] = plainify(d.data()); });
+        setLiveCommunityROI(roiMap);
+      }));
+      // Community Intel listener
+      unsubs.push(onSnapshot(collection(db, "communityIntel"), (snap) => {
+        const intelMap = {};
+        snap.forEach(d => { intelMap[d.id] = plainify(d.data()); });
+        setLiveCommunityIntel(intelMap);
+      }));
+      // Yield data listener
+      unsubs.push(onSnapshot(collection(db, "yieldData"), (snap) => {
+        const yieldMap = {};
+        snap.forEach(d => { yieldMap[d.id] = plainify(d.data()); });
+        setLiveYields(yieldMap);
+      }));
+    } catch (e) { console.error("Real-time listener error:", e); }
+    return () => { unsubs.forEach(u => { try { u(); } catch {} }); };
+  }, [isAdmin]);
+
   /* ─── FETCH KYC VERIFICATIONS ─── */
   const fetchVerifications = useCallback(async () => {
     try {
@@ -3252,6 +3285,21 @@ export default function AdminPanel() {
 
   useEffect(() => { if (isAdmin) fetchVerifications(); }, [isAdmin, fetchVerifications]);
 
+  // Real-time listener for verifications
+  useEffect(() => {
+    if (!isAdmin) return;
+    let unsub;
+    try {
+      unsub = onSnapshot(collection(db, "verifications"), (snap) => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
+        list.sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
+        setVerifications(list);
+      });
+    } catch (e) { fetchVerifications(); }
+    return () => { if (unsub) unsub(); };
+  }, [isAdmin, fetchVerifications]);
+
   const fetchLeads = useCallback(async () => {
     try {
       const snap = await getDocs(collection(db, "leads"));
@@ -3263,6 +3311,21 @@ export default function AdminPanel() {
   }, []);
 
   useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin, fetchLeads]);
+
+  // Real-time listener for leads
+  useEffect(() => {
+    if (!isAdmin) return;
+    let unsub;
+    try {
+      unsub = onSnapshot(collection(db, "leads"), (snap) => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
+        list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        setLeads(list);
+      });
+    } catch (e) { fetchLeads(); }
+    return () => { if (unsub) unsub(); };
+  }, [isAdmin, fetchLeads]);
 
   /* ─── FETCH AUDIT LOG ─── */
   const fetchAuditLog = useCallback(async () => {
