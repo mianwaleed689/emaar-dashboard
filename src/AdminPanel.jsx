@@ -568,6 +568,100 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
+      {/* ═══ RATE HISTORY CHART (12-month SVG) ═══ */}
+      {eiborHistory.length > 1 && (
+        <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div>
+              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Rate History</div>
+              <div style={{ fontSize: 11, color: T.textMuted }}>All 4 tenors over time — color coded</div>
+            </div>
+            <div style={{ display: "flex", gap: 12 }}>
+              {[{ label: "1M", color: T.blue }, { label: "3M", color: T.gold }, { label: "6M", color: T.teal }, { label: "1Y", color: T.purple }].map(l => (
+                <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <div style={{ width: 10, height: 3, borderRadius: 2, background: l.color }} />
+                  <span style={{ fontSize: 10, color: T.textMuted }}>{l.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          {(() => {
+            // Prepare chart data (last 12 entries, oldest first)
+            const chartData = eiborHistory.slice(0, 12).reverse().map(h => ({
+              date: h.asOf || (h.updatedAt ? new Date(h.updatedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short" }) : ""),
+              "1m": parseFloat(h["1m"] || 0),
+              "3m": parseFloat(h["3m"] || 0),
+              "6m": parseFloat(h["6m"] || 0),
+              "1y": parseFloat(h["1y"] || 0),
+            }));
+            // Add current rates as last point
+            if (eiborCurrent) {
+              chartData.push({
+                date: eiborCurrent.asOf || "Now",
+                "1m": parseFloat(eiborCurrent["1m"] || 0),
+                "3m": parseFloat(eiborCurrent["3m"] || 0),
+                "6m": parseFloat(eiborCurrent["6m"] || 0),
+                "1y": parseFloat(eiborCurrent["1y"] || 0),
+              });
+            }
+            if (chartData.length < 2) return <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>Not enough history data yet</div>;
+            
+            // SVG Chart dimensions
+            const width = 700, height = 200, padding = { top: 20, right: 20, bottom: 30, left: 45 };
+            const chartW = width - padding.left - padding.right;
+            const chartH = height - padding.top - padding.bottom;
+            
+            // Find min/max
+            const allValues = chartData.flatMap(d => [d["1m"], d["3m"], d["6m"], d["1y"]]).filter(v => v > 0);
+            const minVal = Math.floor(Math.min(...allValues) * 10) / 10 - 0.2;
+            const maxVal = Math.ceil(Math.max(...allValues) * 10) / 10 + 0.2;
+            const range = maxVal - minVal || 1;
+            
+            // Scale functions
+            const xScale = (i) => padding.left + (i / (chartData.length - 1)) * chartW;
+            const yScale = (v) => padding.top + chartH - ((v - minVal) / range) * chartH;
+            
+            // Generate path
+            const makePath = (key) => chartData.map((d, i) => `${i === 0 ? "M" : "L"} ${xScale(i)} ${yScale(d[key])}`).join(" ");
+            
+            const tenors = [
+              { key: "1m", color: T.blue },
+              { key: "3m", color: T.gold },
+              { key: "6m", color: T.teal },
+              { key: "1y", color: T.purple },
+            ];
+            
+            return (
+              <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: "visible" }}>
+                {/* Grid lines */}
+                {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => {
+                  const y = padding.top + chartH * (1 - pct);
+                  const val = minVal + range * pct;
+                  return (
+                    <g key={i}>
+                      <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+                      <text x={padding.left - 8} y={y + 4} fill={T.textMuted} fontSize="10" textAnchor="end">{val.toFixed(2)}%</text>
+                    </g>
+                  );
+                })}
+                {/* X axis labels */}
+                {chartData.map((d, i) => (
+                  <text key={i} x={xScale(i)} y={height - 8} fill={T.textMuted} fontSize="9" textAnchor="middle">{d.date}</text>
+                ))}
+                {/* Lines */}
+                {tenors.map(t => (
+                  <path key={t.key} d={makePath(t.key)} fill="none" stroke={t.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                ))}
+                {/* Dots */}
+                {tenors.map(t => chartData.map((d, i) => (
+                  <circle key={`${t.key}-${i}`} cx={xScale(i)} cy={yScale(d[t.key])} r="4" fill={t.color} stroke={T.surface} strokeWidth="1.5" />
+                )))}
+              </svg>
+            );
+          })()}
+        </div>
+      )}
+
       {/* ═══ MORTGAGE CALCULATOR ═══ */}
       <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 16 }}>Mortgage Impact Calculator</div>
@@ -2863,6 +2957,7 @@ export default function AdminPanel() {
   const [tabSettings, setTabSettings] = useState({});
   const [tabSettingsSaving, setTabSettingsSaving] = useState(false);
   const [selectedTabControl, setSelectedTabControl] = useState(null);
+  const [previewTier, setPreviewTier] = useState(null); // null = admin view, "free" | "pro" | "enterprise" = preview as that tier
   const [tabDataEdits, setTabDataEdits] = useState({});
   const [tabDataSaving, setTabDataSaving] = useState(false);
   const [users, setUsers] = useState([]);
@@ -9008,6 +9103,88 @@ export default function AdminPanel() {
                     }} style={{ padding: "5px 12px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textMuted, fontFamily: "'Outfit',sans-serif" }}>Reset All</button>
                   </div>
                 </div>
+
+                {/* ═══ PREVIEW MODE BAR ═══ */}
+                <div style={{ background: previewTier ? `${TIER_COLORS[previewTier]}10` : T.surface, borderRadius: 14, border: `1px solid ${previewTier ? TIER_COLORS[previewTier] + "40" : T.border}`, padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={previewTier ? TIER_COLORS[previewTier] : T.textMuted} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: previewTier ? TIER_COLORS[previewTier] : T.white }}>
+                        {previewTier ? `Preview Mode: See as ${TIER_LABELS[previewTier]} User` : "Preview Mode"}
+                      </div>
+                      <div style={{ fontSize: 10, color: T.textMuted }}>
+                        {previewTier ? "Tabs below show what this tier would see in the dashboard sidebar" : "Simulate what each tier sees — no data changes, just UI preview"}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {[
+                      { id: null, label: "Admin View", color: T.white },
+                      { id: "free", label: "See as Free", color: T.textSecondary },
+                      { id: "pro", label: "See as Pro", color: T.gold },
+                      { id: "enterprise", label: "See as Enterprise", color: T.purple },
+                    ].map(p => (
+                      <button key={p.id || "admin"} type="button" onClick={() => setPreviewTier(p.id)}
+                        style={{
+                          padding: "6px 14px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer",
+                          border: `1px solid ${previewTier === p.id ? p.color : T.border}`,
+                          background: previewTier === p.id ? `${p.color}15` : "transparent",
+                          color: previewTier === p.id ? p.color : T.textMuted,
+                          fontFamily: "'Outfit',sans-serif"
+                        }}>
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Preview Sidebar Simulation */}
+                {previewTier && (
+                  <div className="fade-up" style={{ background: T.surfaceAlt, borderRadius: 14, border: `1px solid ${TIER_COLORS[previewTier]}30`, padding: "16px 20px" }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: TIER_COLORS[previewTier], textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
+                      Dashboard Sidebar Preview — {TIER_LABELS[previewTier]} User
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {ALL_TABS.map(tabKey => {
+                        const setting = getTabSetting(tabKey);
+                        const isVisible = setting.visible !== false;
+                        const minTier = setting.minTier || "free";
+                        const tierOrder = { free: 0, pro: 1, enterprise: 2 };
+                        const userTierLevel = tierOrder[previewTier] || 0;
+                        const requiredLevel = tierOrder[minTier] || 0;
+                        const canAccess = isVisible && userTierLevel >= requiredLevel;
+                        const isLocked = isVisible && userTierLevel < requiredLevel;
+                        
+                        if (!isVisible) return null; // Hidden tabs don't show at all
+                        
+                        return (
+                          <div key={tabKey} style={{
+                            padding: "8px 14px", borderRadius: 8,
+                            background: canAccess ? "rgba(16,185,129,0.08)" : "rgba(100,116,139,0.08)",
+                            border: `1px solid ${canAccess ? T.green + "30" : T.border}`,
+                            display: "flex", alignItems: "center", gap: 6,
+                            opacity: canAccess ? 1 : 0.6,
+                          }}>
+                            {isLocked && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>}
+                            <span style={{ fontSize: 11, color: canAccess ? T.white : T.textMuted, fontWeight: canAccess ? 500 : 400 }}>{tabKey}</span>
+                            {isLocked && <span style={{ fontSize: 9, color: TIER_COLORS[minTier], fontWeight: 600 }}>{TIER_LABELS[minTier]}</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div style={{ marginTop: 12, fontSize: 10, color: T.textMuted }}>
+                      {ALL_TABS.filter(t => {
+                        const s = getTabSetting(t);
+                        const tierOrder = { free: 0, pro: 1, enterprise: 2 };
+                        return s.visible !== false && tierOrder[previewTier] >= (tierOrder[s.minTier] || 0);
+                      }).length} tabs visible · {ALL_TABS.filter(t => {
+                        const s = getTabSetting(t);
+                        const tierOrder = { free: 0, pro: 1, enterprise: 2 };
+                        return s.visible !== false && tierOrder[previewTier] < (tierOrder[s.minTier] || 0);
+                      }).length} locked
+                    </div>
+                  </div>
+                )}
 
                 {/* Stacked layout */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
