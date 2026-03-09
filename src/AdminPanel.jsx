@@ -3073,6 +3073,9 @@ export default function AdminPanel() {
   const [verifySubTab, setVerifySubTab] = useState("queue"); // queue | history
   const [reviewingUser, setReviewingUser] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
+  // Analytics Pro states
+  const [analyticsRange, setAnalyticsRange] = useState("30d"); // 7d | 30d | 90d | all
+  const [cohortDrilldown, setCohortDrilldown] = useState(null); // { cohortLabel, weekNum, users[] }
 
   /* ─── PERSIST TAB STATE ─── */
   const isHydrated = React.useRef(false);
@@ -8737,98 +8740,162 @@ export default function AdminPanel() {
           })()}
 
           {tab === "analytics" && (() => {
-            /* ═══════════════════════════════════════════════════════
-               TAB 10: ANALYTICS — Mixpanel + Amplitude + ChartMogul
-               Full user behavior, retention cohorts, geographic insights
-            ═══════════════════════════════════════════════════════ */
+            /* ═══════════════════════════════════════════════════════════════════
+               TAB 10: ANALYTICS — PRO LEVEL
+               Mixpanel + Amplitude + ChartMogul + Baremetrics
+               Date range filtering, MRR charts, cohort drill-downs, export
+            ═══════════════════════════════════════════════════════════════════ */
+            
+            // Date range calculation
+            const rangeMap = { "7d": 7, "30d": 30, "90d": 90, "all": 9999 };
+            const rangeDays = rangeMap[analyticsRange] || 30;
+            const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - rangeDays);
+            
+            // Filter users by range for certain metrics
+            const usersInRange = analyticsRange === "all" ? users : users.filter(u => {
+              try { return new Date(u.createdAt) >= rangeStart; } catch { return true; }
+            });
+            const auditInRange = analyticsRange === "all" ? auditLog : auditLog.filter(l => {
+              try { return new Date(l.changedAt) >= rangeStart; } catch { return true; }
+            });
             
             // DAU/MAU calculations
             const todayStart = new Date(now); todayStart.setHours(0,0,0,0);
+            const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(yesterdayStart.getDate() - 1);
             const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
+            const twoWeeksAgo = new Date(now); twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
             const monthAgo = new Date(now); monthAgo.setDate(monthAgo.getDate() - 30);
+            const twoMonthsAgo = new Date(now); twoMonthsAgo.setDate(twoMonthsAgo.getDate() - 60);
             
-            const dau = users.filter(u => {
-              try { return u.lastLoginAt && new Date(u.lastLoginAt) >= todayStart; } catch { return false; }
-            }).length;
-            const wau = users.filter(u => {
-              try { return u.lastLoginAt && new Date(u.lastLoginAt) >= weekAgo; } catch { return false; }
-            }).length;
-            const mau = users.filter(u => {
-              try { return u.lastLoginAt && new Date(u.lastLoginAt) >= monthAgo; } catch { return false; }
-            }).length;
+            const dau = users.filter(u => { try { return u.lastLoginAt && new Date(u.lastLoginAt) >= todayStart; } catch { return false; } }).length;
+            const dauYesterday = users.filter(u => { try { const d = new Date(u.lastLoginAt); return d >= yesterdayStart && d < todayStart; } catch { return false; } }).length;
+            const wau = users.filter(u => { try { return u.lastLoginAt && new Date(u.lastLoginAt) >= weekAgo; } catch { return false; } }).length;
+            const wauPrev = users.filter(u => { try { const d = new Date(u.lastLoginAt); return d >= twoWeeksAgo && d < weekAgo; } catch { return false; } }).length;
+            const mau = users.filter(u => { try { return u.lastLoginAt && new Date(u.lastLoginAt) >= monthAgo; } catch { return false; } }).length;
+            const mauPrev = users.filter(u => { try { const d = new Date(u.lastLoginAt); return d >= twoMonthsAgo && d < monthAgo; } catch { return false; } }).length;
             const dauMauRatio = mau > 0 ? Math.round((dau / mau) * 100) : 0;
             const neverLoggedIn = users.filter(u => !u.lastLoginAt).length;
+            
+            // Comparison deltas
+            const dauDelta = dau - dauYesterday;
+            const wauDelta = wau - wauPrev;
+            const mauDelta = mau - mauPrev;
 
-            // Weekly signups by tier
+            // MRR History (6 months)
+            const mrrHistory = (() => {
+              const months = [];
+              for (let i = 5; i >= 0; i--) {
+                const monthEnd = new Date(now); monthEnd.setMonth(monthEnd.getMonth() - i);
+                const monthStart = new Date(monthEnd); monthStart.setMonth(monthStart.getMonth() - 1);
+                const label = monthEnd.toLocaleString("en", { month: "short" });
+                const proCount = users.filter(u => { try { const d = new Date(u.createdAt); return d <= monthEnd && (u.tier === "pro" || (u.tier === "free" && u.trialEnd && new Date(u.trialEnd) > monthEnd)); } catch { return false; } }).length;
+                const entCount = users.filter(u => { try { return new Date(u.createdAt) <= monthEnd && u.tier === "enterprise"; } catch { return false; } }).length;
+                const proMRR = proCount * 99;
+                const entMRR = entCount * 499;
+                months.push({ label, mrr: proMRR + entMRR, pro: proMRR, enterprise: entMRR, proCount, entCount });
+              }
+              // Current
+              months.push({ label: "Now", mrr, pro: stats.pro * 99, enterprise: stats.enterprise * 499, proCount: stats.pro, entCount: stats.enterprise });
+              return months;
+            })();
+
+            // Daily signups (last 14 days for sparkline)
+            const dailySignups = (() => {
+              const days = [];
+              for (let i = 13; i >= 0; i--) {
+                const dayStart = new Date(now); dayStart.setDate(dayStart.getDate() - i); dayStart.setHours(0,0,0,0);
+                const dayEnd = new Date(dayStart); dayEnd.setDate(dayEnd.getDate() + 1);
+                const count = users.filter(u => { try { const d = new Date(u.createdAt); return d >= dayStart && d < dayEnd; } catch { return false; } }).length;
+                days.push(count);
+              }
+              return days;
+            })();
+
+            // Weekly signups by tier (dynamic based on range)
+            const weekCount = analyticsRange === "7d" ? 2 : analyticsRange === "30d" ? 5 : analyticsRange === "90d" ? 13 : 8;
             const weeklySignups = (() => {
               const weeks = [];
-              for (let i = 7; i >= 0; i--) {
-                const start = new Date(now); start.setDate(start.getDate() - i * 7 - 6);
-                const end   = new Date(now); end.setDate(end.getDate() - i * 7);
-                const label = `W${8 - i}`;
-                const free = users.filter(u => { try { const d = new Date(u.createdAt); return d >= start && d <= end && u.tier === "free"; } catch { return false; } }).length;
-                const trial = users.filter(u => { try { const d = new Date(u.createdAt); return d >= start && d <= end && u.tier === "pro_trial"; } catch { return false; } }).length;
-                const pro = users.filter(u => { try { const d = new Date(u.createdAt); return d >= start && d <= end && u.tier === "pro"; } catch { return false; } }).length;
-                const ent = users.filter(u => { try { const d = new Date(u.createdAt); return d >= start && d <= end && u.tier === "enterprise"; } catch { return false; } }).length;
+              for (let i = weekCount - 1; i >= 0; i--) {
+                const start = new Date(now); start.setDate(start.getDate() - (i + 1) * 7);
+                const end = new Date(now); end.setDate(end.getDate() - i * 7);
+                const label = start.toLocaleDateString("en-AE", { day: "numeric", month: "short" });
+                const free = users.filter(u => { try { const d = new Date(u.createdAt); return d >= start && d < end && u.tier === "free"; } catch { return false; } }).length;
+                const trial = users.filter(u => { try { const d = new Date(u.createdAt); return d >= start && d < end && u.tier === "pro_trial"; } catch { return false; } }).length;
+                const pro = users.filter(u => { try { const d = new Date(u.createdAt); return d >= start && d < end && u.tier === "pro"; } catch { return false; } }).length;
+                const ent = users.filter(u => { try { const d = new Date(u.createdAt); return d >= start && d < end && u.tier === "enterprise"; } catch { return false; } }).length;
                 weeks.push({ label, free, trial, pro, enterprise: ent, total: free + trial + pro + ent });
               }
               return weeks;
             })();
 
-            // Cohort Retention Heatmap (8 weeks x 8 weeks)
+            // FIXED: Cohort Retention Heatmap — proper calculation
             const cohortHeatmap = (() => {
               const cohorts = [];
-              for (let c = 7; c >= 0; c--) {
-                const cohortStart = new Date(now); cohortStart.setDate(cohortStart.getDate() - (c + 1) * 7);
-                const cohortEnd = new Date(now); cohortEnd.setDate(cohortEnd.getDate() - c * 7);
+              const cohortCount = analyticsRange === "7d" ? 2 : analyticsRange === "30d" ? 5 : 8;
+              
+              for (let c = cohortCount - 1; c >= 0; c--) {
+                const cohortStart = new Date(now); cohortStart.setDate(cohortStart.getDate() - (c + 1) * 7); cohortStart.setHours(0,0,0,0);
+                const cohortEnd = new Date(cohortStart); cohortEnd.setDate(cohortEnd.getDate() + 7);
                 const cohortLabel = cohortStart.toLocaleDateString("en-AE", { day: "numeric", month: "short" });
                 
+                // Users who signed up in this cohort week
                 const cohortUsers = users.filter(u => {
                   try { const d = new Date(u.createdAt); return d >= cohortStart && d < cohortEnd; } catch { return false; }
                 });
                 
+                // For each week after signup, check if user was still active
                 const weeks = [];
-                for (let w = 0; w <= 7 - c; w++) {
-                  const weekEnd = new Date(cohortStart); weekEnd.setDate(weekEnd.getDate() + (w + 1) * 7);
-                  const retained = cohortUsers.filter(u => {
-                    try { return u.lastLoginAt && new Date(u.lastLoginAt) >= weekEnd; } catch { return false; }
-                  }).length;
-                  const pct = cohortUsers.length > 0 ? Math.round((retained / cohortUsers.length) * 100) : 0;
-                  weeks.push({ week: w, retained, pct });
+                const maxWeeks = cohortCount - c;
+                for (let w = 0; w < maxWeeks; w++) {
+                  if (w === 0) {
+                    // Week 0 = signup week, always 100%
+                    weeks.push({ week: w, retained: cohortUsers.length, pct: 100, users: cohortUsers });
+                  } else {
+                    // Check if user logged in during or after week W
+                    const weekStart = new Date(cohortStart); weekStart.setDate(weekStart.getDate() + w * 7);
+                    const retained = cohortUsers.filter(u => {
+                      try { return u.lastLoginAt && new Date(u.lastLoginAt) >= weekStart; } catch { return false; }
+                    });
+                    const pct = cohortUsers.length > 0 ? Math.round((retained.length / cohortUsers.length) * 100) : 0;
+                    weeks.push({ week: w, retained: retained.length, pct, users: retained });
+                  }
                 }
-                cohorts.push({ label: cohortLabel, users: cohortUsers.length, weeks });
+                cohorts.push({ label: cohortLabel, total: cohortUsers.length, weeks, allUsers: cohortUsers });
               }
               return cohorts;
             })();
 
-            // Geographic breakdown (top 10 countries)
+            // Geographic breakdown
             const geoData = (() => {
               const counts = {};
-              users.forEach(u => { const c = u.country || "Unknown"; counts[c] = (counts[c] || 0) + 1; });
-              return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([country, count]) => ({ country, count }));
+              usersInRange.forEach(u => { const c = u.country || "Unknown"; counts[c] = (counts[c] || 0) + 1; });
+              return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([country, count]) => ({ country, count, pct: Math.round((count / usersInRange.length) * 100) }));
             })();
 
-            // Feature usage (auditLog action counts)
+            // Feature usage
             const featureUsage = (() => {
               const counts = {};
-              auditLog.forEach(l => { const a = l.action || "unknown"; counts[a] = (counts[a] || 0) + 1; });
-              return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([action, count]) => ({ action, count }));
+              auditInRange.forEach(l => { const a = l.action || "unknown"; counts[a] = (counts[a] || 0) + 1; });
+              return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([action, count]) => ({ action, count }));
             })();
 
             // Top active users
-            const topActiveUsers = users
-              .filter(u => u.lastLoginAt)
-              .sort((a, b) => new Date(b.lastLoginAt) - new Date(a.lastLoginAt))
-              .slice(0, 10);
+            const topActiveUsers = users.filter(u => u.lastLoginAt).sort((a, b) => new Date(b.lastLoginAt) - new Date(a.lastLoginAt)).slice(0, 12);
 
-            // Churn timing analysis
+            // Churn timing (improved)
             const churnTiming = (() => {
-              const churned = users.filter(u => u.tier === "free" && u.trialEnd && new Date(u.trialEnd) < now);
+              const churned = users.filter(u => (u.tier === "free" || u.tier === "expired") && u.trialEnd && new Date(u.trialEnd) < now);
+              if (churned.length === 0) return [
+                { period: "Day 1", count: 0, pct: 0 },
+                { period: "Week 1", count: 0, pct: 0 },
+                { period: "Month 1", count: 0, pct: 0 },
+                { period: "Month 3+", count: 0, pct: 0 },
+              ];
               const day1 = churned.filter(u => { try { return (new Date(u.trialEnd) - new Date(u.createdAt)) < 2 * 24 * 60 * 60 * 1000; } catch { return false; } }).length;
               const week1 = churned.filter(u => { try { const diff = new Date(u.trialEnd) - new Date(u.createdAt); return diff >= 2 * 24 * 60 * 60 * 1000 && diff < 8 * 24 * 60 * 60 * 1000; } catch { return false; } }).length;
               const month1 = churned.filter(u => { try { const diff = new Date(u.trialEnd) - new Date(u.createdAt); return diff >= 8 * 24 * 60 * 60 * 1000 && diff < 32 * 24 * 60 * 60 * 1000; } catch { return false; } }).length;
               const month3 = churned.filter(u => { try { const diff = new Date(u.trialEnd) - new Date(u.createdAt); return diff >= 32 * 24 * 60 * 60 * 1000; } catch { return false; } }).length;
-              const total = churned.length || 1;
+              const total = churned.length;
               return [
                 { period: "Day 1", count: day1, pct: Math.round((day1 / total) * 100) },
                 { period: "Week 1", count: week1, pct: Math.round((week1 / total) * 100) },
@@ -8837,14 +8904,14 @@ export default function AdminPanel() {
               ];
             })();
 
-            // Signup source analysis
+            // Signup sources
             const signupSources = (() => {
               const counts = {};
-              users.forEach(u => { const s = u.signupSource || u.source || "Direct"; counts[s] = (counts[s] || 0) + 1; });
-              return Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([source, count]) => ({ source, count }));
+              usersInRange.forEach(u => { const s = u.signupSource || u.source || "Direct"; counts[s] = (counts[s] || 0) + 1; });
+              return Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([source, count]) => ({ source, count, pct: Math.round((count / usersInRange.length) * 100) }));
             })();
 
-            // Conversion funnel (Mixpanel-style)
+            // Conversion funnel
             const funnelData = [
               { label: "Registered", value: stats.total, color: T.textSecondary },
               { label: "Trial Activated", value: stats.proTrial + stats.pro + stats.enterprise, color: T.blue },
@@ -8853,10 +8920,10 @@ export default function AdminPanel() {
               { label: "Retained (Pro)", value: stats.pro, color: T.gold },
             ];
 
-            // Tier movement (simplified flow)
+            // Tier movement
             const tierMovement = (() => {
               const movements = { freeToTrial: 0, trialToPro: 0, proToEnt: 0, trialToFree: 0, proToFree: 0 };
-              auditLog.filter(l => l.action === "tier_change").forEach(l => {
+              auditInRange.filter(l => l.action === "tier_change").forEach(l => {
                 if (l.from === "free" && l.to === "pro_trial") movements.freeToTrial++;
                 if (l.from === "pro_trial" && l.to === "pro") movements.trialToPro++;
                 if (l.from === "pro" && l.to === "enterprise") movements.proToEnt++;
@@ -8866,58 +8933,163 @@ export default function AdminPanel() {
               return movements;
             })();
 
-            const growthRate = stats.total > 0 && stats.thisWeek > 0 ? Math.round((stats.thisWeek / stats.total) * 100) : 0;
+            // Sparkline component
+            const Sparkline = ({ data, color, width = 60, height = 20 }) => {
+              if (!data || data.length < 2) return null;
+              const max = Math.max(...data, 1);
+              const points = data.map((v, i) => `${(i / (data.length - 1)) * width},${height - (v / max) * height}`).join(" ");
+              return (
+                <svg width={width} height={height} style={{ marginLeft: 8 }}>
+                  <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              );
+            };
+
+            // Export function
+            const exportAnalytics = () => {
+              const data = {
+                exportDate: new Date().toISOString(),
+                range: analyticsRange,
+                kpis: { dau, wau, mau, dauMauRatio, totalUsers: stats.total, paidUsers: stats.paid, mrr, arr },
+                weeklySignups,
+                cohortHeatmap: cohortHeatmap.map(c => ({ ...c, allUsers: undefined, weeks: c.weeks.map(w => ({ ...w, users: undefined })) })),
+                geoData,
+                featureUsage,
+                tierMovement,
+                churnTiming,
+                signupSources,
+              };
+              const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a"); a.href = url; a.download = `dxb-analytics-${analyticsRange}-${new Date().toISOString().split("T")[0]}.json`; a.click();
+              URL.revokeObjectURL(url);
+              notify("Analytics exported!");
+            };
 
             return (
             <>
-              {/* ═══ ACTIVITY KPI BAR ═══ */}
-              <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, overflow: "hidden" }}>
-                <button type="button" onClick={() => { fetchUsers(); fetchAuditLog(); notify("Analytics refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh}</button>
+              {/* ═══ HEADER BAR: Date Range + Export ═══ */}
+              <div className="fade-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Analytics</div>
+                  <div style={{ display: "flex", gap: 4, padding: 4, background: T.surface, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                    {[
+                      { id: "7d", label: "7 Days" },
+                      { id: "30d", label: "30 Days" },
+                      { id: "90d", label: "90 Days" },
+                      { id: "all", label: "All Time" },
+                    ].map(r => (
+                      <button key={r.id} type="button" onClick={() => setAnalyticsRange(r.id)}
+                        style={{
+                          padding: "6px 14px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer",
+                          border: "none", background: analyticsRange === r.id ? T.gold : "transparent",
+                          color: analyticsRange === r.id ? T.surface : T.textMuted,
+                          fontFamily: "'Outfit',sans-serif", transition: "all 0.15s"
+                        }}>{r.label}</button>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button type="button" onClick={() => { fetchUsers(); fetchAuditLog(); notify("Refreshed"); }}
+                    style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface, color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                    {I.refresh} Refresh
+                  </button>
+                  <button type="button" onClick={exportAnalytics}
+                    style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Export
+                  </button>
+                </div>
+              </div>
+
+              {/* ═══ KPI ROW WITH SPARKLINES + DELTAS ═══ */}
+              <div className="fade-up" style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 20 }}>
                 {[
-                  { label: "DAU", value: dau, color: T.green },
-                  { label: "WAU", value: wau, color: T.teal },
-                  { label: "MAU", value: mau, color: T.blue },
+                  { label: "DAU", value: dau, delta: dauDelta, color: T.green, spark: dailySignups },
+                  { label: "WAU", value: wau, delta: wauDelta, color: T.teal },
+                  { label: "MAU", value: mau, delta: mauDelta, color: T.blue },
                   { label: "DAU/MAU", value: `${dauMauRatio}%`, color: dauMauRatio > 20 ? T.green : dauMauRatio > 10 ? T.gold : T.red },
                   { label: "Never Logged In", value: neverLoggedIn, color: T.orange },
                   { label: "Total Users", value: stats.total, color: T.white },
                 ].map((item, i) => (
-                  <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 18px", borderRight: `1px solid ${T.border}` }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
-                    <span style={{ fontSize: 18, fontWeight: 900, color: item.color, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>{item.value}</span>
+                  <div key={i} style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: "14px 16px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{item.label}</div>
+                        <div style={{ fontSize: 24, fontWeight: 900, color: item.color, fontFamily: "'Fraunces',serif", lineHeight: 1 }}>{item.value}</div>
+                      </div>
+                      {item.spark && <Sparkline data={item.spark} color={item.color} />}
+                    </div>
+                    {item.delta !== undefined && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 6 }}>
+                        <span style={{ fontSize: 10, color: item.delta > 0 ? T.green : item.delta < 0 ? T.red : T.textMuted }}>
+                          {item.delta > 0 ? "↑" : item.delta < 0 ? "↓" : "—"} {Math.abs(item.delta)}
+                        </span>
+                        <span style={{ fontSize: 9, color: T.textMuted }}>vs prev</span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
 
-              {/* ═══ ROW 1: User Growth + Conversion Funnel ═══ */}
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 20 }}>
-                <Chart title="User Growth by Tier (8 Weeks)" sub="Signups color-coded by subscription tier">
+              {/* ═══ ROW 1: MRR Chart + User Growth + Funnel ═══ */}
+              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 0.8fr", gap: 16, marginBottom: 20 }}>
+                <Chart title="MRR History" sub="Monthly Recurring Revenue trend">
+                  <ResponsiveContainer width="100%" height={200}>
+                    <AreaChart data={mrrHistory}>
+                      <defs>
+                        <linearGradient id="gMRRPro" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={T.gold} stopOpacity={0.3} />
+                          <stop offset="100%" stopColor={T.gold} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                      <XAxis dataKey="label" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
+                      <Tooltip content={<CustomTooltip />} formatter={(v) => [`AED ${v.toLocaleString()}`, ""]} />
+                      <Area type="monotone" dataKey="mrr" stroke={T.gold} fill="url(#gMRRPro)" strokeWidth={2.5} dot={{ fill: T.gold, r: 3 }} name="MRR" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                  <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 8 }}>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 18, fontWeight: 900, color: T.gold, fontFamily: "'Fraunces',serif" }}>AED {mrr.toLocaleString()}</div>
+                      <div style={{ fontSize: 9, color: T.textMuted }}>Current MRR</div>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 18, fontWeight: 900, color: T.green, fontFamily: "'Fraunces',serif" }}>AED {arr.toLocaleString()}</div>
+                      <div style={{ fontSize: 9, color: T.textMuted }}>ARR</div>
+                    </div>
+                  </div>
+                </Chart>
+
+                <Chart title="User Growth by Tier" sub={`Last ${weekCount} weeks · color by tier`}>
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={weeklySignups} barGap={2}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                      <XAxis dataKey="label" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <XAxis dataKey="label" tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="free" name="Free" stackId="a" fill={T.textMuted} radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="trial" name="Trial" stackId="a" fill={T.blue} radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="pro" name="Pro" stackId="a" fill={T.gold} radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="free" name="Free" stackId="a" fill={T.textMuted} />
+                      <Bar dataKey="trial" name="Trial" stackId="a" fill={T.blue} />
+                      <Bar dataKey="pro" name="Pro" stackId="a" fill={T.gold} />
                       <Bar dataKey="enterprise" name="Enterprise" stackId="a" fill={T.purple} radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </Chart>
 
-                <Chart title="Conversion Funnel" sub="Mixpanel-style journey">
-                  <div style={{ padding: "8px 0" }}>
+                <Chart title="Conversion Funnel" sub="User journey stages">
+                  <div style={{ padding: "6px 0" }}>
                     {funnelData.map((row, i) => {
                       const maxVal = funnelData[0].value || 1;
                       const pct = Math.round((row.value / maxVal) * 100);
                       return (
-                        <div key={i} style={{ marginBottom: 12 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                            <span style={{ fontSize: 11, color: T.textSecondary }}>{row.label}</span>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: row.color }}>{row.value} <span style={{ fontSize: 9, color: T.textMuted }}>({pct}%)</span></span>
+                        <div key={i} style={{ marginBottom: 10 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                            <span style={{ fontSize: 10, color: T.textSecondary }}>{row.label}</span>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: row.color }}>{row.value} <span style={{ fontSize: 8, color: T.textMuted }}>({pct}%)</span></span>
                           </div>
-                          <div style={{ height: 6, borderRadius: 3, background: T.surfaceAlt }}>
-                            <div style={{ width: `${pct}%`, height: "100%", borderRadius: 3, background: row.color, transition: "width 0.5s" }} />
+                          <div style={{ height: 5, borderRadius: 3, background: T.surfaceAlt }}>
+                            <div style={{ width: `${pct}%`, height: "100%", borderRadius: 3, background: row.color }} />
                           </div>
                         </div>
                       );
@@ -8926,137 +9098,190 @@ export default function AdminPanel() {
                 </Chart>
               </div>
 
-              {/* ═══ ROW 2: COHORT RETENTION HEATMAP ═══ */}
+              {/* ═══ COHORT RETENTION HEATMAP (Clickable) ═══ */}
               <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px", marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Cohort Retention Heatmap</div>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>% of users still active by signup cohort — ChartMogul style</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>Click any cell to see users · % still active by week since signup</div>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 10 }}>
                     <span style={{ color: T.red }}>0%</span>
-                    <div style={{ width: 60, height: 8, borderRadius: 4, background: `linear-gradient(90deg, ${T.red}, ${T.gold}, ${T.green})` }} />
+                    <div style={{ width: 80, height: 8, borderRadius: 4, background: `linear-gradient(90deg, ${T.red}, ${T.orange}, ${T.gold}, ${T.green})` }} />
                     <span style={{ color: T.green }}>100%</span>
                   </div>
                 </div>
-                <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-                    <thead>
-                      <tr>
-                        <th style={{ padding: "8px 10px", textAlign: "left", color: T.gold, fontWeight: 600, fontSize: 9, textTransform: "uppercase" }}>Cohort</th>
-                        <th style={{ padding: "8px 10px", textAlign: "center", color: T.textMuted, fontWeight: 600, fontSize: 9 }}>Users</th>
-                        {[0, 1, 2, 3, 4, 5, 6, 7].map(w => (
-                          <th key={w} style={{ padding: "8px 10px", textAlign: "center", color: T.textMuted, fontWeight: 600, fontSize: 9 }}>Wk {w}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {cohortHeatmap.map((cohort, ci) => (
-                        <tr key={ci}>
-                          <td style={{ padding: "6px 10px", color: T.textSecondary, fontWeight: 500 }}>{cohort.label}</td>
-                          <td style={{ padding: "6px 10px", textAlign: "center", color: T.white, fontWeight: 600 }}>{cohort.users}</td>
-                          {[0, 1, 2, 3, 4, 5, 6, 7].map(w => {
-                            const weekData = cohort.weeks.find(wk => wk.week === w);
-                            if (!weekData) return <td key={w} style={{ padding: "6px 10px", textAlign: "center", color: T.textMuted }}>—</td>;
-                            const pct = w === 0 ? 100 : weekData.pct;
-                            const bgColor = pct >= 70 ? T.green : pct >= 40 ? T.gold : pct >= 20 ? T.orange : T.red;
-                            return (
-                              <td key={w} style={{ padding: "4px" }}>
-                                <div style={{ padding: "6px 8px", borderRadius: 6, background: `${bgColor}25`, color: bgColor, fontWeight: 700, textAlign: "center" }}>{pct}%</div>
-                              </td>
-                            );
-                          })}
+                
+                {cohortHeatmap.every(c => c.total === 0) ? (
+                  <div style={{ padding: "40px 20px", textAlign: "center" }}>
+                    <div style={{ fontSize: 32, marginBottom: 12 }}>📊</div>
+                    <div style={{ fontSize: 14, color: T.textMuted, marginBottom: 8 }}>Not enough data for cohort analysis</div>
+                    <div style={{ fontSize: 12, color: T.textMuted }}>Cohorts will populate as users sign up over multiple weeks</div>
+                  </div>
+                ) : (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                      <thead>
+                        <tr>
+                          <th style={{ padding: "8px 12px", textAlign: "left", color: T.gold, fontWeight: 700, fontSize: 9, textTransform: "uppercase" }}>Cohort</th>
+                          <th style={{ padding: "8px 10px", textAlign: "center", color: T.textMuted, fontWeight: 600, fontSize: 9 }}>Users</th>
+                          {Array.from({ length: weekCount }, (_, i) => (
+                            <th key={i} style={{ padding: "8px 10px", textAlign: "center", color: T.textMuted, fontWeight: 600, fontSize: 9 }}>Wk {i}</th>
+                          ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {cohortHeatmap.map((cohort, ci) => (
+                          <tr key={ci}>
+                            <td style={{ padding: "6px 12px", color: T.textSecondary, fontWeight: 500, borderBottom: `1px solid ${T.border}` }}>{cohort.label}</td>
+                            <td style={{ padding: "6px 10px", textAlign: "center", color: T.white, fontWeight: 700, borderBottom: `1px solid ${T.border}` }}>{cohort.total}</td>
+                            {Array.from({ length: weekCount }, (_, wi) => {
+                              const weekData = cohort.weeks.find(w => w.week === wi);
+                              if (!weekData) return <td key={wi} style={{ padding: "4px", borderBottom: `1px solid ${T.border}` }}><div style={{ padding: "6px 8px", textAlign: "center", color: T.textMuted }}>—</div></td>;
+                              const pct = weekData.pct;
+                              const bgColor = pct >= 70 ? T.green : pct >= 40 ? T.gold : pct >= 20 ? T.orange : pct > 0 ? T.red : T.textMuted;
+                              return (
+                                <td key={wi} style={{ padding: "4px", borderBottom: `1px solid ${T.border}` }}>
+                                  <div 
+                                    onClick={() => weekData.users?.length > 0 && setCohortDrilldown({ cohortLabel: cohort.label, weekNum: wi, users: weekData.users })}
+                                    style={{ 
+                                      padding: "6px 8px", borderRadius: 6, 
+                                      background: cohort.total > 0 ? `${bgColor}25` : "transparent", 
+                                      color: cohort.total > 0 ? bgColor : T.textMuted, 
+                                      fontWeight: 700, textAlign: "center",
+                                      cursor: weekData.users?.length > 0 ? "pointer" : "default",
+                                      transition: "transform 0.1s",
+                                    }}
+                                    onMouseEnter={e => { if (weekData.users?.length > 0) e.target.style.transform = "scale(1.05)"; }}
+                                    onMouseLeave={e => { e.target.style.transform = "scale(1)"; }}
+                                  >{pct}%</div>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
 
-              {/* ═══ ROW 3: Geographic + Tier Movement + Churn Timing ═══ */}
+              {/* ═══ Cohort Drilldown Modal ═══ */}
+              {cohortDrilldown && (
+                <Modal onClose={() => setCohortDrilldown(null)} maxWidth={500}>
+                  <ModalHeader 
+                    title={`Cohort: ${cohortDrilldown.cohortLabel} · Week ${cohortDrilldown.weekNum}`} 
+                    sub={`${cohortDrilldown.users.length} users retained`} 
+                    onClose={() => setCohortDrilldown(null)} 
+                  />
+                  <div style={{ padding: "0 24px 24px", maxHeight: 400, overflowY: "auto" }}>
+                    {cohortDrilldown.users.map((u, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < cohortDrilldown.users.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: `${T.teal}20`, border: `1px solid ${T.teal}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: T.teal }}>
+                          {(u.name || u.email || "?")[0].toUpperCase()}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || u.email?.split("@")[0] || "User"}</div>
+                          <div style={{ fontSize: 11, color: T.textMuted }}>{u.email}</div>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: TIER_BG[u.tier] || "rgba(100,116,139,0.1)", color: TIER_COLOR[u.tier] || T.textMuted, fontWeight: 700 }}>{u.tier?.toUpperCase()}</div>
+                          <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>Last: {u.lastLoginAt ? timeSince(new Date(u.lastLoginAt)) : "Never"}</div>
+                        </div>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => { setCohortDrilldown(null); setTab("users"); }}
+                      style={{ width: "100%", marginTop: 16, padding: "10px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      View All in Users Tab →
+                    </button>
+                  </div>
+                </Modal>
+              )}
+
+              {/* ═══ ROW 3: Geographic + Tier Movement + Churn ═══ */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
-                {/* Geographic Heatmap */}
-                <Chart title="Signups by Country" sub="Top 10 countries">
+                <Chart title="Signups by Country" sub={`Top 10 · ${analyticsRange}`}>
                   {geoData.length === 0 ? (
-                    <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>No country data</div>
+                    <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>No data</div>
                   ) : (
-                    <div style={{ padding: "8px 0" }}>
-                      {geoData.map((g, i) => {
-                        const maxCount = geoData[0]?.count || 1;
-                        return (
-                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, cursor: "pointer" }}
-                            onClick={() => { setTab("users"); notify(`Filter: ${g.country}`); }}>
-                            <span style={{ fontSize: 11, color: T.textSecondary, width: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.country}</span>
-                            <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.surfaceAlt }}>
-                              <div style={{ width: `${Math.round((g.count / maxCount) * 100)}%`, height: "100%", borderRadius: 3, background: i < 3 ? T.gold : T.teal }} />
-                            </div>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: T.white, width: 30, textAlign: "right" }}>{g.count}</span>
+                    <div style={{ padding: "6px 0" }}>
+                      {geoData.map((g, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, cursor: "pointer" }}
+                          onClick={() => { setTab("users"); notify(`Filter: ${g.country}`); }}>
+                          <span style={{ fontSize: 10, color: T.textSecondary, width: 70, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.country}</span>
+                          <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.surfaceAlt }}>
+                            <div style={{ width: `${g.pct}%`, height: "100%", borderRadius: 3, background: i < 3 ? T.gold : T.teal }} />
                           </div>
-                        );
-                      })}
+                          <span style={{ fontSize: 10, fontWeight: 700, color: T.white, width: 35, textAlign: "right" }}>{g.count} <span style={{ color: T.textMuted, fontWeight: 400 }}>({g.pct}%)</span></span>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </Chart>
 
-                {/* Tier Movement Flow */}
-                <Chart title="Tier Movement" sub="Upgrades and downgrades">
-                  <div style={{ padding: "12px 0" }}>
+                <Chart title="Tier Movement" sub="Upgrades ↑ · Downgrades ↓">
+                  <div style={{ padding: "10px 0" }}>
                     {[
-                      { label: "Free → Trial", value: tierMovement.freeToTrial, color: T.blue, icon: "↑" },
-                      { label: "Trial → Pro", value: tierMovement.trialToPro, color: T.green, icon: "↑" },
-                      { label: "Pro → Enterprise", value: tierMovement.proToEnt, color: T.purple, icon: "↑" },
-                      { label: "Trial → Free (churn)", value: tierMovement.trialToFree, color: T.red, icon: "↓" },
-                      { label: "Pro → Free (churn)", value: tierMovement.proToFree, color: T.red, icon: "↓" },
+                      { label: "Free → Trial", value: tierMovement.freeToTrial, color: T.blue, icon: "↑", good: true },
+                      { label: "Trial → Pro", value: tierMovement.trialToPro, color: T.green, icon: "↑", good: true },
+                      { label: "Pro → Enterprise", value: tierMovement.proToEnt, color: T.purple, icon: "↑", good: true },
+                      { label: "Trial → Free", value: tierMovement.trialToFree, color: T.red, icon: "↓", good: false },
+                      { label: "Pro → Free", value: tierMovement.proToFree, color: T.red, icon: "↓", good: false },
                     ].map((m, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
+                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 12, color: m.color }}>{m.icon}</span>
+                          <span style={{ fontSize: 14, color: m.color }}>{m.icon}</span>
                           <span style={{ fontSize: 11, color: T.textSecondary }}>{m.label}</span>
                         </div>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: m.color }}>{m.value}</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: m.value > 0 ? m.color : T.textMuted }}>{m.value}</span>
                       </div>
                     ))}
+                    <div style={{ marginTop: 12, padding: "8px 10px", borderRadius: 8, background: tierMovement.trialToPro > tierMovement.trialToFree ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)" }}>
+                      <div style={{ fontSize: 10, color: tierMovement.trialToPro > tierMovement.trialToFree ? T.green : T.red }}>
+                        {tierMovement.trialToPro > tierMovement.trialToFree ? "✓ Healthy: More upgrades than downgrades" : "⚠ Warning: More downgrades than upgrades"}
+                      </div>
+                    </div>
                   </div>
                 </Chart>
 
-                {/* Churn Timing */}
                 <Chart title="Churn Timing" sub="When users typically leave">
-                  <div style={{ padding: "8px 0" }}>
+                  <div style={{ padding: "6px 0" }}>
                     {churnTiming.map((c, i) => (
-                      <div key={i} style={{ marginBottom: 12 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                      <div key={i} style={{ marginBottom: 10 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
                           <span style={{ fontSize: 11, color: T.textSecondary }}>{c.period}</span>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: c.pct > 30 ? T.red : T.textMuted }}>{c.count} ({c.pct}%)</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: c.pct > 30 ? T.red : c.pct > 0 ? T.orange : T.textMuted }}>{c.count} ({c.pct}%)</span>
                         </div>
-                        <div style={{ height: 6, borderRadius: 3, background: T.surfaceAlt }}>
-                          <div style={{ width: `${c.pct}%`, height: "100%", borderRadius: 3, background: c.pct > 30 ? T.red : T.orange }} />
+                        <div style={{ height: 5, borderRadius: 3, background: T.surfaceAlt }}>
+                          <div style={{ width: `${c.pct}%`, height: "100%", borderRadius: 3, background: c.pct > 30 ? T.red : c.pct > 0 ? T.orange : T.textMuted }} />
                         </div>
                       </div>
                     ))}
-                    <div style={{ marginTop: 12, padding: "8px 10px", borderRadius: 8, background: "rgba(239,68,68,0.08)", fontSize: 10, color: T.textMuted }}>
-                      Focus retention efforts on highest churn periods
-                    </div>
+                    {churnTiming.every(c => c.count === 0) && (
+                      <div style={{ padding: "12px", textAlign: "center", background: "rgba(16,185,129,0.08)", borderRadius: 8 }}>
+                        <div style={{ fontSize: 11, color: T.green }}>🎉 No churned users yet!</div>
+                      </div>
+                    )}
                   </div>
                 </Chart>
               </div>
 
-              {/* ═══ ROW 4: Feature Usage + Top Active Users + Signup Sources ═══ */}
+              {/* ═══ ROW 4: Feature Usage + Top Users + Sources ═══ */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
-                {/* Feature Usage */}
-                <Chart title="Feature Usage" sub="Top admin actions from auditLog">
+                <Chart title="Feature Usage" sub="Top admin actions">
                   {featureUsage.length === 0 ? (
-                    <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>No usage data yet</div>
+                    <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>No data</div>
                   ) : (
-                    <div style={{ padding: "8px 0" }}>
+                    <div style={{ padding: "6px 0" }}>
                       {featureUsage.map((f, i) => {
                         const maxCount = featureUsage[0]?.count || 1;
                         return (
-                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                            <span style={{ fontSize: 10, color: T.textSecondary, width: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.action.replace(/_/g, " ")}</span>
-                            <div style={{ flex: 1, height: 5, borderRadius: 3, background: T.surfaceAlt }}>
-                              <div style={{ width: `${Math.round((f.count / maxCount) * 100)}%`, height: "100%", borderRadius: 3, background: T.teal }} />
+                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                            <span style={{ fontSize: 9, color: T.textSecondary, width: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.action.replace(/_/g, " ")}</span>
+                            <div style={{ flex: 1, height: 4, borderRadius: 2, background: T.surfaceAlt }}>
+                              <div style={{ width: `${Math.round((f.count / maxCount) * 100)}%`, height: "100%", borderRadius: 2, background: T.teal }} />
                             </div>
-                            <span style={{ fontSize: 10, fontWeight: 600, color: T.white, width: 30, textAlign: "right" }}>{f.count}</span>
+                            <span style={{ fontSize: 9, fontWeight: 600, color: T.white, width: 28, textAlign: "right" }}>{f.count}</span>
                           </div>
                         );
                       })}
@@ -9064,53 +9289,48 @@ export default function AdminPanel() {
                   )}
                 </Chart>
 
-                {/* Top Active Users */}
-                <Chart title="Top Active Users" sub="Most recently active">
+                <Chart title="Top Active Users" sub="Click to view profile">
                   {topActiveUsers.length === 0 ? (
                     <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>No active users</div>
                   ) : (
-                    <div style={{ padding: "4px 0", maxHeight: 220, overflowY: "auto" }}>
-                      {topActiveUsers.map((u, i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: i < topActiveUsers.length - 1 ? `1px solid ${T.border}` : "none", cursor: "pointer" }}
+                    <div style={{ padding: "2px 0", maxHeight: 200, overflowY: "auto" }}>
+                      {topActiveUsers.slice(0, 8).map((u, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: i < 7 ? `1px solid ${T.border}` : "none", cursor: "pointer" }}
                           onClick={() => { setTab("users"); setPendingOpenUid(u.uid || u.id); }}>
-                          <div style={{ width: 24, height: 24, borderRadius: "50%", background: `${T.teal}20`, border: `1px solid ${T.teal}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: T.teal }}>
+                          <div style={{ width: 22, height: 22, borderRadius: "50%", background: `${TIER_COLOR[u.tier] || T.teal}15`, border: `1px solid ${TIER_COLOR[u.tier] || T.teal}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: TIER_COLOR[u.tier] || T.teal }}>
                             {(u.name || u.email || "?")[0].toUpperCase()}
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: T.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{u.name || u.email?.split("@")[0] || "User"}</div>
-                            <div style={{ fontSize: 9, color: T.textMuted }}>{u.tier} · {u.lastLoginAt ? timeSince(new Date(u.lastLoginAt)) : "—"}</div>
+                            <div style={{ fontSize: 10, fontWeight: 600, color: T.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{u.name || u.email?.split("@")[0]}</div>
                           </div>
+                          <div style={{ fontSize: 9, color: T.textMuted }}>{u.lastLoginAt ? timeSince(new Date(u.lastLoginAt)) : "—"}</div>
                         </div>
                       ))}
                     </div>
                   )}
                 </Chart>
 
-                {/* Signup Sources */}
-                <Chart title="Signup Sources" sub="How users found us">
+                <Chart title="Signup Sources" sub="Acquisition channels">
                   {signupSources.length === 0 ? (
-                    <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>No source data</div>
+                    <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>No data</div>
                   ) : (
-                    <div style={{ padding: "8px 0" }}>
-                      {signupSources.slice(0, 6).map((s, i) => {
-                        const maxCount = signupSources[0]?.count || 1;
-                        return (
-                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                            <span style={{ fontSize: 11, color: T.textSecondary, width: 80 }}>{s.source}</span>
-                            <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.surfaceAlt }}>
-                              <div style={{ width: `${Math.round((s.count / maxCount) * 100)}%`, height: "100%", borderRadius: 3, background: T.purple }} />
-                            </div>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: T.white, width: 30, textAlign: "right" }}>{s.count}</span>
+                    <div style={{ padding: "6px 0" }}>
+                      {signupSources.slice(0, 6).map((s, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                          <span style={{ fontSize: 10, color: T.textSecondary, width: 70 }}>{s.source}</span>
+                          <div style={{ flex: 1, height: 5, borderRadius: 3, background: T.surfaceAlt }}>
+                            <div style={{ width: `${s.pct}%`, height: "100%", borderRadius: 3, background: T.purple }} />
                           </div>
-                        );
-                      })}
+                          <span style={{ fontSize: 10, fontWeight: 700, color: T.white, width: 35, textAlign: "right" }}>{s.count} <span style={{ color: T.textMuted, fontWeight: 400 }}>({s.pct}%)</span></span>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </Chart>
               </div>
 
-              {/* ═══ ROW 5: Milestones ═══ */}
-              <Section title="Growth Milestones" sub="Track your progress towards key goals">
+              {/* ═══ MILESTONES ═══ */}
+              <Section title="Growth Milestones" sub="Track progress towards key business goals">
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
                   {[
                     { label: "Platform Launch", target: 1, current: 1, date: "Mar 2026" },
@@ -9125,14 +9345,14 @@ export default function AdminPanel() {
                     const done = m.current >= m.target;
                     const pct = Math.min(Math.round((m.current / m.target) * 100), 100);
                     return (
-                      <div key={i} className="chart-box fade-up" style={{ padding: 14, animationDelay: `${i * 0.04}s`, border: done ? `1px solid rgba(16,185,129,0.3)` : `1px solid ${T.border}` }}>
+                      <div key={i} className="chart-box fade-up" style={{ padding: 14, animationDelay: `${i * 0.03}s`, border: done ? `1px solid ${T.green}40` : `1px solid ${T.border}`, background: done ? "rgba(16,185,129,0.04)" : T.surface }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                          <span style={{ fontSize: 9, fontWeight: 800, color: T.gold, letterSpacing: 0.5 }}>{i + 1}</span>
-                          {done ? <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "rgba(16,185,129,0.12)", color: T.green }}>✓</span> : <span style={{ fontSize: 9, color: T.textMuted }}>{pct}%</span>}
+                          <span style={{ fontSize: 9, fontWeight: 800, color: done ? T.green : T.gold }}>{i + 1}</span>
+                          {done ? <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "rgba(16,185,129,0.15)", color: T.green }}>✓ DONE</span> : <span style={{ fontSize: 9, color: T.textMuted }}>{pct}%</span>}
                         </div>
                         <div style={{ fontSize: 11, fontWeight: 600, color: done ? T.white : T.textSecondary, marginBottom: 6 }}>{m.label}</div>
                         <div style={{ height: 4, borderRadius: 2, background: T.surfaceAlt }}>
-                          <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: done ? T.green : T.gold }} />
+                          <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: done ? T.green : T.gold, transition: "width 0.5s" }} />
                         </div>
                         {m.date && <div style={{ fontSize: 9, color: T.green, marginTop: 4 }}>{m.date}</div>}
                       </div>
