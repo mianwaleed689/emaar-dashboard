@@ -430,13 +430,16 @@ function EiborRatesPanel({ db, T, I, notify }) {
   }, [db, notify]);
 
   React.useEffect(() => {
-    getDoc(doc(db, "tabData", "eiborRates")).then(snap => {
+    // Real-time listener for current EIBOR rates
+    const unsubRates = onSnapshot(doc(db, "tabData", "eiborRates"), (snap) => {
       if (snap.exists()) setEiborCurrent(snap.data());
-    }).catch(() => {});
-    getDocs(collection(db, "eiborHistory")).then(snap => {
+    });
+    // Real-time listener for EIBOR history
+    const unsubHistory = onSnapshot(collection(db, "eiborHistory"), (snap) => {
       const hist = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
       setEiborHistory(hist);
-    }).catch(() => {});
+    });
+    return () => { unsubRates(); unsubHistory(); };
   }, [db]);
 
   const saveEibor = async () => {
@@ -3268,6 +3271,22 @@ export default function AdminPanel() {
         snap.forEach(d => { yieldMap[d.id] = plainify(d.data()); });
         setLiveYields(yieldMap);
       }));
+      // Price history listener
+      unsubs.push(onSnapshot(collection(db, "priceHistory"), (snap) => {
+        const histMap = {};
+        snap.forEach(d => {
+          const data = plainify(d.data());
+          const pid = data.projectId || data.pid;
+          if (pid) {
+            if (!histMap[pid]) histMap[pid] = [];
+            histMap[pid].push({ id: d.id, ...data });
+          }
+        });
+        Object.keys(histMap).forEach(pid => {
+          histMap[pid].sort((a, b) => new Date(b.changedAt || b.recordedAt || 0) - new Date(a.changedAt || a.recordedAt || 0));
+        });
+        setPriceHistory(histMap);
+      }));
     } catch (e) { console.error("Real-time listener error:", e); }
     return () => { unsubs.forEach(u => { try { u(); } catch {} }); };
   }, [isAdmin]);
@@ -3377,6 +3396,49 @@ export default function AdminPanel() {
       }
     })();
     return () => { if (unsub) unsub(); };
+  }, [isAdmin]);
+
+  // Real-time listener for Tab Control settings
+  useEffect(() => {
+    if (!isAdmin) return;
+    const unsub = onSnapshot(doc(db, "platformSettings", "tabs"), (snap) => {
+      if (snap.exists()) setTabSettings(snap.data());
+    });
+    return () => unsub();
+  }, [isAdmin]);
+
+  // Real-time listener for payments (Revenue tab)
+  useEffect(() => {
+    if (!isAdmin) return;
+    const unsub = onSnapshot(collection(db, "payments"), (snap) => {
+      const list = [];
+      snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
+      list.sort((a, b) => new Date(b.createdAt || b.paidAt || 0) - new Date(a.createdAt || a.paidAt || 0));
+      window._revenuePayments = list;
+      window._revenuePaymentsLoaded = true;
+    });
+    return () => unsub();
+  }, [isAdmin]);
+
+  // Real-time listener for digest settings (Email Digest tab)
+  useEffect(() => {
+    if (!isAdmin) return;
+    const unsubs = [];
+    try {
+      unsubs.push(onSnapshot(collection(db, "digestLog"), (snap) => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
+        list.sort((a, b) => new Date(b.sentAt || 0) - new Date(a.sentAt || 0));
+        window._digestLog = list;
+      }));
+      unsubs.push(onSnapshot(doc(db, "platformSettings", "digestSchedule"), (snap) => {
+        if (snap.exists()) window._digestSchedule = snap.data();
+      }));
+      unsubs.push(onSnapshot(doc(db, "platformSettings", "digestTemplate"), (snap) => {
+        if (snap.exists()) window._digestTemplate = snap.data();
+      }));
+    } catch (e) {}
+    return () => { unsubs.forEach(u => { try { u(); } catch {} }); };
   }, [isAdmin]);
 
   const approveVerification = async (v) => {
