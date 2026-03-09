@@ -381,6 +381,20 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   const [showCsatModal, setShowCsatModal] = useState(false);
   const [csatForm, setCsatForm] = useState({ ticketId: "", rating: 5, comment: "" });
 
+  // Phase 5B: Knowledge Base & Quick Responses
+  const [kbArticles, setKbArticles] = useState([]);
+  const [quickResponses, setQuickResponses] = useState([]);
+  const [showKbModal, setShowKbModal] = useState(false);
+  const [showQuickResponseModal, setShowQuickResponseModal] = useState(false);
+  const [kbSearch, setKbSearch] = useState("");
+  const [kbCategory, setKbCategory] = useState("all");
+  const [editingArticle, setEditingArticle] = useState(null);
+  const [editingQuickResponse, setEditingQuickResponse] = useState(null);
+  const [articleForm, setArticleForm] = useState({ title: "", content: "", category: "getting-started", tags: "" });
+  const [quickResponseForm, setQuickResponseForm] = useState({ name: "", shortcut: "", content: "", category: "general" });
+  const [expandedKbCategory, setExpandedKbCategory] = useState(null);
+  const [viewingArticle, setViewingArticle] = useState(null);
+
   // Predefined tags
   const availableTags = [
     { id: "urgent", label: "Urgent", color: T.red },
@@ -505,6 +519,14 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         // Fetch CSAT ratings
         const csatSnap = await getDocs(collection(db, "supportCSAT"));
         setCsatRatings(csatSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        
+        // Fetch Knowledge Base articles
+        const kbSnap = await getDocs(collection(db, "supportKnowledgeBase"));
+        setKbArticles(kbSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        
+        // Fetch Quick Responses
+        const qrSnap = await getDocs(collection(db, "supportQuickResponses"));
+        setQuickResponses(qrSnap.docs.map(d => ({ id: d.id, ...d.data() })));
       } catch (e) {
         console.error("Fetch automation settings:", e);
         // Default sample rules
@@ -527,6 +549,27 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           { id: "csat_5", ticketId: "ticket_5", rating: 5, comment: "", agentId: "agent_2", agentName: "Sarah", userName: "Tom Davis", createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
           { id: "csat_6", ticketId: "ticket_6", rating: 2, comment: "Not fully resolved, had to follow up multiple times", agentId: "agent_3", agentName: "Dev Team", userName: "Anna Lee", createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString() },
           { id: "csat_7", ticketId: "ticket_7", rating: 4, comment: "Quick response time", agentId: "agent_1", agentName: "Ahmed", userName: "Chris Martin", createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() },
+        ]);
+        // Default sample KB articles
+        setKbArticles([
+          { id: "kb_1", title: "How to reset your password", content: "To reset your password:\n\n1. Click on your profile icon in the top right corner\n2. Select 'Settings' from the dropdown menu\n3. Navigate to 'Security' tab\n4. Click 'Reset Password'\n5. Enter your current password and new password\n6. Click 'Save Changes'\n\nIf you've forgotten your password, click 'Forgot Password' on the login page and follow the email instructions.", category: "getting-started", tags: ["password", "login", "security"], views: 142, helpful: 89, createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "kb_2", title: "Setting up two-factor authentication", content: "Two-factor authentication (2FA) adds an extra layer of security:\n\n1. Go to Settings > Security\n2. Click 'Enable 2FA'\n3. Scan the QR code with your authenticator app (Google Authenticator, Authy, etc.)\n4. Enter the 6-digit code from your app\n5. Save backup codes in a secure location\n\n**Important:** Keep your backup codes safe - they're the only way to recover your account if you lose access to your authenticator.", category: "getting-started", tags: ["security", "2fa", "authentication"], views: 98, helpful: 76, createdAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "kb_3", title: "Understanding your dashboard", content: "Your DXB Analytics dashboard provides real-time insights into Dubai's real estate market.\n\n**Key Sections:**\n- **Overview**: Market summary with key metrics\n- **Transactions**: Recent sales and rental data\n- **Trends**: Price movements and forecasts\n- **Areas**: Neighborhood-level analysis\n- **Developers**: Builder performance metrics\n\n**Tips:**\n- Use filters to narrow down data by area, property type, or time period\n- Export reports for offline analysis\n- Set up alerts for price changes in specific areas", category: "getting-started", tags: ["dashboard", "overview", "navigation"], views: 234, helpful: 198, createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "kb_4", title: "How to update payment method", content: "To update your payment method:\n\n1. Navigate to Settings > Billing\n2. Under 'Payment Methods', click 'Add New' or 'Edit' on existing card\n3. Enter your new card details\n4. Click 'Save Payment Method'\n\nYour next invoice will automatically charge the new payment method.", category: "billing", tags: ["billing", "payment", "credit card"], views: 67, helpful: 54, createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "kb_5", title: "Understanding your invoice", content: "Your invoice includes:\n\n- **Subscription fee**: Monthly/annual plan charge\n- **Add-ons**: Any additional features purchased\n- **Usage charges**: API calls beyond your plan limit (if applicable)\n- **Tax**: VAT as per UAE regulations\n\n**Download invoices:**\nGo to Settings > Billing > Invoice History to download PDF copies.", category: "billing", tags: ["billing", "invoice", "charges"], views: 45, helpful: 38, createdAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "kb_6", title: "Data not loading troubleshooting", content: "If your data isn't loading:\n\n**Quick fixes:**\n1. Refresh the page (Ctrl+R or Cmd+R)\n2. Clear browser cache\n3. Try a different browser\n4. Check your internet connection\n\n**Still having issues?**\n- Check our status page for any ongoing incidents\n- Ensure your subscription is active\n- Contact support with your browser/device details", category: "technical", tags: ["troubleshooting", "loading", "errors"], views: 156, helpful: 112, createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "kb_7", title: "Browser compatibility", content: "DXB Analytics works best on:\n\n**Fully Supported:**\n- Chrome 90+\n- Firefox 88+\n- Safari 14+\n- Edge 90+\n\n**Limited Support:**\n- Internet Explorer (not recommended)\n- Mobile browsers (responsive design)\n\n**For best experience:**\n- Enable JavaScript\n- Allow cookies\n- Use a screen resolution of 1280x720 or higher", category: "technical", tags: ["browser", "compatibility", "requirements"], views: 89, helpful: 71, createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "kb_8", title: "Refund policy", content: "Our refund policy:\n\n**Monthly subscriptions:**\n- Cancel anytime, no refund for partial months\n- Access continues until end of billing period\n\n**Annual subscriptions:**\n- Full refund within 14 days of purchase\n- Pro-rated refund within 30 days\n- No refunds after 30 days\n\n**To request a refund:**\nContact support with your account email and reason for refund.", category: "billing", tags: ["refund", "cancellation", "policy"], views: 34, helpful: 28, createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
+        ]);
+        // Default sample Quick Responses
+        setQuickResponses([
+          { id: "qr_1", name: "Greeting", shortcut: "/greet", content: "Hi {{name}},\n\nThank you for contacting DXB Analytics support! I'm happy to help you today.\n\nCould you please provide more details about your issue so I can assist you better?", category: "general", usageCount: 156, createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "qr_2", name: "Password Reset", shortcut: "/password", content: "Hi {{name}},\n\nTo reset your password, please follow these steps:\n\n1. Click 'Forgot Password' on the login page\n2. Enter your email address\n3. Check your inbox for the reset link\n4. Follow the link to create a new password\n\nIf you don't receive the email within 5 minutes, please check your spam folder.\n\nLet me know if you need any further assistance!", category: "technical", usageCount: 89, createdAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "qr_3", name: "Billing Question", shortcut: "/billing", content: "Hi {{name}},\n\nI've reviewed your billing inquiry for ticket #{{ticket_id}}.\n\nYour current plan is [PLAN] at [PRICE]/month. Your next billing date is [DATE].\n\nIf you'd like to upgrade, downgrade, or have questions about charges, please let me know and I'll be happy to help!", category: "billing", usageCount: 67, createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "qr_4", name: "Issue Resolved", shortcut: "/resolved", content: "Hi {{name}},\n\nGreat news! Your issue has been resolved. Here's a summary of what was done:\n\n[SUMMARY]\n\nIf you have any other questions or if the issue reoccurs, please don't hesitate to reach out.\n\nThank you for using DXB Analytics!", category: "general", usageCount: 234, createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "qr_5", name: "Escalation Notice", shortcut: "/escalate", content: "Hi {{name}},\n\nI'm escalating your ticket to our senior support team for further investigation. This ensures you receive the specialized attention your issue requires.\n\nA senior agent will review your case and respond within 24 hours.\n\nThank you for your patience!", category: "general", usageCount: 45, createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "qr_6", name: "Need More Info", shortcut: "/info", content: "Hi {{name}},\n\nThank you for reaching out. To help resolve your issue faster, could you please provide:\n\n1. Browser and version you're using\n2. Screenshots of any error messages\n3. Steps to reproduce the issue\n\nThis information will help us identify and fix the problem quickly.", category: "technical", usageCount: 112, createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "qr_7", name: "Feature Request Noted", shortcut: "/feature", content: "Hi {{name}},\n\nThank you for your feature suggestion! I've logged this with our product team for consideration.\n\nWhile I can't guarantee a timeline, we value customer feedback and use it to prioritize our roadmap.\n\nIs there anything else I can help you with today?", category: "general", usageCount: 38, createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
         ]);
       }
     };
@@ -1838,6 +1881,177 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     }));
   };
 
+  // Phase 5B: KB Categories
+  const kbCategories = [
+    { id: "getting-started", label: "Getting Started", icon: "🚀" },
+    { id: "billing", label: "Billing & Payments", icon: "💳" },
+    { id: "technical", label: "Technical Issues", icon: "🔧" },
+    { id: "features", label: "Features & Usage", icon: "✨" },
+    { id: "account", label: "Account & Security", icon: "🔐" },
+  ];
+
+  const qrCategories = [
+    { id: "general", label: "General" },
+    { id: "technical", label: "Technical" },
+    { id: "billing", label: "Billing" },
+    { id: "escalation", label: "Escalation" },
+  ];
+
+  // Save KB article
+  const saveKbArticle = async () => {
+    if (!articleForm.title.trim() || !articleForm.content.trim()) {
+      notify("Please fill in title and content");
+      return;
+    }
+    
+    try {
+      const articleData = {
+        title: articleForm.title.trim(),
+        content: articleForm.content.trim(),
+        category: articleForm.category,
+        tags: articleForm.tags.split(",").map(t => t.trim()).filter(Boolean),
+        updatedAt: new Date().toISOString()
+      };
+      
+      if (editingArticle) {
+        await setDoc(doc(db, "supportKnowledgeBase", editingArticle.id), articleData, { merge: true });
+        setKbArticles(prev => prev.map(a => a.id === editingArticle.id ? { ...a, ...articleData } : a));
+        notify("Article updated");
+      } else {
+        articleData.views = 0;
+        articleData.helpful = 0;
+        articleData.createdAt = new Date().toISOString();
+        articleData.createdBy = adminUser?.displayName || adminUser?.email || "Admin";
+        const docRef = await addDoc(collection(db, "supportKnowledgeBase"), articleData);
+        setKbArticles(prev => [...prev, { id: docRef.id, ...articleData }]);
+        notify("Article created");
+      }
+      
+      setArticleForm({ title: "", content: "", category: "getting-started", tags: "" });
+      setEditingArticle(null);
+      setShowKbModal(false);
+    } catch (e) {
+      notify("Error: " + e.message);
+    }
+  };
+
+  const deleteKbArticle = async (articleId) => {
+    if (!window.confirm("Delete this article?")) return;
+    
+    try {
+      await deleteDoc(doc(db, "supportKnowledgeBase", articleId));
+      setKbArticles(prev => prev.filter(a => a.id !== articleId));
+      notify("Article deleted");
+    } catch (e) {
+      notify("Error: " + e.message);
+    }
+  };
+
+  const editKbArticle = (article) => {
+    setEditingArticle(article);
+    setArticleForm({
+      title: article.title,
+      content: article.content,
+      category: article.category,
+      tags: (article.tags || []).join(", ")
+    });
+    setShowKbModal(true);
+  };
+
+  // Save Quick Response
+  const saveQuickResponse = async () => {
+    if (!quickResponseForm.name.trim() || !quickResponseForm.content.trim()) {
+      notify("Please fill in name and content");
+      return;
+    }
+    
+    try {
+      const qrData = {
+        name: quickResponseForm.name.trim(),
+        shortcut: quickResponseForm.shortcut.trim() || `/${quickResponseForm.name.toLowerCase().replace(/\s+/g, "")}`,
+        content: quickResponseForm.content.trim(),
+        category: quickResponseForm.category,
+        updatedAt: new Date().toISOString()
+      };
+      
+      if (editingQuickResponse) {
+        await setDoc(doc(db, "supportQuickResponses", editingQuickResponse.id), qrData, { merge: true });
+        setQuickResponses(prev => prev.map(q => q.id === editingQuickResponse.id ? { ...q, ...qrData } : q));
+        notify("Quick response updated");
+      } else {
+        qrData.usageCount = 0;
+        qrData.createdAt = new Date().toISOString();
+        qrData.createdBy = adminUser?.displayName || adminUser?.email || "Admin";
+        const docRef = await addDoc(collection(db, "supportQuickResponses"), qrData);
+        setQuickResponses(prev => [...prev, { id: docRef.id, ...qrData }]);
+        notify("Quick response created");
+      }
+      
+      setQuickResponseForm({ name: "", shortcut: "", content: "", category: "general" });
+      setEditingQuickResponse(null);
+      setShowQuickResponseModal(false);
+    } catch (e) {
+      notify("Error: " + e.message);
+    }
+  };
+
+  const deleteQuickResponse = async (qrId) => {
+    if (!window.confirm("Delete this quick response?")) return;
+    
+    try {
+      await deleteDoc(doc(db, "supportQuickResponses", qrId));
+      setQuickResponses(prev => prev.filter(q => q.id !== qrId));
+      notify("Quick response deleted");
+    } catch (e) {
+      notify("Error: " + e.message);
+    }
+  };
+
+  const editQuickResponse = (qr) => {
+    setEditingQuickResponse(qr);
+    setQuickResponseForm({
+      name: qr.name,
+      shortcut: qr.shortcut,
+      content: qr.content,
+      category: qr.category
+    });
+    setShowQuickResponseModal(true);
+  };
+
+  // Apply Quick Response with variable substitution
+  const applyQuickResponse = (qr) => {
+    let content = qr.content;
+    if (ticketDrawer) {
+      content = content
+        .replace(/\{\{name\}\}/g, ticketDrawer.userName || ticketDrawer.userEmail?.split("@")[0] || "there")
+        .replace(/\{\{ticket_id\}\}/g, ticketDrawer.id)
+        .replace(/\{\{category\}\}/g, ticketDrawer.category || "general")
+        .replace(/\{\{tier\}\}/g, ticketDrawer.userTier || "free")
+        .replace(/\{\{agent_name\}\}/g, adminUser?.displayName || adminUser?.email?.split("@")[0] || "Support");
+    }
+    setTicketReply(content);
+    
+    // Increment usage count
+    setDoc(doc(db, "supportQuickResponses", qr.id), { usageCount: (qr.usageCount || 0) + 1 }, { merge: true }).catch(() => {});
+    setQuickResponses(prev => prev.map(q => q.id === qr.id ? { ...q, usageCount: (q.usageCount || 0) + 1 } : q));
+  };
+
+  // Filter KB articles
+  const filteredKbArticles = kbArticles.filter(a => {
+    if (kbCategory !== "all" && a.category !== kbCategory) return false;
+    if (kbSearch) {
+      const s = kbSearch.toLowerCase();
+      if (!a.title.toLowerCase().includes(s) && !a.content.toLowerCase().includes(s) && !(a.tags || []).some(t => t.toLowerCase().includes(s))) return false;
+    }
+    return true;
+  });
+
+  // Group KB articles by category
+  const groupedKbArticles = kbCategories.map(cat => ({
+    ...cat,
+    articles: filteredKbArticles.filter(a => a.category === cat.id)
+  })).filter(g => g.articles.length > 0);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* KPI TOPBAR */}
@@ -1866,6 +2080,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             { id: "resolved", label: `Resolved (${tickets.filter(t => t.status === "resolved" || t.status === "closed").length})` },
             { id: "all", label: `All (${tickets.length})` },
             { id: "analytics", label: "📊 Analytics" },
+            { id: "kb", label: "📚 KB & Tools" },
           ].map(t => (
             <button key={t.id} type="button" onClick={() => setSupportSubTab(t.id)}
               style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${supportSubTab === t.id ? T.gold : T.border}`, background: supportSubTab === t.id ? T.goldGlow : "transparent", color: supportSubTab === t.id ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
@@ -1873,7 +2088,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             </button>
           ))}
         </div>
-        {supportSubTab !== "analytics" && (
+        {supportSubTab !== "analytics" && supportSubTab !== "kb" && (
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <input value={ticketSearch} onChange={e => setTicketSearch(e.target.value)} placeholder="Search tickets..."
             style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, width: 160, fontFamily: "'Outfit',sans-serif" }} />
@@ -2452,6 +2667,217 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             )}
           </div>
         </div>
+      ) : supportSubTab === "kb" ? (
+        /* KNOWLEDGE BASE & TOOLS */
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* KB Categories */}
+          {(() => {
+            const kbCategories = [
+              { id: "getting-started", label: "Getting Started", icon: "🚀" },
+              { id: "billing", label: "Billing & Payments", icon: "💳" },
+              { id: "technical", label: "Technical Issues", icon: "🔧" },
+              { id: "features", label: "Features & How-To", icon: "⭐" },
+              { id: "account", label: "Account Management", icon: "👤" },
+            ];
+            
+            const qrCategories = [
+              { id: "general", label: "General", icon: "💬" },
+              { id: "technical", label: "Technical", icon: "🔧" },
+              { id: "billing", label: "Billing", icon: "💳" },
+            ];
+            
+            const filteredArticles = kbArticles.filter(a => {
+              if (kbCategory !== "all" && a.category !== kbCategory) return false;
+              if (kbSearch) {
+                const s = kbSearch.toLowerCase();
+                return a.title.toLowerCase().includes(s) || a.content.toLowerCase().includes(s) || (a.tags || []).some(t => t.toLowerCase().includes(s));
+              }
+              return true;
+            });
+            
+            const articlesByCategory = kbCategories.map(cat => ({
+              ...cat,
+              articles: filteredArticles.filter(a => a.category === cat.id)
+            })).filter(cat => cat.articles.length > 0 || kbCategory === "all");
+            
+            return (
+              <>
+                {/* Knowledge Base Section */}
+                <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: T.white, display: "flex", alignItems: "center", gap: 8 }}>
+                      📚 Knowledge Base
+                      <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>{kbArticles.length} articles</span>
+                    </div>
+                    <button type="button" onClick={() => { setEditingArticle(null); setArticleForm({ title: "", content: "", category: "getting-started", tags: "" }); setShowKbModal(true); }}
+                      style={{ padding: "8px 16px", borderRadius: 6, border: "none", background: T.teal, color: T.white, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                      + New Article
+                    </button>
+                  </div>
+                  
+                  {/* Search & Filter */}
+                  <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+                    <input value={kbSearch} onChange={e => setKbSearch(e.target.value)} placeholder="Search articles..."
+                      style={{ flex: 1, padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
+                    <select value={kbCategory} onChange={e => setKbCategory(e.target.value)}
+                      style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                      <option value="all">All Categories</option>
+                      {kbCategories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}
+                    </select>
+                  </div>
+                  
+                  {/* Article View */}
+                  {viewingArticle ? (
+                    <div style={{ padding: 20, background: T.surfaceAlt, borderRadius: 10 }}>
+                      <button type="button" onClick={() => setViewingArticle(null)}
+                        style={{ marginBottom: 16, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer" }}>
+                        ← Back to articles
+                      </button>
+                      <h3 style={{ margin: "0 0 12px 0", fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{viewingArticle.title}</h3>
+                      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>
+                          {kbCategories.find(c => c.id === viewingArticle.category)?.icon} {kbCategories.find(c => c.id === viewingArticle.category)?.label}
+                        </span>
+                        <span style={{ fontSize: 10, color: T.textMuted }}>👁 {viewingArticle.views || 0} views</span>
+                        <span style={{ fontSize: 10, color: T.textMuted }}>👍 {viewingArticle.helpful || 0} helpful</span>
+                      </div>
+                      <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{viewingArticle.content}</div>
+                      {viewingArticle.tags?.length > 0 && (
+                        <div style={{ marginTop: 16, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {viewingArticle.tags.map(tag => (
+                            <span key={tag} style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: T.surface, color: T.textMuted }}>#{tag}</span>
+                          ))}
+                        </div>
+                      )}
+                      <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
+                        <button type="button" onClick={() => { setEditingArticle(viewingArticle); setArticleForm({ title: viewingArticle.title, content: viewingArticle.content, category: viewingArticle.category, tags: (viewingArticle.tags || []).join(", ") }); setShowKbModal(true); }}
+                          style={{ padding: "8px 16px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer" }}>
+                          ✏️ Edit
+                        </button>
+                        <button type="button" onClick={async () => {
+                          if (!window.confirm("Delete this article?")) return;
+                          try {
+                            await deleteDoc(doc(db, "supportKnowledgeBase", viewingArticle.id));
+                            setKbArticles(prev => prev.filter(a => a.id !== viewingArticle.id));
+                            setViewingArticle(null);
+                            notify("Article deleted");
+                          } catch (e) { notify("Error: " + e.message); }
+                        }}
+                          style={{ padding: "8px 16px", borderRadius: 6, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 11, cursor: "pointer" }}>
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Categories Accordion */
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {articlesByCategory.length === 0 ? (
+                        <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
+                          <div style={{ fontSize: 24, marginBottom: 8 }}>📚</div>
+                          <div style={{ fontSize: 12 }}>No articles found. Create your first article!</div>
+                        </div>
+                      ) : (
+                        articlesByCategory.map(cat => (
+                          <div key={cat.id} style={{ background: T.surfaceAlt, borderRadius: 10, overflow: "hidden" }}>
+                            <button type="button" onClick={() => setExpandedKbCategory(expandedKbCategory === cat.id ? null : cat.id)}
+                              style={{ width: "100%", padding: "14px 16px", background: "transparent", border: "none", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", textAlign: "left" }}>
+                              <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>
+                                {cat.icon} {cat.label} <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 400 }}>({cat.articles.length})</span>
+                              </span>
+                              <span style={{ color: T.textMuted, fontSize: 12 }}>{expandedKbCategory === cat.id ? "▼" : "▶"}</span>
+                            </button>
+                            {expandedKbCategory === cat.id && (
+                              <div style={{ padding: "0 16px 16px" }}>
+                                {cat.articles.map(article => (
+                                  <div key={article.id} onClick={() => setViewingArticle(article)}
+                                    style={{ padding: "12px 14px", marginTop: 8, background: T.surface, borderRadius: 8, cursor: "pointer", border: `1px solid ${T.border}`, transition: "border-color 0.15s" }}
+                                    onMouseEnter={e => e.currentTarget.style.borderColor = T.teal}
+                                    onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
+                                    <div style={{ fontSize: 13, fontWeight: 500, color: T.white, marginBottom: 4 }}>{article.title}</div>
+                                    <div style={{ display: "flex", gap: 12, fontSize: 10, color: T.textMuted }}>
+                                      <span>👁 {article.views || 0}</span>
+                                      <span>👍 {article.helpful || 0}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Quick Responses Section */}
+                <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: T.white, display: "flex", alignItems: "center", gap: 8 }}>
+                      ⚡ Quick Responses
+                      <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${T.purple}20`, color: T.purple }}>{quickResponses.length} templates</span>
+                    </div>
+                    <button type="button" onClick={() => { setEditingQuickResponse(null); setQuickResponseForm({ name: "", shortcut: "", content: "", category: "general" }); setShowQuickResponseModal(true); }}
+                      style={{ padding: "8px 16px", borderRadius: 6, border: "none", background: T.purple, color: T.white, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                      + New Response
+                    </button>
+                  </div>
+                  
+                  <div style={{ padding: 12, background: `${T.purple}10`, borderRadius: 8, marginBottom: 16 }}>
+                    <div style={{ fontSize: 11, color: T.textSecondary }}>
+                      💡 Use shortcuts like <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>/greet</code> in ticket replies to quickly insert templates. Variables: <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{name}}"}</code>, <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{ticket_id}}"}</code>
+                    </div>
+                  </div>
+                  
+                  {quickResponses.length === 0 ? (
+                    <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
+                      <div style={{ fontSize: 24, marginBottom: 8 }}>⚡</div>
+                      <div style={{ fontSize: 12 }}>No quick responses yet. Create your first template!</div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+                      {quickResponses.map(qr => (
+                        <div key={qr.id} style={{ padding: 14, background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{qr.name}</div>
+                              <code style={{ fontSize: 10, color: T.purple, background: `${T.purple}20`, padding: "2px 6px", borderRadius: 4 }}>{qr.shortcut}</code>
+                            </div>
+                            <span style={{ fontSize: 9, padding: "3px 6px", borderRadius: 4, background: T.surface, color: T.textMuted }}>
+                              {qrCategories.find(c => c.id === qr.category)?.icon} {qr.category}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10, maxHeight: 60, overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {qr.content.length > 100 ? qr.content.slice(0, 100) + "..." : qr.content}
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ fontSize: 10, color: T.textMuted }}>Used {qr.usageCount || 0}x</span>
+                            <div style={{ display: "flex", gap: 6 }}>
+                              <button type="button" onClick={() => { setEditingQuickResponse(qr); setQuickResponseForm({ name: qr.name, shortcut: qr.shortcut, content: qr.content, category: qr.category }); setShowQuickResponseModal(true); }}
+                                style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
+                                Edit
+                              </button>
+                              <button type="button" onClick={async () => {
+                                if (!window.confirm("Delete this quick response?")) return;
+                                try {
+                                  await deleteDoc(doc(db, "supportQuickResponses", qr.id));
+                                  setQuickResponses(prev => prev.filter(q => q.id !== qr.id));
+                                  notify("Quick response deleted");
+                                } catch (e) { notify("Error: " + e.message); }
+                              }}
+                                style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 10, cursor: "pointer" }}>
+                                Del
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            );
+          })()}
+        </div>
       ) : (
       /* TICKETS LIST */
       <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
@@ -2862,23 +3288,79 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 {replyMode === "reply" ? (
                   <>
                     <div style={{ marginBottom: 10 }}>
-                      <button type="button" onClick={() => setShowTemplates(!showTemplates)}
-                        style={{ fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
-                        {showTemplates ? "Hide Templates" : "📝 Quick Templates"}
-                      </button>
+                      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 8 }}>
+                        <button type="button" onClick={() => setShowTemplates(!showTemplates)}
+                          style={{ fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+                          {showTemplates ? "Hide Templates" : "📝 Quick Templates"}
+                        </button>
+                        {quickResponses.length > 0 && (
+                          <span style={{ fontSize: 10, color: T.textMuted }}>
+                            ⚡ {quickResponses.length} quick responses available
+                          </span>
+                        )}
+                      </div>
                       {showTemplates && (
-                        <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
-                          {responseTemplates.map(t => (
-                            <button key={t.id} type="button" onClick={() => insertTemplate(t.text)}
-                              style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surface, color: T.textSecondary, fontSize: 10, cursor: "pointer" }}>
-                              {t.name}
-                            </button>
-                          ))}
+                        <div style={{ marginTop: 8 }}>
+                          {/* Static Templates */}
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+                            {responseTemplates.map(t => (
+                              <button key={t.id} type="button" onClick={() => insertTemplate(t.text)}
+                                style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surface, color: T.textSecondary, fontSize: 10, cursor: "pointer" }}>
+                                {t.name}
+                              </button>
+                            ))}
+                          </div>
+                          {/* Quick Responses from DB */}
+                          {quickResponses.length > 0 && (
+                            <>
+                              <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>⚡ Quick Responses</div>
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                                {quickResponses.map(qr => (
+                                  <button key={qr.id} type="button" onClick={() => {
+                                    let content = qr.content;
+                                    content = content
+                                      .replace(/\{\{name\}\}/g, ticketDrawer?.userName || ticketDrawer?.userEmail?.split("@")[0] || "there")
+                                      .replace(/\{\{ticket_id\}\}/g, ticketDrawer?.id || "")
+                                      .replace(/\{\{category\}\}/g, ticketDrawer?.category || "general")
+                                      .replace(/\{\{tier\}\}/g, ticketDrawer?.userTier || "free")
+                                      .replace(/\{\{agent_name\}\}/g, adminUser?.displayName || adminUser?.email?.split("@")[0] || "Support");
+                                    setTicketReply(content);
+                                    setDoc(doc(db, "supportQuickResponses", qr.id), { usageCount: (qr.usageCount || 0) + 1 }, { merge: true }).catch(() => {});
+                                    setQuickResponses(prev => prev.map(q => q.id === qr.id ? { ...q, usageCount: (q.usageCount || 0) + 1 } : q));
+                                  }}
+                                    style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.purple}40`, background: `${T.purple}10`, color: T.purple, fontSize: 10, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                                    <span>{qr.name}</span>
+                                    <code style={{ fontSize: 8, opacity: 0.7 }}>{qr.shortcut}</code>
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
                     <div style={{ display: "flex", gap: 10 }}>
-                      <textarea value={ticketReply} onChange={e => setTicketReply(e.target.value)} placeholder="Type your reply to the customer..."
+                      <textarea value={ticketReply} onChange={e => {
+                        setTicketReply(e.target.value);
+                        // Check for shortcut commands
+                        const words = e.target.value.split(/\s/);
+                        const lastWord = words[words.length - 1];
+                        if (lastWord.startsWith("/") && lastWord.length > 1) {
+                          const qr = quickResponses.find(q => q.shortcut === lastWord);
+                          if (qr) {
+                            let content = qr.content;
+                            content = content
+                              .replace(/\{\{name\}\}/g, ticketDrawer?.userName || ticketDrawer?.userEmail?.split("@")[0] || "there")
+                              .replace(/\{\{ticket_id\}\}/g, ticketDrawer?.id || "")
+                              .replace(/\{\{category\}\}/g, ticketDrawer?.category || "general")
+                              .replace(/\{\{tier\}\}/g, ticketDrawer?.userTier || "free")
+                              .replace(/\{\{agent_name\}\}/g, adminUser?.displayName || adminUser?.email?.split("@")[0] || "Support");
+                            setTicketReply(words.slice(0, -1).join(" ") + (words.length > 1 ? " " : "") + content);
+                            setDoc(doc(db, "supportQuickResponses", qr.id), { usageCount: (qr.usageCount || 0) + 1 }, { merge: true }).catch(() => {});
+                            setQuickResponses(prev => prev.map(q => q.id === qr.id ? { ...q, usageCount: (q.usageCount || 0) + 1 } : q));
+                          }
+                        }
+                      }} placeholder="Type your reply... Use /shortcut for quick responses"
                         rows={3} style={{ flex: 1, padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "none" }} />
                       <button type="button" onClick={sendReply} disabled={ticketReplying || !ticketReply.trim()}
                         style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: ticketReplying || !ticketReply.trim() ? T.border : T.gold, color: T.bg, fontSize: 13, fontWeight: 700, cursor: ticketReplying || !ticketReply.trim() ? "not-allowed" : "pointer", alignSelf: "flex-end" }}>
@@ -3684,6 +4166,198 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               }}
                 style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 Save Rating
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* KNOWLEDGE BASE ARTICLE MODAL */}
+      {showKbModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9100, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowKbModal(false)}>
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 600, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
+                {editingArticle ? "✏️ Edit Article" : "📚 New Article"}
+              </h3>
+              <button type="button" onClick={() => setShowKbModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+            </div>
+            
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Title</label>
+              <input value={articleForm.title} onChange={e => setArticleForm(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Article title..."
+                style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+            </div>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+              <div>
+                <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Category</label>
+                <select value={articleForm.category} onChange={e => setArticleForm(prev => ({ ...prev, category: e.target.value }))}
+                  style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                  <option value="getting-started">🚀 Getting Started</option>
+                  <option value="billing">💳 Billing & Payments</option>
+                  <option value="technical">🔧 Technical Issues</option>
+                  <option value="features">⭐ Features & How-To</option>
+                  <option value="account">👤 Account Management</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Tags (comma-separated)</label>
+                <input value={articleForm.tags} onChange={e => setArticleForm(prev => ({ ...prev, tags: e.target.value }))}
+                  placeholder="password, login, security"
+                  style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Content</label>
+              <textarea value={articleForm.content} onChange={e => setArticleForm(prev => ({ ...prev, content: e.target.value }))}
+                placeholder="Write your article content here... You can use markdown-style formatting."
+                rows={12}
+                style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box", lineHeight: 1.6 }} />
+            </div>
+            
+            <div style={{ display: "flex", gap: 10 }}>
+              <button type="button" onClick={() => setShowKbModal(false)}
+                style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button type="button" onClick={async () => {
+                if (!articleForm.title.trim() || !articleForm.content.trim()) {
+                  notify("Please fill title and content");
+                  return;
+                }
+                
+                try {
+                  const articleData = {
+                    title: articleForm.title.trim(),
+                    content: articleForm.content.trim(),
+                    category: articleForm.category,
+                    tags: articleForm.tags.split(",").map(t => t.trim()).filter(Boolean),
+                    updatedAt: new Date().toISOString()
+                  };
+                  
+                  if (editingArticle) {
+                    await setDoc(doc(db, "supportKnowledgeBase", editingArticle.id), articleData, { merge: true });
+                    setKbArticles(prev => prev.map(a => a.id === editingArticle.id ? { ...a, ...articleData } : a));
+                    if (viewingArticle?.id === editingArticle.id) setViewingArticle(prev => ({ ...prev, ...articleData }));
+                    notify("Article updated");
+                  } else {
+                    articleData.createdAt = new Date().toISOString();
+                    articleData.views = 0;
+                    articleData.helpful = 0;
+                    const docRef = await addDoc(collection(db, "supportKnowledgeBase"), articleData);
+                    setKbArticles(prev => [...prev, { id: docRef.id, ...articleData }]);
+                    notify("Article created");
+                  }
+                  
+                  setShowKbModal(false);
+                  setArticleForm({ title: "", content: "", category: "getting-started", tags: "" });
+                  setEditingArticle(null);
+                } catch (e) {
+                  notify("Error: " + e.message);
+                }
+              }}
+                style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: T.teal, color: T.white, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                {editingArticle ? "Update Article" : "Create Article"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QUICK RESPONSE MODAL */}
+      {showQuickResponseModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9100, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowQuickResponseModal(false)}>
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 550, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
+                {editingQuickResponse ? "✏️ Edit Quick Response" : "⚡ New Quick Response"}
+              </h3>
+              <button type="button" onClick={() => setShowQuickResponseModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+            </div>
+            
+            <div style={{ padding: 12, background: `${T.purple}10`, borderRadius: 8, marginBottom: 16 }}>
+              <div style={{ fontSize: 11, color: T.textSecondary }}>
+                💡 Available variables: <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{name}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{ticket_id}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{agent_name}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{category}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{tier}}"}</code>
+              </div>
+            </div>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+              <div>
+                <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Name</label>
+                <input value={quickResponseForm.name} onChange={e => setQuickResponseForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g. Greeting"
+                  style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Shortcut</label>
+                <input value={quickResponseForm.shortcut} onChange={e => setQuickResponseForm(prev => ({ ...prev, shortcut: e.target.value.startsWith("/") ? e.target.value : "/" + e.target.value }))}
+                  placeholder="/greet"
+                  style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Category</label>
+              <select value={quickResponseForm.category} onChange={e => setQuickResponseForm(prev => ({ ...prev, category: e.target.value }))}
+                style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                <option value="general">💬 General</option>
+                <option value="technical">🔧 Technical</option>
+                <option value="billing">💳 Billing</option>
+              </select>
+            </div>
+            
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Content</label>
+              <textarea value={quickResponseForm.content} onChange={e => setQuickResponseForm(prev => ({ ...prev, content: e.target.value }))}
+                placeholder="Hi {{name}},\n\nThank you for contacting us..."
+                rows={8}
+                style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box", lineHeight: 1.6 }} />
+            </div>
+            
+            <div style={{ display: "flex", gap: 10 }}>
+              <button type="button" onClick={() => setShowQuickResponseModal(false)}
+                style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button type="button" onClick={async () => {
+                if (!quickResponseForm.name.trim() || !quickResponseForm.content.trim() || !quickResponseForm.shortcut.trim()) {
+                  notify("Please fill all fields");
+                  return;
+                }
+                
+                try {
+                  const qrData = {
+                    name: quickResponseForm.name.trim(),
+                    shortcut: quickResponseForm.shortcut.trim(),
+                    content: quickResponseForm.content.trim(),
+                    category: quickResponseForm.category,
+                    updatedAt: new Date().toISOString()
+                  };
+                  
+                  if (editingQuickResponse) {
+                    await setDoc(doc(db, "supportQuickResponses", editingQuickResponse.id), qrData, { merge: true });
+                    setQuickResponses(prev => prev.map(q => q.id === editingQuickResponse.id ? { ...q, ...qrData } : q));
+                    notify("Quick response updated");
+                  } else {
+                    qrData.createdAt = new Date().toISOString();
+                    qrData.usageCount = 0;
+                    const docRef = await addDoc(collection(db, "supportQuickResponses"), qrData);
+                    setQuickResponses(prev => [...prev, { id: docRef.id, ...qrData }]);
+                    notify("Quick response created");
+                  }
+                  
+                  setShowQuickResponseModal(false);
+                  setQuickResponseForm({ name: "", shortcut: "", content: "", category: "general" });
+                  setEditingQuickResponse(null);
+                } catch (e) {
+                  notify("Error: " + e.message);
+                }
+              }}
+                style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: T.purple, color: T.white, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                {editingQuickResponse ? "Update Response" : "Create Response"}
               </button>
             </div>
           </div>
