@@ -406,6 +406,24 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   const [similarTickets, setSimilarTickets] = useState([]);
   const [showSimilarTickets, setShowSimilarTickets] = useState(false);
 
+  // Phase 7A: Live Chat + Queue Management
+  const [liveChats, setLiveChats] = useState([]);
+  const [chatQueue, setChatQueue] = useState([]);
+  const [activeChatId, setActiveChatId] = useState(null);
+  const [chatMessage, setChatMessage] = useState("");
+  const [agentOnline, setAgentOnline] = useState(true);
+  const [showChatSettings, setShowChatSettings] = useState(false);
+  const [chatSettings, setChatSettings] = useState({
+    enabled: true,
+    autoAccept: false,
+    maxConcurrent: 3,
+    welcomeMessage: "Hi! 👋 How can we help you today?",
+    offlineMessage: "We're currently offline. Leave a message and we'll get back to you!",
+    widgetColor: "#D4A843",
+    widgetPosition: "right"
+  });
+  const [showWidgetPreview, setShowWidgetPreview] = useState(false);
+
   // Predefined tags
   const availableTags = [
     { id: "urgent", label: "Urgent", color: T.red },
@@ -2413,16 +2431,20 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             { id: "open", label: `Open (${tickets.filter(t => t.status === "open" || t.status === "in_progress").length})` },
             { id: "resolved", label: `Resolved (${tickets.filter(t => t.status === "resolved" || t.status === "closed").length})` },
             { id: "all", label: `All (${tickets.length})` },
+            { id: "livechat", label: `💬 Live Chat${liveChats.filter(c => c.status === "active").length > 0 ? ` (${liveChats.filter(c => c.status === "active").length})` : ""}` },
             { id: "analytics", label: "📊 Analytics" },
             { id: "kb", label: "📚 KB & Tools" },
           ].map(t => (
             <button key={t.id} type="button" onClick={() => setSupportSubTab(t.id)}
-              style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${supportSubTab === t.id ? T.gold : T.border}`, background: supportSubTab === t.id ? T.goldGlow : "transparent", color: supportSubTab === t.id ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+              style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${supportSubTab === t.id ? T.gold : T.border}`, background: supportSubTab === t.id ? T.goldGlow : "transparent", color: supportSubTab === t.id ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", position: "relative" }}>
               {t.label}
+              {t.id === "livechat" && chatQueue.length > 0 && (
+                <span style={{ position: "absolute", top: -4, right: -4, width: 16, height: 16, borderRadius: "50%", background: T.red, color: T.white, fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{chatQueue.length}</span>
+              )}
             </button>
           ))}
         </div>
-        {supportSubTab !== "analytics" && supportSubTab !== "kb" && (
+        {supportSubTab !== "analytics" && supportSubTab !== "kb" && supportSubTab !== "livechat" && (
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <input value={ticketSearch} onChange={e => setTicketSearch(e.target.value)} placeholder="Search tickets..."
             style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, width: 160, fontFamily: "'Outfit',sans-serif" }} />
@@ -3001,6 +3023,367 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             )}
           </div>
         </div>
+      ) : supportSubTab === "livechat" ? (
+        /* LIVE CHAT MANAGEMENT */
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Live Chat Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: agentOnline ? T.green : T.red, animation: agentOnline ? "pulse 2s infinite" : "none" }} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{agentOnline ? "Online" : "Offline"}</span>
+              </div>
+              <button type="button" onClick={() => setAgentOnline(!agentOnline)}
+                style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${agentOnline ? T.red : T.green}40`, background: agentOnline ? `${T.red}10` : `${T.green}10`, color: agentOnline ? T.red : T.green, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                {agentOnline ? "Go Offline" : "Go Online"}
+              </button>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button type="button" onClick={() => setShowWidgetPreview(true)}
+                style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                👁️ Widget Preview
+              </button>
+              <button type="button" onClick={() => setShowChatSettings(true)}
+                style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                ⚙️ Settings
+              </button>
+            </div>
+          </div>
+
+          {/* Chat Stats */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
+            {[
+              { label: "Active Chats", value: liveChats.filter(c => c.status === "active").length, color: T.green, icon: "💬" },
+              { label: "In Queue", value: chatQueue.length, color: chatQueue.length > 0 ? T.orange : T.textMuted, icon: "⏳" },
+              { label: "Handled Today", value: liveChats.filter(c => c.status === "ended").length, color: T.teal, icon: "✓" },
+              { label: "Avg Wait", value: chatQueue.length > 0 ? `${Math.round(chatQueue.reduce((a, c) => a + (Date.now() - new Date(c.queuedAt).getTime()) / 1000, 0) / chatQueue.length / 60)}m` : "—", color: T.textSecondary, icon: "⏱️" },
+              { label: "Avg Duration", value: liveChats.filter(c => c.duration).length > 0 ? `${Math.round(liveChats.filter(c => c.duration).reduce((a, c) => a + c.duration, 0) / liveChats.filter(c => c.duration).length / 60)}m` : "—", color: T.textSecondary, icon: "📊" },
+            ].map((stat, i) => (
+              <div key={i} style={{ padding: 16, background: T.surface, borderRadius: 10, border: `1px solid ${T.border}`, textAlign: "center" }}>
+                <div style={{ fontSize: 20, marginBottom: 4 }}>{stat.icon}</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: stat.color, fontFamily: "'Fraunces',serif" }}>{stat.value}</div>
+                <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: activeChatId ? "300px 1fr" : "1fr 1fr", gap: 16 }}>
+            {/* Queue Section */}
+            <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>⏳ Queue</span>
+                  {chatQueue.length > 0 && (
+                    <span style={{ padding: "2px 8px", borderRadius: 10, background: `${T.orange}20`, color: T.orange, fontSize: 11, fontWeight: 600 }}>{chatQueue.length} waiting</span>
+                  )}
+                </div>
+                {chatQueue.length > 0 && (
+                  <button type="button" onClick={() => {
+                    const next = chatQueue[0];
+                    setChatQueue(prev => prev.slice(1));
+                    setLiveChats(prev => [...prev, { ...next, status: "active", assignedTo: adminUser?.uid, assignedToName: adminUser?.displayName || adminUser?.email?.split("@")[0], startedAt: new Date().toISOString() }]);
+                    setActiveChatId(next.id);
+                    notify("Chat accepted");
+                  }}
+                    style={{ padding: "6px 12px", borderRadius: 6, border: "none", background: T.green, color: T.white, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                    Accept Next
+                  </button>
+                )}
+              </div>
+              
+              {chatQueue.length === 0 ? (
+                <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>🎉</div>
+                  <div style={{ fontSize: 12 }}>No visitors waiting</div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {chatQueue.map((visitor, idx) => {
+                    const waitTime = Math.round((Date.now() - new Date(visitor.queuedAt).getTime()) / 1000);
+                    const waitMins = Math.floor(waitTime / 60);
+                    const waitSecs = waitTime % 60;
+                    return (
+                      <div key={visitor.id} style={{ padding: 12, background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${waitMins >= 3 ? T.red : waitMins >= 1 ? T.orange : T.border}30` }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{visitor.visitorName || "Visitor"}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted }}>{visitor.visitorEmail || "No email"}</div>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold, textTransform: "uppercase" }}>{visitor.visitorTier || "free"}</span>
+                            <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: waitMins >= 3 ? `${T.red}20` : waitMins >= 1 ? `${T.orange}20` : T.surface, color: waitMins >= 3 ? T.red : waitMins >= 1 ? T.orange : T.textMuted, fontWeight: 600, fontFamily: "'Fraunces',serif" }}>
+                              {waitMins}:{waitSecs.toString().padStart(2, "0")}
+                            </span>
+                          </div>
+                        </div>
+                        <div style={{ fontSize: 11, color: T.textSecondary, marginBottom: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          "{visitor.initialMessage || "Started chat..."}"
+                        </div>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <button type="button" onClick={() => {
+                            setChatQueue(prev => prev.filter(c => c.id !== visitor.id));
+                            setLiveChats(prev => [...prev, { ...visitor, status: "active", assignedTo: adminUser?.uid, assignedToName: adminUser?.displayName || adminUser?.email?.split("@")[0], startedAt: new Date().toISOString() }]);
+                            setActiveChatId(visitor.id);
+                            notify("Chat accepted");
+                          }}
+                            style={{ flex: 1, padding: "6px 10px", borderRadius: 5, border: "none", background: T.green, color: T.white, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
+                            Accept
+                          </button>
+                          <button type="button" onClick={() => { setChatQueue(prev => prev.filter(c => c.id !== visitor.id)); notify("Visitor dismissed"); }}
+                            style={{ padding: "6px 10px", borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
+                            Dismiss
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Demo: Add to Queue */}
+              <button type="button" onClick={() => {
+                const demoVisitors = [
+                  { name: "Sarah M.", email: "sarah@example.com", tier: "pro", msg: "How do I export my data?" },
+                  { name: "Ahmed K.", email: "ahmed@business.ae", tier: "enterprise", msg: "Urgent: Dashboard not loading!" },
+                  { name: "Mike T.", email: "mike@gmail.com", tier: "free", msg: "Billing question about upgrade" },
+                  { name: "Lisa R.", email: "lisa@startup.io", tier: "pro", msg: "Feature request for reports" },
+                ];
+                const demo = demoVisitors[Math.floor(Math.random() * demoVisitors.length)];
+                const newChat = {
+                  id: `chat_${Date.now()}`,
+                  visitorName: demo.name,
+                  visitorEmail: demo.email,
+                  visitorTier: demo.tier,
+                  initialMessage: demo.msg,
+                  messages: [{ from: "visitor", text: demo.msg, at: new Date().toISOString() }],
+                  queuedAt: new Date().toISOString(),
+                  status: "queued",
+                  channel: "chat"
+                };
+                setChatQueue(prev => [...prev, newChat]);
+                notify("New visitor in queue!");
+              }}
+                style={{ marginTop: 12, width: "100%", padding: "8px 12px", borderRadius: 6, border: `1px dashed ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
+                + Simulate Visitor (Demo)
+              </button>
+            </div>
+
+            {/* Active Chats / Chat Window */}
+            {activeChatId ? (
+              /* Active Chat Window */
+              (() => {
+                const chat = liveChats.find(c => c.id === activeChatId);
+                if (!chat) return null;
+                const chatDuration = chat.startedAt ? Math.round((Date.now() - new Date(chat.startedAt).getTime()) / 1000) : 0;
+                const durMins = Math.floor(chatDuration / 60);
+                const durSecs = chatDuration % 60;
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                    {/* Chat Header */}
+                    <div style={{ padding: "12px 16px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${T.green}20`, display: "flex", alignItems: "center", justifyContent: "center", color: T.green, fontWeight: 700, fontSize: 14 }}>
+                          {(chat.visitorName || "V")[0].toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: T.white }}>{chat.visitorName || "Visitor"}</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, display: "flex", alignItems: "center", gap: 6 }}>
+                            <span>{chat.visitorEmail}</span>
+                            <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold, textTransform: "uppercase" }}>{chat.visitorTier}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ fontSize: 12, color: T.textMuted, fontFamily: "'Fraunces',serif" }}>
+                          🕐 {durMins}:{durSecs.toString().padStart(2, "0")}
+                        </div>
+                        <button type="button" onClick={() => setActiveChatId(null)}
+                          style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
+                          ← Back
+                        </button>
+                        <button type="button" onClick={async () => {
+                          // Convert to ticket
+                          const ticketData = {
+                            userId: chat.visitorId || "guest",
+                            userEmail: chat.visitorEmail || "guest@chat",
+                            userName: chat.visitorName || "Chat Visitor",
+                            userTier: chat.visitorTier || "free",
+                            subject: chat.initialMessage || "Live Chat Conversation",
+                            category: "general",
+                            priority: "normal",
+                            status: "open",
+                            channel: "chat",
+                            chatId: chat.id,
+                            messages: chat.messages.map(m => ({ from: m.from === "visitor" ? "user" : "admin", text: m.text, at: m.at, by: m.from === "admin" ? adminUser?.email : chat.visitorEmail })),
+                            createdAt: new Date().toISOString()
+                          };
+                          try {
+                            const docRef = await addDoc(collection(db, "supportTickets"), ticketData);
+                            setTickets(prev => [{ id: docRef.id, ...ticketData }, ...prev]);
+                            setLiveChats(prev => prev.map(c => c.id === chat.id ? { ...c, status: "ended", convertedToTicket: docRef.id, endedAt: new Date().toISOString(), duration: chatDuration } : c));
+                            setActiveChatId(null);
+                            notify("Converted to ticket #" + docRef.id.slice(0, 6));
+                          } catch (e) { notify("Error: " + e.message); }
+                        }}
+                          style={{ padding: "6px 10px", borderRadius: 5, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
+                          📧 Convert to Ticket
+                        </button>
+                        <button type="button" onClick={() => {
+                          setLiveChats(prev => prev.map(c => c.id === chat.id ? { ...c, status: "ended", endedAt: new Date().toISOString(), duration: chatDuration } : c));
+                          setActiveChatId(null);
+                          notify("Chat ended");
+                        }}
+                          style={{ padding: "6px 10px", borderRadius: 5, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
+                          End Chat
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Messages */}
+                    <div style={{ flex: 1, padding: 16, overflowY: "auto", maxHeight: 350, display: "flex", flexDirection: "column", gap: 10 }}>
+                      {(chat.messages || []).map((msg, i) => (
+                        <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.from === "admin" ? "flex-end" : "flex-start" }}>
+                          <div style={{ maxWidth: "80%", padding: "10px 14px", borderRadius: 12, background: msg.from === "admin" ? T.gold : T.surfaceAlt, color: msg.from === "admin" ? T.bg : T.white, fontSize: 13, lineHeight: 1.5, borderBottomRightRadius: msg.from === "admin" ? 4 : 12, borderBottomLeftRadius: msg.from === "admin" ? 12 : 4 }}>
+                            {msg.text}
+                          </div>
+                          <div style={{ fontSize: 9, color: T.textMuted, marginTop: 4 }}>
+                            {new Date(msg.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Message Input */}
+                    <div style={{ padding: 12, borderTop: `1px solid ${T.border}`, display: "flex", gap: 10 }}>
+                      <input value={chatMessage} onChange={e => setChatMessage(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter" && chatMessage.trim()) {
+                            setLiveChats(prev => prev.map(c => c.id === chat.id ? { ...c, messages: [...(c.messages || []), { from: "admin", text: chatMessage, at: new Date().toISOString() }] } : c));
+                            setChatMessage("");
+                          }
+                        }}
+                        placeholder="Type a message... Press Enter to send"
+                        style={{ flex: 1, padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
+                      <button type="button" onClick={() => {
+                        if (!chatMessage.trim()) return;
+                        setLiveChats(prev => prev.map(c => c.id === chat.id ? { ...c, messages: [...(c.messages || []), { from: "admin", text: chatMessage, at: new Date().toISOString() }] } : c));
+                        setChatMessage("");
+                      }}
+                        style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: chatMessage.trim() ? T.gold : T.border, color: T.bg, fontSize: 13, fontWeight: 700, cursor: chatMessage.trim() ? "pointer" : "not-allowed" }}>
+                        Send
+                      </button>
+                    </div>
+                    
+                    {/* Simulate visitor reply */}
+                    <div style={{ padding: "8px 12px", borderTop: `1px solid ${T.border}`, background: T.surfaceAlt }}>
+                      <button type="button" onClick={() => {
+                        const replies = ["Thanks, that helps!", "Can you explain more?", "I'm still having issues", "Perfect, that worked!", "How long will this take?"];
+                        const reply = replies[Math.floor(Math.random() * replies.length)];
+                        setLiveChats(prev => prev.map(c => c.id === chat.id ? { ...c, messages: [...(c.messages || []), { from: "visitor", text: reply, at: new Date().toISOString() }] } : c));
+                      }}
+                        style={{ width: "100%", padding: "6px 12px", borderRadius: 5, border: `1px dashed ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
+                        💬 Simulate Visitor Reply (Demo)
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()
+            ) : (
+              /* Active Chats List */
+              <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>🟢 Active Chats</span>
+                    {liveChats.filter(c => c.status === "active").length > 0 && (
+                      <span style={{ padding: "2px 8px", borderRadius: 10, background: `${T.green}20`, color: T.green, fontSize: 11, fontWeight: 600 }}>{liveChats.filter(c => c.status === "active").length} live</span>
+                    )}
+                  </div>
+                </div>
+                
+                {liveChats.filter(c => c.status === "active").length === 0 ? (
+                  <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>💬</div>
+                    <div style={{ fontSize: 12 }}>No active chats</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Accept a visitor from the queue to start</div>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {liveChats.filter(c => c.status === "active").map(chat => {
+                      const duration = chat.startedAt ? Math.round((Date.now() - new Date(chat.startedAt).getTime()) / 1000) : 0;
+                      const mins = Math.floor(duration / 60);
+                      const secs = duration % 60;
+                      const lastMsg = chat.messages?.length > 0 ? chat.messages[chat.messages.length - 1] : null;
+                      return (
+                        <div key={chat.id} onClick={() => setActiveChatId(chat.id)}
+                          style={{ padding: 14, background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.green}30`, cursor: "pointer", transition: "all 0.15s" }}
+                          onMouseEnter={e => e.currentTarget.style.borderColor = T.green}
+                          onMouseLeave={e => e.currentTarget.style.borderColor = `${T.green}30`}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <div style={{ width: 32, height: 32, borderRadius: "50%", background: `${T.green}20`, display: "flex", alignItems: "center", justifyContent: "center", color: T.green, fontWeight: 700, fontSize: 12 }}>
+                                {(chat.visitorName || "V")[0].toUpperCase()}
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{chat.visitorName}</div>
+                                <div style={{ fontSize: 10, color: T.textMuted }}>{chat.visitorEmail}</div>
+                              </div>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold, textTransform: "uppercase" }}>{chat.visitorTier}</span>
+                              <span style={{ fontSize: 10, color: T.green, fontFamily: "'Fraunces',serif" }}>{mins}:{secs.toString().padStart(2, "0")}</span>
+                            </div>
+                          </div>
+                          {lastMsg && (
+                            <div style={{ fontSize: 11, color: lastMsg.from === "visitor" ? T.textSecondary : T.textMuted, marginBottom: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {lastMsg.from === "admin" ? "You: " : ""}{lastMsg.text}
+                            </div>
+                          )}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ fontSize: 10, color: T.textMuted }}>{chat.messages?.length || 0} messages</span>
+                            <span style={{ fontSize: 10, color: T.green }}>Click to open →</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Ended Chats Today */}
+                {liveChats.filter(c => c.status === "ended").length > 0 && (
+                  <div style={{ marginTop: 20 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>Ended Today ({liveChats.filter(c => c.status === "ended").length})</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {liveChats.filter(c => c.status === "ended").slice(0, 5).map(chat => (
+                        <div key={chat.id} style={{ padding: 10, background: T.surfaceAlt, borderRadius: 8, opacity: 0.7 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <span style={{ fontSize: 12, fontWeight: 500, color: T.textSecondary }}>{chat.visitorName}</span>
+                              <span style={{ fontSize: 10, color: T.textMuted }}>{chat.messages?.length || 0} msgs</span>
+                              {chat.convertedToTicket && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>→ Ticket</span>}
+                            </div>
+                            <span style={{ fontSize: 10, color: T.textMuted }}>{chat.duration ? `${Math.floor(chat.duration / 60)}m ${chat.duration % 60}s` : "—"}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Embed Code Section */}
+          <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12 }}>🔗 Widget Embed Code</div>
+            <div style={{ padding: 12, background: T.bg, borderRadius: 8, fontFamily: "monospace", fontSize: 11, color: T.teal, lineHeight: 1.6, overflow: "auto" }}>
+              {`<script src="https://chat.dxbanalytics.com/widget.js"></script>\n<script>\n  DXBChat.init({\n    apiKey: "your_api_key",\n    color: "${chatSettings.widgetColor}",\n    position: "${chatSettings.widgetPosition}",\n    welcomeMessage: "${chatSettings.welcomeMessage}"\n  });\n</script>`}
+            </div>
+            <button type="button" onClick={() => { navigator.clipboard.writeText(`<script src="https://chat.dxbanalytics.com/widget.js"></script>\n<script>\n  DXBChat.init({\n    apiKey: "your_api_key",\n    color: "${chatSettings.widgetColor}",\n    position: "${chatSettings.widgetPosition}"\n  });\n</script>`); notify("Embed code copied!"); }}
+              style={{ marginTop: 10, padding: "8px 16px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+              📋 Copy Code
+            </button>
+          </div>
+        </div>
       ) : supportSubTab === "kb" ? (
         /* KNOWLEDGE BASE & TOOLS */
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -3245,6 +3628,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ticket.subject}</span>
                       {sentiment.sentiment !== "neutral" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${sentiment.color}20`, color: sentiment.color, fontWeight: 600 }}>{sentiment.emoji}</span>}
+                      {ticket.channel && ticket.channel !== "email" && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: ticket.channel === "chat" ? `${T.green}20` : ticket.channel === "whatsapp" ? "#25D36620" : `${T.purple}20`, color: ticket.channel === "chat" ? T.green : ticket.channel === "whatsapp" ? "#25D366" : T.purple, fontWeight: 600 }}>{ticket.channel === "chat" ? "💬 CHAT" : ticket.channel === "whatsapp" ? "📱 WA" : "📞 CALL"}</span>}
                       {slaInfo.status === "breached" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>⏰ SLA {slaInfo.percent}%</span>}
                       {slaInfo.status === "warning" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.orange}20`, color: T.orange, fontWeight: 600 }}>⚠️ {slaInfo.percent}%</span>}
                       {ticket.autoAssignedBy && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green, fontWeight: 600 }}>🤖 Auto</span>}
@@ -4922,13 +5306,157 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           </div>
         </div>
       )}
+
+      {/* Chat Settings Modal */}
+      {showChatSettings && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9100, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowChatSettings(false)}>
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 500, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
+                ⚙️ Live Chat Settings
+              </h3>
+              <button type="button" onClick={() => setShowChatSettings(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 12, background: T.surfaceAlt, borderRadius: 8 }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>Enable Live Chat</div>
+                  <div style={{ fontSize: 11, color: T.textMuted }}>Allow visitors to start live chats</div>
+                </div>
+                <button type="button" onClick={() => setChatSettings(prev => ({ ...prev, enabled: !prev.enabled }))}
+                  style={{ width: 44, height: 24, borderRadius: 12, border: "none", background: chatSettings.enabled ? T.green : T.border, cursor: "pointer", position: "relative", transition: "all 0.2s" }}>
+                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: T.white, position: "absolute", top: 3, left: chatSettings.enabled ? 23 : 3, transition: "all 0.2s" }} />
+                </button>
+              </div>
+              
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 12, background: T.surfaceAlt, borderRadius: 8 }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>Auto-Accept Chats</div>
+                  <div style={{ fontSize: 11, color: T.textMuted }}>Automatically accept incoming chats</div>
+                </div>
+                <button type="button" onClick={() => setChatSettings(prev => ({ ...prev, autoAccept: !prev.autoAccept }))}
+                  style={{ width: 44, height: 24, borderRadius: 12, border: "none", background: chatSettings.autoAccept ? T.green : T.border, cursor: "pointer", position: "relative", transition: "all 0.2s" }}>
+                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: T.white, position: "absolute", top: 3, left: chatSettings.autoAccept ? 23 : 3, transition: "all 0.2s" }} />
+                </button>
+              </div>
+              
+              <div>
+                <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Max Concurrent Chats</label>
+                <input type="number" value={chatSettings.maxConcurrent} onChange={e => setChatSettings(prev => ({ ...prev, maxConcurrent: parseInt(e.target.value) || 1 }))}
+                  min={1} max={10}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+              </div>
+              
+              <div>
+                <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Welcome Message</label>
+                <textarea value={chatSettings.welcomeMessage} onChange={e => setChatSettings(prev => ({ ...prev, welcomeMessage: e.target.value }))}
+                  rows={2}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
+              </div>
+              
+              <div>
+                <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Offline Message</label>
+                <textarea value={chatSettings.offlineMessage} onChange={e => setChatSettings(prev => ({ ...prev, offlineMessage: e.target.value }))}
+                  rows={2}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
+              </div>
+              
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Widget Color</label>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input type="color" value={chatSettings.widgetColor} onChange={e => setChatSettings(prev => ({ ...prev, widgetColor: e.target.value }))}
+                      style={{ width: 40, height: 36, borderRadius: 6, border: `1px solid ${T.border}`, cursor: "pointer" }} />
+                    <input type="text" value={chatSettings.widgetColor} onChange={e => setChatSettings(prev => ({ ...prev, widgetColor: e.target.value }))}
+                      style={{ flex: 1, padding: "8px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 12, fontFamily: "monospace" }} />
+                  </div>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Widget Position</label>
+                  <select value={chatSettings.widgetPosition} onChange={e => setChatSettings(prev => ({ ...prev, widgetPosition: e.target.value }))}
+                    style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                    <option value="right">Bottom Right</option>
+                    <option value="left">Bottom Left</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+              <button type="button" onClick={() => setShowChatSettings(false)}
+                style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button type="button" onClick={() => { setShowChatSettings(false); notify("Settings saved"); }}
+                style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.surface, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                Save Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Widget Preview Modal */}
+      {showWidgetPreview && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9100, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowWidgetPreview(false)}>
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 400 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
+                👁️ Widget Preview
+              </h3>
+              <button type="button" onClick={() => setShowWidgetPreview(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+            </div>
+            
+            <div style={{ background: "#f5f5f5", borderRadius: 12, padding: 20, display: "flex", justifyContent: chatSettings.widgetPosition === "right" ? "flex-end" : "flex-start" }}>
+              {/* Widget Preview */}
+              <div style={{ width: 320 }}>
+                {/* Chat Header */}
+                <div style={{ background: chatSettings.widgetColor, borderRadius: "12px 12px 0 0", padding: 16, color: T.white }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>💬</div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14 }}>DXB Analytics</div>
+                      <div style={{ fontSize: 11, opacity: 0.9, display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: agentOnline ? "#4ADE80" : "#EF4444" }} />
+                        {agentOnline ? "Online • ~2 min" : "Offline"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Chat Body */}
+                <div style={{ background: "#fff", padding: 16, minHeight: 200 }}>
+                  <div style={{ background: "#f0f0f0", borderRadius: 12, padding: 12, maxWidth: "80%", marginBottom: 12 }}>
+                    <div style={{ fontSize: 13, color: "#333" }}>{chatSettings.welcomeMessage}</div>
+                  </div>
+                  {!agentOnline && (
+                    <div style={{ background: "#FEF3C7", borderRadius: 8, padding: 10, fontSize: 11, color: "#92400E" }}>
+                      ⚠️ {chatSettings.offlineMessage}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Chat Input */}
+                <div style={{ background: "#fff", borderRadius: "0 0 12px 12px", padding: 12, borderTop: "1px solid #e5e5e5", display: "flex", gap: 8 }}>
+                  <input type="text" placeholder="Type a message..." disabled
+                    style={{ flex: 1, padding: "10px 14px", borderRadius: 8, border: "1px solid #e5e5e5", fontSize: 13 }} />
+                  <button type="button" disabled style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: chatSettings.widgetColor, color: "#fff", fontWeight: 600, fontSize: 13 }}>
+                    Send
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ marginTop: 16, textAlign: "center" }}>
+              <span style={{ fontSize: 11, color: T.textMuted }}>This is how the widget will appear on your website</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-/* ═══════════════════════════════════════
-   MAIN COMPONENT
-   ═══════════════════════════════════════ */
 /* ─── NOTIFICATIONS TAB COMPONENT ─── */
 /* ═══════════════════════════════════════════════════════════════════
    TAB 12: NOTIFICATIONS — PRO LEVEL
