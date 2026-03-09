@@ -9387,7 +9387,7 @@ export default function AdminPanel() {
                                     {lead.email && (
                                       <button type="button" onClick={() => sendLeadEmail(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: "none", background: "rgba(59,130,246,0.12)", color: T.blue, cursor: "pointer", fontWeight: 600 }}>Email</button>
                                     )}
-                                    <button type="button" onClick={() => setLeadDrawer(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer" }}>View</button>
+                                    <button type="button" onClick={() => setLeadDrawer(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.08)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>Edit</button>
                                   </div>
                                 </td>
                               </tr>
@@ -9477,16 +9477,17 @@ export default function AdminPanel() {
 
                 {/* ═══ LEAD DRAWER ═══ */}
                 {leadDrawer && (
-                  <div style={{ position: "fixed", inset: 0, zIndex: 8000 }} onClick={() => setLeadDrawer(null)}>
+                  <div style={{ position: "fixed", inset: 0, zIndex: 8000, background: "rgba(4,9,15,0.85)", backdropFilter: "blur(4px)" }} onClick={() => setLeadDrawer(null)}>
                     <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "100%", maxWidth: 480, background: T.surface, borderLeft: `1px solid ${T.gold}30`, display: "flex", flexDirection: "column", animation: "slideIn 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
                       {/* Header */}
                       <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                         <div>
+                          <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>Edit Lead</div>
                           <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.white }}>{leadDrawer.name || "Unknown Lead"}</div>
                           <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>{leadDrawer.email || "No email"}</div>
                           {leadDrawer.phone && <div style={{ fontSize: 12, color: T.textMuted }}>{leadDrawer.phone}</div>}
                         </div>
-                        <button type="button" onClick={() => setLeadDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>x</button>
+                        <button type="button" onClick={() => setLeadDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>×</button>
                       </div>
 
                       {/* Status + Actions */}
@@ -9516,23 +9517,44 @@ export default function AdminPanel() {
                         )}
                       </div>
 
-                      {/* Details */}
+                      {/* Editable Fields */}
                       <div style={{ padding: "16px 24px", borderBottom: `1px solid ${T.border}` }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Details</div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Edit Details</div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                           {[
-                            { label: "Project", value: leadDrawer.project || "—" },
-                            { label: "Community", value: leadDrawer.community || "—" },
-                            { label: "Source", value: leadDrawer.source || "—" },
-                            { label: "Created", value: leadDrawer.createdAt ? new Date(leadDrawer.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", year: "numeric" }) : "—" },
-                            { label: "First Response", value: leadDrawer.respondedAt ? new Date(leadDrawer.respondedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "Not yet" },
-                            { label: "Updated", value: leadDrawer.updatedAt ? new Date(leadDrawer.updatedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short" }) : "—" },
-                          ].map(d => (
-                            <div key={d.label}>
-                              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 2 }}>{d.label}</div>
-                              <div style={{ fontSize: 12, color: T.textSecondary }}>{d.value}</div>
+                            { key: "name", label: "Name" },
+                            { key: "email", label: "Email" },
+                            { key: "phone", label: "Phone" },
+                            { key: "project", label: "Project" },
+                            { key: "community", label: "Community" },
+                            { key: "source", label: "Source" },
+                          ].map(field => (
+                            <div key={field.key}>
+                              <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 4 }}>{field.label}</label>
+                              <input 
+                                value={leadDrawer[field.key] || ""} 
+                                onChange={e => setLeadDrawer(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                onBlur={async e => {
+                                  try {
+                                    await setDoc(doc(db, "leads", leadDrawer.id), { [field.key]: e.target.value, updatedAt: new Date().toISOString() }, { merge: true });
+                                    notify(`${field.label} updated`);
+                                    fetchLeads();
+                                  } catch (err) { notify("Error saving"); }
+                                }}
+                                style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }}
+                              />
                             </div>
                           ))}
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
+                          <div>
+                            <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 2 }}>Created</div>
+                            <div style={{ fontSize: 12, color: T.textSecondary }}>{leadDrawer.createdAt ? new Date(leadDrawer.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 2 }}>Updated</div>
+                            <div style={{ fontSize: 12, color: T.textSecondary }}>{leadDrawer.updatedAt ? new Date(leadDrawer.updatedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short" }) : "—"}</div>
+                          </div>
                         </div>
                         {leadDrawer.lossReason && (
                           <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(239,68,68,0.08)", border: `1px solid ${T.red}30` }}>
@@ -9565,9 +9587,9 @@ export default function AdminPanel() {
                         )}
                       </div>
 
-                      {/* Add Note */}
+                      {/* Add Note + Delete */}
                       <div style={{ padding: "16px 24px", borderTop: `1px solid ${T.border}`, background: T.surfaceAlt }}>
-                        <div style={{ display: "flex", gap: 10 }}>
+                        <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
                           <input type="text" placeholder="Add a note..." value={leadNote} onChange={e => setLeadNote(e.target.value)} onKeyDown={e => { if (e.key === "Enter") addNote(); }}
                             style={{ flex: 1, padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
                           <button type="button" disabled={leadNoteSaving || !leadNote.trim()} onClick={addNote}
@@ -9575,6 +9597,17 @@ export default function AdminPanel() {
                             {leadNoteSaving ? "..." : "Add"}
                           </button>
                         </div>
+                        <button type="button" onClick={async () => {
+                          if (!window.confirm(`Delete lead "${leadDrawer.name || leadDrawer.email}"? This cannot be undone.`)) return;
+                          try {
+                            await deleteDoc(doc(db, "leads", leadDrawer.id));
+                            notify("Lead deleted");
+                            setLeadDrawer(null);
+                            fetchLeads();
+                          } catch (e) { notify("Error: " + e.message); }
+                        }} style={{ width: "100%", padding: "10px", borderRadius: 8, border: `1px solid ${T.red}30`, background: "rgba(239,68,68,0.08)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          Delete Lead
+                        </button>
                       </div>
                     </div>
                   </div>
