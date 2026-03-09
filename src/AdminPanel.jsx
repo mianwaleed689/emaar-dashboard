@@ -2743,15 +2743,26 @@ export default function AdminPanel() {
   const [rejectReason, setRejectReason] = useState("");
 
   /* ─── PERSIST TAB STATE ─── */
+  const isHydrated = React.useRef(false);
+  
+  // Mark as hydrated after initial mount
   useEffect(() => {
+    const timer = setTimeout(() => { isHydrated.current = true; }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+  
+  useEffect(() => {
+    if (!isHydrated.current) return;
     try { localStorage.setItem("admin_tab", tab); } catch {}
   }, [tab]);
 
   useEffect(() => {
+    if (!isHydrated.current) return;
     try { localStorage.setItem("admin_dataSubTab", dataSubTab); } catch {}
   }, [dataSubTab]);
 
   useEffect(() => {
+    if (!isHydrated.current) return;
     try { 
       if (editingCommunity) localStorage.setItem("admin_editingCommunity", editingCommunity);
       else localStorage.removeItem("admin_editingCommunity");
@@ -2759,26 +2770,32 @@ export default function AdminPanel() {
   }, [editingCommunity]);
 
   useEffect(() => {
+    if (!isHydrated.current) return;
     try { localStorage.setItem("admin_userSearch", userSearch); } catch {}
   }, [userSearch]);
 
   useEffect(() => {
+    if (!isHydrated.current) return;
     try { localStorage.setItem("admin_tierFilter", tierFilter); } catch {}
   }, [tierFilter]);
 
   useEffect(() => {
+    if (!isHydrated.current) return;
     try { localStorage.setItem("admin_dataSearch", dataSearch); } catch {}
   }, [dataSearch]);
 
   useEffect(() => {
+    if (!isHydrated.current) return;
     try { localStorage.setItem("admin_projectCommunityFilter", projectCommunityFilter); } catch {}
   }, [projectCommunityFilter]);
 
   useEffect(() => {
+    if (!isHydrated.current) return;
     try { localStorage.setItem("admin_projectStatusFilter", projectStatusFilter); } catch {}
   }, [projectStatusFilter]);
 
   useEffect(() => {
+    if (!isHydrated.current) return;
     try { localStorage.setItem("admin_verifyFilter", verifyFilter); } catch {}
   }, [verifyFilter]);
 
@@ -5946,7 +5963,15 @@ export default function AdminPanel() {
                   { id: "communities", label: "Communities", count: Object.keys(defaultCommunityROI).length, icon: I.chart },
                   { id: "pricehistory", label: "Price History", count: Object.values(priceHistory).reduce((sum, arr) => sum + (arr?.length || 0), 0), icon: I.chart },
                 ].map(st => (
-                  <button type="button" key={st.id} onClick={() => { setDataSubTab(st.id); setEditingProject(null); setEditingCommunity(null); setEditingYield(null); setEditingCommunityIntel(null); setBulkSelected([]); }}
+                  <button type="button" key={st.id} onClick={() => { 
+                    if (dataSubTab === st.id) return; // Don't reset if same tab
+                    setDataSubTab(st.id); 
+                    setEditingProject(null); 
+                    setEditingCommunity(null); 
+                    setEditingYield(null); 
+                    setEditingCommunityIntel(null); 
+                    setBulkSelected([]); 
+                  }}
                     style={{ 
                       padding: "10px 20px", borderRadius: 8, border: "none",
                       background: dataSubTab === st.id ? T.surface : "transparent",
