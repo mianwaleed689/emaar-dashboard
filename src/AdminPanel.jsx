@@ -6777,188 +6777,283 @@ export default function AdminPanel() {
                 if (!editingCommunityIntel) {
                   setTimeout(() => { setEditingCommunityIntel(communities[0]); setCommunityIntelForm({ ...defaultCommunityIntel[communities[0]], ...(liveCommunityIntel[communities[0]] || {}) }); }, 0);
                 }
-                const iS = { width: "100%", padding: "10px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s" };
-                const lS = { fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6, display: "block" };
-                const sectionTitle = (icon, label) => (
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, marginTop: 28 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 7, background: "rgba(212,168,67,0.12)", border: "1px solid rgba(212,168,67,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>{icon}</div>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase" }}>{label}</span>
-                    <div style={{ flex: 1, height: 1, background: "rgba(212,168,67,0.15)" }} />
+
+                const inp = (val, ph, onChange, extra) => (
+                  <input value={val ?? ""} onChange={onChange} placeholder={ph}
+                    style={{ width: "100%", padding: "10px 13px", background: "rgba(4,9,15,0.8)", border: "1px solid rgba(212,168,67,0.14)", borderRadius: 7, color: "#E2E8F0", fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s", ...(extra||{}) }}
+                    onFocus={e => e.target.style.borderColor="#D4A843"} onBlur={e => e.target.style.borderColor="rgba(212,168,67,0.14)"} />
+                );
+                const ta = (val, ph, onChange, rows) => (
+                  <textarea value={val ?? ""} onChange={onChange} placeholder={ph} rows={rows||3}
+                    style={{ width: "100%", padding: "10px 13px", background: "rgba(4,9,15,0.8)", border: "1px solid rgba(212,168,67,0.14)", borderRadius: 7, color: "#E2E8F0", fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical", transition: "border-color 0.15s", lineHeight: 1.6 }}
+                    onFocus={e => e.target.style.borderColor="#D4A843"} onBlur={e => e.target.style.borderColor="rgba(212,168,67,0.14)"} />
+                );
+                const Lbl = ({ children, hint }) => (
+                  <div style={{ marginBottom: 6 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "#64748B", letterSpacing: 1.1, textTransform: "uppercase" }}>{children}</span>
+                    {hint && <span style={{ fontSize: 10, color: "#334155", marginLeft: 8 }}>— {hint}</span>}
                   </div>
                 );
+
                 return (
-                  <div>
-                    {/* ── Page Header ── */}
-                    <div style={{ marginBottom: 24 }}>
-                      <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.white, margin: 0, lineHeight: 1.2 }}>Community Intelligence</h2>
-                      <p style={{ fontSize: 13, color: T.textMuted, marginTop: 6, maxWidth: 600 }}>Control what users see on every community detail page — taglines, amenities, travel times, visa eligibility. Changes go live instantly.</p>
-                    </div>
+                  <div style={{ margin: "-28px -28px -60px", display: "flex", minHeight: "calc(100vh - 60px)" }}>
 
-                    {/* ── Community Picker Cards ── */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(155px, 1fr))", gap: 8, marginBottom: 28 }}>
-                      {communities.map(k => {
-                        const isActive = activeCIKey === k;
-                        const hasLive = !!liveCommunityIntel[k];
-                        const short = k.replace("Dubai ", "").replace("Emaar ", "").replace(" Estate", "").replace(" Harbour", "");
-                        return (
-                          <button key={k} type="button"
-                            onClick={() => { setEditingCommunityIntel(k); setCommunityIntelForm({ ...defaultCommunityIntel[k], ...(liveCommunityIntel[k] || {}) }); }}
-                            style={{ padding: "12px 14px", borderRadius: 10, border: isActive ? "1.5px solid " + T.gold : "1px solid rgba(255,255,255,0.08)", background: isActive ? "rgba(212,168,67,0.1)" : "rgba(255,255,255,0.03)", cursor: "pointer", textAlign: "left", transition: "all 0.15s", fontFamily: "'Outfit',sans-serif", position: "relative" }}>
-                            {hasLive && <div style={{ position: "absolute", top: 8, right: 8, width: 7, height: 7, borderRadius: "50%", background: T.green, boxShadow: "0 0 6px " + T.green }} />}
-                            <div style={{ fontSize: 12, fontWeight: isActive ? 700 : 500, color: isActive ? T.gold : T.white, lineHeight: 1.3 }}>{short}</div>
-                            <div style={{ fontSize: 10, color: hasLive ? T.green : T.textMuted, marginTop: 3, fontWeight: hasLive ? 600 : 400 }}>{hasLive ? "Live" : "Default"}</div>
-                          </button>
-                        );
-                      })}
-                    </div>
+                    {/* ══════════════════════════════
+                        LEFT NAV — Community List
+                    ══════════════════════════════ */}
+                    <div style={{ width: 260, flexShrink: 0, background: "#060D1A", borderRight: "1px solid rgba(212,168,67,0.1)", display: "flex", flexDirection: "column", position: "sticky", top: 60, height: "calc(100vh - 60px)", overflowY: "auto" }}>
 
-                    {/* ── Active Community Editor ── */}
-                    <div style={{ background: "rgba(255,255,255,0.02)", borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
-
-                      {/* Editor Header */}
-                      <div style={{ padding: "18px 24px", borderBottom: "1px solid rgba(255,255,255,0.07)", background: "rgba(212,168,67,0.04)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-                        <div>
-                          <div style={{ fontSize: 20, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>{activeCIKey}</div>
-                          <div style={{ fontSize: 12, color: ciHasOverride ? T.green : T.textMuted, marginTop: 3, display: "flex", alignItems: "center", gap: 6 }}>
-                            {ciHasOverride ? <><span style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, display: "inline-block" }} /> Live override active</> : <><span style={{ width: 6, height: 6, borderRadius: "50%", background: T.textMuted, display: "inline-block" }} /> Showing data.js defaults</>}
-                          </div>
-                        </div>
-                        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                          {ciHasOverride && (
-                            <button type="button" onClick={() => resetCommunityIntel(activeCIKey)}
-                              style={{ fontSize: 12, padding: "8px 16px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
-                              Reset to Default
-                            </button>
-                          )}
-                          <button type="button" disabled={dataSaving} onClick={() => saveCommunityIntel(activeCIKey, ciForm)}
-                            style={{ fontSize: 13, padding: "10px 28px", borderRadius: 9, border: "none", background: "linear-gradient(135deg," + T.gold + ",#B8860B)", color: "#000", fontWeight: 800, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", boxShadow: "0 4px 16px rgba(212,168,67,0.25)" }}>
-                            {dataSaving ? "Saving..." : "Save — Goes Live Now"}
-                          </button>
-                        </div>
+                      {/* Nav Header */}
+                      <div style={{ padding: "22px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Communities</div>
+                        <div style={{ fontSize: 12, color: "#64748B" }}>{communities.length} areas · {Object.keys(liveCommunityIntel).length} live</div>
                       </div>
 
-                      <div style={{ padding: "8px 24px 32px" }}>
+                      {/* Community List */}
+                      <div style={{ flex: 1, padding: "8px 10px" }}>
+                        {communities.map(k => {
+                          const isActive = activeCIKey === k;
+                          const hasLive = !!liveCommunityIntel[k];
+                          const dm = { ...defaultCommunityIntel[k], ...(liveCommunityIntel[k]||{}) };
+                          return (
+                            <button key={k} type="button"
+                              onClick={() => { setEditingCommunityIntel(k); setCommunityIntelForm({ ...defaultCommunityIntel[k], ...(liveCommunityIntel[k]||{}) }); }}
+                              style={{ width: "100%", padding: "11px 12px", borderRadius: 9, border: isActive ? "1px solid rgba(212,168,67,0.3)" : "1px solid transparent", background: isActive ? "rgba(212,168,67,0.08)" : "transparent", cursor: "pointer", textAlign: "left", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s", marginBottom: 3, display: "block" }}
+                              onMouseEnter={e => { if (!isActive) e.currentTarget.style.background="rgba(255,255,255,0.03)"; }}
+                              onMouseLeave={e => { if (!isActive) e.currentTarget.style.background="transparent"; }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 5 }}>
+                                <div style={{ fontSize: 13, fontWeight: isActive ? 700 : 500, color: isActive ? "#D4A843" : "#CBD5E1", lineHeight: 1.3 }}>{k}</div>
+                                {hasLive
+                                  ? <span style={{ fontSize: 8, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "rgba(16,185,129,0.12)", color: "#10B981", flexShrink: 0, marginLeft: 6, marginTop: 1 }}>LIVE</span>
+                                  : <span style={{ fontSize: 8, fontWeight: 600, padding: "2px 6px", borderRadius: 4, background: "rgba(100,116,139,0.1)", color: "#475569", flexShrink: 0, marginLeft: 6, marginTop: 1 }}>DEFAULT</span>}
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <span style={{ fontSize: 12, fontWeight: 700, color: isActive ? "#D4A843" : "#94A3B8" }}>{dm.avgYield || "—"}</span>
+                                {dm.goldenVisa && <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 3, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700 }}>VISA ✓</span>}
+                              </div>
+                              <div style={{ fontSize: 10, color: "#475569", marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{dm.tagline || "No tagline"}</div>
+                            </button>
+                          );
+                        })}
+                      </div>
 
-                        {/* ── Section 1: Identity ── */}
-                        {sectionTitle("I", "Identity & Positioning")}
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-                          <div>
-                            <label style={lS}>Tagline <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 9 }}>— shown as headline on community page</span></label>
-                            <input value={ciForm.tagline ?? ciMerged.tagline ?? ""} onChange={e => setCIForm(p => ({ ...p, tagline: e.target.value }))} placeholder="e.g. Golf-Side Family Living in the Heart of New Dubai" style={iS} onFocus={e => e.target.style.borderColor = T.gold} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"} />
-                          </div>
-                          <div>
-                            <label style={lS}>Master Developer</label>
-                            <input value={ciForm.masterDev ?? ciMerged.masterDev ?? ""} onChange={e => setCIForm(p => ({ ...p, masterDev: e.target.value }))} placeholder="e.g. Emaar & Meraas joint venture" style={iS} onFocus={e => e.target.style.borderColor = T.gold} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"} />
-                          </div>
-                        </div>
-                        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 16 }}>
-                          <div>
-                            <label style={lS}>Famous For <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 9 }}>— bullet tags on community page</span></label>
-                            <textarea value={ciForm.famousFor ?? ciMerged.famousFor ?? ""} onChange={e => setCIForm(p => ({ ...p, famousFor: e.target.value }))} placeholder="e.g. 18-hole championship golf, Dubai Hills Mall, 54km cycling tracks..." rows={3} style={{ ...iS, resize: "none" }} onFocus={e => e.target.style.borderColor = T.gold} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"} />
-                          </div>
-                          <div>
-                            <label style={lS}>Lifestyle</label>
-                            <textarea value={ciForm.lifestyle ?? ciMerged.lifestyle ?? ""} onChange={e => setCIForm(p => ({ ...p, lifestyle: e.target.value }))} placeholder="e.g. Family-oriented, golf lifestyle..." rows={3} style={{ ...iS, resize: "none" }} onFocus={e => e.target.style.borderColor = T.gold} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"} />
-                          </div>
-                          <div>
-                            <label style={lS}>Avg Rental Yield</label>
-                            <input value={ciForm.avgYield ?? ciMerged.avgYield ?? ""} onChange={e => setCIForm(p => ({ ...p, avgYield: e.target.value }))} placeholder="e.g. 5.5–7.0%" style={iS} onFocus={e => e.target.style.borderColor = T.gold} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"} />
-                            <div style={{ marginTop: 10 }}>
-                              <label style={lS}>Road Access</label>
-                              <input value={ciForm.roads ?? ciMerged.roads ?? ""} onChange={e => setCIForm(p => ({ ...p, roads: e.target.value }))} placeholder="e.g. Al Khail Road (E44)" style={iS} onFocus={e => e.target.style.borderColor = T.gold} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"} />
+                      {/* Nav Footer */}
+                      <div style={{ padding: "14px 16px", borderTop: "1px solid rgba(255,255,255,0.05)", fontSize: 10, color: "#334155", lineHeight: 1.6 }}>
+                        Changes go live on the investor dashboard instantly after saving.
+                      </div>
+                    </div>
+
+                    {/* ══════════════════════════════
+                        RIGHT — Full Editor
+                    ══════════════════════════════ */}
+                    <div style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "calc(100vh - 60px)", scrollbarWidth: "thin" }}>
+
+                      {/* ── Hero Banner ── */}
+                      <div style={{ padding: "32px 40px 28px", background: "linear-gradient(135deg, rgba(212,168,67,0.07) 0%, rgba(10,22,40,0) 60%)", borderBottom: "1px solid rgba(212,168,67,0.1)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24 }}>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Editing Community Profile</div>
+                          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 36, fontWeight: 900, color: "#FFFFFF", margin: "0 0 10px", lineHeight: 1.1 }}>{activeCIKey}</h1>
+                          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <span style={{ width: 7, height: 7, borderRadius: "50%", background: ciHasOverride ? "#10B981" : "#475569", display: "inline-block", boxShadow: ciHasOverride ? "0 0 8px #10B981" : "none" }} />
+                              <span style={{ fontSize: 12, color: ciHasOverride ? "#10B981" : "#64748B", fontWeight: ciHasOverride ? 600 : 400 }}>
+                                {ciHasOverride ? "Live — investors see your version now" : "Showing data.js defaults — save to publish a custom version"}
+                              </span>
                             </div>
+                            <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.1)" }} />
+                            <span style={{ fontSize: 12, color: "#64748B" }}>
+                              Buyers compare this data before committing <span style={{ color: "#94A3B8", fontWeight: 600 }}>AED 1M – 5M+</span>
+                            </span>
                           </div>
                         </div>
-
-                        {/* ── Section 2: Golden Visa ── */}
-                        {sectionTitle("V", "Golden Visa Eligibility")}
-                        <div style={{ display: "flex", gap: 12 }}>
-                          {[{ v: true, label: "Yes — Eligible", sub: "Shown as green badge on community page", color: T.green }, { v: false, label: "No — Not Eligible", sub: "No badge shown", color: "#64748B" }].map(opt => {
-                            const active = (ciForm.goldenVisa ?? ciMerged.goldenVisa) === opt.v;
-                            return (
-                              <button key={String(opt.v)} type="button" onClick={() => setCIForm(p => ({ ...p, goldenVisa: opt.v }))}
-                                style={{ flex: 1, padding: "14px 20px", borderRadius: 10, border: "1.5px solid " + (active ? opt.color : "rgba(255,255,255,0.08)"), background: active ? opt.color + "12" : "rgba(255,255,255,0.02)", color: active ? opt.color : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all 0.15s" }}>
-                                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 3 }}>{opt.label}</div>
-                                <div style={{ fontSize: 11, opacity: 0.7 }}>{opt.sub}</div>
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        {/* ── Section 3: Key Amenities ── */}
-                        {sectionTitle("A", "Key Amenities")}
-                        <p style={{ fontSize: 11, color: T.textMuted, marginTop: -10, marginBottom: 14 }}>Each row becomes a card on the community detail page. Use the Category field as the card title (e.g. Schools, Healthcare).</p>
-                        <div style={{ display: "grid", gridTemplateColumns: "32px 140px 1fr 36px", gap: 8, marginBottom: 8, padding: "0 2px" }}>
-                          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>#</div>
-                          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Category</div>
-                          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Items (comma separated)</div>
-                          <div />
-                        </div>
-                        {(ciForm.keyAmenities ?? ciMerged.keyAmenities ?? []).map((a, idx) => (
-                          <div key={idx} style={{ display: "grid", gridTemplateColumns: "32px 140px 1fr 36px", gap: 8, marginBottom: 8, alignItems: "center" }}>
-                            <div style={{ width: 28, height: 28, borderRadius: 7, background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: T.gold, fontWeight: 700 }}>{idx + 1}</div>
-                            <input placeholder="e.g. Schools" value={a.label || ""} onChange={e => { const arr = JSON.parse(JSON.stringify(ciForm.keyAmenities ?? ciMerged.keyAmenities)); arr[idx] = { ...arr[idx], label: e.target.value }; setCIForm(p => ({ ...p, keyAmenities: arr })); }} style={{ ...iS, fontSize: 12 }} onFocus={e => e.target.style.borderColor = T.gold} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"} />
-                            <input placeholder="e.g. GEMS Wellington, Kings School Al Barsha, Dubai Heights Academy" value={a.items || ""} onChange={e => { const arr = JSON.parse(JSON.stringify(ciForm.keyAmenities ?? ciMerged.keyAmenities)); arr[idx] = { ...arr[idx], items: e.target.value }; setCIForm(p => ({ ...p, keyAmenities: arr })); }} style={{ ...iS, fontSize: 12 }} onFocus={e => e.target.style.borderColor = T.gold} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"} />
-                            <button type="button" onClick={() => { const arr = (ciForm.keyAmenities ?? ciMerged.keyAmenities ?? []).filter((_, i) => i !== idx); setCIForm(p => ({ ...p, keyAmenities: arr })); }} style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, color: T.red, cursor: "pointer", fontSize: 14, flexShrink: 0 }}>x</button>
-                          </div>
-                        ))}
-                        <button type="button" onClick={() => setCIForm(p => ({ ...p, keyAmenities: [...(p.keyAmenities ?? ciMerged.keyAmenities ?? []), { label: "", items: "" }] }))}
-                          style={{ fontSize: 12, padding: "8px 18px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.25)", background: "rgba(212,168,67,0.04)", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, marginTop: 4, transition: "all 0.15s" }}>
-                          + Add Amenity Category
-                        </button>
-
-                        {/* ── Section 4: Distances ── */}
-                        {sectionTitle("D", "Distance & Travel Times")}
-                        <p style={{ fontSize: 11, color: T.textMuted, marginTop: -10, marginBottom: 14 }}>Shown as a travel time table on the community page. Keep destinations to major landmarks users care about.</p>
-                        <div style={{ display: "grid", gridTemplateColumns: "32px 1fr 90px 90px 36px", gap: 8, marginBottom: 8, padding: "0 2px" }}>
-                          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>#</div>
-                          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Destination</div>
-                          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Distance (km)</div>
-                          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Drive (min)</div>
-                          <div />
-                        </div>
-                        {(ciForm.distances ?? ciMerged.distances ?? []).map((d, idx) => (
-                          <div key={idx} style={{ display: "grid", gridTemplateColumns: "32px 1fr 90px 90px 36px", gap: 8, marginBottom: 8, alignItems: "center" }}>
-                            <div style={{ width: 28, height: 28, borderRadius: 7, background: "rgba(20,184,166,0.08)", border: "1px solid rgba(20,184,166,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: T.teal, fontWeight: 700 }}>{idx + 1}</div>
-                            <input placeholder="e.g. Downtown Dubai / Burj Khalifa" value={d.dest || ""} onChange={e => { const arr = JSON.parse(JSON.stringify(ciForm.distances ?? ciMerged.distances)); arr[idx] = { ...arr[idx], dest: e.target.value }; setCIForm(p => ({ ...p, distances: arr })); }} style={{ ...iS, fontSize: 12 }} onFocus={e => e.target.style.borderColor = T.teal} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"} />
-                            <div style={{ position: "relative" }}>
-                              <input type="number" placeholder="13" value={d.km || ""} onChange={e => { const arr = JSON.parse(JSON.stringify(ciForm.distances ?? ciMerged.distances)); arr[idx] = { ...arr[idx], km: Number(e.target.value) }; setCIForm(p => ({ ...p, distances: arr })); }} style={{ ...iS, fontSize: 12, paddingRight: 28 }} onFocus={e => e.target.style.borderColor = T.teal} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"} />
-                              <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: T.textMuted }}>km</span>
-                            </div>
-                            <div style={{ position: "relative" }}>
-                              <input type="number" placeholder="15" value={d.min || ""} onChange={e => { const arr = JSON.parse(JSON.stringify(ciForm.distances ?? ciMerged.distances)); arr[idx] = { ...arr[idx], min: Number(e.target.value) }; setCIForm(p => ({ ...p, distances: arr })); }} style={{ ...iS, fontSize: 12, paddingRight: 32 }} onFocus={e => e.target.style.borderColor = T.teal} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"} />
-                              <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: T.textMuted }}>min</span>
-                            </div>
-                            <button type="button" onClick={() => { const arr = (ciForm.distances ?? ciMerged.distances ?? []).filter((_, i) => i !== idx); setCIForm(p => ({ ...p, distances: arr })); }} style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, color: T.red, cursor: "pointer", fontSize: 14, flexShrink: 0 }}>x</button>
-                          </div>
-                        ))}
-                        <button type="button" onClick={() => setCIForm(p => ({ ...p, distances: [...(p.distances ?? ciMerged.distances ?? []), { dest: "", km: 0, min: 0 }] }))}
-                          style={{ fontSize: 12, padding: "8px 18px", borderRadius: 8, border: "1px solid rgba(20,184,166,0.25)", background: "rgba(20,184,166,0.04)", color: T.teal, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, marginTop: 4 }}>
-                          + Add Destination
-                        </button>
-
-                        {/* ── Save Footer ── */}
-                        <div style={{ marginTop: 36, padding: "20px 24px", marginLeft: -24, marginRight: -24, marginBottom: -32, background: "rgba(212,168,67,0.04)", borderTop: "1px solid rgba(212,168,67,0.12)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{activeCIKey}</div>
-                            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>All changes save to Firestore and go live on the dashboard immediately</div>
-                          </div>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10, flexShrink: 0 }}>
                           <div style={{ display: "flex", gap: 10 }}>
                             {ciHasOverride && (
                               <button type="button" onClick={() => resetCommunityIntel(activeCIKey)}
-                                style={{ fontSize: 12, padding: "10px 20px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                                style={{ fontSize: 12, padding: "10px 18px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.25)", background: "rgba(239,68,68,0.06)", color: "#EF4444", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
                                 Reset to Default
                               </button>
                             )}
                             <button type="button" disabled={dataSaving} onClick={() => saveCommunityIntel(activeCIKey, ciForm)}
-                              style={{ fontSize: 14, padding: "11px 36px", borderRadius: 9, border: "none", background: "linear-gradient(135deg," + T.gold + ",#B8860B)", color: "#000", fontWeight: 800, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", boxShadow: "0 4px 20px rgba(212,168,67,0.3)", letterSpacing: 0.3 }}>
-                              {dataSaving ? "Saving..." : "Save to Firestore \u2192 Goes Live"}
+                              style={{ fontSize: 14, padding: "11px 32px", borderRadius: 9, border: "none", background: "linear-gradient(135deg,#D4A843,#B8860B)", color: "#000", fontWeight: 800, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", boxShadow: "0 6px 24px rgba(212,168,67,0.3)", letterSpacing: 0.2 }}>
+                              {dataSaving ? "Publishing..." : "Publish \u2192 Goes Live"}
+                            </button>
+                          </div>
+                          {/* Live stats */}
+                          <div style={{ display: "flex", gap: 20 }}>
+                            <div style={{ textAlign: "right" }}>
+                              <div style={{ fontSize: 10, color: "#64748B", textTransform: "uppercase", letterSpacing: 1 }}>Yield</div>
+                              <div style={{ fontSize: 20, fontWeight: 800, color: "#D4A843", fontFamily: "'Fraunces',serif", lineHeight: 1.1 }}>{(ciForm.avgYield ?? ciMerged.avgYield) || "—"}</div>
+                            </div>
+                            <div style={{ textAlign: "right" }}>
+                              <div style={{ fontSize: 10, color: "#64748B", textTransform: "uppercase", letterSpacing: 1 }}>Golden Visa</div>
+                              <div style={{ fontSize: 14, fontWeight: 700, color: (ciForm.goldenVisa ?? ciMerged.goldenVisa) ? "#10B981" : "#475569", lineHeight: 1.3 }}>
+                                {(ciForm.goldenVisa ?? ciMerged.goldenVisa) ? "Eligible ✓" : "Not Eligible"}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* ── Form Content ── */}
+                      <div style={{ padding: "36px 40px 60px" }}>
+
+                        {/* ══ SECTION 1: Investment Signal ══ */}
+                        <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 40, marginBottom: 52, paddingBottom: 52, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                          <div>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>01</div>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", lineHeight: 1.3, marginBottom: 10 }}>Investment Signal</div>
+                            <div style={{ fontSize: 12, color: "#64748B", lineHeight: 1.7 }}>The first numbers an investor checks. Rental yield drives ROI models. Golden Visa status is a major purchase trigger for non-UAE residents.</div>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+                            <div style={{ background: "rgba(212,168,67,0.04)", border: "1px solid rgba(212,168,67,0.12)", borderRadius: 10, padding: "18px 18px 16px" }}>
+                              <Lbl hint="headline ROI figure">Avg Rental Yield</Lbl>
+                              {inp(ciForm.avgYield ?? ciMerged.avgYield, "e.g. 5.5–7.0%", e => setCIForm(p => ({ ...p, avgYield: e.target.value })), { fontSize: 20, fontWeight: 700, color: "#D4A843" })}
+                              <div style={{ fontSize: 10, color: "#475569", marginTop: 8 }}>Investors use this for ROI calculations. Precise ranges build more trust than single numbers.</div>
+                            </div>
+                            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "18px 18px 16px" }}>
+                              <Lbl hint="buyer confidence">Master Developer</Lbl>
+                              {inp(ciForm.masterDev ?? ciMerged.masterDev, "e.g. Emaar Properties", e => setCIForm(p => ({ ...p, masterDev: e.target.value })))}
+                              <div style={{ fontSize: 10, color: "#475569", marginTop: 8 }}>Emaar-backed projects command a 15–20% premium. Developer name is a trust signal.</div>
+                            </div>
+                            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "18px 18px 16px" }}>
+                              <Lbl hint="residency trigger">Golden Visa</Lbl>
+                              <div style={{ display: "flex", gap: 8, marginTop: 2 }}>
+                                {[{ v: true, label: "Eligible", color: "#10B981" }, { v: false, label: "Not Eligible", color: "#64748B" }].map(opt => {
+                                  const active = (ciForm.goldenVisa ?? ciMerged.goldenVisa) === opt.v;
+                                  return <button key={String(opt.v)} type="button" onClick={() => setCIForm(p => ({ ...p, goldenVisa: opt.v }))}
+                                    style={{ flex: 1, padding: "10px 8px", borderRadius: 7, border: "1.5px solid " + (active ? opt.color : "rgba(255,255,255,0.07)"), background: active ? opt.color + "15" : "transparent", color: active ? opt.color : "#475569", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: active ? 700 : 400, fontSize: 12, transition: "all 0.15s" }}>{opt.label}</button>;
+                                })}
+                              </div>
+                              <div style={{ fontSize: 10, color: "#475569", marginTop: 8 }}>AED 2M+ purchases in eligible zones grant UAE residency.</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* ══ SECTION 2: Community Story ══ */}
+                        <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 40, marginBottom: 52, paddingBottom: 52, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                          <div>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>02</div>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", lineHeight: 1.3, marginBottom: 10 }}>Community Story</div>
+                            <div style={{ fontSize: 12, color: "#64748B", lineHeight: 1.7 }}>The narrative that makes buyers self-identify with this community. "This is the right place for me." Tagline and lifestyle are the first emotional hooks.</div>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                            <div style={{ gridColumn: "1 / -1" }}>
+                              <Lbl hint="headline on community page — max 60 chars">Tagline</Lbl>
+                              {inp(ciForm.tagline ?? ciMerged.tagline, "e.g. Golf-Side Family Living in the Heart of New Dubai", e => setCIForm(p => ({ ...p, tagline: e.target.value })), { fontSize: 15, fontWeight: 600 })}
+                            </div>
+                            <div style={{ gridColumn: "1 / -1" }}>
+                              <Lbl hint="bullet highlights — lead with the most impressive features">Famous For</Lbl>
+                              {ta(ciForm.famousFor ?? ciMerged.famousFor, "e.g. 18-hole championship golf course with Burj Khalifa views, Dubai Hills Mall (650+ outlets), 1.45M sqm of parks, 54 km cycling tracks...", e => setCIForm(p => ({ ...p, famousFor: e.target.value })), 3)}
+                            </div>
+                            <div>
+                              <Lbl hint="who lives here and why">Lifestyle Profile</Lbl>
+                              {ta(ciForm.lifestyle ?? ciMerged.lifestyle, "e.g. Family-oriented, golf lifestyle, park-centric, gated communities with 24/7 security...", e => setCIForm(p => ({ ...p, lifestyle: e.target.value })), 3)}
+                            </div>
+                            <div>
+                              <Lbl hint="commute routes matter for rental demand">Road Access</Lbl>
+                              {ta(ciForm.roads ?? ciMerged.roads, "e.g. Al Khail Road (E44), Umm Suqeim Street, E311. Future metro connection planned.", e => setCIForm(p => ({ ...p, roads: e.target.value })), 3)}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* ══ SECTION 3: Amenities ══ */}
+                        <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 40, marginBottom: 52, paddingBottom: 52, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                          <div>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>03</div>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", lineHeight: 1.3, marginBottom: 10 }}>Key Amenities</div>
+                            <div style={{ fontSize: 12, color: "#64748B", lineHeight: 1.7 }}>School quality alone can drive villa prices 10–20% higher. Healthcare proximity matters for families relocating from Europe and Asia. Each row becomes a card investors see.</div>
+                          </div>
+                          <div>
+                            <div style={{ display: "grid", gridTemplateColumns: "180px 1fr 36px", gap: 8, marginBottom: 8 }}>
+                              <div style={{ fontSize: 9, fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: 1 }}>Category</div>
+                              <div style={{ fontSize: 9, fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: 1 }}>Specific names, comma separated</div>
+                              <div />
+                            </div>
+                            {(ciForm.keyAmenities ?? ciMerged.keyAmenities ?? []).map((a, idx) => (
+                              <div key={idx} style={{ display: "grid", gridTemplateColumns: "180px 1fr 36px", gap: 8, marginBottom: 8, alignItems: "center" }}>
+                                <input placeholder="e.g. Schools" value={a.label||""} onChange={e => { const arr = JSON.parse(JSON.stringify(ciForm.keyAmenities ?? ciMerged.keyAmenities)); arr[idx]={...arr[idx],label:e.target.value}; setCIForm(p=>({...p,keyAmenities:arr})); }}
+                                  style={{ padding:"10px 12px", background:"rgba(4,9,15,0.8)", border:"1px solid rgba(212,168,67,0.14)", borderRadius:7, color:"#E2E8F0", fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", transition:"border-color 0.15s", fontWeight:600 }}
+                                  onFocus={e=>e.target.style.borderColor="#D4A843"} onBlur={e=>e.target.style.borderColor="rgba(212,168,67,0.14)"} />
+                                <input placeholder="e.g. GEMS Wellington Academy, King's School Al Barsha, Dubai Heights Academy" value={a.items||""} onChange={e => { const arr = JSON.parse(JSON.stringify(ciForm.keyAmenities ?? ciMerged.keyAmenities)); arr[idx]={...arr[idx],items:e.target.value}; setCIForm(p=>({...p,keyAmenities:arr})); }}
+                                  style={{ padding:"10px 12px", background:"rgba(4,9,15,0.8)", border:"1px solid rgba(212,168,67,0.14)", borderRadius:7, color:"#E2E8F0", fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", transition:"border-color 0.15s", width:"100%", boxSizing:"border-box" }}
+                                  onFocus={e=>e.target.style.borderColor="#D4A843"} onBlur={e=>e.target.style.borderColor="rgba(212,168,67,0.14)"} />
+                                <button type="button" onClick={() => { const arr=(ciForm.keyAmenities??ciMerged.keyAmenities??[]).filter((_,i)=>i!==idx); setCIForm(p=>({...p,keyAmenities:arr})); }}
+                                  style={{ width:34, height:34, display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(239,68,68,0.07)", border:"1px solid rgba(239,68,68,0.15)", borderRadius:7, color:"#EF4444", cursor:"pointer", fontSize:16, flexShrink:0 }}>×</button>
+                              </div>
+                            ))}
+                            <button type="button" onClick={() => setCIForm(p => ({ ...p, keyAmenities:[...(p.keyAmenities??ciMerged.keyAmenities??[]),{label:"",items:""}] }))}
+                              style={{ fontSize:12, padding:"9px 18px", borderRadius:8, border:"1px solid rgba(212,168,67,0.2)", background:"rgba(212,168,67,0.04)", color:"#D4A843", cursor:"pointer", fontFamily:"'Outfit',sans-serif", fontWeight:600, marginTop:6 }}>
+                              + Add Amenity Category
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* ══ SECTION 4: Distance Table ══ */}
+                        <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 40, marginBottom: 52, paddingBottom: 52, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                          <div>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>04</div>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", lineHeight: 1.3, marginBottom: 10 }}>Travel Times</div>
+                            <div style={{ fontSize: 12, color: "#64748B", lineHeight: 1.7 }}>Commute time is the #1 filter for working professionals. Airport proximity matters for frequent travellers. Be accurate — investors verify these numbers on Google Maps.</div>
+                          </div>
+                          <div>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 90px 90px 36px", gap: 8, marginBottom: 8 }}>
+                              <div style={{ fontSize: 9, fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: 1 }}>Destination / Landmark</div>
+                              <div style={{ fontSize: 9, fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: 1, textAlign: "center" }}>Distance</div>
+                              <div style={{ fontSize: 9, fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: 1, textAlign: "center" }}>Drive Time</div>
+                              <div />
+                            </div>
+                            {(ciForm.distances ?? ciMerged.distances ?? []).map((d, idx) => (
+                              <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 90px 90px 36px", gap: 8, marginBottom: 8, alignItems: "center" }}>
+                                <input placeholder="e.g. Downtown Dubai / Burj Khalifa" value={d.dest||""} onChange={e => { const arr=JSON.parse(JSON.stringify(ciForm.distances??ciMerged.distances)); arr[idx]={...arr[idx],dest:e.target.value}; setCIForm(p=>({...p,distances:arr})); }}
+                                  style={{ padding:"10px 12px", background:"rgba(4,9,15,0.8)", border:"1px solid rgba(212,168,67,0.14)", borderRadius:7, color:"#E2E8F0", fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", transition:"border-color 0.15s", boxSizing:"border-box", width:"100%" }}
+                                  onFocus={e=>e.target.style.borderColor="#D4A843"} onBlur={e=>e.target.style.borderColor="rgba(212,168,67,0.14)"} />
+                                <div style={{ position:"relative" }}>
+                                  <input type="number" placeholder="13" value={d.km||""} onChange={e => { const arr=JSON.parse(JSON.stringify(ciForm.distances??ciMerged.distances)); arr[idx]={...arr[idx],km:Number(e.target.value)}; setCIForm(p=>({...p,distances:arr})); }}
+                                    style={{ padding:"10px 10px 10px 12px", background:"rgba(4,9,15,0.8)", border:"1px solid rgba(212,168,67,0.14)", borderRadius:7, color:"#E2E8F0", fontSize:13, fontWeight:600, fontFamily:"'Outfit',sans-serif", outline:"none", width:"100%", boxSizing:"border-box", textAlign:"center", transition:"border-color 0.15s" }}
+                                    onFocus={e=>e.target.style.borderColor="#D4A843"} onBlur={e=>e.target.style.borderColor="rgba(212,168,67,0.14)"} />
+                                  <span style={{ position:"absolute", bottom:6, right:7, fontSize:9, color:"#475569", pointerEvents:"none" }}>km</span>
+                                </div>
+                                <div style={{ position:"relative" }}>
+                                  <input type="number" placeholder="15" value={d.min||""} onChange={e => { const arr=JSON.parse(JSON.stringify(ciForm.distances??ciMerged.distances)); arr[idx]={...arr[idx],min:Number(e.target.value)}; setCIForm(p=>({...p,distances:arr})); }}
+                                    style={{ padding:"10px 10px 10px 12px", background:"rgba(4,9,15,0.8)", border:"1px solid rgba(212,168,67,0.14)", borderRadius:7, color:"#00BFA5", fontSize:13, fontWeight:700, fontFamily:"'Outfit',sans-serif", outline:"none", width:"100%", boxSizing:"border-box", textAlign:"center", transition:"border-color 0.15s" }}
+                                    onFocus={e=>e.target.style.borderColor="#00BFA5"} onBlur={e=>e.target.style.borderColor="rgba(212,168,67,0.14)"} />
+                                  <span style={{ position:"absolute", bottom:6, right:7, fontSize:9, color:"#475569", pointerEvents:"none" }}>min</span>
+                                </div>
+                                <button type="button" onClick={() => { const arr=(ciForm.distances??ciMerged.distances??[]).filter((_,i)=>i!==idx); setCIForm(p=>({...p,distances:arr})); }}
+                                  style={{ width:34, height:34, display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(239,68,68,0.07)", border:"1px solid rgba(239,68,68,0.15)", borderRadius:7, color:"#EF4444", cursor:"pointer", fontSize:16, flexShrink:0 }}>×</button>
+                              </div>
+                            ))}
+                            <button type="button" onClick={() => setCIForm(p => ({ ...p, distances:[...(p.distances??ciMerged.distances??[]),{dest:"",km:0,min:0}] }))}
+                              style={{ fontSize:12, padding:"9px 18px", borderRadius:8, border:"1px solid rgba(0,191,165,0.2)", background:"rgba(0,191,165,0.04)", color:"#00BFA5", cursor:"pointer", fontFamily:"'Outfit',sans-serif", fontWeight:600, marginTop:6 }}>
+                              + Add Destination
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* ══ PUBLISH FOOTER ══ */}
+                        <div style={{ background: "linear-gradient(135deg,rgba(212,168,67,0.08),rgba(212,168,67,0.03))", border: "1px solid rgba(212,168,67,0.18)", borderRadius: 12, padding: "24px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+                          <div>
+                            <div style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", marginBottom: 4 }}>Ready to publish: <span style={{ color: "#D4A843" }}>{activeCIKey}</span></div>
+                            <div style={{ fontSize: 12, color: "#64748B" }}>Saves to Firestore — investors on the live dashboard see updated data within seconds.</div>
+                          </div>
+                          <div style={{ display: "flex", gap: 10 }}>
+                            {ciHasOverride && (
+                              <button type="button" onClick={() => resetCommunityIntel(activeCIKey)}
+                                style={{ fontSize: 12, padding: "11px 20px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.25)", background: "rgba(239,68,68,0.06)", color: "#EF4444", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                                Reset to Default
+                              </button>
+                            )}
+                            <button type="button" disabled={dataSaving} onClick={() => saveCommunityIntel(activeCIKey, ciForm)}
+                              style={{ fontSize: 14, padding: "12px 40px", borderRadius: 9, border: "none", background: "linear-gradient(135deg,#D4A843,#B8860B)", color: "#000", fontWeight: 800, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", boxShadow: "0 6px 28px rgba(212,168,67,0.32)", letterSpacing: 0.3 }}>
+                              {dataSaving ? "Publishing..." : "Publish \u2192 Goes Live Now"}
                             </button>
                           </div>
                         </div>
 
                       </div>
                     </div>
+
                   </div>
                 );
               })()}
