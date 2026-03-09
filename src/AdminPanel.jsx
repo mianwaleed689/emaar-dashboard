@@ -3521,6 +3521,46 @@ export default function AdminPanel() {
     } catch (e) { notify("Error: " + e.message); }
   };
 
+  /* ─── COMBINED COMMUNITY SAVE (ROI + INTEL) ─── */
+  const saveCombinedCommunity = async (communityKey, roiData, intelData) => {
+    setDataSaving(true);
+    try {
+      const timestamp = new Date().toISOString();
+      const adminEmail = adminUser?.email || "admin";
+      
+      // Save ROI data
+      if (roiData && Object.keys(roiData).length > 0) {
+        const cleanRoi = JSON.parse(JSON.stringify(roiData));
+        cleanRoi.updatedAt = timestamp;
+        cleanRoi.updatedBy = adminEmail;
+        await setDoc(doc(db, "communityROI", communityKey), cleanRoi, { merge: true });
+      }
+      
+      // Save Intel data
+      if (intelData && Object.keys(intelData).length > 0) {
+        const cleanIntel = JSON.parse(JSON.stringify(intelData));
+        cleanIntel.updatedAt = timestamp;
+        cleanIntel.updatedBy = adminEmail;
+        await setDoc(doc(db, "communityIntel", communityKey), cleanIntel, { merge: true });
+      }
+      
+      await logAudit(db, { action: "community_combined_update", communityKey }).catch(() => {});
+      notify("Community data saved \u2192 Live on dashboard");
+      fetchLiveData();
+    } catch (e) { notify("Error: " + e.message); }
+    setDataSaving(false);
+  };
+
+  const resetCombinedCommunity = async (key) => {
+    if (!window.confirm("\u26A0 RESET COMMUNITY: " + key + "\n\nThis will remove ALL custom data (yields, rents, lifestyle info) and revert to data.js defaults.\n\nContinue?")) return;
+    try {
+      await deleteDoc(doc(db, "communityROI", key));
+      await deleteDoc(doc(db, "communityIntel", key));
+      notify("Reset to defaults");
+      fetchLiveData();
+    } catch (e) { notify("Error: " + e.message); }
+  };
+
   /* Merge live data with defaults */
   const getMergedProject = (p) => ({ ...p, ...(liveProjects[p.id] || {}) });
   const getMergedROI = (key) => ({ ...(defaultCommunityROI[key] || {}), ...(liveCommunityROI[key] || {}) });
@@ -5845,7 +5885,6 @@ export default function AdminPanel() {
                   { id: "yields", label: "Yields", count: emaarYields.length, icon: I.yields },
                   { id: "communities", label: "Communities", count: Object.keys(defaultCommunityROI).length, icon: I.chart },
                   { id: "pricehistory", label: "Price History", count: Object.values(priceHistory).reduce((sum, arr) => sum + (arr?.length || 0), 0), icon: I.chart },
-                  { id: "communityintel", label: "Intel", count: Object.keys(defaultCommunityIntel).length, icon: I.projects },
                 ].map(st => (
                   <button type="button" key={st.id} onClick={() => { setDataSubTab(st.id); setEditingProject(null); setEditingCommunity(null); setEditingYield(null); setEditingCommunityIntel(null); setBulkSelected([]); }}
                     style={{ 
@@ -6418,149 +6457,355 @@ export default function AdminPanel() {
                 </Section>
               )}
 
-              {/* ─── COMMUNITY ROI EDITOR ─── */}
-              {dataSubTab === "communities" && (
-                <Section title="Community ROI Data" sub="Edit yields, rents, appreciation, occupancy per community" action={
-                  <button type="button" onClick={fetchLiveData} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
-                }>
-                  {/* Editing form */}
-                  {editingCommunity && (() => {
-                    const key = editingCommunity;
-                    const merged = getMergedROI(key);
-                    const hasOverride = !!liveCommunityROI[key];
-                    return (
-                      <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: `1px solid ${T.gold}30` }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                          <div>
-                            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{key}</h3>
-                            {hasOverride && <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 600 }}>LIVE DATA</span>}
-                          </div>
-                          <div style={{ display: "flex", gap: 8 }}>
-                            {hasOverride && <button type="button" onClick={() => resetCommunityROI(key)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.3)`, background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Reset</button>}
-                            <button type="button" onClick={() => setEditingCommunity(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
-                          </div>
-                        </div>
+              {/* ═══════════════════════════════════════
+                 UNIFIED COMMUNITIES EDITOR (ROI + INTEL)
+                 ═══════════════════════════════════════ */}
+              {dataSubTab === "communities" && (() => {
+                const communities = Object.keys(defaultCommunityROI);
+                const activeKey = editingCommunity || communities[0];
+                const roiMerged = { ...(defaultCommunityROI[activeKey] || {}), ...(liveCommunityROI[activeKey] || {}) };
+                const intelMerged = { ...(defaultCommunityIntel[activeKey] || {}), ...(liveCommunityIntel[activeKey] || {}) };
+                const hasROI = !!liveCommunityROI[activeKey];
+                const hasIntel = !!liveCommunityIntel[activeKey];
+                const hasAnyOverride = hasROI || hasIntel;
+                
+                // Initialize forms when switching communities
+                if (!editingCommunity && communities.length > 0) {
+                  setTimeout(() => {
+                    setEditingCommunity(communities[0]);
+                    setCommunityForm({ ...(defaultCommunityROI[communities[0]] || {}), ...(liveCommunityROI[communities[0]] || {}) });
+                    setCommunityIntelForm({ ...(defaultCommunityIntel[communities[0]] || {}), ...(liveCommunityIntel[communities[0]] || {}) });
+                  }, 0);
+                }
 
-                        {/* Gross Yields */}
-                        <div style={{ marginBottom: 16 }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Gross Yield (%)</div>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
-                            {["apt1", "apt2", "apt3", "th", "villa"].filter(k => merged.grossYield?.[k] !== undefined || merged.estRent?.[k]).map(k => (
-                              <div key={k}>
-                                <label style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>{k}</label>
-                                <input type="number" step="0.1" value={communityForm.grossYield?.[k] ?? merged.grossYield?.[k] ?? ""} onChange={e => setCommunityForm(prev => ({ ...prev, grossYield: { ...(prev.grossYield || merged.grossYield || {}), [k]: Number(e.target.value) } }))}
-                                  style={{ width: "100%", padding: "8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                const inp = (val, ph, onChange, extra) => (
+                  <input value={val ?? ""} onChange={onChange} placeholder={ph}
+                    style={{ width: "100%", padding: "10px 13px", background: "rgba(4,9,15,0.8)", border: "1px solid rgba(212,168,67,0.14)", borderRadius: 7, color: "#E2E8F0", fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s", ...(extra||{}) }}
+                    onFocus={e => e.target.style.borderColor="#D4A843"} onBlur={e => e.target.style.borderColor="rgba(212,168,67,0.14)"} />
+                );
+                const ta = (val, ph, onChange, rows) => (
+                  <textarea value={val ?? ""} onChange={onChange} placeholder={ph} rows={rows||3}
+                    style={{ width: "100%", padding: "10px 13px", background: "rgba(4,9,15,0.8)", border: "1px solid rgba(212,168,67,0.14)", borderRadius: 7, color: "#E2E8F0", fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical", transition: "border-color 0.15s", lineHeight: 1.6 }}
+                    onFocus={e => e.target.style.borderColor="#D4A843"} onBlur={e => e.target.style.borderColor="rgba(212,168,67,0.14)"} />
+                );
+                const Lbl = ({ children, color }) => (
+                  <div style={{ fontSize: 10, fontWeight: 700, color: color || "#64748B", letterSpacing: 1.1, textTransform: "uppercase", marginBottom: 6 }}>{children}</div>
+                );
 
-                        {/* Net Yields */}
-                        <div style={{ marginBottom: 16 }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: T.green, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Net Yield (%)</div>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
-                            {["apt1", "apt2", "apt3", "th", "villa"].filter(k => merged.netYield?.[k] !== undefined || merged.estRent?.[k]).map(k => (
-                              <div key={k}>
-                                <label style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>{k}</label>
-                                <input type="number" step="0.1" value={communityForm.netYield?.[k] ?? merged.netYield?.[k] ?? ""} onChange={e => setCommunityForm(prev => ({ ...prev, netYield: { ...(prev.netYield || merged.netYield || {}), [k]: Number(e.target.value) } }))}
-                                  style={{ width: "100%", padding: "8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                return (
+                  <div style={{ position: "fixed", top: 60, left: 240, right: 0, bottom: 0, display: "flex", zIndex: 50, background: "#04090F" }}>
 
-                        {/* Est Rents */}
-                        <div style={{ marginBottom: 16 }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: T.blue, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>Est. Annual Rent (AED)</div>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
-                            {["apt1", "apt2", "apt3", "apt4", "th", "villa", "penthouse"].filter(k => merged.estRent?.[k] !== undefined).map(k => (
-                              <div key={k}>
-                                <label style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>{k}</label>
-                                <input type="number" value={communityForm.estRent?.[k] ?? merged.estRent?.[k] ?? ""} onChange={e => setCommunityForm(prev => ({ ...prev, estRent: { ...(prev.estRent || merged.estRent || {}), [k]: Number(e.target.value) } }))}
-                                  style={{ width: "100%", padding: "8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                    {/* ══════════════════════════════
+                        LEFT NAV \u2014 Community List
+                    ══════════════════════════════ */}
+                    <div style={{ width: 280, flexShrink: 0, background: "#060D1A", borderRight: "1px solid rgba(212,168,67,0.1)", display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
 
-                        {/* Key metrics */}
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
-                          {[
-                            { key: "appreciation5yr", label: "5Y Appreciation %", type: "number" },
-                            { key: "appreciationYoY", label: "YoY Growth %", type: "number" },
-                            { key: "serviceCharge", label: "Service Charge (AED/sqft)", type: "number" },
-                            { key: "occupancy", label: "Occupancy %", type: "number" },
-                            { key: "avgDaysToLease", label: "Avg Days to Lease", type: "number" },
-                            { key: "riskLevel", label: "Risk Level", type: "text" },
-                            { key: "shortTermPremium", label: "Short-term Premium %", type: "number" },
-                            { key: "capitalGrowthDriver", label: "Growth Driver", type: "text" },
-                          ].map(f => (
-                            <div key={f.key} style={f.key === "capitalGrowthDriver" ? { gridColumn: "span 4" } : {}}>
-                              <label style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
-                              {f.key === "capitalGrowthDriver" ? (
-                                <textarea value={communityForm[f.key] ?? merged[f.key] ?? ""} onChange={e => setCommunityForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                                  style={{ width: "100%", padding: "8px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", minHeight: 60, resize: "vertical" }} />
-                              ) : (
-                                <input type={f.type} step={f.type === "number" ? "0.1" : undefined} value={communityForm[f.key] ?? merged[f.key] ?? ""} onChange={e => setCommunityForm(prev => ({ ...prev, [f.key]: f.type === "number" ? Number(e.target.value) : e.target.value }))}
-                                  style={{ width: "100%", padding: "8px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} />
-                              )}
-                            </div>
-                          ))}
-                        </div>
-
-                        <button type="button" disabled={dataSaving} onClick={() => saveCommunityROI(key, communityForm)}
-                          style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
-                          {dataSaving ? "Saving..." : "Save Community ROI — Goes Live Instantly"}
-                        </button>
+                      {/* Nav Header */}
+                      <div style={{ padding: "22px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Communities</div>
+                        <div style={{ fontSize: 12, color: "#64748B" }}>{communities.length} areas \u00B7 {Object.keys(liveCommunityROI).length + Object.keys(liveCommunityIntel).length} live overrides</div>
                       </div>
-                    );
-                  })()}
 
-                  {/* Community list */}
-                  <TabHelp items={[
-                    { icon: "[c]", title: "What is Community ROI?", desc: "Each card represents a Dubai community (e.g. Dubai Hills Estate). The data here powers the Yields & ROI section on the main dashboard." },
-                    { icon: "[^]", title: "Gross vs Net Yield", desc: "Gross yield is before costs. Net yield deducts service charge and management fees. Users see both." },
-                    { icon: "[h]", title: "Unit Types", desc: "APT1 = 1BR apartment, APT2 = 2BR, TH = Townhouse. Edit each unit type's yield separately." },
-                    { icon: "[%]", title: "Appreciation", desc: "5Y Appreciation = total % growth over 5 years. YoY = last 12 months. These appear on community comparison charts." },
-                    { icon: "[~]", title: "Reset", desc: "Clicking Reset removes your override and reverts to the default data.js values." },
-                  ]} />
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
-                    {Object.entries(defaultCommunityROI).map(([key, roi]) => {
-                      const merged = getMergedROI(key);
-                      const hasOverride = !!liveCommunityROI[key];
-                      const comm = emaarCommunities.find(c => c.district === key);
-                      return (
-                        <div key={key} className="chart-box fade-up" style={{ padding: 18, cursor: "pointer", border: editingCommunity === key ? `1px solid ${T.gold}` : `1px solid ${T.border}`, transition: "all .2s" }}
-                          onClick={() => { setEditingCommunity(key); setCommunityForm({ ...defaultCommunityROI[key], ...(liveCommunityROI[key] || {}) }); }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                            <div>
-                              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{comm?.name || key}</div>
-                              <div style={{ fontSize: 11, color: T.textMuted }}>{key}</div>
-                            </div>
-                            <span style={{ fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: hasOverride ? "rgba(16,185,129,0.12)" : "rgba(148,163,184,0.08)", color: hasOverride ? T.green : T.textMuted }}>{hasOverride ? "● Live" : "○ Default"}</span>
+                      {/* Community List */}
+                      <div style={{ flex: 1, padding: "8px 10px", overflowY: "auto" }}>
+                        {communities.map(k => {
+                          const isActive = activeKey === k;
+                          const hasLiveROI = !!liveCommunityROI[k];
+                          const hasLiveIntel = !!liveCommunityIntel[k];
+                          const roi = { ...(defaultCommunityROI[k] || {}), ...(liveCommunityROI[k] || {}) };
+                          const intel = { ...(defaultCommunityIntel[k] || {}), ...(liveCommunityIntel[k] || {}) };
+                          const avgYield = roi.grossYield ? Object.values(roi.grossYield).filter(v => v).reduce((a,b) => a+b, 0) / Object.values(roi.grossYield).filter(v => v).length : null;
+                          return (
+                            <button key={k} type="button"
+                              onClick={() => { 
+                                setEditingCommunity(k); 
+                                setCommunityForm({ ...(defaultCommunityROI[k] || {}), ...(liveCommunityROI[k] || {}) });
+                                setCommunityIntelForm({ ...(defaultCommunityIntel[k] || {}), ...(liveCommunityIntel[k] || {}) });
+                              }}
+                              style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: isActive ? "1px solid rgba(212,168,67,0.3)" : "1px solid transparent", background: isActive ? "rgba(212,168,67,0.08)" : "transparent", cursor: "pointer", textAlign: "left", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s", marginBottom: 4, display: "block" }}
+                              onMouseEnter={e => { if (!isActive) e.currentTarget.style.background="rgba(255,255,255,0.03)"; }}
+                              onMouseLeave={e => { if (!isActive) e.currentTarget.style.background="transparent"; }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                                <div style={{ fontSize: 13, fontWeight: isActive ? 700 : 500, color: isActive ? "#D4A843" : "#CBD5E1", lineHeight: 1.3 }}>{k}</div>
+                                {(hasLiveROI || hasLiveIntel)
+                                  ? <span style={{ fontSize: 8, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "rgba(16,185,129,0.12)", color: "#10B981", flexShrink: 0, marginLeft: 6 }}>LIVE</span>
+                                  : <span style={{ fontSize: 8, fontWeight: 600, padding: "2px 6px", borderRadius: 4, background: "rgba(100,116,139,0.1)", color: "#475569", flexShrink: 0, marginLeft: 6 }}>DEFAULT</span>}
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                                <span style={{ fontSize: 13, fontWeight: 700, color: isActive ? "#D4A843" : "#94A3B8" }}>{avgYield ? avgYield.toFixed(1) + "%" : intel.avgYield || "\u2014"}</span>
+                                {roi.goldenVisa && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 3, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700 }}>VISA</span>}
+                                <span style={{ fontSize: 10, color: roi.riskLevel === "Low" ? "#10B981" : roi.riskLevel === "Medium" ? "#F59E0B" : "#64748B" }}>{roi.riskLevel || ""}</span>
+                              </div>
+                              <div style={{ fontSize: 10, color: "#475569", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{intel.tagline || "No tagline"}</div>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Nav Footer */}
+                      <div style={{ padding: "14px 16px", borderTop: "1px solid rgba(255,255,255,0.05)", fontSize: 10, color: "#334155", lineHeight: 1.6 }}>
+                        Investment + Lifestyle data saves to Firestore. Dashboard updates instantly.
+                      </div>
+                    </div>
+
+                    {/* ══════════════════════════════
+                        RIGHT \u2014 Combined Editor
+                    ══════════════════════════════ */}
+                    <div style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100%", scrollbarWidth: "thin" }}>
+
+                      {/* Hero Banner */}
+                      <div style={{ padding: "28px 36px 24px", background: "linear-gradient(135deg, rgba(212,168,67,0.07) 0%, rgba(10,22,40,0) 60%)", borderBottom: "1px solid rgba(212,168,67,0.1)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24, flexWrap: "wrap" }}>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>Editing Community</div>
+                          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 32, fontWeight: 900, color: "#FFFFFF", margin: "0 0 8px", lineHeight: 1.1 }}>{activeKey}</h1>
+                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            <span style={{ width: 8, height: 8, borderRadius: "50%", background: hasAnyOverride ? "#10B981" : "#475569", boxShadow: hasAnyOverride ? "0 0 8px #10B981" : "none" }} />
+                            <span style={{ fontSize: 12, color: hasAnyOverride ? "#10B981" : "#64748B" }}>
+                              {hasAnyOverride ? "Live \u2014 dashboard shows your custom data" : "Default \u2014 showing data.js values"}
+                            </span>
                           </div>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-                            <div>
-                              <div style={{ fontSize: 9, color: T.textMuted }}>GROSS YIELD</div>
-                              <div style={{ fontSize: 16, fontWeight: 700, color: T.gold }}>{merged.grossYield?.apt2 || merged.grossYield?.apt1 || merged.grossYield?.th || "—"}%</div>
-                            </div>
-                            <div>
-                              <div style={{ fontSize: 9, color: T.textMuted }}>YoY GROWTH</div>
-                              <div style={{ fontSize: 16, fontWeight: 700, color: T.green }}>{merged.appreciationYoY || "—"}%</div>
-                            </div>
-                            <div>
-                              <div style={{ fontSize: 9, color: T.textMuted }}>OCCUPANCY</div>
-                              <div style={{ fontSize: 16, fontWeight: 700, color: T.blue }}>{merged.occupancy || "—"}%</div>
-                            </div>
-                          </div>
-                          {merged.updatedAt && <div style={{ fontSize: 9, color: T.textMuted, marginTop: 8 }}>Updated: {new Date(merged.updatedAt).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" })} by {merged.updatedBy || "—"}</div>}
-                          <div style={{ textAlign: "right", marginTop: 8 }}><span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>Edit →</span></div>
                         </div>
-                      );
-                    })}
+                        <div style={{ display: "flex", gap: 10 }}>
+                          {hasAnyOverride && (
+                            <button type="button" onClick={() => resetCombinedCommunity(activeKey)}
+                              style={{ fontSize: 12, padding: "10px 18px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.25)", background: "rgba(239,68,68,0.06)", color: "#EF4444", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                              Reset All
+                            </button>
+                          )}
+                          <button type="button" disabled={dataSaving} onClick={() => saveCombinedCommunity(activeKey, communityForm, communityIntelForm)}
+                            style={{ fontSize: 14, padding: "11px 28px", borderRadius: 9, border: "none", background: "linear-gradient(135deg,#D4A843,#B8860B)", color: "#000", fontWeight: 800, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", boxShadow: "0 6px 24px rgba(212,168,67,0.3)" }}>
+                            {dataSaving ? "Saving..." : "Publish \u2192 Live"}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Editor Content */}
+                      <div style={{ padding: "28px 36px" }}>
+
+                        {/* ══════ INVESTMENT DATA SECTION ══════ */}
+                        <div style={{ marginBottom: 32, padding: 24, background: "rgba(212,168,67,0.03)", border: "1px solid rgba(212,168,67,0.12)", borderRadius: 14 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                            <div style={{ width: 4, height: 24, background: "#D4A843", borderRadius: 2 }} />
+                            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#D4A843", margin: 0 }}>Investment Data</h2>
+                            {hasROI && <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 5, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 600 }}>LIVE</span>}
+                          </div>
+
+                          {/* Yield Grid */}
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 20 }}>
+                            {["apt1", "apt2", "apt3", "th", "villa"].map(k => (
+                              <div key={k} style={{ background: "rgba(4,9,15,0.5)", padding: 14, borderRadius: 10, border: "1px solid rgba(255,255,255,0.05)" }}>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", marginBottom: 10, textTransform: "uppercase" }}>{k === "apt1" ? "1 BR" : k === "apt2" ? "2 BR" : k === "apt3" ? "3 BR" : k === "th" ? "Townhouse" : "Villa"}</div>
+                                <div style={{ marginBottom: 8 }}>
+                                  <div style={{ fontSize: 9, color: "#D4A843", marginBottom: 3 }}>Gross %</div>
+                                  <input type="number" step="0.1" value={communityForm.grossYield?.[k] ?? roiMerged.grossYield?.[k] ?? ""} 
+                                    onChange={e => setCommunityForm(prev => ({ ...prev, grossYield: { ...(prev.grossYield || roiMerged.grossYield || {}), [k]: Number(e.target.value) || null } }))}
+                                    style={{ width: "100%", padding: "8px", background: "#04090F", border: "1px solid rgba(212,168,67,0.2)", borderRadius: 6, color: "#D4A843", fontSize: 14, fontWeight: 700, fontFamily: "'Fraunces',serif", textAlign: "center" }} />
+                                </div>
+                                <div style={{ marginBottom: 8 }}>
+                                  <div style={{ fontSize: 9, color: "#10B981", marginBottom: 3 }}>Net %</div>
+                                  <input type="number" step="0.1" value={communityForm.netYield?.[k] ?? roiMerged.netYield?.[k] ?? ""} 
+                                    onChange={e => setCommunityForm(prev => ({ ...prev, netYield: { ...(prev.netYield || roiMerged.netYield || {}), [k]: Number(e.target.value) || null } }))}
+                                    style={{ width: "100%", padding: "8px", background: "#04090F", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 6, color: "#10B981", fontSize: 14, fontWeight: 700, fontFamily: "'Fraunces',serif", textAlign: "center" }} />
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: 9, color: "#3B82F6", marginBottom: 3 }}>Rent AED/yr</div>
+                                  <input type="number" value={communityForm.estRent?.[k] ?? roiMerged.estRent?.[k] ?? ""} 
+                                    onChange={e => setCommunityForm(prev => ({ ...prev, estRent: { ...(prev.estRent || roiMerged.estRent || {}), [k]: Number(e.target.value) || null } }))}
+                                    style={{ width: "100%", padding: "8px", background: "#04090F", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 6, color: "#3B82F6", fontSize: 12, fontWeight: 600, textAlign: "center" }} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Other Investment Fields */}
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+                            <div>
+                              <Lbl>5-Year Appreciation %</Lbl>
+                              <input type="number" value={communityForm.appreciation5yr ?? roiMerged.appreciation5yr ?? ""} 
+                                onChange={e => setCommunityForm(prev => ({ ...prev, appreciation5yr: Number(e.target.value) }))}
+                                style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
+                            </div>
+                            <div>
+                              <Lbl>YoY Growth %</Lbl>
+                              <input type="number" value={communityForm.appreciationYoY ?? roiMerged.appreciationYoY ?? ""} 
+                                onChange={e => setCommunityForm(prev => ({ ...prev, appreciationYoY: Number(e.target.value) }))}
+                                style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
+                            </div>
+                            <div>
+                              <Lbl>Occupancy %</Lbl>
+                              <input type="number" value={communityForm.occupancy ?? roiMerged.occupancy ?? ""} 
+                                onChange={e => setCommunityForm(prev => ({ ...prev, occupancy: Number(e.target.value) }))}
+                                style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
+                            </div>
+                            <div>
+                              <Lbl>Risk Level</Lbl>
+                              <select value={communityForm.riskLevel ?? roiMerged.riskLevel ?? "Low"} 
+                                onChange={e => setCommunityForm(prev => ({ ...prev, riskLevel: e.target.value }))}
+                                style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }}>
+                                <option value="Low">Low</option>
+                                <option value="Low-Medium">Low-Medium</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Medium-High">Medium-High</option>
+                                <option value="High">High</option>
+                              </select>
+                            </div>
+                            <div>
+                              <Lbl>Service Charge (AED/sqft)</Lbl>
+                              <input type="number" value={communityForm.serviceCharge ?? roiMerged.serviceCharge ?? ""} 
+                                onChange={e => setCommunityForm(prev => ({ ...prev, serviceCharge: Number(e.target.value) }))}
+                                style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
+                            </div>
+                            <div>
+                              <Lbl>Avg Days to Lease</Lbl>
+                              <input type="number" value={communityForm.avgDaysToLease ?? roiMerged.avgDaysToLease ?? ""} 
+                                onChange={e => setCommunityForm(prev => ({ ...prev, avgDaysToLease: Number(e.target.value) }))}
+                                style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
+                            </div>
+                            <div>
+                              <Lbl>Short-Term Premium %</Lbl>
+                              <input type="number" value={communityForm.shortTermPremium ?? roiMerged.shortTermPremium ?? ""} 
+                                onChange={e => setCommunityForm(prev => ({ ...prev, shortTermPremium: Number(e.target.value) }))}
+                                style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
+                            </div>
+                            <div>
+                              <Lbl>Golden Visa Eligible</Lbl>
+                              <select value={communityForm.goldenVisa ?? roiMerged.goldenVisa ?? true} 
+                                onChange={e => setCommunityForm(prev => ({ ...prev, goldenVisa: e.target.value === "true" }))}
+                                style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }}>
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div style={{ marginTop: 16 }}>
+                            <Lbl>Capital Growth Driver</Lbl>
+                            {ta(communityForm.capitalGrowthDriver ?? roiMerged.capitalGrowthDriver ?? "", "What drives value in this community?", e => setCommunityForm(prev => ({ ...prev, capitalGrowthDriver: e.target.value })), 2)}
+                          </div>
+                        </div>
+
+                        {/* ══════ LIFESTYLE DATA SECTION ══════ */}
+                        <div style={{ padding: 24, background: "rgba(0,191,165,0.03)", border: "1px solid rgba(0,191,165,0.12)", borderRadius: 14 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                            <div style={{ width: 4, height: 24, background: "#00BFA5", borderRadius: 2 }} />
+                            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#00BFA5", margin: 0 }}>Lifestyle & Location</h2>
+                            {hasIntel && <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 5, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 600 }}>LIVE</span>}
+                          </div>
+
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                            <div>
+                              <Lbl color="#00BFA5">Tagline</Lbl>
+                              {inp(communityIntelForm.tagline ?? intelMerged.tagline ?? "", "e.g. Golf-Side Family Living...", e => setCommunityIntelForm(prev => ({ ...prev, tagline: e.target.value })))}
+                            </div>
+                            <div>
+                              <Lbl color="#00BFA5">Master Developer</Lbl>
+                              {inp(communityIntelForm.masterDev ?? intelMerged.masterDev ?? "", "e.g. Emaar & Meraas joint venture", e => setCommunityIntelForm(prev => ({ ...prev, masterDev: e.target.value })))}
+                            </div>
+                          </div>
+
+                          <div style={{ marginTop: 16 }}>
+                            <Lbl color="#00BFA5">Famous For</Lbl>
+                            {ta(communityIntelForm.famousFor ?? intelMerged.famousFor ?? "", "Key attractions, landmarks, features...", e => setCommunityIntelForm(prev => ({ ...prev, famousFor: e.target.value })), 2)}
+                          </div>
+
+                          <div style={{ marginTop: 16 }}>
+                            <Lbl color="#00BFA5">Lifestyle Description</Lbl>
+                            {ta(communityIntelForm.lifestyle ?? intelMerged.lifestyle ?? "", "Target demographic, community vibe...", e => setCommunityIntelForm(prev => ({ ...prev, lifestyle: e.target.value })), 2)}
+                          </div>
+
+                          <div style={{ marginTop: 16 }}>
+                            <Lbl color="#00BFA5">Road Connectivity</Lbl>
+                            {inp(communityIntelForm.roads ?? intelMerged.roads ?? "", "Major roads, metro connections...", e => setCommunityIntelForm(prev => ({ ...prev, roads: e.target.value })))}
+                          </div>
+
+                          {/* Key Amenities */}
+                          <div style={{ marginTop: 20 }}>
+                            <Lbl color="#00BFA5">Key Amenities</Lbl>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                              {(communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? []).map((am, idx) => (
+                                <div key={idx} style={{ display: "flex", gap: 8, alignItems: "flex-start", background: "rgba(4,9,15,0.5)", padding: 12, borderRadius: 8 }}>
+                                  <input value={am.icon || ""} onChange={e => {
+                                    const arr = [...(communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? [])];
+                                    arr[idx] = { ...arr[idx], icon: e.target.value };
+                                    setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr }));
+                                  }} style={{ width: 40, padding: "6px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#E2E8F0", fontSize: 16, textAlign: "center" }} />
+                                  <div style={{ flex: 1 }}>
+                                    <input value={am.label || ""} onChange={e => {
+                                      const arr = [...(communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? [])];
+                                      arr[idx] = { ...arr[idx], label: e.target.value };
+                                      setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr }));
+                                    }} placeholder="Label" style={{ width: "100%", padding: "6px 8px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#E2E8F0", fontSize: 12, marginBottom: 4 }} />
+                                    <input value={am.items || ""} onChange={e => {
+                                      const arr = [...(communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? [])];
+                                      arr[idx] = { ...arr[idx], items: e.target.value };
+                                      setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr }));
+                                    }} placeholder="Items (comma-separated)" style={{ width: "100%", padding: "6px 8px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#94A3B8", fontSize: 11 }} />
+                                  </div>
+                                  <button type="button" onClick={() => {
+                                    const arr = (communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? []).filter((_, i) => i !== idx);
+                                    setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr }));
+                                  }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>\u00D7</button>
+                                </div>
+                              ))}
+                            </div>
+                            <button type="button" onClick={() => setCommunityIntelForm(prev => ({ ...prev, keyAmenities: [...(prev.keyAmenities ?? intelMerged.keyAmenities ?? []), { icon: "", label: "", items: "" }] }))}
+                              style={{ marginTop: 8, fontSize: 11, padding: "8px 16px", borderRadius: 6, border: "1px solid rgba(0,191,165,0.3)", background: "rgba(0,191,165,0.05)", color: "#00BFA5", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                              + Add Amenity
+                            </button>
+                          </div>
+
+                          {/* Distances */}
+                          <div style={{ marginTop: 20 }}>
+                            <Lbl color="#00BFA5">Distances to Key Locations</Lbl>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                              {(communityIntelForm.distances ?? intelMerged.distances ?? []).map((d, idx) => (
+                                <div key={idx} style={{ display: "flex", gap: 8, alignItems: "center", background: "rgba(4,9,15,0.5)", padding: 10, borderRadius: 8 }}>
+                                  <input value={d.dest || ""} onChange={e => {
+                                    const arr = [...(communityIntelForm.distances ?? intelMerged.distances ?? [])];
+                                    arr[idx] = { ...arr[idx], dest: e.target.value };
+                                    setCommunityIntelForm(prev => ({ ...prev, distances: arr }));
+                                  }} placeholder="Destination" style={{ flex: 1, padding: "6px 8px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#E2E8F0", fontSize: 12 }} />
+                                  <input type="number" value={d.km || ""} onChange={e => {
+                                    const arr = [...(communityIntelForm.distances ?? intelMerged.distances ?? [])];
+                                    arr[idx] = { ...arr[idx], km: Number(e.target.value) };
+                                    setCommunityIntelForm(prev => ({ ...prev, distances: arr }));
+                                  }} placeholder="km" style={{ width: 50, padding: "6px 8px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#D4A843", fontSize: 12, textAlign: "center" }} />
+                                  <input type="number" value={d.min || ""} onChange={e => {
+                                    const arr = [...(communityIntelForm.distances ?? intelMerged.distances ?? [])];
+                                    arr[idx] = { ...arr[idx], min: Number(e.target.value) };
+                                    setCommunityIntelForm(prev => ({ ...prev, distances: arr }));
+                                  }} placeholder="min" style={{ width: 50, padding: "6px 8px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#00BFA5", fontSize: 12, textAlign: "center" }} />
+                                  <button type="button" onClick={() => {
+                                    const arr = (communityIntelForm.distances ?? intelMerged.distances ?? []).filter((_, i) => i !== idx);
+                                    setCommunityIntelForm(prev => ({ ...prev, distances: arr }));
+                                  }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>\u00D7</button>
+                                </div>
+                              ))}
+                            </div>
+                            <button type="button" onClick={() => setCommunityIntelForm(prev => ({ ...prev, distances: [...(prev.distances ?? intelMerged.distances ?? []), { dest: "", km: 0, min: 0 }] }))}
+                              style={{ marginTop: 8, fontSize: 11, padding: "8px 16px", borderRadius: 6, border: "1px solid rgba(0,191,165,0.3)", background: "rgba(0,191,165,0.05)", color: "#00BFA5", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                              + Add Distance
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Publish Footer */}
+                        <div style={{ marginTop: 24, background: "linear-gradient(135deg,rgba(212,168,67,0.08),rgba(212,168,67,0.03))", border: "1px solid rgba(212,168,67,0.18)", borderRadius: 12, padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+                          <div>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: "#FFFFFF", marginBottom: 4 }}>Ready to publish: <span style={{ color: "#D4A843" }}>{activeKey}</span></div>
+                            <div style={{ fontSize: 12, color: "#64748B" }}>Investment + Lifestyle data saves to Firestore. Dashboard updates instantly.</div>
+                          </div>
+                          <button type="button" disabled={dataSaving} onClick={() => saveCombinedCommunity(activeKey, communityForm, communityIntelForm)}
+                            style={{ fontSize: 14, padding: "12px 36px", borderRadius: 9, border: "none", background: "linear-gradient(135deg,#D4A843,#B8860B)", color: "#000", fontWeight: 800, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", boxShadow: "0 6px 28px rgba(212,168,67,0.32)" }}>
+                            {dataSaving ? "Publishing..." : "Publish \u2192 Goes Live Now"}
+                          </button>
+                        </div>
+
+                      </div>
+                    </div>
+
                   </div>
-                </Section>
-              )}
+                );
+              })()}
 
               {/* ─── YIELD TABLE EDITOR ─── */}
               {dataSubTab === "yields" && (
@@ -6915,8 +7160,8 @@ export default function AdminPanel() {
               })()}
 
               {/* Data sync info */}
-              {dataSubTab !== "communityintel" && <div className="chart-box fade-up" style={{ padding: 16, marginTop: 8, display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ fontSize: 24 }}>ℹ</div>
+              {dataSubTab !== "communities" && <div className="chart-box fade-up" style={{ padding: 16, marginTop: 8, display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ fontSize: 24 }}>{"\u2139"}</div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>How Live Data Works</div>
                   <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6 }}>
@@ -6924,296 +7169,6 @@ export default function AdminPanel() {
                   </div>
                 </div>
               </div>}
-              {dataSubTab === "communityintel" && (() => {
-                const communities = Object.keys(defaultCommunityIntel);
-                const activeCIKey = editingCommunityIntel || communities[0];
-                const ciMerged = { ...defaultCommunityIntel[activeCIKey], ...(liveCommunityIntel[activeCIKey] || {}) };
-                const ciHasOverride = !!liveCommunityIntel[activeCIKey];
-                const ciForm = communityIntelForm;
-                const setCIForm = setCommunityIntelForm;
-                if (!editingCommunityIntel) {
-                  setTimeout(() => { setEditingCommunityIntel(communities[0]); setCommunityIntelForm({ ...defaultCommunityIntel[communities[0]], ...(liveCommunityIntel[communities[0]] || {}) }); }, 0);
-                }
-
-                const inp = (val, ph, onChange, extra) => (
-                  <input value={val ?? ""} onChange={onChange} placeholder={ph}
-                    style={{ width: "100%", padding: "10px 13px", background: "rgba(4,9,15,0.8)", border: "1px solid rgba(212,168,67,0.14)", borderRadius: 7, color: "#E2E8F0", fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s", ...(extra||{}) }}
-                    onFocus={e => e.target.style.borderColor="#D4A843"} onBlur={e => e.target.style.borderColor="rgba(212,168,67,0.14)"} />
-                );
-                const ta = (val, ph, onChange, rows) => (
-                  <textarea value={val ?? ""} onChange={onChange} placeholder={ph} rows={rows||3}
-                    style={{ width: "100%", padding: "10px 13px", background: "rgba(4,9,15,0.8)", border: "1px solid rgba(212,168,67,0.14)", borderRadius: 7, color: "#E2E8F0", fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical", transition: "border-color 0.15s", lineHeight: 1.6 }}
-                    onFocus={e => e.target.style.borderColor="#D4A843"} onBlur={e => e.target.style.borderColor="rgba(212,168,67,0.14)"} />
-                );
-                const Lbl = ({ children, hint }) => (
-                  <div style={{ marginBottom: 6 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: "#64748B", letterSpacing: 1.1, textTransform: "uppercase" }}>{children}</span>
-                    {hint && <span style={{ fontSize: 10, color: "#334155", marginLeft: 8 }}>— {hint}</span>}
-                  </div>
-                );
-
-                return (
-                  <div style={{ position: "fixed", top: 60, left: 240, right: 0, bottom: 0, display: "flex", zIndex: 50, background: "#04090F" }}>
-
-                    {/* ══════════════════════════════
-                        LEFT NAV — Community List
-                    ══════════════════════════════ */}
-                    <div style={{ width: 260, flexShrink: 0, background: "#060D1A", borderRight: "1px solid rgba(212,168,67,0.1)", display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
-
-                      {/* Nav Header */}
-                      <div style={{ padding: "22px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Communities</div>
-                        <div style={{ fontSize: 12, color: "#64748B" }}>{communities.length} areas · {Object.keys(liveCommunityIntel).length} live</div>
-                      </div>
-
-                      {/* Community List */}
-                      <div style={{ flex: 1, padding: "8px 10px" }}>
-                        {communities.map(k => {
-                          const isActive = activeCIKey === k;
-                          const hasLive = !!liveCommunityIntel[k];
-                          const dm = { ...defaultCommunityIntel[k], ...(liveCommunityIntel[k]||{}) };
-                          return (
-                            <button key={k} type="button"
-                              onClick={() => { setEditingCommunityIntel(k); setCommunityIntelForm({ ...defaultCommunityIntel[k], ...(liveCommunityIntel[k]||{}) }); }}
-                              style={{ width: "100%", padding: "11px 12px", borderRadius: 9, border: isActive ? "1px solid rgba(212,168,67,0.3)" : "1px solid transparent", background: isActive ? "rgba(212,168,67,0.08)" : "transparent", cursor: "pointer", textAlign: "left", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s", marginBottom: 3, display: "block" }}
-                              onMouseEnter={e => { if (!isActive) e.currentTarget.style.background="rgba(255,255,255,0.03)"; }}
-                              onMouseLeave={e => { if (!isActive) e.currentTarget.style.background="transparent"; }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 5 }}>
-                                <div style={{ fontSize: 13, fontWeight: isActive ? 700 : 500, color: isActive ? "#D4A843" : "#CBD5E1", lineHeight: 1.3 }}>{k}</div>
-                                {hasLive
-                                  ? <span style={{ fontSize: 8, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "rgba(16,185,129,0.12)", color: "#10B981", flexShrink: 0, marginLeft: 6, marginTop: 1 }}>LIVE</span>
-                                  : <span style={{ fontSize: 8, fontWeight: 600, padding: "2px 6px", borderRadius: 4, background: "rgba(100,116,139,0.1)", color: "#475569", flexShrink: 0, marginLeft: 6, marginTop: 1 }}>DEFAULT</span>}
-                              </div>
-                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                <span style={{ fontSize: 12, fontWeight: 700, color: isActive ? "#D4A843" : "#94A3B8" }}>{dm.avgYield || "—"}</span>
-                                {dm.goldenVisa && <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 3, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700 }}>VISA ✓</span>}
-                              </div>
-                              <div style={{ fontSize: 10, color: "#475569", marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{dm.tagline || "No tagline"}</div>
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {/* Nav Footer */}
-                      <div style={{ padding: "14px 16px", borderTop: "1px solid rgba(255,255,255,0.05)", fontSize: 10, color: "#334155", lineHeight: 1.6 }}>
-                        Changes go live on the investor dashboard instantly after saving.
-                      </div>
-                    </div>
-
-                    {/* ══════════════════════════════
-                        RIGHT — Full Editor
-                    ══════════════════════════════ */}
-                    <div style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100%", scrollbarWidth: "thin" }}>
-
-                      {/* ── Hero Banner ── */}
-                      <div style={{ padding: "32px 40px 28px", background: "linear-gradient(135deg, rgba(212,168,67,0.07) 0%, rgba(10,22,40,0) 60%)", borderBottom: "1px solid rgba(212,168,67,0.1)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24 }}>
-                        <div>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Editing Community Profile</div>
-                          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 36, fontWeight: 900, color: "#FFFFFF", margin: "0 0 10px", lineHeight: 1.1 }}>{activeCIKey}</h1>
-                          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <span style={{ width: 7, height: 7, borderRadius: "50%", background: ciHasOverride ? "#10B981" : "#475569", display: "inline-block", boxShadow: ciHasOverride ? "0 0 8px #10B981" : "none" }} />
-                              <span style={{ fontSize: 12, color: ciHasOverride ? "#10B981" : "#64748B", fontWeight: ciHasOverride ? 600 : 400 }}>
-                                {ciHasOverride ? "Live — investors see your version now" : "Showing data.js defaults — save to publish a custom version"}
-                              </span>
-                            </div>
-                            <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.1)" }} />
-                            <span style={{ fontSize: 12, color: "#64748B" }}>
-                              Buyers compare this data before committing <span style={{ color: "#94A3B8", fontWeight: 600 }}>AED 1M – 5M+</span>
-                            </span>
-                          </div>
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10, flexShrink: 0 }}>
-                          <div style={{ display: "flex", gap: 10 }}>
-                            {ciHasOverride && (
-                              <button type="button" onClick={() => resetCommunityIntel(activeCIKey)}
-                                style={{ fontSize: 12, padding: "10px 18px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.25)", background: "rgba(239,68,68,0.06)", color: "#EF4444", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
-                                Reset to Default
-                              </button>
-                            )}
-                            <button type="button" disabled={dataSaving} onClick={() => saveCommunityIntel(activeCIKey, ciForm)}
-                              style={{ fontSize: 14, padding: "11px 32px", borderRadius: 9, border: "none", background: "linear-gradient(135deg,#D4A843,#B8860B)", color: "#000", fontWeight: 800, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", boxShadow: "0 6px 24px rgba(212,168,67,0.3)", letterSpacing: 0.2 }}>
-                              {dataSaving ? "Publishing..." : "Publish \u2192 Goes Live"}
-                            </button>
-                          </div>
-                          {/* Live stats */}
-                          <div style={{ display: "flex", gap: 20 }}>
-                            <div style={{ textAlign: "right" }}>
-                              <div style={{ fontSize: 10, color: "#64748B", textTransform: "uppercase", letterSpacing: 1 }}>Yield</div>
-                              <div style={{ fontSize: 20, fontWeight: 800, color: "#D4A843", fontFamily: "'Fraunces',serif", lineHeight: 1.1 }}>{(ciForm.avgYield ?? ciMerged.avgYield) || "—"}</div>
-                            </div>
-                            <div style={{ textAlign: "right" }}>
-                              <div style={{ fontSize: 10, color: "#64748B", textTransform: "uppercase", letterSpacing: 1 }}>Golden Visa</div>
-                              <div style={{ fontSize: 14, fontWeight: 700, color: (ciForm.goldenVisa ?? ciMerged.goldenVisa) ? "#10B981" : "#475569", lineHeight: 1.3 }}>
-                                {(ciForm.goldenVisa ?? ciMerged.goldenVisa) ? "Eligible ✓" : "Not Eligible"}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* ── Form Content ── */}
-                      <div style={{ padding: "36px 40px 60px" }}>
-
-                        {/* ══ SECTION 1: Investment Signal ══ */}
-                        <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 40, marginBottom: 52, paddingBottom: 52, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                          <div>
-                            <div style={{ fontSize: 11, fontWeight: 800, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>01</div>
-                            <div style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", lineHeight: 1.3, marginBottom: 10 }}>Investment Signal</div>
-                            <div style={{ fontSize: 12, color: "#64748B", lineHeight: 1.7 }}>The first numbers an investor checks. Rental yield drives ROI models. Golden Visa status is a major purchase trigger for non-UAE residents.</div>
-                          </div>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
-                            <div style={{ background: "rgba(212,168,67,0.04)", border: "1px solid rgba(212,168,67,0.12)", borderRadius: 10, padding: "18px 18px 16px" }}>
-                              <Lbl hint="headline ROI figure">Avg Rental Yield</Lbl>
-                              {inp(ciForm.avgYield ?? ciMerged.avgYield, "e.g. 5.5–7.0%", e => setCIForm(p => ({ ...p, avgYield: e.target.value })), { fontSize: 20, fontWeight: 700, color: "#D4A843" })}
-                              <div style={{ fontSize: 10, color: "#475569", marginTop: 8 }}>Investors use this for ROI calculations. Precise ranges build more trust than single numbers.</div>
-                            </div>
-                            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "18px 18px 16px" }}>
-                              <Lbl hint="buyer confidence">Master Developer</Lbl>
-                              {inp(ciForm.masterDev ?? ciMerged.masterDev, "e.g. Emaar Properties", e => setCIForm(p => ({ ...p, masterDev: e.target.value })))}
-                              <div style={{ fontSize: 10, color: "#475569", marginTop: 8 }}>Emaar-backed projects command a 15–20% premium. Developer name is a trust signal.</div>
-                            </div>
-                            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "18px 18px 16px" }}>
-                              <Lbl hint="residency trigger">Golden Visa</Lbl>
-                              <div style={{ display: "flex", gap: 8, marginTop: 2 }}>
-                                {[{ v: true, label: "Eligible", color: "#10B981" }, { v: false, label: "Not Eligible", color: "#64748B" }].map(opt => {
-                                  const active = (ciForm.goldenVisa ?? ciMerged.goldenVisa) === opt.v;
-                                  return <button key={String(opt.v)} type="button" onClick={() => setCIForm(p => ({ ...p, goldenVisa: opt.v }))}
-                                    style={{ flex: 1, padding: "10px 8px", borderRadius: 7, border: "1.5px solid " + (active ? opt.color : "rgba(255,255,255,0.07)"), background: active ? opt.color + "15" : "transparent", color: active ? opt.color : "#475569", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: active ? 700 : 400, fontSize: 12, transition: "all 0.15s" }}>{opt.label}</button>;
-                                })}
-                              </div>
-                              <div style={{ fontSize: 10, color: "#475569", marginTop: 8 }}>AED 2M+ purchases in eligible zones grant UAE residency.</div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* ══ SECTION 2: Community Story ══ */}
-                        <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 40, marginBottom: 52, paddingBottom: 52, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                          <div>
-                            <div style={{ fontSize: 11, fontWeight: 800, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>02</div>
-                            <div style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", lineHeight: 1.3, marginBottom: 10 }}>Community Story</div>
-                            <div style={{ fontSize: 12, color: "#64748B", lineHeight: 1.7 }}>The narrative that makes buyers self-identify with this community. "This is the right place for me." Tagline and lifestyle are the first emotional hooks.</div>
-                          </div>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                            <div style={{ gridColumn: "1 / -1" }}>
-                              <Lbl hint="headline on community page — max 60 chars">Tagline</Lbl>
-                              {inp(ciForm.tagline ?? ciMerged.tagline, "e.g. Golf-Side Family Living in the Heart of New Dubai", e => setCIForm(p => ({ ...p, tagline: e.target.value })), { fontSize: 15, fontWeight: 600 })}
-                            </div>
-                            <div style={{ gridColumn: "1 / -1" }}>
-                              <Lbl hint="bullet highlights — lead with the most impressive features">Famous For</Lbl>
-                              {ta(ciForm.famousFor ?? ciMerged.famousFor, "e.g. 18-hole championship golf course with Burj Khalifa views, Dubai Hills Mall (650+ outlets), 1.45M sqm of parks, 54 km cycling tracks...", e => setCIForm(p => ({ ...p, famousFor: e.target.value })), 3)}
-                            </div>
-                            <div>
-                              <Lbl hint="who lives here and why">Lifestyle Profile</Lbl>
-                              {ta(ciForm.lifestyle ?? ciMerged.lifestyle, "e.g. Family-oriented, golf lifestyle, park-centric, gated communities with 24/7 security...", e => setCIForm(p => ({ ...p, lifestyle: e.target.value })), 3)}
-                            </div>
-                            <div>
-                              <Lbl hint="commute routes matter for rental demand">Road Access</Lbl>
-                              {ta(ciForm.roads ?? ciMerged.roads, "e.g. Al Khail Road (E44), Umm Suqeim Street, E311. Future metro connection planned.", e => setCIForm(p => ({ ...p, roads: e.target.value })), 3)}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* ══ SECTION 3: Amenities ══ */}
-                        <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 40, marginBottom: 52, paddingBottom: 52, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                          <div>
-                            <div style={{ fontSize: 11, fontWeight: 800, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>03</div>
-                            <div style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", lineHeight: 1.3, marginBottom: 10 }}>Key Amenities</div>
-                            <div style={{ fontSize: 12, color: "#64748B", lineHeight: 1.7 }}>School quality alone can drive villa prices 10–20% higher. Healthcare proximity matters for families relocating from Europe and Asia. Each row becomes a card investors see.</div>
-                          </div>
-                          <div>
-                            <div style={{ display: "grid", gridTemplateColumns: "180px 1fr 36px", gap: 8, marginBottom: 8 }}>
-                              <div style={{ fontSize: 9, fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: 1 }}>Category</div>
-                              <div style={{ fontSize: 9, fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: 1 }}>Specific names, comma separated</div>
-                              <div />
-                            </div>
-                            {(ciForm.keyAmenities ?? ciMerged.keyAmenities ?? []).map((a, idx) => (
-                              <div key={idx} style={{ display: "grid", gridTemplateColumns: "180px 1fr 36px", gap: 8, marginBottom: 8, alignItems: "center" }}>
-                                <input placeholder="e.g. Schools" value={a.label||""} onChange={e => { const arr = JSON.parse(JSON.stringify(ciForm.keyAmenities ?? ciMerged.keyAmenities)); arr[idx]={...arr[idx],label:e.target.value}; setCIForm(p=>({...p,keyAmenities:arr})); }}
-                                  style={{ padding:"10px 12px", background:"rgba(4,9,15,0.8)", border:"1px solid rgba(212,168,67,0.14)", borderRadius:7, color:"#E2E8F0", fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", transition:"border-color 0.15s", fontWeight:600 }}
-                                  onFocus={e=>e.target.style.borderColor="#D4A843"} onBlur={e=>e.target.style.borderColor="rgba(212,168,67,0.14)"} />
-                                <input placeholder="e.g. GEMS Wellington Academy, King's School Al Barsha, Dubai Heights Academy" value={a.items||""} onChange={e => { const arr = JSON.parse(JSON.stringify(ciForm.keyAmenities ?? ciMerged.keyAmenities)); arr[idx]={...arr[idx],items:e.target.value}; setCIForm(p=>({...p,keyAmenities:arr})); }}
-                                  style={{ padding:"10px 12px", background:"rgba(4,9,15,0.8)", border:"1px solid rgba(212,168,67,0.14)", borderRadius:7, color:"#E2E8F0", fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", transition:"border-color 0.15s", width:"100%", boxSizing:"border-box" }}
-                                  onFocus={e=>e.target.style.borderColor="#D4A843"} onBlur={e=>e.target.style.borderColor="rgba(212,168,67,0.14)"} />
-                                <button type="button" onClick={() => { const arr=(ciForm.keyAmenities??ciMerged.keyAmenities??[]).filter((_,i)=>i!==idx); setCIForm(p=>({...p,keyAmenities:arr})); }}
-                                  style={{ width:34, height:34, display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(239,68,68,0.07)", border:"1px solid rgba(239,68,68,0.15)", borderRadius:7, color:"#EF4444", cursor:"pointer", fontSize:16, flexShrink:0 }}>×</button>
-                              </div>
-                            ))}
-                            <button type="button" onClick={() => setCIForm(p => ({ ...p, keyAmenities:[...(p.keyAmenities??ciMerged.keyAmenities??[]),{label:"",items:""}] }))}
-                              style={{ fontSize:12, padding:"9px 18px", borderRadius:8, border:"1px solid rgba(212,168,67,0.2)", background:"rgba(212,168,67,0.04)", color:"#D4A843", cursor:"pointer", fontFamily:"'Outfit',sans-serif", fontWeight:600, marginTop:6 }}>
-                              + Add Amenity Category
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* ══ SECTION 4: Distance Table ══ */}
-                        <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 40, marginBottom: 52, paddingBottom: 52, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                          <div>
-                            <div style={{ fontSize: 11, fontWeight: 800, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>04</div>
-                            <div style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", lineHeight: 1.3, marginBottom: 10 }}>Travel Times</div>
-                            <div style={{ fontSize: 12, color: "#64748B", lineHeight: 1.7 }}>Commute time is the #1 filter for working professionals. Airport proximity matters for frequent travellers. Be accurate — investors verify these numbers on Google Maps.</div>
-                          </div>
-                          <div>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 90px 90px 36px", gap: 8, marginBottom: 8 }}>
-                              <div style={{ fontSize: 9, fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: 1 }}>Destination / Landmark</div>
-                              <div style={{ fontSize: 9, fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: 1, textAlign: "center" }}>Distance</div>
-                              <div style={{ fontSize: 9, fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: 1, textAlign: "center" }}>Drive Time</div>
-                              <div />
-                            </div>
-                            {(ciForm.distances ?? ciMerged.distances ?? []).map((d, idx) => (
-                              <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 90px 90px 36px", gap: 8, marginBottom: 8, alignItems: "center" }}>
-                                <input placeholder="e.g. Downtown Dubai / Burj Khalifa" value={d.dest||""} onChange={e => { const arr=JSON.parse(JSON.stringify(ciForm.distances??ciMerged.distances)); arr[idx]={...arr[idx],dest:e.target.value}; setCIForm(p=>({...p,distances:arr})); }}
-                                  style={{ padding:"10px 12px", background:"rgba(4,9,15,0.8)", border:"1px solid rgba(212,168,67,0.14)", borderRadius:7, color:"#E2E8F0", fontSize:12, fontFamily:"'Outfit',sans-serif", outline:"none", transition:"border-color 0.15s", boxSizing:"border-box", width:"100%" }}
-                                  onFocus={e=>e.target.style.borderColor="#D4A843"} onBlur={e=>e.target.style.borderColor="rgba(212,168,67,0.14)"} />
-                                <div style={{ position:"relative" }}>
-                                  <input type="number" placeholder="13" value={d.km||""} onChange={e => { const arr=JSON.parse(JSON.stringify(ciForm.distances??ciMerged.distances)); arr[idx]={...arr[idx],km:Number(e.target.value)}; setCIForm(p=>({...p,distances:arr})); }}
-                                    style={{ padding:"10px 10px 10px 12px", background:"rgba(4,9,15,0.8)", border:"1px solid rgba(212,168,67,0.14)", borderRadius:7, color:"#E2E8F0", fontSize:13, fontWeight:600, fontFamily:"'Outfit',sans-serif", outline:"none", width:"100%", boxSizing:"border-box", textAlign:"center", transition:"border-color 0.15s" }}
-                                    onFocus={e=>e.target.style.borderColor="#D4A843"} onBlur={e=>e.target.style.borderColor="rgba(212,168,67,0.14)"} />
-                                  <span style={{ position:"absolute", bottom:6, right:7, fontSize:9, color:"#475569", pointerEvents:"none" }}>km</span>
-                                </div>
-                                <div style={{ position:"relative" }}>
-                                  <input type="number" placeholder="15" value={d.min||""} onChange={e => { const arr=JSON.parse(JSON.stringify(ciForm.distances??ciMerged.distances)); arr[idx]={...arr[idx],min:Number(e.target.value)}; setCIForm(p=>({...p,distances:arr})); }}
-                                    style={{ padding:"10px 10px 10px 12px", background:"rgba(4,9,15,0.8)", border:"1px solid rgba(212,168,67,0.14)", borderRadius:7, color:"#00BFA5", fontSize:13, fontWeight:700, fontFamily:"'Outfit',sans-serif", outline:"none", width:"100%", boxSizing:"border-box", textAlign:"center", transition:"border-color 0.15s" }}
-                                    onFocus={e=>e.target.style.borderColor="#00BFA5"} onBlur={e=>e.target.style.borderColor="rgba(212,168,67,0.14)"} />
-                                  <span style={{ position:"absolute", bottom:6, right:7, fontSize:9, color:"#475569", pointerEvents:"none" }}>min</span>
-                                </div>
-                                <button type="button" onClick={() => { const arr=(ciForm.distances??ciMerged.distances??[]).filter((_,i)=>i!==idx); setCIForm(p=>({...p,distances:arr})); }}
-                                  style={{ width:34, height:34, display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(239,68,68,0.07)", border:"1px solid rgba(239,68,68,0.15)", borderRadius:7, color:"#EF4444", cursor:"pointer", fontSize:16, flexShrink:0 }}>×</button>
-                              </div>
-                            ))}
-                            <button type="button" onClick={() => setCIForm(p => ({ ...p, distances:[...(p.distances??ciMerged.distances??[]),{dest:"",km:0,min:0}] }))}
-                              style={{ fontSize:12, padding:"9px 18px", borderRadius:8, border:"1px solid rgba(0,191,165,0.2)", background:"rgba(0,191,165,0.04)", color:"#00BFA5", cursor:"pointer", fontFamily:"'Outfit',sans-serif", fontWeight:600, marginTop:6 }}>
-                              + Add Destination
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* ══ PUBLISH FOOTER ══ */}
-                        <div style={{ background: "linear-gradient(135deg,rgba(212,168,67,0.08),rgba(212,168,67,0.03))", border: "1px solid rgba(212,168,67,0.18)", borderRadius: 12, padding: "24px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
-                          <div>
-                            <div style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", marginBottom: 4 }}>Ready to publish: <span style={{ color: "#D4A843" }}>{activeCIKey}</span></div>
-                            <div style={{ fontSize: 12, color: "#64748B" }}>Saves to Firestore — investors on the live dashboard see updated data within seconds.</div>
-                          </div>
-                          <div style={{ display: "flex", gap: 10 }}>
-                            {ciHasOverride && (
-                              <button type="button" onClick={() => resetCommunityIntel(activeCIKey)}
-                                style={{ fontSize: 12, padding: "11px 20px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.25)", background: "rgba(239,68,68,0.06)", color: "#EF4444", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
-                                Reset to Default
-                              </button>
-                            )}
-                            <button type="button" disabled={dataSaving} onClick={() => saveCommunityIntel(activeCIKey, ciForm)}
-                              style={{ fontSize: 14, padding: "12px 40px", borderRadius: 9, border: "none", background: "linear-gradient(135deg,#D4A843,#B8860B)", color: "#000", fontWeight: 800, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", boxShadow: "0 6px 28px rgba(212,168,67,0.32)", letterSpacing: 0.3 }}>
-                              {dataSaving ? "Publishing..." : "Publish \u2192 Goes Live Now"}
-                            </button>
-                          </div>
-                        </div>
-
-                      </div>
-                    </div>
-
-                  </div>
-                );
-              })()}
 
             </>
           )}
