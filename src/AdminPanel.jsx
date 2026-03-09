@@ -503,6 +503,22 @@ function EiborRatesPanel({ db, T, I, notify }) {
   const rateAlert = eiborHistory.length > 1 && eiborHistory[0].previousRates ? 
     Math.abs(parseFloat(eiborHistory[0]["3m"]) - parseFloat(eiborHistory[0].previousRates["3m"])) > 0.25 : false;
 
+  // Comparison calculations
+  const compareData = React.useMemo(() => {
+    if (eiborHistory.length < 2) return null;
+    const weekAgo = eiborHistory.find(h => {
+      const d = new Date(h.updatedAt);
+      return (Date.now() - d.getTime()) >= 7 * 24 * 60 * 60 * 1000;
+    });
+    const monthAgo = eiborHistory.find(h => {
+      const d = new Date(h.updatedAt);
+      return (Date.now() - d.getTime()) >= 30 * 24 * 60 * 60 * 1000;
+    });
+    return { weekAgo, monthAgo };
+  }, [eiborHistory]);
+  
+  const [eiborCompareMode, setEiborCompareMode] = React.useState(false);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* ═══ KPI TOPBAR ═══ */}
@@ -520,9 +536,48 @@ function EiborRatesPanel({ db, T, I, notify }) {
           </div>
         ))}
         <div style={{ marginLeft: "auto", padding: "10px 16px", display: "flex", gap: 8 }}>
+          <button type="button" onClick={() => setEiborCompareMode(!eiborCompareMode)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${eiborCompareMode ? T.blue : T.border}`, background: eiborCompareMode ? `${T.blue}15` : "transparent", color: eiborCompareMode ? T.blue : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{eiborCompareMode ? "✓ Compare" : "Compare"}</button>
           <button type="button" onClick={pushRateUpdate} disabled={!eiborCurrent} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}`, background: "rgba(20,184,166,0.08)", color: T.teal, cursor: eiborCurrent ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Push to Users</button>
         </div>
       </div>
+
+      {/* ═══ COMPARISON PANEL ═══ */}
+      {eiborCompareMode && compareData && (
+        <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.blue}40`, borderRadius: 14, padding: "16px 20px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: T.blue, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>Historical Comparison</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+            {[
+              { label: "Current", data: eiborCurrent, color: T.gold },
+              { label: "1 Week Ago", data: compareData.weekAgo, color: T.teal },
+              { label: "1 Month Ago", data: compareData.monthAgo, color: T.purple },
+            ].map((period, i) => (
+              <div key={i} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "14px 16px", border: `1px solid ${T.border}` }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: period.color, marginBottom: 10 }}>{period.label}</div>
+                {period.data ? (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {["1m", "3m", "6m", "1y"].map(tenor => {
+                      const val = parseFloat(period.data[tenor] || 0);
+                      const currentVal = eiborCurrent ? parseFloat(eiborCurrent[tenor] || 0) : null;
+                      const diff = currentVal !== null && i > 0 ? currentVal - val : null;
+                      return (
+                        <div key={tenor} style={{ textAlign: "center" }}>
+                          <div style={{ fontSize: 9, color: T.textMuted }}>{tenor.toUpperCase()}</div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{val.toFixed(3)}%</div>
+                          {diff !== null && (
+                            <div style={{ fontSize: 9, color: diff > 0 ? T.red : diff < 0 ? T.green : T.textMuted }}>{diff > 0 ? "+" : ""}{diff.toFixed(3)}</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 11, color: T.textMuted, textAlign: "center" }}>No data</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ═══ RATE ALERT ═══ */}
       {rateAlert && (
@@ -1207,7 +1262,7 @@ const ProfileDrawerComponent = ({
     );
 };
 
-function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, suspendUser, sendResetEmail, extendTrial, openEditUser, saveEditUser, editingUser, setEditingUser, editUserForm, setEditUserForm, editUserLoading, showAddUser, setShowAddUser, addUserForm, setAddUserForm, addUserManually, addUserLoading, exportCSV, userSearch, setUserSearch, tierFilter, setTierFilter, notify, db, T, I, trialDaysLeft, timeSince, pendingOpenUid, setPendingOpenUid, onDrawerChange, auditLog }) {
+function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, suspendUser, sendResetEmail, extendTrial, openEditUser, saveEditUser, editingUser, setEditingUser, editUserForm, setEditUserForm, editUserLoading, showAddUser, setShowAddUser, addUserForm, setAddUserForm, addUserManually, addUserLoading, exportCSV, userSearch, setUserSearch, tierFilter, setTierFilter, notify, db, T, I, trialDaysLeft, timeSince, pendingOpenUid, setPendingOpenUid, onDrawerChange, auditLog, showBulkImport, setShowBulkImport, bulkImportData, setBulkImportData, bulkImportLoading, setBulkImportLoading }) {
 
   /* ─── STATE ─── */
   const [drawerUser,         setDrawerUser]         = useState(null);
@@ -1773,6 +1828,118 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </Modal>
   );
 
+  /* ── BULK IMPORT MODAL ── */
+  const BulkImportModal = () => showBulkImport && (
+    <Modal onClose={() => { setShowBulkImport(false); setBulkImportData([]); }} maxWidth={700}>
+      <ModalHeader title="Bulk Import Users" sub="Upload a CSV file to import multiple users at once" onClose={() => { setShowBulkImport(false); setBulkImportData([]); }} />
+      <div style={{ background: "rgba(20,184,166,0.06)", border: "1px solid rgba(20,184,166,0.2)", borderRadius: 10, padding: "12px 16px", marginBottom: 18 }}>
+        <div style={{ fontSize: 12, color: T.teal, fontWeight: 600, marginBottom: 6 }}>CSV Format Required:</div>
+        <div style={{ fontSize: 11, color: T.textMuted, fontFamily: "monospace", background: "rgba(0,0,0,0.2)", padding: "8px 12px", borderRadius: 6 }}>
+          name,email,phone,tier,country<br/>
+          John Smith,john@email.com,+971501234567,pro,UAE<br/>
+          Jane Doe,jane@email.com,+971509876543,free,UK
+        </div>
+        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>
+          Valid tiers: free, pro_trial, pro, enterprise · Password will be auto-generated and emailed
+        </div>
+      </div>
+      
+      {bulkImportData.length === 0 ? (
+        <div style={{ border: `2px dashed ${T.border}`, borderRadius: 12, padding: "40px 20px", textAlign: "center", background: T.surfaceAlt }}>
+          <input type="file" accept=".csv" id="csvUpload" style={{ display: "none" }} onChange={e => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const text = ev.target?.result;
+              if (!text) return;
+              const lines = text.split("\n").filter(l => l.trim());
+              const headers = lines[0].toLowerCase().split(",").map(h => h.trim());
+              const parsed = [];
+              for (let i = 1; i < lines.length; i++) {
+                const vals = lines[i].split(",").map(v => v.trim().replace(/^"|"$/g, ""));
+                if (vals.length < 2) continue;
+                const row = {};
+                headers.forEach((h, idx) => { row[h] = vals[idx] || ""; });
+                if (row.email) parsed.push({ ...row, valid: row.email.includes("@"), imported: false });
+              }
+              setBulkImportData(parsed);
+            };
+            reader.readAsText(file);
+          }} />
+          <label htmlFor="csvUpload" style={{ cursor: "pointer" }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📄</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: T.white, marginBottom: 4 }}>Drop CSV file or click to upload</div>
+            <div style={{ fontSize: 12, color: T.textMuted }}>Supports .csv files up to 1000 rows</div>
+          </label>
+        </div>
+      ) : (
+        <>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{bulkImportData.length} users parsed</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <span style={{ fontSize: 11, color: T.green }}>{bulkImportData.filter(r => r.valid && !r.imported).length} valid</span>
+              <span style={{ fontSize: 11, color: T.red }}>{bulkImportData.filter(r => !r.valid).length} invalid</span>
+              <span style={{ fontSize: 11, color: T.teal }}>{bulkImportData.filter(r => r.imported).length} imported</span>
+            </div>
+          </div>
+          <div style={{ maxHeight: 280, overflowY: "auto", border: `1px solid ${T.border}`, borderRadius: 10 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+              <thead><tr style={{ background: T.surfaceAlt }}>
+                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Name</th>
+                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Email</th>
+                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Tier</th>
+                <th style={{ padding: "8px 10px", textAlign: "center", color: T.textMuted, fontWeight: 600 }}>Status</th>
+              </tr></thead>
+              <tbody>
+                {bulkImportData.map((row, i) => (
+                  <tr key={i} style={{ borderTop: `1px solid ${T.border}` }}>
+                    <td style={{ padding: "8px 10px", color: T.white }}>{row.name || "—"}</td>
+                    <td style={{ padding: "8px 10px", color: row.valid ? T.textSecondary : T.red }}>{row.email}</td>
+                    <td style={{ padding: "8px 10px" }}><span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: row.tier === "pro" ? `${T.gold}20` : row.tier === "enterprise" ? `${T.purple}20` : `${T.textMuted}20`, color: row.tier === "pro" ? T.gold : row.tier === "enterprise" ? T.purple : T.textMuted }}>{row.tier || "free"}</span></td>
+                    <td style={{ padding: "8px 10px", textAlign: "center" }}>{row.imported ? <span style={{ color: T.green }}>✓</span> : row.valid ? <span style={{ color: T.textMuted }}>—</span> : <span style={{ color: T.red }}>✗</span>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+      
+      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+        <BtnGhost onClick={() => { setShowBulkImport(false); setBulkImportData([]); }} style={{ flex: 1 }}>Cancel</BtnGhost>
+        {bulkImportData.length > 0 && (
+          <BtnGhost onClick={() => setBulkImportData([])} style={{ flex: 1 }}>Clear</BtnGhost>
+        )}
+        <Btn 
+          onClick={async () => {
+            if (setBulkImportLoading) setBulkImportLoading(true);
+            const validRows = bulkImportData.filter(r => r.valid && !r.imported);
+            for (const row of validRows) {
+              try {
+                const uid = `imported_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+                await setDoc(doc(db, "users", uid), {
+                  uid, name: row.name || "", email: row.email, phone: row.phone || "",
+                  tier: row.tier || "free", country: row.country || "",
+                  createdAt: new Date().toISOString(), source: "bulk_import"
+                });
+                row.imported = true;
+                setBulkImportData([...bulkImportData]);
+              } catch(e) { console.error("Import error:", e); }
+            }
+            if (setBulkImportLoading) setBulkImportLoading(false);
+            notify(`Imported ${validRows.length} users`);
+            fetchUsers();
+          }} 
+          disabled={bulkImportLoading || bulkImportData.filter(r => r.valid && !r.imported).length === 0} 
+          color={T.teal} 
+          style={{ flex: 2 }}>
+          {bulkImportLoading ? "Importing..." : `Import ${bulkImportData.filter(r => r.valid && !r.imported).length} Users`}
+        </Btn>
+      </div>
+    </Modal>
+  );
+
   const EditUserModal = () => editingUser && (
     <Modal onClose={() => setEditingUser(null)} maxWidth={520}>
       <ModalHeader title="Edit User" sub={editingUser.email} onClose={() => setEditingUser(null)} />
@@ -1862,6 +2029,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <NoteModal />
       <TagsModal />
       <AddUserModal />
+      <BulkImportModal />
       <EditUserModal />
       <NotifUserModal />
       <ProfileDrawerComponent
@@ -1947,6 +2115,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             )}
           </div>
           <button type="button" onClick={exportFiltered} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} Export ({allFiltered.length})</button>
+          <button type="button" onClick={() => setShowBulkImport && setShowBulkImport(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>↑ Import CSV</button>
           <button type="button" onClick={() => setShowAddUser(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700 }}>+ Add User <span style={{ fontSize: 10, opacity: 0.6 }}>[N]</span></button>
         </div>
       </div>
@@ -2554,6 +2723,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
   });
   const [auditSearch, setAuditSearch] = useState("");
   const [dateRange, setDateRange] = useState("all");
+  const [auditViewMode, setAuditViewMode] = useState("timeline"); // timeline | byAdmin | byAction
 
   // Persist auditFilter to localStorage
   useEffect(() => {
@@ -2701,6 +2871,12 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* View mode toggle */}
+          <div style={{ display: "flex", background: T.surface, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden", marginRight: 8 }}>
+            {[{ id: "timeline", label: "Timeline" }, { id: "byAdmin", label: "By Admin" }, { id: "byAction", label: "By Action" }].map(m => (
+              <button key={m.id} type="button" onClick={() => setAuditViewMode(m.id)} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: auditViewMode === m.id ? T.gold + "20" : "transparent", color: auditViewMode === m.id ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}>{m.label}</button>
+            ))}
+          </div>
           {/* Date range */}
           <select value={dateRange} onChange={e => setDateRange(e.target.value)}
             style={{ padding: "7px 12px", borderRadius: 9, border: `1px solid ${T.border}`, background: T.surface, color: T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none", cursor: "pointer" }}>
@@ -2779,7 +2955,79 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
         </div>
       )}
 
+      {/* ── By Admin View ── */}
+      {auditViewMode === "byAdmin" && (
+        <div style={{ maxHeight: 580, overflowY: "auto", padding: "16px 24px" }}>
+          {(() => {
+            const admins = {};
+            filteredLog.forEach(log => {
+              const by = log.changedBy || "Unknown";
+              if (!admins[by]) admins[by] = [];
+              admins[by].push(log);
+            });
+            return Object.entries(admins).sort((a, b) => b[1].length - a[1].length).map(([admin, logs]) => (
+              <div key={admin} style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: `1px solid ${T.border}` }}>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: `${T.gold}20`, border: `2px solid ${T.gold}`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12, color: T.gold }}>
+                    {admin[0].toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{admin.includes("@") ? admin.split("@")[0] : admin}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>{admin}</div>
+                  </div>
+                  <span style={{ padding: "4px 12px", borderRadius: 12, background: `${T.gold}15`, color: T.gold, fontSize: 12, fontWeight: 700 }}>{logs.length} actions</span>
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "10px 0" }}>
+                  {Object.entries(logs.reduce((acc, l) => { acc[l.action] = (acc[l.action] || 0) + 1; return acc; }, {})).map(([action, count]) => {
+                    const meta = actionMeta[action] || { label: action, color: T.textMuted };
+                    return <span key={action} style={{ padding: "3px 10px", borderRadius: 6, background: `${meta.color}15`, color: meta.color, fontSize: 10, fontWeight: 600 }}>{meta.label}: {count}</span>;
+                  })}
+                </div>
+              </div>
+            ));
+          })()}
+        </div>
+      )}
+
+      {/* ── By Action View ── */}
+      {auditViewMode === "byAction" && (
+        <div style={{ maxHeight: 580, overflowY: "auto", padding: "16px 24px" }}>
+          {(() => {
+            const actions = {};
+            filteredLog.forEach(log => {
+              const action = log.action || "unknown";
+              if (!actions[action]) actions[action] = [];
+              actions[action].push(log);
+            });
+            return Object.entries(actions).sort((a, b) => b[1].length - a[1].length).map(([action, logs]) => {
+              const meta = actionMeta[action] || { label: action, color: T.textMuted, icon: "⚙" };
+              return (
+                <div key={action} style={{ marginBottom: 12, background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderBottom: `1px solid ${T.border}`, background: `${meta.color}08` }}>
+                    <span style={{ fontSize: 14 }}>{meta.icon}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: meta.color }}>{meta.label}</div>
+                    </div>
+                    <span style={{ padding: "4px 12px", borderRadius: 12, background: `${meta.color}20`, color: meta.color, fontSize: 12, fontWeight: 700 }}>{logs.length}</span>
+                  </div>
+                  <div style={{ padding: "8px 16px", maxHeight: 120, overflowY: "auto" }}>
+                    {logs.slice(0, 5).map((log, i) => (
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: 10, color: T.textMuted }}>
+                        <span>{log.changedBy || "Unknown"}</span>
+                        <span>{log.changedAt ? new Date(log.changedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}</span>
+                      </div>
+                    ))}
+                    {logs.length > 5 && <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", padding: "4px 0" }}>+ {logs.length - 5} more</div>}
+                  </div>
+                </div>
+              );
+            });
+          })()}
+        </div>
+      )}
+
       {/* ── Timeline Feed ── */}
+      {auditViewMode === "timeline" && (
       <div style={{ maxHeight: 580, overflowY: "auto", padding: "8px 0" }}>
         {groups.map((group, gi) => (
           <div key={gi}>
@@ -2942,6 +3190,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }
@@ -3079,6 +3328,24 @@ export default function AdminPanel() {
   // Tab Control Pro states
   const [tabSearch, setTabSearch] = useState("");
   const [tabDescEditing, setTabDescEditing] = useState(null); // tabKey being edited
+  // Overview Pro states
+  const [overviewCompare, setOverviewCompare] = useState("week"); // week | month | off
+  // Users Pro states  
+  const [showBulkImport, setShowBulkImport] = useState(false);
+  const [bulkImportData, setBulkImportData] = useState([]);
+  const [bulkImportLoading, setBulkImportLoading] = useState(false);
+  // Data Manager Pro states
+  const [showDataImport, setShowDataImport] = useState(false);
+  const [dataImportTab, setDataImportTab] = useState("projects");
+  const [dataImportPreview, setDataImportPreview] = useState([]);
+  // Verification Pro states
+  const [verifyBatchMode, setVerifyBatchMode] = useState(false);
+  const [verifyBatchSelected, setVerifyBatchSelected] = useState([]);
+  const [verifyDocPreview, setVerifyDocPreview] = useState(null);
+  // EIBOR Pro states
+  const [eiborCompareMode, setEiborCompareMode] = useState(false);
+  // Leads Pro states
+  const [leadsViewMode, setLeadsViewMode] = useState("table"); // table | kanban
 
   /* ─── PERSIST TAB STATE ─── */
   const isHydrated = React.useRef(false);
@@ -4646,12 +4913,19 @@ export default function AdminPanel() {
                       )}
                     </div>
 
-                    {/* Refresh only — actions belong in their respective tabs */}
-                    <button type="button" onClick={() => { fetchUsers(); fetchLeads(); fetchVerifications(); fetchAuditLog(); notify("Refreshed"); }}
-                      style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
-                      title="Refresh all data">
-                      ↻
-                    </button>
+                    {/* Refresh + Compare toggle */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ display: "flex", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                        {[{ id: "off", label: "Now" }, { id: "week", label: "vs Week" }, { id: "month", label: "vs Month" }].map(c => (
+                          <button key={c.id} type="button" onClick={() => setOverviewCompare(c.id)} style={{ padding: "5px 10px", fontSize: 10, fontWeight: 600, background: overviewCompare === c.id ? T.gold + "20" : "transparent", color: overviewCompare === c.id ? T.gold : T.textMuted, border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>{c.label}</button>
+                        ))}
+                      </div>
+                      <button type="button" onClick={() => { fetchUsers(); fetchLeads(); fetchVerifications(); fetchAuditLog(); notify("Refreshed"); }}
+                        style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+                        title="Refresh all data">
+                        ↻
+                      </button>
+                    </div>
 
                   </div>
                 );
@@ -5477,7 +5751,7 @@ export default function AdminPanel() {
           {/* ═══════════════════════════════════════
              USERS TAB
              ═══════════════════════════════════════ */}
-          {tab === "users" && <UsersTab users={users} filteredUsers={filteredUsers} fetchUsers={fetchUsers} changeTier={changeTier} deleteUser={deleteUser} suspendUser={suspendUser} sendResetEmail={sendResetEmail} extendTrial={extendTrial} openEditUser={openEditUser} saveEditUser={saveEditUser} editingUser={editingUser} setEditingUser={setEditingUser} editUserForm={editUserForm} setEditUserForm={setEditUserForm} editUserLoading={editUserLoading} showAddUser={showAddUser} setShowAddUser={setShowAddUser} addUserForm={addUserForm} setAddUserForm={setAddUserForm} addUserManually={addUserManually} addUserLoading={addUserLoading} exportCSV={exportCSV} userSearch={userSearch} setUserSearch={setUserSearch} tierFilter={tierFilter} setTierFilter={setTierFilter} notify={notify} db={db} T={T} I={I} trialDaysLeft={trialDaysLeft} timeSince={timeSince} pendingOpenUid={pendingOpenUid} setPendingOpenUid={setPendingOpenUid} onDrawerChange={setDrawerOpen} auditLog={auditLog} />}
+          {tab === "users" && <UsersTab users={users} filteredUsers={filteredUsers} fetchUsers={fetchUsers} changeTier={changeTier} deleteUser={deleteUser} suspendUser={suspendUser} sendResetEmail={sendResetEmail} extendTrial={extendTrial} openEditUser={openEditUser} saveEditUser={saveEditUser} editingUser={editingUser} setEditingUser={setEditingUser} editUserForm={editUserForm} setEditUserForm={setEditUserForm} editUserLoading={editUserLoading} showAddUser={showAddUser} setShowAddUser={setShowAddUser} addUserForm={addUserForm} setAddUserForm={setAddUserForm} addUserManually={addUserManually} addUserLoading={addUserLoading} exportCSV={exportCSV} userSearch={userSearch} setUserSearch={setUserSearch} tierFilter={tierFilter} setTierFilter={setTierFilter} notify={notify} db={db} T={T} I={I} trialDaysLeft={trialDaysLeft} timeSince={timeSince} pendingOpenUid={pendingOpenUid} setPendingOpenUid={setPendingOpenUid} onDrawerChange={setDrawerOpen} auditLog={auditLog} showBulkImport={showBulkImport} setShowBulkImport={setShowBulkImport} bulkImportData={bulkImportData} setBulkImportData={setBulkImportData} bulkImportLoading={bulkImportLoading} setBulkImportLoading={setBulkImportLoading} />}
 
           
               {tab === "auditlog" && (() => {
@@ -6475,6 +6749,45 @@ export default function AdminPanel() {
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>Live Overrides</div>
                   <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.blue }}>{Object.keys(liveProjects).length}</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>Firestore updates</div>
+                </div>
+              </div>
+
+              {/* Data Health Panel */}
+              <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "16px 20px", marginBottom: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, letterSpacing: 0.5 }}>Data Health Check</div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {(() => {
+                      const issues = [];
+                      const missingPrice = emaarProjects.filter(p => !p.price || p.price <= 0).length;
+                      const missingPpsf = emaarProjects.filter(p => !p.pricePerSqFt || p.pricePerSqFt <= 0).length;
+                      const missingImage = emaarProjects.filter(p => !p.image && !liveProjects[p.id]?.image).length;
+                      const outdatedYields = emaarYields.filter(y => !y.gross || y.gross <= 0).length;
+                      if (missingPrice > 0) issues.push({ label: `${missingPrice} missing prices`, color: T.red });
+                      if (missingPpsf > 0) issues.push({ label: `${missingPpsf} missing PPSF`, color: T.orange });
+                      if (missingImage > 0) issues.push({ label: `${missingImage} no images`, color: T.textMuted });
+                      if (outdatedYields > 0) issues.push({ label: `${outdatedYields} yields need update`, color: T.orange });
+                      if (issues.length === 0) return <span style={{ fontSize: 11, color: T.green, fontWeight: 600 }}>✓ All data complete</span>;
+                      return issues.map((issue, i) => (
+                        <span key={i} style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: `${issue.color}15`, color: issue.color, fontWeight: 600 }}>{issue.label}</span>
+                      ));
+                    })()}
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
+                  {[
+                    { label: "Projects", value: emaarProjects.length, color: T.gold, complete: emaarProjects.filter(p => p.price && p.pricePerSqFt && (p.image || liveProjects[p.id]?.image)).length },
+                    { label: "Yields", value: emaarYields.length, color: T.green, complete: emaarYields.filter(y => y.gross && y.gross > 0).length },
+                    { label: "Communities", value: Object.keys(defaultCommunityROI).length, color: T.teal, complete: Object.values(defaultCommunityROI).filter(c => c.roi && c.roi > 0).length },
+                    { label: "Live Overrides", value: Object.keys(liveProjects).length, color: T.blue },
+                    { label: "Price History", value: Object.values(priceHistory).reduce((sum, arr) => sum + (arr?.length || 0), 0), color: T.purple },
+                  ].map((item, i) => (
+                    <div key={i} style={{ textAlign: "center", padding: "8px 10px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: item.color, fontFamily: "'Fraunces',serif" }}>{item.value}</div>
+                      <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, textTransform: "uppercase" }}>{item.label}</div>
+                      {item.complete !== undefined && <div style={{ fontSize: 9, color: item.complete === item.value ? T.green : T.orange, marginTop: 2 }}>{Math.round((item.complete / item.value) * 100)}% complete</div>}
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -8042,6 +8355,10 @@ export default function AdminPanel() {
                     </div>
                   ))}
                   <div style={{ marginLeft: "auto", padding: "10px 16px", display: "flex", gap: 8 }}>
+                    <div style={{ display: "flex", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                      <button type="button" onClick={() => setLeadsViewMode("table")} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: leadsViewMode === "table" ? T.gold + "20" : "transparent", color: leadsViewMode === "table" ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}>☰ Table</button>
+                      <button type="button" onClick={() => setLeadsViewMode("kanban")} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: leadsViewMode === "kanban" ? T.gold + "20" : "transparent", color: leadsViewMode === "kanban" ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}>⊞ Kanban</button>
+                    </div>
                     <button type="button" onClick={() => setShowAddLead(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.08)", color: T.green, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>+ Add Lead</button>
                     <button type="button" onClick={exportLeadsCSV} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} Export</button>
                   </div>
@@ -8097,7 +8414,51 @@ export default function AdminPanel() {
                   <span style={{ fontSize: 11, color: T.textMuted }}>{filtered.length} of {leads.length} leads</span>
                 </div>
 
+                {/* ═══ KANBAN VIEW ═══ */}
+                {leadsViewMode === "kanban" && (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 20 }}>
+                    {[
+                      { id: "New", label: "New", color: "#3B82F6" },
+                      { id: "Contacted", label: "Contacted", color: T.gold },
+                      { id: "Qualified", label: "Qualified", color: "#8B5CF6" },
+                      { id: "Converted", label: "Converted", color: T.green },
+                      { id: "Lost", label: "Lost", color: T.red },
+                    ].map(stage => {
+                      const stageLeads = leads.filter(l => (l.status || "New") === stage.id).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                      return (
+                        <div key={stage.id} style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                          <div style={{ padding: "12px 14px", borderBottom: `2px solid ${stage.color}`, background: `${stage.color}08` }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: stage.color }}>{stage.label}</span>
+                              <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: `${stage.color}20`, color: stage.color }}>{stageLeads.length}</span>
+                            </div>
+                          </div>
+                          <div style={{ padding: "8px", maxHeight: 400, overflowY: "auto" }}>
+                            {stageLeads.length === 0 ? (
+                              <div style={{ padding: "20px 10px", textAlign: "center", color: T.textMuted, fontSize: 11 }}>No leads</div>
+                            ) : (
+                              stageLeads.map(lead => (
+                                <div key={lead.id} onClick={() => setLeadDrawer(lead)} style={{ padding: "10px 12px", background: T.surfaceAlt, borderRadius: 8, marginBottom: 6, cursor: "pointer", border: `1px solid ${T.border}`, transition: "all 0.15s" }}
+                                  onMouseEnter={e => { e.currentTarget.style.borderColor = stage.color + "50"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                                  onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "none"; }}>
+                                  <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 4 }}>{lead.name || "Unknown"}</div>
+                                  <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>{lead.project || "No project"}</div>
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <span style={{ fontSize: 9, color: T.textMuted }}>{lead.createdAt ? timeSince(new Date(lead.createdAt)) : "—"}</span>
+                                    {lead.notes?.length > 0 && <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>{lead.notes.length} notes</span>}
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
                 {/* ═══ LEADS TABLE ═══ */}
+                {leadsViewMode === "table" && (
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
                   {filtered.length === 0 ? (
                     <div style={{ textAlign: "center", padding: 60, color: T.textMuted }}>
@@ -8172,6 +8533,7 @@ export default function AdminPanel() {
                     </div>
                   )}
                 </div>
+                )}
 
                 {/* ═══ ADD LEAD MODAL ═══ */}
                 {showAddLead && (
@@ -8459,7 +8821,7 @@ export default function AdminPanel() {
                 ))}
               </div>
 
-              {/* ═══ FILTERS ═══ */}
+              {/* ═══ FILTERS + BATCH MODE ═══ */}
               <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
                 {(verifySubTab === "history" ? ["all", "approved", "rejected"] : ["all", "pending"]).map(f => (
                   <button key={f} type="button" onClick={() => setVerifyFilter(f)}
@@ -8467,7 +8829,33 @@ export default function AdminPanel() {
                     {f}
                   </button>
                 ))}
+                <div style={{ height: 20, width: 1, background: T.border }} />
+                <button type="button" onClick={() => { setVerifyBatchMode(!verifyBatchMode); setVerifyBatchSelected([]); }}
+                  style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${verifyBatchMode ? T.purple : T.border}`, background: verifyBatchMode ? `${T.purple}15` : "transparent", color: verifyBatchMode ? T.purple : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                  {verifyBatchMode ? `✓ Batch Mode (${verifyBatchSelected.length})` : "Batch Mode"}
+                </button>
+                {verifyBatchMode && verifyBatchSelected.length > 0 && (
+                  <>
+                    <button type="button" onClick={async () => {
+                      for (const id of verifyBatchSelected) {
+                        const v = filtered.find(x => x.id === id);
+                        if (v) await approveVerification(v);
+                      }
+                      setVerifyBatchSelected([]);
+                      notify(`Approved ${verifyBatchSelected.length} verifications`);
+                    }} style={{ padding: "6px 14px", borderRadius: 8, border: "none", background: T.green, color: T.bg, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                      Approve Selected ({verifyBatchSelected.length})
+                    </button>
+                  </>
+                )}
                 <div style={{ flex: 1 }} />
+                {/* SLA Warning */}
+                {vPending.filter(v => isUrgent(v)).length > 0 && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: T.red }}>⚠ {vPending.filter(v => isUrgent(v)).length} past SLA</span>
+                    <span style={{ fontSize: 9, color: T.textMuted }}>&gt;24h</span>
+                  </div>
+                )}
                 <input value={verifySearch} onChange={e => setVerifySearch(e.target.value)} placeholder="Search name or email..." 
                   style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", width: 200 }} />
               </div>
@@ -8484,6 +8872,14 @@ export default function AdminPanel() {
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                       <thead>
                         <tr style={{ borderBottom: `2px solid ${T.border}` }}>
+                          {verifyBatchMode && (
+                            <th style={{ padding: "12px 10px", textAlign: "center", background: T.surfaceAlt, width: 40 }}>
+                              <input type="checkbox" checked={verifyBatchSelected.length === filtered.filter(v => v.status === "pending").length && filtered.filter(v => v.status === "pending").length > 0} onChange={e => {
+                                if (e.target.checked) setVerifyBatchSelected(filtered.filter(v => v.status === "pending").map(v => v.id));
+                                else setVerifyBatchSelected([]);
+                              }} style={{ cursor: "pointer" }} />
+                            </th>
+                          )}
                           {["User", "Level", "Status", "Submitted", "Wait Time", "Actions"].map(h => (
                             <th key={h} style={{ padding: "12px 14px", textAlign: "left", color: T.gold, fontWeight: 600, fontSize: 10, letterSpacing: 0.5, textTransform: "uppercase", background: T.surfaceAlt }}>{h}</th>
                           ))}
@@ -8495,10 +8891,20 @@ export default function AdminPanel() {
                           const waitHrs = v.submittedAt ? Math.round((Date.now() - new Date(v.submittedAt).getTime()) / 1000 / 60 / 60) : 0;
                           const userCtx = getUserContext(v.uid);
                           return (
-                            <tr key={v.id} style={{ borderBottom: `1px solid ${T.border}`, background: urgent ? "rgba(239,68,68,0.03)" : "transparent", cursor: "pointer" }}
-                              onMouseEnter={e => e.currentTarget.style.background = urgent ? "rgba(239,68,68,0.06)" : T.surfaceAlt}
-                              onMouseLeave={e => e.currentTarget.style.background = urgent ? "rgba(239,68,68,0.03)" : "transparent"}
-                              onClick={() => setReviewingUser(v)}>
+                            <tr key={v.id} style={{ borderBottom: `1px solid ${T.border}`, background: urgent ? "rgba(239,68,68,0.03)" : verifyBatchSelected.includes(v.id) ? `${T.purple}08` : "transparent", cursor: "pointer" }}
+                              onMouseEnter={e => e.currentTarget.style.background = urgent ? "rgba(239,68,68,0.06)" : verifyBatchSelected.includes(v.id) ? `${T.purple}12` : T.surfaceAlt}
+                              onMouseLeave={e => e.currentTarget.style.background = urgent ? "rgba(239,68,68,0.03)" : verifyBatchSelected.includes(v.id) ? `${T.purple}08` : "transparent"}
+                              onClick={() => !verifyBatchMode && setReviewingUser(v)}>
+                              {verifyBatchMode && (
+                                <td style={{ padding: "12px 10px", textAlign: "center" }} onClick={e => e.stopPropagation()}>
+                                  {v.status === "pending" && (
+                                    <input type="checkbox" checked={verifyBatchSelected.includes(v.id)} onChange={e => {
+                                      if (e.target.checked) setVerifyBatchSelected([...verifyBatchSelected, v.id]);
+                                      else setVerifyBatchSelected(verifyBatchSelected.filter(x => x !== v.id));
+                                    }} style={{ cursor: "pointer" }} />
+                                  )}
+                                </td>
+                              )}
                               <td style={{ padding: "12px 14px" }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                   <div style={{ width: 32, height: 32, borderRadius: "50%", background: `${statusColor[v.status]}20`, border: `1.5px solid ${statusColor[v.status]}`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12, color: statusColor[v.status] }}>
