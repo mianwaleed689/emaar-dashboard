@@ -303,8 +303,10 @@ const TabHelp = ({ items }) => {
 /* ═══════════════════════════════════════════════════════════════════
    SUPPORT TAB COMPONENT — TAB 14
    Ticket system, conversation threads, SLA tracking, response templates
-   Collections: supportTickets
+   Collections: supportTickets, ticketPresence
    Benchmark: Intercom + Zendesk + Freshdesk
+   PHASE 1: Internal Notes, Tags, Assignment
+   PHASE 1B: Collision Detection, Attachments, @Mentions
 ═══════════════════════════════════════════════════════════════════ */
 function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpenUid }) {
   // State
@@ -318,6 +320,42 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   const [ticketSearch, setTicketSearch] = useState("");
   const [showTemplates, setShowTemplates] = useState(false);
   const [ticketsLoading, setTicketsLoading] = useState(true);
+  
+  // Phase 1: New state for internal notes, tags, assignment
+  const [internalNote, setInternalNote] = useState("");
+  const [sendingNote, setSendingNote] = useState(false);
+  const [newTag, setNewTag] = useState("");
+  const [tagFilter, setTagFilter] = useState("all");
+  const [assignmentFilter, setAssignmentFilter] = useState("all");
+  const [replyMode, setReplyMode] = useState("reply"); // reply | note
+
+  // Phase 1B: Collision detection, attachments, mentions
+  const [viewingAdmins, setViewingAdmins] = useState([]); // Who's viewing this ticket
+  const [uploading, setUploading] = useState(false);
+  const [showMentionDropdown, setShowMentionDropdown] = useState(false);
+  const [mentionSearch, setMentionSearch] = useState("");
+  const fileInputRef = React.useRef(null);
+  const noteInputRef = React.useRef(null);
+
+  // Predefined tags
+  const availableTags = [
+    { id: "urgent", label: "Urgent", color: T.red },
+    { id: "vip", label: "VIP", color: T.gold },
+    { id: "bug-confirmed", label: "Bug Confirmed", color: T.purple },
+    { id: "waiting-user", label: "Waiting on User", color: T.orange },
+    { id: "escalated", label: "Escalated", color: T.red },
+    { id: "follow-up", label: "Follow Up", color: T.blue },
+    { id: "resolved", label: "Resolved", color: T.green },
+    { id: "duplicate", label: "Duplicate", color: T.textMuted },
+  ];
+
+  // Get admin users for assignment
+  const adminUsers = users.filter(u => u.role === "admin" || u.tier === "enterprise" || u.email?.includes("admin"));
+  const assignableAgents = [
+    { id: "unassigned", name: "Unassigned", email: "" },
+    { id: adminUser?.uid || "current", name: adminUser?.displayName || adminUser?.email?.split("@")[0] || "Me", email: adminUser?.email || "" },
+    ...adminUsers.slice(0, 5).map(u => ({ id: u.uid || u.id, name: u.name || u.email?.split("@")[0], email: u.email }))
+  ].filter((v, i, a) => a.findIndex(t => t.email === v.email) === i); // dedupe
 
   // Response templates
   const responseTemplates = [
@@ -328,6 +366,14 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     { id: 5, name: "Data Updated", text: "The data has been updated as requested. Please refresh your dashboard to see the changes. Let me know if you need anything else!" },
     { id: 6, name: "Billing Help", text: "I'd be happy to help with your billing question. [Insert specific response]. If you need further assistance, just let me know." },
     { id: 7, name: "Issue Resolved", text: "Great news! The issue has been resolved. Please try again and let me know if everything is working correctly now." },
+  ];
+
+  // Internal note templates
+  const noteTemplates = [
+    { id: 1, name: "Escalate", text: "Escalating to engineering team. @dev please review." },
+    { id: 2, name: "Waiting", text: "Waiting for customer response. Follow up in 48h if no reply." },
+    { id: 3, name: "VIP", text: "VIP customer - prioritize and handle with extra care." },
+    { id: 4, name: "Bug Found", text: "Confirmed bug. Created ticket in backlog. ETA: TBD" },
   ];
 
   // Categories and statuses
@@ -363,10 +409,10 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
       } catch (e) {
         console.error("Fetch tickets:", e);
         setTickets([
-          { id: "ticket_1", userId: "user1", userEmail: "ahmed@example.com", userName: "Ahmed", userTier: "pro", subject: "Yield calculation seems incorrect", category: "data", priority: "high", status: "open", messages: [{ from: "user", text: "The yield for Creek Waters shows 6.2% but my calculation gives 5.8%. Can you check?", at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() }], createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
-          { id: "ticket_2", userId: "user2", userEmail: "sarah@realty.ae", userName: "Sarah", userTier: "enterprise", subject: "Can't access EIBOR calculator", category: "bug", priority: "urgent", status: "in_progress", messages: [{ from: "user", text: "Getting error when trying to open EIBOR calculator. Screen goes blank.", at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString() }, { from: "admin", text: "Thanks for reporting. We're looking into this now.", at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() }], createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), respondedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() },
-          { id: "ticket_3", userId: "user3", userEmail: "mike@invest.com", userName: "Mike", userTier: "pro", subject: "Request: Add ROI projections", category: "feature", priority: "normal", status: "open", messages: [{ from: "user", text: "Would be great to have ROI projections based on historical data. Is this planned?", at: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString() }], createdAt: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString() },
-          { id: "ticket_4", userId: "user4", userEmail: "lisa@properties.ae", userName: "Lisa", userTier: "pro_trial", subject: "How to upgrade to Pro?", category: "billing", priority: "normal", status: "resolved", messages: [{ from: "user", text: "My trial ends in 2 days. How do I upgrade?", at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString() }, { from: "admin", text: "Click on 'Upgrade' in the top right corner. You can pay via card. Let me know if you need help!", at: new Date(Date.now() - 47 * 60 * 60 * 1000).toISOString() }, { from: "user", text: "Got it, thanks!", at: new Date(Date.now() - 46 * 60 * 60 * 1000).toISOString() }], createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(), respondedAt: new Date(Date.now() - 47 * 60 * 60 * 1000).toISOString(), resolvedAt: new Date(Date.now() - 45 * 60 * 60 * 1000).toISOString() },
+          { id: "ticket_1", userId: "user1", userEmail: "ahmed@example.com", userName: "Ahmed", userTier: "pro", subject: "Yield calculation seems incorrect", category: "data", priority: "high", status: "open", tags: ["urgent"], assignedTo: null, messages: [{ from: "user", text: "The yield for Creek Waters shows 6.2% but my calculation gives 5.8%. Can you check?", at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() }], internalNotes: [{ text: "Need to verify with data team", by: "admin@dxb.com", at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString() }], createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
+          { id: "ticket_2", userId: "user2", userEmail: "sarah@realty.ae", userName: "Sarah", userTier: "enterprise", subject: "Can't access EIBOR calculator", category: "bug", priority: "urgent", status: "in_progress", tags: ["vip", "bug-confirmed"], assignedTo: "admin", messages: [{ from: "user", text: "Getting error when trying to open EIBOR calculator. Screen goes blank.", at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString() }, { from: "admin", text: "Thanks for reporting. We're looking into this now.", at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() }], internalNotes: [{ text: "VIP customer - enterprise plan. Escalated to dev.", by: "support@dxb.com", at: new Date(Date.now() - 4.5 * 60 * 60 * 1000).toISOString() }], createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), respondedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() },
+          { id: "ticket_3", userId: "user3", userEmail: "mike@invest.com", userName: "Mike", userTier: "pro", subject: "Request: Add ROI projections", category: "feature", priority: "normal", status: "open", tags: [], assignedTo: null, messages: [{ from: "user", text: "Would be great to have ROI projections based on historical data. Is this planned?", at: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString() }], internalNotes: [], createdAt: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString() },
+          { id: "ticket_4", userId: "user4", userEmail: "lisa@properties.ae", userName: "Lisa", userTier: "pro_trial", subject: "How to upgrade to Pro?", category: "billing", priority: "normal", status: "resolved", tags: ["resolved"], assignedTo: "admin", messages: [{ from: "user", text: "My trial ends in 2 days. How do I upgrade?", at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString() }, { from: "admin", text: "Click on 'Upgrade' in the top right corner. You can pay via card. Let me know if you need help!", at: new Date(Date.now() - 47 * 60 * 60 * 1000).toISOString() }, { from: "user", text: "Got it, thanks!", at: new Date(Date.now() - 46 * 60 * 60 * 1000).toISOString() }], internalNotes: [], createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(), respondedAt: new Date(Date.now() - 47 * 60 * 60 * 1000).toISOString(), resolvedAt: new Date(Date.now() - 45 * 60 * 60 * 1000).toISOString() },
         ]);
       }
       setTicketsLoading(false);
@@ -384,11 +430,15 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     const created = new Date(t.createdAt);
     return (now.getTime() - created.getTime()) > 24 * 60 * 60 * 1000;
   });
+  const unassignedCount = tickets.filter(t => !t.assignedTo && (t.status === "open" || t.status === "in_progress")).length;
 
   const respondedTickets = tickets.filter(t => t.respondedAt && t.createdAt);
   const avgResponseHrs = respondedTickets.length > 0
     ? Math.round(respondedTickets.reduce((sum, t) => sum + (new Date(t.respondedAt) - new Date(t.createdAt)), 0) / respondedTickets.length / 1000 / 60 / 60 * 10) / 10
     : null;
+
+  // Get all unique tags from tickets
+  const allUsedTags = [...new Set(tickets.flatMap(t => t.tags || []))];
 
   // Filter tickets
   const filteredTickets = tickets.filter(t => {
@@ -396,6 +446,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     if (supportSubTab === "resolved" && t.status !== "resolved" && t.status !== "closed") return false;
     if (ticketFilter !== "all" && t.category !== ticketFilter) return false;
     if (ticketPriorityFilter !== "all" && t.priority !== ticketPriorityFilter) return false;
+    if (tagFilter !== "all" && !(t.tags || []).includes(tagFilter)) return false;
+    if (assignmentFilter !== "all") {
+      if (assignmentFilter === "unassigned" && t.assignedTo) return false;
+      if (assignmentFilter !== "unassigned" && t.assignedTo !== assignmentFilter) return false;
+    }
     if (ticketSearch) {
       const s = ticketSearch.toLowerCase();
       if (!((t.subject || "").toLowerCase().includes(s) || (t.userEmail || "").toLowerCase().includes(s) || (t.userName || "").toLowerCase().includes(s))) return false;
@@ -436,6 +491,259 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     } catch (e) { notify("Error: " + e.message); }
   };
 
+  // Assign ticket
+  const assignTicket = async (ticketId, agentId, agentName) => {
+    try {
+      const update = { assignedTo: agentId === "unassigned" ? null : agentId, assignedToName: agentId === "unassigned" ? null : agentName, updatedAt: new Date().toISOString() };
+      await setDoc(doc(db, "supportTickets", ticketId), update, { merge: true });
+      setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, ...update } : t));
+      if (ticketDrawer?.id === ticketId) setTicketDrawer(prev => ({ ...prev, ...update }));
+      notify(agentId === "unassigned" ? "Ticket unassigned" : `Assigned to ${agentName}`);
+    } catch (e) { notify("Error: " + e.message); }
+  };
+
+  // Add tag
+  const addTag = async (ticketId, tagId) => {
+    const ticket = tickets.find(t => t.id === ticketId) || ticketDrawer;
+    if (!ticket) return;
+    const currentTags = ticket.tags || [];
+    if (currentTags.includes(tagId)) return;
+    const newTags = [...currentTags, tagId];
+    try {
+      await setDoc(doc(db, "supportTickets", ticketId), { tags: newTags, updatedAt: new Date().toISOString() }, { merge: true });
+      setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, tags: newTags } : t));
+      if (ticketDrawer?.id === ticketId) setTicketDrawer(prev => ({ ...prev, tags: newTags }));
+      notify(`Tag added: ${tagId}`);
+    } catch (e) { notify("Error: " + e.message); }
+  };
+
+  // Remove tag
+  const removeTag = async (ticketId, tagId) => {
+    const ticket = tickets.find(t => t.id === ticketId) || ticketDrawer;
+    if (!ticket) return;
+    const newTags = (ticket.tags || []).filter(t => t !== tagId);
+    try {
+      await setDoc(doc(db, "supportTickets", ticketId), { tags: newTags, updatedAt: new Date().toISOString() }, { merge: true });
+      setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, tags: newTags } : t));
+      if (ticketDrawer?.id === ticketId) setTicketDrawer(prev => ({ ...prev, tags: newTags }));
+      notify(`Tag removed`);
+    } catch (e) { notify("Error: " + e.message); }
+  };
+
+  // Send internal note with @mentions
+  const sendInternalNote = async () => {
+    if (!internalNote.trim() || !ticketDrawer) return;
+    setSendingNote(true);
+    try {
+      // Parse @mentions
+      const mentionRegex = /@(\w+)/g;
+      const mentions = [...internalNote.matchAll(mentionRegex)].map(m => m[1]);
+      const newNote = { 
+        text: internalNote, 
+        by: adminUser?.email || "admin", 
+        at: new Date().toISOString(),
+        mentions: mentions.length > 0 ? mentions : undefined
+      };
+      const internalNotes = [...(ticketDrawer.internalNotes || []), newNote];
+      await setDoc(doc(db, "supportTickets", ticketDrawer.id), { internalNotes, updatedAt: new Date().toISOString() }, { merge: true });
+      setTickets(prev => prev.map(t => t.id === ticketDrawer.id ? { ...t, internalNotes } : t));
+      setTicketDrawer(prev => ({ ...prev, internalNotes }));
+      setInternalNote("");
+      setShowMentionDropdown(false);
+      // Notify mentioned users (would integrate with notification system)
+      if (mentions.length > 0) {
+        notify(`Internal note added, mentioned: ${mentions.join(", ")}`);
+      } else {
+        notify("Internal note added");
+      }
+    } catch (e) { notify("Error: " + e.message); }
+    setSendingNote(false);
+  };
+
+  // Phase 1B: Collision Detection - Track who's viewing a ticket
+  useEffect(() => {
+    if (!ticketDrawer || !adminUser) return;
+    
+    const presenceRef = doc(db, "ticketPresence", ticketDrawer.id);
+    const myId = adminUser.uid || adminUser.email;
+    const myName = adminUser.displayName || adminUser.email?.split("@")[0] || "Admin";
+    
+    // Add self to viewing list
+    const updatePresence = async () => {
+      try {
+        const snap = await getDoc(presenceRef);
+        const current = snap.exists() ? snap.data().viewers || [] : [];
+        const filtered = current.filter(v => v.id !== myId && (Date.now() - new Date(v.at).getTime()) < 60000); // Remove stale (>60s)
+        const updated = [...filtered, { id: myId, name: myName, at: new Date().toISOString() }];
+        await setDoc(presenceRef, { viewers: updated, ticketId: ticketDrawer.id }, { merge: true });
+      } catch (e) { console.error("Presence update failed:", e); }
+    };
+    
+    updatePresence();
+    const interval = setInterval(updatePresence, 30000); // Heartbeat every 30s
+    
+    // Listen for other viewers
+    const unsubscribe = onSnapshot(presenceRef, (snap) => {
+      if (snap.exists()) {
+        const viewers = snap.data().viewers || [];
+        const others = viewers.filter(v => v.id !== myId && (Date.now() - new Date(v.at).getTime()) < 60000);
+        setViewingAdmins(others);
+      }
+    });
+    
+    // Cleanup on drawer close
+    return () => {
+      clearInterval(interval);
+      unsubscribe();
+      // Remove self from viewing list
+      (async () => {
+        try {
+          const snap = await getDoc(presenceRef);
+          if (snap.exists()) {
+            const current = snap.data().viewers || [];
+            const filtered = current.filter(v => v.id !== myId);
+            await setDoc(presenceRef, { viewers: filtered }, { merge: true });
+          }
+        } catch (e) { console.error("Presence cleanup failed:", e); }
+      })();
+    };
+  }, [ticketDrawer?.id, adminUser, db]);
+
+  // Phase 1B: File Upload Handler
+  const handleFileUpload = async (e, isInternalNote = false) => {
+    const file = e.target.files?.[0];
+    if (!file || !ticketDrawer) return;
+    
+    // Validate file
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf", "text/plain", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+    
+    if (file.size > maxSize) {
+      notify("File too large (max 10MB)");
+      return;
+    }
+    
+    if (!allowedTypes.includes(file.type) && !file.type.startsWith("image/")) {
+      notify("File type not supported");
+      return;
+    }
+    
+    setUploading(true);
+    try {
+      // Upload to Firebase Storage
+      const timestamp = Date.now();
+      const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+      const path = `support-attachments/${ticketDrawer.id}/${timestamp}_${safeName}`;
+      const storageRef = ref(storage, path);
+      
+      await uploadBytes(storageRef, file);
+      const downloadUrl = await getDownloadURL(storageRef);
+      
+      const attachment = {
+        name: file.name,
+        url: downloadUrl,
+        type: file.type,
+        size: file.size,
+        uploadedAt: new Date().toISOString(),
+        uploadedBy: adminUser?.email || "admin"
+      };
+      
+      if (isInternalNote) {
+        // Add to internal notes as attachment
+        const newNote = {
+          text: `📎 Attached file: ${file.name}`,
+          by: adminUser?.email || "admin",
+          at: new Date().toISOString(),
+          attachment
+        };
+        const internalNotes = [...(ticketDrawer.internalNotes || []), newNote];
+        await setDoc(doc(db, "supportTickets", ticketDrawer.id), { internalNotes, updatedAt: new Date().toISOString() }, { merge: true });
+        setTickets(prev => prev.map(t => t.id === ticketDrawer.id ? { ...t, internalNotes } : t));
+        setTicketDrawer(prev => ({ ...prev, internalNotes }));
+      } else {
+        // Add to public messages
+        const newMessage = {
+          from: "admin",
+          text: `📎 Attached file: ${file.name}`,
+          at: new Date().toISOString(),
+          by: adminUser?.email || "admin",
+          attachment
+        };
+        const messages = [...(ticketDrawer.messages || []), newMessage];
+        const update = { messages, updatedAt: new Date().toISOString() };
+        await setDoc(doc(db, "supportTickets", ticketDrawer.id), update, { merge: true });
+        setTickets(prev => prev.map(t => t.id === ticketDrawer.id ? { ...t, ...update } : t));
+        setTicketDrawer(prev => ({ ...prev, ...update }));
+      }
+      
+      notify(`File uploaded: ${file.name}`);
+    } catch (e) {
+      console.error("Upload failed:", e);
+      notify("Upload failed: " + e.message);
+    }
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // Phase 1B: @Mention handlers
+  const handleNoteKeyDown = (e) => {
+    if (e.key === "@") {
+      setShowMentionDropdown(true);
+      setMentionSearch("");
+    } else if (showMentionDropdown) {
+      if (e.key === "Escape") {
+        setShowMentionDropdown(false);
+      }
+    }
+  };
+
+  const handleNoteChange = (e) => {
+    const val = e.target.value;
+    setInternalNote(val);
+    
+    // Check if we're in a mention
+    const lastAtIndex = val.lastIndexOf("@");
+    if (lastAtIndex !== -1 && lastAtIndex >= val.length - 20) {
+      const afterAt = val.slice(lastAtIndex + 1);
+      if (!afterAt.includes(" ")) {
+        setShowMentionDropdown(true);
+        setMentionSearch(afterAt.toLowerCase());
+      } else {
+        setShowMentionDropdown(false);
+      }
+    } else {
+      setShowMentionDropdown(false);
+    }
+  };
+
+  const insertMention = (name) => {
+    const lastAtIndex = internalNote.lastIndexOf("@");
+    const newText = internalNote.slice(0, lastAtIndex) + `@${name} `;
+    setInternalNote(newText);
+    setShowMentionDropdown(false);
+    noteInputRef.current?.focus();
+  };
+
+  // Get mentionable team members
+  const mentionableUsers = [
+    { id: "dev", name: "dev", label: "Development Team" },
+    { id: "support", name: "support", label: "Support Team" },
+    { id: "billing", name: "billing", label: "Billing Team" },
+    ...assignableAgents.filter(a => a.id !== "unassigned").map(a => ({ id: a.id, name: a.name.toLowerCase().replace(/\s+/g, ""), label: a.name }))
+  ].filter(u => !mentionSearch || u.name.includes(mentionSearch) || u.label.toLowerCase().includes(mentionSearch));
+
+  // Render text with @mentions highlighted
+  const renderTextWithMentions = (text) => {
+    if (!text) return null;
+    const parts = text.split(/(@\w+)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith("@")) {
+        return <span key={i} style={{ color: T.teal, fontWeight: 600 }}>{part}</span>;
+      }
+      return part;
+    });
+  };
+
   // Send reply
   const sendReply = async () => {
     if (!ticketReply.trim() || !ticketDrawer) return;
@@ -469,6 +777,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   };
 
   const insertTemplate = (text) => { setTicketReply(text); setShowTemplates(false); };
+  const insertNoteTemplate = (text) => { setInternalNote(text); };
   const timeAgo = (date) => {
     if (!date) return "—";
     const seconds = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);
@@ -495,9 +804,10 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "—", color: avgResponseHrs !== null && avgResponseHrs > 24 ? T.red : T.green },
           { label: "Resolved Today", value: resolvedToday, color: T.green },
           { label: "SLA Breached", value: slaBreached.length, color: slaBreached.length > 0 ? T.red : T.green },
-          { label: "Total Tickets", value: tickets.length, color: T.textSecondary },
+          { label: "Unassigned", value: unassignedCount, color: unassignedCount > 0 ? T.orange : T.green },
+          { label: "Total", value: tickets.length, color: T.textSecondary },
         ].map((item, i) => (
-          <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 20px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
+          <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 18px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
             <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
             <span style={{ fontSize: 18, fontWeight: 900, color: item.color, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>{item.value}</span>
           </div>
@@ -518,20 +828,31 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             </button>
           ))}
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <input value={ticketSearch} onChange={e => setTicketSearch(e.target.value)} placeholder="Search tickets..."
-            style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, width: 180, fontFamily: "'Outfit',sans-serif" }} />
+            style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, width: 160, fontFamily: "'Outfit',sans-serif" }} />
           <select value={ticketFilter} onChange={e => setTicketFilter(e.target.value)}
-            style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Categories</option>
             {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}
           </select>
           <select value={ticketPriorityFilter} onChange={e => setTicketPriorityFilter(e.target.value)}
-            style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Priorities</option>
             <option value="urgent">🔴 Urgent</option>
             <option value="high">🟠 High</option>
             <option value="normal">⚪ Normal</option>
+          </select>
+          <select value={tagFilter} onChange={e => setTagFilter(e.target.value)}
+            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${tagFilter !== "all" ? T.teal : T.border}`, background: T.surfaceAlt, color: tagFilter !== "all" ? T.teal : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+            <option value="all">All Tags</option>
+            {availableTags.map(t => <option key={t.id} value={t.id}>🏷️ {t.label}</option>)}
+          </select>
+          <select value={assignmentFilter} onChange={e => setAssignmentFilter(e.target.value)}
+            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${assignmentFilter !== "all" ? T.purple : T.border}`, background: T.surfaceAlt, color: assignmentFilter !== "all" ? T.purple : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+            <option value="all">All Agents</option>
+            <option value="unassigned">👤 Unassigned</option>
+            {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>👤 {a.name}</option>)}
           </select>
         </div>
       </div>
@@ -555,6 +876,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               const status = statuses[ticket.status] || statuses.open;
               const priority = priorities[ticket.priority] || priorities.normal;
               const breached = isSlaBreached(ticket);
+              const ticketTags = ticket.tags || [];
               return (
                 <div key={ticket.id} onClick={() => setTicketDrawer(ticket)}
                   style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", gap: 14, borderLeft: breached ? `3px solid ${T.red}` : "3px solid transparent", transition: "all 0.15s" }}
@@ -562,9 +884,14 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                   <div style={{ width: 8, height: 8, borderRadius: "50%", background: priority.color, flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ticket.subject}</span>
                       {breached && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>⏰ SLA</span>}
+                      {ticketTags.slice(0, 2).map(tagId => {
+                        const tag = availableTags.find(t => t.id === tagId);
+                        return tag ? <span key={tagId} style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${tag.color}20`, color: tag.color, fontWeight: 600 }}>{tag.label}</span> : null;
+                      })}
+                      {ticketTags.length > 2 && <span style={{ fontSize: 8, color: T.textMuted }}>+{ticketTags.length - 2}</span>}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: T.textMuted }}>
                       <span>{ticket.userName || ticket.userEmail}</span>
@@ -572,6 +899,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       <span style={{ padding: "2px 6px", borderRadius: 4, background: `${cat.color}20`, color: cat.color, fontSize: 10 }}>{cat.icon} {cat.label}</span>
                       <span>·</span>
                       <span>{timeAgo(ticket.createdAt)}</span>
+                      {ticket.assignedTo && <><span>·</span><span style={{ color: T.purple }}>👤 {ticket.assignedToName || "Assigned"}</span></>}
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -588,12 +916,29 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
       {/* TICKET DRAWER */}
       {ticketDrawer && (
         <div style={{ position: "fixed", inset: 0, zIndex: 8000, background: "rgba(4,9,15,0.85)", backdropFilter: "blur(4px)" }} onClick={() => setTicketDrawer(null)}>
-          <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "100%", maxWidth: 560, background: T.surface, borderLeft: `1px solid ${T.gold}30`, display: "flex", flexDirection: "column", animation: "slideIn 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
+          <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "100%", maxWidth: 620, background: T.surface, borderLeft: `1px solid ${T.gold}30`, display: "flex", flexDirection: "column", animation: "slideIn 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
+            
+            {/* Collision Detection Banner */}
+            {viewingAdmins.length > 0 && (
+              <div style={{ padding: "10px 24px", background: `${T.purple}15`, borderBottom: `1px solid ${T.purple}30`, display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  {viewingAdmins.slice(0, 3).map((admin, i) => (
+                    <div key={admin.id} style={{ width: 24, height: 24, borderRadius: "50%", background: T.purple, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: T.white, marginLeft: i > 0 ? -8 : 0, border: `2px solid ${T.surface}`, zIndex: 3 - i }}>
+                      {admin.name?.[0]?.toUpperCase() || "?"}
+                    </div>
+                  ))}
+                </div>
+                <span style={{ fontSize: 11, color: T.purple, fontWeight: 500 }}>
+                  👀 {viewingAdmins.map(a => a.name).join(", ")} {viewingAdmins.length === 1 ? "is" : "are"} also viewing this ticket
+                </span>
+              </div>
+            )}
+            
             {/* Drawer Header */}
             <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${(categories.find(c => c.id === ticketDrawer.category) || categories[5]).color}20`, color: (categories.find(c => c.id === ticketDrawer.category) || categories[5]).color }}>{(categories.find(c => c.id === ticketDrawer.category) || categories[5]).icon} {(categories.find(c => c.id === ticketDrawer.category) || categories[5]).label}</span>
                     {isSlaBreached(ticketDrawer) && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>⏰ SLA Breached</span>}
                   </div>
@@ -601,7 +946,9 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 </div>
                 <button type="button" onClick={() => setTicketDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>×</button>
               </div>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              
+              {/* Status, Priority, Assignment Row */}
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                 <select value={ticketDrawer.status} onChange={e => updateTicketStatus(ticketDrawer.id, e.target.value)}
                   style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${(statuses[ticketDrawer.status] || statuses.open).color}40`, background: (statuses[ticketDrawer.status] || statuses.open).bg, color: (statuses[ticketDrawer.status] || statuses.open).color, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                   <option value="open">Open</option>
@@ -615,8 +962,33 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   <option value="high">High</option>
                   <option value="urgent">Urgent</option>
                 </select>
+                <select value={ticketDrawer.assignedTo || "unassigned"} onChange={e => { const agent = assignableAgents.find(a => a.id === e.target.value); assignTicket(ticketDrawer.id, e.target.value, agent?.name || ""); }}
+                  style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${ticketDrawer.assignedTo ? T.purple : T.border}40`, background: ticketDrawer.assignedTo ? `${T.purple}20` : T.surfaceAlt, color: ticketDrawer.assignedTo ? T.purple : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                  <option value="unassigned">👤 Unassigned</option>
+                  {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>👤 {a.name}</option>)}
+                </select>
+              </div>
+
+              {/* Tags Row */}
+              <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 10, color: T.textMuted }}>Tags:</span>
+                {(ticketDrawer.tags || []).map(tagId => {
+                  const tag = availableTags.find(t => t.id === tagId);
+                  return tag ? (
+                    <span key={tagId} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${tag.color}20`, color: tag.color, fontWeight: 600 }}>
+                      {tag.label}
+                      <button type="button" onClick={() => removeTag(ticketDrawer.id, tagId)} style={{ background: "none", border: "none", color: tag.color, cursor: "pointer", fontSize: 12, lineHeight: 1, padding: 0 }}>×</button>
+                    </span>
+                  ) : null;
+                })}
+                <select value="" onChange={e => { if (e.target.value) addTag(ticketDrawer.id, e.target.value); }}
+                  style={{ padding: "4px 8px", borderRadius: 4, border: `1px dashed ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                  <option value="">+ Add tag</option>
+                  {availableTags.filter(t => !(ticketDrawer.tags || []).includes(t.id)).map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                </select>
               </div>
             </div>
+            
             {/* User Context Panel */}
             <div style={{ padding: "12px 24px", background: T.surfaceAlt, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -637,50 +1009,189 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>View User</button>
               </div>
             </div>
-            {/* Conversation Thread */}
-            <div style={{ flex: 1, padding: "16px 24px", overflowY: "auto" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {(ticketDrawer.messages || []).map((msg, i) => (
-                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.from === "admin" ? "flex-end" : "flex-start" }}>
-                    <div style={{ maxWidth: "85%", padding: "12px 16px", borderRadius: 12, background: msg.from === "admin" ? T.gold : T.surfaceAlt, color: msg.from === "admin" ? T.bg : T.white, fontSize: 13, lineHeight: 1.5, borderBottomRightRadius: msg.from === "admin" ? 4 : 12, borderBottomLeftRadius: msg.from === "admin" ? 12 : 4 }}>
-                      {msg.text}
+            
+            {/* Conversation Thread + Internal Notes */}
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              {/* Public Messages */}
+              <div style={{ padding: "16px 24px" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Conversation</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {(ticketDrawer.messages || []).map((msg, i) => (
+                    <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.from === "admin" ? "flex-end" : "flex-start" }}>
+                      <div style={{ maxWidth: "85%", padding: "12px 16px", borderRadius: 12, background: msg.from === "admin" ? T.gold : T.surfaceAlt, color: msg.from === "admin" ? T.bg : T.white, fontSize: 13, lineHeight: 1.5, borderBottomRightRadius: msg.from === "admin" ? 4 : 12, borderBottomLeftRadius: msg.from === "admin" ? 12 : 4 }}>
+                        {msg.text}
+                        {/* Attachment Display */}
+                        {msg.attachment && (
+                          <div style={{ marginTop: 8, padding: 8, background: msg.from === "admin" ? "rgba(0,0,0,0.15)" : T.surface, borderRadius: 8 }}>
+                            {msg.attachment.type?.startsWith("image/") ? (
+                              <a href={msg.attachment.url} target="_blank" rel="noopener noreferrer">
+                                <img src={msg.attachment.url} alt={msg.attachment.name} style={{ maxWidth: "100%", maxHeight: 150, borderRadius: 6 }} />
+                              </a>
+                            ) : (
+                              <a href={msg.attachment.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: msg.from === "admin" ? T.bg : T.teal, textDecoration: "none" }}>
+                                <span style={{ fontSize: 20 }}>📄</span>
+                                <div>
+                                  <div style={{ fontSize: 12, fontWeight: 600 }}>{msg.attachment.name}</div>
+                                  <div style={{ fontSize: 10, opacity: 0.7 }}>{(msg.attachment.size / 1024).toFixed(1)} KB</div>
+                                </div>
+                              </a>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                        <span>{msg.from === "admin" ? (msg.by || "Admin") : ticketDrawer.userName}</span>
+                        <span>·</span>
+                        <span>{timeAgo(msg.at)}</span>
+                      </div>
                     </div>
-                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
-                      <span>{msg.from === "admin" ? (msg.by || "Admin") : ticketDrawer.userName}</span>
-                      <span>·</span>
-                      <span>{timeAgo(msg.at)}</span>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
+
+              {/* Internal Notes Section */}
+              {(ticketDrawer.internalNotes?.length > 0 || true) && (
+                <div style={{ padding: "16px 24px", background: `${T.orange}08`, borderTop: `1px dashed ${T.orange}30` }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.orange, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                    🔒 Internal Notes <span style={{ fontWeight: 400, color: T.textMuted }}>(hidden from customer)</span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {(ticketDrawer.internalNotes || []).map((note, i) => (
+                      <div key={i} style={{ padding: "10px 14px", borderRadius: 8, background: T.surface, border: `1px solid ${T.orange}30` }}>
+                        <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>{renderTextWithMentions(note.text)}</div>
+                        {/* Note Attachment Display */}
+                        {note.attachment && (
+                          <div style={{ marginTop: 8, padding: 8, background: T.surfaceAlt, borderRadius: 6 }}>
+                            {note.attachment.type?.startsWith("image/") ? (
+                              <a href={note.attachment.url} target="_blank" rel="noopener noreferrer">
+                                <img src={note.attachment.url} alt={note.attachment.name} style={{ maxWidth: "100%", maxHeight: 120, borderRadius: 4 }} />
+                              </a>
+                            ) : (
+                              <a href={note.attachment.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: T.teal, textDecoration: "none" }}>
+                                <span style={{ fontSize: 18 }}>📄</span>
+                                <div>
+                                  <div style={{ fontSize: 11, fontWeight: 600 }}>{note.attachment.name}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>{(note.attachment.size / 1024).toFixed(1)} KB</div>
+                                </div>
+                              </a>
+                            )}
+                          </div>
+                        )}
+                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                          <span>{note.by}</span>
+                          <span>·</span>
+                          <span>{timeAgo(note.at)}</span>
+                          {note.mentions?.length > 0 && <><span>·</span><span style={{ color: T.teal }}>@{note.mentions.join(", @")}</span></>}
+                        </div>
+                      </div>
+                    ))}
+                    {(ticketDrawer.internalNotes || []).length === 0 && (
+                      <div style={{ fontSize: 11, color: T.textMuted, fontStyle: "italic" }}>No internal notes yet.</div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-            {/* Reply Input */}
+            
+            {/* Reply / Note Input */}
             {ticketDrawer.status !== "closed" && (
               <div style={{ padding: "16px 24px", borderTop: `1px solid ${T.border}`, background: T.surfaceAlt }}>
-                <div style={{ marginBottom: 10 }}>
-                  <button type="button" onClick={() => setShowTemplates(!showTemplates)}
-                    style={{ fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
-                    {showTemplates ? "Hide Templates" : "📝 Quick Templates"}
+                {/* Hidden File Input */}
+                <input type="file" ref={fileInputRef} style={{ display: "none" }} onChange={(e) => handleFileUpload(e, replyMode === "note")} accept="image/*,.pdf,.doc,.docx,.txt" />
+                
+                {/* Toggle Reply vs Note */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
+                  <button type="button" onClick={() => setReplyMode("reply")}
+                    style={{ padding: "6px 14px", borderRadius: 6, border: `1px solid ${replyMode === "reply" ? T.gold : T.border}`, background: replyMode === "reply" ? T.goldGlow : "transparent", color: replyMode === "reply" ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                    💬 Reply to Customer
                   </button>
-                  {showTemplates && (
-                    <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
-                      {responseTemplates.map(t => (
-                        <button key={t.id} type="button" onClick={() => insertTemplate(t.text)}
-                          style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surface, color: T.textSecondary, fontSize: 10, cursor: "pointer" }}>
+                  <button type="button" onClick={() => setReplyMode("note")}
+                    style={{ padding: "6px 14px", borderRadius: 6, border: `1px solid ${replyMode === "note" ? T.orange : T.border}`, background: replyMode === "note" ? `${T.orange}15` : "transparent", color: replyMode === "note" ? T.orange : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                    🔒 Internal Note
+                  </button>
+                  <div style={{ flex: 1 }} />
+                  <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                    style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: uploading ? T.textMuted : T.teal, fontSize: 11, fontWeight: 600, cursor: uploading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                    {uploading ? "⏳ Uploading..." : "📎 Attach File"}
+                  </button>
+                </div>
+
+                {replyMode === "reply" ? (
+                  <>
+                    <div style={{ marginBottom: 10 }}>
+                      <button type="button" onClick={() => setShowTemplates(!showTemplates)}
+                        style={{ fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+                        {showTemplates ? "Hide Templates" : "📝 Quick Templates"}
+                      </button>
+                      {showTemplates && (
+                        <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                          {responseTemplates.map(t => (
+                            <button key={t.id} type="button" onClick={() => insertTemplate(t.text)}
+                              style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surface, color: T.textSecondary, fontSize: 10, cursor: "pointer" }}>
+                              {t.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <textarea value={ticketReply} onChange={e => setTicketReply(e.target.value)} placeholder="Type your reply to the customer..."
+                        rows={3} style={{ flex: 1, padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "none" }} />
+                      <button type="button" onClick={sendReply} disabled={ticketReplying || !ticketReply.trim()}
+                        style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: ticketReplying || !ticketReply.trim() ? T.border : T.gold, color: T.bg, fontSize: 13, fontWeight: 700, cursor: ticketReplying || !ticketReply.trim() ? "not-allowed" : "pointer", alignSelf: "flex-end" }}>
+                        {ticketReplying ? "..." : "Send"}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ marginBottom: 10, display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                      {noteTemplates.map(t => (
+                        <button key={t.id} type="button" onClick={() => insertNoteTemplate(t.text)}
+                          style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.orange}40`, background: `${T.orange}10`, color: T.orange, fontSize: 10, cursor: "pointer" }}>
                           {t.name}
                         </button>
                       ))}
+                      <span style={{ fontSize: 10, color: T.textMuted, marginLeft: 8 }}>💡 Type @ to mention teammates</span>
                     </div>
-                  )}
-                </div>
-                <div style={{ display: "flex", gap: 10 }}>
-                  <textarea value={ticketReply} onChange={e => setTicketReply(e.target.value)} placeholder="Type your reply..."
-                    rows={3} style={{ flex: 1, padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "none" }} />
-                  <button type="button" onClick={sendReply} disabled={ticketReplying || !ticketReply.trim()}
-                    style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: ticketReplying || !ticketReply.trim() ? T.border : T.gold, color: T.bg, fontSize: 13, fontWeight: 700, cursor: ticketReplying || !ticketReply.trim() ? "not-allowed" : "pointer", alignSelf: "flex-end" }}>
-                    {ticketReplying ? "..." : "Send"}
-                  </button>
-                </div>
+                    <div style={{ position: "relative" }}>
+                      <div style={{ display: "flex", gap: 10 }}>
+                        <textarea 
+                          ref={noteInputRef}
+                          value={internalNote} 
+                          onChange={handleNoteChange} 
+                          onKeyDown={handleNoteKeyDown}
+                          placeholder="Add an internal note (hidden from customer)... Use @name to mention"
+                          rows={3} style={{ flex: 1, padding: "10px 14px", background: T.bg, border: `1px solid ${T.orange}40`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "none" }} />
+                        <button type="button" onClick={sendInternalNote} disabled={sendingNote || !internalNote.trim()}
+                          style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: sendingNote || !internalNote.trim() ? T.border : T.orange, color: T.bg, fontSize: 13, fontWeight: 700, cursor: sendingNote || !internalNote.trim() ? "not-allowed" : "pointer", alignSelf: "flex-end" }}>
+                          {sendingNote ? "..." : "Add Note"}
+                        </button>
+                      </div>
+                      
+                      {/* @Mention Dropdown */}
+                      {showMentionDropdown && mentionableUsers.length > 0 && (
+                        <div style={{ position: "absolute", bottom: "100%", left: 0, marginBottom: 4, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,0.3)", maxHeight: 180, overflowY: "auto", zIndex: 100 }}>
+                          {mentionableUsers.slice(0, 6).map(user => (
+                            <button key={user.id} type="button" onClick={() => insertMention(user.name)}
+                              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", background: "transparent", border: "none", borderBottom: `1px solid ${T.border}`, color: T.white, cursor: "pointer", textAlign: "left" }}
+                              onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                              <div style={{ width: 28, height: 28, borderRadius: "50%", background: `${T.teal}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: T.teal }}>
+                                {user.label[0].toUpperCase()}
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 12, fontWeight: 600 }}>@{user.name}</div>
+                                <div style={{ fontSize: 10, color: T.textMuted }}>{user.label}</div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+
                 <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                   {ticketDrawer.status !== "resolved" && (
                     <button type="button" onClick={() => updateTicketStatus(ticketDrawer.id, "resolved")}
