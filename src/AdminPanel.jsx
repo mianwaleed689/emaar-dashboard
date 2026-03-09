@@ -8612,258 +8612,404 @@ export default function AdminPanel() {
           })()}
 
           {tab === "analytics" && (() => {
-            /* ── per-tab computed data ── */
+            /* ═══════════════════════════════════════════════════════
+               TAB 10: ANALYTICS — Mixpanel + Amplitude + ChartMogul
+               Full user behavior, retention cohorts, geographic insights
+            ═══════════════════════════════════════════════════════ */
+            
+            // DAU/MAU calculations
+            const todayStart = new Date(now); todayStart.setHours(0,0,0,0);
+            const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
+            const monthAgo = new Date(now); monthAgo.setDate(monthAgo.getDate() - 30);
+            
+            const dau = users.filter(u => {
+              try { return u.lastLoginAt && new Date(u.lastLoginAt) >= todayStart; } catch { return false; }
+            }).length;
+            const wau = users.filter(u => {
+              try { return u.lastLoginAt && new Date(u.lastLoginAt) >= weekAgo; } catch { return false; }
+            }).length;
+            const mau = users.filter(u => {
+              try { return u.lastLoginAt && new Date(u.lastLoginAt) >= monthAgo; } catch { return false; }
+            }).length;
+            const dauMauRatio = mau > 0 ? Math.round((dau / mau) * 100) : 0;
+            const neverLoggedIn = users.filter(u => !u.lastLoginAt).length;
+
+            // Weekly signups by tier
             const weeklySignups = (() => {
               const weeks = [];
               for (let i = 7; i >= 0; i--) {
                 const start = new Date(now); start.setDate(start.getDate() - i * 7 - 6);
                 const end   = new Date(now); end.setDate(end.getDate() - i * 7);
                 const label = `W${8 - i}`;
-                const count = users.filter(u => { try { const d = new Date(u.createdAt); return d >= start && d <= end; } catch { return false; } }).length;
-                const paid  = users.filter(u => { try { const d = new Date(u.createdAt); return d >= start && d <= end && (u.tier === "pro" || u.tier === "enterprise"); } catch { return false; } }).length;
-                weeks.push({ label, signups: count, paid });
+                const free = users.filter(u => { try { const d = new Date(u.createdAt); return d >= start && d <= end && u.tier === "free"; } catch { return false; } }).length;
+                const trial = users.filter(u => { try { const d = new Date(u.createdAt); return d >= start && d <= end && u.tier === "pro_trial"; } catch { return false; } }).length;
+                const pro = users.filter(u => { try { const d = new Date(u.createdAt); return d >= start && d <= end && u.tier === "pro"; } catch { return false; } }).length;
+                const ent = users.filter(u => { try { const d = new Date(u.createdAt); return d >= start && d <= end && u.tier === "enterprise"; } catch { return false; } }).length;
+                weeks.push({ label, free, trial, pro, enterprise: ent, total: free + trial + pro + ent });
               }
               return weeks;
             })();
 
-            const mrrHistory = (() => {
-              const months = [];
-              for (let i = 5; i >= 0; i--) {
-                const d = new Date(now); d.setMonth(d.getMonth() - i);
-                const label = d.toLocaleString("en", { month: "short" });
-                const proCount = users.filter(u => { try { return u.tier === "pro" && new Date(u.createdAt) <= d; } catch { return false; } }).length;
-                const entCount = users.filter(u => { try { return u.tier === "enterprise" && new Date(u.createdAt) <= d; } catch { return false; } }).length;
-                months.push({ label, mrr: proCount * 99 + entCount * 499, pro: proCount * 99, enterprise: entCount * 499 });
+            // Cohort Retention Heatmap (8 weeks x 8 weeks)
+            const cohortHeatmap = (() => {
+              const cohorts = [];
+              for (let c = 7; c >= 0; c--) {
+                const cohortStart = new Date(now); cohortStart.setDate(cohortStart.getDate() - (c + 1) * 7);
+                const cohortEnd = new Date(now); cohortEnd.setDate(cohortEnd.getDate() - c * 7);
+                const cohortLabel = cohortStart.toLocaleDateString("en-AE", { day: "numeric", month: "short" });
+                
+                const cohortUsers = users.filter(u => {
+                  try { const d = new Date(u.createdAt); return d >= cohortStart && d < cohortEnd; } catch { return false; }
+                });
+                
+                const weeks = [];
+                for (let w = 0; w <= 7 - c; w++) {
+                  const weekEnd = new Date(cohortStart); weekEnd.setDate(weekEnd.getDate() + (w + 1) * 7);
+                  const retained = cohortUsers.filter(u => {
+                    try { return u.lastLoginAt && new Date(u.lastLoginAt) >= weekEnd; } catch { return false; }
+                  }).length;
+                  const pct = cohortUsers.length > 0 ? Math.round((retained / cohortUsers.length) * 100) : 0;
+                  weeks.push({ week: w, retained, pct });
+                }
+                cohorts.push({ label: cohortLabel, users: cohortUsers.length, weeks });
               }
-              months.push({ label: "Now", mrr, pro: stats.pro * 99, enterprise: stats.enterprise * 499 });
-              return months;
+              return cohorts;
             })();
 
-            const topProjects = (() => {
+            // Geographic breakdown (top 10 countries)
+            const geoData = (() => {
               const counts = {};
-              leads.forEach(l => { const k = l.project || l.projectName || "Unknown"; counts[k] = (counts[k] || 0) + 1; });
-              return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name, count]) => ({ name, count }));
+              users.forEach(u => { const c = u.country || "Unknown"; counts[c] = (counts[c] || 0) + 1; });
+              return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([country, count]) => ({ country, count }));
             })();
 
+            // Feature usage (auditLog action counts)
+            const featureUsage = (() => {
+              const counts = {};
+              auditLog.forEach(l => { const a = l.action || "unknown"; counts[a] = (counts[a] || 0) + 1; });
+              return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([action, count]) => ({ action, count }));
+            })();
+
+            // Top active users
+            const topActiveUsers = users
+              .filter(u => u.lastLoginAt)
+              .sort((a, b) => new Date(b.lastLoginAt) - new Date(a.lastLoginAt))
+              .slice(0, 10);
+
+            // Churn timing analysis
+            const churnTiming = (() => {
+              const churned = users.filter(u => u.tier === "free" && u.trialEnd && new Date(u.trialEnd) < now);
+              const day1 = churned.filter(u => { try { return (new Date(u.trialEnd) - new Date(u.createdAt)) < 2 * 24 * 60 * 60 * 1000; } catch { return false; } }).length;
+              const week1 = churned.filter(u => { try { const diff = new Date(u.trialEnd) - new Date(u.createdAt); return diff >= 2 * 24 * 60 * 60 * 1000 && diff < 8 * 24 * 60 * 60 * 1000; } catch { return false; } }).length;
+              const month1 = churned.filter(u => { try { const diff = new Date(u.trialEnd) - new Date(u.createdAt); return diff >= 8 * 24 * 60 * 60 * 1000 && diff < 32 * 24 * 60 * 60 * 1000; } catch { return false; } }).length;
+              const month3 = churned.filter(u => { try { const diff = new Date(u.trialEnd) - new Date(u.createdAt); return diff >= 32 * 24 * 60 * 60 * 1000; } catch { return false; } }).length;
+              const total = churned.length || 1;
+              return [
+                { period: "Day 1", count: day1, pct: Math.round((day1 / total) * 100) },
+                { period: "Week 1", count: week1, pct: Math.round((week1 / total) * 100) },
+                { period: "Month 1", count: month1, pct: Math.round((month1 / total) * 100) },
+                { period: "Month 3+", count: month3, pct: Math.round((month3 / total) * 100) },
+              ];
+            })();
+
+            // Signup source analysis
+            const signupSources = (() => {
+              const counts = {};
+              users.forEach(u => { const s = u.signupSource || u.source || "Direct"; counts[s] = (counts[s] || 0) + 1; });
+              return Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([source, count]) => ({ source, count }));
+            })();
+
+            // Conversion funnel (Mixpanel-style)
             const funnelData = [
-              { label: "Total Users", value: stats.total, color: T.textSecondary },
-              { label: "Pro Trial", value: stats.proTrial, color: T.gold },
-              { label: "Paid (Pro)", value: stats.pro, color: T.green },
-              { label: "Enterprise", value: stats.enterprise, color: T.teal },
+              { label: "Registered", value: stats.total, color: T.textSecondary },
+              { label: "Trial Activated", value: stats.proTrial + stats.pro + stats.enterprise, color: T.blue },
+              { label: "Paid", value: stats.pro + stats.enterprise, color: T.green },
+              { label: "Active (30d)", value: mau, color: T.teal },
+              { label: "Retained (Pro)", value: stats.pro, color: T.gold },
             ];
 
-            const weeklyRetention = (() => {
-              const cohorts = {};
-              users.forEach(u => {
-                try {
-                  const d = new Date(u.createdAt);
-                  const week = `${d.getFullYear()}-W${Math.ceil(d.getDate() / 7)}`;
-                  if (!cohorts[week]) cohorts[week] = { total: 0, retained: 0 };
-                  cohorts[week].total++;
-                  if (u.tier === "pro" || u.tier === "enterprise" || u.tier === "pro_trial") cohorts[week].retained++;
-                } catch {}
+            // Tier movement (simplified flow)
+            const tierMovement = (() => {
+              const movements = { freeToTrial: 0, trialToPro: 0, proToEnt: 0, trialToFree: 0, proToFree: 0 };
+              auditLog.filter(l => l.action === "tier_change").forEach(l => {
+                if (l.from === "free" && l.to === "pro_trial") movements.freeToTrial++;
+                if (l.from === "pro_trial" && l.to === "pro") movements.trialToPro++;
+                if (l.from === "pro" && l.to === "enterprise") movements.proToEnt++;
+                if (l.from === "pro_trial" && l.to === "free") movements.trialToFree++;
+                if (l.from === "pro" && l.to === "free") movements.proToFree++;
               });
-              return Object.entries(cohorts).slice(-6).map(([week, d]) => ({
-                label: week.replace(/.*-W/, "Wk "),
-                retention: d.total > 0 ? Math.round((d.retained / d.total) * 100) : 0,
-                total: d.total,
-              }));
+              return movements;
             })();
 
             const growthRate = stats.total > 0 && stats.thisWeek > 0 ? Math.round((stats.thisWeek / stats.total) * 100) : 0;
-            const ltv = stats.paid > 0 ? Math.round((mrr / stats.paid) * 12) : 0;
 
             return (
             <>
-              {/* ── KPI Row ── */}
-              <Section title="Growth Analytics" sub="Platform growth metrics — live from Firestore" action={
-                <button type="button" onClick={() => { fetchUsers(); fetchLeads(); notify("Analytics refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
-              }>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12 }}>
-                  <KPI label="Weekly Growth" value={`${growthRate}%`} sub={`${stats.thisWeek} signups this week`} color={T.green} delay={1} />
-                  <KPI label="MRR" value={`AED ${mrr.toLocaleString()}`} sub={`ARR AED ${arr.toLocaleString()}`} color={T.gold} delay={2} />
-                  <KPI label="Proj. MRR" value={`AED ${projectedMRR.toLocaleString()}`} sub="If 30% trials convert" color={T.teal} delay={3} />
-                  <KPI label="Trial → Paid" value={`${trialConversion}%`} sub={`${stats.pro} paid · ${stats.expired} expired`} color={T.blue} delay={4} />
-                  <KPI label="ARPU" value={`AED ${stats.total > 0 ? Math.round(mrr / stats.total) : 0}`} sub="Per active user" delay={5} />
-                  <KPI label="LTV (Est.)" value={`AED ${ltv.toLocaleString()}`} sub="12-month paid LTV" color={T.purple} delay={6} />
-                </div>
-              </Section>
+              {/* ═══ ACTIVITY KPI BAR ═══ */}
+              <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, overflow: "hidden" }}>
+                <button type="button" onClick={() => { fetchUsers(); fetchAuditLog(); notify("Analytics refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh}</button>
+                {[
+                  { label: "DAU", value: dau, color: T.green },
+                  { label: "WAU", value: wau, color: T.teal },
+                  { label: "MAU", value: mau, color: T.blue },
+                  { label: "DAU/MAU", value: `${dauMauRatio}%`, color: dauMauRatio > 20 ? T.green : dauMauRatio > 10 ? T.gold : T.red },
+                  { label: "Never Logged In", value: neverLoggedIn, color: T.orange },
+                  { label: "Total Users", value: stats.total, color: T.white },
+                ].map((item, i) => (
+                  <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 18px", borderRight: `1px solid ${T.border}` }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
+                    <span style={{ fontSize: 18, fontWeight: 900, color: item.color, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>{item.value}</span>
+                  </div>
+                ))}
+              </div>
 
-              {/* ── Revenue + Weekly Signups ── */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
-                <Chart title="MRR History (6 Months)" sub="Monthly Recurring Revenue growth">
-                  <ResponsiveContainer width="100%" height={230}>
-                    <AreaChart data={mrrHistory}>
-                      <defs>
-                        <linearGradient id="gMRR" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={T.gold} stopOpacity={0.3} />
-                          <stop offset="100%" stopColor={T.gold} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                      <XAxis dataKey="label" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <Tooltip content={<CustomTooltip />} formatter={(v) => [`AED ${v}`, "MRR"]} />
-                      <Area type="monotone" dataKey="mrr" stroke={T.gold} fill="url(#gMRR)" strokeWidth={2.5} name="MRR (AED)" dot={{ fill: T.gold, r: 3 }} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </Chart>
-
-                <Chart title="Weekly Signups vs Paid" sub="Last 8 weeks">
-                  <ResponsiveContainer width="100%" height={230}>
-                    <BarChart data={weeklySignups} barGap={4}>
+              {/* ═══ ROW 1: User Growth + Conversion Funnel ═══ */}
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 20 }}>
+                <Chart title="User Growth by Tier (8 Weeks)" sub="Signups color-coded by subscription tier">
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={weeklySignups} barGap={2}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                       <XAxis dataKey="label" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="signups" name="Signups" fill={T.teal} radius={[4, 4, 0, 0]} barSize={14} opacity={0.7} />
-                      <Bar dataKey="paid" name="Paid" fill={T.gold} radius={[4, 4, 0, 0]} barSize={14} />
+                      <Bar dataKey="free" name="Free" stackId="a" fill={T.textMuted} radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="trial" name="Trial" stackId="a" fill={T.blue} radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="pro" name="Pro" stackId="a" fill={T.gold} radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="enterprise" name="Enterprise" stackId="a" fill={T.purple} radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </Chart>
-              </div>
 
-              {/* ── Funnel + Cumulative + Retention ── */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
-                <Chart title="Conversion Funnel">
+                <Chart title="Conversion Funnel" sub="Mixpanel-style journey">
                   <div style={{ padding: "8px 0" }}>
                     {funnelData.map((row, i) => {
                       const maxVal = funnelData[0].value || 1;
                       const pct = Math.round((row.value / maxVal) * 100);
                       return (
-                        <div key={i} style={{ marginBottom: 14 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                            <span style={{ fontSize: 12, color: T.textSecondary }}>{row.label}</span>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: row.color }}>{row.value} <span style={{ fontSize: 10, color: T.textMuted }}>({pct}%)</span></span>
+                        <div key={i} style={{ marginBottom: 12 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                            <span style={{ fontSize: 11, color: T.textSecondary }}>{row.label}</span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: row.color }}>{row.value} <span style={{ fontSize: 9, color: T.textMuted }}>({pct}%)</span></span>
                           </div>
-                          <div style={{ height: 8, borderRadius: 4, background: T.surfaceAlt }}>
-                            <div style={{ width: `${pct}%`, height: "100%", borderRadius: 4, background: row.color, transition: "width 0.7s ease" }} />
+                          <div style={{ height: 6, borderRadius: 3, background: T.surfaceAlt }}>
+                            <div style={{ width: `${pct}%`, height: "100%", borderRadius: 3, background: row.color, transition: "width 0.5s" }} />
                           </div>
                         </div>
                       );
                     })}
-                    <div style={{ marginTop: 16, padding: "10px 12px", borderRadius: 8, background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)" }}>
-                      <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Free → Paid Rate</div>
-                      <div style={{ fontSize: 20, fontWeight: 900, color: T.green, fontFamily: "'Fraunces',serif", marginTop: 2 }}>
-                        {stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0}%
-                      </div>
-                    </div>
-                  </div>
-                </Chart>
-
-                <Chart title="Cumulative User Growth">
-                  <ResponsiveContainer width="100%" height={230}>
-                    <AreaChart data={cumulativeData}>
-                      <defs>
-                        <linearGradient id="gGrow" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={T.teal} stopOpacity={0.25} />
-                          <stop offset="100%" stopColor={T.teal} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                      <XAxis dataKey="date" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Area type="monotone" dataKey="total" stroke={T.teal} fill="url(#gGrow)" strokeWidth={2.5} name="Total Users" dot={{ fill: T.teal, r: 3 }} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </Chart>
-
-                <Chart title="Weekly Retention by Cohort" sub="% active (trial/pro) by signup week">
-                  <div style={{ padding: "8px 0" }}>
-                    {weeklyRetention.length === 0 ? (
-                      <div style={{ textAlign: "center", color: T.textMuted, fontSize: 12, padding: 32 }}>No cohort data yet</div>
-                    ) : weeklyRetention.map((row, i) => (
-                      <div key={i} style={{ marginBottom: 14 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                          <span style={{ fontSize: 12, color: T.textSecondary }}>{row.label} <span style={{ color: T.textMuted }}>({row.total} users)</span></span>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: row.retention >= 50 ? T.green : row.retention >= 20 ? T.gold : T.textMuted }}>{row.retention}%</span>
-                        </div>
-                        <div style={{ height: 8, borderRadius: 4, background: T.surfaceAlt }}>
-                          <div style={{ width: `${row.retention}%`, height: "100%", borderRadius: 4, background: row.retention >= 50 ? T.green : row.retention >= 20 ? T.gold : T.textMuted, transition: "width 0.7s ease" }} />
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 </Chart>
               </div>
 
-              {/* ── Top Projects by Lead Interest ── */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
-                <Section title="Top Projects by Lead Interest" sub={`${leads.length} total leads captured`}>
-                  {topProjects.length === 0 ? (
-                    <div style={{ padding: 24, textAlign: "center", color: T.textMuted, fontSize: 13 }}>No leads captured yet — leads are logged when users click WhatsApp/email on project cards.</div>
+              {/* ═══ ROW 2: COHORT RETENTION HEATMAP ═══ */}
+              <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px", marginBottom: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Cohort Retention Heatmap</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>% of users still active by signup cohort — ChartMogul style</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 10 }}>
+                    <span style={{ color: T.red }}>0%</span>
+                    <div style={{ width: 60, height: 8, borderRadius: 4, background: `linear-gradient(90deg, ${T.red}, ${T.gold}, ${T.green})` }} />
+                    <span style={{ color: T.green }}>100%</span>
+                  </div>
+                </div>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                    <thead>
+                      <tr>
+                        <th style={{ padding: "8px 10px", textAlign: "left", color: T.gold, fontWeight: 600, fontSize: 9, textTransform: "uppercase" }}>Cohort</th>
+                        <th style={{ padding: "8px 10px", textAlign: "center", color: T.textMuted, fontWeight: 600, fontSize: 9 }}>Users</th>
+                        {[0, 1, 2, 3, 4, 5, 6, 7].map(w => (
+                          <th key={w} style={{ padding: "8px 10px", textAlign: "center", color: T.textMuted, fontWeight: 600, fontSize: 9 }}>Wk {w}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cohortHeatmap.map((cohort, ci) => (
+                        <tr key={ci}>
+                          <td style={{ padding: "6px 10px", color: T.textSecondary, fontWeight: 500 }}>{cohort.label}</td>
+                          <td style={{ padding: "6px 10px", textAlign: "center", color: T.white, fontWeight: 600 }}>{cohort.users}</td>
+                          {[0, 1, 2, 3, 4, 5, 6, 7].map(w => {
+                            const weekData = cohort.weeks.find(wk => wk.week === w);
+                            if (!weekData) return <td key={w} style={{ padding: "6px 10px", textAlign: "center", color: T.textMuted }}>—</td>;
+                            const pct = w === 0 ? 100 : weekData.pct;
+                            const bgColor = pct >= 70 ? T.green : pct >= 40 ? T.gold : pct >= 20 ? T.orange : T.red;
+                            return (
+                              <td key={w} style={{ padding: "4px" }}>
+                                <div style={{ padding: "6px 8px", borderRadius: 6, background: `${bgColor}25`, color: bgColor, fontWeight: 700, textAlign: "center" }}>{pct}%</div>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* ═══ ROW 3: Geographic + Tier Movement + Churn Timing ═══ */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
+                {/* Geographic Heatmap */}
+                <Chart title="Signups by Country" sub="Top 10 countries">
+                  {geoData.length === 0 ? (
+                    <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>No country data</div>
                   ) : (
-                    <div>
-                      {topProjects.map((p, i) => {
-                        const maxCount = topProjects[0]?.count || 1;
+                    <div style={{ padding: "8px 0" }}>
+                      {geoData.map((g, i) => {
+                        const maxCount = geoData[0]?.count || 1;
                         return (
-                          <div key={i} className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < topProjects.length - 1 ? `1px solid ${T.border}` : "none", animationDelay: `${i * 0.04}s` }}>
-                            <div style={{ width: 24, height: 24, borderRadius: 6, background: T.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: i < 3 ? T.gold : T.textMuted, flexShrink: 0 }}>#{i + 1}</div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
-                              <div style={{ height: 4, borderRadius: 2, background: T.surfaceAlt }}>
-                                <div style={{ width: `${Math.round((p.count / maxCount) * 100)}%`, height: "100%", borderRadius: 2, background: i < 3 ? T.gold : T.teal }} />
-                              </div>
+                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, cursor: "pointer" }}
+                            onClick={() => { setTab("users"); notify(`Filter: ${g.country}`); }}>
+                            <span style={{ fontSize: 11, color: T.textSecondary, width: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.country}</span>
+                            <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.surfaceAlt }}>
+                              <div style={{ width: `${Math.round((g.count / maxCount) * 100)}%`, height: "100%", borderRadius: 3, background: i < 3 ? T.gold : T.teal }} />
                             </div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: T.gold, flexShrink: 0 }}>{p.count}</div>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: T.white, width: 30, textAlign: "right" }}>{g.count}</span>
                           </div>
                         );
                       })}
                     </div>
                   )}
-                </Section>
+                </Chart>
 
-                {/* Revenue projection */}
-                <Chart title="Revenue Projection (If Trials Convert)" sub="Based on 30% trial-to-paid assumption">
-                  <ResponsiveContainer width="100%" height={240}>
-                    <AreaChart data={revenueProjection}>
-                      <defs>
-                        <linearGradient id="gRevProj" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={T.green} stopOpacity={0.3} />
-                          <stop offset="100%" stopColor={T.green} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                      <XAxis dataKey="month" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <Tooltip content={<CustomTooltip />} formatter={(v) => [`AED ${v}`, "MRR"]} />
-                      <Area type="monotone" dataKey="revenue" stroke={T.green} fill="url(#gRevProj)" strokeWidth={2.5} name="Projected MRR" dot={{ fill: T.green, r: 4 }} />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                {/* Tier Movement Flow */}
+                <Chart title="Tier Movement" sub="Upgrades and downgrades">
+                  <div style={{ padding: "12px 0" }}>
+                    {[
+                      { label: "Free → Trial", value: tierMovement.freeToTrial, color: T.blue, icon: "↑" },
+                      { label: "Trial → Pro", value: tierMovement.trialToPro, color: T.green, icon: "↑" },
+                      { label: "Pro → Enterprise", value: tierMovement.proToEnt, color: T.purple, icon: "↑" },
+                      { label: "Trial → Free (churn)", value: tierMovement.trialToFree, color: T.red, icon: "↓" },
+                      { label: "Pro → Free (churn)", value: tierMovement.proToFree, color: T.red, icon: "↓" },
+                    ].map((m, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 12, color: m.color }}>{m.icon}</span>
+                          <span style={{ fontSize: 11, color: T.textSecondary }}>{m.label}</span>
+                        </div>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: m.color }}>{m.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </Chart>
+
+                {/* Churn Timing */}
+                <Chart title="Churn Timing" sub="When users typically leave">
+                  <div style={{ padding: "8px 0" }}>
+                    {churnTiming.map((c, i) => (
+                      <div key={i} style={{ marginBottom: 12 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                          <span style={{ fontSize: 11, color: T.textSecondary }}>{c.period}</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: c.pct > 30 ? T.red : T.textMuted }}>{c.count} ({c.pct}%)</span>
+                        </div>
+                        <div style={{ height: 6, borderRadius: 3, background: T.surfaceAlt }}>
+                          <div style={{ width: `${c.pct}%`, height: "100%", borderRadius: 3, background: c.pct > 30 ? T.red : T.orange }} />
+                        </div>
+                      </div>
+                    ))}
+                    <div style={{ marginTop: 12, padding: "8px 10px", borderRadius: 8, background: "rgba(239,68,68,0.08)", fontSize: 10, color: T.textMuted }}>
+                      Focus retention efforts on highest churn periods
+                    </div>
+                  </div>
                 </Chart>
               </div>
 
-              {/* ── Milestones ── */}
+              {/* ═══ ROW 4: Feature Usage + Top Active Users + Signup Sources ═══ */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
+                {/* Feature Usage */}
+                <Chart title="Feature Usage" sub="Top admin actions from auditLog">
+                  {featureUsage.length === 0 ? (
+                    <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>No usage data yet</div>
+                  ) : (
+                    <div style={{ padding: "8px 0" }}>
+                      {featureUsage.map((f, i) => {
+                        const maxCount = featureUsage[0]?.count || 1;
+                        return (
+                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                            <span style={{ fontSize: 10, color: T.textSecondary, width: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.action.replace(/_/g, " ")}</span>
+                            <div style={{ flex: 1, height: 5, borderRadius: 3, background: T.surfaceAlt }}>
+                              <div style={{ width: `${Math.round((f.count / maxCount) * 100)}%`, height: "100%", borderRadius: 3, background: T.teal }} />
+                            </div>
+                            <span style={{ fontSize: 10, fontWeight: 600, color: T.white, width: 30, textAlign: "right" }}>{f.count}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Chart>
+
+                {/* Top Active Users */}
+                <Chart title="Top Active Users" sub="Most recently active">
+                  {topActiveUsers.length === 0 ? (
+                    <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>No active users</div>
+                  ) : (
+                    <div style={{ padding: "4px 0", maxHeight: 220, overflowY: "auto" }}>
+                      {topActiveUsers.map((u, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: i < topActiveUsers.length - 1 ? `1px solid ${T.border}` : "none", cursor: "pointer" }}
+                          onClick={() => { setTab("users"); setPendingOpenUid(u.uid || u.id); }}>
+                          <div style={{ width: 24, height: 24, borderRadius: "50%", background: `${T.teal}20`, border: `1px solid ${T.teal}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: T.teal }}>
+                            {(u.name || u.email || "?")[0].toUpperCase()}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: T.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{u.name || u.email?.split("@")[0] || "User"}</div>
+                            <div style={{ fontSize: 9, color: T.textMuted }}>{u.tier} · {u.lastLoginAt ? timeSince(new Date(u.lastLoginAt)) : "—"}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Chart>
+
+                {/* Signup Sources */}
+                <Chart title="Signup Sources" sub="How users found us">
+                  {signupSources.length === 0 ? (
+                    <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>No source data</div>
+                  ) : (
+                    <div style={{ padding: "8px 0" }}>
+                      {signupSources.slice(0, 6).map((s, i) => {
+                        const maxCount = signupSources[0]?.count || 1;
+                        return (
+                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                            <span style={{ fontSize: 11, color: T.textSecondary, width: 80 }}>{s.source}</span>
+                            <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.surfaceAlt }}>
+                              <div style={{ width: `${Math.round((s.count / maxCount) * 100)}%`, height: "100%", borderRadius: 3, background: T.purple }} />
+                            </div>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: T.white, width: 30, textAlign: "right" }}>{s.count}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Chart>
+              </div>
+
+              {/* ═══ ROW 5: Milestones ═══ */}
               <Section title="Growth Milestones" sub="Track your progress towards key goals">
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
                   {[
-                    { label: "Platform Launch", target: 1, current: 1, icon: "launch", date: "Mar 2026" },
-                    { label: "First 10 Users", target: 10, current: stats.total, icon: "users" },
-                    { label: "First 50 Users", target: 50, current: stats.total, icon: "target" },
-                    { label: "First Paid User", target: 1, current: stats.paid, icon: "card" },
-                    { label: "100 Users", target: 100, current: stats.total, icon: "hundred" },
-                    { label: "AED 10K MRR", target: 10000, current: mrr, icon: "trophy" },
-                    { label: "500 Users", target: 500, current: stats.total, icon: "⭐" },
-                    { label: "AED 50K MRR", target: 50000, current: mrr, icon: "trophy" },
+                    { label: "Platform Launch", target: 1, current: 1, date: "Mar 2026" },
+                    { label: "First 10 Users", target: 10, current: stats.total },
+                    { label: "First 50 Users", target: 50, current: stats.total },
+                    { label: "First Paid User", target: 1, current: stats.paid },
+                    { label: "100 Users", target: 100, current: stats.total },
+                    { label: "AED 10K MRR", target: 10000, current: mrr },
+                    { label: "500 Users", target: 500, current: stats.total },
+                    { label: "AED 50K MRR", target: 50000, current: mrr },
                   ].map((m, i) => {
                     const done = m.current >= m.target;
                     const pct = Math.min(Math.round((m.current / m.target) * 100), 100);
                     return (
-                      <div key={i} className="chart-box fade-up" style={{ padding: 16, animationDelay: `${i * 0.04}s`, border: done ? `1px solid rgba(16,185,129,0.3)` : `1px solid ${T.border}` }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                          <span style={{ fontSize: 10, fontWeight: 800, color: T.gold, fontFamily: "'Outfit',sans-serif", letterSpacing: 0.5 }}>{m.icon === "trophy" ? "MRR" : m.icon === "launch" ? "GO" : m.icon === "users" || m.icon === "user" ? "USR" : m.icon === "target" ? "50" : m.icon === "card" ? "PAY" : m.icon === "hundred" ? "100" : m.label.slice(0,3).toUpperCase()}</span>
-                          {done
-                            ? <span style={{ fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green }}>✓ Done</span>
-                            : <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted }}>{pct}%</span>
-                          }
+                      <div key={i} className="chart-box fade-up" style={{ padding: 14, animationDelay: `${i * 0.04}s`, border: done ? `1px solid rgba(16,185,129,0.3)` : `1px solid ${T.border}` }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                          <span style={{ fontSize: 9, fontWeight: 800, color: T.gold, letterSpacing: 0.5 }}>{i + 1}</span>
+                          {done ? <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "rgba(16,185,129,0.12)", color: T.green }}>✓</span> : <span style={{ fontSize: 9, color: T.textMuted }}>{pct}%</span>}
                         </div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: done ? T.white : T.textSecondary, marginBottom: 6 }}>{m.label}</div>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: done ? T.white : T.textSecondary, marginBottom: 6 }}>{m.label}</div>
                         <div style={{ height: 4, borderRadius: 2, background: T.surfaceAlt }}>
-                          <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: done ? T.green : T.gold, transition: "width 0.5s" }} />
+                          <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: done ? T.green : T.gold }} />
                         </div>
-                        {!done && m.target > 1 && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 5 }}>{(m.target - m.current).toLocaleString()} to go</div>}
-                        {m.date && <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>{m.date}</div>}
+                        {m.date && <div style={{ fontSize: 9, color: T.green, marginTop: 4 }}>{m.date}</div>}
                       </div>
                     );
                   })}
