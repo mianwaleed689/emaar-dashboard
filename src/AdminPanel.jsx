@@ -703,6 +703,78 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
       ? Math.round(resolvedInRange.reduce((sum, t) => sum + (new Date(t.resolvedAt) - new Date(t.createdAt)), 0) / resolvedInRange.length / 1000 / 60 / 60 * 10) / 10
       : null;
     
+    // Phase 4B: Agent Performance
+    const agentMap = {};
+    rangeTickets.forEach(t => {
+      if (t.assignedTo) {
+        if (!agentMap[t.assignedTo]) {
+          agentMap[t.assignedTo] = {
+            id: t.assignedTo,
+            name: t.assignedToName || t.assignedTo,
+            assigned: 0,
+            resolved: 0,
+            totalResolutionTime: 0,
+            slaCompliant: 0,
+            slaBreach: 0,
+          };
+        }
+        agentMap[t.assignedTo].assigned++;
+        
+        if (t.resolvedAt) {
+          agentMap[t.assignedTo].resolved++;
+          const hours = (new Date(t.resolvedAt) - new Date(t.createdAt)) / 1000 / 60 / 60;
+          agentMap[t.assignedTo].totalResolutionTime += hours;
+          if (hours <= slaSettings.defaultHours) {
+            agentMap[t.assignedTo].slaCompliant++;
+          } else {
+            agentMap[t.assignedTo].slaBreach++;
+          }
+        }
+      }
+    });
+    
+    const agentPerformance = Object.values(agentMap).map(agent => ({
+      ...agent,
+      avgResolution: agent.resolved > 0 ? Math.round(agent.totalResolutionTime / agent.resolved * 10) / 10 : null,
+      slaPercent: (agent.slaCompliant + agent.slaBreach) > 0 
+        ? Math.round(agent.slaCompliant / (agent.slaCompliant + agent.slaBreach) * 100) 
+        : 100,
+      resolutionRate: agent.assigned > 0 ? Math.round(agent.resolved / agent.assigned * 100) : 0,
+    })).sort((a, b) => b.resolved - a.resolved);
+    
+    // SLA Trend (daily compliance %)
+    const slaTrend = [];
+    for (let i = Math.min(rangeDays, 14) - 1; i >= 0; i--) {
+      const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+      const dayResolved = tickets.filter(t => {
+        if (!t.resolvedAt) return false;
+        const resolved = new Date(t.resolvedAt);
+        return resolved >= dayStart && resolved < dayEnd;
+      });
+      const dayCompliant = dayResolved.filter(t => {
+        const hours = (new Date(t.resolvedAt) - new Date(t.createdAt)) / 1000 / 60 / 60;
+        return hours <= slaSettings.defaultHours;
+      }).length;
+      slaTrend.push({
+        date: dayStart.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        compliance: dayResolved.length > 0 ? Math.round(dayCompliant / dayResolved.length * 100) : 100,
+        resolved: dayResolved.length,
+      });
+    }
+    
+    // Workload distribution (current open tickets per agent)
+    const workloadMap = {};
+    tickets.filter(t => t.status === "open" || t.status === "in_progress").forEach(t => {
+      const agentId = t.assignedTo || "unassigned";
+      const agentName = t.assignedToName || (agentId === "unassigned" ? "Unassigned" : agentId);
+      if (!workloadMap[agentId]) {
+        workloadMap[agentId] = { id: agentId, name: agentName, count: 0 };
+      }
+      workloadMap[agentId].count++;
+    });
+    const workloadDistribution = Object.values(workloadMap).sort((a, b) => b.count - a.count);
+    
     return {
       total: rangeTickets.length,
       volumeChange,
@@ -715,6 +787,9 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
       slaChange: slaPercent - prevSlaPercent,
       avgResolutionHrs,
       resolvedCount: resolvedInRange.length,
+      agentPerformance,
+      slaTrend,
+      workloadDistribution,
     };
   };
   
@@ -1942,6 +2017,140 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+
+          {/* Agent Performance Table */}
+          <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>👥 Agent Performance</div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>Last {analyticsRange === "7d" ? "7 days" : analyticsRange === "30d" ? "30 days" : "90 days"}</div>
+            </div>
+            {analytics.agentPerformance.length === 0 ? (
+              <div style={{ padding: 30, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No agent data available</div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ borderBottom: `1px solid ${T.border}` }}>
+                      <th style={{ textAlign: "left", padding: "10px 12px", color: T.textMuted, fontWeight: 600, fontSize: 10, textTransform: "uppercase" }}>Agent</th>
+                      <th style={{ textAlign: "center", padding: "10px 12px", color: T.textMuted, fontWeight: 600, fontSize: 10, textTransform: "uppercase" }}>Assigned</th>
+                      <th style={{ textAlign: "center", padding: "10px 12px", color: T.textMuted, fontWeight: 600, fontSize: 10, textTransform: "uppercase" }}>Resolved</th>
+                      <th style={{ textAlign: "center", padding: "10px 12px", color: T.textMuted, fontWeight: 600, fontSize: 10, textTransform: "uppercase" }}>Resolution Rate</th>
+                      <th style={{ textAlign: "center", padding: "10px 12px", color: T.textMuted, fontWeight: 600, fontSize: 10, textTransform: "uppercase" }}>Avg Time</th>
+                      <th style={{ textAlign: "center", padding: "10px 12px", color: T.textMuted, fontWeight: 600, fontSize: 10, textTransform: "uppercase" }}>SLA %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {analytics.agentPerformance.slice(0, 10).map((agent, idx) => (
+                      <tr key={agent.id} style={{ borderBottom: `1px solid ${T.border}20` }}>
+                        <td style={{ padding: "12px", display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: "50%", background: `${T.purple}20`, display: "flex", alignItems: "center", justifyContent: "center", color: T.purple, fontWeight: 700, fontSize: 12 }}>
+                            {agent.name?.[0]?.toUpperCase() || "?"}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, color: T.white }}>{agent.name}</div>
+                            {idx === 0 && analytics.agentPerformance.length > 1 && (
+                              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold }}>🏆 Top Performer</span>
+                            )}
+                          </div>
+                        </td>
+                        <td style={{ textAlign: "center", padding: "12px", color: T.textSecondary }}>{agent.assigned}</td>
+                        <td style={{ textAlign: "center", padding: "12px", color: T.green, fontWeight: 600 }}>{agent.resolved}</td>
+                        <td style={{ textAlign: "center", padding: "12px" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                            <div style={{ width: 40, height: 6, background: T.border, borderRadius: 3, overflow: "hidden" }}>
+                              <div style={{ height: "100%", width: `${agent.resolutionRate}%`, background: agent.resolutionRate >= 80 ? T.green : agent.resolutionRate >= 50 ? T.orange : T.red, borderRadius: 3 }} />
+                            </div>
+                            <span style={{ fontSize: 11, color: agent.resolutionRate >= 80 ? T.green : agent.resolutionRate >= 50 ? T.orange : T.red, fontWeight: 600 }}>{agent.resolutionRate}%</span>
+                          </div>
+                        </td>
+                        <td style={{ textAlign: "center", padding: "12px", color: agent.avgResolution && agent.avgResolution > slaSettings.defaultHours ? T.red : T.textSecondary }}>
+                          {agent.avgResolution ? `${agent.avgResolution}h` : "—"}
+                        </td>
+                        <td style={{ textAlign: "center", padding: "12px" }}>
+                          <span style={{ padding: "4px 10px", borderRadius: 6, background: agent.slaPercent >= 85 ? `${T.green}20` : agent.slaPercent >= 70 ? `${T.orange}20` : `${T.red}20`, color: agent.slaPercent >= 85 ? T.green : agent.slaPercent >= 70 ? T.orange : T.red, fontWeight: 700, fontSize: 11 }}>
+                            {agent.slaPercent}%
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* SLA Compliance Trend + Workload */}
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
+            {/* SLA Trend Chart */}
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>📈 SLA Compliance Trend</div>
+              <div style={{ height: 180 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={analytics.slaTrend} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
+                    <defs>
+                      <linearGradient id="colorSla" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={T.teal} stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor={T.teal} stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+                    <XAxis dataKey="date" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={{ stroke: T.border }} tickLine={false} />
+                    <YAxis domain={[0, 100]} tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={{ stroke: T.border }} tickLine={false} tickFormatter={v => `${v}%`} />
+                    <Tooltip 
+                      contentStyle={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: T.white, fontWeight: 600 }}
+                      formatter={(value, name) => [name === "compliance" ? `${value}%` : value, name === "compliance" ? "SLA %" : "Resolved"]}
+                    />
+                    <Area type="monotone" dataKey="compliance" name="SLA %" stroke={T.teal} fillOpacity={1} fill="url(#colorSla)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginTop: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 12, height: 3, background: T.teal, borderRadius: 2 }} />
+                  <span style={{ fontSize: 10, color: T.textMuted }}>SLA Compliance %</span>
+                </div>
+                <div style={{ padding: "4px 10px", borderRadius: 6, background: analytics.slaPercent >= 85 ? `${T.green}20` : analytics.slaPercent >= 70 ? `${T.orange}20` : `${T.red}20`, color: analytics.slaPercent >= 85 ? T.green : analytics.slaPercent >= 70 ? T.orange : T.red, fontSize: 11, fontWeight: 700 }}>
+                  Current: {analytics.slaPercent}%
+                </div>
+              </div>
+            </div>
+
+            {/* Workload Distribution */}
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>⚖️ Current Workload</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {analytics.workloadDistribution.length === 0 ? (
+                  <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No open tickets</div>
+                ) : (
+                  analytics.workloadDistribution.slice(0, 6).map(agent => {
+                    const maxCount = Math.max(...analytics.workloadDistribution.map(a => a.count));
+                    const isOverloaded = agent.count > 10;
+                    return (
+                      <div key={agent.id}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                          <span style={{ fontSize: 11, color: T.textSecondary, display: "flex", alignItems: "center", gap: 6 }}>
+                            {agent.name}
+                            {isOverloaded && <span style={{ fontSize: 9, padding: "1px 4px", borderRadius: 3, background: `${T.red}20`, color: T.red }}>⚠️</span>}
+                          </span>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: isOverloaded ? T.red : agent.id === "unassigned" ? T.orange : T.white }}>{agent.count}</span>
+                        </div>
+                        <div style={{ height: 6, background: T.border, borderRadius: 3, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${(agent.count / maxCount) * 100}%`, background: isOverloaded ? T.red : agent.id === "unassigned" ? T.orange : T.purple, borderRadius: 3 }} />
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+              {analytics.workloadDistribution.length > 0 && (
+                <div style={{ marginTop: 16, padding: 12, background: T.surfaceAlt, borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 10, color: T.textMuted }}>Total Open</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{analytics.workloadDistribution.reduce((sum, a) => sum + a.count, 0)}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
