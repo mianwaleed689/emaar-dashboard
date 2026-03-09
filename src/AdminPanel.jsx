@@ -2651,8 +2651,12 @@ export default function AdminPanel() {
   const [tabDataEdits, setTabDataEdits] = useState({});
   const [tabDataSaving, setTabDataSaving] = useState(false);
   const [users, setUsers] = useState([]);
-  const [userSearch, setUserSearch] = useState("");
-  const [tierFilter, setTierFilter] = useState("All");
+  const [userSearch, setUserSearch] = useState(() => {
+    try { return localStorage.getItem("admin_userSearch") || ""; } catch { return ""; }
+  });
+  const [tierFilter, setTierFilter] = useState(() => {
+    try { return localStorage.getItem("admin_tierFilter") || "All"; } catch { return "All"; }
+  });
   const [expandedUser, setExpandedUser] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
   const [editUserForm, setEditUserForm] = useState({});
@@ -2707,13 +2711,19 @@ export default function AdminPanel() {
   const [editingCommunityIntel, setEditingCommunityIntel] = useState(null);
   const [communityIntelForm, setCommunityIntelForm] = useState({});
   const [liveYields, setLiveYields] = useState({});
-  const [dataSearch, setDataSearch] = useState("");
+  const [dataSearch, setDataSearch] = useState(() => {
+    try { return localStorage.getItem("admin_dataSearch") || ""; } catch { return ""; }
+  });
   const [dataSaving, setDataSaving] = useState(false);
   const [projectForm, setProjectForm] = useState({});
   const [communityForm, setCommunityForm] = useState({});
   const [yieldForm, setYieldForm] = useState({});
-  const [projectCommunityFilter, setProjectCommunityFilter] = useState("All");
-  const [projectStatusFilter, setProjectStatusFilter] = useState("All");
+  const [projectCommunityFilter, setProjectCommunityFilter] = useState(() => {
+    try { return localStorage.getItem("admin_projectCommunityFilter") || "All"; } catch { return "All"; }
+  });
+  const [projectStatusFilter, setProjectStatusFilter] = useState(() => {
+    try { return localStorage.getItem("admin_projectStatusFilter") || "All"; } catch { return "All"; }
+  });
   const [projectSortKey, setProjectSortKey] = useState("name");
   const [projectSortDir, setProjectSortDir] = useState("asc");
   const [validationErrors, setValidationErrors] = useState({});
@@ -2725,7 +2735,9 @@ export default function AdminPanel() {
   /* ─── KYC VERIFICATION STATE ─── */
   const [verifications, setVerifications] = useState([]);
   const [leads, setLeads] = useState([]);
-  const [verifyFilter, setVerifyFilter] = useState("all"); // all | pending | approved | rejected
+  const [verifyFilter, setVerifyFilter] = useState(() => {
+    try { return localStorage.getItem("admin_verifyFilter") || "all"; } catch { return "all"; }
+  }); // all | pending | approved | rejected
   const [verifySearch, setVerifySearch] = useState("");
   const [reviewingUser, setReviewingUser] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -2745,6 +2757,30 @@ export default function AdminPanel() {
       else localStorage.removeItem("admin_editingCommunity");
     } catch {}
   }, [editingCommunity]);
+
+  useEffect(() => {
+    try { localStorage.setItem("admin_userSearch", userSearch); } catch {}
+  }, [userSearch]);
+
+  useEffect(() => {
+    try { localStorage.setItem("admin_tierFilter", tierFilter); } catch {}
+  }, [tierFilter]);
+
+  useEffect(() => {
+    try { localStorage.setItem("admin_dataSearch", dataSearch); } catch {}
+  }, [dataSearch]);
+
+  useEffect(() => {
+    try { localStorage.setItem("admin_projectCommunityFilter", projectCommunityFilter); } catch {}
+  }, [projectCommunityFilter]);
+
+  useEffect(() => {
+    try { localStorage.setItem("admin_projectStatusFilter", projectStatusFilter); } catch {}
+  }, [projectStatusFilter]);
+
+  useEffect(() => {
+    try { localStorage.setItem("admin_verifyFilter", verifyFilter); } catch {}
+  }, [verifyFilter]);
 
   /* ─── ESCAPE KEY ─── */
   useEffect(() => {
@@ -4935,6 +4971,7 @@ export default function AdminPanel() {
                     <>
                       {/* ══ STATS TOPBAR ══ */}
                       <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 24, overflow: "hidden" }}>
+                        <button type="button" onClick={fetchAuditLog} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "10px 14px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 18px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
                           <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.green, boxShadow: `0 0 8px ${T.green}` }} />
                           <span style={{ fontSize: 11, fontWeight: 700, color: T.green }}>Audit Log Active</span>
@@ -5310,6 +5347,7 @@ export default function AdminPanel() {
                   <>
                     {/* ══ SECTION 1 — REVENUE HEALTH TOPBAR ══ */}
                     <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, flexWrap: "wrap" }}>
+                      <button type="button" onClick={() => { fetchUsers(); fetchAuditLog(); window._revenuePaymentsLoaded = false; notify("Revenue refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, marginRight: 8 }}>{I.refresh}</button>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 14, borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
                         <div style={{ width: 8, height: 8, borderRadius: "50%", background: mrr > 0 ? T.green : T.textMuted, boxShadow: mrr > 0 ? `0 0 6px ${T.green}` : "none" }} />
                         <span style={{ fontSize: 12, fontWeight: 700, color: mrr > 0 ? T.green : T.textMuted }}>{mrr > 0 ? "Generating Revenue" : "Pre-Revenue"}</span>
@@ -7670,7 +7708,9 @@ export default function AdminPanel() {
             return (
             <>
               {/* ── KPI Row ── */}
-              <Section title="Growth Analytics" sub="Platform growth metrics — live from Firestore">
+              <Section title="Growth Analytics" sub="Platform growth metrics — live from Firestore" action={
+                <button type="button" onClick={() => { fetchUsers(); fetchLeads(); notify("Analytics refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
+              }>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12 }}>
                   <KPI label="Weekly Growth" value={`${growthRate}%`} sub={`${stats.thisWeek} signups this week`} color={T.green} delay={1} />
                   <KPI label="MRR" value={`AED ${mrr.toLocaleString()}`} sub={`ARR AED ${arr.toLocaleString()}`} color={T.gold} delay={2} />
