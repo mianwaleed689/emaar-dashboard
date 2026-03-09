@@ -1833,6 +1833,37 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </Modal>
   );
 
+  const CohortDrilldownModal = () => cohortDrilldown && (
+    <Modal onClose={() => setCohortDrilldown(null)} maxWidth={500}>
+      <ModalHeader 
+        title={`Cohort: ${cohortDrilldown.cohortLabel} · Week ${cohortDrilldown.weekNum}`} 
+        sub={`${cohortDrilldown.users.length} users retained`} 
+        onClose={() => setCohortDrilldown(null)} 
+      />
+      <div style={{ padding: "0 24px 24px", maxHeight: 400, overflowY: "auto" }}>
+        {cohortDrilldown.users.map((u, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < cohortDrilldown.users.length - 1 ? `1px solid ${T.border}` : "none" }}>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: `${T.teal}20`, border: `1px solid ${T.teal}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: T.teal }}>
+              {(u.name || u.email || "?")[0].toUpperCase()}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || u.email?.split("@")[0] || "User"}</div>
+              <div style={{ fontSize: 11, color: T.textMuted }}>{u.email}</div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: u.tier === "pro" ? "rgba(212,168,67,0.1)" : u.tier === "enterprise" ? "rgba(139,92,246,0.1)" : "rgba(100,116,139,0.1)", color: u.tier === "pro" ? T.gold : u.tier === "enterprise" ? T.purple : T.textMuted, fontWeight: 700 }}>{u.tier?.toUpperCase()}</div>
+              <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>Last: {u.lastLoginAt ? timeSince(new Date(u.lastLoginAt)) : "Never"}</div>
+            </div>
+          </div>
+        ))}
+        <button type="button" onClick={() => { setCohortDrilldown(null); setTab("users"); }}
+          style={{ width: "100%", marginTop: 16, padding: "10px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+          View All in Users Tab →
+        </button>
+      </div>
+    </Modal>
+  );
+
   /* ══════════════════════════════════════════════
      PROFILE DRAWER — rebuilt for professional SaaS quality
   ══════════════════════════════════════════════ */
@@ -1864,6 +1895,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <AddUserModal />
       <EditUserModal />
       <NotifUserModal />
+      <CohortDrilldownModal />
       <ProfileDrawerComponent
         drawerUser={drawerUser}
         onClose={() => setDrawerUserWithCallback(null)}
@@ -9166,38 +9198,6 @@ export default function AdminPanel() {
                 )}
               </div>
 
-              {/* ═══ Cohort Drilldown Modal ═══ */}
-              {cohortDrilldown && (
-                <Modal onClose={() => setCohortDrilldown(null)} maxWidth={500}>
-                  <ModalHeader 
-                    title={`Cohort: ${cohortDrilldown.cohortLabel} · Week ${cohortDrilldown.weekNum}`} 
-                    sub={`${cohortDrilldown.users.length} users retained`} 
-                    onClose={() => setCohortDrilldown(null)} 
-                  />
-                  <div style={{ padding: "0 24px 24px", maxHeight: 400, overflowY: "auto" }}>
-                    {cohortDrilldown.users.map((u, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < cohortDrilldown.users.length - 1 ? `1px solid ${T.border}` : "none" }}>
-                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: `${T.teal}20`, border: `1px solid ${T.teal}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: T.teal }}>
-                          {(u.name || u.email || "?")[0].toUpperCase()}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || u.email?.split("@")[0] || "User"}</div>
-                          <div style={{ fontSize: 11, color: T.textMuted }}>{u.email}</div>
-                        </div>
-                        <div style={{ textAlign: "right" }}>
-                          <div style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: TIER_BG[u.tier] || "rgba(100,116,139,0.1)", color: TIER_COLOR[u.tier] || T.textMuted, fontWeight: 700 }}>{u.tier?.toUpperCase()}</div>
-                          <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>Last: {u.lastLoginAt ? timeSince(new Date(u.lastLoginAt)) : "Never"}</div>
-                        </div>
-                      </div>
-                    ))}
-                    <button type="button" onClick={() => { setCohortDrilldown(null); setTab("users"); }}
-                      style={{ width: "100%", marginTop: 16, padding: "10px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                      View All in Users Tab →
-                    </button>
-                  </div>
-                </Modal>
-              )}
-
               {/* ═══ ROW 3: Geographic + Tier Movement + Churn ═══ */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
                 <Chart title="Signups by Country" sub={`Top 10 · ${analyticsRange}`}>
@@ -9294,10 +9294,12 @@ export default function AdminPanel() {
                     <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>No active users</div>
                   ) : (
                     <div style={{ padding: "2px 0", maxHeight: 200, overflowY: "auto" }}>
-                      {topActiveUsers.slice(0, 8).map((u, i) => (
+                      {topActiveUsers.slice(0, 8).map((u, i) => {
+                        const tierColor = u.tier === "pro" ? T.gold : u.tier === "enterprise" ? T.purple : u.tier === "pro_trial" ? T.blue : T.teal;
+                        return (
                         <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: i < 7 ? `1px solid ${T.border}` : "none", cursor: "pointer" }}
                           onClick={() => { setTab("users"); setPendingOpenUid(u.uid || u.id); }}>
-                          <div style={{ width: 22, height: 22, borderRadius: "50%", background: `${TIER_COLOR[u.tier] || T.teal}15`, border: `1px solid ${TIER_COLOR[u.tier] || T.teal}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: TIER_COLOR[u.tier] || T.teal }}>
+                          <div style={{ width: 22, height: 22, borderRadius: "50%", background: `${tierColor}15`, border: `1px solid ${tierColor}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: tierColor }}>
                             {(u.name || u.email || "?")[0].toUpperCase()}
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
@@ -9305,7 +9307,8 @@ export default function AdminPanel() {
                           </div>
                           <div style={{ fontSize: 9, color: T.textMuted }}>{u.lastLoginAt ? timeSince(new Date(u.lastLoginAt)) : "—"}</div>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </Chart>
