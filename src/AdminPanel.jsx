@@ -346,6 +346,13 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   const [linkTargetId, setLinkTargetId] = useState("");
   const [linking, setLinking] = useState(false);
 
+  // Phase 2B: Custom Fields
+  const [customFields, setCustomFields] = useState([]);
+  const [showFieldsModal, setShowFieldsModal] = useState(false);
+  const [editingField, setEditingField] = useState(null);
+  const [newFieldForm, setNewFieldForm] = useState({ name: "", type: "text", options: "", required: false });
+  const [customFieldFilter, setCustomFieldFilter] = useState({ fieldId: "", value: "" });
+
   // Predefined tags
   const availableTags = [
     { id: "urgent", label: "Urgent", color: T.red },
@@ -429,6 +436,26 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     fetchTickets();
   }, [db]);
 
+  // Fetch custom field definitions
+  useEffect(() => {
+    const fetchCustomFields = async () => {
+      try {
+        const snap = await getDocs(collection(db, "supportCustomFields"));
+        setCustomFields(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      } catch (e) {
+        console.error("Fetch custom fields:", e);
+        // Default sample fields
+        setCustomFields([
+          { id: "field_1", name: "Browser", type: "dropdown", options: ["Chrome", "Firefox", "Safari", "Edge", "Other"], required: false, createdAt: new Date().toISOString() },
+          { id: "field_2", name: "Device", type: "dropdown", options: ["Desktop", "Mobile", "Tablet"], required: false, createdAt: new Date().toISOString() },
+          { id: "field_3", name: "Version", type: "text", required: false, createdAt: new Date().toISOString() },
+          { id: "field_4", name: "Due Date", type: "date", required: false, createdAt: new Date().toISOString() },
+        ]);
+      }
+    };
+    fetchCustomFields();
+  }, [db]);
+
   // Computed stats
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -449,7 +476,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   // Get all unique tags from tickets
   const allUsedTags = [...new Set(tickets.flatMap(t => t.tags || []))];
 
-  // Filter tickets
+  // Filter tickets (including custom field filter)
   const filteredTickets = tickets.filter(t => {
     if (supportSubTab === "open" && t.status !== "open" && t.status !== "in_progress") return false;
     if (supportSubTab === "resolved" && t.status !== "resolved" && t.status !== "closed") return false;
@@ -459,6 +486,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     if (assignmentFilter !== "all") {
       if (assignmentFilter === "unassigned" && t.assignedTo) return false;
       if (assignmentFilter !== "unassigned" && t.assignedTo !== assignmentFilter) return false;
+    }
+    // Custom field filter
+    if (customFieldFilter.fieldId && customFieldFilter.value) {
+      const ticketFieldValue = (t.customFields || {})[customFieldFilter.fieldId];
+      if (!ticketFieldValue || !ticketFieldValue.toLowerCase().includes(customFieldFilter.value.toLowerCase())) return false;
     }
     if (ticketSearch) {
       const s = ticketSearch.toLowerCase();
@@ -975,6 +1007,79 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     );
   };
 
+  // Phase 2B: Custom Field Management
+  const saveCustomField = async () => {
+    if (!newFieldForm.name.trim()) {
+      notify("Field name is required");
+      return;
+    }
+    
+    try {
+      const fieldData = {
+        name: newFieldForm.name.trim(),
+        type: newFieldForm.type,
+        options: newFieldForm.type === "dropdown" ? newFieldForm.options.split(",").map(o => o.trim()).filter(o => o) : [],
+        required: newFieldForm.required,
+        updatedAt: new Date().toISOString()
+      };
+      
+      if (editingField) {
+        // Update existing
+        await setDoc(doc(db, "supportCustomFields", editingField.id), fieldData, { merge: true });
+        setCustomFields(prev => prev.map(f => f.id === editingField.id ? { ...f, ...fieldData } : f));
+        notify("Field updated");
+      } else {
+        // Create new
+        fieldData.createdAt = new Date().toISOString();
+        const docRef = await addDoc(collection(db, "supportCustomFields"), fieldData);
+        setCustomFields(prev => [...prev, { id: docRef.id, ...fieldData }]);
+        notify("Field created");
+      }
+      
+      setNewFieldForm({ name: "", type: "text", options: "", required: false });
+      setEditingField(null);
+    } catch (e) {
+      notify("Error: " + e.message);
+    }
+  };
+
+  const deleteCustomField = async (fieldId) => {
+    if (!confirm("Delete this custom field? This won't remove data from existing tickets.")) return;
+    
+    try {
+      await deleteDoc(doc(db, "supportCustomFields", fieldId));
+      setCustomFields(prev => prev.filter(f => f.id !== fieldId));
+      notify("Field deleted");
+    } catch (e) {
+      notify("Error: " + e.message);
+    }
+  };
+
+  const editCustomField = (field) => {
+    setEditingField(field);
+    setNewFieldForm({
+      name: field.name,
+      type: field.type,
+      options: (field.options || []).join(", "),
+      required: field.required || false
+    });
+  };
+
+  // Update ticket custom field value
+  const updateTicketCustomField = async (ticketId, fieldId, value) => {
+    try {
+      const ticket = tickets.find(t => t.id === ticketId) || ticketDrawer;
+      const currentFields = ticket?.customFields || {};
+      const updatedFields = { ...currentFields, [fieldId]: value };
+      
+      await setDoc(doc(db, "supportTickets", ticketId), { customFields: updatedFields, updatedAt: new Date().toISOString() }, { merge: true });
+      setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, customFields: updatedFields } : t));
+      if (ticketDrawer?.id === ticketId) setTicketDrawer(prev => ({ ...prev, customFields: updatedFields }));
+    } catch (e) {
+      notify("Error: " + e.message);
+    }
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* KPI TOPBAR */}
@@ -1035,6 +1140,22 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             <option value="unassigned">👤 Unassigned</option>
             {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>👤 {a.name}</option>)}
           </select>
+          {/* Custom Field Filter */}
+          {customFields.length > 0 && (
+            <select value={customFieldFilter.fieldId} onChange={e => setCustomFieldFilter({ fieldId: e.target.value, value: "" })}
+              style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${customFieldFilter.fieldId ? T.cyan : T.border}`, background: T.surfaceAlt, color: customFieldFilter.fieldId ? T.cyan : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+              <option value="">Custom Field...</option>
+              {customFields.map(f => <option key={f.id} value={f.id}>📋 {f.name}</option>)}
+            </select>
+          )}
+          {customFieldFilter.fieldId && (
+            <input value={customFieldFilter.value} onChange={e => setCustomFieldFilter(prev => ({ ...prev, value: e.target.value }))} placeholder="Filter value..."
+              style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.cyan}`, background: T.surfaceAlt, color: T.white, fontSize: 11, width: 100, fontFamily: "'Outfit',sans-serif" }} />
+          )}
+          <button type="button" onClick={() => setShowFieldsModal(true)}
+            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+            ⚙️
+          </button>
         </div>
       </div>
 
@@ -1217,6 +1338,50 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         )}
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Custom Fields Section */}
+              {customFields.length > 0 && (
+                <div style={{ marginTop: 12, padding: "10px 12px", background: `${T.cyan}08`, borderRadius: 8, border: `1px solid ${T.cyan}20` }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: T.cyan, marginBottom: 10, display: "flex", alignItems: "center", gap: 4 }}>
+                    📋 Custom Fields
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    {customFields.map(field => {
+                      const value = (ticketDrawer.customFields || {})[field.id] || "";
+                      return (
+                        <div key={field.id} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          <label style={{ fontSize: 10, color: T.textMuted, display: "flex", alignItems: "center", gap: 4 }}>
+                            {field.name}
+                            {field.required && <span style={{ color: T.red }}>*</span>}
+                          </label>
+                          {field.type === "dropdown" ? (
+                            <select value={value} onChange={e => updateTicketCustomField(ticketDrawer.id, field.id, e.target.value)}
+                              style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surface, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>
+                              <option value="">Select...</option>
+                              {(field.options || []).map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                          ) : field.type === "date" ? (
+                            <input type="date" value={value} onChange={e => updateTicketCustomField(ticketDrawer.id, field.id, e.target.value)}
+                              style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surface, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif" }} />
+                          ) : field.type === "number" ? (
+                            <input type="number" value={value} onChange={e => updateTicketCustomField(ticketDrawer.id, field.id, e.target.value)} placeholder="Enter number..."
+                              style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surface, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif" }} />
+                          ) : field.type === "checkbox" ? (
+                            <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+                              <input type="checkbox" checked={value === "true"} onChange={e => updateTicketCustomField(ticketDrawer.id, field.id, e.target.checked ? "true" : "false")}
+                                style={{ width: 14, height: 14 }} />
+                              <span style={{ fontSize: 11, color: T.textSecondary }}>Yes</span>
+                            </label>
+                          ) : (
+                            <input type="text" value={value} onChange={e => updateTicketCustomField(ticketDrawer.id, field.id, e.target.value)} placeholder="Enter value..."
+                              style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surface, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif" }} />
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1550,6 +1715,120 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: !linkTargetId || linking ? T.border : T.teal, color: T.bg, fontSize: 13, fontWeight: 700, cursor: !linkTargetId || linking ? "not-allowed" : "pointer" }}>
                 {linking ? "Linking..." : "🔗 Link Tickets"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CUSTOM FIELDS MANAGEMENT MODAL */}
+      {showFieldsModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowFieldsModal(false)}>
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 560, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>⚙️ Manage Custom Fields</h3>
+              <button type="button" onClick={() => setShowFieldsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+            </div>
+            
+            <div style={{ padding: 12, background: `${T.cyan}15`, borderRadius: 8, marginBottom: 20 }}>
+              <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
+                Create custom fields to capture additional information on tickets. Fields will appear in the ticket drawer and can be used for filtering.
+              </div>
+            </div>
+            
+            {/* Add/Edit Field Form */}
+            <div style={{ padding: 16, background: T.surfaceAlt, borderRadius: 10, marginBottom: 20 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
+                {editingField ? "✏️ Edit Field" : "➕ Add New Field"}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Field Name</label>
+                  <input value={newFieldForm.name} onChange={e => setNewFieldForm(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Browser, Device, Version..."
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Field Type</label>
+                  <select value={newFieldForm.type} onChange={e => setNewFieldForm(prev => ({ ...prev, type: e.target.value }))}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                    <option value="text">Text</option>
+                    <option value="dropdown">Dropdown</option>
+                    <option value="number">Number</option>
+                    <option value="date">Date</option>
+                    <option value="checkbox">Checkbox</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Required</label>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "10px 0" }}>
+                    <input type="checkbox" checked={newFieldForm.required} onChange={e => setNewFieldForm(prev => ({ ...prev, required: e.target.checked }))}
+                      style={{ width: 16, height: 16 }} />
+                    <span style={{ fontSize: 12, color: T.textSecondary }}>Required field</span>
+                  </label>
+                </div>
+                {newFieldForm.type === "dropdown" && (
+                  <div style={{ gridColumn: "span 2" }}>
+                    <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Options (comma-separated)</label>
+                    <input value={newFieldForm.options} onChange={e => setNewFieldForm(prev => ({ ...prev, options: e.target.value }))} placeholder="Option 1, Option 2, Option 3..."
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                  </div>
+                )}
+                <div style={{ gridColumn: "span 2", display: "flex", gap: 10, marginTop: 8 }}>
+                  {editingField && (
+                    <button type="button" onClick={() => { setEditingField(null); setNewFieldForm({ name: "", type: "text", options: "", required: false }); }}
+                      style={{ padding: "10px 16px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                      Cancel
+                    </button>
+                  )}
+                  <button type="button" onClick={saveCustomField}
+                    style={{ flex: 1, padding: "10px 16px", borderRadius: 6, border: "none", background: T.cyan, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                    {editingField ? "Update Field" : "Add Field"}
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Existing Fields List */}
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
+                📋 Existing Fields ({customFields.length})
+              </div>
+              {customFields.length === 0 ? (
+                <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>
+                  No custom fields yet. Add one above!
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {customFields.map(field => (
+                    <div key={field.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <span style={{ fontSize: 18 }}>
+                          {field.type === "dropdown" ? "📋" : field.type === "date" ? "📅" : field.type === "number" ? "🔢" : field.type === "checkbox" ? "☑️" : "📝"}
+                        </span>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: T.white, display: "flex", alignItems: "center", gap: 6 }}>
+                            {field.name}
+                            {field.required && <span style={{ fontSize: 10, color: T.red }}>*</span>}
+                          </div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>
+                            {field.type.charAt(0).toUpperCase() + field.type.slice(1)}
+                            {field.type === "dropdown" && field.options?.length > 0 && ` • ${field.options.length} options`}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button type="button" onClick={() => editCustomField(field)}
+                          style={{ padding: "6px 12px", borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
+                          Edit
+                        </button>
+                        <button type="button" onClick={() => deleteCustomField(field.id)}
+                          style={{ padding: "6px 12px", borderRadius: 5, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 10, cursor: "pointer" }}>
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
