@@ -2641,7 +2641,9 @@ export default function AdminPanel() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [adminUser, setAdminUser] = useState(null);
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState(() => {
+    try { return localStorage.getItem("admin_tab") || "overview"; } catch { return "overview"; }
+  });
   const [kpiDrill, setKpiDrill] = useState(null); // { title, color, items, chart, actions }
   const [tabSettings, setTabSettings] = useState({});
   const [tabSettingsSaving, setTabSettingsSaving] = useState(false);
@@ -2667,7 +2669,9 @@ export default function AdminPanel() {
   const [showProfile, setShowProfile] = useState(false);
 
   /* ─── DATA MANAGER STATE ─── */
-  const [dataSubTab, setDataSubTab] = useState("data"); // projects | communities | yields
+  const [dataSubTab, setDataSubTab] = useState(() => {
+    try { return localStorage.getItem("admin_dataSubTab") || "projects"; } catch { return "projects"; }
+  }); // projects | communities | yields
   const [phSelId,   setPhSelId]   = useState("");
   const [phLoading, setPhLoading] = useState(false);
   const [phManual,  setPhManual]  = useState({ price: "", ppsf: "", date: "", note: "" });
@@ -2723,6 +2727,15 @@ export default function AdminPanel() {
   const [verifySearch, setVerifySearch] = useState("");
   const [reviewingUser, setReviewingUser] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
+
+  /* ─── PERSIST TAB STATE ─── */
+  useEffect(() => {
+    try { localStorage.setItem("admin_tab", tab); } catch {}
+  }, [tab]);
+
+  useEffect(() => {
+    try { localStorage.setItem("admin_dataSubTab", dataSubTab); } catch {}
+  }, [dataSubTab]);
 
   /* ─── ESCAPE KEY ─── */
   useEffect(() => {
@@ -3545,14 +3558,14 @@ export default function AdminPanel() {
       }
       
       await logAudit(db, { action: "community_combined_update", communityKey }).catch(() => {});
-      notify("Community data saved \u2192 Live on dashboard");
+      notify("Community data saved → Live on dashboard");
       fetchLiveData();
     } catch (e) { notify("Error: " + e.message); }
     setDataSaving(false);
   };
 
   const resetCombinedCommunity = async (key) => {
-    if (!window.confirm("\u26A0 RESET COMMUNITY: " + key + "\n\nThis will remove ALL custom data (yields, rents, lifestyle info) and revert to data.js defaults.\n\nContinue?")) return;
+    if (!window.confirm("⚠ RESET COMMUNITY: " + key + "\n\nThis will remove ALL custom data (yields, rents, lifestyle info) and revert to data.js defaults.\n\nContinue?")) return;
     try {
       await deleteDoc(doc(db, "communityROI", key));
       await deleteDoc(doc(db, "communityIntel", key));
@@ -6496,7 +6509,7 @@ export default function AdminPanel() {
                   <div style={{ position: "fixed", top: 60, left: 240, right: 0, bottom: 0, display: "flex", zIndex: 50, background: "#04090F" }}>
 
                     {/* ══════════════════════════════
-                        LEFT NAV \u2014 Community List
+                        LEFT NAV — Community List
                     ══════════════════════════════ */}
                     <div style={{ width: 280, flexShrink: 0, background: "#060D1A", borderRight: "1px solid rgba(212,168,67,0.1)", display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
 
@@ -6532,7 +6545,7 @@ export default function AdminPanel() {
                                   : <span style={{ fontSize: 8, fontWeight: 600, padding: "2px 6px", borderRadius: 4, background: "rgba(100,116,139,0.1)", color: "#475569", flexShrink: 0, marginLeft: 6 }}>DEFAULT</span>}
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                                <span style={{ fontSize: 13, fontWeight: 700, color: isActive ? "#D4A843" : "#94A3B8" }}>{avgYield ? avgYield.toFixed(1) + "%" : intel.avgYield || "\u2014"}</span>
+                                <span style={{ fontSize: 13, fontWeight: 700, color: isActive ? "#D4A843" : "#94A3B8" }}>{avgYield ? avgYield.toFixed(1) + "%" : intel.avgYield || "—"}</span>
                                 {roi.goldenVisa && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 3, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700 }}>VISA</span>}
                                 <span style={{ fontSize: 10, color: roi.riskLevel === "Low" ? "#10B981" : roi.riskLevel === "Medium" ? "#F59E0B" : "#64748B" }}>{roi.riskLevel || ""}</span>
                               </div>
@@ -6549,7 +6562,7 @@ export default function AdminPanel() {
                     </div>
 
                     {/* ══════════════════════════════
-                        RIGHT \u2014 Combined Editor
+                        RIGHT — Combined Editor
                     ══════════════════════════════ */}
                     <div style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100%", scrollbarWidth: "thin" }}>
 
@@ -6561,11 +6574,15 @@ export default function AdminPanel() {
                           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                             <span style={{ width: 8, height: 8, borderRadius: "50%", background: hasAnyOverride ? "#10B981" : "#475569", boxShadow: hasAnyOverride ? "0 0 8px #10B981" : "none" }} />
                             <span style={{ fontSize: 12, color: hasAnyOverride ? "#10B981" : "#64748B" }}>
-                              {hasAnyOverride ? "Live \u2014 dashboard shows your custom data" : "Default \u2014 showing data.js values"}
+                              {hasAnyOverride ? "Live — dashboard shows your custom data" : "Default — showing data.js values"}
                             </span>
                           </div>
                         </div>
                         <div style={{ display: "flex", gap: 10 }}>
+                          <button type="button" onClick={fetchLiveData}
+                            style={{ fontSize: 12, padding: "10px 18px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.3)", background: "rgba(212,168,67,0.06)", color: "#D4A843", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                            {I.refresh} Refresh
+                          </button>
                           {hasAnyOverride && (
                             <button type="button" onClick={() => resetCombinedCommunity(activeKey)}
                               style={{ fontSize: 12, padding: "10px 18px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.25)", background: "rgba(239,68,68,0.06)", color: "#EF4444", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
@@ -6574,7 +6591,7 @@ export default function AdminPanel() {
                           )}
                           <button type="button" disabled={dataSaving} onClick={() => saveCombinedCommunity(activeKey, communityForm, communityIntelForm)}
                             style={{ fontSize: 14, padding: "11px 28px", borderRadius: 9, border: "none", background: "linear-gradient(135deg,#D4A843,#B8860B)", color: "#000", fontWeight: 800, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", boxShadow: "0 6px 24px rgba(212,168,67,0.3)" }}>
-                            {dataSaving ? "Saving..." : "Publish \u2192 Live"}
+                            {dataSaving ? "Saving..." : "Publish → Live"}
                           </button>
                         </div>
                       </div>
@@ -6796,7 +6813,7 @@ export default function AdminPanel() {
                           </div>
                           <button type="button" disabled={dataSaving} onClick={() => saveCombinedCommunity(activeKey, communityForm, communityIntelForm)}
                             style={{ fontSize: 14, padding: "12px 36px", borderRadius: 9, border: "none", background: "linear-gradient(135deg,#D4A843,#B8860B)", color: "#000", fontWeight: 800, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", boxShadow: "0 6px 28px rgba(212,168,67,0.32)" }}>
-                            {dataSaving ? "Publishing..." : "Publish \u2192 Goes Live Now"}
+                            {dataSaving ? "Publishing..." : "Publish → Goes Live Now"}
                           </button>
                         </div>
 
@@ -7161,7 +7178,7 @@ export default function AdminPanel() {
 
               {/* Data sync info */}
               {dataSubTab !== "communities" && <div className="chart-box fade-up" style={{ padding: 16, marginTop: 8, display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ fontSize: 24 }}>{"\u2139"}</div>
+                <div style={{ fontSize: 24 }}>ℹ</div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>How Live Data Works</div>
                   <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6 }}>
@@ -8319,7 +8336,7 @@ export default function AdminPanel() {
                 <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8 }}>PREVIEW</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 13, color: T.textSecondary }}>Original: AED 1,000,000</span>
-                  <span style={{ color: bulkPriceChange >= 0 ? T.green : T.red }}>{"\u2192"}</span>
+                  <span style={{ color: bulkPriceChange >= 0 ? T.green : T.red }}>{"→"}</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: bulkPriceChange >= 0 ? T.green : T.red }}>
                     New: AED {bulkChangeType === "percent" ? (1000000 * (1 + bulkPriceChange / 100)).toLocaleString() : (1000000 + bulkPriceChange).toLocaleString()}
                   </span>
