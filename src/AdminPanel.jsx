@@ -6146,6 +6146,23 @@ export default function AdminPanel() {
                             }} />
                           </label>
                         </div>
+                        {/* Coordinates for new project */}
+                        <div style={{ marginTop: 14, padding: 14, borderRadius: 10, border: "1px solid rgba(20,184,166,0.2)", background: "rgba(20,184,166,0.04)" }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.teal, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Map Coordinates (optional)</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                            <div>
+                              <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Latitude</label>
+                              <input type="number" step="0.000001" placeholder="e.g. 25.197525" value={projectForm.lat || ""} onChange={e => setProjectForm(prev => ({ ...prev, lat: e.target.value }))}
+                                style={{ width: "100%", padding: "8px 10px", background: T.bg, border: "1px solid rgba(20,184,166,0.15)", borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Longitude</label>
+                              <input type="number" step="0.000001" placeholder="e.g. 55.274288" value={projectForm.lng || ""} onChange={e => setProjectForm(prev => ({ ...prev, lng: e.target.value }))}
+                                style={{ width: "100%", padding: "8px 10px", background: T.bg, border: "1px solid rgba(20,184,166,0.15)", borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>Right-click on Google Maps to copy coordinates</div>
+                        </div>
                         {/* Duplicate name warning */}
                         {projectForm.name && emaarProjects.some(p => p.name?.toLowerCase() === projectForm.name?.toLowerCase()) && (
                           <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 8, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", fontSize: 11, color: "#EF4444" }}>
@@ -6259,6 +6276,41 @@ export default function AdminPanel() {
                             }} />
                           </label>
                           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>Supports images, PDFs, videos up to 25MB</div>
+                          {/* Direct Image URL input */}
+                          <div style={{ marginTop: 10 }}>
+                            <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Or Paste Image URL</label>
+                            <input type="url" placeholder="https://cloudinary.com/... or any image URL" value={projectForm.imageUrl ?? liveProjects[p.id]?.imageUrl ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, imageUrl: e.target.value }))}
+                              style={{ width: "100%", padding: "8px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                          </div>
+                        </div>
+
+                        {/* ── COORDINATES FOR MAP ── */}
+                        <div style={{ marginTop: 12, padding: 16, borderRadius: 10, border: "1px solid rgba(20,184,166,0.2)", background: "rgba(20,184,166,0.04)" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                            <div>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: T.teal, letterSpacing: 1, textTransform: "uppercase" }}>Map Coordinates</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Set the pin location on the Map tab. Get coordinates from Google Maps.</div>
+                            </div>
+                            <a href={`https://www.google.com/maps/search/${encodeURIComponent((merged.name || p.name) + " Dubai")}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(20,184,166,0.3)", background: "rgba(20,184,166,0.08)" }}>Find on Google Maps ↗</a>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "flex", alignItems: "center" }}>Latitude<HelpTip text="Latitude coordinate (e.g. 25.1234). Right-click on Google Maps and copy the first number." /></label>
+                              <input type="number" step="0.000001" placeholder="e.g. 25.197525" value={projectForm.lat ?? merged.lat ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, lat: e.target.value }))}
+                                style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(20,184,166,0.2)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "flex", alignItems: "center" }}>Longitude<HelpTip text="Longitude coordinate (e.g. 55.2743). Right-click on Google Maps and copy the second number." /></label>
+                              <input type="number" step="0.000001" placeholder="e.g. 55.274288" value={projectForm.lng ?? merged.lng ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, lng: e.target.value }))}
+                                style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(20,184,166,0.2)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                            </div>
+                          </div>
+                          {(projectForm.lat || merged.lat) && (projectForm.lng || merged.lng) && (
+                            <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 10 }}>
+                              <div style={{ fontSize: 10, color: T.green }}>✓ Coordinates set: {projectForm.lat || merged.lat}, {projectForm.lng || merged.lng}</div>
+                              <a href={`https://www.google.com/maps?q=${projectForm.lat || merged.lat},${projectForm.lng || merged.lng}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.teal, textDecoration: "none" }}>Preview on Map ↗</a>
+                            </div>
+                          )}
                         </div>
                         
                           <div style={{ marginTop: 12, padding: 16, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
