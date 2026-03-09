@@ -2713,7 +2713,6 @@ export default function AdminPanel() {
   const [validationErrors, setValidationErrors] = useState({});
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
-  const [priceHistory, setPriceHistory] = useState([]);
 
   /* ─── KYC VERIFICATION STATE ─── */
   const [verifications, setVerifications] = useState([]);
@@ -2806,13 +2805,23 @@ export default function AdminPanel() {
       yieldSnap.forEach(d => { yieldMap[d.id] = plainify(d.data()); });
       setLiveYields(yieldMap);
 
-      // Fetch price history
+      // Fetch price history (keyed by projectId)
       try {
         const histSnap = await getDocs(collection(db, "priceHistory"));
-        const histList = [];
-        histSnap.forEach(d => histList.push({ id: d.id, ...plainify(d.data()) }));
-        histList.sort((a, b) => new Date(b.changedAt || 0) - new Date(a.changedAt || 0));
-        setPriceHistory(histList);
+        const histMap = {};
+        histSnap.forEach(d => {
+          const data = plainify(d.data());
+          const pid = data.projectId || data.pid;
+          if (pid) {
+            if (!histMap[pid]) histMap[pid] = [];
+            histMap[pid].push({ id: d.id, ...data });
+          }
+        });
+        // Sort each project's history by date
+        Object.keys(histMap).forEach(pid => {
+          histMap[pid].sort((a, b) => new Date(b.changedAt || b.recordedAt || 0) - new Date(a.changedAt || a.recordedAt || 0));
+        });
+        setPriceHistory(histMap);
       } catch(e) { console.error("Fetch price history:", e); }
     } catch (e) { console.error("Fetch live data:", e); }
   }, []);
@@ -5831,7 +5840,7 @@ export default function AdminPanel() {
                   { id: "projects", label: "Projects", count: emaarProjects.length, icon: I.projects },
                   { id: "yields", label: "Yields", count: emaarYields.length, icon: I.yields },
                   { id: "communities", label: "Communities", count: Object.keys(defaultCommunityROI).length, icon: I.chart },
-                  { id: "pricehistory", label: "Price History", count: priceHistory.length, icon: I.chart },
+                  { id: "pricehistory", label: "Price History", count: Object.values(priceHistory).reduce((sum, arr) => sum + (arr?.length || 0), 0), icon: I.chart },
                   { id: "communityintel", label: "Intel", count: Object.keys(defaultCommunityIntel).length, icon: I.projects },
                 ].map(st => (
                   <button type="button" key={st.id} onClick={() => { setDataSubTab(st.id); setEditingProject(null); setEditingCommunity(null); setEditingYield(null); setEditingCommunityIntel(null); setBulkSelected([]); }}
