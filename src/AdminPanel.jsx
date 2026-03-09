@@ -400,6 +400,12 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [showAiPanel, setShowAiPanel] = useState(true);
 
+  // Phase 6B: Smart Replies + Similar Tickets
+  const [suggestedReplies, setSuggestedReplies] = useState([]);
+  const [repliesLoading, setRepliesLoading] = useState(false);
+  const [similarTickets, setSimilarTickets] = useState([]);
+  const [showSimilarTickets, setShowSimilarTickets] = useState(false);
+
   // Predefined tags
   const availableTags = [
     { id: "urgent", label: "Urgent", color: T.red },
@@ -2210,6 +2216,173 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     setSummaryLoading(false);
   };
 
+  // Phase 6B: Generate Smart Reply Suggestions
+  const generateSmartReplies = async (ticket) => {
+    if (!ticket) return;
+    
+    setRepliesLoading(true);
+    setSuggestedReplies([]);
+    
+    // Simulate AI processing
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    const sentiment = analyzeSentiment(ticket);
+    const category = ticket.category;
+    const allText = [ticket.subject || "", ...(ticket.messages || []).map(m => m.text || "")].join(" ").toLowerCase();
+    const userName = ticket.userName?.split(" ")[0] || "there";
+    const hasResponded = (ticket.messages || []).some(m => m.from === "admin");
+    
+    const replies = [];
+    
+    // Opening based on sentiment and context
+    if (sentiment.sentiment === "frustrated" || sentiment.sentiment === "urgent") {
+      replies.push({
+        id: "empathy",
+        title: "Empathize & Reassure",
+        tone: "empathetic",
+        preview: `Hi ${userName}, I completely understand how frustrating this must be, and I sincerely apologize for the inconvenience. Let me personally ensure this gets resolved for you right away.`,
+        full: `Hi ${userName},\n\nI completely understand how frustrating this must be, and I sincerely apologize for the inconvenience you've experienced. Please know that I'm treating this as a priority.\n\nLet me personally ensure this gets resolved for you right away. I'm looking into this now and will update you within the next hour.\n\nThank you for your patience.\n\nBest regards,\n${adminUser?.displayName || "Support Team"}`
+      });
+    }
+    
+    // Category-specific replies
+    if (category === "bug" || allText.includes("error") || allText.includes("not working")) {
+      replies.push({
+        id: "troubleshoot",
+        title: "Troubleshooting Steps",
+        tone: "technical",
+        preview: `Hi ${userName}, thanks for reporting this. To help me investigate, could you try these quick steps: 1) Clear your browser cache...`,
+        full: `Hi ${userName},\n\nThank you for bringing this to our attention. I'd like to help you resolve this as quickly as possible.\n\nCould you please try the following steps:\n\n1. Clear your browser cache and cookies\n2. Try using an incognito/private window\n3. If possible, test on a different browser\n\nIf the issue persists after these steps, could you let me know:\n- What browser and version you're using?\n- Any error messages you see?\n- When did this issue start?\n\nThis information will help me investigate further.\n\nBest regards,\n${adminUser?.displayName || "Support Team"}`
+      });
+    }
+    
+    if (category === "billing" || allText.includes("payment") || allText.includes("charge") || allText.includes("refund")) {
+      replies.push({
+        id: "billing",
+        title: "Billing Assistance",
+        tone: "professional",
+        preview: `Hi ${userName}, I've reviewed your account and can help with your billing inquiry. Let me check the details...`,
+        full: `Hi ${userName},\n\nThank you for reaching out about your billing concern. I've pulled up your account and I'm reviewing the details now.\n\nTo ensure I can assist you fully, could you please confirm:\n- The date of the transaction in question\n- The amount you're inquiring about\n- Your preferred resolution\n\nRest assured, we take billing matters very seriously and I'll make sure this is resolved to your satisfaction.\n\nBest regards,\n${adminUser?.displayName || "Support Team"}`
+      });
+    }
+    
+    if (category === "feature" || allText.includes("how to") || allText.includes("how do i")) {
+      replies.push({
+        id: "howto",
+        title: "How-To Guide",
+        tone: "helpful",
+        preview: `Hi ${userName}, great question! Let me walk you through how to do this step by step...`,
+        full: `Hi ${userName},\n\nGreat question! I'd be happy to help you with this.\n\nHere's how you can do it:\n\n1. [Step 1 - Navigate to...]\n2. [Step 2 - Click on...]\n3. [Step 3 - Configure...]\n\nI've also attached a link to our help article that covers this in more detail: [KB Article Link]\n\nIf you run into any issues or have questions along the way, just let me know!\n\nBest regards,\n${adminUser?.displayName || "Support Team"}`
+      });
+    }
+    
+    // Generic acknowledgment if first response
+    if (!hasResponded) {
+      replies.push({
+        id: "acknowledge",
+        title: "Acknowledge & Investigate",
+        tone: "professional",
+        preview: `Hi ${userName}, thank you for contacting us. I've received your request and am looking into it now...`,
+        full: `Hi ${userName},\n\nThank you for contacting DXB Analytics support. I've received your request regarding "${ticket.subject}" and am looking into it now.\n\nI'll review the details and get back to you with a solution or update within the next 24 hours.\n\nIf you have any additional information that might help, please feel free to share it.\n\nBest regards,\n${adminUser?.displayName || "Support Team"}`
+      });
+    }
+    
+    // Escalation option
+    if (sentiment.sentiment === "frustrated" || sentiment.sentiment === "urgent" || (ticket.messages || []).filter(m => m.from === "user").length > 3) {
+      replies.push({
+        id: "escalate",
+        title: "Escalate to Specialist",
+        tone: "reassuring",
+        preview: `Hi ${userName}, I'm escalating this to our senior team to ensure you get the fastest resolution...`,
+        full: `Hi ${userName},\n\nI understand the importance of getting this resolved quickly for you. To ensure you receive the best possible assistance, I'm escalating this to our senior technical team.\n\nThey will review your case with priority and reach out to you directly within the next few hours.\n\nIn the meantime, please don't hesitate to reply here if you have any additional information to share.\n\nThank you for your patience.\n\nBest regards,\n${adminUser?.displayName || "Support Team"}`
+      });
+    }
+    
+    // Resolution reply
+    replies.push({
+      id: "resolved",
+      title: "Mark as Resolved",
+      tone: "positive",
+      preview: `Hi ${userName}, great news! I've resolved the issue. Here's what was done...`,
+      full: `Hi ${userName},\n\nGreat news! I've investigated and resolved the issue you reported.\n\n**What was the problem:**\n[Brief explanation]\n\n**What we did:**\n[Solution applied]\n\n**Next steps:**\nYou should now be able to [expected outcome]. Please try it out and let me know if everything is working as expected.\n\nIf you have any other questions or need further assistance, I'm here to help!\n\nBest regards,\n${adminUser?.displayName || "Support Team"}`
+    });
+    
+    setSuggestedReplies(replies.slice(0, 4)); // Limit to 4 suggestions
+    setRepliesLoading(false);
+  };
+
+  // Phase 6B: Find Similar Tickets
+  const findSimilarTickets = (ticket) => {
+    if (!ticket) return [];
+    
+    const subject = (ticket.subject || "").toLowerCase();
+    const category = ticket.category;
+    const allText = [ticket.subject || "", ...(ticket.messages || []).map(m => m.text || "")].join(" ").toLowerCase();
+    
+    // Extract keywords
+    const stopWords = ["the", "a", "an", "is", "are", "was", "were", "i", "my", "me", "we", "you", "your", "it", "this", "that", "to", "of", "in", "on", "for", "with", "and", "or", "but", "not", "can", "cant", "cannot", "dont", "doesnt", "have", "has", "had"];
+    const words = subject.split(/\s+/).filter(w => w.length > 2 && !stopWords.includes(w));
+    
+    // Find similar tickets (excluding current)
+    const similar = tickets
+      .filter(t => t.id !== ticket.id && (t.status === "resolved" || t.status === "closed"))
+      .map(t => {
+        let score = 0;
+        const tSubject = (t.subject || "").toLowerCase();
+        const tText = [t.subject || "", ...(t.messages || []).map(m => m.text || "")].join(" ").toLowerCase();
+        
+        // Category match
+        if (t.category === category) score += 3;
+        
+        // Keyword matches in subject
+        words.forEach(word => {
+          if (tSubject.includes(word)) score += 2;
+          if (tText.includes(word)) score += 1;
+        });
+        
+        // Common issue patterns
+        const patterns = [
+          { keywords: ["login", "password", "access", "sign in"], weight: 2 },
+          { keywords: ["payment", "billing", "charge", "refund"], weight: 2 },
+          { keywords: ["upgrade", "subscription", "pro", "tier"], weight: 2 },
+          { keywords: ["error", "bug", "crash", "not working"], weight: 2 },
+          { keywords: ["slow", "loading", "performance"], weight: 2 },
+          { keywords: ["data", "export", "import", "csv"], weight: 2 },
+        ];
+        
+        patterns.forEach(pattern => {
+          const currentHas = pattern.keywords.some(k => allText.includes(k));
+          const ticketHas = pattern.keywords.some(k => tText.includes(k));
+          if (currentHas && ticketHas) score += pattern.weight;
+        });
+        
+        // Extract solution if resolved
+        let solution = null;
+        if (t.status === "resolved" || t.status === "closed") {
+          const adminMsgs = (t.messages || []).filter(m => m.from === "admin");
+          if (adminMsgs.length > 0) {
+            const lastAdminMsg = adminMsgs[adminMsgs.length - 1].text || "";
+            solution = lastAdminMsg.length > 100 ? lastAdminMsg.slice(0, 100) + "..." : lastAdminMsg;
+          }
+        }
+        
+        return { ...t, similarityScore: score, solution };
+      })
+      .filter(t => t.similarityScore >= 3)
+      .sort((a, b) => b.similarityScore - a.similarityScore)
+      .slice(0, 5);
+    
+    return similar;
+  };
+
+  // Update similar tickets when drawer opens
+  const updateSimilarTickets = (ticket) => {
+    if (ticket) {
+      const similar = findSimilarTickets(ticket);
+      setSimilarTickets(similar);
+    }
+  };
+
   // Reset summary when ticket changes
   const prevTicketId = ticketDrawer?.id;
   
@@ -3063,7 +3236,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               const slaInfo = getSlaStatus(ticket);
               const sentiment = analyzeSentiment(ticket);
               return (
-                <div key={ticket.id} onClick={() => { setTicketDrawer(ticket); setTicketSummary(null); }}
+                <div key={ticket.id} onClick={() => { setTicketDrawer(ticket); setTicketSummary(null); setSuggestedReplies([]); setSimilarTickets([]); setShowSimilarTickets(false); }}
                   style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", gap: 14, borderLeft: breached ? `3px solid ${T.red}` : "3px solid transparent", transition: "all 0.15s" }}
                   onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
                   onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
@@ -3466,6 +3639,57 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div style={{ fontSize: 11, color: T.teal }}>🔄 Analyzing ticket content...</div>
                   </div>
                 )}
+                
+                {/* Similar Tickets Section */}
+                <div style={{ marginTop: 12 }}>
+                  <button type="button" onClick={() => { if (!showSimilarTickets) updateSimilarTickets(ticketDrawer); setShowSimilarTickets(!showSimilarTickets); }}
+                    style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: showSimilarTickets ? T.surface : "transparent", color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span>🔗 Similar Resolved Tickets {similarTickets.length > 0 && `(${similarTickets.length})`}</span>
+                    <span style={{ fontSize: 10, color: T.textMuted }}>{showSimilarTickets ? "▲" : "▼"}</span>
+                  </button>
+                  
+                  {showSimilarTickets && (
+                    <div style={{ marginTop: 8 }}>
+                      {similarTickets.length === 0 ? (
+                        <div style={{ padding: 16, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                          <div style={{ fontSize: 11, color: T.textMuted }}>No similar resolved tickets found</div>
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          {similarTickets.map(sim => (
+                            <div key={sim.id} style={{ padding: 12, background: T.surface, borderRadius: 8, border: `1px solid ${T.border}`, cursor: "pointer" }}
+                              onClick={() => { setTicketDrawer(sim); setTicketSummary(null); setSuggestedReplies([]); setShowSimilarTickets(false); }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                                <div style={{ fontSize: 12, fontWeight: 600, color: T.white, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {sim.subject}
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                                  <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>✓ Resolved</span>
+                                  <span style={{ fontSize: 9, color: T.textMuted }}>{timeAgo(sim.resolvedAt || sim.updatedAt)}</span>
+                                </div>
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                                <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: `${(categories.find(c => c.id === sim.category) || categories[5]).color}20`, color: (categories.find(c => c.id === sim.category) || categories[5]).color }}>
+                                  {(categories.find(c => c.id === sim.category) || categories[5]).icon} {(categories.find(c => c.id === sim.category) || categories[5]).label}
+                                </span>
+                                <span style={{ fontSize: 9, color: T.textMuted }}>Match score: {sim.similarityScore}</span>
+                              </div>
+                              {sim.solution && (
+                                <div style={{ padding: 8, background: `${T.green}08`, borderRadius: 6, borderLeft: `2px solid ${T.green}` }}>
+                                  <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4 }}>💡 Resolution:</div>
+                                  <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.4 }}>{sim.solution}</div>
+                                </div>
+                              )}
+                              <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
+                                <span style={{ fontSize: 9, color: T.teal }}>Click to view full ticket →</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
             
@@ -3583,12 +3807,57 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           style={{ fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
                           {showTemplates ? "Hide Templates" : "📝 Quick Templates"}
                         </button>
+                        <button type="button" onClick={() => { if (suggestedReplies.length === 0) generateSmartReplies(ticketDrawer); }}
+                          style={{ fontSize: 10, color: T.purple, background: "none", border: "none", cursor: "pointer", textDecoration: suggestedReplies.length > 0 ? "none" : "underline", display: "flex", alignItems: "center", gap: 4 }}>
+                          {repliesLoading ? "⏳ Generating..." : suggestedReplies.length > 0 ? `💡 ${suggestedReplies.length} AI Suggestions` : "💡 Generate Smart Replies"}
+                        </button>
                         {quickResponses.length > 0 && (
                           <span style={{ fontSize: 10, color: T.textMuted }}>
-                            ⚡ {quickResponses.length} quick responses available
+                            ⚡ {quickResponses.length} quick responses
                           </span>
                         )}
                       </div>
+                      
+                      {/* AI Smart Replies Section */}
+                      {suggestedReplies.length > 0 && (
+                        <div style={{ marginBottom: 12, padding: 12, background: `${T.purple}08`, borderRadius: 10, border: `1px solid ${T.purple}20` }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: T.purple }}>💡 AI-Suggested Replies</span>
+                            <button type="button" onClick={() => generateSmartReplies(ticketDrawer)} disabled={repliesLoading}
+                              style={{ fontSize: 9, color: T.textMuted, background: "none", border: "none", cursor: "pointer" }}>
+                              ↻ Regenerate
+                            </button>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            {suggestedReplies.map(reply => (
+                              <div key={reply.id} style={{ padding: 10, background: T.surface, borderRadius: 8, border: `1px solid ${T.border}`, cursor: "pointer", transition: "all 0.15s" }}
+                                onMouseEnter={e => e.currentTarget.style.borderColor = T.purple}
+                                onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
+                                onClick={() => setTicketReply(reply.full)}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                                  <span style={{ fontSize: 11, fontWeight: 600, color: T.white }}>{reply.title}</span>
+                                  <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: 
+                                    reply.tone === "empathetic" ? `${T.red}20` : 
+                                    reply.tone === "technical" ? `${T.teal}20` : 
+                                    reply.tone === "reassuring" ? `${T.orange}20` : 
+                                    `${T.blue}20`, 
+                                    color: reply.tone === "empathetic" ? T.red : 
+                                    reply.tone === "technical" ? T.teal : 
+                                    reply.tone === "reassuring" ? T.orange : 
+                                    T.blue }}>{reply.tone}</span>
+                                </div>
+                                <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                                  {reply.preview}
+                                </div>
+                                <div style={{ marginTop: 6, display: "flex", justifyContent: "flex-end" }}>
+                                  <span style={{ fontSize: 9, color: T.purple }}>Click to use →</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
                       {showTemplates && (
                         <div style={{ marginTop: 8 }}>
                           {/* Static Templates */}
