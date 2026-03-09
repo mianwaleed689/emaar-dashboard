@@ -1833,37 +1833,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </Modal>
   );
 
-  const CohortDrilldownModal = () => cohortDrilldown && (
-    <Modal onClose={() => setCohortDrilldown(null)} maxWidth={500}>
-      <ModalHeader 
-        title={`Cohort: ${cohortDrilldown.cohortLabel} · Week ${cohortDrilldown.weekNum}`} 
-        sub={`${cohortDrilldown.users.length} users retained`} 
-        onClose={() => setCohortDrilldown(null)} 
-      />
-      <div style={{ padding: "0 24px 24px", maxHeight: 400, overflowY: "auto" }}>
-        {cohortDrilldown.users.map((u, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < cohortDrilldown.users.length - 1 ? `1px solid ${T.border}` : "none" }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: `${T.teal}20`, border: `1px solid ${T.teal}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: T.teal }}>
-              {(u.name || u.email || "?")[0].toUpperCase()}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || u.email?.split("@")[0] || "User"}</div>
-              <div style={{ fontSize: 11, color: T.textMuted }}>{u.email}</div>
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: u.tier === "pro" ? "rgba(212,168,67,0.1)" : u.tier === "enterprise" ? "rgba(139,92,246,0.1)" : "rgba(100,116,139,0.1)", color: u.tier === "pro" ? T.gold : u.tier === "enterprise" ? T.purple : T.textMuted, fontWeight: 700 }}>{u.tier?.toUpperCase()}</div>
-              <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>Last: {u.lastLoginAt ? timeSince(new Date(u.lastLoginAt)) : "Never"}</div>
-            </div>
-          </div>
-        ))}
-        <button type="button" onClick={() => { setCohortDrilldown(null); setTab("users"); }}
-          style={{ width: "100%", marginTop: 16, padding: "10px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-          View All in Users Tab →
-        </button>
-      </div>
-    </Modal>
-  );
-
   /* ══════════════════════════════════════════════
      PROFILE DRAWER — rebuilt for professional SaaS quality
   ══════════════════════════════════════════════ */
@@ -1895,7 +1864,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <AddUserModal />
       <EditUserModal />
       <NotifUserModal />
-      <CohortDrilldownModal />
       <ProfileDrawerComponent
         drawerUser={drawerUser}
         onClose={() => setDrawerUserWithCallback(null)}
@@ -4479,6 +4447,41 @@ export default function AdminPanel() {
 
       {/* Toast */}
       <KpiDrillModal />
+      {/* Cohort Drilldown Modal */}
+      {cohortDrilldown && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setCohortDrilldown(null)}>
+          <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth: 500, maxHeight: "90vh", overflowY: "auto", animation: "slideUp 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22 }}>
+              <div>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{`Cohort: ${cohortDrilldown.cohortLabel} · Week ${cohortDrilldown.weekNum}`}</div>
+                <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{`${cohortDrilldown.users.length} users retained`}</div>
+              </div>
+              <button type="button" onClick={() => setCohortDrilldown(null)} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>✕</button>
+            </div>
+            <div style={{ maxHeight: 400, overflowY: "auto" }}>
+              {cohortDrilldown.users.map((u, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < cohortDrilldown.users.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: `${T.teal}20`, border: `1px solid ${T.teal}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: T.teal }}>
+                    {(u.name || u.email || "?")[0].toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || u.email?.split("@")[0] || "User"}</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>{u.email}</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: u.tier === "pro" ? "rgba(212,168,67,0.1)" : u.tier === "enterprise" ? "rgba(139,92,246,0.1)" : "rgba(100,116,139,0.1)", color: u.tier === "pro" ? T.gold : u.tier === "enterprise" ? T.purple : T.textMuted, fontWeight: 700 }}>{u.tier?.toUpperCase()}</div>
+                    <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>Last: {u.lastLoginAt ? timeSince(new Date(u.lastLoginAt)) : "Never"}</div>
+                  </div>
+                </div>
+              ))}
+              <button type="button" onClick={() => { setCohortDrilldown(null); setTab("users"); }}
+                style={{ width: "100%", marginTop: 16, padding: "10px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                View All in Users Tab →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {toast && <div key={toast} className="toast-notify" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: (toast.includes("failed") || toast.includes("Error") || toast.includes("required") || toast.includes("registered") || toast.includes("weak") || toast.includes("invalid") || toast.includes("Invalid") || toast.startsWith("Error:")) ? T.red : T.green, color: T.white, fontWeight: 700, fontSize: 13, zIndex: 99999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>{toast}</div>}
 
       {/* Mobile overlay */}
