@@ -395,6 +395,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   const [expandedKbCategory, setExpandedKbCategory] = useState(null);
   const [viewingArticle, setViewingArticle] = useState(null);
 
+  // Phase 6A: AI Features (Sentiment + Summarization)
+  const [ticketSummary, setTicketSummary] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [showAiPanel, setShowAiPanel] = useState(true);
+
   // Predefined tags
   const availableTags = [
     { id: "urgent", label: "Urgent", color: T.red },
@@ -2052,6 +2057,162 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     articles: filteredKbArticles.filter(a => a.category === cat.id)
   })).filter(g => g.articles.length > 0);
 
+  // Phase 6A: Sentiment Analysis (rule-based)
+  const analyzeSentiment = (ticket) => {
+    if (!ticket) return { sentiment: "neutral", emoji: "😐", color: T.textMuted, label: "Neutral" };
+    
+    const allText = [
+      ticket.subject || "",
+      ...(ticket.messages || []).filter(m => m.from === "user").map(m => m.text || "")
+    ].join(" ").toLowerCase();
+    
+    // Check for urgency indicators
+    const urgentWords = ["asap", "urgent", "emergency", "critical", "deadline", "immediately", "right now", "can't wait"];
+    const frustratedWords = ["frustrated", "angry", "furious", "unacceptable", "ridiculous", "terrible", "worst", "hate", "useless", "waste"];
+    const concernedWords = ["worried", "confused", "unsure", "not sure", "don't understand", "help me", "stuck", "problem"];
+    const positiveWords = ["thank you", "thanks", "great", "amazing", "awesome", "love", "excellent", "perfect", "wonderful", "appreciate"];
+    
+    // Check for ALL CAPS (frustration indicator)
+    const capsRatio = (allText.match(/[A-Z]{3,}/g) || []).length;
+    const hasExcessiveCaps = capsRatio > 2;
+    
+    // Check for multiple exclamation/question marks
+    const hasExcessivePunctuation = (allText.match(/[!?]{2,}/g) || []).length > 0;
+    
+    // Score each sentiment
+    let scores = {
+      urgent: urgentWords.filter(w => allText.includes(w)).length * 3,
+      frustrated: frustratedWords.filter(w => allText.includes(w)).length * 2 + (hasExcessiveCaps ? 2 : 0) + (hasExcessivePunctuation ? 1 : 0),
+      concerned: concernedWords.filter(w => allText.includes(w)).length,
+      positive: positiveWords.filter(w => allText.includes(w)).length,
+    };
+    
+    // Determine sentiment
+    if (scores.urgent >= 3) return { sentiment: "urgent", emoji: "🆘", color: T.red, label: "Urgent", pulse: true };
+    if (scores.frustrated >= 3) return { sentiment: "frustrated", emoji: "😠", color: T.red, label: "Frustrated" };
+    if (scores.concerned >= 2) return { sentiment: "concerned", emoji: "😟", color: T.orange, label: "Concerned" };
+    if (scores.positive >= 2) return { sentiment: "positive", emoji: "😊", color: T.green, label: "Positive" };
+    
+    return { sentiment: "neutral", emoji: "😐", color: T.textMuted, label: "Neutral" };
+  };
+
+  // Phase 6A: AI Priority Recommendation
+  const getAiPriorityRecommendation = (ticket) => {
+    if (!ticket) return null;
+    
+    const sentiment = analyzeSentiment(ticket);
+    const allText = [ticket.subject || "", ...(ticket.messages || []).map(m => m.text || "")].join(" ").toLowerCase();
+    
+    let score = 0;
+    let reasons = [];
+    
+    // Check user tier
+    if (ticket.userTier === "enterprise") { score += 3; reasons.push("Enterprise customer"); }
+    else if (ticket.userTier === "pro") { score += 1; reasons.push("Pro customer"); }
+    
+    // Check sentiment
+    if (sentiment.sentiment === "urgent") { score += 3; reasons.push("Urgent language detected"); }
+    else if (sentiment.sentiment === "frustrated") { score += 2; reasons.push("Customer frustration detected"); }
+    
+    // Check for payment/billing issues
+    if (allText.includes("payment") || allText.includes("billing") || allText.includes("charge") || allText.includes("refund")) {
+      score += 2; reasons.push("Payment-related issue");
+    }
+    
+    // Check for access/login issues
+    if (allText.includes("can't access") || allText.includes("login") || allText.includes("locked out") || allText.includes("password")) {
+      score += 1; reasons.push("Access issue");
+    }
+    
+    // Check for deadline mentions
+    if (allText.includes("deadline") || allText.includes("presentation") || allText.includes("meeting") || allText.includes("tomorrow")) {
+      score += 2; reasons.push("Time-sensitive");
+    }
+    
+    // Determine recommended priority
+    let recommended;
+    if (score >= 5) recommended = "urgent";
+    else if (score >= 3) recommended = "high";
+    else recommended = "normal";
+    
+    return { recommended, score, reasons, currentPriority: ticket.priority || "normal" };
+  };
+
+  // Phase 6A: Generate AI Summary
+  const generateAiSummary = async (ticket) => {
+    if (!ticket) return;
+    
+    setSummaryLoading(true);
+    setTicketSummary(null);
+    
+    // Simulate AI processing delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    const messages = ticket.messages || [];
+    const userMessages = messages.filter(m => m.from === "user");
+    const adminMessages = messages.filter(m => m.from === "admin");
+    const sentiment = analyzeSentiment(ticket);
+    const allUserText = userMessages.map(m => m.text || "").join(" ");
+    
+    // Extract key information
+    const keyPoints = [];
+    
+    // Check for specific patterns
+    if (allUserText.toLowerCase().includes("upgrade") || allUserText.toLowerCase().includes("subscription")) {
+      keyPoints.push("Subscription/upgrade related issue");
+    }
+    if (allUserText.toLowerCase().includes("payment") || allUserText.toLowerCase().includes("charge")) {
+      keyPoints.push("Payment or billing concern mentioned");
+    }
+    if (allUserText.toLowerCase().includes("error") || allUserText.toLowerCase().includes("bug")) {
+      keyPoints.push("Technical error reported");
+    }
+    if (allUserText.toLowerCase().includes("feature") || allUserText.toLowerCase().includes("how to")) {
+      keyPoints.push("Feature or how-to question");
+    }
+    if (allUserText.toLowerCase().includes("deadline") || allUserText.toLowerCase().includes("urgent")) {
+      keyPoints.push("Time pressure mentioned");
+    }
+    
+    // Extract any mentioned browsers/devices
+    const browsers = ["chrome", "firefox", "safari", "edge"].filter(b => allUserText.toLowerCase().includes(b));
+    if (browsers.length > 0) {
+      keyPoints.push(`Browsers tried: ${browsers.join(", ")}`);
+    }
+    
+    // Check for troubleshooting steps already attempted
+    if (allUserText.toLowerCase().includes("tried") || allUserText.toLowerCase().includes("already")) {
+      keyPoints.push("Customer has attempted troubleshooting");
+    }
+    
+    // Build summary
+    const category = categories.find(c => c.id === ticket.category);
+    const summary = {
+      overview: `${ticket.userName || "Customer"} reported a ${category?.label?.toLowerCase() || "support"} issue: "${ticket.subject}". ${userMessages.length > 1 ? `Thread contains ${messages.length} messages over ${timeAgo(ticket.createdAt)}.` : "Initial report."}`,
+      sentiment: sentiment,
+      keyPoints: keyPoints.length > 0 ? keyPoints : ["General inquiry - no specific technical details extracted"],
+      messageCount: { total: messages.length, user: userMessages.length, admin: adminMessages.length },
+      timeline: {
+        created: ticket.createdAt,
+        lastActivity: messages.length > 0 ? messages[messages.length - 1].at : ticket.createdAt,
+        responded: ticket.respondedAt ? true : false,
+      },
+      aiRecommendation: userMessages.length > 2 && !ticket.resolvedAt 
+        ? "Consider escalating - multiple follow-ups from customer" 
+        : userMessages.length === 1 && !adminMessages.length 
+          ? "Awaiting initial response" 
+          : ticket.status === "resolved" 
+            ? "Ticket resolved" 
+            : "Continue investigation",
+    };
+    
+    setTicketSummary(summary);
+    setSummaryLoading(false);
+  };
+
+  // Reset summary when ticket changes
+  const prevTicketId = ticketDrawer?.id;
+  
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* KPI TOPBAR */}
@@ -2900,8 +3061,9 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               const breached = isSlaBreached(ticket);
               const ticketTags = ticket.tags || [];
               const slaInfo = getSlaStatus(ticket);
+              const sentiment = analyzeSentiment(ticket);
               return (
-                <div key={ticket.id} onClick={() => setTicketDrawer(ticket)}
+                <div key={ticket.id} onClick={() => { setTicketDrawer(ticket); setTicketSummary(null); }}
                   style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", gap: 14, borderLeft: breached ? `3px solid ${T.red}` : "3px solid transparent", transition: "all 0.15s" }}
                   onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
                   onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
@@ -2909,6 +3071,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ticket.subject}</span>
+                      {sentiment.sentiment !== "neutral" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${sentiment.color}20`, color: sentiment.color, fontWeight: 600 }}>{sentiment.emoji}</span>}
                       {slaInfo.status === "breached" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>⏰ SLA {slaInfo.percent}%</span>}
                       {slaInfo.status === "warning" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.orange}20`, color: T.orange, fontWeight: 600 }}>⚠️ {slaInfo.percent}%</span>}
                       {ticket.autoAssignedBy && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green, fontWeight: 600 }}>🤖 Auto</span>}
@@ -2981,10 +3144,25 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${(categories.find(c => c.id === ticketDrawer.category) || categories[5]).color}20`, color: (categories.find(c => c.id === ticketDrawer.category) || categories[5]).color }}>{(categories.find(c => c.id === ticketDrawer.category) || categories[5]).icon} {(categories.find(c => c.id === ticketDrawer.category) || categories[5]).label}</span>
                     {isSlaBreached(ticketDrawer) && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>⏰ SLA Breached</span>}
+                    {/* Sentiment Badge */}
+                    {(() => {
+                      const sentiment = analyzeSentiment(ticketDrawer);
+                      return sentiment.sentiment !== "neutral" && (
+                        <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${sentiment.color}20`, color: sentiment.color, fontWeight: 600, animation: sentiment.pulse ? "pulse 1.5s infinite" : "none" }}>
+                          {sentiment.emoji} {sentiment.label}
+                        </span>
+                      );
+                    })()}
                   </div>
                   <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{ticketDrawer.subject}</div>
                 </div>
-                <button type="button" onClick={() => setTicketDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>×</button>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <button type="button" onClick={() => setShowAiPanel(!showAiPanel)}
+                    style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${showAiPanel ? T.teal : T.border}`, background: showAiPanel ? `${T.teal}15` : "transparent", color: showAiPanel ? T.teal : T.textMuted, fontSize: 10, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                    🤖 AI
+                  </button>
+                  <button type="button" onClick={() => setTicketDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>×</button>
+                </div>
               </div>
               
               {/* Status, Priority, Assignment Row */}
@@ -3178,6 +3356,118 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 </div>
               );
             })()}
+            
+            {/* AI Summary Panel */}
+            {showAiPanel && (
+              <div style={{ padding: "16px 24px", background: `${T.teal}08`, borderBottom: `1px solid ${T.teal}20` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: T.teal }}>🤖 AI Insights</span>
+                    {summaryLoading && <span style={{ fontSize: 10, color: T.textMuted }}>Analyzing...</span>}
+                  </div>
+                  <button type="button" onClick={() => generateAiSummary(ticketDrawer)} disabled={summaryLoading}
+                    style={{ padding: "5px 10px", borderRadius: 5, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 10, fontWeight: 600, cursor: summaryLoading ? "not-allowed" : "pointer", opacity: summaryLoading ? 0.5 : 1 }}>
+                    {summaryLoading ? "..." : ticketSummary ? "↻ Refresh" : "Generate Summary"}
+                  </button>
+                </div>
+                
+                {/* Sentiment + Priority Row */}
+                <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+                  {/* Sentiment Card */}
+                  {(() => {
+                    const sentiment = analyzeSentiment(ticketDrawer);
+                    return (
+                      <div style={{ flex: 1, padding: 12, background: T.surface, borderRadius: 8, border: `1px solid ${sentiment.color}30` }}>
+                        <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Sentiment</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 24 }}>{sentiment.emoji}</span>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: sentiment.color }}>{sentiment.label}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted }}>Based on message analysis</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  
+                  {/* AI Priority Recommendation */}
+                  {(() => {
+                    const aiPriority = getAiPriorityRecommendation(ticketDrawer);
+                    if (!aiPriority) return null;
+                    const needsChange = aiPriority.recommended !== aiPriority.currentPriority;
+                    const priorityColors = { urgent: T.red, high: T.orange, normal: T.textMuted };
+                    return (
+                      <div style={{ flex: 1, padding: 12, background: T.surface, borderRadius: 8, border: `1px solid ${needsChange ? T.gold : T.border}30` }}>
+                        <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>AI Priority</div>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: priorityColors[aiPriority.recommended] || T.textMuted, textTransform: "capitalize" }}>
+                              {aiPriority.recommended}
+                            </div>
+                            <div style={{ fontSize: 10, color: T.textMuted }}>
+                              {aiPriority.reasons.slice(0, 2).join(" • ")}
+                            </div>
+                          </div>
+                          {needsChange && aiPriority.recommended !== "normal" && (
+                            <button type="button" onClick={() => updateTicketPriority(ticketDrawer.id, aiPriority.recommended)}
+                              style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.gold}40`, background: `${T.gold}10`, color: T.gold, fontSize: 9, fontWeight: 600, cursor: "pointer" }}>
+                              Apply
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+                
+                {/* AI Summary */}
+                {ticketSummary ? (
+                  <div style={{ padding: 14, background: T.surface, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6, marginBottom: 12 }}>
+                      {ticketSummary.overview}
+                    </div>
+                    
+                    {ticketSummary.keyPoints.length > 0 && (
+                      <div style={{ marginBottom: 12 }}>
+                        <div style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, marginBottom: 6 }}>KEY POINTS</div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          {ticketSummary.keyPoints.map((point, i) => (
+                            <div key={i} style={{ fontSize: 11, color: T.textSecondary, display: "flex", alignItems: "flex-start", gap: 6 }}>
+                              <span style={{ color: T.teal }}>•</span> {point}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 10, borderTop: `1px solid ${T.border}` }}>
+                      <div style={{ display: "flex", gap: 12 }}>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>
+                          <span style={{ color: T.textSecondary }}>{ticketSummary.messageCount.total}</span> messages
+                        </div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>
+                          <span style={{ color: T.textSecondary }}>{ticketSummary.messageCount.user}</span> from user
+                        </div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>
+                          <span style={{ color: T.textSecondary }}>{ticketSummary.messageCount.admin}</span> from support
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${T.teal}20`, color: T.teal, fontWeight: 600 }}>
+                        💡 {ticketSummary.aiRecommendation}
+                      </div>
+                    </div>
+                  </div>
+                ) : !summaryLoading ? (
+                  <div style={{ padding: 16, background: T.surface, borderRadius: 8, border: `1px dashed ${T.border}`, textAlign: "center" }}>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>Click "Generate Summary" to analyze this ticket</div>
+                  </div>
+                ) : (
+                  <div style={{ padding: 16, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                    <div style={{ fontSize: 11, color: T.teal }}>🔄 Analyzing ticket content...</div>
+                  </div>
+                )}
+              </div>
+            )}
             
             {/* Conversation Thread + Internal Notes */}
             <div style={{ flex: 1, overflowY: "auto" }}>
