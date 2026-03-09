@@ -1044,7 +1044,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   };
 
   const deleteCustomField = async (fieldId) => {
-    if (!confirm("Delete this custom field? This won't remove data from existing tickets.")) return;
+    if (!window.confirm("Delete this custom field? This won't remove data from existing tickets.")) return;
     
     try {
       await deleteDoc(doc(db, "supportCustomFields", fieldId));
