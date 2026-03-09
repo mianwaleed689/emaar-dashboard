@@ -6503,7 +6503,7 @@ export default function AdminPanel() {
                       {/* Nav Header */}
                       <div style={{ padding: "22px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                         <div style={{ fontSize: 10, fontWeight: 700, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Communities</div>
-                        <div style={{ fontSize: 12, color: "#64748B" }}>{communities.length} areas \u00B7 {Object.keys(liveCommunityROI).length + Object.keys(liveCommunityIntel).length} live overrides</div>
+                        <div style={{ fontSize: 12, color: "#64748B" }}>{communities.length} areas · {Object.keys(liveCommunityROI).length + Object.keys(liveCommunityIntel).length} live overrides</div>
                       </div>
 
                       {/* Community List */}
@@ -6743,7 +6743,7 @@ export default function AdminPanel() {
                                   <button type="button" onClick={() => {
                                     const arr = (communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? []).filter((_, i) => i !== idx);
                                     setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr }));
-                                  }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>\u00D7</button>
+                                  }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>×</button>
                                 </div>
                               ))}
                             </div>
@@ -6777,7 +6777,7 @@ export default function AdminPanel() {
                                   <button type="button" onClick={() => {
                                     const arr = (communityIntelForm.distances ?? intelMerged.distances ?? []).filter((_, i) => i !== idx);
                                     setCommunityIntelForm(prev => ({ ...prev, distances: arr }));
-                                  }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>\u00D7</button>
+                                  }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>×</button>
                                 </div>
                               ))}
                             </div>
