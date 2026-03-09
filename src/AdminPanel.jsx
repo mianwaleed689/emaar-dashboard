@@ -2713,6 +2713,8 @@ export default function AdminPanel() {
   const [validationErrors, setValidationErrors] = useState({});
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkChangeType, setBulkChangeType] = useState("percent");
+  const [bulkPriceChange, setBulkPriceChange] = useState(0);
 
   /* ─── KYC VERIFICATION STATE ─── */
   const [verifications, setVerifications] = useState([]);
@@ -3458,6 +3460,8 @@ export default function AdminPanel() {
       notify(`${bulkSelected.length} projects updated successfully`);
       setBulkSelected([]);
       setShowBulkModal(false);
+      setBulkPriceChange(0);
+      setBulkChangeType("percent");
       fetchLiveData();
     } catch (e) { notify("Error: " + e.message); }
     setBulkLoading(false);
@@ -8336,55 +8340,46 @@ export default function AdminPanel() {
             
             {/* Content */}
             <div style={{ padding: 24 }}>
-              {(() => {
-                const [bulkChangeType, setBulkChangeType] = React.useState("percent");
-                const [bulkPriceChange, setBulkPriceChange] = React.useState(0);
-                
-                return (
-                  <>
-                    <div style={{ marginBottom: 20 }}>
-                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Change Type</label>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button type="button" onClick={() => setBulkChangeType("percent")}
-                          style={{ flex: 1, padding: 10, borderRadius: 8, border: `1px solid ${bulkChangeType === "percent" ? T.gold : T.border}`, background: bulkChangeType === "percent" ? `${T.gold}15` : "transparent", color: bulkChangeType === "percent" ? T.gold : T.textMuted, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                          Percentage (%)
-                        </button>
-                        <button type="button" onClick={() => setBulkChangeType("fixed")}
-                          style={{ flex: 1, padding: 10, borderRadius: 8, border: `1px solid ${bulkChangeType === "fixed" ? T.gold : T.border}`, background: bulkChangeType === "fixed" ? `${T.gold}15` : "transparent", color: bulkChangeType === "fixed" ? T.gold : T.textMuted, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                          Fixed (AED)
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div style={{ marginBottom: 20 }}>
-                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>{bulkChangeType === "percent" ? "Price Change (%)" : "Price Change (AED)"}</label>
-                      <input type="number" value={bulkPriceChange} onChange={e => setBulkPriceChange(parseFloat(e.target.value) || 0)} placeholder={bulkChangeType === "percent" ? "+5 or -5" : "+50000 or -50000"}
-                        style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: bulkPriceChange >= 0 ? T.green : T.red, fontSize: 18, fontWeight: 700, textAlign: "center", fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                    </div>
-                    
-                    <div style={{ padding: 12, borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}`, marginBottom: 20 }}>
-                      <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8 }}>PREVIEW</div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 13, color: T.textSecondary }}>Original: AED 1,000,000</span>
-                        <span style={{ color: bulkPriceChange >= 0 ? T.green : T.red }}>→</span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: bulkPriceChange >= 0 ? T.green : T.red }}>
-                          New: AED {bulkChangeType === "percent" ? (1000000 * (1 + bulkPriceChange / 100)).toLocaleString() : (1000000 + bulkPriceChange).toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {/* Actions */}
-                    <div style={{ display: "flex", gap: 12 }}>
-                      <button type="button" onClick={() => setShowBulkModal(false)}
-                        style={{ flex: 1, padding: 12, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
-                      <button type="button" onClick={() => handleBulkPriceUpdate({ changeType: bulkChangeType, priceChange: bulkPriceChange })} disabled={bulkLoading || bulkPriceChange === 0}
-                        style={{ flex: 2, padding: 12, borderRadius: 8, border: "none", background: bulkPriceChange === 0 ? T.border : T.gold, color: T.surface, fontSize: 14, fontWeight: 700, cursor: bulkLoading || bulkPriceChange === 0 ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                        {bulkLoading ? "Updating..." : `Apply to ${bulkSelected.length} Projects`}
-                      </button>
-                    </div>
-                  </>
-                );
-              })()}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Change Type</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button type="button" onClick={() => setBulkChangeType("percent")}
+                    style={{ flex: 1, padding: 10, borderRadius: 8, border: `1px solid ${bulkChangeType === "percent" ? T.gold : T.border}`, background: bulkChangeType === "percent" ? `${T.gold}15` : "transparent", color: bulkChangeType === "percent" ? T.gold : T.textMuted, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                    Percentage (%)
+                  </button>
+                  <button type="button" onClick={() => setBulkChangeType("fixed")}
+                    style={{ flex: 1, padding: 10, borderRadius: 8, border: `1px solid ${bulkChangeType === "fixed" ? T.gold : T.border}`, background: bulkChangeType === "fixed" ? `${T.gold}15` : "transparent", color: bulkChangeType === "fixed" ? T.gold : T.textMuted, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                    Fixed (AED)
+                  </button>
+                </div>
+              </div>
+              
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>{bulkChangeType === "percent" ? "Price Change (%)" : "Price Change (AED)"}</label>
+                <input type="number" value={bulkPriceChange} onChange={e => setBulkPriceChange(parseFloat(e.target.value) || 0)} placeholder={bulkChangeType === "percent" ? "+5 or -5" : "+50000 or -50000"}
+                  style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: bulkPriceChange >= 0 ? T.green : T.red, fontSize: 18, fontWeight: 700, textAlign: "center", fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+              </div>
+              
+              <div style={{ padding: 12, borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}`, marginBottom: 20 }}>
+                <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8 }}>PREVIEW</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 13, color: T.textSecondary }}>Original: AED 1,000,000</span>
+                  <span style={{ color: bulkPriceChange >= 0 ? T.green : T.red }}>{"\u2192"}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: bulkPriceChange >= 0 ? T.green : T.red }}>
+                    New: AED {bulkChangeType === "percent" ? (1000000 * (1 + bulkPriceChange / 100)).toLocaleString() : (1000000 + bulkPriceChange).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Actions */}
+              <div style={{ display: "flex", gap: 12 }}>
+                <button type="button" onClick={() => { setShowBulkModal(false); setBulkPriceChange(0); setBulkChangeType("percent"); }}
+                  style={{ flex: 1, padding: 12, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                <button type="button" onClick={() => handleBulkPriceUpdate({ changeType: bulkChangeType, priceChange: bulkPriceChange })} disabled={bulkLoading || bulkPriceChange === 0}
+                  style={{ flex: 2, padding: 12, borderRadius: 8, border: "none", background: bulkPriceChange === 0 ? T.border : T.gold, color: T.surface, fontSize: 14, fontWeight: 700, cursor: bulkLoading || bulkPriceChange === 0 ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  {bulkLoading ? "Updating..." : `Apply to ${bulkSelected.length} Projects`}
+                </button>
+              </div>
             </div>
           </div>
         </div>
