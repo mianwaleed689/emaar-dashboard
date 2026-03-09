@@ -3076,6 +3076,9 @@ export default function AdminPanel() {
   // Analytics Pro states
   const [analyticsRange, setAnalyticsRange] = useState("30d"); // 7d | 30d | 90d | all
   const [cohortDrilldown, setCohortDrilldown] = useState(null); // { cohortLabel, weekNum, users[] }
+  // Tab Control Pro states
+  const [tabSearch, setTabSearch] = useState("");
+  const [tabDescEditing, setTabDescEditing] = useState(null); // tabKey being edited
 
   /* ─── PERSIST TAB STATE ─── */
   const isHydrated = React.useRef(false);
@@ -9371,496 +9374,319 @@ export default function AdminPanel() {
           })()}
 
           {tab === "tabcontrol" && (() => {
+            /* ═══════════════════════════════════════════════════════════════════
+               TAB 9: TAB CONTROL — PRO LEVEL
+               LaunchDarkly + Statsig + Flagsmith inspired feature flags
+               Search, badges, descriptions, usage stats, bulk actions
+            ═══════════════════════════════════════════════════════════════════ */
+
             const ALL_TABS = [
-              "Overview", "Financials", "Projects", "Handover", "Launch Calendar",
-              "Neighbourhoods", "Service Charges", "STR vs LTR", "Developer Health",
-              "DLD Volumes", "DXB Estimate", "Portfolio", "Competitors", "Yields",
-              "Mortgage", "Map", "Risk", "Market", "Currency", "Golden Visa", "Flip"
+              { id: "Overview", category: "Core", desc: "Dashboard home with key metrics" },
+              { id: "Financials", category: "Core", desc: "Revenue, payments, MRR tracking" },
+              { id: "Projects", category: "Properties", desc: "Emaar project listings and details" },
+              { id: "Handover", category: "Properties", desc: "Project completion timeline tracker" },
+              { id: "Launch Calendar", category: "Properties", desc: "Upcoming project launches" },
+              { id: "Neighbourhoods", category: "Properties", desc: "Community profiles and stats" },
+              { id: "Service Charges", category: "Properties", desc: "Annual fees by community" },
+              { id: "STR vs LTR", category: "Investment", desc: "Short-term vs long-term rental analysis" },
+              { id: "Developer Health", category: "Analytics", desc: "Developer financial scorecards" },
+              { id: "DLD Volumes", category: "Analytics", desc: "Dubai Land Dept transaction data" },
+              { id: "DXB Estimate", category: "Tools", desc: "Property value estimator" },
+              { id: "Portfolio", category: "User", desc: "Personal investment tracker" },
+              { id: "Competitors", category: "Analytics", desc: "Market competitor analysis" },
+              { id: "Yields", category: "Investment", desc: "Rental yield by community" },
+              { id: "Mortgage", category: "Tools", desc: "Mortgage calculator UAE banks" },
+              { id: "Map", category: "Tools", desc: "Interactive Dubai property map" },
+              { id: "Risk", category: "Analytics", desc: "Investment risk assessment" },
+              { id: "Market", category: "Analytics", desc: "Market overview and trends" },
+              { id: "Currency", category: "Tools", desc: "FX rates and converter" },
+              { id: "Golden Visa", category: "Tools", desc: "Visa eligibility checker" },
+              { id: "Flip", category: "Investment", desc: "Property flipping calculator" },
             ];
 
+            const CATEGORIES = ["Core", "Properties", "Investment", "Analytics", "Tools", "User"];
             const TIERS = ["free", "pro", "enterprise"];
             const TIER_COLORS = { free: T.textSecondary, pro: T.gold, enterprise: T.purple };
             const TIER_LABELS = { free: "Free", pro: "Pro", enterprise: "Enterprise" };
+            const BADGE_TYPES = { none: null, beta: { label: "BETA", color: T.blue }, new: { label: "NEW", color: T.green }, soon: { label: "SOON", color: T.orange } };
 
-            const getTabSetting = (tabKey) => tabSettings[tabKey] || { visible: true, minTier: "free" };
+            const getTabSetting = (tabKey) => tabSettings[tabKey] || { visible: true, minTier: "free", badge: "none", description: "" };
 
             const updateTabSetting = async (tabKey, field, value) => {
               const current = getTabSetting(tabKey);
-              const updated = { ...tabSettings, [tabKey]: { ...current, [field]: value } };
+              const updated = { ...tabSettings, [tabKey]: { ...current, [field]: value, lastModified: new Date().toISOString(), modifiedBy: adminUser?.email || "admin" } };
               setTabSettings(updated);
               setTabSettingsSaving(true);
               try { await setDoc(doc(db, "platformSettings", "tabs"), updated); } catch(e) {}
-              logAudit(db, { action: "tab_visibility", tabKey, field, value }).catch(() => {});
+              logAudit(db, { action: "tab_setting_change", tabKey, field, value }).catch(() => {});
               setTimeout(() => setTabSettingsSaving(false), 800);
             };
 
-            // ── Per-tab default data ──
-            const TAB_DATA = {
-              "Yields": {
-                fields: ["community","grossYield","netYield","avgRent","trend"],
-                labels: { community:"Community", grossYield:"Gross Yield %", netYield:"Net Yield %", avgRent:"Avg Annual Rent (AED)", trend:"Trend" },
-                rows: liveCommunityROI && Object.keys(liveCommunityROI).length > 0
-                  ? Object.entries(liveCommunityROI).map(([k,v]) => ({ community: k, grossYield: v.grossYield || "", netYield: v.netYield || "", avgRent: v.avgRent || "", trend: v.trend || "" }))
-                  : [
-                    { community:"Dubai Marina", grossYield:"5.8", netYield:"4.9", avgRent:"110000", trend:"stable" },
-                    { community:"Downtown Dubai", grossYield:"5.2", netYield:"4.3", avgRent:"155000", trend:"rising" },
-                    { community:"JVC", grossYield:"8.2", netYield:"6.8", avgRent:"62000", trend:"rising" },
-                    { community:"Business Bay", grossYield:"6.4", netYield:"5.3", avgRent:"98000", trend:"stable" },
-                    { community:"Palm Jumeirah", grossYield:"5.0", netYield:"4.1", avgRent:"420000", trend:"stable" },
-                    { community:"Dubai Hills", grossYield:"5.5", netYield:"4.6", avgRent:"185000", trend:"rising" },
-                    { community:"Creek Harbour", grossYield:"6.1", netYield:"5.0", avgRent:"125000", trend:"rising" },
-                    { community:"Emaar Beachfront", grossYield:"5.7", netYield:"4.7", avgRent:"195000", trend:"stable" },
-                  ],
-                firestoreKey: "yieldData",
-              },
-              "Developer Health": {
-                fields: ["developer","revenue","profit","backlog","score","rating"],
-                labels: { developer:"Developer", revenue:"Revenue (AED B)", profit:"Profit (AED B)", backlog:"Backlog (AED B)", score:"Score /100", rating:"Rating" },
-                rows: [
-                  { developer:"Emaar", revenue:"49.6", profit:"25.7", backlog:"155", score:"95", rating:"AAA" },
-                  { developer:"DAMAC", revenue:"21.8", profit:"6.2", backlog:"85", score:"72", rating:"BB+" },
-                  { developer:"Nakheel/Dubai Holding", revenue:"17.2", profit:"4.8", backlog:"62", score:"79", rating:"AA-" },
-                  { developer:"Aldar", revenue:"16.4", profit:"3.9", backlog:"48", score:"76", rating:"A+" },
-                  { developer:"Sobha", revenue:"8.1", profit:"1.9", backlog:"31", score:"68", rating:"BBB" },
-                  { developer:"Meraas", revenue:"12.1", profit:"3.2", backlog:"44", score:"82", rating:"A" },
-                ],
-                firestoreKey: "developerHealth",
-              },
-              "DLD Volumes": {
-                fields: ["community","deals","value","avgPrice","yoyChange"],
-                labels: { community:"Community", deals:"Deals (2025)", value:"Value (AED B)", avgPrice:"Avg Price (AED)", yoyChange:"YoY Change %" },
-                rows: [
-                  { community:"Business Bay", deals:"29950", value:"89.2", avgPrice:"1850000", yoyChange:"+18" },
-                  { community:"JVC", deals:"13676", value:"28.4", avgPrice:"780000", yoyChange:"+22" },
-                  { community:"Dubai Marina", deals:"10400", value:"45.6", avgPrice:"2100000", yoyChange:"+15" },
-                  { community:"Downtown Dubai", deals:"5800", value:"38.9", avgPrice:"3200000", yoyChange:"+12" },
-                  { community:"Dubai Hills Estate", deals:"4100", value:"29.7", avgPrice:"3850000", yoyChange:"+19" },
-                  { community:"Creek Harbour", deals:"3150", value:"18.2", avgPrice:"2890000", yoyChange:"+44" },
-                  { community:"Palm Jumeirah", deals:"1680", value:"42.8", avgPrice:"7640000", yoyChange:"+11" },
-                  { community:"Emaar Beachfront", deals:"1520", value:"12.4", avgPrice:"3200000", yoyChange:"+28" },
-                  { community:"Arabian Ranches III", deals:"1200", value:"8.9", avgPrice:"2950000", yoyChange:"+16" },
-                  { community:"The Valley", deals:"970", value:"5.8", avgPrice:"1890000", yoyChange:"+41" },
-                ],
-                firestoreKey: "dldVolumes",
-              },
-              "STR vs LTR": {
-                fields: ["community","strYield","ltrYield","occupancy","avgNightly","verdict"],
-                labels: { community:"Community", strYield:"STR Yield %", ltrYield:"LTR Yield %", occupancy:"STR Occupancy %", avgNightly:"Avg Nightly (AED)", verdict:"Verdict" },
-                rows: [
-                  { community:"Dubai Marina", strYield:"7.2", ltrYield:"5.8", occupancy:"74", avgNightly:"650", verdict:"STR wins" },
-                  { community:"Downtown Dubai", strYield:"6.8", ltrYield:"5.2", occupancy:"71", avgNightly:"820", verdict:"STR wins" },
-                  { community:"Palm Jumeirah", strYield:"5.9", ltrYield:"5.0", occupancy:"68", avgNightly:"1450", verdict:"STR slight edge" },
-                  { community:"JVC", strYield:"6.1", ltrYield:"8.2", occupancy:"55", avgNightly:"380", verdict:"LTR wins" },
-                  { community:"Business Bay", strYield:"7.0", ltrYield:"6.4", occupancy:"70", avgNightly:"590", verdict:"STR wins" },
-                  { community:"Dubai Hills", strYield:"4.8", ltrYield:"5.5", occupancy:"58", avgNightly:"920", verdict:"LTR wins" },
-                  { community:"Creek Harbour", strYield:"6.5", ltrYield:"6.1", occupancy:"65", avgNightly:"710", verdict:"STR slight edge" },
-                ],
-                firestoreKey: "strLtrData",
-              },
-              "Service Charges": {
-                fields: ["community","chargePerSqft","totalFor1BR","totalFor2BR","mollakReg","trend"],
-                labels: { community:"Community", chargePerSqft:"AED/sqft/yr", totalFor1BR:"1BR Total (AED)", totalFor2BR:"2BR Total (AED)", mollakReg:"Mollak Reg", trend:"Trend" },
-                rows: [
-                  { community:"Dubai Marina", chargePerSqft:"18", totalFor1BR:"15800", totalFor2BR:"26500", mollakReg:"Yes", trend:"stable" },
-                  { community:"Downtown Dubai", chargePerSqft:"22", totalFor1BR:"20200", totalFor2BR:"34800", mollakReg:"Yes", trend:"rising" },
-                  { community:"Palm Jumeirah", chargePerSqft:"28", totalFor1BR:"29400", totalFor2BR:"52200", mollakReg:"Yes", trend:"rising" },
-                  { community:"JVC", chargePerSqft:"13", totalFor1BR:"9100", totalFor2BR:"15600", mollakReg:"Yes", trend:"stable" },
-                  { community:"Business Bay", chargePerSqft:"16", totalFor1BR:"13200", totalFor2BR:"22800", mollakReg:"Yes", trend:"stable" },
-                  { community:"Dubai Hills", chargePerSqft:"19", totalFor1BR:"17100", totalFor2BR:"30400", mollakReg:"Yes", trend:"stable" },
-                  { community:"Creek Harbour", chargePerSqft:"21", totalFor1BR:"18900", totalFor2BR:"33200", mollakReg:"Yes", trend:"rising" },
-                ],
-                firestoreKey: "serviceCharges",
-              },
-              "Competitors": {
-                fields: ["developer","sales2025","marketShare","projects","avgPriceSqft","strength"],
-                labels: { developer:"Developer", sales2025:"2025 Sales (AED B)", marketShare:"Market Share %", projects:"Active Projects", avgPriceSqft:"Avg AED/sqft", strength:"Strength" },
-                rows: [
-                  { developer:"Emaar", sales2025:"80.4", marketShare:"11.8", projects:"42", avgPriceSqft:"2100", strength:"Brand + scale" },
-                  { developer:"DAMAC", sales2025:"32.0", marketShare:"4.7", projects:"28", avgPriceSqft:"1850", strength:"Luxury + speed" },
-                  { developer:"Nakheel", sales2025:"24.5", marketShare:"3.6", projects:"18", avgPriceSqft:"1620", strength:"Land bank" },
-                  { developer:"Sobha", sales2025:"18.2", marketShare:"2.7", projects:"12", avgPriceSqft:"1980", strength:"Quality build" },
-                  { developer:"Aldar", sales2025:"16.4", marketShare:"2.4", projects:"15", avgPriceSqft:"1740", strength:"Abu Dhabi expand" },
-                  { developer:"Meraas", sales2025:"14.8", marketShare:"2.2", projects:"11", avgPriceSqft:"2250", strength:"Lifestyle projects" },
-                ],
-                firestoreKey: "competitorData",
-              },
-              "Mortgage": {
-                fields: ["bank","rate","maxLTV","processingFee","minSalary","notes"],
-                labels: { bank:"Bank", rate:"Rate (EIBOR+%)", maxLTV:"Max LTV %", processingFee:"Processing Fee", minSalary:"Min Salary (AED)", notes:"Notes" },
-                rows: [
-                  { bank:"Emirates NBD", rate:"4.99", maxLTV:"80", processingFee:"1%", minSalary:"15000", notes:"Variable only" },
-                  { bank:"ADCB", rate:"4.89", maxLTV:"80", processingFee:"0.95%", minSalary:"12000", notes:"Fixed 3yr option" },
-                  { bank:"Mashreq", rate:"4.75", maxLTV:"75", processingFee:"1%", minSalary:"10000", notes:"Best for expats" },
-                  { bank:"FAB", rate:"4.99", maxLTV:"80", processingFee:"0.5%", minSalary:"15000", notes:"Low proc fee" },
-                  { bank:"DIB", rate:"4.49", maxLTV:"80", processingFee:"1%", minSalary:"12000", notes:"Islamic only" },
-                  { bank:"ENBD Islamic", rate:"4.59", maxLTV:"80", processingFee:"1%", minSalary:"12000", notes:"Murabaha" },
-                ],
-                firestoreKey: "mortgageRates",
-              },
-              "Neighbourhoods": {
-                fields: ["community","score","priceGrowth","rentalDemand","infraRating","recommended"],
-                labels: { community:"Community", score:"Overall Score", priceGrowth:"Price Growth %", rentalDemand:"Rental Demand", infraRating:"Infra Rating", recommended:"Recommended For" },
-                rows: [
-                  { community:"Dubai Marina", score:"88", priceGrowth:"12.5", rentalDemand:"Very High", infraRating:"5/5", recommended:"Investors, Expats" },
-                  { community:"Downtown Dubai", score:"91", priceGrowth:"14.2", rentalDemand:"Very High", infraRating:"5/5", recommended:"Premium buyers" },
-                  { community:"JVC", score:"74", priceGrowth:"11.8", rentalDemand:"High", infraRating:"3/5", recommended:"First-time buyers" },
-                  { community:"Dubai Hills", score:"85", priceGrowth:"15.1", rentalDemand:"High", infraRating:"4/5", recommended:"Families" },
-                  { community:"Creek Harbour", score:"82", priceGrowth:"18.4", rentalDemand:"High", infraRating:"4/5", recommended:"Long-term investors" },
-                  { community:"Palm Jumeirah", score:"90", priceGrowth:"11.2", rentalDemand:"Medium", infraRating:"5/5", recommended:"Ultra-luxury" },
-                  { community:"Business Bay", score:"80", priceGrowth:"13.6", rentalDemand:"Very High", infraRating:"4/5", recommended:"Young professionals" },
-                ],
-                firestoreKey: "neighbourhoodScores",
-              },
-              "Market": {
-                fields: ["metric","value","period","source","change"],
-                labels: { metric:"Metric", value:"Value", period:"Period", source:"Source", change:"YoY Change" },
-                rows: [
-                  { metric:"Total Transactions", value:"214,912", period:"FY2025", source:"DLD", change:"+18.82%" },
-                  { metric:"Total Volume", value:"AED 682.5B", period:"FY2025", source:"DLD", change:"+30.64%" },
-                  { metric:"Avg Price/sqft", value:"AED 1,689", period:"Dec 2025", source:"REIDIN", change:"+12.88%" },
-                  { metric:"Off-plan Share", value:"68%", period:"FY2025", source:"DXB Interact", change:"+5pp" },
-                  { metric:"Apartment Growth", value:"+12.52%", period:"FY2025", source:"ValuStrat", change:"+12.52%" },
-                  { metric:"Villa Growth", value:"+15.16%", period:"FY2025", source:"ValuStrat", change:"+15.16%" },
-                  { metric:"Rental Yield Avg", value:"6.9%", period:"Dec 2025", source:"REIDIN", change:"+0.4pp" },
-                ],
-                firestoreKey: "marketData",
-              },
-            };
+            // Usage stats from auditLog
+            const tabUsageStats = (() => {
+              const stats = {};
+              auditLog.forEach(log => {
+                if (log.action === "tab_view" && log.tabKey) {
+                  stats[log.tabKey] = (stats[log.tabKey] || 0) + 1;
+                }
+              });
+              return stats;
+            })();
 
+            // Filter tabs by search
+            const filteredTabs = ALL_TABS.filter(t => {
+              if (!tabSearch) return true;
+              const s = tabSearch.toLowerCase();
+              const setting = getTabSetting(t.id);
+              const customDesc = setting.description || t.desc;
+              return t.id.toLowerCase().includes(s) || t.category.toLowerCase().includes(s) || customDesc.toLowerCase().includes(s);
+            });
+
+            // Stats
+            const hiddenCount = ALL_TABS.filter(t => !getTabSetting(t.id).visible).length;
+            const proCount = ALL_TABS.filter(t => getTabSetting(t.id).minTier === "pro").length;
+            const entCount = ALL_TABS.filter(t => getTabSetting(t.id).minTier === "enterprise").length;
+            const betaCount = ALL_TABS.filter(t => getTabSetting(t.id).badge === "beta").length;
+
+            // Per-tab data
+            const TAB_DATA = {
+              "Yields": { fields: ["community","grossYield","netYield","avgRent","trend"], labels: { community:"Community", grossYield:"Gross Yield %", netYield:"Net Yield %", avgRent:"Avg Rent (AED)", trend:"Trend" }, rows: liveCommunityROI && Object.keys(liveCommunityROI).length > 0 ? Object.entries(liveCommunityROI).map(([k,v]) => ({ community: k, grossYield: v.grossYield || "", netYield: v.netYield || "", avgRent: v.avgRent || "", trend: v.trend || "" })) : [{ community:"Dubai Marina", grossYield:"5.8", netYield:"4.9", avgRent:"110000", trend:"stable" }], firestoreKey: "yieldData" },
+              "Developer Health": { fields: ["developer","revenue","profit","backlog","score","rating"], labels: { developer:"Developer", revenue:"Revenue (AED B)", profit:"Profit (AED B)", backlog:"Backlog (AED B)", score:"Score /100", rating:"Rating" }, rows: [{ developer:"Emaar", revenue:"49.6", profit:"25.7", backlog:"155", score:"95", rating:"AAA" }], firestoreKey: "developerHealth" },
+              "DLD Volumes": { fields: ["community","deals","value","avgPrice","yoyChange"], labels: { community:"Community", deals:"Deals (2025)", value:"Value (AED B)", avgPrice:"Avg Price (AED)", yoyChange:"YoY %" }, rows: [{ community:"Business Bay", deals:"29950", value:"89.2", avgPrice:"1850000", yoyChange:"+18" }], firestoreKey: "dldVolumes" },
+              "STR vs LTR": { fields: ["community","strYield","ltrYield","occupancy","avgNightly","verdict"], labels: { community:"Community", strYield:"STR Yield %", ltrYield:"LTR Yield %", occupancy:"Occupancy %", avgNightly:"Avg Nightly", verdict:"Verdict" }, rows: [{ community:"Dubai Marina", strYield:"7.2", ltrYield:"5.8", occupancy:"74", avgNightly:"650", verdict:"STR wins" }], firestoreKey: "strLtrData" },
+              "Market": { fields: ["metric","value","period","source","change"], labels: { metric:"Metric", value:"Value", period:"Period", source:"Source", change:"Change" }, rows: [{ metric:"Avg Price/sqft", value:"AED 1,689", period:"Dec 2025", source:"REIDIN", change:"+12.88%" }], firestoreKey: "marketData" },
+            };
+            const hasData = (t) => !!TAB_DATA[t];
             const activeTabData = selectedTabControl ? TAB_DATA[selectedTabControl] : null;
 
-            // Get editable rows for selected tab
-            const getEditableRows = () => {
-              if (!activeTabData) return [];
-              const edited = tabDataEdits[selectedTabControl];
-              return edited || activeTabData.rows;
-            };
-
-            const updateCell = (rowIdx, field, value) => {
-              const rows = getEditableRows().map((r, i) => i === rowIdx ? { ...r, [field]: value } : r);
-              setTabDataEdits(prev => ({ ...prev, [selectedTabControl]: rows }));
-            };
-
-            const addRow = () => {
-              if (!activeTabData) return;
-              const emptyRow = {};
-              activeTabData.fields.forEach(f => { emptyRow[f] = ""; });
-              const rows = [...getEditableRows(), emptyRow];
-              setTabDataEdits(prev => ({ ...prev, [selectedTabControl]: rows }));
-            };
-
-            const deleteRow = (idx) => {
-              const rows = getEditableRows().filter((_, i) => i !== idx);
-              setTabDataEdits(prev => ({ ...prev, [selectedTabControl]: rows }));
-            };
-
-            const saveTabData = async () => {
-              if (!activeTabData || !selectedTabControl) return;
-              setTabDataSaving(true);
-              const rows = getEditableRows();
-              try {
-                await setDoc(doc(db, "tabData", activeTabData.firestoreKey), { rows, updatedAt: new Date().toISOString() });
-                setTabSettingsSaving(true);
-                setTimeout(() => { setTabSettingsSaving(false); setTabDataSaving(false); }, 1000);
-              } catch(e) {
-                console.error("Save failed:", e);
-                setTabDataSaving(false);
-              }
-            };
-
-            const hiddenCount = ALL_TABS.filter(t => !getTabSetting(t).visible).length;
-            const proCount = ALL_TABS.filter(t => getTabSetting(t).minTier === "pro").length;
-            const entCount = ALL_TABS.filter(t => getTabSetting(t).minTier === "enterprise").length;
-            const hasData = (t) => !!TAB_DATA[t];
+            const getEditableRows = () => { if (!activeTabData) return []; return tabDataEdits[selectedTabControl] || activeTabData.rows; };
+            const updateCell = (rowIdx, field, value) => { const rows = getEditableRows().map((r, i) => i === rowIdx ? { ...r, [field]: value } : r); setTabDataEdits(prev => ({ ...prev, [selectedTabControl]: rows })); };
+            const addRow = () => { if (!activeTabData) return; const emptyRow = {}; activeTabData.fields.forEach(f => { emptyRow[f] = ""; }); setTabDataEdits(prev => ({ ...prev, [selectedTabControl]: [...getEditableRows(), emptyRow] })); };
+            const deleteRow = (idx) => { setTabDataEdits(prev => ({ ...prev, [selectedTabControl]: getEditableRows().filter((_, i) => i !== idx) })); };
+            const saveTabData = async () => { if (!activeTabData) return; setTabDataSaving(true); try { await setDoc(doc(db, "tabData", activeTabData.firestoreKey), { rows: getEditableRows(), updatedAt: new Date().toISOString() }); notify("Saved!"); } catch(e) { notify("Failed"); } setTabDataSaving(false); };
 
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-                {/* Header */}
-                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-                  <div>
-                    <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Tab Control</div>
-                    <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Toggle visibility, set tier access, and edit tab data · All saved to Firestore instantly</div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <button type="button" onClick={async () => {
-                      const snap = await getDoc(doc(db, "platformSettings", "tabs"));
-                      if (snap.exists()) setTabSettings(snap.data());
-                      notify("Tab settings refreshed");
-                    }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
-                    {tabSettingsSaving && <div style={{ fontSize: 11, color: T.green, display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 6, height: 6, borderRadius: "50%", background: T.green }} />Saved ✓</div>}
-                    <div style={{ fontSize: 11, color: T.textMuted, padding: "5px 10px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
-                      {hiddenCount} hidden · {proCount} Pro · {entCount} Ent
+                {/* ═══ HEADER WITH SEARCH ═══ */}
+                <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+                    <div>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Tab Control</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Feature flags, tier gating, badges, and data management</div>
                     </div>
-                    <button type="button" onClick={async () => {
-                      const u = {}; ALL_TABS.forEach(t => { u[t] = { visible: true, minTier: "free" }; });
-                      setTabSettings(u); setTabSettingsSaving(true);
-                      await setDoc(doc(db, "platformSettings", "tabs"), u);
-                      setTimeout(() => setTabSettingsSaving(false), 800);
-                    }} style={{ padding: "5px 12px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textMuted, fontFamily: "'Outfit',sans-serif" }}>Reset All</button>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      {tabSettingsSaving && <div style={{ fontSize: 11, color: T.green, display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, animation: "pulse 1s infinite" }} />Saving...</div>}
+                      <button type="button" onClick={async () => { const snap = await getDoc(doc(db, "platformSettings", "tabs")); if (snap.exists()) setTabSettings(snap.data()); notify("Refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh}</button>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 12, marginTop: 14, alignItems: "center", flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, minWidth: 200, position: "relative" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                      <input type="text" placeholder="Search tabs..." value={tabSearch} onChange={e => setTabSearch(e.target.value)} style={{ width: "100%", padding: "10px 12px 10px 36px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                      {tabSearch && <button type="button" onClick={() => setTabSearch("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 14 }}>✕</button>}
+                    </div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {[{ label: `${ALL_TABS.length - hiddenCount} visible`, color: T.green }, { label: `${hiddenCount} hidden`, color: T.textMuted }, { label: `${proCount} Pro`, color: T.gold }, { label: `${entCount} Ent`, color: T.purple }, { label: `${betaCount} Beta`, color: T.blue }].map((s, i) => (
+                        <div key={i} style={{ fontSize: 10, padding: "5px 10px", borderRadius: 6, background: `${s.color}10`, color: s.color, fontWeight: 600 }}>{s.label}</div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* ═══ PREVIEW MODE BAR ═══ */}
-                <div style={{ background: previewTier ? `${TIER_COLORS[previewTier]}10` : T.surface, borderRadius: 14, border: `1px solid ${previewTier ? TIER_COLORS[previewTier] + "40" : T.border}`, padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                {/* ═══ PREVIEW MODE ═══ */}
+                <div className="fade-up" style={{ background: previewTier ? `${TIER_COLORS[previewTier]}10` : T.surface, borderRadius: 14, border: `1px solid ${previewTier ? TIER_COLORS[previewTier] + "40" : T.border}`, padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={previewTier ? TIER_COLORS[previewTier] : T.textMuted} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={previewTier ? TIER_COLORS[previewTier] : T.textMuted} strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/></svg>
                     <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: previewTier ? TIER_COLORS[previewTier] : T.white }}>
-                        {previewTier ? `Preview Mode: See as ${TIER_LABELS[previewTier]} User` : "Preview Mode"}
-                      </div>
-                      <div style={{ fontSize: 10, color: T.textMuted }}>
-                        {previewTier ? "Tabs below show what this tier would see in the dashboard sidebar" : "Simulate what each tier sees — no data changes, just UI preview"}
-                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: previewTier ? TIER_COLORS[previewTier] : T.white }}>{previewTier ? `Preview: ${TIER_LABELS[previewTier]} User` : "Preview Mode"}</div>
+                      <div style={{ fontSize: 10, color: T.textMuted }}>{previewTier ? "Showing sidebar view for this tier" : "Test different tier perspectives"}</div>
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {[
-                      { id: null, label: "Admin View", color: T.white },
-                      { id: "free", label: "See as Free", color: T.textSecondary },
-                      { id: "pro", label: "See as Pro", color: T.gold },
-                      { id: "enterprise", label: "See as Enterprise", color: T.purple },
-                    ].map(p => (
-                      <button key={p.id || "admin"} type="button" onClick={() => setPreviewTier(p.id)}
-                        style={{
-                          padding: "6px 14px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer",
-                          border: `1px solid ${previewTier === p.id ? p.color : T.border}`,
-                          background: previewTier === p.id ? `${p.color}15` : "transparent",
-                          color: previewTier === p.id ? p.color : T.textMuted,
-                          fontFamily: "'Outfit',sans-serif"
-                        }}>
-                        {p.label}
-                      </button>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {[{ id: null, label: "Admin", color: T.white }, { id: "free", label: "Free", color: T.textSecondary }, { id: "pro", label: "Pro", color: T.gold }, { id: "enterprise", label: "Ent", color: T.purple }].map(p => (
+                      <button key={p.id || "admin"} type="button" onClick={() => setPreviewTier(p.id)} style={{ padding: "6px 12px", borderRadius: 8, fontSize: 10, fontWeight: 600, cursor: "pointer", border: previewTier === p.id ? `2px solid ${p.color}` : `1px solid ${T.border}`, background: previewTier === p.id ? `${p.color}15` : "transparent", color: previewTier === p.id ? p.color : T.textMuted, fontFamily: "'Outfit',sans-serif" }}>{p.label}</button>
                     ))}
                   </div>
                 </div>
 
-                {/* Preview Sidebar Simulation */}
+                {/* Preview Sidebar */}
                 {previewTier && (
                   <div className="fade-up" style={{ background: T.surfaceAlt, borderRadius: 14, border: `1px solid ${TIER_COLORS[previewTier]}30`, padding: "16px 20px" }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: TIER_COLORS[previewTier], textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
-                      Dashboard Sidebar Preview — {TIER_LABELS[previewTier]} User
-                    </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                      {ALL_TABS.map(tabKey => {
-                        const setting = getTabSetting(tabKey);
+                    <div style={{ fontSize: 10, fontWeight: 700, color: TIER_COLORS[previewTier], textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Sidebar — {TIER_LABELS[previewTier]}</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {ALL_TABS.map(tabObj => {
+                        const setting = getTabSetting(tabObj.id);
                         const isVisible = setting.visible !== false;
                         const minTier = setting.minTier || "free";
+                        const badge = setting.badge || "none";
                         const tierOrder = { free: 0, pro: 1, enterprise: 2 };
-                        const userTierLevel = tierOrder[previewTier] || 0;
-                        const requiredLevel = tierOrder[minTier] || 0;
-                        const canAccess = isVisible && userTierLevel >= requiredLevel;
-                        const isLocked = isVisible && userTierLevel < requiredLevel;
-                        
-                        if (!isVisible) return null; // Hidden tabs don't show at all
-                        
+                        const canAccess = isVisible && tierOrder[previewTier] >= tierOrder[minTier];
+                        if (!isVisible) return null;
                         return (
-                          <div key={tabKey} style={{
-                            padding: "8px 14px", borderRadius: 8,
-                            background: canAccess ? "rgba(16,185,129,0.08)" : "rgba(100,116,139,0.08)",
-                            border: `1px solid ${canAccess ? T.green + "30" : T.border}`,
-                            display: "flex", alignItems: "center", gap: 6,
-                            opacity: canAccess ? 1 : 0.6,
-                          }}>
-                            {isLocked && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>}
-                            <span style={{ fontSize: 11, color: canAccess ? T.white : T.textMuted, fontWeight: canAccess ? 500 : 400 }}>{tabKey}</span>
-                            {isLocked && <span style={{ fontSize: 9, color: TIER_COLORS[minTier], fontWeight: 600 }}>{TIER_LABELS[minTier]}</span>}
+                          <div key={tabObj.id} style={{ padding: "6px 10px", borderRadius: 6, background: canAccess ? "rgba(16,185,129,0.08)" : "rgba(100,116,139,0.08)", border: `1px solid ${canAccess ? T.green + "30" : T.border}`, display: "flex", alignItems: "center", gap: 4, opacity: canAccess ? 1 : 0.5 }}>
+                            {!canAccess && <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>}
+                            <span style={{ fontSize: 10, color: canAccess ? T.white : T.textMuted }}>{tabObj.id}</span>
+                            {badge !== "none" && BADGE_TYPES[badge] && <span style={{ fontSize: 7, padding: "1px 4px", borderRadius: 3, background: `${BADGE_TYPES[badge].color}20`, color: BADGE_TYPES[badge].color, fontWeight: 700 }}>{BADGE_TYPES[badge].label}</span>}
                           </div>
                         );
                       })}
-                    </div>
-                    <div style={{ marginTop: 12, fontSize: 10, color: T.textMuted }}>
-                      {ALL_TABS.filter(t => {
-                        const s = getTabSetting(t);
-                        const tierOrder = { free: 0, pro: 1, enterprise: 2 };
-                        return s.visible !== false && tierOrder[previewTier] >= (tierOrder[s.minTier] || 0);
-                      }).length} tabs visible · {ALL_TABS.filter(t => {
-                        const s = getTabSetting(t);
-                        const tierOrder = { free: 0, pro: 1, enterprise: 2 };
-                        return s.visible !== false && tierOrder[previewTier] < (tierOrder[s.minTier] || 0);
-                      }).length} locked
                     </div>
                   </div>
                 )}
 
-                {/* Stacked layout */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {/* ═══ BULK ACTIONS ═══ */}
+                <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "14px 20px" }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Bulk Actions</div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {[
+                      { label: "Show All", color: T.green, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { ...getTabSetting(t.id), visible: true }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("All visible"); } },
+                      { label: "Hide All", color: T.red, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { ...getTabSetting(t.id), visible: false }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("All hidden"); } },
+                      { label: "All → Free", color: T.textSecondary, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { ...getTabSetting(t.id), minTier: "free" }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("All free"); } },
+                      { label: "All → Pro", color: T.gold, action: async () => { const u = {}; ALL_TABS.forEach(t => { if (t.id !== "Overview") u[t.id] = { ...getTabSetting(t.id), minTier: "pro" }; }); const f = { ...tabSettings, ...u }; setTabSettings(f); await setDoc(doc(db, "platformSettings", "tabs"), f); notify("Locked to Pro"); } },
+                      { label: "Analytics → Ent", color: T.purple, action: async () => { const analytics = ["Developer Health", "DLD Volumes", "Competitors", "Risk", "Market"]; const u = { ...tabSettings }; analytics.forEach(t => { u[t] = { ...getTabSetting(t), minTier: "enterprise" }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("Analytics locked"); } },
+                      { label: "Clear Badges", color: T.orange, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { ...getTabSetting(t.id), badge: "none" }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("Badges cleared"); } },
+                      { label: "Reset All", color: T.textMuted, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { visible: true, minTier: "free", badge: "none", description: "" }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("Reset complete"); } },
+                    ].map(({ label, action, color }) => (
+                      <button key={label} type="button" onClick={action} style={{ padding: "6px 12px", borderRadius: 8, fontSize: 10, fontWeight: 600, cursor: "pointer", border: `1px solid ${color}40`, background: `${color}10`, color, fontFamily: "'Outfit',sans-serif" }}>{label}</button>
+                    ))}
+                  </div>
+                </div>
 
-                  {/* TOP — Tab list (horizontal scrollable cards) */}
-                  <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-                    <div style={{ padding: "10px 16px", borderBottom: `1px solid ${T.border}`, display: "grid", gridTemplateColumns: "1fr 44px", gap: 8, alignItems: "center" }}>
-                      <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Tab</span>
-                      <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, textAlign: "center" }}>On</span>
+                {/* ═══ TAB LIST BY CATEGORY ═══ */}
+                <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                  <div style={{ padding: "12px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>All Tabs ({filteredTabs.length})</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>Click to configure</div>
+                  </div>
+                  
+                  {filteredTabs.length === 0 ? (
+                    <div style={{ padding: "40px 20px", textAlign: "center" }}>
+                      <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+                      <div style={{ fontSize: 13, color: T.textMuted }}>No tabs match "{tabSearch}"</div>
+                      <button type="button" onClick={() => setTabSearch("")} style={{ marginTop: 12, padding: "6px 14px", borderRadius: 8, fontSize: 11, background: T.goldGlow, border: `1px solid ${T.gold}`, color: T.gold, cursor: "pointer" }}>Clear</button>
                     </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: "12px 16px" }}>
-                      {ALL_TABS.map((tabKey) => {
-                        const setting = getTabSetting(tabKey);
-                        const isVisible = setting.visible !== false;
-                        const minTier = setting.minTier || "free";
-                        const isSelected = selectedTabControl === tabKey;
-                        const editable = hasData(tabKey);
+                  ) : (
+                    <div style={{ maxHeight: 400, overflowY: "auto" }}>
+                      {CATEGORIES.map(cat => {
+                        const catTabs = filteredTabs.filter(t => t.category === cat);
+                        if (catTabs.length === 0) return null;
                         return (
-                          <div key={tabKey} onClick={() => setSelectedTabControl(isSelected ? null : tabKey)} style={{
-                            display: "flex", alignItems: "center", gap: 8,
-                            padding: "8px 14px",
-                            borderRadius: 10,
-                            background: isSelected ? "rgba(212,168,67,0.1)" : T.surfaceAlt,
-                            border: `1px solid ${isSelected ? T.gold : T.border}`,
-                            cursor: "pointer", transition: "all 0.15s",
-                          }}>
-                            {/* Visibility dot */}
-                            <div style={{ width: 7, height: 7, borderRadius: "50%", flexShrink: 0,
-                              background: !isVisible ? T.textMuted : minTier === "enterprise" ? T.purple : minTier === "pro" ? T.gold : T.green }} />
-                            {/* Name */}
-                            <span style={{ fontSize: 12, fontWeight: isSelected ? 700 : 500, color: isVisible ? T.white : T.textMuted, whiteSpace: "nowrap" }}>{tabKey}</span>
-                            {/* Tier badge */}
-                            {minTier !== "free" && <span style={{ fontSize: 9, fontWeight: 700, color: TIER_COLORS[minTier], padding: "1px 5px", borderRadius: 4, background: `${TIER_COLORS[minTier]}15` }}>{TIER_LABELS[minTier].toUpperCase()}</span>}
-                            {/* Data badge */}
-                            {editable && <span style={{ fontSize: 9, color: T.blue, padding: "1px 5px", borderRadius: 4, background: "rgba(59,130,246,0.1)" }}>DATA</span>}
-                            {/* Toggle */}
-                            <div onClick={e => e.stopPropagation()}>
-                              <button type="button" onClick={() => updateTabSetting(tabKey, "visible", !isVisible)} style={{
-                                width: 32, height: 18, borderRadius: 9,
-                                background: isVisible ? T.green : "rgba(255,255,255,0.08)",
-                                border: "none", cursor: "pointer", position: "relative", transition: "background 0.2s", display: "block"
-                              }}>
-                                <div style={{ position: "absolute", top: 2, left: isVisible ? 16 : 2, width: 14, height: 14, borderRadius: "50%", background: T.white, transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
-                              </button>
-                            </div>
+                          <div key={cat}>
+                            <div style={{ padding: "8px 20px", background: T.surfaceAlt, fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, borderBottom: `1px solid ${T.border}` }}>{cat} ({catTabs.length})</div>
+                            {catTabs.map(tabObj => {
+                              const setting = getTabSetting(tabObj.id);
+                              const isVisible = setting.visible !== false;
+                              const minTier = setting.minTier || "free";
+                              const badge = setting.badge || "none";
+                              const customDesc = setting.description || tabObj.desc;
+                              const lastMod = setting.lastModified;
+                              const usage = tabUsageStats[tabObj.id] || 0;
+                              const isSelected = selectedTabControl === tabObj.id;
+                              const editable = hasData(tabObj.id);
+
+                              return (
+                                <div key={tabObj.id} onClick={() => setSelectedTabControl(isSelected ? null : tabObj.id)} style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto auto auto", alignItems: "center", gap: 12, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, background: isSelected ? "rgba(212,168,67,0.08)" : "transparent", cursor: "pointer" }} onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }} onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}>
+                                  <div style={{ minWidth: 0 }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: !isVisible ? T.textMuted : minTier === "enterprise" ? T.purple : minTier === "pro" ? T.gold : T.green, flexShrink: 0 }} />
+                                      <span style={{ fontSize: 13, fontWeight: isSelected ? 700 : 500, color: isVisible ? T.white : T.textMuted }}>{tabObj.id}</span>
+                                      {badge !== "none" && BADGE_TYPES[badge] && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${BADGE_TYPES[badge].color}20`, color: BADGE_TYPES[badge].color, fontWeight: 700 }}>{BADGE_TYPES[badge].label}</span>}
+                                      {editable && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: "rgba(59,130,246,0.1)", color: T.blue, fontWeight: 600 }}>DATA</span>}
+                                    </div>
+                                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{customDesc}</div>
+                                  </div>
+                                  <div style={{ textAlign: "center", minWidth: 50 }}><div style={{ fontSize: 12, fontWeight: 700, color: usage > 0 ? T.teal : T.textMuted }}>{usage}</div><div style={{ fontSize: 8, color: T.textMuted }}>views</div></div>
+                                  <div style={{ minWidth: 70 }}><span style={{ fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 5, background: `${TIER_COLORS[minTier]}15`, color: TIER_COLORS[minTier] }}>{TIER_LABELS[minTier].toUpperCase()}</span></div>
+                                  <div style={{ fontSize: 9, color: T.textMuted, minWidth: 70, textAlign: "right" }}>{lastMod ? timeSince(new Date(lastMod)) : "—"}</div>
+                                  <div onClick={e => e.stopPropagation()}><button type="button" onClick={() => updateTabSetting(tabObj.id, "visible", !isVisible)} style={{ width: 36, height: 20, borderRadius: 10, background: isVisible ? T.green : "rgba(255,255,255,0.08)", border: "none", cursor: "pointer", position: "relative" }}><div style={{ position: "absolute", top: 3, left: isVisible ? 19 : 3, width: 14, height: 14, borderRadius: "50%", background: T.white, transition: "left 0.2s" }} /></button></div>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isSelected ? T.gold : T.textMuted} strokeWidth="2" style={{ transform: isSelected ? "rotate(90deg)" : "none", transition: "transform 0.2s" }}><path d="m9 18 6-6-6-6"/></svg>
+                                </div>
+                              );
+                            })}
                           </div>
                         );
                       })}
                     </div>
-                  </div>
-
-                  {/* BOTTOM — Selected tab config (full width) */}
-                  {!selectedTabControl ? (
-                    <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "32px 24px", textAlign: "center" }}>
-                      
-                      <div style={{ fontSize: 14, fontWeight: 600, color: T.white, marginBottom: 6 }}>Select a tab above to configure</div>
-                      <div style={{ fontSize: 12, color: T.textMuted }}>Click any tab card to set tier access or edit its data table in full width</div>
-                    </div>
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                        {/* Tier control for selected tab */}
-                        <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                            <div>
-                              <div style={{ fontSize: 16, fontWeight: 700, color: T.white, fontFamily: "'Fraunces', serif" }}>{selectedTabControl}</div>
-                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Access control · Who can see this tab</div>
-                            </div>
-                            <button type="button" onClick={() => setSelectedTabControl(null)} style={{ background: "none", border: "none", color: T.textMuted, fontSize: 18, cursor: "pointer" }}>✕</button>
-                          </div>
-                          <div style={{ display: "flex", gap: 8 }}>
-                            {TIERS.map(tier => {
-                              const setting = getTabSetting(selectedTabControl);
-                              const minTier = setting.minTier || "free";
-                              return (
-                                <button key={tier} type="button" onClick={() => updateTabSetting(selectedTabControl, "minTier", tier)} style={{
-                                  flex: 1, padding: "10px 0", borderRadius: 10, fontSize: 12, fontWeight: 700,
-                                  cursor: "pointer", border: `1px solid ${minTier === tier ? TIER_COLORS[tier] : T.border}`,
-                                  background: minTier === tier ? `${TIER_COLORS[tier]}18` : T.surfaceAlt,
-                                  color: minTier === tier ? TIER_COLORS[tier] : T.textMuted,
-                                  transition: "all 0.15s", fontFamily: "'Outfit',sans-serif"
-                                }}>
-                                  {tier === "free" ? "Free" : tier === "pro" ? "Pro" : "Enterprise"}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Data table editor */}
-                        {activeTabData ? (
-                          <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-                            <div style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                              <div>
-                                <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Data Table — {selectedTabControl}</div>
-                                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Edit any cell · Changes saved to Firestore → live on dashboard</div>
-                              </div>
-                              <div style={{ display: "flex", gap: 8 }}>
-                                <button type="button" onClick={addRow} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontFamily: "'Outfit',sans-serif" }}>+ Add Row</button>
-                                <button type="button" onClick={saveTabData} disabled={tabDataSaving} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.1)", color: T.gold, fontFamily: "'Outfit',sans-serif" }}>
-                                  {tabDataSaving ? "Saving…" : "Save"}
-                                </button>
-                              </div>
-                            </div>
-                            <div style={{ overflowX: "auto" }}>
-                              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                                <thead>
-                                  <tr style={{ background: T.surfaceAlt }}>
-                                    {activeTabData.fields.map(f => (
-                                      <th key={f} style={{ padding: "10px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, whiteSpace: "nowrap", borderBottom: `1px solid ${T.border}` }}>
-                                        {activeTabData.labels[f]}
-                                      </th>
-                                    ))}
-                                    <th style={{ padding: "10px 12px", borderBottom: `1px solid ${T.border}` }} />
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {getEditableRows().map((row, rowIdx) => (
-                                    <tr key={rowIdx} style={{ borderBottom: `1px solid ${T.border}` }}
-                                      onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
-                                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                                    >
-                                      {activeTabData.fields.map(f => (
-                                        <td key={f} style={{ padding: "6px 8px" }}>
-                                          <input
-                                            value={row[f] ?? ""}
-                                            onChange={e => updateCell(rowIdx, f, e.target.value)}
-                                            style={{
-                                              width: "100%", minWidth: 80, background: "rgba(255,255,255,0.04)",
-                                              border: `1px solid ${T.border}`, borderRadius: 6,
-                                              padding: "5px 8px", color: T.white, fontSize: 12,
-                                              fontFamily: "'Outfit', sans-serif", outline: "none",
-                                              transition: "border-color 0.15s"
-                                            }}
-                                            onFocus={e => e.target.style.borderColor = T.gold}
-                                            onBlur={e => e.target.style.borderColor = "rgba(212,168,67,0.08)"}
-                                          />
-                                        </td>
-                                      ))}
-                                      <td style={{ padding: "6px 8px" }}>
-                                        <button type="button" onClick={() => deleteRow(rowIdx)} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, color: "#EF4444", fontSize: 11, padding: "4px 8px", cursor: "pointer" }}>✕</button>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                            <div style={{ padding: "10px 20px", fontSize: 11, color: T.textMuted, borderTop: `1px solid ${T.border}` }}>
-                              Saved to Firestore: <code style={{ color: T.gold, fontSize: 10 }}>tabData/{activeTabData.firestoreKey}</code> · Dashboard reads this collection on load
-                            </div>
-                          </div>
-                        ) : (
-                          <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "32px 24px", textAlign: "center" }}>
-                            <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(100,116,139,0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", color: "#64748B" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 6 }}>No editable data for this tab</div>
-                            <div style={{ fontSize: 12, color: T.textMuted }}>This tab renders dynamic or user-specific data (Portfolio, Map, DXB Estimate, etc.) that can't be edited here.</div>
-                          </div>
-                        )}
-                    </div>
                   )}
                 </div>
 
-                {/* Quick actions */}
-                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "14px 20px", display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                  <span style={{ fontSize: 11, color: T.textMuted, marginRight: 4 }}>Quick:</span>
-                  {[
-                    { label: "Show All", color: T.green, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t] = { ...getTabSetting(t), visible: true }; }); setTabSettings(u); setTabSettingsSaving(true); await setDoc(doc(db, "platformSettings", "tabs"), u); setTimeout(() => setTabSettingsSaving(false), 800); } },
-                    { label: "Lock All to Pro+", color: T.gold, action: async () => { const u = {}; ALL_TABS.forEach(t => { if (!["Overview","Projects"].includes(t)) u[t] = { ...getTabSetting(t), minTier: "pro" }; }); const f = { ...tabSettings, ...u }; setTabSettings(f); setTabSettingsSaving(true); await setDoc(doc(db, "platformSettings", "tabs"), f); setTimeout(() => setTabSettingsSaving(false), 800); } },
-                    { label: "Hide Analytics Tabs", color: T.textMuted, action: async () => { const hide = ["DLD Volumes","Developer Health","Competitors","Risk","Market"]; const u = { ...tabSettings }; hide.forEach(t => { u[t] = { ...getTabSetting(t), visible: false }; }); setTabSettings(u); setTabSettingsSaving(true); await setDoc(doc(db, "platformSettings", "tabs"), u); setTimeout(() => setTabSettingsSaving(false), 800); } },
-                  ].map(({ label, action, color }) => (
-                    <button key={label} type="button" onClick={action} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", border: `1px solid ${color}40`, background: `${color}10`, color, fontFamily: "'Outfit',sans-serif" }}>{label}</button>
-                  ))}
-                </div>
+                {/* ═══ SELECTED TAB CONFIG ═══ */}
+                {selectedTabControl && (
+                  <div className="fade-up" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.gold}40`, padding: "16px 20px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                        <div>
+                          <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{selectedTabControl}</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Configure access, badge, and description</div>
+                        </div>
+                        <button type="button" onClick={() => setSelectedTabControl(null)} style={{ background: "none", border: "none", color: T.textMuted, fontSize: 18, cursor: "pointer" }}>✕</button>
+                      </div>
+                      <div style={{ marginBottom: 16 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Min Tier</div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          {TIERS.map(tier => {
+                            const minTier = getTabSetting(selectedTabControl).minTier || "free";
+                            return <button key={tier} type="button" onClick={() => updateTabSetting(selectedTabControl, "minTier", tier)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: "pointer", border: `2px solid ${minTier === tier ? TIER_COLORS[tier] : T.border}`, background: minTier === tier ? `${TIER_COLORS[tier]}18` : T.surfaceAlt, color: minTier === tier ? TIER_COLORS[tier] : T.textMuted, fontFamily: "'Outfit',sans-serif" }}>{TIER_LABELS[tier]}</button>;
+                          })}
+                        </div>
+                      </div>
+                      <div style={{ marginBottom: 16 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Badge</div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          {Object.entries(BADGE_TYPES).map(([key, val]) => {
+                            const currentBadge = getTabSetting(selectedTabControl).badge || "none";
+                            const isActive = currentBadge === key;
+                            const color = val ? val.color : T.textMuted;
+                            return <button key={key} type="button" onClick={() => updateTabSetting(selectedTabControl, "badge", key)} style={{ padding: "8px 16px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", border: `2px solid ${isActive ? color : T.border}`, background: isActive ? `${color}15` : T.surfaceAlt, color: isActive ? color : T.textMuted, fontFamily: "'Outfit',sans-serif" }}>{key === "none" ? "None" : val.label}</button>;
+                          })}
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Description</div>
+                        <input type="text" placeholder={ALL_TABS.find(t => t.id === selectedTabControl)?.desc || "Tab description..."} value={getTabSetting(selectedTabControl).description || ""} onChange={e => updateTabSetting(selectedTabControl, "description", e.target.value)} style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                      </div>
+                    </div>
 
-                <div style={{ fontSize: 11, color: T.textMuted, padding: "8px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
-                  Tip: Tabs marked <span style={{ color: T.blue }}>DATA</span> have editable tables. Click to open. Data saved to <code style={{ fontSize: 10 }}>Firestore/tabData/</code>. Note: dashboard must read from Firestore for edits to reflect live — hook this into each tab's data source for full live control.
+                    {activeTabData ? (
+                      <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Data Table</div>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button type="button" onClick={addRow} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary }}>+ Row</button>
+                            <button type="button" onClick={saveTabData} disabled={tabDataSaving} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.1)", color: T.gold }}>{tabDataSaving ? "Saving…" : "Save"}</button>
+                          </div>
+                        </div>
+                        <div style={{ overflowX: "auto" }}>
+                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                            <thead><tr style={{ background: T.surfaceAlt }}>{activeTabData.fields.map(f => <th key={f} style={{ padding: "10px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", borderBottom: `1px solid ${T.border}` }}>{activeTabData.labels[f]}</th>)}<th style={{ borderBottom: `1px solid ${T.border}` }} /></tr></thead>
+                            <tbody>
+                              {getEditableRows().map((row, rowIdx) => (
+                                <tr key={rowIdx} style={{ borderBottom: `1px solid ${T.border}` }}>
+                                  {activeTabData.fields.map(f => <td key={f} style={{ padding: "6px 8px" }}><input value={row[f] ?? ""} onChange={e => updateCell(rowIdx, f, e.target.value)} style={{ width: "100%", minWidth: 80, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, borderRadius: 6, padding: "5px 8px", color: T.white, fontSize: 12, fontFamily: "'Outfit', sans-serif", outline: "none" }} /></td>)}
+                                  <td style={{ padding: "6px 8px" }}><button type="button" onClick={() => deleteRow(rowIdx)} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, color: "#EF4444", fontSize: 11, padding: "4px 8px", cursor: "pointer" }}>✕</button></td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "32px 24px", textAlign: "center" }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 6 }}>No editable data</div>
+                        <div style={{ fontSize: 12, color: T.textMuted }}>This tab uses dynamic data</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div style={{ fontSize: 11, color: T.textMuted, padding: "10px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
+                  💡 <strong>Tips:</strong> Tabs with <span style={{ color: T.blue }}>DATA</span> have editable tables. Badge labels show in sidebar. Changes sync instantly.
                 </div>
               </div>
             );
           })()}
+
 
           {tab === "eibor" && <EiborRatesPanel db={db} T={T} I={I} notify={notify} />}
 
