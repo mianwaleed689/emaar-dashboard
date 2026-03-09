@@ -373,6 +373,9 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     enabled: true 
   });
 
+  // Phase 4: Analytics & Reporting
+  const [analyticsRange, setAnalyticsRange] = useState("7d"); // 7d | 30d | 90d
+
   // Predefined tags
   const availableTags = [
     { id: "urgent", label: "Urgent", color: T.red },
@@ -584,6 +587,138 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   // Get all unique tags from tickets
   const allUsedTags = [...new Set(tickets.flatMap(t => t.tags || []))];
 
+  // Phase 4: Analytics Calculations
+  const getAnalyticsData = () => {
+    const rangeDays = analyticsRange === "7d" ? 7 : analyticsRange === "30d" ? 30 : 90;
+    const rangeStart = new Date(now.getTime() - rangeDays * 24 * 60 * 60 * 1000);
+    
+    // Filter tickets in range
+    const rangeTickets = tickets.filter(t => new Date(t.createdAt) >= rangeStart);
+    const prevRangeStart = new Date(rangeStart.getTime() - rangeDays * 24 * 60 * 60 * 1000);
+    const prevRangeTickets = tickets.filter(t => {
+      const created = new Date(t.createdAt);
+      return created >= prevRangeStart && created < rangeStart;
+    });
+    
+    // Daily volume data for chart
+    const dailyVolume = [];
+    for (let i = rangeDays - 1; i >= 0; i--) {
+      const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+      const dayTickets = tickets.filter(t => {
+        const created = new Date(t.createdAt);
+        return created >= dayStart && created < dayEnd;
+      });
+      const resolved = tickets.filter(t => {
+        if (!t.resolvedAt) return false;
+        const resolvedDate = new Date(t.resolvedAt);
+        return resolvedDate >= dayStart && resolvedDate < dayEnd;
+      });
+      dailyVolume.push({
+        date: dayStart.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
+        shortDate: dayStart.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        created: dayTickets.length,
+        resolved: resolved.length,
+      });
+    }
+    
+    // Category breakdown
+    const categoryBreakdown = categories.map(cat => ({
+      ...cat,
+      count: rangeTickets.filter(t => t.category === cat.id).length,
+      percent: rangeTickets.length > 0 ? Math.round(rangeTickets.filter(t => t.category === cat.id).length / rangeTickets.length * 100) : 0
+    })).filter(c => c.count > 0).sort((a, b) => b.count - a.count);
+    
+    // Priority breakdown
+    const priorityBreakdown = [
+      { id: "urgent", label: "Urgent", color: T.red, count: rangeTickets.filter(t => t.priority === "urgent").length },
+      { id: "high", label: "High", color: T.orange, count: rangeTickets.filter(t => t.priority === "high").length },
+      { id: "normal", label: "Normal", color: T.textSecondary, count: rangeTickets.filter(t => !t.priority || t.priority === "normal").length },
+    ];
+    
+    // Status breakdown
+    const statusBreakdown = [
+      { id: "open", label: "Open", color: T.blue, count: rangeTickets.filter(t => t.status === "open").length },
+      { id: "in_progress", label: "In Progress", color: T.orange, count: rangeTickets.filter(t => t.status === "in_progress").length },
+      { id: "resolved", label: "Resolved", color: T.green, count: rangeTickets.filter(t => t.status === "resolved").length },
+      { id: "closed", label: "Closed", color: T.textMuted, count: rangeTickets.filter(t => t.status === "closed").length },
+    ];
+    
+    // Resolution time buckets
+    const resolvedInRange = rangeTickets.filter(t => t.resolvedAt && t.createdAt);
+    const resolutionBuckets = [
+      { label: "< 4h", color: T.green, count: 0, percent: 0 },
+      { label: "4-12h", color: T.teal, count: 0, percent: 0 },
+      { label: "12-24h", color: T.orange, count: 0, percent: 0 },
+      { label: "> 24h", color: T.red, count: 0, percent: 0 },
+    ];
+    resolvedInRange.forEach(t => {
+      const hours = (new Date(t.resolvedAt) - new Date(t.createdAt)) / 1000 / 60 / 60;
+      if (hours < 4) resolutionBuckets[0].count++;
+      else if (hours < 12) resolutionBuckets[1].count++;
+      else if (hours < 24) resolutionBuckets[2].count++;
+      else resolutionBuckets[3].count++;
+    });
+    resolutionBuckets.forEach(b => {
+      b.percent = resolvedInRange.length > 0 ? Math.round(b.count / resolvedInRange.length * 100) : 0;
+    });
+    
+    // SLA compliance
+    const slaCompliant = rangeTickets.filter(t => {
+      if (!t.resolvedAt) return false;
+      const hours = (new Date(t.resolvedAt) - new Date(t.createdAt)) / 1000 / 60 / 60;
+      return hours <= slaSettings.defaultHours;
+    }).length;
+    const slaBreachedCount = rangeTickets.filter(t => {
+      if (t.status === "resolved" || t.status === "closed") {
+        if (!t.resolvedAt) return false;
+        const hours = (new Date(t.resolvedAt) - new Date(t.createdAt)) / 1000 / 60 / 60;
+        return hours > slaSettings.defaultHours;
+      }
+      const hours = (now - new Date(t.createdAt)) / 1000 / 60 / 60;
+      return hours > slaSettings.defaultHours;
+    }).length;
+    const slaPercent = (slaCompliant + slaBreachedCount) > 0 ? Math.round(slaCompliant / (slaCompliant + slaBreachedCount) * 100) : 100;
+    
+    // Previous period SLA for comparison
+    const prevSlaCompliant = prevRangeTickets.filter(t => {
+      if (!t.resolvedAt) return false;
+      const hours = (new Date(t.resolvedAt) - new Date(t.createdAt)) / 1000 / 60 / 60;
+      return hours <= slaSettings.defaultHours;
+    }).length;
+    const prevSlaBr = prevRangeTickets.filter(t => {
+      if (!t.resolvedAt) return false;
+      const hours = (new Date(t.resolvedAt) - new Date(t.createdAt)) / 1000 / 60 / 60;
+      return hours > slaSettings.defaultHours;
+    }).length;
+    const prevSlaPercent = (prevSlaCompliant + prevSlaBr) > 0 ? Math.round(prevSlaCompliant / (prevSlaCompliant + prevSlaBr) * 100) : 100;
+    
+    // Volume change
+    const volumeChange = prevRangeTickets.length > 0 
+      ? Math.round((rangeTickets.length - prevRangeTickets.length) / prevRangeTickets.length * 100) 
+      : 0;
+    
+    // Avg resolution time
+    const avgResolutionHrs = resolvedInRange.length > 0
+      ? Math.round(resolvedInRange.reduce((sum, t) => sum + (new Date(t.resolvedAt) - new Date(t.createdAt)), 0) / resolvedInRange.length / 1000 / 60 / 60 * 10) / 10
+      : null;
+    
+    return {
+      total: rangeTickets.length,
+      volumeChange,
+      dailyVolume,
+      categoryBreakdown,
+      priorityBreakdown,
+      statusBreakdown,
+      resolutionBuckets,
+      slaPercent,
+      slaChange: slaPercent - prevSlaPercent,
+      avgResolutionHrs,
+      resolvedCount: resolvedInRange.length,
+    };
+  };
+  
+  const analytics = getAnalyticsData();
   // Filter tickets (including custom field filter)
   const filteredTickets = tickets.filter(t => {
     if (supportSubTab === "open" && t.status !== "open" && t.status !== "in_progress") return false;
@@ -1555,6 +1690,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             { id: "open", label: `Open (${tickets.filter(t => t.status === "open" || t.status === "in_progress").length})` },
             { id: "resolved", label: `Resolved (${tickets.filter(t => t.status === "resolved" || t.status === "closed").length})` },
             { id: "all", label: `All (${tickets.length})` },
+            { id: "analytics", label: "📊 Analytics" },
           ].map(t => (
             <button key={t.id} type="button" onClick={() => setSupportSubTab(t.id)}
               style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${supportSubTab === t.id ? T.gold : T.border}`, background: supportSubTab === t.id ? T.goldGlow : "transparent", color: supportSubTab === t.id ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
@@ -1562,6 +1698,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             </button>
           ))}
         </div>
+        {supportSubTab !== "analytics" && (
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <input value={ticketSearch} onChange={e => setTicketSearch(e.target.value)} placeholder="Search tickets..."
             style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, width: 160, fontFamily: "'Outfit',sans-serif" }} />
@@ -1621,9 +1758,195 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             ⚡ {workflowTriggers.filter(w => w.enabled).length > 0 && <span style={{ fontSize: 9 }}>{workflowTriggers.filter(w => w.enabled).length}</span>}
           </button>
         </div>
+        )}
+        {supportSubTab === "analytics" && (
+          <div style={{ display: "flex", gap: 8 }}>
+            {[
+              { id: "7d", label: "7 Days" },
+              { id: "30d", label: "30 Days" },
+              { id: "90d", label: "90 Days" },
+            ].map(r => (
+              <button key={r.id} type="button" onClick={() => setAnalyticsRange(r.id)}
+                style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${analyticsRange === r.id ? T.teal : T.border}`, background: analyticsRange === r.id ? `${T.teal}20` : "transparent", color: analyticsRange === r.id ? T.teal : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                {r.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* TICKETS LIST */}
+      {/* ANALYTICS VIEW */}
+      {supportSubTab === "analytics" ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* KPI Cards Row */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Total Tickets</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                <span style={{ fontSize: 32, fontWeight: 900, color: T.white, fontFamily: "'Fraunces',serif" }}>{analytics.total}</span>
+                {analytics.volumeChange !== 0 && (
+                  <span style={{ fontSize: 12, fontWeight: 600, color: analytics.volumeChange > 0 ? T.red : T.green }}>
+                    {analytics.volumeChange > 0 ? "↑" : "↓"} {Math.abs(analytics.volumeChange)}%
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>vs previous {analyticsRange}</div>
+            </div>
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Avg Resolution</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                <span style={{ fontSize: 32, fontWeight: 900, color: analytics.avgResolutionHrs && analytics.avgResolutionHrs > slaSettings.defaultHours ? T.red : T.green, fontFamily: "'Fraunces',serif" }}>
+                  {analytics.avgResolutionHrs ? `${analytics.avgResolutionHrs}h` : "—"}
+                </span>
+              </div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>SLA target: {slaSettings.defaultHours}h</div>
+            </div>
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>SLA Compliance</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                <span style={{ fontSize: 32, fontWeight: 900, color: analytics.slaPercent >= 85 ? T.green : analytics.slaPercent >= 70 ? T.orange : T.red, fontFamily: "'Fraunces',serif" }}>
+                  {analytics.slaPercent}%
+                </span>
+                {analytics.slaChange !== 0 && (
+                  <span style={{ fontSize: 12, fontWeight: 600, color: analytics.slaChange > 0 ? T.green : T.red }}>
+                    {analytics.slaChange > 0 ? "↑" : "↓"} {Math.abs(analytics.slaChange)}%
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>tickets resolved within SLA</div>
+            </div>
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Resolved</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                <span style={{ fontSize: 32, fontWeight: 900, color: T.green, fontFamily: "'Fraunces',serif" }}>{analytics.resolvedCount}</span>
+              </div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>tickets closed in period</div>
+            </div>
+          </div>
+
+          {/* Charts Row */}
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
+            {/* Ticket Volume Chart */}
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>📈 Ticket Volume</div>
+              <div style={{ height: 200 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={analytics.dailyVolume.slice(-14)} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
+                    <defs>
+                      <linearGradient id="colorCreated" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={T.gold} stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor={T.gold} stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={T.green} stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor={T.green} stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+                    <XAxis dataKey="shortDate" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={{ stroke: T.border }} tickLine={false} />
+                    <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={{ stroke: T.border }} tickLine={false} />
+                    <Tooltip 
+                      contentStyle={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: T.white, fontWeight: 600 }}
+                    />
+                    <Area type="monotone" dataKey="created" name="Created" stroke={T.gold} fillOpacity={1} fill="url(#colorCreated)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="resolved" name="Resolved" stroke={T.green} fillOpacity={1} fill="url(#colorResolved)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 12, height: 3, background: T.gold, borderRadius: 2 }} />
+                  <span style={{ fontSize: 10, color: T.textMuted }}>Created</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 12, height: 3, background: T.green, borderRadius: 2 }} />
+                  <span style={{ fontSize: 10, color: T.textMuted }}>Resolved</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Category Breakdown */}
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>📊 By Category</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {analytics.categoryBreakdown.slice(0, 6).map(cat => (
+                  <div key={cat.id}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                      <span style={{ fontSize: 11, color: T.textSecondary }}>{cat.icon} {cat.label}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: T.white }}>{cat.count} ({cat.percent}%)</span>
+                    </div>
+                    <div style={{ height: 6, background: T.border, borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${cat.percent}%`, background: cat.color, borderRadius: 3 }} />
+                    </div>
+                  </div>
+                ))}
+                {analytics.categoryBreakdown.length === 0 && (
+                  <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No data</div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Second Row */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+            {/* Priority Breakdown */}
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>🎯 By Priority</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {analytics.priorityBreakdown.map(p => (
+                  <div key={p.id}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                      <span style={{ fontSize: 11, color: T.textSecondary }}>{p.label}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: p.color }}>{p.count}</span>
+                    </div>
+                    <div style={{ height: 6, background: T.border, borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${analytics.total > 0 ? (p.count / analytics.total * 100) : 0}%`, background: p.color, borderRadius: 3 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Status Breakdown */}
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>📋 By Status</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {analytics.statusBreakdown.map(s => (
+                  <div key={s.id}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                      <span style={{ fontSize: 11, color: T.textSecondary }}>{s.label}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: s.color }}>{s.count}</span>
+                    </div>
+                    <div style={{ height: 6, background: T.border, borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${analytics.total > 0 ? (s.count / analytics.total * 100) : 0}%`, background: s.color, borderRadius: 3 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Resolution Time Buckets */}
+            <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>⏱️ Resolution Time</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {analytics.resolutionBuckets.map((b, idx) => (
+                  <div key={idx}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                      <span style={{ fontSize: 11, color: T.textSecondary }}>{b.label}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: b.color }}>{b.count} ({b.percent}%)</span>
+                    </div>
+                    <div style={{ height: 6, background: T.border, borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${b.percent}%`, background: b.color, borderRadius: 3 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+      /* TICKETS LIST */
       <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
         {ticketsLoading ? (
           <div style={{ padding: 60, textAlign: "center" }}>
@@ -1695,6 +2018,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           </div>
         )}
       </div>
+      )}
 
       {/* TICKET DRAWER */}
       {ticketDrawer && (
