@@ -353,6 +353,14 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   const [newFieldForm, setNewFieldForm] = useState({ name: "", type: "text", options: "", required: false });
   const [customFieldFilter, setCustomFieldFilter] = useState({ fieldId: "", value: "" });
 
+  // Phase 3A: Auto-Assign Rules & SLA Escalation
+  const [autoAssignRules, setAutoAssignRules] = useState([]);
+  const [showAutoAssignModal, setShowAutoAssignModal] = useState(false);
+  const [editingRule, setEditingRule] = useState(null);
+  const [newRuleForm, setNewRuleForm] = useState({ name: "", condition: "category", conditionValue: "", assignTo: "", enabled: true });
+  const [slaSettings, setSlaSettings] = useState({ defaultHours: 24, warningPercent: 75, escalateOnBreach: true, escalateTo: "", notifyAgent: true, notifyManager: true });
+  const [showSlaModal, setShowSlaModal] = useState(false);
+
   // Predefined tags
   const availableTags = [
     { id: "urgent", label: "Urgent", color: T.red },
@@ -455,6 +463,85 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     };
     fetchCustomFields();
   }, [db]);
+
+  // Fetch auto-assign rules and SLA settings
+  useEffect(() => {
+    const fetchAutomation = async () => {
+      try {
+        // Fetch auto-assign rules
+        const rulesSnap = await getDocs(collection(db, "supportAutoAssignRules"));
+        setAutoAssignRules(rulesSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        
+        // Fetch SLA settings
+        const slaDoc = await getDoc(doc(db, "supportSettings", "sla"));
+        if (slaDoc.exists()) {
+          setSlaSettings(prev => ({ ...prev, ...slaDoc.data() }));
+        }
+      } catch (e) {
+        console.error("Fetch automation settings:", e);
+        // Default sample rules
+        setAutoAssignRules([
+          { id: "rule_1", name: "Bugs to Dev Team", condition: "category", conditionValue: "bug", assignTo: "dev_team", assignToName: "Dev Team", enabled: true },
+          { id: "rule_2", name: "VIP Customers", condition: "tier", conditionValue: "enterprise", assignTo: "vip_support", assignToName: "VIP Support", enabled: true },
+          { id: "rule_3", name: "Urgent Priority", condition: "priority", conditionValue: "urgent", assignTo: "senior_agent", assignToName: "Senior Agent", enabled: false },
+        ]);
+      }
+    };
+    fetchAutomation();
+  }, [db]);
+
+  // SLA Check & Auto-Escalation (runs on ticket load and periodically)
+  useEffect(() => {
+    if (!slaSettings.escalateOnBreach || tickets.length === 0) return;
+    
+    const checkSlaEscalation = async () => {
+      const now = new Date();
+      const slaMs = slaSettings.defaultHours * 60 * 60 * 1000;
+      
+      for (const ticket of tickets) {
+        if (ticket.status === "resolved" || ticket.status === "closed" || ticket.escalatedAt) continue;
+        
+        const created = new Date(ticket.createdAt);
+        const elapsed = now.getTime() - created.getTime();
+        const percentUsed = (elapsed / slaMs) * 100;
+        
+        // Auto-escalate at 100% SLA breach
+        if (percentUsed >= 100 && !ticket.autoEscalated) {
+          try {
+            const escalationUpdate = {
+              autoEscalated: true,
+              escalatedAt: now.toISOString(),
+              tags: [...new Set([...(ticket.tags || []), "escalated"])],
+              internalNotes: [
+                ...(ticket.internalNotes || []),
+                { text: `⚠️ AUTO-ESCALATED: SLA breached (>${slaSettings.defaultHours}h without resolution)`, by: "System", at: now.toISOString(), isSystem: true }
+              ],
+              updatedAt: now.toISOString()
+            };
+            
+            // Assign to escalation manager if set
+            if (slaSettings.escalateTo) {
+              escalationUpdate.assignedTo = slaSettings.escalateTo;
+              escalationUpdate.assignedToName = slaSettings.escalateToName || "Manager";
+            }
+            
+            await setDoc(doc(db, "supportTickets", ticket.id), escalationUpdate, { merge: true });
+            
+            // Update local state
+            setTickets(prev => prev.map(t => t.id === ticket.id ? { ...t, ...escalationUpdate } : t));
+            
+            console.log(`Auto-escalated ticket: ${ticket.id}`);
+          } catch (e) {
+            console.error("Auto-escalation failed:", e);
+          }
+        }
+      }
+    };
+    
+    checkSlaEscalation();
+    const interval = setInterval(checkSlaEscalation, 5 * 60 * 1000); // Check every 5 minutes
+    return () => clearInterval(interval);
+  }, [tickets, slaSettings, db]);
 
   // Computed stats
   const now = new Date();
@@ -1080,6 +1167,162 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     }
   };
 
+  // Phase 3A: Auto-Assign Rules Management
+  const saveAutoAssignRule = async () => {
+    if (!newRuleForm.name.trim() || !newRuleForm.conditionValue || !newRuleForm.assignTo) {
+      notify("Please fill all required fields");
+      return;
+    }
+    
+    try {
+      const ruleData = {
+        name: newRuleForm.name.trim(),
+        condition: newRuleForm.condition,
+        conditionValue: newRuleForm.conditionValue,
+        assignTo: newRuleForm.assignTo,
+        assignToName: assignableAgents.find(a => a.id === newRuleForm.assignTo)?.name || newRuleForm.assignTo,
+        enabled: newRuleForm.enabled,
+        updatedAt: new Date().toISOString()
+      };
+      
+      if (editingRule) {
+        await setDoc(doc(db, "supportAutoAssignRules", editingRule.id), ruleData, { merge: true });
+        setAutoAssignRules(prev => prev.map(r => r.id === editingRule.id ? { ...r, ...ruleData } : r));
+        notify("Rule updated");
+      } else {
+        ruleData.createdAt = new Date().toISOString();
+        const docRef = await addDoc(collection(db, "supportAutoAssignRules"), ruleData);
+        setAutoAssignRules(prev => [...prev, { id: docRef.id, ...ruleData }]);
+        notify("Rule created");
+      }
+      
+      setNewRuleForm({ name: "", condition: "category", conditionValue: "", assignTo: "", enabled: true });
+      setEditingRule(null);
+    } catch (e) {
+      notify("Error: " + e.message);
+    }
+  };
+
+  const deleteAutoAssignRule = async (ruleId) => {
+    if (!window.confirm("Delete this auto-assign rule?")) return;
+    
+    try {
+      await deleteDoc(doc(db, "supportAutoAssignRules", ruleId));
+      setAutoAssignRules(prev => prev.filter(r => r.id !== ruleId));
+      notify("Rule deleted");
+    } catch (e) {
+      notify("Error: " + e.message);
+    }
+  };
+
+  const toggleRuleEnabled = async (ruleId, enabled) => {
+    try {
+      await setDoc(doc(db, "supportAutoAssignRules", ruleId), { enabled, updatedAt: new Date().toISOString() }, { merge: true });
+      setAutoAssignRules(prev => prev.map(r => r.id === ruleId ? { ...r, enabled } : r));
+      notify(enabled ? "Rule enabled" : "Rule disabled");
+    } catch (e) {
+      notify("Error: " + e.message);
+    }
+  };
+
+  const editAutoAssignRule = (rule) => {
+    setEditingRule(rule);
+    setNewRuleForm({
+      name: rule.name,
+      condition: rule.condition,
+      conditionValue: rule.conditionValue,
+      assignTo: rule.assignTo,
+      enabled: rule.enabled
+    });
+  };
+
+  // Apply auto-assign rules to a ticket
+  const applyAutoAssignRules = async (ticket) => {
+    const enabledRules = autoAssignRules.filter(r => r.enabled);
+    
+    for (const rule of enabledRules) {
+      let matches = false;
+      
+      switch (rule.condition) {
+        case "category":
+          matches = ticket.category === rule.conditionValue;
+          break;
+        case "priority":
+          matches = ticket.priority === rule.conditionValue;
+          break;
+        case "tier":
+          matches = ticket.userTier === rule.conditionValue;
+          break;
+        case "keyword":
+          matches = (ticket.subject || "").toLowerCase().includes(rule.conditionValue.toLowerCase());
+          break;
+        default:
+          break;
+      }
+      
+      if (matches) {
+        try {
+          const assignUpdate = {
+            assignedTo: rule.assignTo,
+            assignedToName: rule.assignToName,
+            autoAssignedBy: rule.name,
+            internalNotes: [
+              ...(ticket.internalNotes || []),
+              { text: `🤖 Auto-assigned to ${rule.assignToName} by rule: "${rule.name}"`, by: "System", at: new Date().toISOString(), isSystem: true }
+            ],
+            updatedAt: new Date().toISOString()
+          };
+          
+          await setDoc(doc(db, "supportTickets", ticket.id), assignUpdate, { merge: true });
+          setTickets(prev => prev.map(t => t.id === ticket.id ? { ...t, ...assignUpdate } : t));
+          
+          notify(`Auto-assigned to ${rule.assignToName}`);
+          return true; // Stop after first matching rule
+        } catch (e) {
+          console.error("Auto-assign failed:", e);
+        }
+      }
+    }
+    return false;
+  };
+
+  // Save SLA Settings
+  const saveSlaSettings = async () => {
+    try {
+      await setDoc(doc(db, "supportSettings", "sla"), {
+        ...slaSettings,
+        updatedAt: new Date().toISOString()
+      });
+      notify("SLA settings saved");
+      setShowSlaModal(false);
+    } catch (e) {
+      notify("Error: " + e.message);
+    }
+  };
+
+  // Get SLA status for a ticket
+  const getSlaStatus = (ticket) => {
+    if (ticket.status === "resolved" || ticket.status === "closed") return { status: "resolved", percent: 0 };
+    
+    const created = new Date(ticket.createdAt);
+    const now = new Date();
+    const elapsed = now.getTime() - created.getTime();
+    const slaMs = slaSettings.defaultHours * 60 * 60 * 1000;
+    const percent = Math.round((elapsed / slaMs) * 100);
+    
+    if (percent >= 100) return { status: "breached", percent, color: T.red };
+    if (percent >= slaSettings.warningPercent) return { status: "warning", percent, color: T.orange };
+    return { status: "ok", percent, color: T.green };
+  };
+
+  // Condition options for rules
+  const conditionOptions = [
+    { id: "category", label: "Category", values: categories.map(c => ({ id: c.id, label: c.label })) },
+    { id: "priority", label: "Priority", values: [{ id: "urgent", label: "Urgent" }, { id: "high", label: "High" }, { id: "normal", label: "Normal" }] },
+    { id: "tier", label: "User Tier", values: [{ id: "enterprise", label: "Enterprise" }, { id: "pro", label: "Pro" }, { id: "pro_trial", label: "Pro Trial" }, { id: "free", label: "Free" }] },
+    { id: "keyword", label: "Subject Contains", values: [] },
+  ];
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* KPI TOPBAR */}
@@ -1153,8 +1396,19 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.cyan}`, background: T.surfaceAlt, color: T.white, fontSize: 11, width: 100, fontFamily: "'Outfit',sans-serif" }} />
           )}
           <button type="button" onClick={() => setShowFieldsModal(true)}
-            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+            title="Custom Fields">
             ⚙️
+          </button>
+          <button type="button" onClick={() => setShowAutoAssignModal(true)}
+            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${autoAssignRules.filter(r => r.enabled).length > 0 ? T.green : T.border}`, background: autoAssignRules.filter(r => r.enabled).length > 0 ? `${T.green}15` : "transparent", color: autoAssignRules.filter(r => r.enabled).length > 0 ? T.green : T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+            title="Auto-Assign Rules">
+            🤖 {autoAssignRules.filter(r => r.enabled).length > 0 && <span style={{ fontSize: 9 }}>{autoAssignRules.filter(r => r.enabled).length}</span>}
+          </button>
+          <button type="button" onClick={() => setShowSlaModal(true)}
+            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+            title="SLA Settings">
+            ⏱️
           </button>
         </div>
       </div>
@@ -1179,6 +1433,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               const priority = priorities[ticket.priority] || priorities.normal;
               const breached = isSlaBreached(ticket);
               const ticketTags = ticket.tags || [];
+              const slaInfo = getSlaStatus(ticket);
               return (
                 <div key={ticket.id} onClick={() => setTicketDrawer(ticket)}
                   style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", display: "flex", alignItems: "center", gap: 14, borderLeft: breached ? `3px solid ${T.red}` : "3px solid transparent", transition: "all 0.15s" }}
@@ -1188,7 +1443,10 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ticket.subject}</span>
-                      {breached && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>⏰ SLA</span>}
+                      {slaInfo.status === "breached" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>⏰ SLA {slaInfo.percent}%</span>}
+                      {slaInfo.status === "warning" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.orange}20`, color: T.orange, fontWeight: 600 }}>⚠️ {slaInfo.percent}%</span>}
+                      {ticket.autoAssignedBy && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green, fontWeight: 600 }}>🤖 Auto</span>}
+                      {ticket.autoEscalated && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>⚡ Escalated</span>}
                       {ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.textMuted}20`, color: T.textMuted, fontWeight: 600 }}>↪️ MERGED</span>}
                       {(ticket.linkedTickets || []).length > 0 && !ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal, fontWeight: 600 }}>🔗 {ticket.linkedTickets.length}</span>}
                       {ticketTags.slice(0, 2).map(tagId => {
@@ -1204,6 +1462,17 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       <span>·</span>
                       <span>{timeAgo(ticket.createdAt)}</span>
                       {ticket.assignedTo && <><span>·</span><span style={{ color: T.purple }}>👤 {ticket.assignedToName || "Assigned"}</span></>}
+                      {/* SLA Progress Bar */}
+                      {slaInfo.status !== "resolved" && (
+                        <>
+                          <span>·</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <div style={{ width: 40, height: 4, background: T.border, borderRadius: 2, overflow: "hidden" }}>
+                              <div style={{ width: `${Math.min(slaInfo.percent, 100)}%`, height: "100%", background: slaInfo.color, borderRadius: 2 }} />
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -1829,6 +2098,252 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AUTO-ASSIGN RULES MODAL */}
+      {showAutoAssignModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowAutoAssignModal(false)}>
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 600, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>🤖 Auto-Assign Rules</h3>
+              <button type="button" onClick={() => setShowAutoAssignModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+            </div>
+            
+            <div style={{ padding: 12, background: `${T.green}15`, borderRadius: 8, marginBottom: 20 }}>
+              <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
+                Create rules to automatically assign tickets based on category, priority, user tier, or keywords. Rules are applied in order — first match wins.
+              </div>
+            </div>
+            
+            {/* Add/Edit Rule Form */}
+            <div style={{ padding: 16, background: T.surfaceAlt, borderRadius: 10, marginBottom: 20 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
+                {editingRule ? "✏️ Edit Rule" : "➕ Add New Rule"}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Rule Name</label>
+                  <input value={newRuleForm.name} onChange={e => setNewRuleForm(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Bugs to Dev Team..."
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>When</label>
+                  <select value={newRuleForm.condition} onChange={e => setNewRuleForm(prev => ({ ...prev, condition: e.target.value, conditionValue: "" }))}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                    {conditionOptions.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Equals / Contains</label>
+                  {conditionOptions.find(c => c.id === newRuleForm.condition)?.values.length > 0 ? (
+                    <select value={newRuleForm.conditionValue} onChange={e => setNewRuleForm(prev => ({ ...prev, conditionValue: e.target.value }))}
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                      <option value="">Select...</option>
+                      {conditionOptions.find(c => c.id === newRuleForm.condition)?.values.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}
+                    </select>
+                  ) : (
+                    <input value={newRuleForm.conditionValue} onChange={e => setNewRuleForm(prev => ({ ...prev, conditionValue: e.target.value }))} placeholder="Enter keyword..."
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                  )}
+                </div>
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Assign To</label>
+                  <select value={newRuleForm.assignTo} onChange={e => setNewRuleForm(prev => ({ ...prev, assignTo: e.target.value }))}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                    <option value="">Select agent...</option>
+                    {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>👤 {a.name}</option>)}
+                  </select>
+                </div>
+                <div style={{ gridColumn: "span 2", display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                    <input type="checkbox" checked={newRuleForm.enabled} onChange={e => setNewRuleForm(prev => ({ ...prev, enabled: e.target.checked }))}
+                      style={{ width: 16, height: 16 }} />
+                    <span style={{ fontSize: 12, color: T.textSecondary }}>Enabled</span>
+                  </label>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    {editingRule && (
+                      <button type="button" onClick={() => { setEditingRule(null); setNewRuleForm({ name: "", condition: "category", conditionValue: "", assignTo: "", enabled: true }); }}
+                        style={{ padding: "10px 16px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                        Cancel
+                      </button>
+                    )}
+                    <button type="button" onClick={saveAutoAssignRule}
+                      style={{ padding: "10px 20px", borderRadius: 6, border: "none", background: T.green, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                      {editingRule ? "Update Rule" : "Add Rule"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Existing Rules List */}
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
+                📋 Active Rules ({autoAssignRules.length})
+              </div>
+              {autoAssignRules.length === 0 ? (
+                <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>
+                  No rules yet. Add one above!
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {autoAssignRules.map((rule, idx) => (
+                    <div key={rule.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${rule.enabled ? T.green : T.border}40`, opacity: rule.enabled ? 1 : 0.6 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <span style={{ fontSize: 12, color: T.textMuted, fontWeight: 600, minWidth: 20 }}>#{idx + 1}</span>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: T.white, display: "flex", alignItems: "center", gap: 6 }}>
+                            {rule.name}
+                            {!rule.enabled && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.textMuted}20`, color: T.textMuted }}>DISABLED</span>}
+                          </div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>
+                            If <span style={{ color: T.cyan }}>{rule.condition}</span> = <span style={{ color: T.gold }}>{rule.conditionValue}</span> → assign to <span style={{ color: T.purple }}>{rule.assignToName}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button type="button" onClick={() => toggleRuleEnabled(rule.id, !rule.enabled)}
+                          style={{ padding: "6px 10px", borderRadius: 5, border: `1px solid ${rule.enabled ? T.orange : T.green}40`, background: rule.enabled ? `${T.orange}10` : `${T.green}10`, color: rule.enabled ? T.orange : T.green, fontSize: 10, cursor: "pointer" }}>
+                          {rule.enabled ? "Disable" : "Enable"}
+                        </button>
+                        <button type="button" onClick={() => editAutoAssignRule(rule)}
+                          style={{ padding: "6px 10px", borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
+                          Edit
+                        </button>
+                        <button type="button" onClick={() => deleteAutoAssignRule(rule.id)}
+                          style={{ padding: "6px 10px", borderRadius: 5, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 10, cursor: "pointer" }}>
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Run Auto-Assign Now Button */}
+            <div style={{ marginTop: 20, padding: 16, background: `${T.gold}10`, borderRadius: 10, border: `1px solid ${T.gold}30` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: T.gold }}>💡 Run Auto-Assign on Unassigned Tickets</div>
+                  <div style={{ fontSize: 11, color: T.textMuted }}>{unassignedCount} unassigned tickets</div>
+                </div>
+                <button type="button" onClick={async () => {
+                  const unassigned = tickets.filter(t => !t.assignedTo && (t.status === "open" || t.status === "in_progress"));
+                  let assigned = 0;
+                  for (const ticket of unassigned) {
+                    const result = await applyAutoAssignRules(ticket);
+                    if (result) assigned++;
+                  }
+                  notify(`Auto-assigned ${assigned} tickets`);
+                }}
+                  style={{ padding: "10px 20px", borderRadius: 6, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                  Run Now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SLA SETTINGS MODAL */}
+      {showSlaModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowSlaModal(false)}>
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 500, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>⏱️ SLA Settings</h3>
+              <button type="button" onClick={() => setShowSlaModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+            </div>
+            
+            <div style={{ padding: 12, background: `${T.orange}15`, borderRadius: 8, marginBottom: 20 }}>
+              <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
+                Configure Service Level Agreement settings for response times and automatic escalation when SLA is breached.
+              </div>
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Default SLA Hours */}
+              <div>
+                <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Default SLA (hours)</label>
+                <input type="number" value={slaSettings.defaultHours} onChange={e => setSlaSettings(prev => ({ ...prev, defaultHours: parseInt(e.target.value) || 24 }))}
+                  style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 14, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>Tickets must be resolved within this time</div>
+              </div>
+              
+              {/* Warning Threshold */}
+              <div>
+                <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Warning Threshold (%)</label>
+                <input type="number" value={slaSettings.warningPercent} onChange={e => setSlaSettings(prev => ({ ...prev, warningPercent: parseInt(e.target.value) || 75 }))} min="50" max="99"
+                  style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 14, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>Show warning when SLA time is this % used (currently {Math.round(slaSettings.defaultHours * slaSettings.warningPercent / 100)}h)</div>
+              </div>
+              
+              {/* Auto Escalation */}
+              <div style={{ padding: 16, background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", marginBottom: 12 }}>
+                  <input type="checkbox" checked={slaSettings.escalateOnBreach} onChange={e => setSlaSettings(prev => ({ ...prev, escalateOnBreach: e.target.checked }))}
+                    style={{ width: 18, height: 18 }} />
+                  <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>Auto-escalate on SLA breach</span>
+                </label>
+                
+                {slaSettings.escalateOnBreach && (
+                  <div style={{ marginLeft: 28, display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div>
+                      <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Escalate To (Manager)</label>
+                      <select value={slaSettings.escalateTo} onChange={e => {
+                        const agent = assignableAgents.find(a => a.id === e.target.value);
+                        setSlaSettings(prev => ({ ...prev, escalateTo: e.target.value, escalateToName: agent?.name || "" }));
+                      }}
+                        style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
+                        <option value="">Select manager...</option>
+                        {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>👤 {a.name}</option>)}
+                      </select>
+                    </div>
+                    
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                      <input type="checkbox" checked={slaSettings.notifyAgent} onChange={e => setSlaSettings(prev => ({ ...prev, notifyAgent: e.target.checked }))}
+                        style={{ width: 14, height: 14 }} />
+                      <span style={{ fontSize: 11, color: T.textSecondary }}>Notify assigned agent</span>
+                    </label>
+                    
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                      <input type="checkbox" checked={slaSettings.notifyManager} onChange={e => setSlaSettings(prev => ({ ...prev, notifyManager: e.target.checked }))}
+                        style={{ width: 14, height: 14 }} />
+                      <span style={{ fontSize: 11, color: T.textSecondary }}>Notify escalation manager</span>
+                    </label>
+                  </div>
+                )}
+              </div>
+              
+              {/* SLA Preview */}
+              <div style={{ padding: 16, background: `${T.blue}10`, borderRadius: 10, border: `1px solid ${T.blue}30` }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: T.blue, marginBottom: 8 }}>📊 SLA Timeline Preview</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ flex: 1, height: 8, background: T.border, borderRadius: 4, overflow: "hidden", position: "relative" }}>
+                    <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${slaSettings.warningPercent}%`, background: T.green, borderRadius: 4 }} />
+                    <div style={{ position: "absolute", left: `${slaSettings.warningPercent}%`, top: 0, bottom: 0, right: 0, background: T.orange, borderRadius: "0 4px 4px 0" }} />
+                  </div>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 10, color: T.textMuted }}>
+                  <span>0h</span>
+                  <span style={{ color: T.orange }}>{Math.round(slaSettings.defaultHours * slaSettings.warningPercent / 100)}h (Warning)</span>
+                  <span style={{ color: T.red }}>{slaSettings.defaultHours}h (Breach)</span>
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
+              <button type="button" onClick={() => setShowSlaModal(false)}
+                style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button type="button" onClick={saveSlaSettings}
+                style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                Save Settings
+              </button>
             </div>
           </div>
         </div>
