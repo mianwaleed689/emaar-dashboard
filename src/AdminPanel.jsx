@@ -6759,7 +6759,7 @@ export default function AdminPanel() {
               })()}
 
               {/* Data sync info */}
-              <div className="chart-box fade-up" style={{ padding: 16, marginTop: 8, display: "flex", alignItems: "center", gap: 12 }}>
+              {dataSubTab !== "communityintel" && <div className="chart-box fade-up" style={{ padding: 16, marginTop: 8, display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ fontSize: 24 }}>ℹ</div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>How Live Data Works</div>
@@ -6767,6 +6767,7 @@ export default function AdminPanel() {
                     Data saved here goes to Firestore and overrides default values from data.js. The main dashboard reads Firestore first, falls back to defaults if no override exists. Click "Reset to Default" on any item to remove the live override. Last updated timestamps are tracked per entry.
                   </div>
                 </div>
+              </div>}
               {dataSubTab === "communityintel" && (() => {
                 const communities = Object.keys(defaultCommunityIntel);
                 const activeCIKey = editingCommunityIntel || communities[0];
@@ -6796,12 +6797,12 @@ export default function AdminPanel() {
                 );
 
                 return (
-                  <div style={{ margin: "-28px -28px -60px", display: "flex", minHeight: "calc(100vh - 60px)" }}>
+                  <div style={{ position: "fixed", top: 60, left: 240, right: 0, bottom: 0, display: "flex", zIndex: 50, background: "#04090F" }}>
 
                     {/* ══════════════════════════════
                         LEFT NAV — Community List
                     ══════════════════════════════ */}
-                    <div style={{ width: 260, flexShrink: 0, background: "#060D1A", borderRight: "1px solid rgba(212,168,67,0.1)", display: "flex", flexDirection: "column", position: "sticky", top: 60, height: "calc(100vh - 60px)", overflowY: "auto" }}>
+                    <div style={{ width: 260, flexShrink: 0, background: "#060D1A", borderRight: "1px solid rgba(212,168,67,0.1)", display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
 
                       {/* Nav Header */}
                       <div style={{ padding: "22px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
@@ -6846,7 +6847,7 @@ export default function AdminPanel() {
                     {/* ══════════════════════════════
                         RIGHT — Full Editor
                     ══════════════════════════════ */}
-                    <div style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "calc(100vh - 60px)", scrollbarWidth: "thin" }}>
+                    <div style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100%", scrollbarWidth: "thin" }}>
 
                       {/* ── Hero Banner ── */}
                       <div style={{ padding: "32px 40px 28px", background: "linear-gradient(135deg, rgba(212,168,67,0.07) 0%, rgba(10,22,40,0) 60%)", borderBottom: "1px solid rgba(212,168,67,0.1)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24 }}>
