@@ -11125,11 +11125,15 @@ export default function AdminPanel() {
   const [visibleColumns, setVisibleColumns] = useState(() => {
     try {
       const saved = localStorage.getItem("admin_projectColumns");
-      return saved ? JSON.parse(saved) : { community: true, price: true, ppsf: true, status: true, source: true, tier: false, handover: false, beds: false };
-    } catch { return { community: true, price: true, ppsf: true, status: true, source: true, tier: false, handover: false, beds: false }; }
+      return saved ? JSON.parse(saved) : { community: true, price: true, ppsf: true, status: true, source: true, tier: false, handover: false, beds: false, quality: true };
+    } catch { return { community: true, price: true, ppsf: true, status: true, source: true, tier: false, handover: false, beds: false, quality: true }; }
   });
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
+  
+  // Data Quality Score states
+  const [showDataQualityPanel, setShowDataQualityPanel] = useState(false);
+  const [qualityFilter, setQualityFilter] = useState("all"); // all | excellent | good | fair | poor
 
   /* ─── KYC VERIFICATION STATE ─── */
   const [verifications, setVerifications] = useState([]);
@@ -12071,10 +12075,80 @@ export default function AdminPanel() {
   
   // Reset columns to default
   const resetColumns = () => {
-    const defaults = { community: true, price: true, ppsf: true, status: true, source: true, tier: false, handover: false, beds: false };
+    const defaults = { community: true, price: true, ppsf: true, status: true, source: true, quality: true, tier: false, handover: false, beds: false };
     setVisibleColumns(defaults);
     try { localStorage.setItem("admin_projectColumns", JSON.stringify(defaults)); } catch {}
     notify("Columns reset to default");
+  };
+  
+  // ═══════════════════════════════════════
+  // DATA QUALITY SCORE SYSTEM
+  // ═══════════════════════════════════════
+  
+  // Quality weights for each field (total = 100)
+  const QUALITY_WEIGHTS = {
+    price: 25,      // Most important
+    status: 15,
+    ppsf: 15,
+    image: 15,
+    handover: 10,
+    tier: 8,
+    beds: 6,
+    type: 6
+  };
+  
+  // Calculate quality score for a single project
+  const calculateProjectQuality = (project) => {
+    const merged = getMergedProject(project);
+    const scores = {
+      price: merged.price && merged.price > 0 ? QUALITY_WEIGHTS.price : 0,
+      status: merged.status && merged.status.length > 0 ? QUALITY_WEIGHTS.status : 0,
+      ppsf: merged.ppsf && merged.ppsf > 0 ? QUALITY_WEIGHTS.ppsf : 0,
+      image: (merged.imageUrl || merged.image || project.image) ? QUALITY_WEIGHTS.image : 0,
+      handover: merged.handover && merged.handover.length > 0 ? QUALITY_WEIGHTS.handover : 0,
+      tier: merged.tier && merged.tier.length > 0 ? QUALITY_WEIGHTS.tier : 0,
+      beds: merged.beds && merged.beds.length > 0 ? QUALITY_WEIGHTS.beds : 0,
+      type: merged.type && merged.type.length > 0 ? QUALITY_WEIGHTS.type : 0
+    };
+    
+    const total = Object.values(scores).reduce((a, b) => a + b, 0);
+    const missing = Object.entries(scores).filter(([k, v]) => v === 0).map(([k]) => k);
+    
+    return {
+      score: total,
+      scores,
+      missing,
+      grade: total >= 90 ? "excellent" : total >= 70 ? "good" : total >= 50 ? "fair" : "poor",
+      color: total >= 90 ? "#10B981" : total >= 70 ? "#3B82F6" : total >= 50 ? "#F97316" : "#EF4444"
+    };
+  };
+  
+  // Calculate overall data quality stats
+  const calculateOverallQuality = () => {
+    if (!emaarProjects || emaarProjects.length === 0) return null;
+    
+    const projectQualities = emaarProjects.map(p => calculateProjectQuality(p));
+    const avgScore = Math.round(projectQualities.reduce((a, b) => a + b.score, 0) / projectQualities.length);
+    
+    // Count by grade
+    const grades = { excellent: 0, good: 0, fair: 0, poor: 0 };
+    projectQualities.forEach(q => grades[q.grade]++);
+    
+    // Field completion rates
+    const fieldRates = {};
+    Object.keys(QUALITY_WEIGHTS).forEach(field => {
+      const completed = projectQualities.filter(q => q.scores[field] > 0).length;
+      fieldRates[field] = Math.round((completed / projectQualities.length) * 100);
+    });
+    
+    return {
+      avgScore,
+      totalProjects: emaarProjects.length,
+      grades,
+      fieldRates,
+      grade: avgScore >= 90 ? "excellent" : avgScore >= 70 ? "good" : avgScore >= 50 ? "fair" : "poor",
+      color: avgScore >= 90 ? "#10B981" : avgScore >= 70 ? "#3B82F6" : avgScore >= 50 ? "#F97316" : "#EF4444"
+    };
   };
 
   
@@ -15306,10 +15380,10 @@ export default function AdminPanel() {
                 }>
                   {/* Search */}
                   <TabHelp items={[
+                    { icon: "[q]", title: "Data Quality Score", desc: "Each project gets a 0-100 score based on completeness. Click the panel to see field breakdown and quick actions." },
                     { icon: "[e]", title: "Edit a Project", desc: "Click any row to open the edit drawer. Change price, status, handover date, images and more." },
-                    { icon: "[s]", title: "Save Goes Live", desc: "Clicking 'Save to Firestore' updates the project instantly on the dashboard for all users." },
-                    { icon: "[f]", title: "Advanced Filters", desc: "Click 'Filters' to expand. Filter by price range, PPSF, tier, data source, modified date, and image status." },
-                    { icon: "[c]", title: "Column Settings", desc: "Click 'Columns' to show/hide table columns. Your preferences are saved automatically." },
+                    { icon: "[f]", title: "Advanced Filters", desc: "Click 'Filters' to expand. Filter by price, PPSF, tier, date, quality grade, and more." },
+                    { icon: "[c]", title: "Column Settings", desc: "Click 'Columns' to show/hide table columns including Quality Score." },
                     { icon: "[b]", title: "Bulk Actions", desc: "Select multiple projects with checkboxes. Export, update prices, or delete in bulk." },
                     { icon: "[~]", title: "Default vs Live", desc: "'Default' means data comes from data.js. 'Live' means you've saved a Firestore override." },
                   ]} />
@@ -15493,6 +15567,7 @@ export default function AdminPanel() {
                             { key: "ppsf", label: "PPSF" },
                             { key: "status", label: "Status" },
                             { key: "source", label: "Source" },
+                            { key: "quality", label: "Quality Score" },
                             { key: "tier", label: "Tier" },
                             { key: "handover", label: "Handover" },
                             { key: "beds", label: "Beds/Type" },
@@ -15508,12 +15583,12 @@ export default function AdminPanel() {
                     </div>
                     
                     {/* Clear All Filters */}
-                    {(dataSearch || projectCommunityFilter !== "All" || projectStatusFilter !== "All" || priceMin || priceMax || ppsfMin || ppsfMax || projectTierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all") && (
+                    {(dataSearch || projectCommunityFilter !== "All" || projectStatusFilter !== "All" || priceMin || priceMax || ppsfMin || ppsfMax || projectTierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all" || qualityFilter !== "all") && (
                       <button type="button" onClick={() => { 
                         setDataSearch(""); setProjectCommunityFilter("All"); setProjectStatusFilter("All");
                         setPriceMin(""); setPriceMax(""); setPpsfMin(""); setPpsfMax("");
                         setProjectTierFilter("All"); setDataSourceFilter("all"); setModifiedDateFilter("all");
-                        setHasImageFilter("all"); setActiveFilterViewId(null);
+                        setHasImageFilter("all"); setQualityFilter("all"); setActiveFilterViewId(null);
                       }}
                         style={{ padding: "8px 12px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, color: T.red, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" }}>
                         ✕ Clear All
@@ -15672,6 +15747,144 @@ export default function AdminPanel() {
                       </div>
                     </div>
                   )}
+                  
+                  {/* ══════════════════════════════════════
+                     DATA QUALITY SCORE PANEL
+                     ══════════════════════════════════════ */}
+                  {(() => {
+                    const quality = calculateOverallQuality();
+                    if (!quality) return null;
+                    
+                    return (
+                      <div style={{ marginBottom: 16 }}>
+                        {/* Quality Summary Bar */}
+                        <div 
+                          onClick={() => setShowDataQualityPanel(!showDataQualityPanel)}
+                          style={{ 
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            padding: "12px 16px", borderRadius: showDataQualityPanel ? "10px 10px 0 0" : 10,
+                            background: T.surfaceAlt, border: `1px solid ${T.border}`,
+                            borderBottom: showDataQualityPanel ? "none" : `1px solid ${T.border}`,
+                            cursor: "pointer", transition: "all 0.15s"
+                          }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <div style={{ 
+                                width: 42, height: 42, borderRadius: 10, 
+                                background: `${quality.color}15`, 
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                border: `2px solid ${quality.color}`
+                              }}>
+                                <span style={{ fontSize: 16, fontWeight: 800, color: quality.color, fontFamily: "'Fraunces',serif" }}>{quality.avgScore}</span>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>Data Quality Score</div>
+                                <div style={{ fontSize: 10, color: quality.color, fontWeight: 600, textTransform: "capitalize" }}>{quality.grade}</div>
+                              </div>
+                            </div>
+                            
+                            {/* Quick Stats */}
+                            <div style={{ display: "flex", gap: 16, marginLeft: 16 }}>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "#10B981" }}>{quality.grades.excellent}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Excellent</div>
+                              </div>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "#3B82F6" }}>{quality.grades.good}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Good</div>
+                              </div>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "#F97316" }}>{quality.grades.fair}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Fair</div>
+                              </div>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "#EF4444" }}>{quality.grades.poor}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Poor</div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            {/* Quality Filter Pills */}
+                            <div style={{ display: "flex", gap: 6 }}>
+                              {[
+                                { key: "all", label: "All", color: T.textMuted },
+                                { key: "poor", label: "Poor", color: "#EF4444" },
+                                { key: "fair", label: "Fair", color: "#F97316" },
+                              ].map(f => (
+                                <button key={f.key} type="button" onClick={(e) => { e.stopPropagation(); setQualityFilter(qualityFilter === f.key ? "all" : f.key); }}
+                                  style={{ 
+                                    padding: "4px 10px", borderRadius: 12, fontSize: 10, fontWeight: 600,
+                                    border: `1px solid ${qualityFilter === f.key ? f.color : T.border}`,
+                                    background: qualityFilter === f.key ? `${f.color}15` : "transparent",
+                                    color: qualityFilter === f.key ? f.color : T.textMuted,
+                                    cursor: "pointer", fontFamily: "'Outfit',sans-serif"
+                                  }}>
+                                  {f.label}
+                                </button>
+                              ))}
+                            </div>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" style={{ transform: showDataQualityPanel ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s" }}>
+                              <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                          </div>
+                        </div>
+                        
+                        {/* Expanded Quality Details */}
+                        {showDataQualityPanel && (
+                          <div className="fade-up" style={{ 
+                            padding: 16, background: T.surface, 
+                            borderRadius: "0 0 10px 10px", border: `1px solid ${T.border}`, borderTop: "none"
+                          }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, marginBottom: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>Field Completion Rates</div>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+                              {[
+                                { key: "price", label: "Price", weight: 25 },
+                                { key: "status", label: "Status", weight: 15 },
+                                { key: "ppsf", label: "PPSF", weight: 15 },
+                                { key: "image", label: "Image", weight: 15 },
+                                { key: "handover", label: "Handover", weight: 10 },
+                                { key: "tier", label: "Tier", weight: 8 },
+                                { key: "beds", label: "Beds", weight: 6 },
+                                { key: "type", label: "Type", weight: 6 },
+                              ].map(field => {
+                                const rate = quality.fieldRates[field.key];
+                                const barColor = rate >= 90 ? "#10B981" : rate >= 70 ? "#3B82F6" : rate >= 50 ? "#F97316" : "#EF4444";
+                                return (
+                                  <div key={field.key} style={{ padding: 10, background: T.surfaceAlt, borderRadius: 8 }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                                      <span style={{ fontSize: 11, color: T.white, fontWeight: 600 }}>{field.label}</span>
+                                      <span style={{ fontSize: 10, color: barColor, fontWeight: 700 }}>{rate}%</span>
+                                    </div>
+                                    <div style={{ height: 4, background: T.border, borderRadius: 2, overflow: "hidden" }}>
+                                      <div style={{ width: `${rate}%`, height: "100%", background: barColor, borderRadius: 2, transition: "width 0.3s" }} />
+                                    </div>
+                                    <div style={{ fontSize: 9, color: T.textMuted, marginTop: 4 }}>Weight: {field.weight}%</div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            
+                            {/* Quick Actions */}
+                            <div style={{ display: "flex", gap: 10, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+                              <button type="button" onClick={() => { setQualityFilter("poor"); setShowDataQualityPanel(false); }}
+                                style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                Fix {quality.grades.poor} Poor Quality Projects
+                              </button>
+                              <button type="button" onClick={() => { setPriceMax("0"); setShowDataQualityPanel(false); }}
+                                style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.orange}40`, background: `${T.orange}10`, color: T.orange, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                Find Missing Prices ({100 - quality.fieldRates.price}%)
+                              </button>
+                              <button type="button" onClick={() => { setHasImageFilter("no"); setShowDataQualityPanel(false); }}
+                                style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.blue}40`, background: `${T.blue}10`, color: T.blue, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                Find Missing Images ({100 - quality.fieldRates.image}%)
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Bulk Selection Action Bar */}
                   {bulkSelected.length > 0 && (
@@ -16198,6 +16411,7 @@ export default function AdminPanel() {
                       if (visibleColumns.price) cols.push("110px");
                       if (visibleColumns.ppsf) cols.push("90px");
                       if (visibleColumns.status) cols.push("80px");
+                      if (visibleColumns.quality) cols.push("70px");
                       if (visibleColumns.tier) cols.push("100px");
                       if (visibleColumns.handover) cols.push("90px");
                       if (visibleColumns.beds) cols.push("90px");
@@ -16213,6 +16427,7 @@ export default function AdminPanel() {
                         { label: "Price", key: "price", col: "price" },
                         { label: "PPSF", key: "ppsf", col: "ppsf" },
                         { label: "Status", key: "status", col: "status" },
+                        { label: "Quality", key: null, col: "quality" },
                         { label: "Tier", key: "tier", col: "tier" },
                         { label: "Handover", key: "handover", col: "handover" },
                         { label: "Beds", key: "beds", col: "beds" },
@@ -16228,6 +16443,7 @@ export default function AdminPanel() {
                           .filter(p => {
                             const merged = getMergedProject(p);
                             const hasOverride = !!liveProjects[p.id];
+                            const projectQuality = calculateProjectQuality(p);
                             
                             // Basic filters
                             const matchSearch = !dataSearch || (p.name||"").toLowerCase().includes(dataSearch.toLowerCase()) || (p.community||"").toLowerCase().includes(dataSearch.toLowerCase());
@@ -16268,9 +16484,12 @@ export default function AdminPanel() {
                               (hasImageFilter === "yes" && hasImage) || 
                               (hasImageFilter === "no" && !hasImage);
                             
+                            // Quality filter
+                            const matchQuality = qualityFilter === "all" || projectQuality.grade === qualityFilter;
+                            
                             return matchSearch && matchCommunity && matchStatus && 
                                    matchPriceMin && matchPriceMax && matchPpsfMin && matchPpsfMax &&
-                                   matchTier && matchDataSource && matchModifiedDate && matchHasImage;
+                                   matchTier && matchDataSource && matchModifiedDate && matchHasImage && matchQuality;
                           })
                           .sort((a, b) => {
                             const ma = getMergedProject(a); const mb = getMergedProject(b);
@@ -16290,7 +16509,8 @@ export default function AdminPanel() {
                           projectTierFilter !== "All",
                           dataSourceFilter !== "all",
                           modifiedDateFilter !== "all",
-                          hasImageFilter !== "all"
+                          hasImageFilter !== "all",
+                          qualityFilter !== "all"
                         ].filter(Boolean).length;
                         
                         return (
@@ -16332,7 +16552,7 @@ export default function AdminPanel() {
                                   setDataSearch(""); setProjectCommunityFilter("All"); setProjectStatusFilter("All");
                                   setPriceMin(""); setPriceMax(""); setPpsfMin(""); setPpsfMax("");
                                   setProjectTierFilter("All"); setDataSourceFilter("all"); setModifiedDateFilter("all");
-                                  setHasImageFilter("all"); setActiveFilterViewId(null);
+                                  setHasImageFilter("all"); setQualityFilter("all"); setActiveFilterViewId(null);
                                 }}
                                   style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
                                   Clear All Filters
@@ -16342,6 +16562,7 @@ export default function AdminPanel() {
                             {filtered.map((p, i) => {
                         const merged = getMergedProject(p);
                         const hasOverride = !!liveProjects[p.id];
+                        const pQuality = calculateProjectQuality(p);
                         return (
                           <div key={p.id} className="fade-up" style={{ display: "grid", gridTemplateColumns: gridCols, gap: 8, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", animationDelay: `${Math.min(i * 0.02, 0.5)}s`, cursor: "pointer", transition: "background .15s", background: editingProject === p.id ? T.goldGlow : "transparent" }}
                             onMouseEnter={e => { if (editingProject !== p.id) e.currentTarget.style.background = T.surfaceAlt; }}
@@ -16357,6 +16578,18 @@ export default function AdminPanel() {
                             {visibleColumns.price && <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{merged.price ? `AED ${(merged.price / 1e6).toFixed(2)}M` : "TBA"}</span>}
                             {visibleColumns.ppsf && <span style={{ fontSize: 12, color: T.textPrimary }}>{merged.ppsf ? merged.ppsf.toLocaleString() : "—"}</span>}
                             {visibleColumns.status && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: merged.status === "Selling" ? "rgba(16,185,129,0.12)" : merged.status === "Upcoming" ? "rgba(212,168,67,0.12)" : "rgba(148,163,184,0.1)", color: merged.status === "Selling" ? T.green : merged.status === "Upcoming" ? T.gold : T.textMuted }}>{merged.status || "—"}</span>}
+                            {visibleColumns.quality && (
+                              <div style={{ display: "flex", alignItems: "center", gap: 4 }} title={`Missing: ${pQuality.missing.join(", ") || "None"}`}>
+                                <div style={{ 
+                                  width: 28, height: 28, borderRadius: 6, 
+                                  background: `${pQuality.color}15`, 
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  border: `1.5px solid ${pQuality.color}`
+                                }}>
+                                  <span style={{ fontSize: 10, fontWeight: 700, color: pQuality.color }}>{pQuality.score}</span>
+                                </div>
+                              </div>
+                            )}
                             {visibleColumns.tier && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.tier || "—"}</span>}
                             {visibleColumns.handover && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.handover || "—"}</span>}
                             {visibleColumns.beds && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.beds || "—"}</span>}
