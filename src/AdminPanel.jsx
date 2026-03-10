@@ -438,6 +438,17 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     { id: "offline", name: "Offline Notice", content: "Hi {{name}}, our support team is currently offline. We'll respond within 24 hours. For urgent matters, please email support@dxbanalytics.com" },
   ]);
 
+  // Phase 8A: Time Tracking + Audit Logs
+  const [timeEntries, setTimeEntries] = useState([]);
+  const [activeTimer, setActiveTimer] = useState(null); // { ticketId, startedAt, agentId, agentName }
+  const [timerElapsed, setTimerElapsed] = useState(0);
+  const [showTimeEntryModal, setShowTimeEntryModal] = useState(false);
+  const [timeEntryForm, setTimeEntryForm] = useState({ ticketId: "", duration: 15, notes: "", billable: true });
+  const [ticketAuditLogs, setTicketAuditLogs] = useState([]);
+  const [auditLogFilter, setAuditLogFilter] = useState("all"); // all | status | assignment | reply | tag | merge | time
+  const [auditLogTicketFilter, setAuditLogTicketFilter] = useState("");
+  const [showAuditDetails, setShowAuditDetails] = useState(null);
+
   // Predefined tags
   const availableTags = [
     { id: "urgent", label: "Urgent", color: T.red },
@@ -671,6 +682,60 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     const interval = setInterval(checkSlaEscalation, 5 * 60 * 1000); // Check every 5 minutes
     return () => clearInterval(interval);
   }, [tickets, slaSettings, db]);
+
+  // Phase 8A: Timer tick effect
+  useEffect(() => {
+    if (!activeTimer) {
+      setTimerElapsed(0);
+      return;
+    }
+    const tick = () => {
+      const started = new Date(activeTimer.startedAt).getTime();
+      setTimerElapsed(Math.floor((Date.now() - started) / 1000));
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [activeTimer]);
+
+  // Phase 8A: Fetch time entries and audit logs
+  useEffect(() => {
+    const fetchTimeData = async () => {
+      try {
+        const timeSnap = await getDocs(collection(db, "supportTimeEntries"));
+        setTimeEntries(timeSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        
+        const auditSnap = await getDocs(query(collection(db, "supportTicketAudit"), orderBy("timestamp", "desc"), limit(500)));
+        setTicketAuditLogs(auditSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      } catch (e) {
+        console.error("Fetch time data:", e);
+        // Demo data for time entries
+        setTimeEntries([
+          { id: "time_1", ticketId: "ticket_1", agentId: "agent_1", agentName: "Ahmed", duration: 25, notes: "Initial investigation", billable: true, createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
+          { id: "time_2", ticketId: "ticket_2", agentId: "agent_2", agentName: "Sarah", duration: 45, notes: "Debugging EIBOR calculator", billable: true, createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString() },
+          { id: "time_3", ticketId: "ticket_2", agentId: "agent_1", agentName: "Ahmed", duration: 30, notes: "Follow-up with user", billable: false, createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString() },
+          { id: "time_4", ticketId: "ticket_4", agentId: "agent_2", agentName: "Sarah", duration: 10, notes: "Quick response", billable: true, createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString() },
+        ]);
+        // Demo data for audit logs
+        setTicketAuditLogs([
+          { id: "audit_1", ticketId: "ticket_1", action: "created", actor: "user", actorName: "Ahmed (Customer)", details: { subject: "Yield calculation seems incorrect" }, timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
+          { id: "audit_2", ticketId: "ticket_1", action: "tag_added", actor: "agent", actorName: "Support Admin", details: { tag: "urgent" }, timestamp: new Date(Date.now() - 1.9 * 60 * 60 * 1000).toISOString() },
+          { id: "audit_3", ticketId: "ticket_1", action: "note_added", actor: "agent", actorName: "Support Admin", details: { preview: "Need to verify with data team" }, timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString() },
+          { id: "audit_4", ticketId: "ticket_2", action: "created", actor: "user", actorName: "Sarah (Customer)", details: { subject: "Can't access EIBOR calculator" }, timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString() },
+          { id: "audit_5", ticketId: "ticket_2", action: "status_change", actor: "agent", actorName: "Support Admin", details: { from: "open", to: "in_progress" }, timestamp: new Date(Date.now() - 4.5 * 60 * 60 * 1000).toISOString() },
+          { id: "audit_6", ticketId: "ticket_2", action: "assigned", actor: "agent", actorName: "Support Admin", details: { to: "admin" }, timestamp: new Date(Date.now() - 4.5 * 60 * 60 * 1000).toISOString() },
+          { id: "audit_7", ticketId: "ticket_2", action: "reply_sent", actor: "agent", actorName: "Support Admin", details: { preview: "Thanks for reporting..." }, timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() },
+          { id: "audit_8", ticketId: "ticket_2", action: "tag_added", actor: "agent", actorName: "Support Admin", details: { tag: "vip" }, timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() },
+          { id: "audit_9", ticketId: "ticket_2", action: "tag_added", actor: "agent", actorName: "Support Admin", details: { tag: "bug-confirmed" }, timestamp: new Date(Date.now() - 3.9 * 60 * 60 * 1000).toISOString() },
+          { id: "audit_10", ticketId: "ticket_2", action: "time_logged", actor: "agent", actorName: "Sarah", details: { duration: 45, billable: true }, timestamp: new Date(Date.now() - 3.5 * 60 * 60 * 1000).toISOString() },
+          { id: "audit_11", ticketId: "ticket_4", action: "created", actor: "user", actorName: "Lisa (Customer)", details: { subject: "How to upgrade to Pro?" }, timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString() },
+          { id: "audit_12", ticketId: "ticket_4", action: "reply_sent", actor: "agent", actorName: "Support Admin", details: { preview: "Click on Upgrade..." }, timestamp: new Date(Date.now() - 47 * 60 * 60 * 1000).toISOString() },
+          { id: "audit_13", ticketId: "ticket_4", action: "status_change", actor: "agent", actorName: "Support Admin", details: { from: "in_progress", to: "resolved" }, timestamp: new Date(Date.now() - 45 * 60 * 60 * 1000).toISOString() },
+        ]);
+      }
+    };
+    fetchTimeData();
+  }, [db]);
 
   // Computed stats
   const now = new Date();
@@ -1361,6 +1426,193 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   const isSlaBreached = (ticket) => {
     if (ticket.status === "resolved" || ticket.status === "closed") return false;
     return (now.getTime() - new Date(ticket.createdAt).getTime()) > 24 * 60 * 60 * 1000;
+  };
+
+  // Phase 8A: Time Tracking Functions
+  const formatTimerDisplay = (totalSeconds) => {
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    if (hrs > 0) return `${hrs}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const startTimer = (ticketId) => {
+    if (activeTimer) {
+      notify("Stop current timer first");
+      return;
+    }
+    const agentName = adminUser?.displayName || adminUser?.email?.split("@")[0] || "Admin";
+    setActiveTimer({
+      ticketId,
+      startedAt: new Date().toISOString(),
+      agentId: adminUser?.uid || "admin",
+      agentName
+    });
+    notify("Timer started");
+  };
+
+  const stopTimer = async () => {
+    if (!activeTimer) return;
+    const started = new Date(activeTimer.startedAt).getTime();
+    const durationMins = Math.max(1, Math.round((Date.now() - started) / 60000));
+    
+    try {
+      const entryId = `time_${Date.now()}`;
+      const entry = {
+        ticketId: activeTimer.ticketId,
+        agentId: activeTimer.agentId,
+        agentName: activeTimer.agentName,
+        duration: durationMins,
+        notes: "Timer session",
+        billable: true,
+        createdAt: new Date().toISOString()
+      };
+      await setDoc(doc(db, "supportTimeEntries", entryId), entry);
+      setTimeEntries(prev => [{ id: entryId, ...entry }, ...prev]);
+      
+      // Log to audit
+      const auditId = `audit_${Date.now()}`;
+      const auditEntry = {
+        ticketId: activeTimer.ticketId,
+        action: "time_logged",
+        actor: "agent",
+        actorName: activeTimer.agentName,
+        details: { duration: durationMins, billable: true, method: "timer" },
+        timestamp: new Date().toISOString()
+      };
+      await setDoc(doc(db, "supportTicketAudit", auditId), auditEntry);
+      setTicketAuditLogs(prev => [{ id: auditId, ...auditEntry }, ...prev]);
+      
+      notify(`Logged ${durationMins} minutes`);
+    } catch (e) {
+      console.error("Stop timer error:", e);
+      notify("Error logging time");
+    }
+    setActiveTimer(null);
+  };
+
+  const addManualTimeEntry = async () => {
+    if (!timeEntryForm.ticketId || timeEntryForm.duration <= 0) {
+      notify("Select a ticket and enter duration");
+      return;
+    }
+    
+    try {
+      const agentName = adminUser?.displayName || adminUser?.email?.split("@")[0] || "Admin";
+      const entryId = `time_${Date.now()}`;
+      const entry = {
+        ticketId: timeEntryForm.ticketId,
+        agentId: adminUser?.uid || "admin",
+        agentName,
+        duration: timeEntryForm.duration,
+        notes: timeEntryForm.notes || "Manual entry",
+        billable: timeEntryForm.billable,
+        createdAt: new Date().toISOString()
+      };
+      await setDoc(doc(db, "supportTimeEntries", entryId), entry);
+      setTimeEntries(prev => [{ id: entryId, ...entry }, ...prev]);
+      
+      // Log to audit
+      const auditId = `audit_${Date.now()}`;
+      const auditEntry = {
+        ticketId: timeEntryForm.ticketId,
+        action: "time_logged",
+        actor: "agent",
+        actorName: agentName,
+        details: { duration: timeEntryForm.duration, billable: timeEntryForm.billable, method: "manual" },
+        timestamp: new Date().toISOString()
+      };
+      await setDoc(doc(db, "supportTicketAudit", auditId), auditEntry);
+      setTicketAuditLogs(prev => [{ id: auditId, ...auditEntry }, ...prev]);
+      
+      setShowTimeEntryModal(false);
+      setTimeEntryForm({ ticketId: "", duration: 15, notes: "", billable: true });
+      notify("Time entry added");
+    } catch (e) {
+      console.error("Manual time entry error:", e);
+      notify("Error adding time entry");
+    }
+  };
+
+  const logTicketAudit = async (ticketId, action, details) => {
+    try {
+      const agentName = adminUser?.displayName || adminUser?.email?.split("@")[0] || "Admin";
+      const auditId = `audit_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+      const auditEntry = {
+        ticketId,
+        action,
+        actor: "agent",
+        actorName: agentName,
+        details,
+        timestamp: new Date().toISOString()
+      };
+      await setDoc(doc(db, "supportTicketAudit", auditId), auditEntry);
+      setTicketAuditLogs(prev => [{ id: auditId, ...auditEntry }, ...prev]);
+    } catch (e) {
+      console.error("Audit log error:", e);
+    }
+  };
+
+  const getTicketTimeTotal = (ticketId) => {
+    return timeEntries.filter(e => e.ticketId === ticketId).reduce((sum, e) => sum + (e.duration || 0), 0);
+  };
+
+  const getAgentTimeStats = () => {
+    const stats = {};
+    timeEntries.forEach(e => {
+      if (!stats[e.agentName]) {
+        stats[e.agentName] = { total: 0, billable: 0, entries: 0 };
+      }
+      stats[e.agentName].total += e.duration || 0;
+      stats[e.agentName].entries += 1;
+      if (e.billable) stats[e.agentName].billable += e.duration || 0;
+    });
+    return Object.entries(stats).map(([name, data]) => ({ name, ...data })).sort((a, b) => b.total - a.total);
+  };
+
+  const getAuditActionLabel = (action) => {
+    const labels = {
+      created: "Ticket Created",
+      status_change: "Status Changed",
+      assigned: "Assigned",
+      unassigned: "Unassigned",
+      reply_sent: "Reply Sent",
+      note_added: "Note Added",
+      tag_added: "Tag Added",
+      tag_removed: "Tag Removed",
+      priority_change: "Priority Changed",
+      merged: "Merged",
+      linked: "Linked",
+      time_logged: "Time Logged",
+      escalated: "Escalated",
+      sla_breach: "SLA Breached",
+      attachment_added: "Attachment Added",
+      custom_field_updated: "Field Updated"
+    };
+    return labels[action] || action;
+  };
+
+  const getAuditActionColor = (action) => {
+    const colors = {
+      created: T.green,
+      status_change: T.blue,
+      assigned: T.purple,
+      unassigned: T.textMuted,
+      reply_sent: T.teal,
+      note_added: T.orange,
+      tag_added: T.cyan,
+      tag_removed: T.textMuted,
+      priority_change: T.orange,
+      merged: T.purple,
+      linked: T.blue,
+      time_logged: T.gold,
+      escalated: T.red,
+      sla_breach: T.red,
+      attachment_added: T.blue,
+      custom_field_updated: T.cyan
+    };
+    return colors[action] || T.textMuted;
   };
 
   // Phase 2: Merge Tickets - Combine duplicate tickets
@@ -2461,6 +2713,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             { id: "whatsapp", label: `📱 WhatsApp${whatsappConversations.filter(c => c.status === "active").length > 0 ? ` (${whatsappConversations.filter(c => c.status === "active").length})` : ""}` },
             { id: "analytics", label: "📊 Analytics" },
             { id: "kb", label: "📚 KB & Tools" },
+            { id: "timetrack", label: `⏱️ Time${activeTimer ? " 🔴" : ""}` },
+            { id: "auditlog", label: "📋 Audit" },
           ].map(t => (
             <button key={t.id} type="button" onClick={() => setSupportSubTab(t.id)}
               style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${supportSubTab === t.id ? T.gold : T.border}`, background: supportSubTab === t.id ? T.goldGlow : "transparent", color: supportSubTab === t.id ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", position: "relative" }}>
@@ -2474,7 +2728,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             </button>
           ))}
         </div>
-        {supportSubTab !== "analytics" && supportSubTab !== "kb" && supportSubTab !== "livechat" && supportSubTab !== "whatsapp" && (
+        {supportSubTab !== "analytics" && supportSubTab !== "kb" && supportSubTab !== "livechat" && supportSubTab !== "whatsapp" && supportSubTab !== "timetrack" && supportSubTab !== "auditlog" && (
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <input value={ticketSearch} onChange={e => setTicketSearch(e.target.value)} placeholder="Search tickets..."
             style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, width: 160, fontFamily: "'Outfit',sans-serif" }} />
@@ -3922,6 +4176,308 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             );
           })()}
         </div>
+      ) : supportSubTab === "timetrack" ? (
+        /* TIME TRACKING SUB-TAB */
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Active Timer Banner */}
+          {activeTimer && (
+            <div style={{ background: `linear-gradient(135deg, ${T.gold}20, ${T.orange}10)`, borderRadius: 12, border: `1px solid ${T.gold}40`, padding: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <div style={{ width: 12, height: 12, borderRadius: "50%", background: T.red, animation: "pulse 1s infinite" }} />
+                <div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 2 }}>Timer Running</div>
+                  <div style={{ fontSize: 11, color: T.textSecondary }}>
+                    Ticket: {tickets.find(t => t.id === activeTimer.ticketId)?.subject?.slice(0, 40) || activeTimer.ticketId}...
+                  </div>
+                </div>
+                <div style={{ fontSize: 32, fontWeight: 900, color: T.gold, fontFamily: "'Fraunces',serif", minWidth: 120 }}>
+                  {formatTimerDisplay(timerElapsed)}
+                </div>
+              </div>
+              <button type="button" onClick={stopTimer}
+                style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: T.red, color: T.white, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                ⏹️ Stop & Log
+              </button>
+            </div>
+          )}
+
+          {/* KPIs Row */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+            <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Total Time Logged</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: T.gold, fontFamily: "'Fraunces',serif" }}>
+                {Math.round(timeEntries.reduce((s, e) => s + (e.duration || 0), 0) / 60 * 10) / 10}h
+              </div>
+              <div style={{ fontSize: 10, color: T.textSecondary, marginTop: 4 }}>{timeEntries.length} entries</div>
+            </div>
+            <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Billable Time</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: T.green, fontFamily: "'Fraunces',serif" }}>
+                {Math.round(timeEntries.filter(e => e.billable).reduce((s, e) => s + (e.duration || 0), 0) / 60 * 10) / 10}h
+              </div>
+              <div style={{ fontSize: 10, color: T.textSecondary, marginTop: 4 }}>
+                {timeEntries.filter(e => e.billable).length} billable entries
+              </div>
+            </div>
+            <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Today's Time</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: T.teal, fontFamily: "'Fraunces',serif" }}>
+                {(() => {
+                  const today = new Date(); today.setHours(0,0,0,0);
+                  return Math.round(timeEntries.filter(e => new Date(e.createdAt) >= today).reduce((s, e) => s + (e.duration || 0), 0));
+                })()}m
+              </div>
+              <div style={{ fontSize: 10, color: T.textSecondary, marginTop: 4 }}>
+                {(() => {
+                  const today = new Date(); today.setHours(0,0,0,0);
+                  return timeEntries.filter(e => new Date(e.createdAt) >= today).length;
+                })()} entries today
+              </div>
+            </div>
+            <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Avg Per Ticket</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: T.purple, fontFamily: "'Fraunces',serif" }}>
+                {(() => {
+                  const ticketIds = [...new Set(timeEntries.map(e => e.ticketId))];
+                  if (ticketIds.length === 0) return "0";
+                  return Math.round(timeEntries.reduce((s, e) => s + (e.duration || 0), 0) / ticketIds.length);
+                })()}m
+              </div>
+              <div style={{ fontSize: 10, color: T.textSecondary, marginTop: 4 }}>
+                across {[...new Set(timeEntries.map(e => e.ticketId))].length} tickets
+              </div>
+            </div>
+          </div>
+
+          {/* Actions Bar */}
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <button type="button" onClick={() => setShowTimeEntryModal(true)}
+              style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+              ➕ Manual Entry
+            </button>
+            <div style={{ flex: 1 }} />
+            <div style={{ fontSize: 11, color: T.textMuted }}>
+              💡 Start timer from any ticket drawer, or add manual entries here
+            </div>
+          </div>
+
+          {/* Agent Time Breakdown */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 20 }}>
+            <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 16 }}>👥 Agent Breakdown</div>
+              {getAgentTimeStats().length === 0 ? (
+                <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No time logged yet</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {getAgentTimeStats().map((agent, idx) => (
+                    <div key={agent.name} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 24, height: 24, borderRadius: "50%", background: idx === 0 ? T.gold : T.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: idx === 0 ? T.bg : T.textMuted }}>
+                        {idx + 1}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{agent.name}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{agent.entries} entries</div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: T.gold }}>{Math.round(agent.total / 60 * 10) / 10}h</div>
+                        <div style={{ fontSize: 9, color: T.green }}>{Math.round(agent.billable / 60 * 10) / 10}h billable</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recent Time Entries */}
+            <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+              <div style={{ padding: 16, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>📝 Recent Time Entries</div>
+                <div style={{ fontSize: 10, color: T.textMuted }}>{timeEntries.length} total</div>
+              </div>
+              <div style={{ maxHeight: 350, overflowY: "auto" }}>
+                {timeEntries.slice(0, 20).map(entry => {
+                  const ticket = tickets.find(t => t.id === entry.ticketId);
+                  return (
+                    <div key={entry.id} style={{ padding: "12px 16px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 8, background: entry.billable ? `${T.green}20` : `${T.textMuted}20`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: entry.billable ? T.green : T.textMuted }}>{entry.duration}m</span>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {ticket?.subject || entry.ticketId}
+                        </div>
+                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>
+                          {entry.agentName} • {entry.notes} • {timeAgo(entry.createdAt)}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        {entry.billable && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>Billable</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+                {timeEntries.length === 0 && (
+                  <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>⏱️</div>
+                    <div style={{ fontSize: 12 }}>No time entries yet</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : supportSubTab === "auditlog" ? (
+        /* AUDIT LOG SUB-TAB */
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Audit KPIs */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+            <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Total Events</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: T.gold, fontFamily: "'Fraunces',serif" }}>{ticketAuditLogs.length}</div>
+              <div style={{ fontSize: 10, color: T.textSecondary, marginTop: 4 }}>all actions logged</div>
+            </div>
+            <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Today</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: T.teal, fontFamily: "'Fraunces',serif" }}>
+                {(() => {
+                  const today = new Date(); today.setHours(0,0,0,0);
+                  return ticketAuditLogs.filter(l => new Date(l.timestamp) >= today).length;
+                })()}
+              </div>
+              <div style={{ fontSize: 10, color: T.textSecondary, marginTop: 4 }}>events today</div>
+            </div>
+            <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Tickets Tracked</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: T.purple, fontFamily: "'Fraunces',serif" }}>
+                {[...new Set(ticketAuditLogs.map(l => l.ticketId))].length}
+              </div>
+              <div style={{ fontSize: 10, color: T.textSecondary, marginTop: 4 }}>unique tickets</div>
+            </div>
+            <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Active Agents</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: T.blue, fontFamily: "'Fraunces',serif" }}>
+                {[...new Set(ticketAuditLogs.filter(l => l.actor === "agent").map(l => l.actorName))].length}
+              </div>
+              <div style={{ fontSize: 10, color: T.textSecondary, marginTop: 4 }}>unique agents</div>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+            <select value={auditLogFilter} onChange={e => setAuditLogFilter(e.target.value)}
+              style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${auditLogFilter !== "all" ? T.gold : T.border}`, background: T.surfaceAlt, color: auditLogFilter !== "all" ? T.gold : T.white, fontSize: 11, cursor: "pointer" }}>
+              <option value="all">All Actions</option>
+              <option value="status_change">Status Changes</option>
+              <option value="assigned">Assignments</option>
+              <option value="reply_sent">Replies</option>
+              <option value="note_added">Notes</option>
+              <option value="tag_added">Tags</option>
+              <option value="time_logged">Time Logged</option>
+              <option value="escalated">Escalations</option>
+              <option value="created">Created</option>
+            </select>
+            <input value={auditLogTicketFilter} onChange={e => setAuditLogTicketFilter(e.target.value)} placeholder="Filter by ticket ID..."
+              style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, width: 180 }} />
+            <div style={{ flex: 1 }} />
+            <div style={{ fontSize: 10, color: T.textMuted }}>
+              Showing {ticketAuditLogs.filter(l => {
+                if (auditLogFilter !== "all" && l.action !== auditLogFilter) return false;
+                if (auditLogTicketFilter && !l.ticketId?.includes(auditLogTicketFilter)) return false;
+                return true;
+              }).length} of {ticketAuditLogs.length} events
+            </div>
+          </div>
+
+          {/* Audit Log Table */}
+          <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+            <div style={{ padding: 16, borderBottom: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>📋 Ticket Audit Trail</div>
+            </div>
+            <div style={{ maxHeight: 500, overflowY: "auto" }}>
+              {ticketAuditLogs.filter(l => {
+                if (auditLogFilter !== "all" && l.action !== auditLogFilter) return false;
+                if (auditLogTicketFilter && !l.ticketId?.includes(auditLogTicketFilter)) return false;
+                return true;
+              }).slice(0, 100).map(log => {
+                const ticket = tickets.find(t => t.id === log.ticketId);
+                return (
+                  <div key={log.id} style={{ padding: "14px 16px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "flex-start", gap: 12 }}
+                    onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                    {/* Action Icon */}
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: `${getAuditActionColor(log.action)}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <span style={{ fontSize: 12 }}>
+                        {log.action === "created" ? "📝" :
+                         log.action === "status_change" ? "🔄" :
+                         log.action === "assigned" ? "👤" :
+                         log.action === "reply_sent" ? "💬" :
+                         log.action === "note_added" ? "📌" :
+                         log.action === "tag_added" ? "🏷️" :
+                         log.action === "tag_removed" ? "🏷️" :
+                         log.action === "time_logged" ? "⏱️" :
+                         log.action === "escalated" ? "🚨" :
+                         log.action === "merged" ? "🔗" : "📋"}
+                      </span>
+                    </div>
+                    
+                    {/* Content */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: `${getAuditActionColor(log.action)}20`, color: getAuditActionColor(log.action) }}>
+                          {getAuditActionLabel(log.action)}
+                        </span>
+                        <span style={{ fontSize: 11, color: T.textSecondary }}>by {log.actorName}</span>
+                        <span style={{ fontSize: 10, color: T.textMuted }}>{timeAgo(log.timestamp)}</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: T.white, marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {ticket?.subject || log.ticketId}
+                      </div>
+                      {/* Details */}
+                      {log.details && (
+                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>
+                          {log.action === "status_change" && log.details.from && log.details.to && (
+                            <span>{log.details.from} → {log.details.to}</span>
+                          )}
+                          {log.action === "assigned" && log.details.to && (
+                            <span>Assigned to: {log.details.to}</span>
+                          )}
+                          {log.action === "tag_added" && log.details.tag && (
+                            <span>Tag: {log.details.tag}</span>
+                          )}
+                          {log.action === "time_logged" && (
+                            <span>{log.details.duration}m {log.details.billable ? "(billable)" : "(non-billable)"} - {log.details.method}</span>
+                          )}
+                          {log.action === "reply_sent" && log.details.preview && (
+                            <span>"{log.details.preview.slice(0, 60)}..."</span>
+                          )}
+                          {log.action === "note_added" && log.details.preview && (
+                            <span>"{log.details.preview.slice(0, 60)}..."</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* View Ticket Button */}
+                    <button type="button" onClick={() => {
+                      const t = tickets.find(x => x.id === log.ticketId);
+                      if (t) { setTicketDrawer(t); setSupportSubTab("all"); }
+                    }}
+                      style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
+                      View →
+                    </button>
+                  </div>
+                );
+              })}
+              {ticketAuditLogs.length === 0 && (
+                <div style={{ padding: 60, textAlign: "center", color: T.textMuted }}>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>No audit logs yet</div>
+                  <div style={{ fontSize: 12 }}>Actions will be logged as you work on tickets</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       ) : (
       /* TICKETS LIST */
       <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
@@ -4139,6 +4695,51 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   </div>
                 </div>
               )}
+
+              {/* Phase 8A: Time Tracking Section */}
+              <div style={{ marginTop: 12, padding: "10px 12px", background: `${T.gold}08`, borderRadius: 8, border: `1px solid ${T.gold}20` }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: T.gold, display: "flex", alignItems: "center", gap: 4 }}>
+                    ⏱️ Time Tracking
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: T.white }}>
+                    Total: {getTicketTimeTotal(ticketDrawer.id)}m
+                  </div>
+                </div>
+                
+                {/* Active Timer or Start Button */}
+                {activeTimer && activeTimer.ticketId === ticketDrawer.id ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 12px", background: `${T.red}15`, borderRadius: 6, border: `1px solid ${T.red}30` }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.red, animation: "pulse 1s infinite" }} />
+                    <span style={{ fontSize: 18, fontWeight: 900, color: T.gold, fontFamily: "'Fraunces',serif", flex: 1 }}>{formatTimerDisplay(timerElapsed)}</span>
+                    <button type="button" onClick={stopTimer}
+                      style={{ padding: "6px 12px", borderRadius: 6, border: "none", background: T.red, color: T.white, fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
+                      ⏹️ Stop
+                    </button>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => startTimer(ticketDrawer.id)} disabled={activeTimer !== null}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: `1px solid ${activeTimer ? T.border : T.gold}`, background: activeTimer ? "transparent" : `${T.gold}15`, color: activeTimer ? T.textMuted : T.gold, fontSize: 11, fontWeight: 600, cursor: activeTimer ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                    ▶️ {activeTimer ? "Timer running on another ticket" : "Start Timer"}
+                  </button>
+                )}
+                
+                {/* Recent Time Entries for this ticket */}
+                {timeEntries.filter(e => e.ticketId === ticketDrawer.id).length > 0 && (
+                  <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+                    {timeEntries.filter(e => e.ticketId === ticketDrawer.id).slice(0, 5).map(entry => (
+                      <div key={entry.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: T.surface, borderRadius: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: entry.billable ? T.green : T.textMuted }}>{entry.duration}m</span>
+                          <span style={{ fontSize: 10, color: T.textSecondary }}>{entry.agentName}</span>
+                          {entry.notes && <span style={{ fontSize: 9, color: T.textMuted }}>• {entry.notes.slice(0, 20)}</span>}
+                        </div>
+                        <span style={{ fontSize: 9, color: T.textMuted }}>{timeAgo(entry.createdAt)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Custom Fields Section */}
               {customFields.length > 0 && (
@@ -5850,6 +6451,70 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <button type="button" style={{ marginTop: 10, padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 11, cursor: "pointer" }}>
                 + Submit New Template
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Phase 8A: Manual Time Entry Modal */}
+      {showTimeEntryModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
+          <div style={{ width: 440, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+            <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>⏱️ Add Manual Time Entry</div>
+              <button type="button" onClick={() => setShowTimeEntryModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+            </div>
+            
+            <div style={{ padding: 20 }}>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Select Ticket *</label>
+                <select value={timeEntryForm.ticketId} onChange={e => setTimeEntryForm(prev => ({ ...prev, ticketId: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, cursor: "pointer" }}>
+                  <option value="">Choose a ticket...</option>
+                  {tickets.map(t => (
+                    <option key={t.id} value={t.id}>{t.subject?.slice(0, 50) || t.id}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Duration (minutes) *</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {[5, 15, 30, 60].map(mins => (
+                    <button key={mins} type="button" onClick={() => setTimeEntryForm(prev => ({ ...prev, duration: mins }))}
+                      style={{ flex: 1, padding: "10px 0", borderRadius: 6, border: `1px solid ${timeEntryForm.duration === mins ? T.gold : T.border}`, background: timeEntryForm.duration === mins ? `${T.gold}20` : "transparent", color: timeEntryForm.duration === mins ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                      {mins}m
+                    </button>
+                  ))}
+                </div>
+                <input type="number" value={timeEntryForm.duration} onChange={e => setTimeEntryForm(prev => ({ ...prev, duration: parseInt(e.target.value) || 0 }))} placeholder="Or enter custom..."
+                  style={{ width: "100%", marginTop: 8, padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, boxSizing: "border-box" }} />
+              </div>
+              
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Notes</label>
+                <input value={timeEntryForm.notes} onChange={e => setTimeEntryForm(prev => ({ ...prev, notes: e.target.value }))} placeholder="What did you work on?"
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, boxSizing: "border-box" }} />
+              </div>
+              
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                  <input type="checkbox" checked={timeEntryForm.billable} onChange={e => setTimeEntryForm(prev => ({ ...prev, billable: e.target.checked }))}
+                    style={{ width: 18, height: 18, accentColor: T.green }} />
+                  <span style={{ fontSize: 12, color: T.textSecondary }}>💰 Billable time</span>
+                </label>
+              </div>
+              
+              <div style={{ display: "flex", gap: 12 }}>
+                <button type="button" onClick={() => setShowTimeEntryModal(false)}
+                  style={{ flex: 1, padding: "12px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                  Cancel
+                </button>
+                <button type="button" onClick={addManualTimeEntry} disabled={!timeEntryForm.ticketId || timeEntryForm.duration <= 0}
+                  style={{ flex: 2, padding: "12px", borderRadius: 8, border: "none", background: timeEntryForm.ticketId && timeEntryForm.duration > 0 ? T.gold : T.border, color: T.bg, fontSize: 12, fontWeight: 700, cursor: timeEntryForm.ticketId && timeEntryForm.duration > 0 ? "pointer" : "not-allowed" }}>
+                  Add Entry
+                </button>
+              </div>
             </div>
           </div>
         </div>
