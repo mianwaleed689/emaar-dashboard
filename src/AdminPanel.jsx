@@ -11136,10 +11136,20 @@ export default function AdminPanel() {
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [bulkImportData, setBulkImportData] = useState([]);
   const [bulkImportLoading, setBulkImportLoading] = useState(false);
-  // Data Manager Pro states
+  // Data Manager Pro states - CSV Import Pro
   const [showDataImport, setShowDataImport] = useState(false);
   const [dataImportTab, setDataImportTab] = useState("projects");
   const [dataImportPreview, setDataImportPreview] = useState([]);
+  // CSV Import Pro - Full Feature Set
+  const [importFile, setImportFile] = useState(null);
+  const [importHeaders, setImportHeaders] = useState([]);
+  const [importRows, setImportRows] = useState([]);
+  const [importMapping, setImportMapping] = useState({});
+  const [importErrors, setImportErrors] = useState([]);
+  const [importProgress, setImportProgress] = useState({ current: 0, total: 0, status: "idle" }); // idle | validating | importing | done | error
+  const [importSkipInvalid, setImportSkipInvalid] = useState(true);
+  const [importStats, setImportStats] = useState({ valid: 0, invalid: 0, skipped: 0, imported: 0 });
+  const [importDragOver, setImportDragOver] = useState(false);
   // Verification Pro states
   const [verifyBatchMode, setVerifyBatchMode] = useState(false);
   const [verifyBatchSelected, setVerifyBatchSelected] = useState([]);
@@ -12474,27 +12484,237 @@ export default function AdminPanel() {
     setDataSaving(false);
   };
 
-  const importCSV = async (file) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const lines = ev.target.result.split("\n").filter(Boolean);
-      const headers = lines[0].split(",").map(h => h.trim());
-      const rows = lines.slice(1).map(l => {
-        const vals = l.split(",");
-        return headers.reduce((o, h, i) => ({ ...o, [h]: vals[i]?.trim() }), {});
-      });
-      let saved = 0;
-      for (const row of rows) {
-        if (row.id) {
-          await setDoc(doc(db, "projectData", String(row.id)), row, { merge: true });
-          saved++;
-        }
-      }
-      notify(saved + " projects updated from CSV!");
-      fetchLiveData();
+  /* ─── CSV IMPORT PRO SYSTEM ─── */
+  const IMPORT_FIELDS = [
+    { key: "id", label: "Project ID", required: true, type: "text" },
+    { key: "name", label: "Project Name", required: true, type: "text" },
+    { key: "community", label: "Community", required: true, type: "text" },
+    { key: "price", label: "Price (AED)", required: false, type: "number" },
+    { key: "ppsf", label: "Price/sqft", required: false, type: "number" },
+    { key: "status", label: "Status", required: false, type: "select", options: ["Under Construction", "Off-Plan", "Completed", "Selling", "Upcoming", "Sold Out", "Ready"] },
+    { key: "handover", label: "Handover", required: false, type: "text" },
+    { key: "type", label: "Type", required: false, type: "text" },
+    { key: "beds", label: "Bedrooms", required: false, type: "text" },
+    { key: "paymentPlan", label: "Payment Plan", required: false, type: "text" },
+    { key: "construction", label: "Construction %", required: false, type: "number" },
+    { key: "tier", label: "Tier", required: false, type: "text" },
+    { key: "sizeFrom", label: "Size From (sqft)", required: false, type: "number" },
+    { key: "sizeTo", label: "Size To (sqft)", required: false, type: "number" },
+    { key: "imageUrl", label: "Image URL", required: false, type: "url" },
+    { key: "emaarUrl", label: "Source URL", required: false, type: "url" },
+    { key: "lat", label: "Latitude", required: false, type: "number" },
+    { key: "lng", label: "Longitude", required: false, type: "number" },
+    { key: "notes", label: "Notes", required: false, type: "text" },
+  ];
+
+  const parseCSVFile = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const text = ev.target.result;
+          const lines = text.split(/\r?\n/).filter(line => line.trim());
+          if (lines.length < 2) { reject(new Error("CSV must have header row and at least one data row")); return; }
+          // Parse header - handle quoted values
+          const parseRow = (line) => {
+            const result = [];
+            let current = "";
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+              const char = line[i];
+              if (char === '"') { inQuotes = !inQuotes; }
+              else if (char === "," && !inQuotes) { result.push(current.trim()); current = ""; }
+              else { current += char; }
+            }
+            result.push(current.trim());
+            return result;
+          };
+          const headers = parseRow(lines[0]);
+          const rows = lines.slice(1).map((line, idx) => {
+            const values = parseRow(line);
+            const row = { _rowNum: idx + 2 };
+            headers.forEach((h, i) => { row[h] = values[i] || ""; });
+            return row;
+          });
+          resolve({ headers, rows });
+        } catch (e) { reject(e); }
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsText(file);
+    });
+  };
+
+  const autoDetectMapping = (csvHeaders) => {
+    const mapping = {};
+    const normalize = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const fieldAliases = {
+      id: ["id", "projectid", "pid"],
+      name: ["name", "projectname", "title", "project"],
+      community: ["community", "area", "location", "district"],
+      price: ["price", "startingprice", "priceaed", "cost"],
+      ppsf: ["ppsf", "priceperSqft", "sqftprice", "persqft"],
+      status: ["status", "projectstatus", "state"],
+      handover: ["handover", "completion", "delivery", "completiondate"],
+      type: ["type", "propertytype", "unittype"],
+      beds: ["beds", "bedrooms", "br", "bedroom"],
+      paymentPlan: ["paymentplan", "payment", "plan"],
+      construction: ["construction", "progress", "completion"],
+      tier: ["tier", "segment", "category"],
+      sizeFrom: ["sizefrom", "minsize", "sqftfrom"],
+      sizeTo: ["sizeto", "maxsize", "sqftto"],
+      imageUrl: ["imageurl", "image", "photo", "picture"],
+      emaarUrl: ["emaarurl", "sourceurl", "url", "link"],
+      lat: ["lat", "latitude"],
+      lng: ["lng", "longitude", "long"],
+      notes: ["notes", "comments", "description"],
     };
-    reader.readAsText(file);
+    csvHeaders.forEach((csvHeader, idx) => {
+      const normalized = normalize(csvHeader);
+      for (const [fieldKey, aliases] of Object.entries(fieldAliases)) {
+        if (aliases.includes(normalized)) { mapping[idx] = fieldKey; break; }
+      }
+    });
+    return mapping;
+  };
+
+  const validateImportRow = (row, mapping, csvHeaders) => {
+    const errors = [];
+    const data = {};
+    // Map CSV columns to fields
+    Object.entries(mapping).forEach(([colIdx, fieldKey]) => {
+      const csvHeader = csvHeaders[parseInt(colIdx)];
+      const value = row[csvHeader];
+      if (value !== undefined && value !== "") { data[fieldKey] = value; }
+    });
+    // Check required fields
+    IMPORT_FIELDS.filter(f => f.required).forEach(f => {
+      if (!data[f.key] || data[f.key].toString().trim() === "") {
+        errors.push(`Missing required field: ${f.label}`);
+      }
+    });
+    // Validate number fields
+    IMPORT_FIELDS.filter(f => f.type === "number").forEach(f => {
+      if (data[f.key] && isNaN(Number(data[f.key]))) {
+        errors.push(`${f.label} must be a number`);
+      }
+    });
+    // Validate price range
+    if (data.price) {
+      const price = Number(data.price);
+      if (price > 0 && price < 100000) { errors.push("Price looks too low (< AED 100K)"); }
+      if (price > 500000000) { errors.push("Price looks too high (> AED 500M)"); }
+    }
+    // Validate PPSF range
+    if (data.ppsf) {
+      const ppsf = Number(data.ppsf);
+      if (ppsf > 0 && ppsf < 100) { errors.push("PPSF looks too low (< 100)"); }
+      if (ppsf > 10000) { errors.push("PPSF looks too high (> 10,000)"); }
+    }
+    // Validate coordinates
+    if (data.lat && (Number(data.lat) < 24 || Number(data.lat) > 26)) { errors.push("Latitude should be ~25 for Dubai"); }
+    if (data.lng && (Number(data.lng) < 54 || Number(data.lng) > 56)) { errors.push("Longitude should be ~55 for Dubai"); }
+    // Check for duplicate ID
+    const existingProject = emaarProjects.find(p => String(p.id) === String(data.id));
+    const isUpdate = !!existingProject;
+    return { data, errors, isUpdate, existingName: existingProject?.name };
+  };
+
+  const handleImportFile = async (file) => {
+    if (!file) return;
+    setImportFile(file);
+    setImportProgress({ current: 0, total: 0, status: "validating" });
+    setImportErrors([]);
+    setImportStats({ valid: 0, invalid: 0, skipped: 0, imported: 0 });
+    try {
+      const { headers, rows } = await parseCSVFile(file);
+      setImportHeaders(headers);
+      setImportRows(rows);
+      const autoMapping = autoDetectMapping(headers);
+      setImportMapping(autoMapping);
+      // Validate all rows
+      let valid = 0, invalid = 0;
+      const errors = [];
+      rows.forEach((row, idx) => {
+        const result = validateImportRow(row, autoMapping, headers);
+        if (result.errors.length > 0) {
+          invalid++;
+          errors.push({ rowNum: row._rowNum, errors: result.errors, data: result.data });
+        } else { valid++; }
+      });
+      setImportErrors(errors);
+      setImportStats(prev => ({ ...prev, valid, invalid }));
+      setImportProgress({ current: 0, total: rows.length, status: "idle" });
+    } catch (e) {
+      notify("Error parsing CSV: " + e.message);
+      setImportProgress({ current: 0, total: 0, status: "error" });
+    }
+  };
+
+  const executeImport = async () => {
+    if (importRows.length === 0) { notify("No data to import"); return; }
+    setImportProgress({ current: 0, total: importRows.length, status: "importing" });
+    let imported = 0, skipped = 0;
+    try {
+      for (let i = 0; i < importRows.length; i++) {
+        const row = importRows[i];
+        const result = validateImportRow(row, importMapping, importHeaders);
+        if (result.errors.length > 0 && importSkipInvalid) { skipped++; }
+        else if (result.errors.length === 0 || !importSkipInvalid) {
+          const cleanData = {};
+          Object.entries(result.data).forEach(([k, v]) => {
+            if (v !== "" && v !== undefined && v !== null) {
+              const field = IMPORT_FIELDS.find(f => f.key === k);
+              cleanData[k] = field?.type === "number" ? Number(v) : v;
+            }
+          });
+          cleanData.updatedAt = new Date().toISOString();
+          cleanData.updatedBy = adminUser?.email || "csv-import";
+          cleanData.importedAt = new Date().toISOString();
+          await setDoc(doc(db, "projectData", String(result.data.id)), cleanData, { merge: true });
+          imported++;
+        }
+        setImportProgress({ current: i + 1, total: importRows.length, status: "importing" });
+      }
+      await logAudit(db, { action: "csv_import", imported, skipped, total: importRows.length });
+      setImportStats(prev => ({ ...prev, imported, skipped }));
+      setImportProgress({ current: importRows.length, total: importRows.length, status: "done" });
+      notify(`Import complete: ${imported} saved, ${skipped} skipped`);
+      fetchLiveData();
+    } catch (e) {
+      notify("Import error: " + e.message);
+      setImportProgress(prev => ({ ...prev, status: "error" }));
+    }
+  };
+
+  const resetImport = () => {
+    setImportFile(null);
+    setImportHeaders([]);
+    setImportRows([]);
+    setImportMapping({});
+    setImportErrors([]);
+    setImportProgress({ current: 0, total: 0, status: "idle" });
+    setImportStats({ valid: 0, invalid: 0, skipped: 0, imported: 0 });
+    setShowDataImport(false);
+  };
+
+  const downloadImportTemplate = () => {
+    const headers = IMPORT_FIELDS.map(f => f.key).join(",");
+    const example = "1,The Golf Residence,Dubai Hills Estate,2500000,2200,Selling,Q4 2027,Apartments,1-3 BR,80/20,75,Premium,750,2200,,,25.1234,55.2743,Sample notes";
+    const csv = headers + "\\n" + example;
+    const blob = new Blob([csv], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "dxb-import-template.csv";
+    a.click();
+    notify("Template downloaded!");
+  };
+
+  const importCSV = async (file) => {
+    // Legacy function - now opens modal instead
+    if (file) {
+      setShowDataImport(true);
+      handleImportFile(file);
+    }
   };
 
   const exportCSV = () => {
@@ -14649,6 +14869,211 @@ export default function AdminPanel() {
              ═══════════════════════════════════════ */}
           {tab === "data" && (
             <>
+              {/* ═══════════════════════════════════════
+                 CSV IMPORT PRO MODAL
+                 ═══════════════════════════════════════ */}
+              {showDataImport && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => importProgress.status !== "importing" && resetImport()}>
+                  <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 20, width: "100%", maxWidth: 900, maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", animation: "slideUp 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
+                    {/* Header */}
+                    <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(135deg, rgba(212,168,67,0.08) 0%, transparent 60%)" }}>
+                      <div>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>CSV Import Pro</div>
+                        <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Import project data with preview, mapping, and validation</div>
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button type="button" onClick={downloadImportTemplate} style={{ fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Download Template</button>
+                        <button type="button" onClick={() => importProgress.status !== "importing" && resetImport()} disabled={importProgress.status === "importing"} style={{ fontSize: 16, width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: importProgress.status === "importing" ? "not-allowed" : "pointer" }}>×</button>
+                      </div>
+                    </div>
+                    
+                    {/* Content */}
+                    <div style={{ flex: 1, overflow: "auto", padding: 24 }}>
+                      {/* Drop Zone - Show when no file */}
+                      {!importFile && (
+                        <div 
+                          onDragOver={e => { e.preventDefault(); setImportDragOver(true); }}
+                          onDragLeave={() => setImportDragOver(false)}
+                          onDrop={e => { e.preventDefault(); setImportDragOver(false); const file = e.dataTransfer.files[0]; if (file) handleImportFile(file); }}
+                          style={{ border: `2px dashed ${importDragOver ? T.gold : T.border}`, borderRadius: 16, padding: "48px 24px", textAlign: "center", background: importDragOver ? "rgba(212,168,67,0.08)" : "transparent", transition: "all 0.2s", cursor: "pointer" }}
+                          onClick={() => document.getElementById("csv-file-input")?.click()}>
+                          <input id="csv-file-input" type="file" accept=".csv" style={{ display: "none" }} onChange={e => { const file = e.target.files?.[0]; if (file) handleImportFile(file); }} />
+                          <div style={{ width: 56, height: 56, borderRadius: 14, background: "rgba(212,168,67,0.1)", border: "1px solid rgba(212,168,67,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                          </div>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: T.white, marginBottom: 8 }}>Drop CSV file here or click to browse</div>
+                          <div style={{ fontSize: 12, color: T.textMuted }}>Supports .csv files with header row. Max 1000 rows recommended.</div>
+                        </div>
+                      )}
+                      
+                      {/* File Loaded - Show preview, mapping, errors */}
+                      {importFile && importHeaders.length > 0 && (
+                        <>
+                          {/* File Info Bar */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: T.surfaceAlt, borderRadius: 10, marginBottom: 20 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                              <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{importFile.name}</div>
+                                <div style={{ fontSize: 11, color: T.textMuted }}>{importRows.length} rows · {importHeaders.length} columns</div>
+                              </div>
+                            </div>
+                            <button type="button" onClick={() => { setImportFile(null); setImportHeaders([]); setImportRows([]); setImportMapping({}); setImportErrors([]); }} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Change File</button>
+                          </div>
+                          
+                          {/* Stats Cards */}
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+                            <div style={{ padding: "12px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                              <div style={{ fontSize: 20, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>{importRows.length}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase" }}>Total Rows</div>
+                            </div>
+                            <div style={{ padding: "12px 16px", background: "rgba(16,185,129,0.06)", borderRadius: 10, border: "1px solid rgba(16,185,129,0.2)" }}>
+                              <div style={{ fontSize: 20, fontWeight: 800, color: T.green, fontFamily: "'Fraunces',serif" }}>{importStats.valid}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase" }}>Valid</div>
+                            </div>
+                            <div style={{ padding: "12px 16px", background: "rgba(239,68,68,0.06)", borderRadius: 10, border: "1px solid rgba(239,68,68,0.2)" }}>
+                              <div style={{ fontSize: 20, fontWeight: 800, color: T.red, fontFamily: "'Fraunces',serif" }}>{importStats.invalid}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase" }}>Invalid</div>
+                            </div>
+                            <div style={{ padding: "12px 16px", background: "rgba(212,168,67,0.06)", borderRadius: 10, border: "1px solid rgba(212,168,67,0.2)" }}>
+                              <div style={{ fontSize: 20, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>{importProgress.status === "done" ? importStats.imported : "—"}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase" }}>Imported</div>
+                            </div>
+                          </div>
+                          
+                          {/* Column Mapping */}
+                          <div style={{ marginBottom: 20 }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                              <span>Column Mapping</span>
+                              <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 4, background: "rgba(212,168,67,0.1)", color: T.gold }}>{Object.keys(importMapping).length} mapped</span>
+                            </div>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, padding: 16, background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}` }}>
+                              {importHeaders.map((header, idx) => (
+                                <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <div style={{ flex: 1, fontSize: 11, color: T.textSecondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={header}>{header}</div>
+                                  <span style={{ color: T.textMuted }}>→</span>
+                                  <select value={importMapping[idx] || ""} onChange={e => setImportMapping(prev => ({ ...prev, [idx]: e.target.value || undefined }))}
+                                    style={{ flex: 1, padding: "6px 8px", background: T.bg, border: `1px solid ${importMapping[idx] ? "rgba(16,185,129,0.3)" : T.border}`, borderRadius: 6, color: importMapping[idx] ? T.green : T.textMuted, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                                    <option value="">— Skip —</option>
+                                    {IMPORT_FIELDS.map(f => (
+                                      <option key={f.key} value={f.key}>{f.label}{f.required ? " *" : ""}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Preview Table */}
+                          <div style={{ marginBottom: 20 }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12 }}>Preview (first 5 rows)</div>
+                            <div style={{ overflow: "auto", borderRadius: 12, border: `1px solid ${T.border}` }}>
+                              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                                <thead>
+                                  <tr style={{ background: T.surfaceAlt }}>
+                                    <th style={{ padding: "10px 12px", textAlign: "left", color: T.textMuted, fontWeight: 600, borderBottom: `1px solid ${T.border}` }}>#</th>
+                                    {importHeaders.slice(0, 6).map((h, i) => (
+                                      <th key={i} style={{ padding: "10px 12px", textAlign: "left", color: importMapping[i] ? T.gold : T.textMuted, fontWeight: 600, borderBottom: `1px solid ${T.border}`, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{importMapping[i] ? IMPORT_FIELDS.find(f => f.key === importMapping[i])?.label : h}</th>
+                                    ))}
+                                    {importHeaders.length > 6 && <th style={{ padding: "10px 12px", textAlign: "center", color: T.textMuted, fontWeight: 600, borderBottom: `1px solid ${T.border}` }}>+{importHeaders.length - 6}</th>}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {importRows.slice(0, 5).map((row, rowIdx) => {
+                                    const result = validateImportRow(row, importMapping, importHeaders);
+                                    const hasError = result.errors.length > 0;
+                                    return (
+                                      <tr key={rowIdx} style={{ background: hasError ? "rgba(239,68,68,0.04)" : "transparent" }}>
+                                        <td style={{ padding: "8px 12px", color: T.textMuted, borderBottom: `1px solid ${T.border}` }}>{row._rowNum}</td>
+                                        {importHeaders.slice(0, 6).map((h, colIdx) => (
+                                          <td key={colIdx} style={{ padding: "8px 12px", color: T.textSecondary, borderBottom: `1px solid ${T.border}`, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row[h] || "—"}</td>
+                                        ))}
+                                        {importHeaders.length > 6 && <td style={{ padding: "8px 12px", textAlign: "center", color: T.textMuted, borderBottom: `1px solid ${T.border}` }}>...</td>}
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                          
+                          {/* Validation Errors */}
+                          {importErrors.length > 0 && (
+                            <div style={{ marginBottom: 20 }}>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: T.red, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                                <span>Validation Errors</span>
+                                <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 4, background: "rgba(239,68,68,0.1)", color: T.red }}>{importErrors.length} rows</span>
+                              </div>
+                              <div style={{ maxHeight: 200, overflow: "auto", padding: 16, background: "rgba(239,68,68,0.04)", borderRadius: 12, border: "1px solid rgba(239,68,68,0.2)" }}>
+                                {importErrors.slice(0, 10).map((err, idx) => (
+                                  <div key={idx} style={{ padding: "8px 0", borderBottom: idx < importErrors.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                                    <div style={{ fontSize: 11, fontWeight: 600, color: T.white, marginBottom: 4 }}>Row {err.rowNum}: {err.data?.name || err.data?.id || "Unknown"}</div>
+                                    <div style={{ fontSize: 10, color: T.red }}>{err.errors.join(" · ")}</div>
+                                  </div>
+                                ))}
+                                {importErrors.length > 10 && <div style={{ fontSize: 11, color: T.textMuted, paddingTop: 8 }}>...and {importErrors.length - 10} more errors</div>}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Skip Invalid Toggle */}
+                          {importErrors.length > 0 && (
+                            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: T.surfaceAlt, borderRadius: 10, marginBottom: 20 }}>
+                              <input type="checkbox" id="skip-invalid" checked={importSkipInvalid} onChange={e => setImportSkipInvalid(e.target.checked)} style={{ accentColor: T.gold, width: 16, height: 16 }} />
+                              <label htmlFor="skip-invalid" style={{ fontSize: 12, color: T.textSecondary, cursor: "pointer" }}>Skip invalid rows (import only valid data)</label>
+                            </div>
+                          )}
+                          
+                          {/* Progress Bar */}
+                          {importProgress.status === "importing" && (
+                            <div style={{ marginBottom: 20 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                                <span style={{ fontSize: 12, color: T.textSecondary }}>Importing...</span>
+                                <span style={{ fontSize: 12, color: T.gold, fontWeight: 600 }}>{importProgress.current} / {importProgress.total}</span>
+                              </div>
+                              <div style={{ height: 6, background: T.surfaceAlt, borderRadius: 3, overflow: "hidden" }}>
+                                <div style={{ width: `${(importProgress.current / importProgress.total) * 100}%`, height: "100%", background: `linear-gradient(90deg, ${T.gold}, ${T.teal})`, borderRadius: 3, transition: "width 0.2s" }} />
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Success Message */}
+                          {importProgress.status === "done" && (
+                            <div style={{ padding: 20, background: "rgba(16,185,129,0.08)", borderRadius: 12, border: "1px solid rgba(16,185,129,0.2)", textAlign: "center", marginBottom: 20 }}>
+                              <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(16,185,129,0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                              </div>
+                              <div style={{ fontSize: 16, fontWeight: 700, color: T.green, marginBottom: 4 }}>Import Complete!</div>
+                              <div style={{ fontSize: 12, color: T.textSecondary }}>{importStats.imported} projects imported, {importStats.skipped} skipped</div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    
+                    {/* Footer */}
+                    <div style={{ padding: "16px 24px", borderTop: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: T.surfaceAlt }}>
+                      <div style={{ fontSize: 11, color: T.textMuted }}>
+                        {importProgress.status === "done" ? "Import finished — data is now live" : importFile ? `${importStats.valid} rows ready to import` : "Upload a CSV file to begin"}
+                      </div>
+                      <div style={{ display: "flex", gap: 10 }}>
+                        <button type="button" onClick={resetImport} disabled={importProgress.status === "importing"} style={{ fontSize: 12, padding: "10px 20px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: importProgress.status === "importing" ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                          {importProgress.status === "done" ? "Close" : "Cancel"}
+                        </button>
+                        {importFile && importProgress.status !== "done" && (
+                          <button type="button" onClick={executeImport} disabled={importProgress.status === "importing" || (importStats.valid === 0 && importSkipInvalid)}
+                            style={{ fontSize: 12, padding: "10px 24px", borderRadius: 8, border: "none", background: (importProgress.status === "importing" || (importStats.valid === 0 && importSkipInvalid)) ? T.border : `linear-gradient(135deg, ${T.gold}, #B8860B)`, color: (importProgress.status === "importing" || (importStats.valid === 0 && importSkipInvalid)) ? T.textMuted : "#000", cursor: (importProgress.status === "importing" || (importStats.valid === 0 && importSkipInvalid)) ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700 }}>
+                            {importProgress.status === "importing" ? "Importing..." : `Import ${importSkipInvalid ? importStats.valid : importRows.length} Projects`}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Section Header */}
               <div style={{ marginBottom: 24 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
@@ -14766,10 +15191,10 @@ export default function AdminPanel() {
                 <Section title="Project Data Manager" sub="Edit prices, PPSF, status — changes go live instantly" action={
                 <div style={{ display: "flex", gap: 8 }}>
                     <button type="button" onClick={exportProjectsExcel} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(100,116,139,0.3)",background:"transparent",color:T.textSecondary,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>Export</button>
-                    <label style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(100,116,139,0.3)",background:"transparent",color:T.textSecondary,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>
+                    <button type="button" onClick={() => setShowDataImport(true)} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(20,184,166,0.4)",background:"rgba(20,184,166,0.08)",color:T.teal,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                       Import CSV
-                      <input type="file" accept=".csv" style={{display:"none"}} onChange={e => importCSV(e.target.files[0])} />
-                    </label>
+                    </button>
                     <button type="button" onClick={() => { setEditingProject("new"); setProjectForm({}); }} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(16,185,129,0.4)",background:"rgba(16,185,129,0.08)",color:"#10B981",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>+ Add Project</button>
                     <button type="button" onClick={fetchLiveData} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(212,168,67,0.4)",background:"rgba(212,168,67,0.08)",color:"#D4A843",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>{I.refresh} Refresh</button>
                   </div>
@@ -14780,7 +15205,7 @@ export default function AdminPanel() {
                     { icon: "[s]", title: "Save Goes Live", desc: "Clicking 'Save to Firestore' updates the project instantly on the dashboard for all users." },
                     { icon: "[img]", title: "Upload Images", desc: "Upload a project image via Cloudinary. It appears on the dashboard project card." },
                     { icon: "[x]", title: "Bulk Edit", desc: "Check multiple projects using the checkboxes, then set price or status for all at once." },
-                    { icon: "[dl]", title: "Export / Import", desc: "Export all project data to Excel. Import updates via CSV for bulk data changes." },
+                    { icon: "[dl]", title: "CSV Import Pro", desc: "Upload CSV with preview, auto-column mapping, validation errors, and import progress. Download template for correct format." },
                     { icon: "[~]", title: "Default vs Live", desc: "'Default' means data comes from data.js. 'Live' means you've saved a Firestore override." },
                   ]} />
                   {/* ── Filter & Sort Bar ── */}
