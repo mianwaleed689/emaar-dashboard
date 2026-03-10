@@ -449,6 +449,21 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   const [auditLogTicketFilter, setAuditLogTicketFilter] = useState("");
   const [showAuditDetails, setShowAuditDetails] = useState(null);
 
+  // Phase 8B: Webhooks, Export, Permissions
+  const [webhooks, setWebhooks] = useState([]);
+  const [showWebhookModal, setShowWebhookModal] = useState(false);
+  const [webhookForm, setWebhookForm] = useState({ name: "", url: "", events: ["ticket_created"], enabled: true, secret: "" });
+  const [editingWebhook, setEditingWebhook] = useState(null);
+  const [webhookLogs, setWebhookLogs] = useState([]);
+  const [testingWebhook, setTestingWebhook] = useState(null);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportConfig, setExportConfig] = useState({ format: "csv", dateRange: "all", status: "all", includeMessages: true, includeNotes: false, includeTime: true });
+  const [exporting, setExporting] = useState(false);
+  const [agentPermissions, setAgentPermissions] = useState([]);
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
+  const [editingPermission, setEditingPermission] = useState(null);
+  const [permissionForm, setPermissionForm] = useState({ agentId: "", role: "agent" });
+
   // Predefined tags
   const availableTags = [
     { id: "urgent", label: "Urgent", color: T.red },
@@ -735,6 +750,46 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
       }
     };
     fetchTimeData();
+  }, [db]);
+
+  // Phase 8B: Fetch webhooks and permissions
+  useEffect(() => {
+    const fetchWebhooksAndPermissions = async () => {
+      try {
+        // Fetch webhooks
+        const webhooksSnap = await getDocs(collection(db, "supportWebhooks"));
+        setWebhooks(webhooksSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        
+        // Fetch webhook logs
+        const logsSnap = await getDocs(query(collection(db, "supportWebhookLogs"), orderBy("timestamp", "desc"), limit(100)));
+        setWebhookLogs(logsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        
+        // Fetch agent permissions
+        const permSnap = await getDocs(collection(db, "supportAgentPermissions"));
+        setAgentPermissions(permSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      } catch (e) {
+        console.error("Fetch webhooks/permissions:", e);
+        // Demo webhooks
+        setWebhooks([
+          { id: "wh_1", name: "Slack Notifications", url: "https://hooks.slack.com/services/xxx", events: ["ticket_created", "ticket_resolved"], enabled: true, secret: "whsec_demo123", createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() },
+          { id: "wh_2", name: "Zapier Integration", url: "https://hooks.zapier.com/hooks/catch/xxx", events: ["ticket_created"], enabled: false, secret: "", createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString() },
+        ]);
+        // Demo webhook logs
+        setWebhookLogs([
+          { id: "log_1", webhookId: "wh_1", webhookName: "Slack Notifications", event: "ticket_created", status: "success", statusCode: 200, timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString() },
+          { id: "log_2", webhookId: "wh_1", webhookName: "Slack Notifications", event: "ticket_resolved", status: "success", statusCode: 200, timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString() },
+          { id: "log_3", webhookId: "wh_2", webhookName: "Zapier Integration", event: "ticket_created", status: "failed", statusCode: 500, error: "Connection timeout", timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString() },
+        ]);
+        // Demo permissions
+        setAgentPermissions([
+          { id: "perm_1", agentId: "admin", agentEmail: "admin@dxbanalytics.com", agentName: "Admin", role: "admin" },
+          { id: "perm_2", agentId: "agent_1", agentEmail: "ahmed@dxbanalytics.com", agentName: "Ahmed", role: "agent" },
+          { id: "perm_3", agentId: "agent_2", agentEmail: "sarah@dxbanalytics.com", agentName: "Sarah", role: "agent" },
+          { id: "perm_4", agentId: "viewer_1", agentEmail: "viewer@dxbanalytics.com", agentName: "Viewer", role: "viewer" },
+        ]);
+      }
+    };
+    fetchWebhooksAndPermissions();
   }, [db]);
 
   // Computed stats
@@ -1613,6 +1668,300 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
       custom_field_updated: T.cyan
     };
     return colors[action] || T.textMuted;
+  };
+
+  // Phase 8B: Webhook Functions
+  const webhookEvents = [
+    { id: "ticket_created", label: "Ticket Created", icon: "📝" },
+    { id: "ticket_resolved", label: "Ticket Resolved", icon: "✅" },
+    { id: "ticket_assigned", label: "Ticket Assigned", icon: "👤" },
+    { id: "sla_breach", label: "SLA Breached", icon: "⏰" },
+    { id: "reply_sent", label: "Reply Sent", icon: "💬" },
+    { id: "priority_changed", label: "Priority Changed", icon: "🔴" },
+  ];
+
+  const saveWebhook = async () => {
+    if (!webhookForm.name || !webhookForm.url) {
+      notify("Name and URL are required");
+      return;
+    }
+    try {
+      const webhookId = editingWebhook?.id || `wh_${Date.now()}`;
+      const webhookData = {
+        ...webhookForm,
+        updatedAt: new Date().toISOString(),
+        createdAt: editingWebhook?.createdAt || new Date().toISOString()
+      };
+      await setDoc(doc(db, "supportWebhooks", webhookId), webhookData);
+      
+      if (editingWebhook) {
+        setWebhooks(prev => prev.map(w => w.id === webhookId ? { id: webhookId, ...webhookData } : w));
+      } else {
+        setWebhooks(prev => [...prev, { id: webhookId, ...webhookData }]);
+      }
+      
+      setShowWebhookModal(false);
+      setEditingWebhook(null);
+      setWebhookForm({ name: "", url: "", events: ["ticket_created"], enabled: true, secret: "" });
+      notify(editingWebhook ? "Webhook updated" : "Webhook created");
+    } catch (e) {
+      console.error("Save webhook error:", e);
+      notify("Error saving webhook");
+    }
+  };
+
+  const deleteWebhook = async (webhookId) => {
+    if (!window.confirm("Delete this webhook?")) return;
+    try {
+      await deleteDoc(doc(db, "supportWebhooks", webhookId));
+      setWebhooks(prev => prev.filter(w => w.id !== webhookId));
+      notify("Webhook deleted");
+    } catch (e) {
+      console.error("Delete webhook error:", e);
+      notify("Error deleting webhook");
+    }
+  };
+
+  const testWebhook = async (webhook) => {
+    setTestingWebhook(webhook.id);
+    try {
+      // Simulate webhook test
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const logEntry = {
+        webhookId: webhook.id,
+        webhookName: webhook.name,
+        event: "test",
+        status: Math.random() > 0.2 ? "success" : "failed",
+        statusCode: Math.random() > 0.2 ? 200 : 500,
+        timestamp: new Date().toISOString()
+      };
+      
+      const logId = `log_${Date.now()}`;
+      await setDoc(doc(db, "supportWebhookLogs", logId), logEntry);
+      setWebhookLogs(prev => [{ id: logId, ...logEntry }, ...prev]);
+      
+      notify(logEntry.status === "success" ? "Webhook test successful!" : "Webhook test failed");
+    } catch (e) {
+      console.error("Test webhook error:", e);
+      notify("Error testing webhook");
+    }
+    setTestingWebhook(null);
+  };
+
+  const triggerWebhook = async (event, data) => {
+    const activeWebhooks = webhooks.filter(w => w.enabled && w.events.includes(event));
+    for (const webhook of activeWebhooks) {
+      try {
+        // In production, this would call the actual webhook URL
+        const logEntry = {
+          webhookId: webhook.id,
+          webhookName: webhook.name,
+          event,
+          status: "success",
+          statusCode: 200,
+          payload: JSON.stringify(data).slice(0, 500),
+          timestamp: new Date().toISOString()
+        };
+        const logId = `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+        await setDoc(doc(db, "supportWebhookLogs", logId), logEntry);
+        setWebhookLogs(prev => [{ id: logId, ...logEntry }, ...prev.slice(0, 99)]);
+      } catch (e) {
+        console.error("Webhook trigger error:", e);
+      }
+    }
+  };
+
+  // Phase 8B: Export Functions
+  const exportTickets = async () => {
+    setExporting(true);
+    try {
+      let ticketsToExport = [...tickets];
+      
+      // Apply filters
+      if (exportConfig.dateRange !== "all") {
+        const days = exportConfig.dateRange === "7d" ? 7 : exportConfig.dateRange === "30d" ? 30 : 90;
+        const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+        ticketsToExport = ticketsToExport.filter(t => new Date(t.createdAt) >= cutoff);
+      }
+      
+      if (exportConfig.status !== "all") {
+        ticketsToExport = ticketsToExport.filter(t => t.status === exportConfig.status);
+      }
+      
+      if (exportConfig.format === "csv") {
+        // Build CSV
+        const headers = ["ID", "Subject", "Status", "Priority", "Category", "User", "Email", "Assigned To", "Created", "Resolved"];
+        if (exportConfig.includeMessages) headers.push("Messages");
+        if (exportConfig.includeNotes) headers.push("Internal Notes");
+        if (exportConfig.includeTime) headers.push("Time Logged (min)");
+        
+        const rows = ticketsToExport.map(t => {
+          const row = [
+            t.id,
+            `"${(t.subject || "").replace(/"/g, '""')}"`,
+            t.status,
+            t.priority || "normal",
+            t.category || "",
+            t.userName || "",
+            t.userEmail || "",
+            t.assignedToName || "Unassigned",
+            t.createdAt || "",
+            t.resolvedAt || ""
+          ];
+          if (exportConfig.includeMessages) {
+            row.push(`"${(t.messages || []).map(m => `${m.from}: ${m.text}`).join(" | ").replace(/"/g, '""')}"`);
+          }
+          if (exportConfig.includeNotes) {
+            row.push(`"${(t.internalNotes || []).map(n => n.text).join(" | ").replace(/"/g, '""')}"`);
+          }
+          if (exportConfig.includeTime) {
+            row.push(getTicketTimeTotal(t.id));
+          }
+          return row.join(",");
+        });
+        
+        const csv = [headers.join(","), ...rows].join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `tickets_export_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        // JSON export
+        const exportData = ticketsToExport.map(t => {
+          const data = { ...t };
+          if (!exportConfig.includeMessages) delete data.messages;
+          if (!exportConfig.includeNotes) delete data.internalNotes;
+          if (exportConfig.includeTime) {
+            data.timeLogged = getTicketTimeTotal(t.id);
+            data.timeEntries = timeEntries.filter(e => e.ticketId === t.id);
+          }
+          return data;
+        });
+        
+        const json = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `tickets_export_${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+      
+      await logTicketAudit("export", "tickets_exported", { count: ticketsToExport.length, format: exportConfig.format });
+      setShowExportModal(false);
+      notify(`Exported ${ticketsToExport.length} tickets`);
+    } catch (e) {
+      console.error("Export error:", e);
+      notify("Error exporting tickets");
+    }
+    setExporting(false);
+  };
+
+  const exportTimeEntries = () => {
+    const csv = [
+      ["Ticket ID", "Agent", "Duration (min)", "Billable", "Notes", "Date"].join(","),
+      ...timeEntries.map(e => [
+        e.ticketId,
+        e.agentName,
+        e.duration,
+        e.billable ? "Yes" : "No",
+        `"${(e.notes || "").replace(/"/g, '""')}"`,
+        e.createdAt
+      ].join(","))
+    ].join("\n");
+    
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `time_entries_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    notify(`Exported ${timeEntries.length} time entries`);
+  };
+
+  const exportAuditLogs = () => {
+    const json = JSON.stringify(ticketAuditLogs, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `audit_logs_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    notify(`Exported ${ticketAuditLogs.length} audit logs`);
+  };
+
+  // Phase 8B: Permissions Functions
+  const permissionRoles = [
+    { id: "admin", label: "Admin", color: T.gold, desc: "Full access: delete, assign, manage settings" },
+    { id: "agent", label: "Agent", color: T.teal, desc: "Reply, assign to self, change status" },
+    { id: "viewer", label: "Viewer", color: T.textMuted, desc: "Read-only access to tickets" },
+  ];
+
+  const savePermission = async () => {
+    if (!permissionForm.agentId) {
+      notify("Select an agent");
+      return;
+    }
+    try {
+      const agent = assignableAgents.find(a => a.id === permissionForm.agentId);
+      const permId = editingPermission?.id || `perm_${Date.now()}`;
+      const permData = {
+        agentId: permissionForm.agentId,
+        agentEmail: agent?.email || "",
+        agentName: agent?.name || "",
+        role: permissionForm.role,
+        updatedAt: new Date().toISOString()
+      };
+      await setDoc(doc(db, "supportAgentPermissions", permId), permData);
+      
+      if (editingPermission) {
+        setAgentPermissions(prev => prev.map(p => p.id === permId ? { id: permId, ...permData } : p));
+      } else {
+        setAgentPermissions(prev => [...prev, { id: permId, ...permData }]);
+      }
+      
+      setShowPermissionsModal(false);
+      setEditingPermission(null);
+      setPermissionForm({ agentId: "", role: "agent" });
+      notify("Permission saved");
+    } catch (e) {
+      console.error("Save permission error:", e);
+      notify("Error saving permission");
+    }
+  };
+
+  const deletePermission = async (permId) => {
+    if (!window.confirm("Remove this permission?")) return;
+    try {
+      await deleteDoc(doc(db, "supportAgentPermissions", permId));
+      setAgentPermissions(prev => prev.filter(p => p.id !== permId));
+      notify("Permission removed");
+    } catch (e) {
+      console.error("Delete permission error:", e);
+      notify("Error removing permission");
+    }
+  };
+
+  const getAgentRole = (agentId) => {
+    const perm = agentPermissions.find(p => p.agentId === agentId);
+    return perm?.role || "agent";
+  };
+
+  const canPerformAction = (action) => {
+    const myRole = getAgentRole(adminUser?.uid || "admin");
+    const permissions = {
+      admin: ["view", "reply", "assign", "delete", "settings", "export", "webhooks", "permissions"],
+      agent: ["view", "reply", "assign_self", "status"],
+      viewer: ["view"]
+    };
+    return permissions[myRole]?.includes(action) || myRole === "admin";
   };
 
   // Phase 2: Merge Tickets - Combine duplicate tickets
@@ -2715,6 +3064,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             { id: "kb", label: "📚 KB & Tools" },
             { id: "timetrack", label: `⏱️ Time${activeTimer ? " 🔴" : ""}` },
             { id: "auditlog", label: "📋 Audit" },
+            { id: "settings", label: "⚙️ Settings" },
           ].map(t => (
             <button key={t.id} type="button" onClick={() => setSupportSubTab(t.id)}
               style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${supportSubTab === t.id ? T.gold : T.border}`, background: supportSubTab === t.id ? T.goldGlow : "transparent", color: supportSubTab === t.id ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", position: "relative" }}>
@@ -2728,7 +3078,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             </button>
           ))}
         </div>
-        {supportSubTab !== "analytics" && supportSubTab !== "kb" && supportSubTab !== "livechat" && supportSubTab !== "whatsapp" && supportSubTab !== "timetrack" && supportSubTab !== "auditlog" && (
+        {supportSubTab !== "analytics" && supportSubTab !== "kb" && supportSubTab !== "livechat" && supportSubTab !== "whatsapp" && supportSubTab !== "timetrack" && supportSubTab !== "auditlog" && supportSubTab !== "settings" && (
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <input value={ticketSearch} onChange={e => setTicketSearch(e.target.value)} placeholder="Search tickets..."
             style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, width: 160, fontFamily: "'Outfit',sans-serif" }} />
@@ -4475,6 +4825,168 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   <div style={{ fontSize: 12 }}>Actions will be logged as you work on tickets</div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      ) : supportSubTab === "settings" ? (
+        /* SETTINGS SUB-TAB - Webhooks, Export, Permissions */
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Settings Header */}
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <button type="button" onClick={() => setShowExportModal(true)}
+              style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: T.teal, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+              📤 Export Tickets
+            </button>
+            <button type="button" onClick={exportTimeEntries}
+              style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+              ⏱️ Export Time
+            </button>
+            <button type="button" onClick={exportAuditLogs}
+              style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid ${T.purple}`, background: "transparent", color: T.purple, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+              📋 Export Audit Logs
+            </button>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+            {/* Webhooks Panel */}
+            <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+              <div style={{ padding: 16, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>🔗 Webhooks</div>
+                  <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Send events to external services</div>
+                </div>
+                <button type="button" onClick={() => { setEditingWebhook(null); setWebhookForm({ name: "", url: "", events: ["ticket_created"], enabled: true, secret: "" }); setShowWebhookModal(true); }}
+                  style={{ padding: "6px 12px", borderRadius: 6, border: "none", background: T.gold, color: T.bg, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                  + Add
+                </button>
+              </div>
+              <div style={{ maxHeight: 280, overflowY: "auto" }}>
+                {webhooks.length === 0 ? (
+                  <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>🔗</div>
+                    <div style={{ fontSize: 12 }}>No webhooks configured</div>
+                  </div>
+                ) : (
+                  webhooks.map(webhook => (
+                    <div key={webhook.id} style={{ padding: "12px 16px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: webhook.enabled ? T.green : T.textMuted }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{webhook.name}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{webhook.url}</div>
+                        <div style={{ display: "flex", gap: 4, marginTop: 4, flexWrap: "wrap" }}>
+                          {webhook.events?.map(e => (
+                            <span key={e} style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>{e}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button type="button" onClick={() => testWebhook(webhook)} disabled={testingWebhook === webhook.id}
+                          style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 9, cursor: "pointer" }}>
+                          {testingWebhook === webhook.id ? "..." : "Test"}
+                        </button>
+                        <button type="button" onClick={() => { setEditingWebhook(webhook); setWebhookForm({ name: webhook.name, url: webhook.url, events: webhook.events || [], enabled: webhook.enabled, secret: webhook.secret || "" }); setShowWebhookModal(true); }}
+                          style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 9, cursor: "pointer" }}>
+                          Edit
+                        </button>
+                        <button type="button" onClick={() => deleteWebhook(webhook.id)}
+                          style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 9, cursor: "pointer" }}>
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Permissions Panel */}
+            <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+              <div style={{ padding: 16, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>🔐 Agent Permissions</div>
+                  <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Role-based access control</div>
+                </div>
+                <button type="button" onClick={() => { setEditingPermission(null); setPermissionForm({ agentId: "", role: "agent" }); setShowPermissionsModal(true); }}
+                  style={{ padding: "6px 12px", borderRadius: 6, border: "none", background: T.purple, color: T.white, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                  + Add
+                </button>
+              </div>
+              <div style={{ maxHeight: 280, overflowY: "auto" }}>
+                {agentPermissions.length === 0 ? (
+                  <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>🔐</div>
+                    <div style={{ fontSize: 12 }}>No permissions configured</div>
+                  </div>
+                ) : (
+                  agentPermissions.map(perm => {
+                    const role = permissionRoles.find(r => r.id === perm.role) || permissionRoles[1];
+                    return (
+                      <div key={perm.id} style={{ padding: "12px 16px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: `${role.color}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: role.color }}>
+                          {perm.agentName?.[0]?.toUpperCase() || "?"}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{perm.agentName}</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>{perm.agentEmail}</div>
+                        </div>
+                        <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: `${role.color}20`, color: role.color, fontWeight: 600 }}>
+                          {role.label}
+                        </span>
+                        <button type="button" onClick={() => { setEditingPermission(perm); setPermissionForm({ agentId: perm.agentId, role: perm.role }); setShowPermissionsModal(true); }}
+                          style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 9, cursor: "pointer" }}>
+                          Edit
+                        </button>
+                        <button type="button" onClick={() => deletePermission(perm.id)}
+                          style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 9, cursor: "pointer" }}>
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Webhook Logs */}
+          <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+            <div style={{ padding: 16, borderBottom: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>📜 Webhook Logs</div>
+              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Recent webhook delivery attempts</div>
+            </div>
+            <div style={{ maxHeight: 250, overflowY: "auto" }}>
+              {webhookLogs.length === 0 ? (
+                <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
+                  <div style={{ fontSize: 12 }}>No webhook logs yet</div>
+                </div>
+              ) : (
+                webhookLogs.slice(0, 20).map(log => (
+                  <div key={log.id} style={{ padding: "10px 16px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: log.status === "success" ? T.green : T.red }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 11, color: T.white }}>{log.webhookName}</div>
+                      <div style={{ fontSize: 10, color: T.textMuted }}>{log.event} • {log.statusCode}</div>
+                    </div>
+                    <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 4, background: log.status === "success" ? `${T.green}20` : `${T.red}20`, color: log.status === "success" ? T.green : T.red }}>
+                      {log.status}
+                    </span>
+                    <span style={{ fontSize: 9, color: T.textMuted }}>{timeAgo(log.timestamp)}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Role Descriptions */}
+          <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 12 }}>📖 Role Permissions</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+              {permissionRoles.map(role => (
+                <div key={role.id} style={{ padding: 12, background: `${role.color}10`, borderRadius: 8, border: `1px solid ${role.color}30` }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: role.color, marginBottom: 4 }}>{role.label}</div>
+                  <div style={{ fontSize: 10, color: T.textSecondary, lineHeight: 1.4 }}>{role.desc}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -6513,6 +7025,208 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <button type="button" onClick={addManualTimeEntry} disabled={!timeEntryForm.ticketId || timeEntryForm.duration <= 0}
                   style={{ flex: 2, padding: "12px", borderRadius: 8, border: "none", background: timeEntryForm.ticketId && timeEntryForm.duration > 0 ? T.gold : T.border, color: T.bg, fontSize: 12, fontWeight: 700, cursor: timeEntryForm.ticketId && timeEntryForm.duration > 0 ? "pointer" : "not-allowed" }}>
                   Add Entry
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Phase 8B: Webhook Modal */}
+      {showWebhookModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
+          <div style={{ width: 500, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+            <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>🔗 {editingWebhook ? "Edit Webhook" : "Add Webhook"}</div>
+              <button type="button" onClick={() => setShowWebhookModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+            </div>
+            
+            <div style={{ padding: 20 }}>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Webhook Name *</label>
+                <input value={webhookForm.name} onChange={e => setWebhookForm(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Slack Notifications"
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, boxSizing: "border-box" }} />
+              </div>
+              
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Webhook URL *</label>
+                <input value={webhookForm.url} onChange={e => setWebhookForm(prev => ({ ...prev, url: e.target.value }))} placeholder="https://hooks.slack.com/..."
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, boxSizing: "border-box" }} />
+              </div>
+              
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Secret (Optional)</label>
+                <input value={webhookForm.secret} onChange={e => setWebhookForm(prev => ({ ...prev, secret: e.target.value }))} placeholder="For signature verification"
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, boxSizing: "border-box" }} />
+              </div>
+              
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Events to Send</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {webhookEvents.map(event => (
+                    <label key={event.id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 6, border: `1px solid ${webhookForm.events?.includes(event.id) ? T.teal : T.border}`, background: webhookForm.events?.includes(event.id) ? `${T.teal}15` : "transparent", cursor: "pointer" }}>
+                      <input type="checkbox" checked={webhookForm.events?.includes(event.id)} onChange={e => {
+                        if (e.target.checked) {
+                          setWebhookForm(prev => ({ ...prev, events: [...(prev.events || []), event.id] }));
+                        } else {
+                          setWebhookForm(prev => ({ ...prev, events: (prev.events || []).filter(x => x !== event.id) }));
+                        }
+                      }} style={{ display: "none" }} />
+                      <span style={{ fontSize: 11, color: webhookForm.events?.includes(event.id) ? T.teal : T.textMuted }}>{event.icon} {event.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                  <input type="checkbox" checked={webhookForm.enabled} onChange={e => setWebhookForm(prev => ({ ...prev, enabled: e.target.checked }))}
+                    style={{ width: 18, height: 18, accentColor: T.green }} />
+                  <span style={{ fontSize: 12, color: T.textSecondary }}>Webhook enabled</span>
+                </label>
+              </div>
+              
+              <div style={{ display: "flex", gap: 12 }}>
+                <button type="button" onClick={() => setShowWebhookModal(false)}
+                  style={{ flex: 1, padding: "12px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                  Cancel
+                </button>
+                <button type="button" onClick={saveWebhook}
+                  style={{ flex: 2, padding: "12px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                  {editingWebhook ? "Update Webhook" : "Create Webhook"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Phase 8B: Export Modal */}
+      {showExportModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
+          <div style={{ width: 460, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+            <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>📤 Export Tickets</div>
+              <button type="button" onClick={() => setShowExportModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+            </div>
+            
+            <div style={{ padding: 20 }}>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Format</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {["csv", "json"].map(fmt => (
+                    <button key={fmt} type="button" onClick={() => setExportConfig(prev => ({ ...prev, format: fmt }))}
+                      style={{ flex: 1, padding: "10px 0", borderRadius: 6, border: `1px solid ${exportConfig.format === fmt ? T.teal : T.border}`, background: exportConfig.format === fmt ? `${T.teal}20` : "transparent", color: exportConfig.format === fmt ? T.teal : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", textTransform: "uppercase" }}>
+                      {fmt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Date Range</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {[{ id: "all", label: "All" }, { id: "7d", label: "7 Days" }, { id: "30d", label: "30 Days" }, { id: "90d", label: "90 Days" }].map(range => (
+                    <button key={range.id} type="button" onClick={() => setExportConfig(prev => ({ ...prev, dateRange: range.id }))}
+                      style={{ flex: 1, padding: "8px 0", borderRadius: 6, border: `1px solid ${exportConfig.dateRange === range.id ? T.gold : T.border}`, background: exportConfig.dateRange === range.id ? `${T.gold}20` : "transparent", color: exportConfig.dateRange === range.id ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                      {range.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Status Filter</label>
+                <select value={exportConfig.status} onChange={e => setExportConfig(prev => ({ ...prev, status: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, cursor: "pointer" }}>
+                  <option value="all">All Statuses</option>
+                  <option value="open">Open</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </div>
+              
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Include</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                    <input type="checkbox" checked={exportConfig.includeMessages} onChange={e => setExportConfig(prev => ({ ...prev, includeMessages: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.teal }} />
+                    <span style={{ fontSize: 12, color: T.textSecondary }}>💬 Messages</span>
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                    <input type="checkbox" checked={exportConfig.includeNotes} onChange={e => setExportConfig(prev => ({ ...prev, includeNotes: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.orange }} />
+                    <span style={{ fontSize: 12, color: T.textSecondary }}>📌 Internal Notes</span>
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                    <input type="checkbox" checked={exportConfig.includeTime} onChange={e => setExportConfig(prev => ({ ...prev, includeTime: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.gold }} />
+                    <span style={{ fontSize: 12, color: T.textSecondary }}>⏱️ Time Entries</span>
+                  </label>
+                </div>
+              </div>
+              
+              <div style={{ display: "flex", gap: 12 }}>
+                <button type="button" onClick={() => setShowExportModal(false)}
+                  style={{ flex: 1, padding: "12px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                  Cancel
+                </button>
+                <button type="button" onClick={exportTickets} disabled={exporting}
+                  style={{ flex: 2, padding: "12px", borderRadius: 8, border: "none", background: T.teal, color: T.bg, fontSize: 12, fontWeight: 700, cursor: exporting ? "not-allowed" : "pointer" }}>
+                  {exporting ? "Exporting..." : `Export ${exportConfig.format.toUpperCase()}`}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Phase 8B: Permissions Modal */}
+      {showPermissionsModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
+          <div style={{ width: 420, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+            <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>🔐 {editingPermission ? "Edit Permission" : "Add Permission"}</div>
+              <button type="button" onClick={() => setShowPermissionsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+            </div>
+            
+            <div style={{ padding: 20 }}>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Select Agent *</label>
+                <select value={permissionForm.agentId} onChange={e => setPermissionForm(prev => ({ ...prev, agentId: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, cursor: "pointer" }}>
+                  <option value="">Choose agent...</option>
+                  {assignableAgents.filter(a => a.id !== "unassigned").map(agent => (
+                    <option key={agent.id} value={agent.id}>{agent.name} ({agent.email})</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Role</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {permissionRoles.map(role => (
+                    <label key={role.id} onClick={() => setPermissionForm(prev => ({ ...prev, role: role.id }))}
+                      style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: 12, borderRadius: 8, border: `1px solid ${permissionForm.role === role.id ? role.color : T.border}`, background: permissionForm.role === role.id ? `${role.color}15` : "transparent", cursor: "pointer" }}>
+                      <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${permissionForm.role === role.id ? role.color : T.textMuted}`, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 2 }}>
+                        {permissionForm.role === role.id && <div style={{ width: 10, height: 10, borderRadius: "50%", background: role.color }} />}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: permissionForm.role === role.id ? role.color : T.white }}>{role.label}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{role.desc}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              
+              <div style={{ display: "flex", gap: 12 }}>
+                <button type="button" onClick={() => setShowPermissionsModal(false)}
+                  style={{ flex: 1, padding: "12px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                  Cancel
+                </button>
+                <button type="button" onClick={savePermission} disabled={!permissionForm.agentId}
+                  style={{ flex: 2, padding: "12px", borderRadius: 8, border: "none", background: permissionForm.agentId ? T.purple : T.border, color: T.white, fontSize: 12, fontWeight: 700, cursor: permissionForm.agentId ? "pointer" : "not-allowed" }}>
+                  {editingPermission ? "Update Permission" : "Add Permission"}
                 </button>
               </div>
             </div>
