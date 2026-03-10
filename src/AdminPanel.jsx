@@ -17733,6 +17733,232 @@ export default function AdminPanel() {
                 ))}
               </div>
 
+              {/* ═══ USER LIFECYCLE ANALYTICS (Phase 2B) ═══ */}
+              {(() => {
+                const now = new Date();
+                const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+                
+                // User Lifecycle Segmentation
+                const lifecycle = {
+                  new: users.filter(u => {
+                    try { return new Date(u.createdAt) >= sevenDaysAgo; } catch { return false; }
+                  }),
+                  active: users.filter(u => {
+                    try {
+                      const created = new Date(u.createdAt);
+                      const lastLogin = u.lastLoginAt ? new Date(u.lastLoginAt) : null;
+                      return created < sevenDaysAgo && lastLogin && lastLogin >= sevenDaysAgo;
+                    } catch { return false; }
+                  }),
+                  returning: users.filter(u => {
+                    try {
+                      const lastLogin = u.lastLoginAt ? new Date(u.lastLoginAt) : null;
+                      const prevLogin = u.prevLoginAt ? new Date(u.prevLoginAt) : null;
+                      return lastLogin && lastLogin >= sevenDaysAgo && prevLogin && prevLogin < thirtyDaysAgo;
+                    } catch { return false; }
+                  }),
+                  dormant: users.filter(u => {
+                    try {
+                      const lastLogin = u.lastLoginAt ? new Date(u.lastLoginAt) : null;
+                      return lastLogin && lastLogin < thirtyDaysAgo && lastLogin >= ninetyDaysAgo;
+                    } catch { return false; }
+                  }),
+                  churned: users.filter(u => {
+                    try {
+                      const lastLogin = u.lastLoginAt ? new Date(u.lastLoginAt) : null;
+                      return !lastLogin || lastLogin < ninetyDaysAgo;
+                    } catch { return false; }
+                  }),
+                };
+                
+                const lifecycleData = [
+                  { name: "New", count: lifecycle.new.length, color: T.green, icon: "\uD83C\uDF31", desc: "Joined < 7 days" },
+                  { name: "Active", count: lifecycle.active.length, color: T.teal, icon: "\u26A1", desc: "Active in 7 days" },
+                  { name: "Returning", count: lifecycle.returning.length, color: T.blue, icon: "\uD83D\uDD04", desc: "Came back" },
+                  { name: "Dormant", count: lifecycle.dormant.length, color: T.orange, icon: "\uD83D\uDCA4", desc: "30-90 days inactive" },
+                  { name: "Churned", count: lifecycle.churned.length, color: T.red, icon: "\uD83D\uDEAB", desc: "90+ days inactive" },
+                ];
+                
+                const totalCategorized = lifecycleData.reduce((sum, l) => sum + l.count, 0);
+                
+                // At-Risk Users (dormant + low engagement)
+                const atRiskUsers = users.filter(u => {
+                  try {
+                    const lastLogin = u.lastLoginAt ? new Date(u.lastLoginAt) : null;
+                    const daysSinceLogin = lastLogin ? Math.floor((now.getTime() - lastLogin.getTime()) / (24 * 60 * 60 * 1000)) : 999;
+                    const isPaid = u.tier === "pro" || u.tier === "enterprise";
+                    return (isPaid && daysSinceLogin >= 14 && daysSinceLogin < 90) || (!isPaid && daysSinceLogin >= 21 && daysSinceLogin < 60);
+                  } catch { return false; }
+                }).slice(0, 8);
+                
+                // Win-back Candidates (churned but were paying)
+                const winbackCandidates = users.filter(u => {
+                  try {
+                    const lastLogin = u.lastLoginAt ? new Date(u.lastLoginAt) : null;
+                    const wasActive = u.tier === "pro" || u.tier === "enterprise" || u.trialEnd;
+                    return lastLogin && lastLogin < ninetyDaysAgo && wasActive;
+                  } catch { return false; }
+                }).slice(0, 5);
+                
+                // Resurrection rate
+                const resurrectedCount = lifecycle.returning.length;
+                const resurrectionRate = lifecycle.dormant.length + lifecycle.churned.length > 0 
+                  ? Math.round((resurrectedCount / (lifecycle.dormant.length + lifecycle.churned.length + resurrectedCount)) * 100)
+                  : 0;
+                
+                return (
+                  <div className="fade-up" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
+                    {/* User Lifecycle Donut */}
+                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>User Lifecycle</div>
+                      
+                      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                        <div style={{ position: "relative", width: 100, height: 100 }}>
+                          <svg width="100" height="100" viewBox="0 0 100 100">
+                            {(() => {
+                              let cumulativePercent = 0;
+                              return lifecycleData.map((segment, idx) => {
+                                const percent = totalCategorized > 0 ? (segment.count / totalCategorized) * 100 : 0;
+                                const startAngle = cumulativePercent * 3.6;
+                                cumulativePercent += percent;
+                                const endAngle = cumulativePercent * 3.6;
+                                
+                                if (percent === 0) return null;
+                                
+                                const largeArc = percent > 50 ? 1 : 0;
+                                const startX = 50 + 35 * Math.cos((startAngle - 90) * Math.PI / 180);
+                                const startY = 50 + 35 * Math.sin((startAngle - 90) * Math.PI / 180);
+                                const endX = 50 + 35 * Math.cos((endAngle - 90) * Math.PI / 180);
+                                const endY = 50 + 35 * Math.sin((endAngle - 90) * Math.PI / 180);
+                                
+                                return (
+                                  <path
+                                    key={idx}
+                                    d={`M 50 50 L ${startX} ${startY} A 35 35 0 ${largeArc} 1 ${endX} ${endY} Z`}
+                                    fill={segment.color}
+                                    opacity={0.85}
+                                  />
+                                );
+                              });
+                            })()}
+                            <circle cx="50" cy="50" r="20" fill={T.surface} />
+                          </svg>
+                          <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center" }}>
+                            <div style={{ fontSize: 16, fontWeight: 900, color: T.white, fontFamily: "'Fraunces',serif" }}>{users.length}</div>
+                            <div style={{ fontSize: 7, color: T.textMuted }}>TOTAL</div>
+                          </div>
+                        </div>
+                        
+                        <div style={{ flex: 1 }}>
+                          {lifecycleData.map(l => (
+                            <div key={l.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 0", borderBottom: `1px solid ${T.border}` }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <span style={{ width: 8, height: 8, borderRadius: "50%", background: l.color }} />
+                                <span style={{ fontSize: 10, color: T.textSecondary }}>{l.icon} {l.name}</span>
+                              </div>
+                              <span style={{ fontSize: 11, fontWeight: 700, color: l.color }}>{l.count}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div style={{ marginTop: 16, padding: "10px 12px", background: T.surfaceAlt, borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 10, color: T.textMuted }}>Resurrection Rate</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: resurrectionRate >= 10 ? T.green : T.orange }}>{resurrectionRate}%</span>
+                      </div>
+                    </div>
+                    
+                    {/* At-Risk Users */}
+                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                        <div>
+                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>At-Risk Users</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>May churn soon</div>
+                        </div>
+                        <div style={{ background: `${T.orange}20`, color: T.orange, padding: "4px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700 }}>
+                          {atRiskUsers.length}
+                        </div>
+                      </div>
+                      
+                      <div style={{ maxHeight: 200, overflowY: "auto" }}>
+                        {atRiskUsers.length === 0 ? (
+                          <div style={{ textAlign: "center", padding: 20, color: T.textMuted, fontSize: 11 }}>No at-risk users detected</div>
+                        ) : (
+                          atRiskUsers.map((u, idx) => {
+                            const daysSince = u.lastLoginAt ? Math.floor((now.getTime() - new Date(u.lastLoginAt).getTime()) / (24 * 60 * 60 * 1000)) : 999;
+                            return (
+                              <div key={u.uid || idx} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: idx < atRiskUsers.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                                <div style={{ width: 32, height: 32, borderRadius: "50%", background: T.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: T.textSecondary, fontWeight: 600 }}>
+                                  {(u.displayName || u.email || "U")[0].toUpperCase()}
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: 11, color: T.textPrimary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                    {u.displayName || u.email?.split("@")[0] || "User"}
+                                  </div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>
+                                    {u.tier === "pro" ? "Pro" : u.tier === "enterprise" ? "Enterprise" : "Free"} \u2022 {daysSince}d inactive
+                                  </div>
+                                </div>
+                                <div style={{ padding: "3px 8px", borderRadius: 6, fontSize: 9, fontWeight: 600, background: daysSince > 30 ? `${T.red}20` : `${T.orange}20`, color: daysSince > 30 ? T.red : T.orange }}>
+                                  {daysSince > 30 ? "High Risk" : "At Risk"}
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Win-back Candidates */}
+                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                        <div>
+                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Win-back Candidates</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>Churned but valuable</div>
+                        </div>
+                        <div style={{ background: `${T.purple}20`, color: T.purple, padding: "4px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700 }}>
+                          {winbackCandidates.length}
+                        </div>
+                      </div>
+                      
+                      <div style={{ maxHeight: 160, overflowY: "auto" }}>
+                        {winbackCandidates.length === 0 ? (
+                          <div style={{ textAlign: "center", padding: 20, color: T.textMuted, fontSize: 11 }}>No win-back candidates</div>
+                        ) : (
+                          winbackCandidates.map((u, idx) => {
+                            const daysSince = u.lastLoginAt ? Math.floor((now.getTime() - new Date(u.lastLoginAt).getTime()) / (24 * 60 * 60 * 1000)) : 999;
+                            return (
+                              <div key={u.uid || idx} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: idx < winbackCandidates.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                                <div style={{ width: 28, height: 28, borderRadius: "50%", background: T.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: T.textSecondary, fontWeight: 600 }}>
+                                  {(u.displayName || u.email || "U")[0].toUpperCase()}
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: 11, color: T.textPrimary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                    {u.displayName || u.email?.split("@")[0] || "User"}
+                                  </div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Was {u.tier || "active"} \u2022 {daysSince}d ago</div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                      
+                      <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8 }}>
+                        <button type="button" style={{ flex: 1, padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.purple}`, background: `${T.purple}15`, color: T.purple, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
+                          Export List
+                        </button>
+                        <button type="button" style={{ flex: 1, padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.teal}`, background: `${T.teal}15`, color: T.teal, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
+                          Send Campaign
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* ═══ ROW 1: MRR Chart + User Growth + Funnel ═══ */}
               <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 0.8fr", gap: 16, marginBottom: 20 }}>
                 <Chart title="MRR History" sub="Monthly Recurring Revenue trend">
