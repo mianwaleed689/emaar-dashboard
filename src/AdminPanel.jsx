@@ -11174,6 +11174,14 @@ export default function AdminPanel() {
   const [activeSegmentId, setActiveSegmentId] = useState(null);
   const [segmentName, setSegmentName] = useState("");
 
+  // Phase 3B: Scheduled Reports
+  const [scheduledReports, setScheduledReports] = useState([
+    { id: 1, name: "Weekly KPI Summary", frequency: "weekly", day: "monday", time: "09:00", recipients: ["admin@company.com"], metrics: ["dau", "mrr", "conversion"], enabled: true, lastSent: "2025-03-03" },
+    { id: 2, name: "Monthly Executive Report", frequency: "monthly", day: "1", time: "08:00", recipients: ["exec@company.com"], metrics: ["mrr", "arr", "churn", "growth"], enabled: true, lastSent: "2025-03-01" },
+  ]);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [editingReport, setEditingReport] = useState(null);
+
   /* ─── PERSIST TAB STATE ─── */
   const isHydrated = React.useRef(false);
   
@@ -18505,6 +18513,308 @@ export default function AdminPanel() {
                               </div>
                             );
                           })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ═══ SCHEDULED REPORTS & EXPORT CENTER (Phase 3B) ═══ */}
+              {(() => {
+                const metricOptions = [
+                  { key: "dau", label: "Daily Active Users", icon: "\uD83D\uDC64" },
+                  { key: "wau", label: "Weekly Active Users", icon: "\uD83D\uDC65" },
+                  { key: "mau", label: "Monthly Active Users", icon: "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67" },
+                  { key: "mrr", label: "Monthly Recurring Revenue", icon: "\uD83D\uDCB0" },
+                  { key: "arr", label: "Annual Recurring Revenue", icon: "\uD83D\uDCB8" },
+                  { key: "conversion", label: "Conversion Rate", icon: "\uD83D\uDCC8" },
+                  { key: "churn", label: "Churn Rate", icon: "\uD83D\uDCC9" },
+                  { key: "growth", label: "User Growth", icon: "\uD83D\uDE80" },
+                  { key: "retention", label: "Retention Rate", icon: "\uD83D\uDD04" },
+                  { key: "engagement", label: "Engagement Score", icon: "\u26A1" },
+                ];
+                
+                const frequencyLabels = { daily: "Daily", weekly: "Weekly", monthly: "Monthly" };
+                const dayLabels = { monday: "Mon", tuesday: "Tue", wednesday: "Wed", thursday: "Thu", friday: "Fri", saturday: "Sat", sunday: "Sun" };
+                
+                const handleToggleReport = (id) => {
+                  setScheduledReports(scheduledReports.map(r => r.id === id ? { ...r, enabled: !r.enabled } : r));
+                };
+                
+                const handleDeleteReport = (id) => {
+                  setScheduledReports(scheduledReports.filter(r => r.id !== id));
+                  notify("Report deleted");
+                };
+                
+                const handleRunNow = (report) => {
+                  notify(`Running "${report.name}" report...`);
+                  // Simulate report generation
+                  setTimeout(() => notify(`"${report.name}" sent to ${report.recipients.length} recipient(s)`), 1500);
+                };
+                
+                // Export functions
+                const generateCSVExport = () => {
+                  const rows = [
+                    ["DXB Analytics Report", new Date().toLocaleDateString()],
+                    [],
+                    ["KEY METRICS"],
+                    ["Metric", "Value"],
+                    ["DAU", dau],
+                    ["WAU", wau],
+                    ["MAU", mau],
+                    ["DAU/MAU Ratio", `${dauMauRatio}%`],
+                    ["MRR", `AED ${mrr}`],
+                    ["ARR", `AED ${arr}`],
+                    ["Total Users", stats.total],
+                    ["Pro Users", stats.pro],
+                    ["Enterprise Users", stats.enterprise],
+                    [],
+                    ["SESSION METRICS"],
+                    ["Avg Duration (min)", sessionMetrics.avgDuration],
+                    ["Bounce Rate", `${sessionMetrics.bounceRate}%`],
+                    ["Pages/Session", sessionMetrics.pagesPerSession],
+                    [],
+                    ["DEVICE BREAKDOWN"],
+                    ["Desktop", `${deviceBreakdown.desktop}%`],
+                    ["Mobile", `${deviceBreakdown.mobile}%`],
+                    ["Tablet", `${deviceBreakdown.tablet}%`],
+                    [],
+                    ["USER LIFECYCLE"],
+                    ...users.slice(0, 100).map(u => [
+                      u.email || "",
+                      u.displayName || "",
+                      u.tier || "free",
+                      u.createdAt || "",
+                      u.lastLoginAt || ""
+                    ])
+                  ];
+                  
+                  const csv = rows.map(r => r.join(",")).join("\n");
+                  const blob = new Blob([csv], { type: "text/csv" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `dxb-analytics-${new Date().toISOString().split("T")[0]}.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  notify("CSV exported successfully");
+                };
+                
+                const generateJSONExport = () => {
+                  const data = {
+                    exportDate: new Date().toISOString(),
+                    metrics: { dau, wau, mau, dauMauRatio, mrr, arr },
+                    stats,
+                    sessionMetrics,
+                    deviceBreakdown,
+                    browserBreakdown,
+                    realtimeUsers,
+                    segments: savedSegments,
+                    users: users.slice(0, 500).map(u => ({
+                      email: u.email,
+                      name: u.displayName,
+                      tier: u.tier,
+                      created: u.createdAt,
+                      lastLogin: u.lastLoginAt
+                    }))
+                  };
+                  
+                  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `dxb-analytics-${new Date().toISOString().split("T")[0]}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  notify("JSON exported successfully");
+                };
+                
+                return (
+                  <div className="fade-up" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 16, marginBottom: 20 }}>
+                    {/* Scheduled Reports */}
+                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                        <div>
+                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Scheduled Reports</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>Automated analytics delivery</div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => { setEditingReport(null); setShowReportModal(true); }}
+                          style={{ padding: "6px 14px", borderRadius: 8, border: "none", background: T.gold, color: T.surface, fontSize: 10, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+                        >
+                          + New Report
+                        </button>
+                      </div>
+                      
+                      {scheduledReports.length === 0 ? (
+                        <div style={{ textAlign: "center", padding: 30, color: T.textMuted, fontSize: 11 }}>
+                          No scheduled reports yet. Create one to automate your analytics delivery.
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          {scheduledReports.map(report => (
+                            <div 
+                              key={report.id}
+                              style={{ 
+                                padding: 14, 
+                                background: T.surfaceAlt, 
+                                borderRadius: 10, 
+                                border: `1px solid ${report.enabled ? T.border : `${T.red}30`}`,
+                                opacity: report.enabled ? 1 : 0.7
+                              }}
+                            >
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                                <div>
+                                  <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 2 }}>{report.name}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>
+                                    {frequencyLabels[report.frequency]} {report.frequency === "weekly" ? `on ${dayLabels[report.day] || report.day}` : report.frequency === "monthly" ? `on day ${report.day}` : ""} at {report.time}
+                                  </div>
+                                </div>
+                                <div style={{ display: "flex", gap: 6 }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleReport(report.id)}
+                                    style={{ 
+                                      width: 36, height: 18, borderRadius: 9, border: "none", 
+                                      background: report.enabled ? T.green : T.border,
+                                      position: "relative", cursor: "pointer", transition: "background 0.2s"
+                                    }}
+                                  >
+                                    <div style={{ 
+                                      width: 14, height: 14, borderRadius: "50%", background: T.white,
+                                      position: "absolute", top: 2, left: report.enabled ? 20 : 2,
+                                      transition: "left 0.2s"
+                                    }} />
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              {/* Metrics badges */}
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 10 }}>
+                                {report.metrics.map(m => {
+                                  const metric = metricOptions.find(o => o.key === m);
+                                  return (
+                                    <span key={m} style={{ padding: "3px 8px", borderRadius: 4, background: `${T.teal}20`, color: T.teal, fontSize: 9 }}>
+                                      {metric?.icon} {metric?.label || m}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                              
+                              {/* Recipients & actions */}
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>
+                                  \uD83D\uDCE7 {report.recipients.join(", ")}
+                                </div>
+                                <div style={{ display: "flex", gap: 6 }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRunNow(report)}
+                                    style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.teal}`, background: "transparent", color: T.teal, fontSize: 9, cursor: "pointer" }}
+                                  >
+                                    Run Now
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteReport(report.id)}
+                                    style={{ padding: "4px 8px", borderRadius: 6, border: `1px solid ${T.red}`, background: "transparent", color: T.red, fontSize: 9, cursor: "pointer" }}
+                                  >
+                                    \u2715
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              {/* Last sent */}
+                              {report.lastSent && (
+                                <div style={{ fontSize: 8, color: T.textMuted, marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
+                                  Last sent: {report.lastSent}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Export Center */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                      {/* Quick Export */}
+                      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>Export Center</div>
+                        
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                          <button
+                            type="button"
+                            onClick={generateCSVExport}
+                            style={{ 
+                              padding: 16, borderRadius: 10, border: `1px solid ${T.teal}`, 
+                              background: `${T.teal}10`, cursor: "pointer", textAlign: "center",
+                              transition: "all 0.2s"
+                            }}
+                          >
+                            <div style={{ fontSize: 24, marginBottom: 6 }}>\uD83D\uDCC4</div>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: T.teal }}>CSV Export</div>
+                            <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>Spreadsheet ready</div>
+                          </button>
+                          
+                          <button
+                            type="button"
+                            onClick={generateJSONExport}
+                            style={{ 
+                              padding: 16, borderRadius: 10, border: `1px solid ${T.gold}`, 
+                              background: `${T.gold}10`, cursor: "pointer", textAlign: "center",
+                              transition: "all 0.2s"
+                            }}
+                          >
+                            <div style={{ fontSize: 24, marginBottom: 6 }}>\uD83D\uDDC2</div>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: T.gold }}>JSON Export</div>
+                            <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>Full data dump</div>
+                          </button>
+                        </div>
+                        
+                        {/* Export includes */}
+                        <div style={{ marginTop: 14, padding: 12, background: T.surfaceAlt, borderRadius: 8 }}>
+                          <div style={{ fontSize: 9, fontWeight: 600, color: T.textMuted, marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>Export Includes</div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                            {["KPIs", "Users", "Sessions", "Devices", "Segments", "Lifecycle"].map(item => (
+                              <span key={item} style={{ padding: "4px 8px", borderRadius: 4, background: T.border, color: T.textSecondary, fontSize: 9 }}>
+                                \u2713 {item}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Report Stats */}
+                      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20, flex: 1 }}>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 12 }}>Report Stats</div>
+                        
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                          <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 12, textAlign: "center" }}>
+                            <div style={{ fontSize: 20, fontWeight: 900, color: T.green, fontFamily: "'Fraunces',serif" }}>{scheduledReports.filter(r => r.enabled).length}</div>
+                            <div style={{ fontSize: 8, color: T.textMuted }}>ACTIVE</div>
+                          </div>
+                          <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 12, textAlign: "center" }}>
+                            <div style={{ fontSize: 20, fontWeight: 900, color: T.teal, fontFamily: "'Fraunces',serif" }}>{scheduledReports.reduce((sum, r) => sum + r.recipients.length, 0)}</div>
+                            <div style={{ fontSize: 8, color: T.textMuted }}>RECIPIENTS</div>
+                          </div>
+                          <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 12, textAlign: "center" }}>
+                            <div style={{ fontSize: 20, fontWeight: 900, color: T.blue, fontFamily: "'Fraunces',serif" }}>{scheduledReports.filter(r => r.frequency === "weekly").length}</div>
+                            <div style={{ fontSize: 8, color: T.textMuted }}>WEEKLY</div>
+                          </div>
+                          <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 12, textAlign: "center" }}>
+                            <div style={{ fontSize: 20, fontWeight: 900, color: T.purple, fontFamily: "'Fraunces',serif" }}>{scheduledReports.filter(r => r.frequency === "monthly").length}</div>
+                            <div style={{ fontSize: 8, color: T.textMuted }}>MONTHLY</div>
+                          </div>
+                        </div>
+                        
+                        {/* Quick tips */}
+                        <div style={{ marginTop: 12, padding: 10, background: `${T.blue}10`, border: `1px solid ${T.blue}30`, borderRadius: 8 }}>
+                          <div style={{ fontSize: 9, color: T.blue }}>
+                            \uD83D\uDCA1 Pro tip: Schedule executive reports for Monday mornings to start the week with insights.
+                          </div>
                         </div>
                       </div>
                     </div>
