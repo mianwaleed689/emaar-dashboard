@@ -11119,6 +11119,17 @@ export default function AdminPanel() {
   const [activeFilterViewId, setActiveFilterViewId] = useState(null);
   const [showSaveFilterModal, setShowSaveFilterModal] = useState(false);
   const [newFilterViewName, setNewFilterViewName] = useState("");
+  
+  // Column visibility & Bulk delete states
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState(() => {
+    try {
+      const saved = localStorage.getItem("admin_projectColumns");
+      return saved ? JSON.parse(saved) : { community: true, price: true, ppsf: true, status: true, source: true, tier: false, handover: false, beds: false };
+    } catch { return { community: true, price: true, ppsf: true, status: true, source: true, tier: false, handover: false, beds: false }; }
+  });
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
 
   /* ─── KYC VERIFICATION STATE ─── */
   const [verifications, setVerifications] = useState([]);
@@ -11994,6 +12005,76 @@ export default function AdminPanel() {
     a.download = "emaar-projects-full-" + new Date().toISOString().slice(0,10) + ".csv";
     a.click();
     notify("Full export downloaded!");
+  };
+  
+  // Export filtered/selected projects to CSV
+  const exportFilteredProjects = (projectList, filename) => {
+    if (!projectList || projectList.length === 0) { notify("No projects to export"); return; }
+    const headers = ["ID","Name","Community","Price","PPSF","Status","Tier","Handover","Type","Beds","Source"];
+    const rows = projectList.map(p => {
+      const m = getMergedProject(p);
+      const hasOverride = !!liveProjects[p.id];
+      return [
+        p.id, 
+        `"${(p.name||"").replace(/"/g, '""')}"`, 
+        p.community||"", 
+        m.price||"", 
+        m.ppsf||"", 
+        m.status||"", 
+        m.tier||"",
+        m.handover||"", 
+        m.type||"", 
+        m.beds||"", 
+        hasOverride ? "Live" : "Default"
+      ];
+    });
+    const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename || "emaar-projects-export-" + new Date().toISOString().slice(0,10) + ".csv";
+    a.click();
+    notify(`${projectList.length} projects exported!`);
+  };
+  
+  // Bulk delete selected projects
+  const bulkDeleteProjects = async () => {
+    if (bulkSelected.length === 0) { notify("No projects selected"); return; }
+    setBulkDeleteLoading(true);
+    try {
+      let deleted = 0;
+      for (const projectId of bulkSelected) {
+        // Only delete Firestore overrides - we can't delete from data.js
+        if (liveProjects[projectId]) {
+          await deleteDoc(doc(db, "projectData", String(projectId)));
+          deleted++;
+        }
+      }
+      await auditLog("bulk_delete", { count: deleted, projectIds: bulkSelected });
+      notify(`${deleted} project override${deleted !== 1 ? 's' : ''} deleted!${deleted < bulkSelected.length ? ` (${bulkSelected.length - deleted} were default data)` : ''}`);
+      setBulkSelected([]);
+      setShowBulkDeleteConfirm(false);
+      fetchLiveData();
+    } catch (e) {
+      notify("Error deleting: " + e.message);
+    } finally {
+      setBulkDeleteLoading(false);
+    }
+  };
+  
+  // Toggle column visibility
+  const toggleColumn = (col) => {
+    const updated = { ...visibleColumns, [col]: !visibleColumns[col] };
+    setVisibleColumns(updated);
+    try { localStorage.setItem("admin_projectColumns", JSON.stringify(updated)); } catch {}
+  };
+  
+  // Reset columns to default
+  const resetColumns = () => {
+    const defaults = { community: true, price: true, ppsf: true, status: true, source: true, tier: false, handover: false, beds: false };
+    setVisibleColumns(defaults);
+    try { localStorage.setItem("admin_projectColumns", JSON.stringify(defaults)); } catch {}
+    notify("Columns reset to default");
   };
 
   
@@ -15228,8 +15309,8 @@ export default function AdminPanel() {
                     { icon: "[e]", title: "Edit a Project", desc: "Click any row to open the edit drawer. Change price, status, handover date, images and more." },
                     { icon: "[s]", title: "Save Goes Live", desc: "Clicking 'Save to Firestore' updates the project instantly on the dashboard for all users." },
                     { icon: "[f]", title: "Advanced Filters", desc: "Click 'Filters' to expand. Filter by price range, PPSF, tier, data source, modified date, and image status." },
-                    { icon: "[v]", title: "Saved Views", desc: "Save your current filter combination as a reusable view. Click any saved view pill to apply it instantly." },
-                    { icon: "[dl]", title: "CSV Import Pro", desc: "Upload CSV with preview, auto-column mapping, validation errors, and import progress." },
+                    { icon: "[c]", title: "Column Settings", desc: "Click 'Columns' to show/hide table columns. Your preferences are saved automatically." },
+                    { icon: "[b]", title: "Bulk Actions", desc: "Select multiple projects with checkboxes. Export, update prices, or delete in bulk." },
                     { icon: "[~]", title: "Default vs Live", desc: "'Default' means data comes from data.js. 'Live' means you've saved a Firestore override." },
                   ]} />
                   {/* ══════════════════════════════════════
@@ -15380,6 +15461,51 @@ export default function AdminPanel() {
                         <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.teal }} />
                       )}
                     </button>
+                    
+                    {/* Column Settings Toggle */}
+                    <div style={{ position: "relative" }}>
+                      <button type="button" onClick={() => setShowColumnSettings(!showColumnSettings)}
+                        style={{ 
+                          display: "flex", alignItems: "center", gap: 5,
+                          padding: "8px 12px", borderRadius: 8, 
+                          border: `1px solid ${showColumnSettings ? T.purple : T.border}`,
+                          background: showColumnSettings ? `${T.purple}15` : "transparent",
+                          color: showColumnSettings ? T.purple : T.textMuted,
+                          fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif"
+                        }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        Columns
+                      </button>
+                      {/* Column Settings Dropdown */}
+                      {showColumnSettings && (
+                        <div className="fade-up" style={{ 
+                          position: "absolute", top: "100%", right: 0, marginTop: 8, 
+                          background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12,
+                          padding: 16, zIndex: 100, minWidth: 220, boxShadow: "0 8px 32px rgba(0,0,0,0.4)"
+                        }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span>Toggle Columns</span>
+                            <button type="button" onClick={resetColumns} style={{ fontSize: 10, color: T.textMuted, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Reset</button>
+                          </div>
+                          {[
+                            { key: "community", label: "Community" },
+                            { key: "price", label: "Price" },
+                            { key: "ppsf", label: "PPSF" },
+                            { key: "status", label: "Status" },
+                            { key: "source", label: "Source" },
+                            { key: "tier", label: "Tier" },
+                            { key: "handover", label: "Handover" },
+                            { key: "beds", label: "Beds/Type" },
+                          ].map(col => (
+                            <label key={col.key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", cursor: "pointer", borderBottom: `1px solid ${T.border}20` }}>
+                              <input type="checkbox" checked={visibleColumns[col.key]} onChange={() => toggleColumn(col.key)}
+                                style={{ accentColor: T.purple, cursor: "pointer" }} />
+                              <span style={{ fontSize: 12, color: visibleColumns[col.key] ? T.white : T.textMuted }}>{col.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     
                     {/* Clear All Filters */}
                     {(dataSearch || projectCommunityFilter !== "All" || projectStatusFilter !== "All" || priceMin || priceMax || ppsfMin || ppsfMax || projectTierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all") && (
@@ -15560,10 +15686,57 @@ export default function AdminPanel() {
                           style={{ padding: "4px 10px", borderRadius: 4, border: `1px solid ${T.gold}50`, background: "transparent", color: T.gold, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
                       </div>
                       <div style={{ display: "flex", gap: 8 }}>
-                        <button type="button" onClick={() => setShowBulkModal(true)}
-                          style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
-                          {I.revenue} Bulk Price Update
+                        {/* Export Selected */}
+                        <button type="button" onClick={() => {
+                          const selectedProjects = emaarProjects.filter(p => bulkSelected.includes(String(p.id)));
+                          exportFilteredProjects(selectedProjects, `emaar-selected-${bulkSelected.length}-projects.csv`);
+                        }}
+                          style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}`, background: "transparent", color: T.teal, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                          Export
                         </button>
+                        {/* Bulk Price Update */}
+                        <button type="button" onClick={() => setShowBulkModal(true)}
+                          style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
+                          {I.revenue} Price Update
+                        </button>
+                        {/* Bulk Delete */}
+                        <button type="button" onClick={() => setShowBulkDeleteConfirm(true)}
+                          style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.red}`, background: `${T.red}15`, color: T.red, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Bulk Delete Confirmation Modal */}
+                  {showBulkDeleteConfirm && (
+                    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowBulkDeleteConfirm(false)}>
+                      <div className="fade-up" style={{ background: T.surface, borderRadius: 16, padding: 28, width: 420, border: `1px solid ${T.red}40` }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                          <div style={{ width: 48, height: 48, borderRadius: 12, background: `${T.red}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T.red} strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: T.white }}>Delete {bulkSelected.length} Projects?</div>
+                            <div style={{ fontSize: 12, color: T.textMuted }}>This will remove Firestore overrides</div>
+                          </div>
+                        </div>
+                        <div style={{ padding: 14, background: T.surfaceAlt, borderRadius: 10, marginBottom: 20, fontSize: 12, color: T.textSecondary }}>
+                          <div style={{ marginBottom: 8 }}><strong>Note:</strong> Only "Live" overrides will be deleted. Default data from data.js cannot be removed.</div>
+                          <div>Projects with overrides: <strong style={{ color: T.gold }}>{bulkSelected.filter(id => liveProjects[id]).length}</strong> of {bulkSelected.length} selected</div>
+                        </div>
+                        <div style={{ display: "flex", gap: 12 }}>
+                          <button type="button" onClick={() => setShowBulkDeleteConfirm(false)}
+                            style={{ flex: 1, padding: "12px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                            Cancel
+                          </button>
+                          <button type="button" onClick={bulkDeleteProjects} disabled={bulkDeleteLoading}
+                            style={{ flex: 1, padding: "12px", borderRadius: 8, border: "none", background: T.red, color: "#fff", fontSize: 13, cursor: bulkDeleteLoading ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700, opacity: bulkDeleteLoading ? 0.7 : 1 }}>
+                            {bulkDeleteLoading ? "Deleting..." : "Yes, Delete"}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -16018,29 +16191,40 @@ export default function AdminPanel() {
                   )}
                   {/* Projects list */}
                   <div className="chart-box" style={{ padding: 0, overflow: "hidden" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "40px 2fr 110px 110px 90px 80px 90px 80px", gap: 8, padding: "12px 20px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt }}>
-                      {[
-                        { label: "#", key: null },
-                        { label: "Project", key: "name" },
-                        { label: "Community", key: "community" },
-                        { label: "Price", key: "price" },
-                        { label: "PPSF", key: "ppsf" },
-                        { label: "Status", key: "status" },
-                        { label: "Source", key: null },
-                        { label: "", key: null },
-                      ].map(h => (
-                        <span key={h.label} onClick={() => { if (!h.key) return; if (projectSortKey === h.key) setProjectSortDir(d => d === "asc" ? "desc" : "asc"); else { setProjectSortKey(h.key); setProjectSortDir("asc"); } }}
-                          style={{ fontSize: 9, fontWeight: 700, color: projectSortKey === h.key ? T.gold : T.textMuted, letterSpacing: 1, textTransform: "uppercase", cursor: h.key ? "pointer" : "default", userSelect: "none" }}>
-                          {h.label}{projectSortKey === h.key ? (projectSortDir === "asc" ? " ^" : " v") : ""}
-                        </span>
-                      ))}
-                    </div>
                     {(() => {
-                        // Deduplicate by id — safety net in case data.js has duplicates
-                        const _seen = new Set();
-                        const allProjects = emaarProjects.filter(p => { if (_seen.has(p.id)) return false; _seen.add(p.id); return true; });
-                        const now = new Date();
-                        const filtered = allProjects
+                      // Build dynamic grid columns based on visibility
+                      const cols = ["40px", "2fr"]; // checkbox + project name always visible
+                      if (visibleColumns.community) cols.push("110px");
+                      if (visibleColumns.price) cols.push("110px");
+                      if (visibleColumns.ppsf) cols.push("90px");
+                      if (visibleColumns.status) cols.push("80px");
+                      if (visibleColumns.tier) cols.push("100px");
+                      if (visibleColumns.handover) cols.push("90px");
+                      if (visibleColumns.beds) cols.push("90px");
+                      if (visibleColumns.source) cols.push("90px");
+                      cols.push("80px"); // edit button always visible
+                      const gridCols = cols.join(" ");
+                      
+                      // Build header columns
+                      const headers = [
+                        { label: "#", key: null, always: true },
+                        { label: "Project", key: "name", always: true },
+                        { label: "Community", key: "community", col: "community" },
+                        { label: "Price", key: "price", col: "price" },
+                        { label: "PPSF", key: "ppsf", col: "ppsf" },
+                        { label: "Status", key: "status", col: "status" },
+                        { label: "Tier", key: "tier", col: "tier" },
+                        { label: "Handover", key: "handover", col: "handover" },
+                        { label: "Beds", key: "beds", col: "beds" },
+                        { label: "Source", key: null, col: "source" },
+                        { label: "", key: null, always: true },
+                      ].filter(h => h.always || visibleColumns[h.col]);
+                      
+                      // Deduplicate by id — safety net in case data.js has duplicates
+                      const _seen = new Set();
+                      const allProjects = emaarProjects.filter(p => { if (_seen.has(p.id)) return false; _seen.add(p.id); return true; });
+                      const now = new Date();
+                      const filtered = allProjects
                           .filter(p => {
                             const merged = getMergedProject(p);
                             const hasOverride = !!liveProjects[p.id];
@@ -16111,15 +16295,32 @@ export default function AdminPanel() {
                         
                         return (
                           <>
+                            {/* Table Header */}
+                            <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 8, padding: "12px 20px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt }}>
+                              {headers.map(h => (
+                                <span key={h.label || "edit"} onClick={() => { if (!h.key) return; if (projectSortKey === h.key) setProjectSortDir(d => d === "asc" ? "desc" : "asc"); else { setProjectSortKey(h.key); setProjectSortDir("asc"); } }}
+                                  style={{ fontSize: 9, fontWeight: 700, color: projectSortKey === h.key ? T.gold : T.textMuted, letterSpacing: 1, textTransform: "uppercase", cursor: h.key ? "pointer" : "default", userSelect: "none" }}>
+                                  {h.label}{projectSortKey === h.key ? (projectSortDir === "asc" ? " ↑" : " ↓") : ""}
+                                </span>
+                              ))}
+                            </div>
+                            {/* Results Bar */}
                             <div style={{ padding: "6px 20px", fontSize: 11, color: T.textMuted, borderBottom: `1px solid ${T.border}`, background: T.bg, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                               <div>
                                 Showing <strong style={{ color: T.gold }}>{filtered.length}</strong> of {allProjects.length} projects
                                 {activeFilterCount > 0 && <span style={{ marginLeft: 8, padding: "2px 8px", borderRadius: 10, background: `${T.teal}20`, color: T.teal, fontSize: 10, fontWeight: 600 }}>{activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""}</span>}
                                 {bulkSelected.length > 0 && <span style={{ marginLeft: 12, color: T.gold }}>· {bulkSelected.length} selected</span>}
                               </div>
-                              <div>
-                                <button type="button" onClick={() => setBulkSelected(filtered.map(p => String(p.id)))} style={{ marginLeft: 12, fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Select All Visible</button>
-                                {bulkSelected.length > 0 && <button type="button" onClick={() => setBulkSelected([])} style={{ marginLeft: 8, fontSize: 10, color: T.red, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Deselect All</button>}
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                {filtered.length > 0 && (
+                                  <button type="button" onClick={() => exportFilteredProjects(filtered, `emaar-filtered-${filtered.length}-projects.csv`)}
+                                    style={{ fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    Export Filtered
+                                  </button>
+                                )}
+                                <button type="button" onClick={() => setBulkSelected(filtered.map(p => String(p.id)))} style={{ fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Select All Visible</button>
+                                {bulkSelected.length > 0 && <button type="button" onClick={() => setBulkSelected([])} style={{ fontSize: 10, color: T.red, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Deselect All</button>}
                               </div>
                             </div>
                             {filtered.length === 0 && (
@@ -16142,21 +16343,24 @@ export default function AdminPanel() {
                         const merged = getMergedProject(p);
                         const hasOverride = !!liveProjects[p.id];
                         return (
-                          <div key={p.id} className="fade-up" style={{ display: "grid", gridTemplateColumns: "40px 2fr 100px 110px 100px 80px 90px 80px", gap: 8, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", animationDelay: `${Math.min(i * 0.02, 0.5)}s`, cursor: "pointer", transition: "background .15s", background: editingProject === p.id ? T.goldGlow : "transparent" }}
+                          <div key={p.id} className="fade-up" style={{ display: "grid", gridTemplateColumns: gridCols, gap: 8, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", animationDelay: `${Math.min(i * 0.02, 0.5)}s`, cursor: "pointer", transition: "background .15s", background: editingProject === p.id ? T.goldGlow : "transparent" }}
                             onMouseEnter={e => { if (editingProject !== p.id) e.currentTarget.style.background = T.surfaceAlt; }}
                             onMouseLeave={e => { if (editingProject !== p.id) e.currentTarget.style.background = "transparent"; }}
                             onClick={() => { setEditingProject(p.id); setProjectForm(liveProjects[p.id] || {}); }}>
                             <input type="checkbox" checked={bulkSelected.includes(String(p.id))} onChange={e => setBulkSelected(prev => e.target.checked ? [...prev, String(p.id)] : prev.filter(x => x !== String(p.id)))}
-                               style={{ cursor: "pointer", accentColor: T.gold }} />
+                               onClick={e => e.stopPropagation()} style={{ cursor: "pointer", accentColor: T.gold }} />
                             <div>
                               <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</div>
-                              <div style={{ fontSize: 10, color: T.textMuted }}>{merged.type} · {merged.beds || "—"}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>{merged.type || "—"}{visibleColumns.beds ? "" : ` · ${merged.beds || "—"}`}</div>
                             </div>
-                            <span style={{ fontSize: 11, color: T.textSecondary }}>{p.community}</span>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{merged.price ? `AED ${(merged.price / 1e6).toFixed(2)}M` : "TBA"}</span>
-                            <span style={{ fontSize: 12, color: T.textPrimary }}>{merged.ppsf ? merged.ppsf.toLocaleString() : "—"}</span>
-                            <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: merged.status === "Selling" ? "rgba(16,185,129,0.12)" : merged.status === "Upcoming" ? "rgba(212,168,67,0.12)" : "rgba(148,163,184,0.1)", color: merged.status === "Selling" ? T.green : merged.status === "Upcoming" ? T.gold : T.textMuted }}>{merged.status || "—"}</span>
-                            <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? "● Live" : "○ Default"}</span>
+                            {visibleColumns.community && <span style={{ fontSize: 11, color: T.textSecondary }}>{p.community}</span>}
+                            {visibleColumns.price && <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{merged.price ? `AED ${(merged.price / 1e6).toFixed(2)}M` : "TBA"}</span>}
+                            {visibleColumns.ppsf && <span style={{ fontSize: 12, color: T.textPrimary }}>{merged.ppsf ? merged.ppsf.toLocaleString() : "—"}</span>}
+                            {visibleColumns.status && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: merged.status === "Selling" ? "rgba(16,185,129,0.12)" : merged.status === "Upcoming" ? "rgba(212,168,67,0.12)" : "rgba(148,163,184,0.1)", color: merged.status === "Selling" ? T.green : merged.status === "Upcoming" ? T.gold : T.textMuted }}>{merged.status || "—"}</span>}
+                            {visibleColumns.tier && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.tier || "—"}</span>}
+                            {visibleColumns.handover && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.handover || "—"}</span>}
+                            {visibleColumns.beds && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.beds || "—"}</span>}
+                            {visibleColumns.source && <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? "● Live" : "○ Default"}</span>}
                             <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>Edit →</span>
                           </div>
                         );
