@@ -17959,6 +17959,243 @@ export default function AdminPanel() {
                 );
               })()}
 
+              {/* ═══ ADVANCED FUNNELS & DROP-OFF ANALYSIS (Phase 2C) ═══ */}
+              {(() => {
+                // Define funnel stages with user data
+                const funnelStages = [
+                  { 
+                    name: "Visited", 
+                    key: "visited",
+                    count: users.length,
+                    color: T.blue,
+                    icon: "\uD83D\uDC41"
+                  },
+                  { 
+                    name: "Signed Up", 
+                    key: "signup",
+                    count: users.filter(u => u.createdAt).length,
+                    color: T.teal,
+                    icon: "\u270D\uFE0F"
+                  },
+                  { 
+                    name: "Activated", 
+                    key: "activated",
+                    count: users.filter(u => u.lastLoginAt).length,
+                    color: T.green,
+                    icon: "\u2705"
+                  },
+                  { 
+                    name: "Engaged", 
+                    key: "engaged",
+                    count: users.filter(u => {
+                      try {
+                        const lastLogin = u.lastLoginAt ? new Date(u.lastLoginAt) : null;
+                        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+                        return lastLogin && lastLogin >= sevenDaysAgo;
+                      } catch { return false; }
+                    }).length,
+                    color: T.gold,
+                    icon: "\uD83D\uDD25"
+                  },
+                  { 
+                    name: "Converted", 
+                    key: "converted",
+                    count: users.filter(u => u.tier === "pro" || u.tier === "enterprise").length,
+                    color: T.purple,
+                    icon: "\uD83D\uDCB0"
+                  },
+                ];
+                
+                const maxCount = funnelStages[0].count || 1;
+                
+                // Calculate drop-offs between stages
+                const dropoffs = funnelStages.slice(0, -1).map((stage, idx) => {
+                  const next = funnelStages[idx + 1];
+                  const dropped = stage.count - next.count;
+                  const dropRate = stage.count > 0 ? Math.round((dropped / stage.count) * 100) : 0;
+                  return {
+                    from: stage.name,
+                    to: next.name,
+                    dropped,
+                    dropRate,
+                    color: dropRate > 50 ? T.red : dropRate > 30 ? T.orange : T.textMuted
+                  };
+                });
+                
+                // Time to convert metrics
+                const timeToConvert = (() => {
+                  const converted = users.filter(u => (u.tier === "pro" || u.tier === "enterprise") && u.createdAt && u.tierChangedAt);
+                  if (converted.length === 0) return { avg: 0, median: 0, fastest: 0, slowest: 0 };
+                  
+                  const times = converted.map(u => {
+                    try {
+                      const created = new Date(u.createdAt);
+                      const tierChanged = new Date(u.tierChangedAt || u.createdAt);
+                      return Math.max(0, Math.floor((tierChanged.getTime() - created.getTime()) / (24 * 60 * 60 * 1000)));
+                    } catch { return 0; }
+                  }).filter(t => t >= 0).sort((a, b) => a - b);
+                  
+                  if (times.length === 0) return { avg: 0, median: 0, fastest: 0, slowest: 0 };
+                  
+                  return {
+                    avg: Math.round(times.reduce((a, b) => a + b, 0) / times.length),
+                    median: times[Math.floor(times.length / 2)] || 0,
+                    fastest: times[0] || 0,
+                    slowest: times[times.length - 1] || 0
+                  };
+                })();
+                
+                // Conversion rates
+                const overallConversion = funnelStages[0].count > 0 
+                  ? ((funnelStages[funnelStages.length - 1].count / funnelStages[0].count) * 100).toFixed(1)
+                  : 0;
+                
+                const activationRate = funnelStages[1].count > 0
+                  ? ((funnelStages[2].count / funnelStages[1].count) * 100).toFixed(1)
+                  : 0;
+                
+                return (
+                  <div className="fade-up" style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 16, marginBottom: 20 }}>
+                    {/* Advanced Funnel Visualization */}
+                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                        <div>
+                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Conversion Funnel</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>User journey from visit to paid</div>
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <div style={{ background: T.surfaceAlt, padding: "6px 12px", borderRadius: 8, textAlign: "center" }}>
+                            <div style={{ fontSize: 16, fontWeight: 900, color: T.green, fontFamily: "'Fraunces',serif" }}>{overallConversion}%</div>
+                            <div style={{ fontSize: 8, color: T.textMuted }}>OVERALL</div>
+                          </div>
+                          <div style={{ background: T.surfaceAlt, padding: "6px 12px", borderRadius: 8, textAlign: "center" }}>
+                            <div style={{ fontSize: 16, fontWeight: 900, color: T.teal, fontFamily: "'Fraunces',serif" }}>{activationRate}%</div>
+                            <div style={{ fontSize: 8, color: T.textMuted }}>ACTIVATION</div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Funnel Bars */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {funnelStages.map((stage, idx) => {
+                          const widthPercent = (stage.count / maxCount) * 100;
+                          const conversionFromPrev = idx > 0 && funnelStages[idx - 1].count > 0
+                            ? ((stage.count / funnelStages[idx - 1].count) * 100).toFixed(0)
+                            : 100;
+                          
+                          return (
+                            <div key={stage.key}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                <div style={{ width: 80, display: "flex", alignItems: "center", gap: 6 }}>
+                                  <span style={{ fontSize: 14 }}>{stage.icon}</span>
+                                  <span style={{ fontSize: 10, color: T.textSecondary }}>{stage.name}</span>
+                                </div>
+                                <div style={{ flex: 1, position: "relative" }}>
+                                  <div style={{ height: 28, background: T.border, borderRadius: 6, overflow: "hidden" }}>
+                                    <div style={{ 
+                                      height: "100%", 
+                                      width: `${widthPercent}%`, 
+                                      background: `linear-gradient(90deg, ${stage.color}, ${stage.color}88)`,
+                                      borderRadius: 6,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      paddingLeft: 10,
+                                      transition: "width 0.5s ease"
+                                    }}>
+                                      <span style={{ fontSize: 12, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{stage.count.toLocaleString()}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div style={{ width: 50, textAlign: "right" }}>
+                                  {idx > 0 && (
+                                    <span style={{ fontSize: 10, fontWeight: 600, color: parseInt(conversionFromPrev) >= 70 ? T.green : parseInt(conversionFromPrev) >= 40 ? T.gold : T.red }}>
+                                      {conversionFromPrev}%
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {/* Drop-off indicator */}
+                              {idx < dropoffs.length && dropoffs[idx].dropped > 0 && (
+                                <div style={{ display: "flex", alignItems: "center", marginLeft: 92, marginTop: 2, marginBottom: 2 }}>
+                                  <div style={{ width: 1, height: 12, background: dropoffs[idx].color, marginRight: 8 }} />
+                                  <span style={{ fontSize: 9, color: dropoffs[idx].color }}>
+                                    \u2193 {dropoffs[idx].dropped.toLocaleString()} dropped ({dropoffs[idx].dropRate}%)
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    
+                    {/* Time to Convert & Insights */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                      {/* Time to Convert */}
+                      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>Time to Convert</div>
+                        
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                          <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 12, textAlign: "center" }}>
+                            <div style={{ fontSize: 24, fontWeight: 900, color: T.gold, fontFamily: "'Fraunces',serif" }}>{timeToConvert.avg}</div>
+                            <div style={{ fontSize: 9, color: T.textMuted }}>AVG DAYS</div>
+                          </div>
+                          <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 12, textAlign: "center" }}>
+                            <div style={{ fontSize: 24, fontWeight: 900, color: T.teal, fontFamily: "'Fraunces',serif" }}>{timeToConvert.median}</div>
+                            <div style={{ fontSize: 9, color: T.textMuted }}>MEDIAN DAYS</div>
+                          </div>
+                          <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 12, textAlign: "center" }}>
+                            <div style={{ fontSize: 24, fontWeight: 900, color: T.green, fontFamily: "'Fraunces',serif" }}>{timeToConvert.fastest}</div>
+                            <div style={{ fontSize: 9, color: T.textMuted }}>FASTEST</div>
+                          </div>
+                          <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: 12, textAlign: "center" }}>
+                            <div style={{ fontSize: 24, fontWeight: 900, color: T.orange, fontFamily: "'Fraunces',serif" }}>{timeToConvert.slowest}</div>
+                            <div style={{ fontSize: 9, color: T.textMuted }}>SLOWEST</div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Drop-off Insights */}
+                      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20, flex: 1 }}>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 12 }}>Drop-off Analysis</div>
+                        
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          {dropoffs.map((d, idx) => (
+                            <div key={idx} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", background: T.surfaceAlt, borderRadius: 8 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <div style={{ width: 6, height: 6, borderRadius: "50%", background: d.color }} />
+                                <span style={{ fontSize: 10, color: T.textSecondary }}>{d.from} \u2192 {d.to}</span>
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <span style={{ fontSize: 10, color: T.textMuted }}>{d.dropped}</span>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: d.color, padding: "2px 6px", background: `${d.color}15`, borderRadius: 4 }}>
+                                  -{d.dropRate}%
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* Biggest leak callout */}
+                        {(() => {
+                          const worstDropoff = dropoffs.reduce((worst, d) => d.dropRate > worst.dropRate ? d : worst, dropoffs[0]);
+                          if (!worstDropoff || worstDropoff.dropRate === 0) return null;
+                          return (
+                            <div style={{ marginTop: 12, padding: 10, background: `${T.red}10`, border: `1px solid ${T.red}30`, borderRadius: 8 }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: T.red, marginBottom: 4 }}>\u26A0 Biggest Leak</div>
+                              <div style={{ fontSize: 9, color: T.textSecondary }}>
+                                {worstDropoff.dropRate}% drop from {worstDropoff.from} to {worstDropoff.to}. Consider improving the {worstDropoff.to.toLowerCase()} experience.
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* ═══ ROW 1: MRR Chart + User Growth + Funnel ═══ */}
               <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 0.8fr", gap: 16, marginBottom: 20 }}>
                 <Chart title="MRR History" sub="Monthly Recurring Revenue trend">
