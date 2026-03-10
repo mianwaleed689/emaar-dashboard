@@ -15381,11 +15381,10 @@ export default function AdminPanel() {
                   {/* Search */}
                   <TabHelp items={[
                     { icon: "[q]", title: "Data Quality Score", desc: "Each project gets a 0-100 score based on completeness. Click the panel to see field breakdown and quick actions." },
-                    { icon: "[e]", title: "Edit a Project", desc: "Click any row to open the edit drawer. Change price, status, handover date, images and more." },
+                    { icon: "[e]", title: "Edit a Project", desc: "Click any row to edit. The Linked Records panel shows related community data and other projects." },
                     { icon: "[f]", title: "Advanced Filters", desc: "Click 'Filters' to expand. Filter by price, PPSF, tier, date, quality grade, and more." },
-                    { icon: "[c]", title: "Column Settings", desc: "Click 'Columns' to show/hide table columns including Quality Score." },
+                    { icon: "[🔗]", title: "Linked Records", desc: "When editing a project, see community stats, ROI data, and quickly jump to other projects in the same community." },
                     { icon: "[b]", title: "Bulk Actions", desc: "Select multiple projects with checkboxes. Export, update prices, or delete in bulk." },
-                    { icon: "[~]", title: "Default vs Live", desc: "'Default' means data comes from data.js. 'Live' means you've saved a Firestore override." },
                   ]} />
                   {/* ══════════════════════════════════════
                      ADVANCED FILTER PRO SYSTEM
@@ -16273,6 +16272,112 @@ export default function AdminPanel() {
                               </div>
                             );
                           })()}
+                        
+                        {/* ═══════════════════════════════════════
+                           LINKED RECORDS PANEL
+                           ═══════════════════════════════════════ */}
+                        {(() => {
+                          const communityName = p.community;
+                          const communityProjects = emaarProjects.filter(proj => proj.community === communityName && proj.id !== p.id);
+                          const communityROI = { ...(defaultCommunityROI[communityName] || {}), ...(liveCommunityROI[communityName] || {}) };
+                          const communityIntel = { ...(defaultCommunityIntel[communityName] || {}), ...(liveCommunityIntel[communityName] || {}) };
+                          const hasROI = !!liveCommunityROI[communityName] || !!defaultCommunityROI[communityName];
+                          const hasIntel = !!liveCommunityIntel[communityName] || !!defaultCommunityIntel[communityName];
+                          
+                          // Calculate community stats
+                          const allCommunityProjects = emaarProjects.filter(proj => proj.community === communityName);
+                          const avgPrice = allCommunityProjects.length > 0 
+                            ? Math.round(allCommunityProjects.reduce((sum, proj) => sum + (getMergedProject(proj).price || 0), 0) / allCommunityProjects.length)
+                            : 0;
+                          const avgPpsf = allCommunityProjects.length > 0
+                            ? Math.round(allCommunityProjects.reduce((sum, proj) => sum + (getMergedProject(proj).ppsf || 0), 0) / allCommunityProjects.length)
+                            : 0;
+                          
+                          return (
+                            <div style={{ marginTop: 20, padding: 16, borderRadius: 12, border: `1px solid ${T.purple}30`, background: `${T.purple}08` }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.purple} strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                  <span style={{ fontSize: 12, fontWeight: 700, color: T.purple }}>Linked Records</span>
+                                  <span style={{ fontSize: 10, color: T.textMuted }}>· {communityName}</span>
+                                </div>
+                                <button type="button" onClick={() => { setDataSubTab("communities"); setEditingCommunity(communityName); setEditingProject(null); }}
+                                  style={{ fontSize: 10, padding: "5px 12px", borderRadius: 6, border: `1px solid ${T.purple}40`, background: "transparent", color: T.purple, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                                  Edit Community →
+                                </button>
+                              </div>
+                              
+                              {/* Community Stats Row */}
+                              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 12 }}>
+                                <div style={{ padding: 10, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 16, fontWeight: 700, color: T.gold, fontFamily: "'Fraunces',serif" }}>{allCommunityProjects.length}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Projects</div>
+                                </div>
+                                <div style={{ padding: 10, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPrice > 0 ? `${(avgPrice/1e6).toFixed(1)}M` : "—"}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Avg Price</div>
+                                </div>
+                                <div style={{ padding: 10, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPpsf > 0 ? avgPpsf.toLocaleString() : "—"}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Avg PPSF</div>
+                                </div>
+                                <div style={{ padding: 10, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 14, fontWeight: 700, color: communityROI.yield ? T.green : T.textMuted, fontFamily: "'Fraunces',serif" }}>{communityROI.yield ? `${communityROI.yield}%` : "—"}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Yield</div>
+                                </div>
+                              </div>
+                              
+                              {/* Community Data Preview */}
+                              {(hasROI || hasIntel) && (
+                                <div style={{ padding: 10, background: T.surface, borderRadius: 8, marginBottom: 12 }}>
+                                  <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 11 }}>
+                                    {communityROI.rentalYield && <span><span style={{ color: T.textMuted }}>Rental Yield:</span> <span style={{ color: T.green }}>{communityROI.rentalYield}%</span></span>}
+                                    {communityROI.appreciation && <span><span style={{ color: T.textMuted }}>Appreciation:</span> <span style={{ color: T.teal }}>{communityROI.appreciation}%</span></span>}
+                                    {communityIntel.nearbySchools && <span><span style={{ color: T.textMuted }}>Schools:</span> <span style={{ color: T.white }}>{communityIntel.nearbySchools}</span></span>}
+                                    {communityIntel.developmentStage && <span><span style={{ color: T.textMuted }}>Stage:</span> <span style={{ color: T.white }}>{communityIntel.developmentStage}</span></span>}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Other Projects in Community */}
+                              {communityProjects.length > 0 && (
+                                <div>
+                                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                                    Other Projects in {communityName} ({communityProjects.length})
+                                  </div>
+                                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                                    {communityProjects.slice(0, 8).map(proj => {
+                                      const projMerged = getMergedProject(proj);
+                                      const projQuality = calculateProjectQuality(proj);
+                                      return (
+                                        <button key={proj.id} type="button" 
+                                          onClick={() => { setEditingProject(proj.id); setProjectForm(liveProjects[proj.id] || {}); }}
+                                          style={{ 
+                                            padding: "6px 10px", borderRadius: 6, 
+                                            border: `1px solid ${T.border}`, background: T.surfaceAlt,
+                                            color: T.white, fontSize: 11, cursor: "pointer", 
+                                            fontFamily: "'Outfit',sans-serif", textAlign: "left",
+                                            display: "flex", alignItems: "center", gap: 6
+                                          }}>
+                                          <span style={{ 
+                                            width: 18, height: 18, borderRadius: 4, fontSize: 8, fontWeight: 700,
+                                            background: `${projQuality.color}20`, color: projQuality.color,
+                                            display: "flex", alignItems: "center", justifyContent: "center"
+                                          }}>{projQuality.score}</span>
+                                          <span>{proj.name}</span>
+                                          {projMerged.price && <span style={{ color: T.gold, fontSize: 10 }}>{(projMerged.price/1e6).toFixed(1)}M</span>}
+                                        </button>
+                                      );
+                                    })}
+                                    {communityProjects.length > 8 && (
+                                      <span style={{ padding: "6px 10px", fontSize: 11, color: T.textMuted }}>+{communityProjects.length - 8} more</span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
 
                         <button type="button" disabled={dataSaving} onClick={() => saveProjectData(p.id, projectForm)}
                           style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
@@ -16954,6 +17059,138 @@ export default function AdminPanel() {
                             </button>
                           </div>
                         </div>
+                        
+                        {/* ═══════════════════════════════════════
+                           LINKED PROJECTS PANEL
+                           ═══════════════════════════════════════ */}
+                        {(() => {
+                          const communityProjects = emaarProjects.filter(p => p.community === activeKey);
+                          
+                          // Calculate stats
+                          const totalProjects = communityProjects.length;
+                          const avgPrice = totalProjects > 0 
+                            ? Math.round(communityProjects.reduce((sum, p) => sum + (getMergedProject(p).price || 0), 0) / totalProjects)
+                            : 0;
+                          const avgPpsf = totalProjects > 0
+                            ? Math.round(communityProjects.reduce((sum, p) => sum + (getMergedProject(p).ppsf || 0), 0) / totalProjects)
+                            : 0;
+                          const avgQuality = totalProjects > 0
+                            ? Math.round(communityProjects.reduce((sum, p) => sum + calculateProjectQuality(p).score, 0) / totalProjects)
+                            : 0;
+                          const liveCount = communityProjects.filter(p => liveProjects[p.id]).length;
+                          
+                          // Group by status
+                          const statusGroups = {};
+                          communityProjects.forEach(p => {
+                            const status = getMergedProject(p).status || "Unknown";
+                            if (!statusGroups[status]) statusGroups[status] = [];
+                            statusGroups[status].push(p);
+                          });
+                          
+                          return (
+                            <div style={{ marginTop: 24, padding: 20, borderRadius: 12, border: `1px solid ${T.purple}30`, background: `${T.purple}05` }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.purple} strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                                  <span style={{ fontSize: 14, fontWeight: 700, color: T.purple }}>Linked Projects</span>
+                                  <span style={{ padding: "3px 10px", borderRadius: 12, background: `${T.gold}20`, color: T.gold, fontSize: 11, fontWeight: 700 }}>{totalProjects}</span>
+                                </div>
+                                <button type="button" onClick={() => { setDataSubTab("projects"); setProjectCommunityFilter(activeKey); }}
+                                  style={{ fontSize: 11, padding: "6px 14px", borderRadius: 6, border: `1px solid ${T.purple}40`, background: "transparent", color: T.purple, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                                  View All in Projects →
+                                </button>
+                              </div>
+                              
+                              {/* Stats Row */}
+                              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 16 }}>
+                                <div style={{ padding: 12, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 18, fontWeight: 700, color: T.gold, fontFamily: "'Fraunces',serif" }}>{totalProjects}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Total Projects</div>
+                                </div>
+                                <div style={{ padding: 12, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPrice > 0 ? `${(avgPrice/1e6).toFixed(1)}M` : "—"}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Avg Price</div>
+                                </div>
+                                <div style={{ padding: 12, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPpsf > 0 ? avgPpsf.toLocaleString() : "—"}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Avg PPSF</div>
+                                </div>
+                                <div style={{ padding: 12, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: avgQuality >= 70 ? T.green : avgQuality >= 50 ? T.orange : T.red, fontFamily: "'Fraunces',serif" }}>{avgQuality}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Avg Quality</div>
+                                </div>
+                                <div style={{ padding: 12, background: T.surface, borderRadius: 8, textAlign: "center" }}>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: T.green, fontFamily: "'Fraunces',serif" }}>{liveCount}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted }}>Live Overrides</div>
+                                </div>
+                              </div>
+                              
+                              {/* Status Breakdown */}
+                              {Object.keys(statusGroups).length > 0 && (
+                                <div style={{ marginBottom: 16 }}>
+                                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>By Status</div>
+                                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                                    {Object.entries(statusGroups).map(([status, projects]) => (
+                                      <div key={status} style={{ 
+                                        padding: "6px 12px", borderRadius: 8, 
+                                        background: status === "Selling" ? "rgba(16,185,129,0.1)" : status === "Upcoming" ? "rgba(212,168,67,0.1)" : "rgba(148,163,184,0.1)",
+                                        border: `1px solid ${status === "Selling" ? "rgba(16,185,129,0.3)" : status === "Upcoming" ? "rgba(212,168,67,0.3)" : "rgba(148,163,184,0.2)"}`,
+                                        display: "flex", alignItems: "center", gap: 6
+                                      }}>
+                                        <span style={{ fontSize: 13, fontWeight: 700, color: status === "Selling" ? T.green : status === "Upcoming" ? T.gold : T.textMuted }}>{projects.length}</span>
+                                        <span style={{ fontSize: 11, color: T.textSecondary }}>{status}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Project List (collapsed by default) */}
+                              {totalProjects > 0 && (
+                                <div>
+                                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>Quick Edit Projects</div>
+                                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8, maxHeight: 200, overflowY: "auto" }}>
+                                    {communityProjects.map(p => {
+                                      const merged = getMergedProject(p);
+                                      const quality = calculateProjectQuality(p);
+                                      const hasOverride = !!liveProjects[p.id];
+                                      return (
+                                        <button key={p.id} type="button"
+                                          onClick={() => { setDataSubTab("projects"); setEditingProject(p.id); setProjectForm(liveProjects[p.id] || {}); }}
+                                          style={{ 
+                                            padding: "10px 12px", borderRadius: 8, 
+                                            border: `1px solid ${T.border}`, background: T.surface,
+                                            cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left",
+                                            display: "flex", alignItems: "center", gap: 8
+                                          }}>
+                                          <div style={{ 
+                                            width: 24, height: 24, borderRadius: 6, fontSize: 10, fontWeight: 700,
+                                            background: `${quality.color}15`, color: quality.color,
+                                            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                                          }}>{quality.score}</div>
+                                          <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
+                                            <div style={{ fontSize: 10, color: T.textMuted, display: "flex", gap: 6 }}>
+                                              <span>{merged.price ? `${(merged.price/1e6).toFixed(1)}M` : "TBA"}</span>
+                                              {hasOverride && <span style={{ color: T.green }}>● Live</span>}
+                                            </div>
+                                          </div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {totalProjects === 0 && (
+                                <div style={{ textAlign: "center", padding: 20, color: T.textMuted }}>
+                                  <div style={{ fontSize: 24, marginBottom: 8 }}>📭</div>
+                                  <div style={{ fontSize: 12 }}>No projects in this community yet</div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
 
                         {/* Publish Footer */}
                         <div style={{ marginTop: 24, background: "linear-gradient(135deg,rgba(212,168,67,0.08),rgba(212,168,67,0.03))", border: "1px solid rgba(212,168,67,0.18)", borderRadius: 12, padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
