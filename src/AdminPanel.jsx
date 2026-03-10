@@ -11164,6 +11164,16 @@ export default function AdminPanel() {
   const [browserBreakdown, setBrowserBreakdown] = useState([]);
   const [osBreakdown, setOsBreakdown] = useState([]);
 
+  // Phase 3A: Segment Builder
+  const [segmentFilters, setSegmentFilters] = useState({ tier: "all", activity: "all", dateRange: "all", geo: "all" });
+  const [savedSegments, setSavedSegments] = useState([
+    { id: 1, name: "Power Users", filters: { tier: "pro", activity: "high", dateRange: "all", geo: "all" }, color: "#10B981" },
+    { id: 2, name: "At-Risk Free", filters: { tier: "free", activity: "low", dateRange: "30d", geo: "all" }, color: "#F97316" },
+    { id: 3, name: "New Signups", filters: { tier: "all", activity: "all", dateRange: "7d", geo: "all" }, color: "#3B82F6" },
+  ]);
+  const [activeSegmentId, setActiveSegmentId] = useState(null);
+  const [segmentName, setSegmentName] = useState("");
+
   /* ─── PERSIST TAB STATE ─── */
   const isHydrated = React.useRef(false);
   
@@ -18190,6 +18200,312 @@ export default function AdminPanel() {
                             </div>
                           );
                         })()}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ═══ SEGMENT BUILDER (Phase 3A) ═══ */}
+              {(() => {
+                const now = new Date();
+                const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+                
+                // Apply filters to get segment users
+                const applyFilters = (filters) => {
+                  return users.filter(u => {
+                    // Tier filter
+                    if (filters.tier !== "all") {
+                      if (filters.tier === "free" && (u.tier === "pro" || u.tier === "enterprise")) return false;
+                      if (filters.tier === "pro" && u.tier !== "pro") return false;
+                      if (filters.tier === "enterprise" && u.tier !== "enterprise") return false;
+                      if (filters.tier === "paid" && u.tier !== "pro" && u.tier !== "enterprise") return false;
+                    }
+                    
+                    // Activity filter
+                    if (filters.activity !== "all") {
+                      const lastLogin = u.lastLoginAt ? new Date(u.lastLoginAt) : null;
+                      const daysSince = lastLogin ? Math.floor((now.getTime() - lastLogin.getTime()) / (24 * 60 * 60 * 1000)) : 999;
+                      if (filters.activity === "high" && daysSince > 3) return false;
+                      if (filters.activity === "medium" && (daysSince <= 3 || daysSince > 14)) return false;
+                      if (filters.activity === "low" && daysSince <= 14) return false;
+                    }
+                    
+                    // Date range filter (signup date)
+                    if (filters.dateRange !== "all") {
+                      try {
+                        const created = new Date(u.createdAt);
+                        if (filters.dateRange === "7d" && created < sevenDaysAgo) return false;
+                        if (filters.dateRange === "30d" && created < thirtyDaysAgo) return false;
+                        if (filters.dateRange === "90d" && created < ninetyDaysAgo) return false;
+                      } catch { return false; }
+                    }
+                    
+                    // Geo filter
+                    if (filters.geo !== "all") {
+                      const country = (u.country || u.geo || "").toLowerCase();
+                      if (filters.geo === "uae" && !country.includes("uae") && !country.includes("emirates")) return false;
+                      if (filters.geo === "gcc" && !["uae", "emirates", "saudi", "qatar", "kuwait", "bahrain", "oman"].some(c => country.includes(c))) return false;
+                      if (filters.geo === "intl" && ["uae", "emirates", "saudi", "qatar", "kuwait", "bahrain", "oman"].some(c => country.includes(c))) return false;
+                    }
+                    
+                    return true;
+                  });
+                };
+                
+                const currentSegmentUsers = applyFilters(segmentFilters);
+                
+                // Segment stats
+                const segmentStats = {
+                  total: currentSegmentUsers.length,
+                  paidPercent: currentSegmentUsers.length > 0 
+                    ? Math.round((currentSegmentUsers.filter(u => u.tier === "pro" || u.tier === "enterprise").length / currentSegmentUsers.length) * 100)
+                    : 0,
+                  avgDaysSinceLogin: currentSegmentUsers.length > 0
+                    ? Math.round(currentSegmentUsers.reduce((sum, u) => {
+                        const lastLogin = u.lastLoginAt ? new Date(u.lastLoginAt) : null;
+                        return sum + (lastLogin ? Math.floor((now.getTime() - lastLogin.getTime()) / (24 * 60 * 60 * 1000)) : 30);
+                      }, 0) / currentSegmentUsers.length)
+                    : 0,
+                };
+                
+                // Compare saved segments
+                const segmentComparison = savedSegments.map(seg => ({
+                  ...seg,
+                  users: applyFilters(seg.filters),
+                  count: applyFilters(seg.filters).length
+                }));
+                
+                const handleSaveSegment = () => {
+                  if (!segmentName.trim()) return;
+                  const newSegment = {
+                    id: Date.now(),
+                    name: segmentName,
+                    filters: { ...segmentFilters },
+                    color: [T.green, T.teal, T.blue, T.purple, T.gold, T.orange][savedSegments.length % 6]
+                  };
+                  setSavedSegments([...savedSegments, newSegment]);
+                  setSegmentName("");
+                  notify(`Segment "${segmentName}" saved`);
+                };
+                
+                const handleDeleteSegment = (id) => {
+                  setSavedSegments(savedSegments.filter(s => s.id !== id));
+                  if (activeSegmentId === id) setActiveSegmentId(null);
+                };
+                
+                const handleLoadSegment = (seg) => {
+                  setSegmentFilters(seg.filters);
+                  setActiveSegmentId(seg.id);
+                };
+                
+                return (
+                  <div className="fade-up" style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 16, marginBottom: 20 }}>
+                    {/* Segment Builder Controls */}
+                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                        <div>
+                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Segment Builder</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>Create custom user segments</div>
+                        </div>
+                        <div style={{ background: T.gold, color: T.surface, padding: "4px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>
+                          {currentSegmentUsers.length} users
+                        </div>
+                      </div>
+                      
+                      {/* Filter Controls */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                        {/* Tier Filter */}
+                        <div>
+                          <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>Tier</div>
+                          <select 
+                            value={segmentFilters.tier} 
+                            onChange={(e) => setSegmentFilters({ ...segmentFilters, tier: e.target.value })}
+                            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, cursor: "pointer" }}
+                          >
+                            <option value="all">All Tiers</option>
+                            <option value="free">Free Only</option>
+                            <option value="pro">Pro Only</option>
+                            <option value="enterprise">Enterprise</option>
+                            <option value="paid">All Paid</option>
+                          </select>
+                        </div>
+                        
+                        {/* Activity Filter */}
+                        <div>
+                          <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>Activity</div>
+                          <select 
+                            value={segmentFilters.activity} 
+                            onChange={(e) => setSegmentFilters({ ...segmentFilters, activity: e.target.value })}
+                            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, cursor: "pointer" }}
+                          >
+                            <option value="all">All Activity</option>
+                            <option value="high">High (3 days)</option>
+                            <option value="medium">Medium (3-14d)</option>
+                            <option value="low">Low (14+ days)</option>
+                          </select>
+                        </div>
+                        
+                        {/* Date Range Filter */}
+                        <div>
+                          <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>Signed Up</div>
+                          <select 
+                            value={segmentFilters.dateRange} 
+                            onChange={(e) => setSegmentFilters({ ...segmentFilters, dateRange: e.target.value })}
+                            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, cursor: "pointer" }}
+                          >
+                            <option value="all">All Time</option>
+                            <option value="7d">Last 7 Days</option>
+                            <option value="30d">Last 30 Days</option>
+                            <option value="90d">Last 90 Days</option>
+                          </select>
+                        </div>
+                        
+                        {/* Geo Filter */}
+                        <div>
+                          <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>Region</div>
+                          <select 
+                            value={segmentFilters.geo} 
+                            onChange={(e) => setSegmentFilters({ ...segmentFilters, geo: e.target.value })}
+                            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, cursor: "pointer" }}
+                          >
+                            <option value="all">All Regions</option>
+                            <option value="uae">UAE Only</option>
+                            <option value="gcc">GCC</option>
+                            <option value="intl">International</option>
+                          </select>
+                        </div>
+                      </div>
+                      
+                      {/* Segment Stats */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
+                        <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
+                          <div style={{ fontSize: 18, fontWeight: 900, color: T.white, fontFamily: "'Fraunces',serif" }}>{segmentStats.total}</div>
+                          <div style={{ fontSize: 8, color: T.textMuted }}>USERS</div>
+                        </div>
+                        <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
+                          <div style={{ fontSize: 18, fontWeight: 900, color: T.green, fontFamily: "'Fraunces',serif" }}>{segmentStats.paidPercent}%</div>
+                          <div style={{ fontSize: 8, color: T.textMuted }}>PAID</div>
+                        </div>
+                        <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
+                          <div style={{ fontSize: 18, fontWeight: 900, color: T.teal, fontFamily: "'Fraunces',serif" }}>{segmentStats.avgDaysSinceLogin}d</div>
+                          <div style={{ fontSize: 8, color: T.textMuted }}>AVG IDLE</div>
+                        </div>
+                      </div>
+                      
+                      {/* Save Segment */}
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <input
+                          type="text"
+                          placeholder="Segment name..."
+                          value={segmentName}
+                          onChange={(e) => setSegmentName(e.target.value)}
+                          style={{ flex: 1, padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11 }}
+                        />
+                        <button 
+                          type="button" 
+                          onClick={handleSaveSegment}
+                          disabled={!segmentName.trim()}
+                          style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: segmentName.trim() ? T.gold : T.border, color: segmentName.trim() ? T.surface : T.textMuted, fontSize: 11, fontWeight: 600, cursor: segmentName.trim() ? "pointer" : "not-allowed" }}
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Saved Segments & Comparison */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                      {/* Saved Segments List */}
+                      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 12 }}>Saved Segments</div>
+                        
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          {savedSegments.length === 0 ? (
+                            <div style={{ textAlign: "center", padding: 16, color: T.textMuted, fontSize: 11 }}>No saved segments yet</div>
+                          ) : (
+                            savedSegments.map(seg => (
+                              <div 
+                                key={seg.id} 
+                                style={{ 
+                                  display: "flex", 
+                                  alignItems: "center", 
+                                  justifyContent: "space-between",
+                                  padding: "10px 12px", 
+                                  background: activeSegmentId === seg.id ? `${seg.color}15` : T.surfaceAlt, 
+                                  borderRadius: 8,
+                                  border: activeSegmentId === seg.id ? `1px solid ${seg.color}50` : `1px solid transparent`,
+                                  cursor: "pointer",
+                                  transition: "all 0.2s"
+                                }}
+                                onClick={() => handleLoadSegment(seg)}
+                              >
+                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: seg.color }} />
+                                  <div>
+                                    <div style={{ fontSize: 11, fontWeight: 600, color: T.white }}>{seg.name}</div>
+                                    <div style={{ fontSize: 9, color: T.textMuted }}>
+                                      {seg.filters.tier !== "all" ? seg.filters.tier : ""} 
+                                      {seg.filters.activity !== "all" ? ` \u2022 ${seg.filters.activity} activity` : ""}
+                                      {seg.filters.dateRange !== "all" ? ` \u2022 ${seg.filters.dateRange}` : ""}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <span style={{ fontSize: 12, fontWeight: 700, color: seg.color }}>{applyFilters(seg.filters).length}</span>
+                                  <button 
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteSegment(seg.id); }}
+                                    style={{ padding: "4px 8px", borderRadius: 4, border: "none", background: `${T.red}20`, color: T.red, fontSize: 9, cursor: "pointer" }}
+                                  >
+                                    \u2715
+                                  </button>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Segment Comparison Chart */}
+                      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20, flex: 1 }}>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 12 }}>Segment Comparison</div>
+                        
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          {segmentComparison.map(seg => {
+                            const maxUsers = Math.max(...segmentComparison.map(s => s.count), 1);
+                            const widthPercent = (seg.count / maxUsers) * 100;
+                            const paidCount = seg.users.filter(u => u.tier === "pro" || u.tier === "enterprise").length;
+                            const paidPercent = seg.count > 0 ? Math.round((paidCount / seg.count) * 100) : 0;
+                            
+                            return (
+                              <div key={seg.id}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: seg.color }} />
+                                    <span style={{ fontSize: 10, color: T.textSecondary }}>{seg.name}</span>
+                                  </div>
+                                  <span style={{ fontSize: 10, color: T.textMuted }}>{paidPercent}% paid</span>
+                                </div>
+                                <div style={{ height: 20, background: T.border, borderRadius: 4, overflow: "hidden", position: "relative" }}>
+                                  <div style={{ 
+                                    height: "100%", 
+                                    width: `${widthPercent}%`, 
+                                    background: seg.color,
+                                    borderRadius: 4,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    paddingLeft: 8,
+                                    transition: "width 0.3s ease"
+                                  }}>
+                                    <span style={{ fontSize: 10, fontWeight: 700, color: T.white }}>{seg.count}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>
