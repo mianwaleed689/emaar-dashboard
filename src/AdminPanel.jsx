@@ -11095,6 +11095,30 @@ export default function AdminPanel() {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkChangeType, setBulkChangeType] = useState("percent");
   const [bulkPriceChange, setBulkPriceChange] = useState(0);
+  
+  // Advanced Filter Pro states
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
+  const [ppsfMin, setPpsfMin] = useState("");
+  const [ppsfMax, setPpsfMax] = useState("");
+  const [modifiedDateFilter, setModifiedDateFilter] = useState("all"); // all | today | 7d | 30d | 90d
+  const [tierFilter, setTierFilter] = useState("All");
+  const [dataSourceFilter, setDataSourceFilter] = useState("all"); // all | live | default
+  const [hasImageFilter, setHasImageFilter] = useState("all"); // all | yes | no
+  const [savedFilterViews, setSavedFilterViews] = useState(() => {
+    try { 
+      const saved = localStorage.getItem("admin_savedFilterViews");
+      return saved ? JSON.parse(saved) : [
+        { id: 1, name: "Missing Prices", filters: { priceMin: "", priceMax: "0", status: "All", community: "All" }, color: "#EF4444" },
+        { id: 2, name: "Live Overrides", filters: { dataSource: "live", status: "All", community: "All" }, color: "#10B981" },
+        { id: 3, name: "Premium Projects", filters: { tier: "Premium", status: "All", community: "All" }, color: "#D4A843" },
+      ];
+    } catch { return []; }
+  });
+  const [activeFilterViewId, setActiveFilterViewId] = useState(null);
+  const [showSaveFilterModal, setShowSaveFilterModal] = useState(false);
+  const [newFilterViewName, setNewFilterViewName] = useState("");
 
   /* ─── KYC VERIFICATION STATE ─── */
   const [verifications, setVerifications] = useState([]);
@@ -15203,28 +15227,118 @@ export default function AdminPanel() {
                   <TabHelp items={[
                     { icon: "[e]", title: "Edit a Project", desc: "Click any row to open the edit drawer. Change price, status, handover date, images and more." },
                     { icon: "[s]", title: "Save Goes Live", desc: "Clicking 'Save to Firestore' updates the project instantly on the dashboard for all users." },
-                    { icon: "[img]", title: "Upload Images", desc: "Upload a project image via Cloudinary. It appears on the dashboard project card." },
-                    { icon: "[x]", title: "Bulk Edit", desc: "Check multiple projects using the checkboxes, then set price or status for all at once." },
-                    { icon: "[dl]", title: "CSV Import Pro", desc: "Upload CSV with preview, auto-column mapping, validation errors, and import progress. Download template for correct format." },
+                    { icon: "[f]", title: "Advanced Filters", desc: "Click 'Filters' to expand. Filter by price range, PPSF, tier, data source, modified date, and image status." },
+                    { icon: "[v]", title: "Saved Views", desc: "Save your current filter combination as a reusable view. Click any saved view pill to apply it instantly." },
+                    { icon: "[dl]", title: "CSV Import Pro", desc: "Upload CSV with preview, auto-column mapping, validation errors, and import progress." },
                     { icon: "[~]", title: "Default vs Live", desc: "'Default' means data comes from data.js. 'Live' means you've saved a Firestore override." },
                   ]} />
-                  {/* ── Filter & Sort Bar ── */}
+                  {/* ══════════════════════════════════════
+                     ADVANCED FILTER PRO SYSTEM
+                     ══════════════════════════════════════ */}
+                  
+                  {/* Saved Filter Views Pills */}
+                  {savedFilterViews.length > 0 && (
+                    <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
+                      <span style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Quick Filters:</span>
+                      {savedFilterViews.map(view => (
+                        <div key={view.id} style={{ position: "relative", display: "inline-flex" }}>
+                          <button type="button"
+                            onClick={() => {
+                              if (activeFilterViewId === view.id) {
+                                // Deactivate - clear all filters
+                                setActiveFilterViewId(null);
+                                setProjectCommunityFilter("All");
+                                setProjectStatusFilter("All");
+                                setTierFilter("All");
+                                setPriceMin(""); setPriceMax("");
+                                setPpsfMin(""); setPpsfMax("");
+                                setDataSourceFilter("all");
+                                setModifiedDateFilter("all");
+                                setHasImageFilter("all");
+                              } else {
+                                // Activate this view
+                                setActiveFilterViewId(view.id);
+                                const f = view.filters;
+                                if (f.community) setProjectCommunityFilter(f.community);
+                                if (f.status) setProjectStatusFilter(f.status);
+                                if (f.tier) setTierFilter(f.tier);
+                                if (f.priceMin !== undefined) setPriceMin(f.priceMin);
+                                if (f.priceMax !== undefined) setPriceMax(f.priceMax);
+                                if (f.ppsfMin !== undefined) setPpsfMin(f.ppsfMin);
+                                if (f.ppsfMax !== undefined) setPpsfMax(f.ppsfMax);
+                                if (f.dataSource) setDataSourceFilter(f.dataSource);
+                                if (f.modifiedDate) setModifiedDateFilter(f.modifiedDate);
+                                if (f.hasImage) setHasImageFilter(f.hasImage);
+                              }
+                            }}
+                            style={{ 
+                              display: "flex", alignItems: "center", gap: 6,
+                              padding: "6px 12px", borderRadius: "20px 4px 4px 20px", 
+                              border: `1px solid ${activeFilterViewId === view.id ? view.color : T.border}`,
+                              borderRight: "none",
+                              background: activeFilterViewId === view.id ? `${view.color}15` : "transparent",
+                              color: activeFilterViewId === view.id ? view.color : T.textSecondary,
+                              fontSize: 11, fontWeight: activeFilterViewId === view.id ? 700 : 500,
+                              cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s"
+                            }}>
+                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: view.color }} />
+                            {view.name}
+                          </button>
+                          <button type="button" onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm(`Delete filter view "${view.name}"?`)) {
+                              const updated = savedFilterViews.filter(v => v.id !== view.id);
+                              setSavedFilterViews(updated);
+                              try { localStorage.setItem("admin_savedFilterViews", JSON.stringify(updated)); } catch {}
+                              if (activeFilterViewId === view.id) setActiveFilterViewId(null);
+                              notify("Filter view deleted");
+                            }
+                          }}
+                            style={{ 
+                              padding: "6px 8px", borderRadius: "0 20px 20px 0",
+                              border: `1px solid ${activeFilterViewId === view.id ? view.color : T.border}`,
+                              borderLeft: `1px solid ${T.border}`,
+                              background: "transparent", color: T.textMuted,
+                              fontSize: 10, cursor: "pointer", fontFamily: "'Outfit',sans-serif",
+                              transition: "all 0.15s"
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.color = T.red; e.currentTarget.style.background = `${T.red}10`; }}
+                            onMouseLeave={e => { e.currentTarget.style.color = T.textMuted; e.currentTarget.style.background = "transparent"; }}>
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      <button type="button" onClick={() => setShowSaveFilterModal(true)}
+                        style={{ padding: "6px 10px", borderRadius: 20, border: `1px dashed ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        + Save Current
+                      </button>
+                    </div>
+                  )}
+                  
+                  {/* Main Filter Bar */}
                   <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", alignItems: "center", padding: "10px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                    {/* Search */}
                     <div style={{ position: "relative", flex: "1 1 200px", minWidth: 160 }}>
                       <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.textMuted, fontSize: 13, pointerEvents: "none" }}>⌕</span>
-                      <input value={dataSearch} onChange={e => setDataSearch(e.target.value)} placeholder="Search projects..."
+                      <input value={dataSearch} onChange={e => { setDataSearch(e.target.value); setActiveFilterViewId(null); }} placeholder="Search projects..."
                         style={{ width: "100%", padding: "8px 10px 8px 28px", background: T.surface, border: `1px solid ${dataSearch ? T.gold : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
                     </div>
-                    <select value={projectCommunityFilter} onChange={e => setProjectCommunityFilter(e.target.value)}
+                    
+                    {/* Community Filter */}
+                    <select value={projectCommunityFilter} onChange={e => { setProjectCommunityFilter(e.target.value); setActiveFilterViewId(null); }}
                       style={{ padding: "8px 10px", background: projectCommunityFilter !== "All" ? `${T.gold}15` : T.surface, border: `1px solid ${projectCommunityFilter !== "All" ? T.gold : T.border}`, borderRadius: 8, color: projectCommunityFilter !== "All" ? T.gold : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: projectCommunityFilter !== "All" ? 700 : 400, maxWidth: 180 }}>
                       <option value="All">All Communities</option>
                       {[...new Set(emaarProjects.map(p => p.community))].sort().map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
-                    <select value={projectStatusFilter} onChange={e => setProjectStatusFilter(e.target.value)}
+                    
+                    {/* Status Filter */}
+                    <select value={projectStatusFilter} onChange={e => { setProjectStatusFilter(e.target.value); setActiveFilterViewId(null); }}
                       style={{ padding: "8px 10px", background: projectStatusFilter !== "All" ? `${T.gold}15` : T.surface, border: `1px solid ${projectStatusFilter !== "All" ? T.gold : T.border}`, borderRadius: 8, color: projectStatusFilter !== "All" ? T.gold : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: projectStatusFilter !== "All" ? 700 : 400 }}>
                       <option value="All">All Status</option>
                       {["Under Construction","Off-Plan","Completed","Selling","Upcoming","Sold Out","Ready"].map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
+                    
+                    {/* Sort */}
                     <select value={projectSortKey + "_" + projectSortDir} onChange={e => { const [k,d] = e.target.value.split("_"); setProjectSortKey(k); setProjectSortDir(d); }}
                       style={{ padding: "8px 10px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
                       <option value="name_asc">Name A→Z</option>
@@ -15236,13 +15350,189 @@ export default function AdminPanel() {
                       <option value="status_asc">Status A→Z</option>
                       <option value="community_asc">Community A→Z</option>
                     </select>
-                    {(dataSearch || projectCommunityFilter !== "All" || projectStatusFilter !== "All") && (
-                      <button type="button" onClick={() => { setDataSearch(""); setProjectCommunityFilter("All"); setProjectStatusFilter("All"); }}
+                    
+                    {/* Advanced Filters Toggle */}
+                    <button type="button" onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                      style={{ 
+                        display: "flex", alignItems: "center", gap: 5,
+                        padding: "8px 12px", borderRadius: 8, 
+                        border: `1px solid ${showAdvancedFilters || priceMin || priceMax || ppsfMin || ppsfMax || tierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all" ? T.teal : T.border}`,
+                        background: showAdvancedFilters ? `${T.teal}15` : "transparent",
+                        color: showAdvancedFilters || priceMin || priceMax || ppsfMin || ppsfMax || tierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all" ? T.teal : T.textMuted,
+                        fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif"
+                      }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                      Filters
+                      {(priceMin || priceMax || ppsfMin || ppsfMax || tierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all") && (
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.teal }} />
+                      )}
+                    </button>
+                    
+                    {/* Clear All Filters */}
+                    {(dataSearch || projectCommunityFilter !== "All" || projectStatusFilter !== "All" || priceMin || priceMax || ppsfMin || ppsfMax || tierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all") && (
+                      <button type="button" onClick={() => { 
+                        setDataSearch(""); setProjectCommunityFilter("All"); setProjectStatusFilter("All");
+                        setPriceMin(""); setPriceMax(""); setPpsfMin(""); setPpsfMax("");
+                        setTierFilter("All"); setDataSourceFilter("all"); setModifiedDateFilter("all");
+                        setHasImageFilter("all"); setActiveFilterViewId(null);
+                      }}
                         style={{ padding: "8px 12px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, color: T.red, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" }}>
-                        ✕ Clear filters
+                        ✕ Clear All
                       </button>
                     )}
                   </div>
+                  
+                  {/* Advanced Filters Panel */}
+                  {showAdvancedFilters && (
+                    <div className="fade-up" style={{ 
+                      display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12,
+                      padding: 16, marginBottom: 16, background: T.surface, borderRadius: 12, 
+                      border: `1px solid ${T.teal}30`
+                    }}>
+                      {/* Price Range */}
+                      <div>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Price Range (AED)</label>
+                        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                          <input type="number" value={priceMin} onChange={e => { setPriceMin(e.target.value); setActiveFilterViewId(null); }} placeholder="Min"
+                            style={{ flex: 1, padding: "7px 10px", background: T.bg, border: `1px solid ${priceMin ? T.teal : T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                          <span style={{ color: T.textMuted, fontSize: 11 }}>—</span>
+                          <input type="number" value={priceMax} onChange={e => { setPriceMax(e.target.value); setActiveFilterViewId(null); }} placeholder="Max"
+                            style={{ flex: 1, padding: "7px 10px", background: T.bg, border: `1px solid ${priceMax ? T.teal : T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                        </div>
+                      </div>
+                      
+                      {/* PPSF Range */}
+                      <div>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6, display: "block" }}>PPSF Range</label>
+                        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                          <input type="number" value={ppsfMin} onChange={e => { setPpsfMin(e.target.value); setActiveFilterViewId(null); }} placeholder="Min"
+                            style={{ flex: 1, padding: "7px 10px", background: T.bg, border: `1px solid ${ppsfMin ? T.teal : T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                          <span style={{ color: T.textMuted, fontSize: 11 }}>—</span>
+                          <input type="number" value={ppsfMax} onChange={e => { setPpsfMax(e.target.value); setActiveFilterViewId(null); }} placeholder="Max"
+                            style={{ flex: 1, padding: "7px 10px", background: T.bg, border: `1px solid ${ppsfMax ? T.teal : T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                        </div>
+                      </div>
+                      
+                      {/* Tier Filter */}
+                      <div>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Tier</label>
+                        <select value={tierFilter} onChange={e => { setTierFilter(e.target.value); setActiveFilterViewId(null); }}
+                          style={{ width: "100%", padding: "7px 10px", background: T.bg, border: `1px solid ${tierFilter !== "All" ? T.teal : T.border}`, borderRadius: 6, color: tierFilter !== "All" ? T.teal : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                          <option value="All">All Tiers</option>
+                          {["Affordable", "Mid-Market", "Mid-Premium", "Premium", "Luxury", "Ultra-Luxury", "Luxury Branded", "Ultra-Lux Branded"].map(t => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      {/* Data Source */}
+                      <div>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Data Source</label>
+                        <select value={dataSourceFilter} onChange={e => { setDataSourceFilter(e.target.value); setActiveFilterViewId(null); }}
+                          style={{ width: "100%", padding: "7px 10px", background: T.bg, border: `1px solid ${dataSourceFilter !== "all" ? T.teal : T.border}`, borderRadius: 6, color: dataSourceFilter !== "all" ? T.teal : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                          <option value="all">All Sources</option>
+                          <option value="live">Live Overrides Only</option>
+                          <option value="default">Default Data Only</option>
+                        </select>
+                      </div>
+                      
+                      {/* Modified Date */}
+                      <div>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Last Modified</label>
+                        <select value={modifiedDateFilter} onChange={e => { setModifiedDateFilter(e.target.value); setActiveFilterViewId(null); }}
+                          style={{ width: "100%", padding: "7px 10px", background: T.bg, border: `1px solid ${modifiedDateFilter !== "all" ? T.teal : T.border}`, borderRadius: 6, color: modifiedDateFilter !== "all" ? T.teal : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                          <option value="all">Any Time</option>
+                          <option value="today">Today</option>
+                          <option value="7d">Last 7 Days</option>
+                          <option value="30d">Last 30 Days</option>
+                          <option value="90d">Last 90 Days</option>
+                        </select>
+                      </div>
+                      
+                      {/* Has Image */}
+                      <div>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Has Image</label>
+                        <select value={hasImageFilter} onChange={e => { setHasImageFilter(e.target.value); setActiveFilterViewId(null); }}
+                          style={{ width: "100%", padding: "7px 10px", background: T.bg, border: `1px solid ${hasImageFilter !== "all" ? T.teal : T.border}`, borderRadius: 6, color: hasImageFilter !== "all" ? T.teal : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                          <option value="all">Any</option>
+                          <option value="yes">With Image</option>
+                          <option value="no">Missing Image</option>
+                        </select>
+                      </div>
+                      
+                      {/* Quick Presets */}
+                      <div style={{ gridColumn: "span 2", display: "flex", gap: 8, alignItems: "flex-end" }}>
+                        <button type="button" onClick={() => { setPriceMax("0"); setPriceMin(""); setActiveFilterViewId(null); }}
+                          style={{ padding: "7px 12px", borderRadius: 6, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          Missing Prices
+                        </button>
+                        <button type="button" onClick={() => { setHasImageFilter("no"); setActiveFilterViewId(null); }}
+                          style={{ padding: "7px 12px", borderRadius: 6, border: `1px solid ${T.orange}40`, background: `${T.orange}10`, color: T.orange, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          Missing Images
+                        </button>
+                        <button type="button" onClick={() => { setDataSourceFilter("live"); setActiveFilterViewId(null); }}
+                          style={{ padding: "7px 12px", borderRadius: 6, border: `1px solid ${T.green}40`, background: `${T.green}10`, color: T.green, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          Live Overrides
+                        </button>
+                        <button type="button" onClick={() => { setModifiedDateFilter("7d"); setActiveFilterViewId(null); }}
+                          style={{ padding: "7px 12px", borderRadius: 6, border: `1px solid ${T.blue}40`, background: `${T.blue}10`, color: T.blue, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          Recent Changes
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Save Filter View Modal */}
+                  {showSaveFilterModal && (
+                    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowSaveFilterModal(false)}>
+                      <div style={{ background: T.surface, borderRadius: 16, padding: 24, width: 360, border: `1px solid ${T.border}` }} onClick={e => e.stopPropagation()}>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 16 }}>Save Current Filters</div>
+                        <input value={newFilterViewName} onChange={e => setNewFilterViewName(e.target.value)} placeholder="Filter view name..."
+                          style={{ width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", marginBottom: 16, outline: "none", boxSizing: "border-box" }} />
+                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16, padding: 12, background: T.surfaceAlt, borderRadius: 8 }}>
+                          <div style={{ marginBottom: 4 }}>Current filters:</div>
+                          {projectCommunityFilter !== "All" && <div>• Community: {projectCommunityFilter}</div>}
+                          {projectStatusFilter !== "All" && <div>• Status: {projectStatusFilter}</div>}
+                          {tierFilter !== "All" && <div>• Tier: {tierFilter}</div>}
+                          {priceMin && <div>• Price min: AED {Number(priceMin).toLocaleString()}</div>}
+                          {priceMax && <div>• Price max: AED {Number(priceMax).toLocaleString()}</div>}
+                          {ppsfMin && <div>• PPSF min: {ppsfMin}</div>}
+                          {ppsfMax && <div>• PPSF max: {ppsfMax}</div>}
+                          {dataSourceFilter !== "all" && <div>• Source: {dataSourceFilter}</div>}
+                          {modifiedDateFilter !== "all" && <div>• Modified: {modifiedDateFilter}</div>}
+                          {hasImageFilter !== "all" && <div>• Has image: {hasImageFilter}</div>}
+                        </div>
+                        <div style={{ display: "flex", gap: 10 }}>
+                          <button type="button" onClick={() => setShowSaveFilterModal(false)}
+                            style={{ flex: 1, padding: "10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                          <button type="button" onClick={() => {
+                            if (!newFilterViewName.trim()) { notify("Enter a name"); return; }
+                            const newView = {
+                              id: Date.now(),
+                              name: newFilterViewName.trim(),
+                              filters: {
+                                community: projectCommunityFilter,
+                                status: projectStatusFilter,
+                                tier: tierFilter,
+                                priceMin, priceMax, ppsfMin, ppsfMax,
+                                dataSource: dataSourceFilter,
+                                modifiedDate: modifiedDateFilter,
+                                hasImage: hasImageFilter
+                              },
+                              color: ["#D4A843", "#10B981", "#3B82F6", "#8B5CF6", "#F97316", "#EF4444"][Math.floor(Math.random() * 6)]
+                            };
+                            const updated = [...savedFilterViews, newView];
+                            setSavedFilterViews(updated);
+                            try { localStorage.setItem("admin_savedFilterViews", JSON.stringify(updated)); } catch {}
+                            setNewFilterViewName("");
+                            setShowSaveFilterModal(false);
+                            notify("Filter view saved!");
+                          }}
+                            style={{ flex: 1, padding: "10px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Save View</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Bulk Selection Action Bar */}
                   {bulkSelected.length > 0 && (
@@ -15736,13 +16026,54 @@ export default function AdminPanel() {
                         // Deduplicate by id — safety net in case data.js has duplicates
                         const _seen = new Set();
                         const allProjects = emaarProjects.filter(p => { if (_seen.has(p.id)) return false; _seen.add(p.id); return true; });
+                        const now = new Date();
                         const filtered = allProjects
                           .filter(p => {
                             const merged = getMergedProject(p);
+                            const hasOverride = !!liveProjects[p.id];
+                            
+                            // Basic filters
                             const matchSearch = !dataSearch || (p.name||"").toLowerCase().includes(dataSearch.toLowerCase()) || (p.community||"").toLowerCase().includes(dataSearch.toLowerCase());
                             const matchCommunity = projectCommunityFilter === "All" || p.community === projectCommunityFilter;
                             const matchStatus = projectStatusFilter === "All" || (merged.status||"") === projectStatusFilter;
-                            return matchSearch && matchCommunity && matchStatus;
+                            
+                            // Advanced filters
+                            const price = merged.price || 0;
+                            const matchPriceMin = !priceMin || price >= Number(priceMin);
+                            const matchPriceMax = !priceMax || (priceMax === "0" ? price === 0 : price <= Number(priceMax));
+                            
+                            const ppsf = merged.ppsf || 0;
+                            const matchPpsfMin = !ppsfMin || ppsf >= Number(ppsfMin);
+                            const matchPpsfMax = !ppsfMax || ppsf <= Number(ppsfMax);
+                            
+                            const matchTier = tierFilter === "All" || (merged.tier||"") === tierFilter;
+                            
+                            const matchDataSource = dataSourceFilter === "all" || 
+                              (dataSourceFilter === "live" && hasOverride) || 
+                              (dataSourceFilter === "default" && !hasOverride);
+                            
+                            // Modified date filter
+                            let matchModifiedDate = true;
+                            if (modifiedDateFilter !== "all" && hasOverride && liveProjects[p.id]?.updatedAt) {
+                              const modDate = new Date(liveProjects[p.id].updatedAt);
+                              const daysDiff = (now - modDate) / (1000 * 60 * 60 * 24);
+                              if (modifiedDateFilter === "today") matchModifiedDate = daysDiff < 1;
+                              else if (modifiedDateFilter === "7d") matchModifiedDate = daysDiff <= 7;
+                              else if (modifiedDateFilter === "30d") matchModifiedDate = daysDiff <= 30;
+                              else if (modifiedDateFilter === "90d") matchModifiedDate = daysDiff <= 90;
+                            } else if (modifiedDateFilter !== "all" && !hasOverride) {
+                              matchModifiedDate = false; // Default data has no modification date
+                            }
+                            
+                            // Has image filter
+                            const hasImage = !!(merged.imageUrl || merged.image || p.image);
+                            const matchHasImage = hasImageFilter === "all" || 
+                              (hasImageFilter === "yes" && hasImage) || 
+                              (hasImageFilter === "no" && !hasImage);
+                            
+                            return matchSearch && matchCommunity && matchStatus && 
+                                   matchPriceMin && matchPriceMax && matchPpsfMin && matchPpsfMax &&
+                                   matchTier && matchDataSource && matchModifiedDate && matchHasImage;
                           })
                           .sort((a, b) => {
                             const ma = getMergedProject(a); const mb = getMergedProject(b);
@@ -15752,14 +16083,48 @@ export default function AdminPanel() {
                             if (typeof va === "number" && typeof vb === "number") return dir * (va - vb);
                             return dir * String(va).localeCompare(String(vb));
                           });
+                        
+                        // Count active filters
+                        const activeFilterCount = [
+                          dataSearch, 
+                          projectCommunityFilter !== "All", 
+                          projectStatusFilter !== "All",
+                          priceMin, priceMax, ppsfMin, ppsfMax,
+                          tierFilter !== "All",
+                          dataSourceFilter !== "all",
+                          modifiedDateFilter !== "all",
+                          hasImageFilter !== "all"
+                        ].filter(Boolean).length;
+                        
                         return (
                           <>
-                            <div style={{ padding: "6px 20px", fontSize: 11, color: T.textMuted, borderBottom: `1px solid ${T.border}`, background: T.bg }}>
-                              Showing <strong style={{ color: T.gold }}>{filtered.length}</strong> of {allProjects.length} projects
-                              {bulkSelected.length > 0 && <span style={{ marginLeft: 12, color: T.gold }}>· {bulkSelected.length} selected</span>}
-                              <button type="button" onClick={() => setBulkSelected(filtered.map(p => String(p.id)))} style={{ marginLeft: 12, fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Select All Visible</button>
-                              {bulkSelected.length > 0 && <button type="button" onClick={() => setBulkSelected([])} style={{ marginLeft: 8, fontSize: 10, color: T.red, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Deselect All</button>}
+                            <div style={{ padding: "6px 20px", fontSize: 11, color: T.textMuted, borderBottom: `1px solid ${T.border}`, background: T.bg, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                              <div>
+                                Showing <strong style={{ color: T.gold }}>{filtered.length}</strong> of {allProjects.length} projects
+                                {activeFilterCount > 0 && <span style={{ marginLeft: 8, padding: "2px 8px", borderRadius: 10, background: `${T.teal}20`, color: T.teal, fontSize: 10, fontWeight: 600 }}>{activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""}</span>}
+                                {bulkSelected.length > 0 && <span style={{ marginLeft: 12, color: T.gold }}>· {bulkSelected.length} selected</span>}
+                              </div>
+                              <div>
+                                <button type="button" onClick={() => setBulkSelected(filtered.map(p => String(p.id)))} style={{ marginLeft: 12, fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Select All Visible</button>
+                                {bulkSelected.length > 0 && <button type="button" onClick={() => setBulkSelected([])} style={{ marginLeft: 8, fontSize: 10, color: T.red, background: "none", border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Deselect All</button>}
+                              </div>
                             </div>
+                            {filtered.length === 0 && (
+                              <div style={{ padding: "40px 20px", textAlign: "center" }}>
+                                <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>🔍</div>
+                                <div style={{ fontSize: 14, fontWeight: 600, color: T.white, marginBottom: 4 }}>No projects match your filters</div>
+                                <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Try adjusting your filter criteria</div>
+                                <button type="button" onClick={() => { 
+                                  setDataSearch(""); setProjectCommunityFilter("All"); setProjectStatusFilter("All");
+                                  setPriceMin(""); setPriceMax(""); setPpsfMin(""); setPpsfMax("");
+                                  setTierFilter("All"); setDataSourceFilter("all"); setModifiedDateFilter("all");
+                                  setHasImageFilter("all"); setActiveFilterViewId(null);
+                                }}
+                                  style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                                  Clear All Filters
+                                </button>
+                              </div>
+                            )}
                             {filtered.map((p, i) => {
                         const merged = getMergedProject(p);
                         const hasOverride = !!liveProjects[p.id];
