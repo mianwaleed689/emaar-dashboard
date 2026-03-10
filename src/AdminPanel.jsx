@@ -11103,7 +11103,7 @@ export default function AdminPanel() {
   const [ppsfMin, setPpsfMin] = useState("");
   const [ppsfMax, setPpsfMax] = useState("");
   const [modifiedDateFilter, setModifiedDateFilter] = useState("all"); // all | today | 7d | 30d | 90d
-  const [tierFilter, setTierFilter] = useState("All");
+  const [projectTierFilter, setProjectTierFilter] = useState("All");
   const [dataSourceFilter, setDataSourceFilter] = useState("all"); // all | live | default
   const [hasImageFilter, setHasImageFilter] = useState("all"); // all | yes | no
   const [savedFilterViews, setSavedFilterViews] = useState(() => {
@@ -15249,7 +15249,7 @@ export default function AdminPanel() {
                                 setActiveFilterViewId(null);
                                 setProjectCommunityFilter("All");
                                 setProjectStatusFilter("All");
-                                setTierFilter("All");
+                                setProjectTierFilter("All");
                                 setPriceMin(""); setPriceMax("");
                                 setPpsfMin(""); setPpsfMax("");
                                 setDataSourceFilter("all");
@@ -15261,7 +15261,7 @@ export default function AdminPanel() {
                                 const f = view.filters;
                                 if (f.community) setProjectCommunityFilter(f.community);
                                 if (f.status) setProjectStatusFilter(f.status);
-                                if (f.tier) setTierFilter(f.tier);
+                                if (f.tier) setProjectTierFilter(f.tier);
                                 if (f.priceMin !== undefined) setPriceMin(f.priceMin);
                                 if (f.priceMax !== undefined) setPriceMax(f.priceMax);
                                 if (f.ppsfMin !== undefined) setPpsfMin(f.ppsfMin);
@@ -15356,24 +15356,24 @@ export default function AdminPanel() {
                       style={{ 
                         display: "flex", alignItems: "center", gap: 5,
                         padding: "8px 12px", borderRadius: 8, 
-                        border: `1px solid ${showAdvancedFilters || priceMin || priceMax || ppsfMin || ppsfMax || tierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all" ? T.teal : T.border}`,
+                        border: `1px solid ${showAdvancedFilters || priceMin || priceMax || ppsfMin || ppsfMax || projectTierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all" ? T.teal : T.border}`,
                         background: showAdvancedFilters ? `${T.teal}15` : "transparent",
-                        color: showAdvancedFilters || priceMin || priceMax || ppsfMin || ppsfMax || tierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all" ? T.teal : T.textMuted,
+                        color: showAdvancedFilters || priceMin || priceMax || ppsfMin || ppsfMax || projectTierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all" ? T.teal : T.textMuted,
                         fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif"
                       }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                       Filters
-                      {(priceMin || priceMax || ppsfMin || ppsfMax || tierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all") && (
+                      {(priceMin || priceMax || ppsfMin || ppsfMax || projectTierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all") && (
                         <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.teal }} />
                       )}
                     </button>
                     
                     {/* Clear All Filters */}
-                    {(dataSearch || projectCommunityFilter !== "All" || projectStatusFilter !== "All" || priceMin || priceMax || ppsfMin || ppsfMax || tierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all") && (
+                    {(dataSearch || projectCommunityFilter !== "All" || projectStatusFilter !== "All" || priceMin || priceMax || ppsfMin || ppsfMax || projectTierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all") && (
                       <button type="button" onClick={() => { 
                         setDataSearch(""); setProjectCommunityFilter("All"); setProjectStatusFilter("All");
                         setPriceMin(""); setPriceMax(""); setPpsfMin(""); setPpsfMax("");
-                        setTierFilter("All"); setDataSourceFilter("all"); setModifiedDateFilter("all");
+                        setProjectTierFilter("All"); setDataSourceFilter("all"); setModifiedDateFilter("all");
                         setHasImageFilter("all"); setActiveFilterViewId(null);
                       }}
                         style={{ padding: "8px 12px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, color: T.red, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" }}>
@@ -15416,8 +15416,8 @@ export default function AdminPanel() {
                       {/* Tier Filter */}
                       <div>
                         <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Tier</label>
-                        <select value={tierFilter} onChange={e => { setTierFilter(e.target.value); setActiveFilterViewId(null); }}
-                          style={{ width: "100%", padding: "7px 10px", background: T.bg, border: `1px solid ${tierFilter !== "All" ? T.teal : T.border}`, borderRadius: 6, color: tierFilter !== "All" ? T.teal : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                        <select value={projectTierFilter} onChange={e => { setProjectTierFilter(e.target.value); setActiveFilterViewId(null); }}
+                          style={{ width: "100%", padding: "7px 10px", background: T.bg, border: `1px solid ${projectTierFilter !== "All" ? T.teal : T.border}`, borderRadius: 6, color: projectTierFilter !== "All" ? T.teal : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
                           <option value="All">All Tiers</option>
                           {["Affordable", "Mid-Market", "Mid-Premium", "Premium", "Luxury", "Ultra-Luxury", "Luxury Branded", "Ultra-Lux Branded"].map(t => (
                             <option key={t} value={t}>{t}</option>
@@ -15493,7 +15493,7 @@ export default function AdminPanel() {
                           <div style={{ marginBottom: 4 }}>Current filters:</div>
                           {projectCommunityFilter !== "All" && <div>• Community: {projectCommunityFilter}</div>}
                           {projectStatusFilter !== "All" && <div>• Status: {projectStatusFilter}</div>}
-                          {tierFilter !== "All" && <div>• Tier: {tierFilter}</div>}
+                          {projectTierFilter !== "All" && <div>• Tier: {projectTierFilter}</div>}
                           {priceMin && <div>• Price min: AED {Number(priceMin).toLocaleString()}</div>}
                           {priceMax && <div>• Price max: AED {Number(priceMax).toLocaleString()}</div>}
                           {ppsfMin && <div>• PPSF min: {ppsfMin}</div>}
@@ -15513,7 +15513,7 @@ export default function AdminPanel() {
                               filters: {
                                 community: projectCommunityFilter,
                                 status: projectStatusFilter,
-                                tier: tierFilter,
+                                tier: projectTierFilter,
                                 priceMin, priceMax, ppsfMin, ppsfMax,
                                 dataSource: dataSourceFilter,
                                 modifiedDate: modifiedDateFilter,
@@ -16046,7 +16046,7 @@ export default function AdminPanel() {
                             const matchPpsfMin = !ppsfMin || ppsf >= Number(ppsfMin);
                             const matchPpsfMax = !ppsfMax || ppsf <= Number(ppsfMax);
                             
-                            const matchTier = tierFilter === "All" || (merged.tier||"") === tierFilter;
+                            const matchTier = projectTierFilter === "All" || (merged.tier||"") === projectTierFilter;
                             
                             const matchDataSource = dataSourceFilter === "all" || 
                               (dataSourceFilter === "live" && hasOverride) || 
@@ -16090,7 +16090,7 @@ export default function AdminPanel() {
                           projectCommunityFilter !== "All", 
                           projectStatusFilter !== "All",
                           priceMin, priceMax, ppsfMin, ppsfMax,
-                          tierFilter !== "All",
+                          projectTierFilter !== "All",
                           dataSourceFilter !== "all",
                           modifiedDateFilter !== "all",
                           hasImageFilter !== "all"
@@ -16117,7 +16117,7 @@ export default function AdminPanel() {
                                 <button type="button" onClick={() => { 
                                   setDataSearch(""); setProjectCommunityFilter("All"); setProjectStatusFilter("All");
                                   setPriceMin(""); setPriceMax(""); setPpsfMin(""); setPpsfMax("");
-                                  setTierFilter("All"); setDataSourceFilter("all"); setModifiedDateFilter("all");
+                                  setProjectTierFilter("All"); setDataSourceFilter("all"); setModifiedDateFilter("all");
                                   setHasImageFilter("all"); setActiveFilterViewId(null);
                                 }}
                                   style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
