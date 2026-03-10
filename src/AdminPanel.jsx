@@ -424,6 +424,20 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   });
   const [showWidgetPreview, setShowWidgetPreview] = useState(false);
 
+  // Phase 7B: WhatsApp + Unified Inbox
+  const [whatsappConversations, setWhatsappConversations] = useState([]);
+  const [activeWhatsappId, setActiveWhatsappId] = useState(null);
+  const [whatsappMessage, setWhatsappMessage] = useState("");
+  const [channelFilter, setChannelFilter] = useState("all");
+  const [showWhatsappTemplates, setShowWhatsappTemplates] = useState(false);
+  const [whatsappTemplates] = useState([
+    { id: "welcome", name: "Welcome", content: "Hello {{name}}! Thank you for contacting DXB Analytics. How can we assist you today?" },
+    { id: "followup", name: "Follow Up", content: "Hi {{name}}, just following up on our previous conversation. Is there anything else we can help you with?" },
+    { id: "resolved", name: "Issue Resolved", content: "Hi {{name}}, we're pleased to inform you that your issue has been resolved. Please let us know if you need any further assistance." },
+    { id: "payment", name: "Payment Received", content: "Hi {{name}}, we've received your payment. Thank you! Your account has been updated." },
+    { id: "offline", name: "Offline Notice", content: "Hi {{name}}, our support team is currently offline. We'll respond within 24 hours. For urgent matters, please email support@dxbanalytics.com" },
+  ]);
+
   // Predefined tags
   const availableTags = [
     { id: "urgent", label: "Urgent", color: T.red },
@@ -973,6 +987,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     if (ticketFilter !== "all" && t.category !== ticketFilter) return false;
     if (ticketPriorityFilter !== "all" && t.priority !== ticketPriorityFilter) return false;
     if (tagFilter !== "all" && !(t.tags || []).includes(tagFilter)) return false;
+    // Channel filter
+    if (channelFilter !== "all") {
+      const ticketChannel = t.channel || "email";
+      if (ticketChannel !== channelFilter) return false;
+    }
     if (assignmentFilter !== "all") {
       if (assignmentFilter === "unassigned" && t.assignedTo) return false;
       if (assignmentFilter !== "unassigned" && t.assignedTo !== assignmentFilter) return false;
@@ -2422,6 +2441,13 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             <span style={{ fontSize: 18, fontWeight: 900, color: item.color, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>{item.value}</span>
           </div>
         ))}
+        {/* Channel indicators */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", marginLeft: "auto" }}>
+          <span style={{ fontSize: 9, color: T.textMuted }}>Channels:</span>
+          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.blue}20`, color: T.blue }}>📧 {tickets.filter(t => !t.channel || t.channel === "email").length}</span>
+          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>💬 {liveChats.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "chat").length}</span>
+          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: "#25D36620", color: "#25D366" }}>📱 {whatsappConversations.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "whatsapp").length}</span>
+        </div>
       </div>
 
       {/* SUB-TABS + FILTERS */}
@@ -2432,6 +2458,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             { id: "resolved", label: `Resolved (${tickets.filter(t => t.status === "resolved" || t.status === "closed").length})` },
             { id: "all", label: `All (${tickets.length})` },
             { id: "livechat", label: `💬 Live Chat${liveChats.filter(c => c.status === "active").length > 0 ? ` (${liveChats.filter(c => c.status === "active").length})` : ""}` },
+            { id: "whatsapp", label: `📱 WhatsApp${whatsappConversations.filter(c => c.status === "active").length > 0 ? ` (${whatsappConversations.filter(c => c.status === "active").length})` : ""}` },
             { id: "analytics", label: "📊 Analytics" },
             { id: "kb", label: "📚 KB & Tools" },
           ].map(t => (
@@ -2441,13 +2468,25 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               {t.id === "livechat" && chatQueue.length > 0 && (
                 <span style={{ position: "absolute", top: -4, right: -4, width: 16, height: 16, borderRadius: "50%", background: T.red, color: T.white, fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{chatQueue.length}</span>
               )}
+              {t.id === "whatsapp" && whatsappConversations.filter(c => !c.responded && c.status === "active").length > 0 && (
+                <span style={{ position: "absolute", top: -4, right: -4, width: 16, height: 16, borderRadius: "50%", background: "#25D366", color: T.white, fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{whatsappConversations.filter(c => !c.responded && c.status === "active").length}</span>
+              )}
             </button>
           ))}
         </div>
-        {supportSubTab !== "analytics" && supportSubTab !== "kb" && supportSubTab !== "livechat" && (
+        {supportSubTab !== "analytics" && supportSubTab !== "kb" && supportSubTab !== "livechat" && supportSubTab !== "whatsapp" && (
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <input value={ticketSearch} onChange={e => setTicketSearch(e.target.value)} placeholder="Search tickets..."
             style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, width: 160, fontFamily: "'Outfit',sans-serif" }} />
+          {/* Channel Filter */}
+          <select value={channelFilter} onChange={e => setChannelFilter(e.target.value)}
+            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${channelFilter !== "all" ? "#25D366" : T.border}`, background: T.surfaceAlt, color: channelFilter !== "all" ? "#25D366" : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+            <option value="all">All Channels</option>
+            <option value="email">📧 Email</option>
+            <option value="chat">💬 Live Chat</option>
+            <option value="whatsapp">📱 WhatsApp</option>
+            <option value="phone">📞 Phone</option>
+          </select>
           <select value={ticketFilter} onChange={e => setTicketFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Categories</option>
@@ -3382,6 +3421,294 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               style={{ marginTop: 10, padding: "8px 16px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
               📋 Copy Code
             </button>
+          </div>
+        </div>
+      ) : supportSubTab === "whatsapp" ? (
+        /* WHATSAPP MANAGEMENT */
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* WhatsApp Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#25D366", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ fontSize: 18 }}>📱</span>
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>WhatsApp Business</div>
+                  <div style={{ fontSize: 11, color: T.textMuted }}>+971 4 XXX XXXX</div>
+                </div>
+              </div>
+              <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "#25D36620", color: "#25D366", fontWeight: 600 }}>✓ Connected</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button type="button" onClick={() => setShowWhatsappTemplates(true)}
+                style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid #25D36640`, background: "#25D36610", color: "#25D366", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                📝 Message Templates
+              </button>
+            </div>
+          </div>
+
+          {/* WhatsApp Stats */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
+            {[
+              { label: "Active", value: whatsappConversations.filter(c => c.status === "active").length, color: "#25D366", icon: "💬" },
+              { label: "Unread", value: whatsappConversations.filter(c => !c.responded && c.status === "active").length, color: T.orange, icon: "🔔" },
+              { label: "Today", value: whatsappConversations.filter(c => new Date(c.createdAt) > new Date(Date.now() - 86400000)).length, color: T.teal, icon: "📊" },
+              { label: "Converted", value: whatsappConversations.filter(c => c.convertedToTicket).length, color: T.purple, icon: "🎫" },
+              { label: "Avg Response", value: "~5m", color: T.textSecondary, icon: "⏱️" },
+            ].map((stat, i) => (
+              <div key={i} style={{ padding: 16, background: T.surface, borderRadius: 10, border: `1px solid ${T.border}`, textAlign: "center" }}>
+                <div style={{ fontSize: 20, marginBottom: 4 }}>{stat.icon}</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: stat.color, fontFamily: "'Fraunces',serif" }}>{stat.value}</div>
+                <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: activeWhatsappId ? "300px 1fr" : "1fr", gap: 16 }}>
+            {/* Conversations List */}
+            <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>📱 Conversations</span>
+                  {whatsappConversations.filter(c => c.status === "active").length > 0 && (
+                    <span style={{ padding: "2px 8px", borderRadius: 10, background: "#25D36620", color: "#25D366", fontSize: 11, fontWeight: 600 }}>{whatsappConversations.filter(c => c.status === "active").length}</span>
+                  )}
+                </div>
+              </div>
+              
+              {whatsappConversations.length === 0 ? (
+                <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>📱</div>
+                  <div style={{ fontSize: 12 }}>No WhatsApp conversations</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Messages will appear here when customers contact you</div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {whatsappConversations.map(conv => {
+                    const lastMsg = conv.messages?.length > 0 ? conv.messages[conv.messages.length - 1] : null;
+                    const windowRemaining = conv.lastCustomerMessage ? Math.max(0, 24 - (Date.now() - new Date(conv.lastCustomerMessage).getTime()) / 3600000) : 0;
+                    return (
+                      <div key={conv.id} onClick={() => setActiveWhatsappId(conv.id)}
+                        style={{ padding: 12, background: activeWhatsappId === conv.id ? `#25D36615` : T.surfaceAlt, borderRadius: 10, border: `1px solid ${activeWhatsappId === conv.id ? "#25D366" : conv.responded ? T.border : "#25D36640"}`, cursor: "pointer", transition: "all 0.15s" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div style={{ width: 32, height: 32, borderRadius: "50%", background: `#25D36620`, display: "flex", alignItems: "center", justifyContent: "center", color: "#25D366", fontWeight: 700, fontSize: 12 }}>
+                              {(conv.customerName || "W")[0].toUpperCase()}
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{conv.customerName || "Unknown"}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>{conv.phoneNumber}</div>
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                            <span style={{ fontSize: 9, color: T.textMuted }}>{timeAgo(lastMsg?.at || conv.createdAt)}</span>
+                            {!conv.responded && <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#25D366" }} />}
+                          </div>
+                        </div>
+                        {lastMsg && (
+                          <div style={{ fontSize: 11, color: lastMsg.from === "customer" ? T.textSecondary : T.textMuted, marginBottom: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {lastMsg.from === "agent" ? "You: " : ""}{lastMsg.text}
+                          </div>
+                        )}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold, textTransform: "uppercase" }}>{conv.customerTier || "free"}</span>
+                          {windowRemaining > 0 ? (
+                            <span style={{ fontSize: 9, color: windowRemaining < 4 ? T.orange : T.textMuted }}>⏱️ {Math.round(windowRemaining)}h window</span>
+                          ) : (
+                            <span style={{ fontSize: 9, color: T.red }}>⚠️ Window expired</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Demo: Add WhatsApp Conversation */}
+              <button type="button" onClick={() => {
+                const demoCustomers = [
+                  { name: "Sarah M.", phone: "+971 50 123 4567", tier: "pro", msg: "Hi, I need help with my subscription" },
+                  { name: "Ahmed K.", phone: "+971 55 987 6543", tier: "enterprise", msg: "Urgent: Can't access my dashboard" },
+                  { name: "Mike T.", phone: "+971 52 456 7890", tier: "free", msg: "How do I upgrade my account?" },
+                  { name: "Fatima R.", phone: "+971 54 321 0987", tier: "pro", msg: "Question about the API limits" },
+                ];
+                const demo = demoCustomers[Math.floor(Math.random() * demoCustomers.length)];
+                const newConv = {
+                  id: `wa_${Date.now()}`,
+                  customerName: demo.name,
+                  phoneNumber: demo.phone,
+                  customerTier: demo.tier,
+                  messages: [{ from: "customer", text: demo.msg, at: new Date().toISOString() }],
+                  lastCustomerMessage: new Date().toISOString(),
+                  createdAt: new Date().toISOString(),
+                  status: "active",
+                  responded: false,
+                  channel: "whatsapp"
+                };
+                setWhatsappConversations(prev => [newConv, ...prev]);
+                notify("New WhatsApp message!");
+              }}
+                style={{ marginTop: 12, width: "100%", padding: "8px 12px", borderRadius: 6, border: `1px dashed ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
+                + Simulate WhatsApp Message (Demo)
+              </button>
+            </div>
+
+            {/* Active Conversation Window */}
+            {activeWhatsappId && (() => {
+              const conv = whatsappConversations.find(c => c.id === activeWhatsappId);
+              if (!conv) return null;
+              const windowRemaining = conv.lastCustomerMessage ? Math.max(0, 24 - (Date.now() - new Date(conv.lastCustomerMessage).getTime()) / 3600000) : 0;
+              const canSendFreeform = windowRemaining > 0;
+              
+              return (
+                <div style={{ display: "flex", flexDirection: "column", background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                  {/* Conversation Header */}
+                  <div style={{ padding: "12px 16px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: "#25D36608" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#25D36620", display: "flex", alignItems: "center", justifyContent: "center", color: "#25D366", fontWeight: 700, fontSize: 16 }}>
+                        {(conv.customerName || "W")[0].toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: T.white }}>{conv.customerName}</div>
+                        <div style={{ fontSize: 11, color: T.textMuted, display: "flex", alignItems: "center", gap: 6 }}>
+                          <span>{conv.phoneNumber}</span>
+                          <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold, textTransform: "uppercase" }}>{conv.customerTier}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      {/* 24hr Window Indicator */}
+                      <div style={{ padding: "6px 10px", borderRadius: 6, background: canSendFreeform ? `${T.green}15` : `${T.red}15`, border: `1px solid ${canSendFreeform ? T.green : T.red}30` }}>
+                        <div style={{ fontSize: 9, color: T.textMuted }}>24hr Window</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: canSendFreeform ? T.green : T.red, fontFamily: "'Fraunces',serif" }}>
+                          {canSendFreeform ? `${Math.floor(windowRemaining)}h ${Math.round((windowRemaining % 1) * 60)}m left` : "Expired"}
+                        </div>
+                      </div>
+                      <button type="button" onClick={() => setActiveWhatsappId(null)}
+                        style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
+                        ← Back
+                      </button>
+                      <button type="button" onClick={async () => {
+                        // Convert to ticket
+                        const ticketData = {
+                          userId: conv.customerId || "guest",
+                          userEmail: conv.customerEmail || `${conv.phoneNumber.replace(/\s/g, "")}@whatsapp`,
+                          userName: conv.customerName || "WhatsApp User",
+                          userTier: conv.customerTier || "free",
+                          subject: conv.messages?.[0]?.text || "WhatsApp Conversation",
+                          category: "general",
+                          priority: "normal",
+                          status: "open",
+                          channel: "whatsapp",
+                          phoneNumber: conv.phoneNumber,
+                          whatsappId: conv.id,
+                          messages: conv.messages.map(m => ({ from: m.from === "customer" ? "user" : "admin", text: m.text, at: m.at, by: m.from === "agent" ? adminUser?.email : conv.customerEmail })),
+                          createdAt: new Date().toISOString()
+                        };
+                        try {
+                          const docRef = await addDoc(collection(db, "supportTickets"), ticketData);
+                          setTickets(prev => [{ id: docRef.id, ...ticketData }, ...prev]);
+                          setWhatsappConversations(prev => prev.map(c => c.id === conv.id ? { ...c, convertedToTicket: docRef.id } : c));
+                          notify("Converted to ticket #" + docRef.id.slice(0, 6));
+                        } catch (e) { notify("Error: " + e.message); }
+                      }}
+                        style={{ padding: "6px 10px", borderRadius: 5, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
+                        🎫 Convert to Ticket
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Messages */}
+                  <div style={{ flex: 1, padding: 16, overflowY: "auto", maxHeight: 350, display: "flex", flexDirection: "column", gap: 10, background: "#f0f2f5" }}>
+                    {(conv.messages || []).map((msg, i) => (
+                      <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.from === "agent" ? "flex-end" : "flex-start" }}>
+                        <div style={{ maxWidth: "80%", padding: "10px 14px", borderRadius: 8, background: msg.from === "agent" ? "#DCF8C6" : "#fff", color: "#111", fontSize: 13, lineHeight: 1.5, boxShadow: "0 1px 2px rgba(0,0,0,0.1)" }}>
+                          {msg.text}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
+                          <span style={{ fontSize: 9, color: "#667781" }}>
+                            {new Date(msg.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                          {msg.from === "agent" && <span style={{ fontSize: 9, color: "#53BDEB" }}>✓✓</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Message Input */}
+                  <div style={{ padding: 12, borderTop: `1px solid ${T.border}`, background: T.surface }}>
+                    {!canSendFreeform && (
+                      <div style={{ padding: 10, background: `${T.orange}10`, borderRadius: 8, marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 16 }}>⚠️</span>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: T.orange }}>24-hour window expired</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>You can only send pre-approved template messages. Click "Templates" below.</div>
+                        </div>
+                      </div>
+                    )}
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <button type="button" onClick={() => setShowWhatsappTemplates(true)}
+                        style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid #25D36640`, background: "#25D36610", color: "#25D366", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                        📝 Templates
+                      </button>
+                      <input value={whatsappMessage} onChange={e => setWhatsappMessage(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter" && whatsappMessage.trim() && canSendFreeform) {
+                            setWhatsappConversations(prev => prev.map(c => c.id === conv.id ? { ...c, messages: [...(c.messages || []), { from: "agent", text: whatsappMessage, at: new Date().toISOString() }], responded: true } : c));
+                            setWhatsappMessage("");
+                          }
+                        }}
+                        placeholder={canSendFreeform ? "Type a message..." : "Use a template message"}
+                        disabled={!canSendFreeform}
+                        style={{ flex: 1, padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: canSendFreeform ? T.bg : T.surfaceAlt, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", opacity: canSendFreeform ? 1 : 0.5 }} />
+                      <button type="button" onClick={() => {
+                        if (!whatsappMessage.trim() || !canSendFreeform) return;
+                        setWhatsappConversations(prev => prev.map(c => c.id === conv.id ? { ...c, messages: [...(c.messages || []), { from: "agent", text: whatsappMessage, at: new Date().toISOString() }], responded: true } : c));
+                        setWhatsappMessage("");
+                      }}
+                        disabled={!whatsappMessage.trim() || !canSendFreeform}
+                        style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: whatsappMessage.trim() && canSendFreeform ? "#25D366" : T.border, color: "#fff", fontSize: 13, fontWeight: 700, cursor: whatsappMessage.trim() && canSendFreeform ? "pointer" : "not-allowed" }}>
+                        Send
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Simulate customer reply */}
+                  <div style={{ padding: "8px 12px", borderTop: `1px solid ${T.border}`, background: T.surfaceAlt }}>
+                    <button type="button" onClick={() => {
+                      const replies = ["Thanks for the quick response!", "Can you help me with something else?", "That worked, thank you!", "I'm still having the same issue", "When will this be fixed?"];
+                      const reply = replies[Math.floor(Math.random() * replies.length)];
+                      setWhatsappConversations(prev => prev.map(c => c.id === conv.id ? { ...c, messages: [...(c.messages || []), { from: "customer", text: reply, at: new Date().toISOString() }], lastCustomerMessage: new Date().toISOString(), responded: false } : c));
+                    }}
+                      style={{ width: "100%", padding: "6px 12px", borderRadius: 5, border: `1px dashed ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
+                      📱 Simulate Customer Reply (Demo)
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* WhatsApp API Info */}
+          <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 8 }}>📱 WhatsApp Business API</div>
+                <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.6 }}>
+                  Connected via Meta Business API. Messages from customers open a 24-hour free-form messaging window.<br />
+                  Outside this window, you must use pre-approved message templates.
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                  ⚙️ API Settings
+                </button>
+                <button type="button" style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                  📊 Delivery Reports
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       ) : supportSubTab === "kb" ? (
@@ -5450,6 +5777,79 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             
             <div style={{ marginTop: 16, textAlign: "center" }}>
               <span style={{ fontSize: 11, color: T.textMuted }}>This is how the widget will appear on your website</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp Templates Modal */}
+      {showWhatsappTemplates && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9100, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowWhatsappTemplates(false)}>
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid #25D36630`, padding: 24, width: "100%", maxWidth: 550, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 24 }}>📱</span>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
+                    WhatsApp Message Templates
+                  </h3>
+                  <div style={{ fontSize: 11, color: T.textMuted }}>Pre-approved templates for out-of-window messaging</div>
+                </div>
+              </div>
+              <button type="button" onClick={() => setShowWhatsappTemplates(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+            </div>
+            
+            <div style={{ padding: 12, background: `${T.teal}10`, borderRadius: 8, marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <span style={{ fontSize: 16 }}>💡</span>
+              <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>
+                These templates are pre-approved by Meta for WhatsApp Business API. Use <code style={{ background: T.surface, padding: "1px 4px", borderRadius: 3 }}>{"{{name}}"}</code> for customer's name.
+                {activeWhatsappId && " Click a template to send it to the current conversation."}
+              </div>
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {whatsappTemplates.map(template => {
+                const activeConv = whatsappConversations.find(c => c.id === activeWhatsappId);
+                const previewContent = activeConv ? template.content.replace("{{name}}", activeConv.customerName?.split(" ")[0] || "there") : template.content;
+                
+                return (
+                  <div key={template.id} 
+                    onClick={() => {
+                      if (activeConv) {
+                        const content = template.content.replace("{{name}}", activeConv.customerName?.split(" ")[0] || "there");
+                        setWhatsappConversations(prev => prev.map(c => c.id === activeWhatsappId ? { ...c, messages: [...(c.messages || []), { from: "agent", text: content, at: new Date().toISOString() }], responded: true } : c));
+                        setShowWhatsappTemplates(false);
+                        notify("Template sent!");
+                      }
+                    }}
+                    style={{ padding: 14, background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, cursor: activeConv ? "pointer" : "default", transition: "all 0.15s" }}
+                    onMouseEnter={e => activeConv && (e.currentTarget.style.borderColor = "#25D366")}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{template.name}</span>
+                      <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 4, background: "#25D36620", color: "#25D366" }}>✓ Approved</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5, padding: 10, background: T.surface, borderRadius: 6, borderLeft: `3px solid #25D366` }}>
+                      {previewContent}
+                    </div>
+                    {activeConv && (
+                      <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
+                        <span style={{ fontSize: 10, color: "#25D366" }}>Click to send →</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div style={{ marginTop: 20, padding: 12, background: T.surfaceAlt, borderRadius: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, marginBottom: 6 }}>📝 Create Custom Template</div>
+              <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.5 }}>
+                Custom templates must be submitted to Meta for approval. This process typically takes 24-48 hours.
+              </div>
+              <button type="button" style={{ marginTop: 10, padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 11, cursor: "pointer" }}>
+                + Submit New Template
+              </button>
             </div>
           </div>
         </div>
