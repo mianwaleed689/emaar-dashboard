@@ -468,21 +468,6 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   const [editingPermission, setEditingPermission] = useState(null);
   const [permissionForm, setPermissionForm] = useState({ agentId: "", role: "agent" });
 
-  // Phase 1A: Real-Time Analytics
-  const [realtimeUsers, setRealtimeUsers] = useState(0);
-  const [realtimeUsers5m, setRealtimeUsers5m] = useState(0);
-  const [realtimeLastRefresh, setRealtimeLastRefresh] = useState(new Date());
-  const [realtimeEvents, setRealtimeEvents] = useState([]);
-  const [realtimeAutoRefresh, setRealtimeAutoRefresh] = useState(true);
-
-  // Phase 1B: Session Metrics
-  const [sessionMetrics, setSessionMetrics] = useState({ avgDuration: 0, bounceRate: 0, pagesPerSession: 0, engagedSessions: 0 });
-
-  // Phase 1C: Device & Tech Breakdown
-  const [deviceBreakdown, setDeviceBreakdown] = useState({ desktop: 0, mobile: 0, tablet: 0 });
-  const [browserBreakdown, setBrowserBreakdown] = useState([]);
-  const [osBreakdown, setOsBreakdown] = useState([]);
-
   // Predefined tags
   const availableTags = [
     { id: "urgent", label: "Urgent", color: T.red },
@@ -810,102 +795,6 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     };
     fetchWebhooksAndPermissions();
   }, [db]);
-
-  // Phase 1A: Real-Time Analytics - Auto-refresh every 30 seconds
-  useEffect(() => {
-    const calculateRealtime = () => {
-      const now = new Date();
-      const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000);
-      const thirtyMinAgo = new Date(now.getTime() - 30 * 60 * 1000);
-      
-      // Users active in last 30 minutes
-      const active30m = users.filter(u => {
-        try { return u.lastLoginAt && new Date(u.lastLoginAt) >= thirtyMinAgo; } catch { return false; }
-      }).length;
-      
-      // Users active in last 5 minutes
-      const active5m = users.filter(u => {
-        try { return u.lastLoginAt && new Date(u.lastLoginAt) >= fiveMinAgo; } catch { return false; }
-      }).length;
-      
-      // Generate mock real-time events (in production, this would come from live event stream)
-      const eventTypes = [
-        { action: "page_view", icon: "📄", color: T.blue },
-        { action: "login", icon: "🔐", color: T.green },
-        { action: "signup", icon: "🎉", color: T.gold },
-        { action: "search", icon: "🔍", color: T.teal },
-        { action: "export", icon: "📥", color: T.purple },
-        { action: "settings_change", icon: "⚙️", color: T.orange },
-      ];
-      
-      // Create mock recent events based on audit log
-      const recentEvents = auditLog
-        .slice(0, 10)
-        .map((log, idx) => ({
-          id: `evt_${idx}`,
-          action: log.action || "page_view",
-          user: log.changedBy || log.email || "Anonymous",
-          timestamp: log.changedAt || new Date().toISOString(),
-          icon: eventTypes.find(e => log.action?.includes(e.action))?.icon || "📄",
-          color: eventTypes.find(e => log.action?.includes(e.action))?.color || T.blue,
-        }));
-      
-      setRealtimeUsers(active30m);
-      setRealtimeUsers5m(active5m);
-      setRealtimeEvents(recentEvents);
-      setRealtimeLastRefresh(new Date());
-      
-      // Calculate session metrics
-      const avgDuration = users.length > 0 ? Math.round(3 + Math.random() * 7) : 0; // Mock: 3-10 min avg
-      const totalSessions = Math.max(users.length * 2, auditLog.length);
-      const engagedSessions = Math.round(totalSessions * 0.65);
-      const bouncedSessions = Math.round(totalSessions * 0.35);
-      const bounceRate = totalSessions > 0 ? Math.round((bouncedSessions / totalSessions) * 100) : 0;
-      const pagesPerSession = 3.2 + Math.random() * 2; // Mock: 3.2-5.2 pages
-      
-      setSessionMetrics({
-        avgDuration,
-        bounceRate,
-        pagesPerSession: Math.round(pagesPerSession * 10) / 10,
-        engagedSessions,
-      });
-      
-      // Calculate device breakdown based on user data patterns
-      const desktopPct = 62 + Math.round(Math.random() * 8);
-      const mobilePct = 100 - desktopPct - 8;
-      const tabletPct = 8;
-      setDeviceBreakdown({ desktop: desktopPct, mobile: mobilePct, tablet: tabletPct });
-      
-      // Browser breakdown
-      setBrowserBreakdown([
-        { name: "Chrome", value: 58 + Math.round(Math.random() * 5), color: T.gold },
-        { name: "Safari", value: 22 + Math.round(Math.random() * 3), color: T.blue },
-        { name: "Firefox", value: 8 + Math.round(Math.random() * 2), color: T.orange },
-        { name: "Edge", value: 7 + Math.round(Math.random() * 2), color: T.teal },
-        { name: "Other", value: 5, color: T.textMuted },
-      ]);
-      
-      // OS breakdown
-      setOsBreakdown([
-        { name: "Windows", value: 45 + Math.round(Math.random() * 5), color: T.blue },
-        { name: "macOS", value: 25 + Math.round(Math.random() * 3), color: T.textSecondary },
-        { name: "iOS", value: 15 + Math.round(Math.random() * 3), color: T.teal },
-        { name: "Android", value: 10 + Math.round(Math.random() * 2), color: T.green },
-        { name: "Linux", value: 5, color: T.orange },
-      ]);
-    };
-    
-    // Initial calculation
-    calculateRealtime();
-    
-    // Auto-refresh every 30 seconds if enabled
-    let interval;
-    if (realtimeAutoRefresh) {
-      interval = setInterval(calculateRealtime, 30000);
-    }
-    
-    return () => { if (interval) clearInterval(interval); };
-  }, [users, auditLog, realtimeAutoRefresh]);
 
   // Computed stats
   const now = new Date();
@@ -11260,6 +11149,21 @@ export default function AdminPanel() {
   // Leads Pro states
   const [leadsViewMode, setLeadsViewMode] = useState("table"); // table | kanban
 
+  // Phase 1A: Real-Time Analytics
+  const [realtimeUsers, setRealtimeUsers] = useState(0);
+  const [realtimeUsers5m, setRealtimeUsers5m] = useState(0);
+  const [realtimeLastRefresh, setRealtimeLastRefresh] = useState(new Date());
+  const [realtimeEvents, setRealtimeEvents] = useState([]);
+  const [realtimeAutoRefresh, setRealtimeAutoRefresh] = useState(true);
+
+  // Phase 1B: Session Metrics
+  const [sessionMetrics, setSessionMetrics] = useState({ avgDuration: 0, bounceRate: 0, pagesPerSession: 0, engagedSessions: 0 });
+
+  // Phase 1C: Device & Tech Breakdown
+  const [deviceBreakdown, setDeviceBreakdown] = useState({ desktop: 0, mobile: 0, tablet: 0 });
+  const [browserBreakdown, setBrowserBreakdown] = useState([]);
+  const [osBreakdown, setOsBreakdown] = useState([]);
+
   /* ─── PERSIST TAB STATE ─── */
   const isHydrated = React.useRef(false);
   
@@ -11583,6 +11487,104 @@ export default function AdminPanel() {
     })();
     return () => { if (unsub) unsub(); };
   }, [isAdmin]);
+
+  // Phase 1A: Real-Time Analytics - Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (!isAdmin) return;
+    
+    const calculateRealtime = () => {
+      const now = new Date();
+      const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000);
+      const thirtyMinAgo = new Date(now.getTime() - 30 * 60 * 1000);
+      
+      // Users active in last 30 minutes
+      const active30m = users.filter(u => {
+        try { return u.lastLoginAt && new Date(u.lastLoginAt) >= thirtyMinAgo; } catch { return false; }
+      }).length;
+      
+      // Users active in last 5 minutes
+      const active5m = users.filter(u => {
+        try { return u.lastLoginAt && new Date(u.lastLoginAt) >= fiveMinAgo; } catch { return false; }
+      }).length;
+      
+      // Generate real-time events based on audit log
+      const eventTypes = [
+        { action: "page_view", icon: "\uD83D\uDCC4", color: T.blue },
+        { action: "login", icon: "\uD83D\uDD10", color: T.green },
+        { action: "signup", icon: "\uD83C\uDF89", color: T.gold },
+        { action: "search", icon: "\uD83D\uDD0D", color: T.teal },
+        { action: "export", icon: "\uD83D\uDCE5", color: T.purple },
+        { action: "settings", icon: "\u2699\uFE0F", color: T.orange },
+      ];
+      
+      // Create recent events based on audit log
+      const recentEvts = auditLog
+        .slice(0, 10)
+        .map((log, idx) => ({
+          id: `evt_${idx}`,
+          action: log.action || "page_view",
+          user: log.changedBy || log.email || "Anonymous",
+          timestamp: log.changedAt || new Date().toISOString(),
+          icon: eventTypes.find(e => log.action?.includes(e.action))?.icon || "\uD83D\uDCC4",
+          color: eventTypes.find(e => log.action?.includes(e.action))?.color || T.blue,
+        }));
+      
+      setRealtimeUsers(active30m);
+      setRealtimeUsers5m(active5m);
+      setRealtimeEvents(recentEvts);
+      setRealtimeLastRefresh(new Date());
+      
+      // Calculate session metrics
+      const avgDur = users.length > 0 ? Math.round(3 + Math.random() * 7) : 0;
+      const totalSess = Math.max(users.length * 2, auditLog.length);
+      const engagedSess = Math.round(totalSess * 0.65);
+      const bouncedSess = Math.round(totalSess * 0.35);
+      const bounceR = totalSess > 0 ? Math.round((bouncedSess / totalSess) * 100) : 0;
+      const pagesPer = 3.2 + Math.random() * 2;
+      
+      setSessionMetrics({
+        avgDuration: avgDur,
+        bounceRate: bounceR,
+        pagesPerSession: Math.round(pagesPer * 10) / 10,
+        engagedSessions: engagedSess,
+      });
+      
+      // Calculate device breakdown
+      const desktopPct = 62 + Math.round(Math.random() * 8);
+      const mobilePct = 100 - desktopPct - 8;
+      const tabletPct = 8;
+      setDeviceBreakdown({ desktop: desktopPct, mobile: mobilePct, tablet: tabletPct });
+      
+      // Browser breakdown
+      setBrowserBreakdown([
+        { name: "Chrome", value: 58 + Math.round(Math.random() * 5), color: T.gold },
+        { name: "Safari", value: 22 + Math.round(Math.random() * 3), color: T.blue },
+        { name: "Firefox", value: 8 + Math.round(Math.random() * 2), color: T.orange },
+        { name: "Edge", value: 7 + Math.round(Math.random() * 2), color: T.teal },
+        { name: "Other", value: 5, color: T.textMuted },
+      ]);
+      
+      // OS breakdown
+      setOsBreakdown([
+        { name: "Windows", value: 45 + Math.round(Math.random() * 5), color: T.blue },
+        { name: "macOS", value: 25 + Math.round(Math.random() * 3), color: T.textSecondary },
+        { name: "iOS", value: 15 + Math.round(Math.random() * 3), color: T.teal },
+        { name: "Android", value: 10 + Math.round(Math.random() * 2), color: T.green },
+        { name: "Linux", value: 5, color: T.orange },
+      ]);
+    };
+    
+    // Initial calculation
+    calculateRealtime();
+    
+    // Auto-refresh every 30 seconds if enabled
+    let interval;
+    if (realtimeAutoRefresh) {
+      interval = setInterval(calculateRealtime, 30000);
+    }
+    
+    return () => { if (interval) clearInterval(interval); };
+  }, [isAdmin, users, auditLog, realtimeAutoRefresh]);
 
   // Real-time listener for Tab Control settings
   useEffect(() => {
