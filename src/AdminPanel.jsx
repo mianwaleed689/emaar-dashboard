@@ -11134,6 +11134,11 @@ export default function AdminPanel() {
   // Data Quality Score states
   const [showDataQualityPanel, setShowDataQualityPanel] = useState(false);
   const [qualityFilter, setQualityFilter] = useState("all"); // all | excellent | good | fair | poor
+  
+  // Data Intelligence & Automation states
+  const [showDataIntelPanel, setShowDataIntelPanel] = useState(false);
+  const [stalenessFilter, setStalenessFilter] = useState("all"); // all | fresh | stale30 | stale60 | stale90
+  const [showDuplicatesModal, setShowDuplicatesModal] = useState(false);
 
   /* ─── KYC VERIFICATION STATE ─── */
   const [verifications, setVerifications] = useState([]);
@@ -12148,6 +12153,133 @@ export default function AdminPanel() {
       fieldRates,
       grade: avgScore >= 90 ? "excellent" : avgScore >= 70 ? "good" : avgScore >= 50 ? "fair" : "poor",
       color: avgScore >= 90 ? "#10B981" : avgScore >= 70 ? "#3B82F6" : avgScore >= 50 ? "#F97316" : "#EF4444"
+    };
+  };
+  
+  // ═══════════════════════════════════════
+  // DATA INTELLIGENCE & AUTOMATION
+  // ═══════════════════════════════════════
+  
+  // Calculate data staleness for a project
+  const calculateStaleness = (project) => {
+    const liveData = liveProjects[project.id];
+    if (!liveData || !liveData.updatedAt) {
+      return { days: null, status: "never", color: T.textMuted, label: "Never updated" };
+    }
+    const updatedDate = new Date(liveData.updatedAt);
+    const now = new Date();
+    const days = Math.floor((now - updatedDate) / (1000 * 60 * 60 * 24));
+    
+    if (days <= 7) return { days, status: "fresh", color: "#10B981", label: "Fresh" };
+    if (days <= 30) return { days, status: "recent", color: "#3B82F6", label: "Recent" };
+    if (days <= 60) return { days, status: "stale30", color: "#F97316", label: "30+ days" };
+    if (days <= 90) return { days, status: "stale60", color: "#EF4444", label: "60+ days" };
+    return { days, status: "stale90", color: "#7F1D1D", label: "90+ days" };
+  };
+  
+  // Find potential duplicate projects
+  const findDuplicates = () => {
+    const duplicates = [];
+    const seen = new Map();
+    
+    emaarProjects.forEach(p => {
+      const merged = getMergedProject(p);
+      
+      // Check for similar names (lowercase, remove common words)
+      const normalizedName = (p.name || "").toLowerCase()
+        .replace(/the |by emaar|emaar |residences|residence|towers|tower|apartments|apartment/g, "")
+        .replace(/\s+/g, " ").trim();
+      
+      if (normalizedName.length > 3) {
+        if (seen.has(normalizedName)) {
+          duplicates.push({
+            type: "name",
+            project1: seen.get(normalizedName),
+            project2: p,
+            reason: `Similar name: "${p.name}"`
+          });
+        } else {
+          seen.set(normalizedName, p);
+        }
+      }
+      
+      // Check for identical price + community combo
+      if (merged.price && merged.price > 0) {
+        const priceKey = `${p.community}_${merged.price}`;
+        if (seen.has(priceKey)) {
+          const existing = seen.get(priceKey);
+          if (existing.id !== p.id) {
+            duplicates.push({
+              type: "price",
+              project1: existing,
+              project2: p,
+              reason: `Same price (${merged.price.toLocaleString()}) in ${p.community}`
+            });
+          }
+        } else {
+          seen.set(priceKey, p);
+        }
+      }
+    });
+    
+    return duplicates;
+  };
+  
+  // Calculate data intelligence summary
+  const calculateDataIntel = () => {
+    if (!emaarProjects || emaarProjects.length === 0) return null;
+    
+    const now = new Date();
+    const stalenessStats = { fresh: 0, recent: 0, stale30: 0, stale60: 0, stale90: 0, never: 0 };
+    const recentChanges = [];
+    
+    emaarProjects.forEach(p => {
+      const staleness = calculateStaleness(p);
+      stalenessStats[staleness.status]++;
+      
+      const liveData = liveProjects[p.id];
+      if (liveData?.updatedAt) {
+        const days = Math.floor((now - new Date(liveData.updatedAt)) / (1000 * 60 * 60 * 24));
+        if (days <= 7) {
+          recentChanges.push({
+            project: p,
+            updatedAt: liveData.updatedAt,
+            updatedBy: liveData.updatedBy,
+            days
+          });
+        }
+      }
+    });
+    
+    // Sort recent changes by date (newest first)
+    recentChanges.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    
+    // Find duplicates
+    const duplicates = findDuplicates();
+    
+    // Data integrity issues
+    const integrityIssues = [];
+    emaarProjects.forEach(p => {
+      const merged = getMergedProject(p);
+      const issues = [];
+      
+      if (!merged.price || merged.price === 0) issues.push("Missing price");
+      if (!merged.status) issues.push("Missing status");
+      if (merged.ppsf && merged.price && merged.ppsf > merged.price) issues.push("PPSF > Price (invalid)");
+      if (merged.construction && (merged.construction < 0 || merged.construction > 100)) issues.push("Invalid construction %");
+      
+      if (issues.length > 0) {
+        integrityIssues.push({ project: p, issues });
+      }
+    });
+    
+    return {
+      staleness: stalenessStats,
+      recentChanges: recentChanges.slice(0, 10), // Top 10
+      duplicates,
+      integrityIssues,
+      totalLive: Object.keys(liveProjects).length,
+      totalDefault: emaarProjects.length - Object.keys(liveProjects).length
     };
   };
 
@@ -15381,9 +15513,9 @@ export default function AdminPanel() {
                   {/* Search */}
                   <TabHelp items={[
                     { icon: "[q]", title: "Data Quality Score", desc: "Each project gets a 0-100 score based on completeness. Click the panel to see field breakdown and quick actions." },
-                    { icon: "[e]", title: "Edit a Project", desc: "Click any row to edit. The Linked Records panel shows related community data and other projects." },
-                    { icon: "[f]", title: "Advanced Filters", desc: "Click 'Filters' to expand. Filter by price, PPSF, tier, date, quality grade, and more." },
-                    { icon: "[🔗]", title: "Linked Records", desc: "When editing a project, see community stats, ROI data, and quickly jump to other projects in the same community." },
+                    { icon: "[📊]", title: "Data Intelligence", desc: "Track recent changes, find stale data, detect duplicates, and identify integrity issues. Click to expand." },
+                    { icon: "[f]", title: "Advanced Filters", desc: "Filter by price, PPSF, tier, quality, staleness, and more. Save custom filter views." },
+                    { icon: "[🔗]", title: "Linked Records", desc: "When editing a project, see community stats and quickly jump to related projects." },
                     { icon: "[b]", title: "Bulk Actions", desc: "Select multiple projects with checkboxes. Export, update prices, or delete in bulk." },
                   ]} />
                   {/* ══════════════════════════════════════
@@ -15582,12 +15714,12 @@ export default function AdminPanel() {
                     </div>
                     
                     {/* Clear All Filters */}
-                    {(dataSearch || projectCommunityFilter !== "All" || projectStatusFilter !== "All" || priceMin || priceMax || ppsfMin || ppsfMax || projectTierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all" || qualityFilter !== "all") && (
+                    {(dataSearch || projectCommunityFilter !== "All" || projectStatusFilter !== "All" || priceMin || priceMax || ppsfMin || ppsfMax || projectTierFilter !== "All" || dataSourceFilter !== "all" || modifiedDateFilter !== "all" || hasImageFilter !== "all" || qualityFilter !== "all" || stalenessFilter !== "all") && (
                       <button type="button" onClick={() => { 
                         setDataSearch(""); setProjectCommunityFilter("All"); setProjectStatusFilter("All");
                         setPriceMin(""); setPriceMax(""); setPpsfMin(""); setPpsfMax("");
                         setProjectTierFilter("All"); setDataSourceFilter("all"); setModifiedDateFilter("all");
-                        setHasImageFilter("all"); setQualityFilter("all"); setActiveFilterViewId(null);
+                        setHasImageFilter("all"); setQualityFilter("all"); setStalenessFilter("all"); setActiveFilterViewId(null);
                       }}
                         style={{ padding: "8px 12px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, color: T.red, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" }}>
                         ✕ Clear All
@@ -15881,6 +16013,259 @@ export default function AdminPanel() {
                             </div>
                           </div>
                         )}
+                      </div>
+                    );
+                  })()}
+                  
+                  {/* ══════════════════════════════════════
+                     DATA INTELLIGENCE PANEL
+                     ══════════════════════════════════════ */}
+                  {(() => {
+                    const intel = calculateDataIntel();
+                    if (!intel) return null;
+                    
+                    return (
+                      <div style={{ marginBottom: 16 }}>
+                        {/* Intel Summary Bar */}
+                        <div 
+                          onClick={() => setShowDataIntelPanel(!showDataIntelPanel)}
+                          style={{ 
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            padding: "12px 16px", borderRadius: showDataIntelPanel ? "10px 10px 0 0" : 10,
+                            background: T.surfaceAlt, border: `1px solid ${T.teal}30`,
+                            borderBottom: showDataIntelPanel ? "none" : `1px solid ${T.teal}30`,
+                            cursor: "pointer", transition: "all 0.15s"
+                          }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <div style={{ 
+                                width: 42, height: 42, borderRadius: 10, 
+                                background: `${T.teal}15`, 
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                border: `2px solid ${T.teal}`
+                              }}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>Data Intelligence</div>
+                                <div style={{ fontSize: 10, color: T.teal, fontWeight: 600 }}>
+                                  {intel.recentChanges.length} changes this week · {intel.duplicates.length} potential duplicates
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Quick Stats */}
+                            <div style={{ display: "flex", gap: 16, marginLeft: 16 }}>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "#10B981" }}>{intel.staleness.fresh + intel.staleness.recent}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Fresh</div>
+                              </div>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "#F97316" }}>{intel.staleness.stale30 + intel.staleness.stale60}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Stale</div>
+                              </div>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: T.textMuted }}>{intel.staleness.never}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Never</div>
+                              </div>
+                              <div style={{ textAlign: "center" }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: T.red }}>{intel.integrityIssues.length}</div>
+                                <div style={{ fontSize: 9, color: T.textMuted }}>Issues</div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            {/* Staleness Filter Pills */}
+                            <div style={{ display: "flex", gap: 6 }}>
+                              {[
+                                { key: "all", label: "All", color: T.textMuted },
+                                { key: "stale60", label: "60+ days", color: "#EF4444" },
+                                { key: "never", label: "Never", color: "#7F1D1D" },
+                              ].map(f => (
+                                <button key={f.key} type="button" onClick={(e) => { e.stopPropagation(); setStalenessFilter(stalenessFilter === f.key ? "all" : f.key); }}
+                                  style={{ 
+                                    padding: "4px 10px", borderRadius: 12, fontSize: 10, fontWeight: 600,
+                                    border: `1px solid ${stalenessFilter === f.key ? f.color : T.border}`,
+                                    background: stalenessFilter === f.key ? `${f.color}15` : "transparent",
+                                    color: stalenessFilter === f.key ? f.color : T.textMuted,
+                                    cursor: "pointer", fontFamily: "'Outfit',sans-serif"
+                                  }}>
+                                  {f.label}
+                                </button>
+                              ))}
+                            </div>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" style={{ transform: showDataIntelPanel ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s" }}>
+                              <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                          </div>
+                        </div>
+                        
+                        {/* Expanded Intel Details */}
+                        {showDataIntelPanel && (
+                          <div className="fade-up" style={{ 
+                            padding: 16, background: T.surface, 
+                            borderRadius: "0 0 10px 10px", border: `1px solid ${T.teal}30`, borderTop: "none"
+                          }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                              
+                              {/* Recent Changes */}
+                              <div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 6 }}>
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                  Recent Changes (7 days)
+                                </div>
+                                {intel.recentChanges.length === 0 ? (
+                                  <div style={{ padding: 16, background: T.surfaceAlt, borderRadius: 8, textAlign: "center", color: T.textMuted, fontSize: 11 }}>No changes in the last 7 days</div>
+                                ) : (
+                                  <div style={{ maxHeight: 180, overflowY: "auto", background: T.surfaceAlt, borderRadius: 8 }}>
+                                    {intel.recentChanges.map((change, i) => (
+                                      <div key={i} onClick={() => { setEditingProject(change.project.id); setProjectForm(liveProjects[change.project.id] || {}); setShowDataIntelPanel(false); }}
+                                        style={{ padding: "8px 12px", borderBottom: `1px solid ${T.border}20`, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                                        onMouseEnter={e => e.currentTarget.style.background = T.surface}
+                                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                        <div>
+                                          <div style={{ fontSize: 11, fontWeight: 600, color: T.white }}>{change.project.name}</div>
+                                          <div style={{ fontSize: 10, color: T.textMuted }}>{change.updatedBy || "admin"}</div>
+                                        </div>
+                                        <div style={{ fontSize: 10, color: T.teal, fontWeight: 600 }}>{change.days === 0 ? "Today" : `${change.days}d ago`}</div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Data Integrity Issues */}
+                              <div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 6 }}>
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.red} strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                  Data Issues ({intel.integrityIssues.length})
+                                </div>
+                                {intel.integrityIssues.length === 0 ? (
+                                  <div style={{ padding: 16, background: "rgba(16,185,129,0.08)", borderRadius: 8, textAlign: "center", color: T.green, fontSize: 11, border: `1px solid ${T.green}30` }}>
+                                    ✓ No data integrity issues found
+                                  </div>
+                                ) : (
+                                  <div style={{ maxHeight: 180, overflowY: "auto", background: T.surfaceAlt, borderRadius: 8 }}>
+                                    {intel.integrityIssues.slice(0, 8).map((issue, i) => (
+                                      <div key={i} onClick={() => { setEditingProject(issue.project.id); setProjectForm(liveProjects[issue.project.id] || {}); setShowDataIntelPanel(false); }}
+                                        style={{ padding: "8px 12px", borderBottom: `1px solid ${T.border}20`, cursor: "pointer" }}
+                                        onMouseEnter={e => e.currentTarget.style.background = T.surface}
+                                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                        <div style={{ fontSize: 11, fontWeight: 600, color: T.white, marginBottom: 2 }}>{issue.project.name}</div>
+                                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                          {issue.issues.map((iss, j) => (
+                                            <span key={j} style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}15`, color: T.red }}>{iss}</span>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    ))}
+                                    {intel.integrityIssues.length > 8 && (
+                                      <div style={{ padding: 8, textAlign: "center", fontSize: 10, color: T.textMuted }}>+{intel.integrityIssues.length - 8} more issues</div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Potential Duplicates */}
+                            {intel.duplicates.length > 0 && (
+                              <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 6 }}>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.orange} strokeWidth="2"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4a2 2 0 012-2h12"/></svg>
+                                    Potential Duplicates ({intel.duplicates.length})
+                                  </div>
+                                  <button type="button" onClick={() => setShowDuplicatesModal(true)}
+                                    style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.orange}40`, background: "transparent", color: T.orange, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                                    Review All
+                                  </button>
+                                </div>
+                                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                                  {intel.duplicates.slice(0, 3).map((dup, i) => (
+                                    <div key={i} style={{ padding: "8px 12px", background: `${T.orange}10`, borderRadius: 8, border: `1px solid ${T.orange}30`, fontSize: 11 }}>
+                                      <span style={{ color: T.white }}>{dup.project1.name}</span>
+                                      <span style={{ color: T.orange, margin: "0 6px" }}>↔</span>
+                                      <span style={{ color: T.white }}>{dup.project2.name}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Quick Actions */}
+                            <div style={{ display: "flex", gap: 10, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+                              <button type="button" onClick={() => { setStalenessFilter("stale60"); setShowDataIntelPanel(false); }}
+                                style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                Review Stale Data ({intel.staleness.stale60 + intel.staleness.stale90})
+                              </button>
+                              <button type="button" onClick={() => { setStalenessFilter("never"); setShowDataIntelPanel(false); }}
+                                style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.textMuted}40`, background: `${T.textMuted}10`, color: T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                Never Updated ({intel.staleness.never})
+                              </button>
+                              <button type="button" onClick={() => { setDataSourceFilter("live"); setShowDataIntelPanel(false); }}
+                                style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.green}40`, background: `${T.green}10`, color: T.green, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                View Live Overrides ({intel.totalLive})
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  
+                  {/* ══════════════════════════════════════
+                     DUPLICATES REVIEW MODAL
+                     ══════════════════════════════════════ */}
+                  {showDuplicatesModal && (() => {
+                    const duplicates = findDuplicates();
+                    return (
+                      <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowDuplicatesModal(false)}>
+                        <div style={{ background: "#0C1B2E", border: `1px solid ${T.orange}40`, borderRadius: 16, width: "95%", maxWidth: 700, maxHeight: "80vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+                          <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.orange}20`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div>
+                              <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.orange, margin: 0 }}>Potential Duplicates</h3>
+                              <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{duplicates.length} potential duplicate pairs found</p>
+                            </div>
+                            <button type="button" onClick={() => setShowDuplicatesModal(false)} style={{ background: "transparent", border: "none", color: T.textMuted, fontSize: 20, cursor: "pointer", padding: "4px 10px" }}>×</button>
+                          </div>
+                          <div style={{ padding: 20 }}>
+                            {duplicates.length === 0 ? (
+                              <div style={{ textAlign: "center", padding: 40 }}>
+                                <div style={{ fontSize: 40, marginBottom: 12 }}>✓</div>
+                                <div style={{ fontSize: 14, color: T.green, fontWeight: 600 }}>No duplicates detected</div>
+                                <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Your data is clean!</div>
+                              </div>
+                            ) : (
+                              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                                {duplicates.map((dup, i) => {
+                                  const m1 = getMergedProject(dup.project1);
+                                  const m2 = getMergedProject(dup.project2);
+                                  return (
+                                    <div key={i} style={{ padding: 16, background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                                      <div style={{ fontSize: 10, color: T.orange, fontWeight: 600, marginBottom: 10 }}>{dup.reason}</div>
+                                      <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 12, alignItems: "center" }}>
+                                        <div onClick={() => { setEditingProject(dup.project1.id); setProjectForm(liveProjects[dup.project1.id] || {}); setShowDuplicatesModal(false); }}
+                                          style={{ padding: 12, background: T.surface, borderRadius: 8, cursor: "pointer" }}>
+                                          <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{dup.project1.name}</div>
+                                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{dup.project1.community}</div>
+                                          <div style={{ fontSize: 11, color: T.gold, marginTop: 4 }}>{m1.price ? `AED ${(m1.price/1e6).toFixed(2)}M` : "No price"}</div>
+                                        </div>
+                                        <div style={{ color: T.orange, fontSize: 20 }}>↔</div>
+                                        <div onClick={() => { setEditingProject(dup.project2.id); setProjectForm(liveProjects[dup.project2.id] || {}); setShowDuplicatesModal(false); }}
+                                          style={{ padding: 12, background: T.surface, borderRadius: 8, cursor: "pointer" }}>
+                                          <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{dup.project2.name}</div>
+                                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{dup.project2.community}</div>
+                                          <div style={{ fontSize: 11, color: T.gold, marginTop: 4 }}>{m2.price ? `AED ${(m2.price/1e6).toFixed(2)}M` : "No price"}</div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     );
                   })()}
@@ -16592,9 +16977,15 @@ export default function AdminPanel() {
                             // Quality filter
                             const matchQuality = qualityFilter === "all" || projectQuality.grade === qualityFilter;
                             
+                            // Staleness filter
+                            const staleness = calculateStaleness(p);
+                            const matchStaleness = stalenessFilter === "all" || 
+                              (stalenessFilter === "stale60" && (staleness.status === "stale60" || staleness.status === "stale90")) ||
+                              (stalenessFilter === "never" && staleness.status === "never");
+                            
                             return matchSearch && matchCommunity && matchStatus && 
                                    matchPriceMin && matchPriceMax && matchPpsfMin && matchPpsfMax &&
-                                   matchTier && matchDataSource && matchModifiedDate && matchHasImage && matchQuality;
+                                   matchTier && matchDataSource && matchModifiedDate && matchHasImage && matchQuality && matchStaleness;
                           })
                           .sort((a, b) => {
                             const ma = getMergedProject(a); const mb = getMergedProject(b);
@@ -16615,7 +17006,8 @@ export default function AdminPanel() {
                           dataSourceFilter !== "all",
                           modifiedDateFilter !== "all",
                           hasImageFilter !== "all",
-                          qualityFilter !== "all"
+                          qualityFilter !== "all",
+                          stalenessFilter !== "all"
                         ].filter(Boolean).length;
                         
                         return (
@@ -16657,7 +17049,7 @@ export default function AdminPanel() {
                                   setDataSearch(""); setProjectCommunityFilter("All"); setProjectStatusFilter("All");
                                   setPriceMin(""); setPriceMax(""); setPpsfMin(""); setPpsfMax("");
                                   setProjectTierFilter("All"); setDataSourceFilter("all"); setModifiedDateFilter("all");
-                                  setHasImageFilter("all"); setQualityFilter("all"); setActiveFilterViewId(null);
+                                  setHasImageFilter("all"); setQualityFilter("all"); setStalenessFilter("all"); setActiveFilterViewId(null);
                                 }}
                                   style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
                                   Clear All Filters
