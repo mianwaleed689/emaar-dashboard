@@ -15236,84 +15236,97 @@ export default function AdminPanel() {
                      ADVANCED FILTER PRO SYSTEM
                      ══════════════════════════════════════ */}
                   
-                  {/* Saved Filter Views Pills */}
-                  {savedFilterViews.length > 0 && (
-                    <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
-                      <span style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Quick Filters:</span>
-                      {savedFilterViews.map(view => (
-                        <div key={view.id} style={{ position: "relative", display: "inline-flex" }}>
-                          <button type="button"
-                            onClick={() => {
-                              if (activeFilterViewId === view.id) {
-                                // Deactivate - clear all filters
-                                setActiveFilterViewId(null);
-                                setProjectCommunityFilter("All");
-                                setProjectStatusFilter("All");
-                                setProjectTierFilter("All");
-                                setPriceMin(""); setPriceMax("");
-                                setPpsfMin(""); setPpsfMax("");
-                                setDataSourceFilter("all");
-                                setModifiedDateFilter("all");
-                                setHasImageFilter("all");
-                              } else {
-                                // Activate this view
-                                setActiveFilterViewId(view.id);
-                                const f = view.filters;
-                                if (f.community) setProjectCommunityFilter(f.community);
-                                if (f.status) setProjectStatusFilter(f.status);
-                                if (f.tier) setProjectTierFilter(f.tier);
-                                if (f.priceMin !== undefined) setPriceMin(f.priceMin);
-                                if (f.priceMax !== undefined) setPriceMax(f.priceMax);
-                                if (f.ppsfMin !== undefined) setPpsfMin(f.ppsfMin);
-                                if (f.ppsfMax !== undefined) setPpsfMax(f.ppsfMax);
-                                if (f.dataSource) setDataSourceFilter(f.dataSource);
-                                if (f.modifiedDate) setModifiedDateFilter(f.modifiedDate);
-                                if (f.hasImage) setHasImageFilter(f.hasImage);
-                              }
-                            }}
-                            style={{ 
-                              display: "flex", alignItems: "center", gap: 6,
-                              padding: "6px 12px", borderRadius: "20px 4px 4px 20px", 
-                              border: `1px solid ${activeFilterViewId === view.id ? view.color : T.border}`,
-                              borderRight: "none",
-                              background: activeFilterViewId === view.id ? `${view.color}15` : "transparent",
-                              color: activeFilterViewId === view.id ? view.color : T.textSecondary,
-                              fontSize: 11, fontWeight: activeFilterViewId === view.id ? 700 : 500,
-                              cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s"
-                            }}>
-                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: view.color }} />
-                            {view.name}
-                          </button>
-                          <button type="button" onClick={(e) => {
-                            e.stopPropagation();
-                            if (window.confirm(`Delete filter view "${view.name}"?`)) {
-                              const updated = savedFilterViews.filter(v => v.id !== view.id);
-                              setSavedFilterViews(updated);
-                              try { localStorage.setItem("admin_savedFilterViews", JSON.stringify(updated)); } catch {}
-                              if (activeFilterViewId === view.id) setActiveFilterViewId(null);
-                              notify("Filter view deleted");
+                  {/* Saved Filter Views Pills - Always visible */}
+                  <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
+                    <span style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Quick Filters:</span>
+                    {savedFilterViews.length === 0 && (
+                      <button type="button" onClick={() => {
+                        const defaults = [
+                          { id: 1, name: "Missing Prices", filters: { priceMin: "", priceMax: "0", status: "All", community: "All" }, color: "#EF4444" },
+                          { id: 2, name: "Live Overrides", filters: { dataSource: "live", status: "All", community: "All" }, color: "#10B981" },
+                          { id: 3, name: "Premium Projects", filters: { tier: "Premium", status: "All", community: "All" }, color: "#D4A843" },
+                        ];
+                        setSavedFilterViews(defaults);
+                        try { localStorage.setItem("admin_savedFilterViews", JSON.stringify(defaults)); } catch {}
+                        notify("Default filters restored!");
+                      }}
+                        style={{ padding: "6px 12px", borderRadius: 20, border: `1px dashed ${T.gold}`, background: `${T.gold}10`, color: T.gold, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                        ↻ Restore Defaults
+                      </button>
+                    )}
+                    {savedFilterViews.map(view => (
+                      <div key={view.id} style={{ position: "relative", display: "inline-flex" }}>
+                        <button type="button"
+                          onClick={() => {
+                            if (activeFilterViewId === view.id) {
+                              // Deactivate - clear all filters
+                              setActiveFilterViewId(null);
+                              setProjectCommunityFilter("All");
+                              setProjectStatusFilter("All");
+                              setProjectTierFilter("All");
+                              setPriceMin(""); setPriceMax("");
+                              setPpsfMin(""); setPpsfMax("");
+                              setDataSourceFilter("all");
+                              setModifiedDateFilter("all");
+                              setHasImageFilter("all");
+                            } else {
+                              // Activate this view
+                              setActiveFilterViewId(view.id);
+                              const f = view.filters;
+                              if (f.community) setProjectCommunityFilter(f.community);
+                              if (f.status) setProjectStatusFilter(f.status);
+                              if (f.tier) setProjectTierFilter(f.tier);
+                              if (f.priceMin !== undefined) setPriceMin(f.priceMin);
+                              if (f.priceMax !== undefined) setPriceMax(f.priceMax);
+                              if (f.ppsfMin !== undefined) setPpsfMin(f.ppsfMin);
+                              if (f.ppsfMax !== undefined) setPpsfMax(f.ppsfMax);
+                              if (f.dataSource) setDataSourceFilter(f.dataSource);
+                              if (f.modifiedDate) setModifiedDateFilter(f.modifiedDate);
+                              if (f.hasImage) setHasImageFilter(f.hasImage);
                             }
                           }}
-                            style={{ 
-                              padding: "6px 8px", borderRadius: "0 20px 20px 0",
-                              border: `1px solid ${activeFilterViewId === view.id ? view.color : T.border}`,
-                              borderLeft: `1px solid ${T.border}`,
-                              background: "transparent", color: T.textMuted,
-                              fontSize: 10, cursor: "pointer", fontFamily: "'Outfit',sans-serif",
-                              transition: "all 0.15s"
-                            }}
-                            onMouseEnter={e => { e.currentTarget.style.color = T.red; e.currentTarget.style.background = `${T.red}10`; }}
-                            onMouseLeave={e => { e.currentTarget.style.color = T.textMuted; e.currentTarget.style.background = "transparent"; }}>
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                      <button type="button" onClick={() => setShowSaveFilterModal(true)}
-                        style={{ padding: "6px 10px", borderRadius: 20, border: `1px dashed ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                        + Save Current
-                      </button>
-                    </div>
-                  )}
+                          style={{ 
+                            display: "flex", alignItems: "center", gap: 6,
+                            padding: "6px 12px", borderRadius: "20px 4px 4px 20px", 
+                            border: `1px solid ${activeFilterViewId === view.id ? view.color : T.border}`,
+                            borderRight: "none",
+                            background: activeFilterViewId === view.id ? `${view.color}15` : "transparent",
+                            color: activeFilterViewId === view.id ? view.color : T.textSecondary,
+                            fontSize: 11, fontWeight: activeFilterViewId === view.id ? 700 : 500,
+                            cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s"
+                          }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: view.color }} />
+                          {view.name}
+                        </button>
+                        <button type="button" onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm(`Delete filter view "${view.name}"?`)) {
+                            const updated = savedFilterViews.filter(v => v.id !== view.id);
+                            setSavedFilterViews(updated);
+                            try { localStorage.setItem("admin_savedFilterViews", JSON.stringify(updated)); } catch {}
+                            if (activeFilterViewId === view.id) setActiveFilterViewId(null);
+                            notify("Filter view deleted");
+                          }
+                        }}
+                          style={{ 
+                            padding: "6px 8px", borderRadius: "0 20px 20px 0",
+                            border: `1px solid ${activeFilterViewId === view.id ? view.color : T.border}`,
+                            borderLeft: `1px solid ${T.border}`,
+                            background: "transparent", color: T.textMuted,
+                            fontSize: 10, cursor: "pointer", fontFamily: "'Outfit',sans-serif",
+                            transition: "all 0.15s"
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.color = T.red; e.currentTarget.style.background = `${T.red}10`; }}
+                          onMouseLeave={e => { e.currentTarget.style.color = T.textMuted; e.currentTarget.style.background = "transparent"; }}>
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => setShowSaveFilterModal(true)}
+                      style={{ padding: "6px 10px", borderRadius: 20, border: `1px dashed ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      + Save Current
+                    </button>
+                  </div>
                   
                   {/* Main Filter Bar */}
                   <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", alignItems: "center", padding: "10px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
