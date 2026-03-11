@@ -37,7 +37,7 @@ function AdminAuditLogTab({ auditLog, users, emaarProjects, fetchAuditLog, setTa
         {days.map((d, i) => (
           <div key={i} title={d.date.toLocaleDateString() + ": " + d.count + " events"}
             style={{ width: 14, height: 14, borderRadius: 3,
-              background: d.count === 0 ? (t||T).surfaceAlt : \`rgba(212,168,67,\${d.count/max})\`,
+              background: d.count === 0 ? (t||T).surfaceAlt : `rgba(212,168,67,${d.count/max})`,
               border: "1px solid rgba(255,255,255,0.05)"
             }} />
         ))}

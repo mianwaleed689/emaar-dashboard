@@ -32,6 +32,9 @@ async function logAudit(db, payload) {
 }
 
 function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpenUid }) {
+  const now = new Date();
+
+
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
@@ -483,7 +486,6 @@ const TabHelp = ({ items }) => {
     if (!slaSettings.escalateOnBreach || tickets.length === 0) return;
     
     const checkSlaEscalation = async () => {
-      const now = new Date();
       const slaMs = slaSettings.defaultHours * 60 * 60 * 1000;
       
       for (const ticket of tickets) {

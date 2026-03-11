@@ -56,7 +56,7 @@ function AdminRevenueTab({ users, auditLog, T, I, notify, db, timeSince, trialDa
     activeToday: users.filter(u => u.lastLoginAt && (now - new Date(u.lastLoginAt)) < msPerDay).length,
   };
   stats.paid = stats.pro + stats.enterprise;
-  const mrr = (stats.pro * 99) + (stats.enterprise * 499);
+  // mrr already defined above
   const arr = mrr * 12;
   const everTrialled = stats.proTrial + stats.pro + stats.expired;
   const churnEvents = (auditLog || []).filter(l => l.action === "tier_change" && (l.from === "pro" || l.from === "enterprise") && (l.to === "free" || l.to === "pro_trial"));

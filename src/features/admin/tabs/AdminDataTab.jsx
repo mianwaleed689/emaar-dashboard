@@ -6,7 +6,8 @@ import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, Cart
 import { emaarProjects as defaultProjects, emaarCommunities as defaultCommunities, emaarYields as defaultYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "../../../data";
 
 function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV, timeSince, dataSubTab, setDataSubTab, editingProject, setEditingProject, editingCommunity, setEditingCommunity, editingYield, setEditingYield, liveProjects, setLiveProjects, liveCommunityROI, setLiveCommunityROI, liveYields, setLiveYields, dataSearch, setDataSearch, projectForm, setProjectForm, communityForm, setCommunityForm, yieldForm, setYieldForm, projectCommunityFilter, setProjectCommunityFilter, projectStatusFilter, setProjectStatusFilter, bulkSelected, setBulkSelected, tabDataEdits, setTabDataEdits, tabDataSaving, setTabDataSaving, plainify, setTab, emaarProjects, emaarCommunities, emaarYields, defaultCommunityROI: communityROIprop, defaultCommunityIntel: communityIntelprop, uploadBytes, getDownloadURL }) {
-  const adminUser = { email: "admin@dxbanalytics.com" };
+  const now = new Date();
+
 
 
   // ── Internal state (was in AdminPanel IIFE, now local) ─────────────
@@ -1951,7 +1952,6 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
                       // Deduplicate by id — safety net in case data.js has duplicates
                       const _seen = new Set();
                       const allProjects = emaarProjects.filter(p => { if (_seen.has(p.id)) return false; _seen.add(p.id); return true; });
-                      const now = new Date();
                       const filtered = allProjects
                           .filter(p => {
                             const merged = getMergedProject(p);
