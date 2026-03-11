@@ -15669,10 +15669,17 @@ export default function AdminPanel() {
                   setCleanResult(null);
                   try {
                     const { collection, getDocs, deleteDoc, doc } = await import("firebase/firestore");
-                    const snap = await getDocs(collection(db, "projects"));
                     let deleted = 0;
-                    for (const d of snap.docs) {
+                    // Clean projects collection
+                    const snap1 = await getDocs(collection(db, "projects"));
+                    for (const d of snap1.docs) {
                       await deleteDoc(doc(db, "projects", d.id));
+                      deleted++;
+                    }
+                    // Clean projectData collection (overrides)
+                    const snap2 = await getDocs(collection(db, "projectData"));
+                    for (const d of snap2.docs) {
+                      await deleteDoc(doc(db, "projectData", d.id));
                       deleted++;
                     }
                     setCleanResult({ ok: true, count: deleted });
