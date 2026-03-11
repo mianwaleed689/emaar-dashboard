@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, updateDoc } from "firebase/firestore";
 import { auth, db, storage } from "../../../firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes = () => {}, getDownloadURL } from "firebase/storage";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { emaarProjects as defaultProjects, emaarCommunities as defaultCommunities, emaarYields as defaultYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "../../../data";
 
-function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV, timeSince, dataSubTab, setDataSubTab, editingProject, setEditingProject, editingCommunity, setEditingCommunity, editingYield, setEditingYield, liveProjects, setLiveProjects, liveCommunityROI, setLiveCommunityROI, liveYields, setLiveYields, dataSearch, setDataSearch, projectForm, setProjectForm, communityForm, setCommunityForm, yieldForm, setYieldForm, projectCommunityFilter, setProjectCommunityFilter, projectStatusFilter, setProjectStatusFilter, bulkSelected, setBulkSelected, tabDataEdits, setTabDataEdits, tabDataSaving, setTabDataSaving, plainify, setTab, emaarProjects, emaarCommunities, emaarYields, defaultCommunityROI: communityROIprop, defaultCommunityIntel: communityIntelprop, uploadBytes, getDownloadURL }) {
+function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV, timeSince, dataSubTab, setDataSubTab, editingProject, setEditingProject, editingCommunity, setEditingCommunity, editingYield, setEditingYield, liveProjects = {}, setLiveProjects = () => {}, liveCommunityROI = {}, setLiveCommunityROI = () => {}, liveYields = [], setLiveYields = () => {}, dataSearch, setDataSearch, projectForm, setProjectForm, communityForm, setCommunityForm, yieldForm, setYieldForm, projectCommunityFilter, setProjectCommunityFilter, projectStatusFilter, setProjectStatusFilter, bulkSelected = [], setBulkSelected = () => {}, tabDataEdits = {}, setTabDataEdits = () => {}, tabDataSaving, setTabDataSaving = () => {}, plainify = (x) => x, setTab, emaarProjects = [], emaarCommunities = [], emaarYields = [], defaultCommunityROI: communityROIprop, defaultCommunityIntel: communityIntelprop, uploadBytes = () => {}, getDownloadURL }) {
   const now = new Date();
+
+  // ── Safety guards ─────────────────────────────────────────────
+  const _projects   = Array.isArray(emaarProjects)   ? emaarProjects   : [];
+  const _communities= Array.isArray(emaarCommunities) ? emaarCommunities: [];
+  const _yields     = Array.isArray(emaarYields)      ? emaarYields      : [];
 
 
 
@@ -436,7 +441,7 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
                 <div className="kpi-card fade-up" style={{ position: "relative", overflow: "hidden" }}>
                   <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.7 }} />
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>Total Projects</div>
-                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.white }}>{emaarProjects.length}</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.white }}>{_projects.length}</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>Emaar projects</div>
                 </div>
                 <div className="kpi-card fade-up" style={{ position: "relative", overflow: "hidden", animationDelay: "0.05s" }}>
@@ -448,7 +453,7 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
                 <div className="kpi-card fade-up" style={{ position: "relative", overflow: "hidden", animationDelay: "0.1s" }}>
                   <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.7 }} />
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>Avg Yield</div>
-                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.green }}>{(emaarYields.reduce((sum, y) => sum + (y.gross || 0), 0) / (emaarYields.length || 1)).toFixed(1)}%</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.green }}>{(_yields.reduce((sum, y) => sum + (y.gross || 0), 0) / (_yields.length || 1)).toFixed(1)}%</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>portfolio average</div>
                 </div>
                 <div className="kpi-card fade-up" style={{ position: "relative", overflow: "hidden", animationDelay: "0.15s" }}>
@@ -466,10 +471,10 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
                   <div style={{ display: "flex", gap: 8 }}>
                     {(() => {
                       const issues = [];
-                      const missingPrice = emaarProjects.filter(p => !p.price || p.price <= 0).length;
-                      const missingPpsf = emaarProjects.filter(p => !p.pricePerSqFt || p.pricePerSqFt <= 0).length;
-                      const missingImage = emaarProjects.filter(p => !p.image && !liveProjects[p.id]?.image).length;
-                      const outdatedYields = emaarYields.filter(y => !y.gross || y.gross <= 0).length;
+                      const missingPrice = _projects.filter(p => !p.price || p.price <= 0).length;
+                      const missingPpsf = _projects.filter(p => !p.pricePerSqFt || p.pricePerSqFt <= 0).length;
+                      const missingImage = _projects.filter(p => !p.image && !liveProjects[p.id]?.image).length;
+                      const outdatedYields = _yields.filter(y => !y.gross || y.gross <= 0).length;
                       if (missingPrice > 0) issues.push({ label: `${missingPrice} missing prices`, color: T.red });
                       if (missingPpsf > 0) issues.push({ label: `${missingPpsf} missing PPSF`, color: T.orange });
                       if (missingImage > 0) issues.push({ label: `${missingImage} no images`, color: T.textMuted });
@@ -483,8 +488,8 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
                   {[
-                    { label: "Projects", value: emaarProjects.length, color: T.gold, complete: emaarProjects.filter(p => p.price && p.pricePerSqFt && (p.image || liveProjects[p.id]?.image)).length },
-                    { label: "Yields", value: emaarYields.length, color: T.green, complete: emaarYields.filter(y => y.gross && y.gross > 0).length },
+                    { label: "Projects", value: _projects.length, color: T.gold, complete: _projects.filter(p => p.price && p.pricePerSqFt && (p.image || liveProjects[p.id]?.image)).length },
+                    { label: "Yields", value: _yields.length, color: T.green, complete: _yields.filter(y => y.gross && y.gross > 0).length },
                     { label: "Communities", value: Object.keys(defaultCommunityROI).length, color: T.teal, complete: Object.values(defaultCommunityROI).filter(c => c.roi && c.roi > 0).length },
                     { label: "Live Overrides", value: Object.keys(liveProjects).length, color: T.blue },
                     { label: "Price History", value: Object.values(priceHistory).reduce((sum, arr) => sum + (arr?.length || 0), 0), color: T.purple },
@@ -501,8 +506,8 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
               {/* Sub-tab navigation - Enhanced */}
               <div style={{ display: "flex", gap: 4, background: T.surfaceAlt, padding: 4, borderRadius: 10, marginBottom: 24 }}>
                 {[
-                  { id: "projects", label: "Projects", count: emaarProjects.length, icon: I.projects },
-                  { id: "yields", label: "Yields", count: emaarYields.length, icon: I.yields },
+                  { id: "projects", label: "Projects", count: _projects.length, icon: I.projects },
+                  { id: "yields", label: "Yields", count: _yields.length, icon: I.yields },
                   { id: "communities", label: "Communities", count: Object.keys(defaultCommunityROI).length, icon: I.chart },
                   { id: "pricehistory", label: "Price History", count: Object.values(priceHistory).reduce((sum, arr) => sum + (arr?.length || 0), 0), icon: I.chart },
                 ].map(st => (
@@ -663,7 +668,7 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
                     <select value={projectCommunityFilter} onChange={e => { setProjectCommunityFilter(e.target.value); setActiveFilterViewId(null); }}
                       style={{ padding: "8px 10px", background: projectCommunityFilter !== "All" ? `${T.gold}15` : T.surface, border: `1px solid ${projectCommunityFilter !== "All" ? T.gold : T.border}`, borderRadius: 8, color: projectCommunityFilter !== "All" ? T.gold : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: projectCommunityFilter !== "All" ? 700 : 400, maxWidth: 180 }}>
                       <option value="All">All Communities</option>
-                      {[...new Set(emaarProjects.map(p => p.community))].sort().map(c => <option key={c} value={c}>{c}</option>)}
+                      {[...new Set(_projects.map(p => p.community))].sort().map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                     
                     {/* Status Filter */}
@@ -1321,7 +1326,7 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
                       <div style={{ display: "flex", gap: 8 }}>
                         {/* Export Selected */}
                         <button type="button" onClick={() => {
-                          const selectedProjects = emaarProjects.filter(p => bulkSelected.includes(String(p.id)));
+                          const selectedProjects = _projects.filter(p => bulkSelected.includes(String(p.id)));
                           exportFilteredProjects(selectedProjects, `emaar-selected-${bulkSelected.length}-projects.csv`);
                         }}
                           style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}`, background: "transparent", color: T.teal, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
@@ -1450,7 +1455,7 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
                         </button>
                       </div>
                     );
-                    const p = emaarProjects.find(x => x.id === editingProject);
+                    const p = _projects.find(x => x.id === editingProject);
                     if (!p) return null;
                     const merged = getMergedProject(p);
                     const hasOverride = !!liveProjects[p.id];
@@ -1699,14 +1704,14 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
                            ═══════════════════════════════════════ */}
                         {(() => {
                           const communityName = p.community;
-                          const communityProjects = emaarProjects.filter(proj => proj.community === communityName && proj.id !== p.id);
+                          const communityProjects = _projects.filter(proj => proj.community === communityName && proj.id !== p.id);
                           const communityROI = { ...(defaultCommunityROI[communityName] || {}), ...(liveCommunityROI[communityName] || {}) };
                           const communityIntel = { ...(defaultCommunityIntel[communityName] || {}), ...(liveCommunityIntel[communityName] || {}) };
                           const hasROI = !!liveCommunityROI[communityName] || !!defaultCommunityROI[communityName];
                           const hasIntel = !!liveCommunityIntel[communityName] || !!defaultCommunityIntel[communityName];
                           
                           // Calculate community stats
-                          const allCommunityProjects = emaarProjects.filter(proj => proj.community === communityName);
+                          const allCommunityProjects = _projects.filter(proj => proj.community === communityName);
                           const avgPrice = allCommunityProjects.length > 0 
                             ? Math.round(allCommunityProjects.reduce((sum, proj) => sum + (getMergedProject(proj).price || 0), 0) / allCommunityProjects.length)
                             : 0;
@@ -1811,7 +1816,7 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
                   {/* ── VERSION HISTORY MODAL ── */}
                   {viewingVersions && (() => {
                     const pid = viewingVersions;
-                    const p = emaarProjects.find(x => String(x.id) === pid) || { name: "Project " + pid, id: pid };
+                    const p = _projects.find(x => String(x.id) === pid) || { name: "Project " + pid, id: pid };
                     const versions = projectVersions[pid] || null;
                     return (
                       <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setViewingVersions(null)}>
@@ -1963,7 +1968,7 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
                       
                       // Deduplicate by id — safety net in case data.js has duplicates
                       const _seen = new Set();
-                      const allProjects = emaarProjects.filter(p => { if (_seen.has(p.id)) return false; _seen.add(p.id); return true; });
+                      const allProjects = _projects.filter(p => { if (_seen.has(p.id)) return false; _seen.add(p.id); return true; });
                       const filtered = allProjects
                           .filter(p => {
                             const merged = getMergedProject(p);
@@ -2491,7 +2496,7 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
                            LINKED PROJECTS PANEL
                            ═══════════════════════════════════════ */}
                         {(() => {
-                          const communityProjects = emaarProjects.filter(p => p.community === activeKey);
+                          const communityProjects = _projects.filter(p => p.community === activeKey);
                           
                           // Calculate stats
                           const totalProjects = communityProjects.length;
@@ -2705,7 +2710,7 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
                           <span key={h} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>{h}</span>
                         ))}
                       </div>
-                      {emaarYields.map((y, i) => {
+                      {_yields.map((y, i) => {
                         const yieldKey = `${y.community}_${y.unit}`.replace(/\s+/g, "_");
                         const hasOverride = !!liveYields[yieldKey];
                         const merged = { ...y, ...(liveYields[yieldKey] || {}) };
@@ -2734,7 +2739,7 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
 
               {/* ─── PRICE HISTORY SUB-TAB ─── */}
               {dataSubTab === "pricehistory" && (() => {
-                const selectedProject = emaarProjects.find(p => String(p.id) === String(phSelId));
+                const selectedProject = _projects.find(p => String(p.id) === String(phSelId));
                 const history         = phSelId ? (priceHistory[phSelId] || []) : [];
 
                 const loadHistory = async (id) => {
