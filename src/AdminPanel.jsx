@@ -4,6 +4,18 @@
    ═══════════════════════════════════════════════════════════════ */
 import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import ReactDOM from "react-dom";
+import { auth, db, storage, firebaseConfig } from "./firebase";
+import { initializeApp, deleteApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import emailjs from "@emailjs/browser";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc } from "firebase/firestore";
+import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
+import ProjectManager from "./ProjectManager";
+import { useI18n, LANGUAGES } from "./i18n";
+
 
 class TabErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null }; }
@@ -20,17 +32,6 @@ class TabErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
-import { auth, db, storage, firebaseConfig } from "./firebase";
-import { initializeApp, deleteApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import emailjs from "@emailjs/browser";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc } from "firebase/firestore";
-import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
-import ProjectManager from "./ProjectManager";
-import { useI18n, LANGUAGES } from "./i18n";
 
 // ── Extracted Tab Components ──────────────────────────────────────────────────
 const AdminOverviewTab      = lazy(() => import("./features/admin/tabs/AdminOverviewTab").then(m => m.default ? m : { default: Object.values(m).find(v => typeof v === "function") || (() => null) }));
