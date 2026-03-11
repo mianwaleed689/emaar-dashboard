@@ -11232,6 +11232,8 @@ export default function AdminPanel() {
   const [toast, setToast] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [cleaningProjects, setCleaningProjects] = useState(false);
+  const [cleanResult, setCleanResult] = useState(null);
 
   /* ─── DATA MANAGER STATE ─── */
   const [dataSubTab, setDataSubTab] = useState(() => {
@@ -15658,6 +15660,47 @@ export default function AdminPanel() {
                   ))}
                 </div>
               </div>
+
+              {/* 🧹 Firestore Cleanup Panel */}
+              {(() => {
+                const handleCleanFirestore = async () => {
+                  if (!window.confirm("This will delete ALL documents from the Firestore 'projects' collection. Your 48 real projects in data.js are safe. Continue?")) return;
+                  setCleaningProjects(true);
+                  setCleanResult(null);
+                  try {
+                    const { collection, getDocs, deleteDoc, doc } = await import("firebase/firestore");
+                    const snap = await getDocs(collection(db, "projects"));
+                    let deleted = 0;
+                    for (const d of snap.docs) {
+                      await deleteDoc(doc(db, "projects", d.id));
+                      deleted++;
+                    }
+                    setCleanResult({ ok: true, count: deleted });
+                  } catch(e) {
+                    setCleanResult({ ok: false, msg: e.message });
+                  }
+                  setCleaningProjects(false);
+                };
+                return (
+                  <div style={{ background: T.surface, border: `1px solid ${T.red}40`, borderRadius: 14, padding: "16px 20px", marginBottom: 20 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: T.red }}>🧹 Clean Fake Projects from Firestore</div>
+                        <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Removes all documents from the Firestore <code style={{ background: T.surfaceAlt, padding: "1px 6px", borderRadius: 4 }}>projects</code> collection. Your 48 real projects in data.js are unaffected.</div>
+                      </div>
+                      <button type="button" onClick={handleCleanFirestore} disabled={cleaningProjects}
+                        style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: cleaningProjects ? T.surfaceAlt : `${T.red}20`, color: cleaningProjects ? T.textMuted : T.red, fontSize: 12, fontWeight: 700, cursor: cleaningProjects ? "not-allowed" : "pointer", whiteSpace: "nowrap", fontFamily: "'Outfit',sans-serif" }}>
+                        {cleaningProjects ? "Cleaning..." : "Delete Fake Projects"}
+                      </button>
+                    </div>
+                    {cleanResult && (
+                      <div style={{ marginTop: 12, padding: "8px 14px", borderRadius: 8, background: cleanResult.ok ? `${T.green}15` : `${T.red}15`, color: cleanResult.ok ? T.green : T.red, fontSize: 12, fontWeight: 600 }}>
+                        {cleanResult.ok ? `✅ Done! Deleted ${cleanResult.count} fake projects. Refresh the dashboard to see 48.` : `❌ Error: ${cleanResult.msg}`}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Sub-tab navigation - Enhanced */}
               <div style={{ display: "flex", gap: 4, background: T.surfaceAlt, padding: 4, borderRadius: 10, marginBottom: 24 }}>
