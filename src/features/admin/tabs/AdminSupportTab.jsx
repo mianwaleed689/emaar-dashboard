@@ -253,7 +253,7 @@ const TabHelp = ({ items }) => {
     enabled: true,
     autoAccept: false,
     maxConcurrent: 3,
-    welcomeMessage: "Hi! ≡ƒæï How can we help you today?",
+    welcomeMessage: "Hi!  How can we help you today?",
     offlineMessage: "We're currently offline. Leave a message and we'll get back to you!",
     widgetColor: "#D4A843",
     widgetPosition: "right"
@@ -341,12 +341,12 @@ const TabHelp = ({ items }) => {
 
   // Categories and statuses
   const categories = [
-    { id: "bug", label: "Bug Report", color: T.red, icon: "≡ƒÉ¢" },
-    { id: "data", label: "Data Question", color: T.orange, icon: "≡ƒôè" },
-    { id: "feature", label: "Feature Request", color: T.purple, icon: "Γ£¿" },
-   { id: "billing", label: "Billing Query", color: T.green, icon: "≡ƒÆ│" },
-    { id: "account", label: "Account Issue", color: T.blue, icon: "≡ƒæñ" },
-    { id: "other", label: "Other", color: T.textMuted, icon: "≡ƒô¥" },
+    { id: "bug", label: "Bug Report", color: T.red, icon: "🉢" },
+    { id: "data", label: "Data Question", color: T.orange, icon: "📈" },
+    { id: "feature", label: "Feature Request", color: T.purple, icon: "✿" },
+   { id: "billing", label: "Billing Query", color: T.green, icon: "" },
+    { id: "account", label: "Account Issue", color: T.blue, icon: "" },
+    { id: "other", label: "Other", color: T.textMuted, icon: "" },
   ];
 
   const statuses = {
@@ -442,7 +442,7 @@ const TabHelp = ({ items }) => {
         ]);
         // Default sample workflows
         setWorkflowTriggers([
-          { id: "wf_1", name: "Resolved ΓåÆ Add Tag", trigger: "status_change", triggerValue: "resolved", actions: [{ type: "add_tag", value: "resolved" }], enabled: true },
+          { id: "wf_1", name: "Resolved ↑ Add Tag", trigger: "status_change", triggerValue: "resolved", actions: [{ type: "add_tag", value: "resolved" }], enabled: true },
           { id: "wf_2", name: "VIP Auto-Priority", trigger: "tier_is", triggerValue: "enterprise", actions: [{ type: "set_priority", value: "high" }, { type: "add_tag", value: "vip" }], enabled: true },
         ]);
         // Default sample CSAT
@@ -504,7 +504,7 @@ const TabHelp = ({ items }) => {
               tags: [...new Set([...(ticket.tags || []), "escalated"])],
               internalNotes: [
                 ...(ticket.internalNotes || []),
-   { text: `ΓÜá∩╕Å AUTO-ESCALATED: SLA breached (>${slaSettings.defaultHours}h without resolution)`, by: "System", at: now.toISOString(), isSystem: true }
+   { text: ` AUTO-ESCALATED: SLA breached (>${slaSettings.defaultHours}h without resolution)`, by: "System", at: now.toISOString(), isSystem: true }
               ],
               updatedAt: now.toISOString()
             };
@@ -1175,7 +1175,7 @@ const TabHelp = ({ items }) => {
       if (isInternalNote) {
         // Add to internal notes as attachment
         const newNote = {
-          text: `≡ƒôÄ Attached file: ${file.name}`,
+          text: `📄 Attached file: ${file.name}`,
           by: adminUser?.email || "admin",
           at: new Date().toISOString(),
           attachment
@@ -1188,7 +1188,7 @@ const TabHelp = ({ items }) => {
         // Add to public messages
         const newMessage = {
           from: "admin",
-          text: `≡ƒôÄ Attached file: ${file.name}`,
+          text: `📄 Attached file: ${file.name}`,
           at: new Date().toISOString(),
           by: adminUser?.email || "admin",
           attachment
@@ -1507,12 +1507,12 @@ const TabHelp = ({ items }) => {
 
   // Phase 8B: Webhook Functions
   const webhookEvents = [
-    { id: "ticket_created", label: "Ticket Created", icon: "≡ƒô¥" },
-    { id: "ticket_resolved", label: "Ticket Resolved", icon: "Γ£à" },
-    { id: "ticket_assigned", label: "Ticket Assigned", icon: "≡ƒæñ" },
-    { id: "sla_breach", label: "SLA Breached", icon: "ΓÅ░" },
-    { id: "reply_sent", label: "Reply Sent", icon: "≡ƒÆ¼" },
-   { id: "priority_changed", label: "Priority Changed", icon: "≡ƒö┤" },
+    { id: "ticket_created", label: "Ticket Created", icon: "" },
+    { id: "ticket_resolved", label: "Ticket Resolved", icon: "" },
+    { id: "ticket_assigned", label: "Ticket Assigned", icon: "" },
+    { id: "sla_breach", label: "SLA Breached", icon: "░" },
+    { id: "reply_sent", label: "Reply Sent", icon: "💼" },
+   { id: "priority_changed", label: "Priority Changed", icon: "" },
   ];
 
   const saveWebhook = async () => {
@@ -2145,7 +2145,7 @@ const TabHelp = ({ items }) => {
             autoAssignedBy: rule.name,
             internalNotes: [
               ...(ticket.internalNotes || []),
-              { text: `≡ƒñû Auto-assigned to ${rule.assignToName} by rule: "${rule.name}"`, by: "System", at: new Date().toISOString(), isSystem: true }
+              { text: `👛 Auto-assigned to ${rule.assignToName} by rule: "${rule.name}"`, by: "System", at: new Date().toISOString(), isSystem: true }
             ],
             updatedAt: new Date().toISOString()
           };
@@ -2314,7 +2314,7 @@ const TabHelp = ({ items }) => {
             if (action.value === "resolved") updates.resolvedAt = new Date().toISOString();
             break;
           case "add_note":
-            newNotes.push({ text: `≡ƒñû ${action.value}`, by: "System", at: new Date().toISOString(), isSystem: true });
+            newNotes.push({ text: `👛 ${action.value}`, by: "System", at: new Date().toISOString(), isSystem: true });
             break;
           case "send_notification":
             // Would integrate with notification system
@@ -2367,11 +2367,11 @@ const TabHelp = ({ items }) => {
 
   // Phase 5B: KB Categories
   const kbCategories = [
-    { id: "getting-started", label: "Getting Started", icon: "≡ƒÜÇ" },
-   { id: "billing", label: "Billing & Payments", icon: "≡ƒÆ│" },
-    { id: "technical", label: "Technical Issues", icon: "≡ƒöº" },
-    { id: "features", label: "Features & Usage", icon: "Γ£¿" },
-    { id: "account", label: "Account & Security", icon: "≡ƒöÉ" },
+    { id: "getting-started", label: "Getting Started", icon: "🔇" },
+   { id: "billing", label: "Billing & Payments", icon: "" },
+    { id: "technical", label: "Technical Issues", icon: "" },
+    { id: "features", label: "Features & Usage", icon: "✿" },
+    { id: "account", label: "Account & Security", icon: "🗉" },
   ];
 
   const qrCategories = [
@@ -2538,7 +2538,7 @@ const TabHelp = ({ items }) => {
 
   // Phase 6A: Sentiment Analysis (rule-based)
   const analyzeSentiment = (ticket) => {
-    if (!ticket) return { sentiment: "neutral", emoji: "≡ƒÿÉ", color: T.textMuted, label: "Neutral" };
+    if (!ticket) return { sentiment: "neutral", emoji: "🟉", color: T.textMuted, label: "Neutral" };
     
     const allText = [
       ticket.subject || "",
@@ -2567,12 +2567,12 @@ const TabHelp = ({ items }) => {
     };
     
     // Determine sentiment
-    if (scores.urgent >= 3) return { sentiment: "urgent", emoji: "≡ƒåÿ", color: T.red, label: "Urgent", pulse: true };
-    if (scores.frustrated >= 3) return { sentiment: "frustrated", emoji: "≡ƒÿá", color: T.red, label: "Frustrated" };
-    if (scores.concerned >= 2) return { sentiment: "concerned", emoji: "≡ƒÿƒ", color: T.orange, label: "Concerned" };
-    if (scores.positive >= 2) return { sentiment: "positive", emoji: "≡ƒÿè", color: T.green, label: "Positive" };
+    if (scores.urgent >= 3) return { sentiment: "urgent", emoji: "", color: T.red, label: "Urgent", pulse: true };
+    if (scores.frustrated >= 3) return { sentiment: "frustrated", emoji: "", color: T.red, label: "Frustrated" };
+    if (scores.concerned >= 2) return { sentiment: "concerned", emoji: "", color: T.orange, label: "Concerned" };
+    if (scores.positive >= 2) return { sentiment: "positive", emoji: "", color: T.green, label: "Positive" };
     
-    return { sentiment: "neutral", emoji: "≡ƒÿÉ", color: T.textMuted, label: "Neutral" };
+    return { sentiment: "neutral", emoji: "🟉", color: T.textMuted, label: "Neutral" };
   };
 
   // Phase 6A: AI Priority Recommendation
@@ -2880,9 +2880,9 @@ const TabHelp = ({ items }) => {
         {/* Channel indicators */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", marginLeft: "auto" }}>
           <span style={{ fontSize: 9, color: T.textMuted }}>Channels:</span>
-          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.blue}20`, color: T.blue }}>≡ƒôº {tickets.filter(t => !t.channel || t.channel === "email").length}</span>
-          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>≡ƒÆ¼ {liveChats.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "chat").length}</span>
-          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: "#25D36620", color: "#25D366" }}>≡ƒô▒ {whatsappConversations.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "whatsapp").length}</span>
+          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.blue}20`, color: T.blue }}> {tickets.filter(t => !t.channel || t.channel === "email").length}</span>
+          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>💼 {liveChats.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "chat").length}</span>
+          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: "#25D36620", color: "#25D366" }}>📱 {whatsappConversations.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "whatsapp").length}</span>
         </div>
       </div>
 
@@ -2893,13 +2893,13 @@ const TabHelp = ({ items }) => {
             { id: "open", label: `Open (${tickets.filter(t => t.status === "open" || t.status === "in_progress").length})` },
             { id: "resolved", label: `Resolved (${tickets.filter(t => t.status === "resolved" || t.status === "closed").length})` },
             { id: "all", label: `All (${tickets.length})` },
-            { id: "livechat", label: `≡ƒÆ¼ Live Chat${liveChats.filter(c => c.status === "active").length > 0 ? ` (${liveChats.filter(c => c.status === "active").length})` : ""}` },
-            { id: "whatsapp", label: `≡ƒô▒ WhatsApp${whatsappConversations.filter(c => c.status === "active").length > 0 ? ` (${whatsappConversations.filter(c => c.status === "active").length})` : ""}` },
-            { id: "analytics", label: "≡ƒôè Analytics" },
-            { id: "kb", label: "≡ƒôÜ KB & Tools" },
-   { id: "timetrack", label: `ΓÅ▒∩╕Å Time${activeTimer ? " ≡ƒö┤" : ""}` },
-            { id: "auditlog", label: "≡ƒôï Audit" },
-   { id: "settings", label: "ΓÜÖ∩╕Å Settings" },
+            { id: "livechat", label: `💼 Live Chat${liveChats.filter(c => c.status === "active").length > 0 ? ` (${liveChats.filter(c => c.status === "active").length})` : ""}` },
+            { id: "whatsapp", label: `📱 WhatsApp${whatsappConversations.filter(c => c.status === "active").length > 0 ? ` (${whatsappConversations.filter(c => c.status === "active").length})` : ""}` },
+            { id: "analytics", label: "📈 Analytics" },
+            { id: "kb", label: "📬 KB & Tools" },
+   { id: "timetrack", label: ` Time${activeTimer ? " " : ""}` },
+            { id: "auditlog", label: " Audit" },
+   { id: "settings", label: " Settings" },
           ].map(t => (
             <button key={t.id} type="button" onClick={() => setSupportSubTab(t.id)}
               style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${supportSubTab === t.id ? T.gold : T.border}`, background: supportSubTab === t.id ? T.goldGlow : "transparent", color: supportSubTab === t.id ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", position: "relative" }}>
@@ -2921,10 +2921,10 @@ const TabHelp = ({ items }) => {
           <select value={channelFilter} onChange={e => setChannelFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${channelFilter !== "all" ? "#25D366" : T.border}`, background: T.surfaceAlt, color: channelFilter !== "all" ? "#25D366" : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Channels</option>
-            <option value="email">≡ƒôº Email</option>
-            <option value="chat">≡ƒÆ¼ Live Chat</option>
-            <option value="whatsapp">≡ƒô▒ WhatsApp</option>
-            <option value="phone">≡ƒô₧ Phone</option>
+            <option value="email"> Email</option>
+            <option value="chat">💼 Live Chat</option>
+            <option value="whatsapp">📱 WhatsApp</option>
+            <option value="phone">📧 Phone</option>
           </select>
           <select value={ticketFilter} onChange={e => setTicketFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
@@ -2934,27 +2934,27 @@ const TabHelp = ({ items }) => {
           <select value={ticketPriorityFilter} onChange={e => setTicketPriorityFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Priorities</option>
-   <option value="urgent">≡ƒö┤ Urgent</option>
-            <option value="high">≡ƒƒá High</option>
-            <option value="normal">ΓÜ¬ Normal</option>
+   <option value="urgent"> Urgent</option>
+            <option value="high"> High</option>
+            <option value="normal"> Normal</option>
           </select>
           <select value={tagFilter} onChange={e => setTagFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${tagFilter !== "all" ? T.teal : T.border}`, background: T.surfaceAlt, color: tagFilter !== "all" ? T.teal : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Tags</option>
-   {availableTags.map(t => <option key={t.id} value={t.id}>≡ƒÅ╖∩╕Å {t.label}</option>)}
+   {availableTags.map(t => <option key={t.id} value={t.id}> {t.label}</option>)}
           </select>
           <select value={assignmentFilter} onChange={e => setAssignmentFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${assignmentFilter !== "all" ? T.purple : T.border}`, background: T.surfaceAlt, color: assignmentFilter !== "all" ? T.purple : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Agents</option>
-            <option value="unassigned">≡ƒæñ Unassigned</option>
-            {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>≡ƒæñ {a.name}</option>)}
+            <option value="unassigned"> Unassigned</option>
+            {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}> {a.name}</option>)}
           </select>
           {/* Custom Field Filter */}
           {customFields.length > 0 && (
             <select value={customFieldFilter.fieldId} onChange={e => setCustomFieldFilter({ fieldId: e.target.value, value: "" })}
               style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${customFieldFilter.fieldId ? T.cyan : T.border}`, background: T.surfaceAlt, color: customFieldFilter.fieldId ? T.cyan : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
               <option value="">Custom Field...</option>
-              {customFields.map(f => <option key={f.id} value={f.id}>≡ƒôï {f.name}</option>)}
+              {customFields.map(f => <option key={f.id} value={f.id}> {f.name}</option>)}
             </select>
           )}
           {customFieldFilter.fieldId && (
@@ -2964,22 +2964,22 @@ const TabHelp = ({ items }) => {
           <button type="button" onClick={() => setShowFieldsModal(true)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
             title="Custom Fields">
-   ΓÜÖ∩╕Å
+   
           </button>
           <button type="button" onClick={() => setShowAutoAssignModal(true)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${autoAssignRules.filter(r => r.enabled).length > 0 ? T.green : T.border}`, background: autoAssignRules.filter(r => r.enabled).length > 0 ? `${T.green}15` : "transparent", color: autoAssignRules.filter(r => r.enabled).length > 0 ? T.green : T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
             title="Auto-Assign Rules">
-            ≡ƒñû {autoAssignRules.filter(r => r.enabled).length > 0 && <span style={{ fontSize: 9 }}>{autoAssignRules.filter(r => r.enabled).length}</span>}
+            👛 {autoAssignRules.filter(r => r.enabled).length > 0 && <span style={{ fontSize: 9 }}>{autoAssignRules.filter(r => r.enabled).length}</span>}
           </button>
           <button type="button" onClick={() => setShowSlaModal(true)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
             title="SLA Settings">
-   ΓÅ▒∩╕Å
+   
           </button>
           <button type="button" onClick={() => setShowWorkflowModal(true)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${workflowTriggers.filter(w => w.enabled).length > 0 ? T.purple : T.border}`, background: workflowTriggers.filter(w => w.enabled).length > 0 ? `${T.purple}15` : "transparent", color: workflowTriggers.filter(w => w.enabled).length > 0 ? T.purple : T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
             title="Workflow Triggers">
-            ΓÜí {workflowTriggers.filter(w => w.enabled).length > 0 && <span style={{ fontSize: 9 }}>{workflowTriggers.filter(w => w.enabled).length}</span>}
+            ⚡ {workflowTriggers.filter(w => w.enabled).length > 0 && <span style={{ fontSize: 9 }}>{workflowTriggers.filter(w => w.enabled).length}</span>}
           </button>
         </div>
         )}
@@ -3052,7 +3052,7 @@ const TabHelp = ({ items }) => {
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
             {/* Ticket Volume Chart */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>≡ƒôê Ticket Volume</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>📊 Ticket Volume</div>
               <div style={{ height: 200 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={analytics.dailyVolume.slice(-14)} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
@@ -3092,7 +3092,7 @@ const TabHelp = ({ items }) => {
 
             {/* Category Breakdown */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>≡ƒôè By Category</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>📈 By Category</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.categoryBreakdown.slice(0, 6).map(cat => (
                   <div key={cat.id}>
@@ -3116,7 +3116,7 @@ const TabHelp = ({ items }) => {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
             {/* Priority Breakdown */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>≡ƒÄ» By Priority</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}> By Priority</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.priorityBreakdown.map(p => (
                   <div key={p.id}>
@@ -3134,7 +3134,7 @@ const TabHelp = ({ items }) => {
 
             {/* Status Breakdown */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>≡ƒôï By Status</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}> By Status</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.statusBreakdown.map(s => (
                   <div key={s.id}>
@@ -3152,7 +3152,7 @@ const TabHelp = ({ items }) => {
 
             {/* Resolution Time Buckets */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-   <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ΓÅ▒∩╕Å Resolution Time</div>
+   <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}> Resolution Time</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.resolutionBuckets.map((b, idx) => (
                   <div key={idx}>
@@ -3172,7 +3172,7 @@ const TabHelp = ({ items }) => {
           {/* Agent Performance Table */}
           <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>≡ƒæÑ Agent Performance</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}> Agent Performance</div>
               <div style={{ fontSize: 10, color: T.textMuted }}>Last {analyticsRange === "7d" ? "7 days" : analyticsRange === "30d" ? "30 days" : "90 days"}</div>
             </div>
             {analytics.agentPerformance.length === 0 ? (
@@ -3200,7 +3200,7 @@ const TabHelp = ({ items }) => {
                           <div>
                             <div style={{ fontWeight: 600, color: T.white }}>{agent.name}</div>
                             {idx === 0 && analytics.agentPerformance.length > 1 && (
-                              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold }}>≡ƒÅå Top Performer</span>
+                              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold }}> Top Performer</span>
                             )}
                           </div>
                         </td>
@@ -3234,7 +3234,7 @@ const TabHelp = ({ items }) => {
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
             {/* SLA Trend Chart */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>≡ƒôê SLA Compliance Trend</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>📊 SLA Compliance Trend</div>
               <div style={{ height: 180 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={analytics.slaTrend} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
@@ -3269,7 +3269,7 @@ const TabHelp = ({ items }) => {
 
             {/* Workload Distribution */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-   <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ΓÜû∩╕Å Current Workload</div>
+   <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>⏰ Current Workload</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.workloadDistribution.length === 0 ? (
                   <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No open tickets</div>
@@ -3282,7 +3282,7 @@ const TabHelp = ({ items }) => {
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                           <span style={{ fontSize: 11, color: T.textSecondary, display: "flex", alignItems: "center", gap: 6 }}>
                             {agent.name}
-   {isOverloaded && <span style={{ fontSize: 9, padding: "1px 4px", borderRadius: 3, background: `${T.red}20`, color: T.red }}>ΓÜá∩╕Å</span>}
+   {isOverloaded && <span style={{ fontSize: 9, padding: "1px 4px", borderRadius: 3, background: `${T.red}20`, color: T.red }}></span>}
                           </span>
                           <span style={{ fontSize: 11, fontWeight: 600, color: isOverloaded ? T.red : agent.id === "unassigned" ? T.orange : T.white }}>{agent.count}</span>
                         </div>
@@ -3305,7 +3305,7 @@ const TabHelp = ({ items }) => {
 
           {/* CSAT Section Header */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>≡ƒÿè Customer Satisfaction</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}> Customer Satisfaction</div>
             <div style={{ flex: 1, height: 1, background: T.border }} />
           </div>
 
@@ -3315,7 +3315,7 @@ const TabHelp = ({ items }) => {
               <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Avg CSAT Score</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                 <span style={{ fontSize: 32, fontWeight: 900, color: analytics.avgCsat && analytics.avgCsat >= 4 ? T.green : analytics.avgCsat && analytics.avgCsat >= 3 ? T.orange : T.red, fontFamily: "'Fraunces',serif" }}>
-                  {analytics.avgCsat ? `${analytics.avgCsat}Γÿà` : "—"}
+                  {analytics.avgCsat ? `${analytics.avgCsat}` : "—"}
                 </span>
                 {analytics.csatChange !== 0 && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: analytics.csatChange > 0 ? T.green : T.red }}>
@@ -3358,7 +3358,7 @@ const TabHelp = ({ items }) => {
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
             {/* CSAT Trend */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>≡ƒôê CSAT Trend</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>📊 CSAT Trend</div>
               <div style={{ height: 180 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={analytics.csatTrend.filter(d => d.avgRating !== null)} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
@@ -3374,7 +3374,7 @@ const TabHelp = ({ items }) => {
                     <Tooltip 
                       contentStyle={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 12 }}
                       labelStyle={{ color: T.white, fontWeight: 600 }}
-                      formatter={(value) => [`${value} Γÿà`, "Avg Rating"]}
+                      formatter={(value) => [`${value} `, "Avg Rating"]}
                     />
                     <Area type="monotone" dataKey="avgRating" name="Avg Rating" stroke={T.gold} fillOpacity={1} fill="url(#colorCsat)" strokeWidth={2} />
                   </AreaChart>
@@ -3387,7 +3387,7 @@ const TabHelp = ({ items }) => {
                 </div>
                 {analytics.avgCsat && (
                   <div style={{ padding: "4px 10px", borderRadius: 6, background: analytics.avgCsat >= 4 ? `${T.green}20` : analytics.avgCsat >= 3 ? `${T.orange}20` : `${T.red}20`, color: analytics.avgCsat >= 4 ? T.green : analytics.avgCsat >= 3 ? T.orange : T.red, fontSize: 11, fontWeight: 700 }}>
-                    Period Avg: {analytics.avgCsat}Γÿà
+                    Period Avg: {analytics.avgCsat}
                   </div>
                 )}
               </div>
@@ -3395,12 +3395,12 @@ const TabHelp = ({ items }) => {
 
             {/* Rating Distribution */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>Γ¡É Rating Distribution</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}> Rating Distribution</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.ratingDistribution.map(r => (
                   <div key={r.rating}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                      <span style={{ fontSize: 11, color: T.textSecondary }}>{"Γ¡É".repeat(r.rating)}</span>
+                      <span style={{ fontSize: 11, color: T.textSecondary }}>{"".repeat(r.rating)}</span>
                       <span style={{ fontSize: 11, fontWeight: 600, color: r.color }}>{r.count} ({r.percent}%)</span>
                     </div>
                     <div style={{ height: 6, background: T.border, borderRadius: 3, overflow: "hidden" }}>
@@ -3415,7 +3415,7 @@ const TabHelp = ({ items }) => {
           {/* Agent CSAT Scores */}
           <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>≡ƒæÑ Agent CSAT Scores</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}> Agent CSAT Scores</div>
               <div style={{ fontSize: 10, color: T.textMuted }}>Based on customer feedback</div>
             </div>
             {analytics.agentCsat.length === 0 ? (
@@ -3441,13 +3441,13 @@ const TabHelp = ({ items }) => {
                           <div>
                             <div style={{ fontWeight: 600, color: T.white }}>{agent.name}</div>
                             {idx === 0 && analytics.agentCsat.length > 1 && (
-                              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold }}>Γ¡É Highest Rated</span>
+                              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold }}> Highest Rated</span>
                             )}
                           </div>
                         </td>
                         <td style={{ textAlign: "center", padding: "12px" }}>
                           <span style={{ padding: "6px 12px", borderRadius: 8, background: agent.avgRating >= 4 ? `${T.green}20` : agent.avgRating >= 3 ? `${T.orange}20` : `${T.red}20`, color: agent.avgRating >= 4 ? T.green : agent.avgRating >= 3 ? T.orange : T.red, fontWeight: 700, fontSize: 14 }}>
-                            {agent.avgRating}Γÿà
+                            {agent.avgRating}
                           </span>
                         </td>
                         <td style={{ textAlign: "center", padding: "12px", color: T.textSecondary }}>{agent.totalRatings}</td>
@@ -3455,7 +3455,7 @@ const TabHelp = ({ items }) => {
                           {agent.recentComment ? (
                             <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                               <span style={{ fontSize: 10, color: agent.recentComment.rating >= 4 ? T.green : agent.recentComment.rating >= 3 ? T.orange : T.red }}>
-                                {"Γÿà".repeat(agent.recentComment.rating)}
+                                {"".repeat(agent.recentComment.rating)}
                               </span>
                               <span style={{ fontSize: 11, color: T.textSecondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 "{agent.recentComment.text.length > 40 ? agent.recentComment.text.slice(0, 40) + "..." : agent.recentComment.text}"
@@ -3475,7 +3475,7 @@ const TabHelp = ({ items }) => {
 
           {/* Recent Feedback */}
           <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>≡ƒÆ¼ Recent Feedback</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>💼 Recent Feedback</div>
             {analytics.recentFeedback.length === 0 ? (
               <div style={{ padding: 30, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No feedback with comments yet</div>
             ) : (
@@ -3485,7 +3485,7 @@ const TabHelp = ({ items }) => {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ fontSize: 14, color: feedback.rating >= 4 ? T.green : feedback.rating >= 3 ? T.orange : T.red }}>
-                          {"Γÿà".repeat(feedback.rating)}{"Γÿå".repeat(5 - feedback.rating)}
+                          {"".repeat(feedback.rating)}{"".repeat(5 - feedback.rating)}
                         </span>
                         <span style={{ fontSize: 11, color: T.textMuted }}>by {feedback.userName || "Customer"}</span>
                       </div>
@@ -3519,11 +3519,11 @@ const TabHelp = ({ items }) => {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <button type="button" onClick={() => setShowWidgetPreview(true)}
                 style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-   ≡ƒæü∩╕Å Widget Preview
+    Widget Preview
               </button>
               <button type="button" onClick={() => setShowChatSettings(true)}
                 style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-   ΓÜÖ∩╕Å Settings
+    Settings
               </button>
             </div>
           </div>
@@ -3531,11 +3531,11 @@ const TabHelp = ({ items }) => {
           {/* Chat Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
             {[
-              { label: "Active Chats", value: liveChats.filter(c => c.status === "active").length, color: T.green, icon: "≡ƒÆ¼" },
-   { label: "In Queue", value: chatQueue.length, color: chatQueue.length > 0 ? T.orange : T.textMuted, icon: "ΓÅ│" },
-              { label: "Handled Today", value: liveChats.filter(c => c.status === "ended").length, color: T.teal, icon: "Γ£ô" },
-   { label: "Avg Wait", value: chatQueue.length > 0 ? `${Math.round(chatQueue.reduce((a, c) => a + (Date.now() - new Date(c.queuedAt).getTime()) / 1000, 0) / chatQueue.length / 60)}m` : "—", color: T.textSecondary, icon: "ΓÅ▒∩╕Å" },
-              { label: "Avg Duration", value: liveChats.filter(c => c.duration).length > 0 ? `${Math.round(liveChats.filter(c => c.duration).reduce((a, c) => a + c.duration, 0) / liveChats.filter(c => c.duration).length / 60)}m` : "—", color: T.textSecondary, icon: "≡ƒôè" },
+              { label: "Active Chats", value: liveChats.filter(c => c.status === "active").length, color: T.green, icon: "💼" },
+   { label: "In Queue", value: chatQueue.length, color: chatQueue.length > 0 ? T.orange : T.textMuted, icon: "" },
+              { label: "Handled Today", value: liveChats.filter(c => c.status === "ended").length, color: T.teal, icon: "✔" },
+   { label: "Avg Wait", value: chatQueue.length > 0 ? `${Math.round(chatQueue.reduce((a, c) => a + (Date.now() - new Date(c.queuedAt).getTime()) / 1000, 0) / chatQueue.length / 60)}m` : "—", color: T.textSecondary, icon: "" },
+              { label: "Avg Duration", value: liveChats.filter(c => c.duration).length > 0 ? `${Math.round(liveChats.filter(c => c.duration).reduce((a, c) => a + c.duration, 0) / liveChats.filter(c => c.duration).length / 60)}m` : "—", color: T.textSecondary, icon: "📈" },
             ].map((stat, i) => (
               <div key={i} style={{ padding: 16, background: T.surface, borderRadius: 10, border: `1px solid ${T.border}`, textAlign: "center" }}>
                 <div style={{ fontSize: 20, marginBottom: 4 }}>{stat.icon}</div>
@@ -3550,7 +3550,7 @@ const TabHelp = ({ items }) => {
             <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-   <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ΓÅ│ Queue</span>
+   <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}> Queue</span>
                   {chatQueue.length > 0 && (
                     <span style={{ padding: "2px 8px", borderRadius: 10, background: `${T.orange}20`, color: T.orange, fontSize: 11, fontWeight: 600 }}>{chatQueue.length} waiting</span>
                   )}
@@ -3571,7 +3571,7 @@ const TabHelp = ({ items }) => {
               
               {chatQueue.length === 0 ? (
                 <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>≡ƒÄë</div>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}></div>
                   <div style={{ fontSize: 12 }}>No visitors waiting</div>
                 </div>
               ) : (
@@ -3673,11 +3673,11 @@ const TabHelp = ({ items }) => {
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ fontSize: 12, color: T.textMuted, fontFamily: "'Fraunces',serif" }}>
-                          ≡ƒòÉ {durMins}:{durSecs.toString().padStart(2, "0")}
+                           {durMins}:{durSecs.toString().padStart(2, "0")}
                         </div>
                         <button type="button" onClick={() => setActiveChatId(null)}
                           style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
-                          ΓåÉ Back
+                           Back
                         </button>
                         <button type="button" onClick={async () => {
                           // Convert to ticket
@@ -3704,7 +3704,7 @@ const TabHelp = ({ items }) => {
                           } catch (e) { notify("Error: " + e.message); }
                         }}
                           style={{ padding: "6px 10px", borderRadius: 5, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
-                          ≡ƒôº Convert to Ticket
+                           Convert to Ticket
                         </button>
                         <button type="button" onClick={() => {
                           setLiveChats(prev => prev.map(c => c.id === chat.id ? { ...c, status: "ended", endedAt: new Date().toISOString(), duration: chatDuration } : c));
@@ -3760,7 +3760,7 @@ const TabHelp = ({ items }) => {
                         setLiveChats(prev => prev.map(c => c.id === chat.id ? { ...c, messages: [...(c.messages || []), { from: "visitor", text: reply, at: new Date().toISOString() }] } : c));
                       }}
                         style={{ width: "100%", padding: "6px 12px", borderRadius: 5, border: `1px dashed ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
-                        ≡ƒÆ¼ Simulate Visitor Reply (Demo)
+                        💼 Simulate Visitor Reply (Demo)
                       </button>
                     </div>
                   </div>
@@ -3771,7 +3771,7 @@ const TabHelp = ({ items }) => {
               <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>≡ƒƒó Active Chats</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}> Active Chats</span>
                     {liveChats.filter(c => c.status === "active").length > 0 && (
                       <span style={{ padding: "2px 8px", borderRadius: 10, background: `${T.green}20`, color: T.green, fontSize: 11, fontWeight: 600 }}>{liveChats.filter(c => c.status === "active").length} live</span>
                     )}
@@ -3780,7 +3780,7 @@ const TabHelp = ({ items }) => {
                 
                 {liveChats.filter(c => c.status === "active").length === 0 ? (
                   <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 28, marginBottom: 8 }}>≡ƒÆ¼</div>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>💼</div>
                     <div style={{ fontSize: 12 }}>No active chats</div>
                     <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Accept a visitor from the queue to start</div>
                   </div>
@@ -3818,7 +3818,7 @@ const TabHelp = ({ items }) => {
                           )}
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             <span style={{ fontSize: 10, color: T.textMuted }}>{chat.messages?.length || 0} messages</span>
-                            <span style={{ fontSize: 10, color: T.green }}>Click to open ΓåÆ</span>
+                            <span style={{ fontSize: 10, color: T.green }}>Click to open ↑</span>
                           </div>
                         </div>
                       );
@@ -3837,7 +3837,7 @@ const TabHelp = ({ items }) => {
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               <span style={{ fontSize: 12, fontWeight: 500, color: T.textSecondary }}>{chat.visitorName}</span>
                               <span style={{ fontSize: 10, color: T.textMuted }}>{chat.messages?.length || 0} msgs</span>
-                              {chat.convertedToTicket && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>ΓåÆ Ticket</span>}
+                              {chat.convertedToTicket && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>↑ Ticket</span>}
                             </div>
                             <span style={{ fontSize: 10, color: T.textMuted }}>{chat.duration ? `${Math.floor(chat.duration / 60)}m ${chat.duration % 60}s` : "—"}</span>
                           </div>
@@ -3852,13 +3852,13 @@ const TabHelp = ({ items }) => {
 
           {/* Embed Code Section */}
           <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12 }}>≡ƒöù Widget Embed Code</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12 }}> Widget Embed Code</div>
             <div style={{ padding: 12, background: T.bg, borderRadius: 8, fontFamily: "monospace", fontSize: 11, color: T.teal, lineHeight: 1.6, overflow: "auto" }}>
               {`<script src="https://chat.dxbanalytics.com/widget.js"></script>\n<script>\n  DXBChat.init({\n    apiKey: "your_api_key",\n    color: "${chatSettings.widgetColor}",\n    position: "${chatSettings.widgetPosition}",\n    welcomeMessage: "${chatSettings.welcomeMessage}"\n  });\n</script>`}
             </div>
             <button type="button" onClick={() => { navigator.clipboard.writeText(`<script src="https://chat.dxbanalytics.com/widget.js"></script>\n<script>\n  DXBChat.init({\n    apiKey: "your_api_key",\n    color: "${chatSettings.widgetColor}",\n    position: "${chatSettings.widgetPosition}"\n  });\n</script>`); notify("Embed code copied!"); }}
               style={{ marginTop: 10, padding: "8px 16px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-              ≡ƒôï Copy Code
+               Copy Code
             </button>
           </div>
         </div>
@@ -3870,19 +3870,19 @@ const TabHelp = ({ items }) => {
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#25D366", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{ fontSize: 18 }}>≡ƒô▒</span>
+                  <span style={{ fontSize: 18 }}>📱</span>
                 </div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>WhatsApp Business</div>
                   <div style={{ fontSize: 11, color: T.textMuted }}>+971 4 XXX XXXX</div>
                 </div>
               </div>
-              <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "#25D36620", color: "#25D366", fontWeight: 600 }}>Γ£ô Connected</span>
+              <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "#25D36620", color: "#25D366", fontWeight: 600 }}>✔ Connected</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <button type="button" onClick={() => setShowWhatsappTemplates(true)}
                 style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid #25D36640`, background: "#25D36610", color: "#25D366", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                ≡ƒô¥ Message Templates
+                 Message Templates
               </button>
             </div>
           </div>
@@ -3890,11 +3890,11 @@ const TabHelp = ({ items }) => {
           {/* WhatsApp Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
             {[
-              { label: "Active", value: whatsappConversations.filter(c => c.status === "active").length, color: "#25D366", icon: "≡ƒÆ¼" },
-              { label: "Unread", value: whatsappConversations.filter(c => !c.responded && c.status === "active").length, color: T.orange, icon: "≡ƒöö" },
-              { label: "Today", value: whatsappConversations.filter(c => new Date(c.createdAt) > new Date(Date.now() - 86400000)).length, color: T.teal, icon: "≡ƒôè" },
-              { label: "Converted", value: whatsappConversations.filter(c => c.convertedToTicket).length, color: T.purple, icon: "≡ƒÄ½" },
-   { label: "Avg Response", value: "~5m", color: T.textSecondary, icon: "ΓÅ▒∩╕Å" },
+              { label: "Active", value: whatsappConversations.filter(c => c.status === "active").length, color: "#25D366", icon: "💼" },
+              { label: "Unread", value: whatsappConversations.filter(c => !c.responded && c.status === "active").length, color: T.orange, icon: "" },
+              { label: "Today", value: whatsappConversations.filter(c => new Date(c.createdAt) > new Date(Date.now() - 86400000)).length, color: T.teal, icon: "📈" },
+              { label: "Converted", value: whatsappConversations.filter(c => c.convertedToTicket).length, color: T.purple, icon: "" },
+   { label: "Avg Response", value: "~5m", color: T.textSecondary, icon: "" },
             ].map((stat, i) => (
               <div key={i} style={{ padding: 16, background: T.surface, borderRadius: 10, border: `1px solid ${T.border}`, textAlign: "center" }}>
                 <div style={{ fontSize: 20, marginBottom: 4 }}>{stat.icon}</div>
@@ -3909,7 +3909,7 @@ const TabHelp = ({ items }) => {
             <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>≡ƒô▒ Conversations</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>📱 Conversations</span>
                   {whatsappConversations.filter(c => c.status === "active").length > 0 && (
                     <span style={{ padding: "2px 8px", borderRadius: 10, background: "#25D36620", color: "#25D366", fontSize: 11, fontWeight: 600 }}>{whatsappConversations.filter(c => c.status === "active").length}</span>
                   )}
@@ -3918,7 +3918,7 @@ const TabHelp = ({ items }) => {
               
               {whatsappConversations.length === 0 ? (
                 <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>≡ƒô▒</div>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>📱</div>
                   <div style={{ fontSize: 12 }}>No WhatsApp conversations</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Messages will appear here when customers contact you</div>
                 </div>
@@ -3953,9 +3953,9 @@ const TabHelp = ({ items }) => {
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold, textTransform: "uppercase" }}>{conv.customerTier || "free"}</span>
                           {windowRemaining > 0 ? (
-   <span style={{ fontSize: 9, color: windowRemaining < 4 ? T.orange : T.textMuted }}>ΓÅ▒∩╕Å {Math.round(windowRemaining)}h window</span>
+   <span style={{ fontSize: 9, color: windowRemaining < 4 ? T.orange : T.textMuted }}> {Math.round(windowRemaining)}h window</span>
                           ) : (
-   <span style={{ fontSize: 9, color: T.red }}>ΓÜá∩╕Å Window expired</span>
+   <span style={{ fontSize: 9, color: T.red }}> Window expired</span>
                           )}
                         </div>
                       </div>
@@ -4026,7 +4026,7 @@ const TabHelp = ({ items }) => {
                       </div>
                       <button type="button" onClick={() => setActiveWhatsappId(null)}
                         style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
-                        ΓåÉ Back
+                         Back
                       </button>
                       <button type="button" onClick={async () => {
                         // Convert to ticket
@@ -4053,7 +4053,7 @@ const TabHelp = ({ items }) => {
                         } catch (e) { notify("Error: " + e.message); }
                       }}
                         style={{ padding: "6px 10px", borderRadius: 5, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
-                        ≡ƒÄ½ Convert to Ticket
+                         Convert to Ticket
                       </button>
                     </div>
                   </div>
@@ -4069,7 +4069,7 @@ const TabHelp = ({ items }) => {
                           <span style={{ fontSize: 9, color: "#667781" }}>
                             {new Date(msg.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                           </span>
-                          {msg.from === "agent" && <span style={{ fontSize: 9, color: "#53BDEB" }}>Γ£ôΓ£ô</span>}
+                          {msg.from === "agent" && <span style={{ fontSize: 9, color: "#53BDEB" }}>✔✔</span>}
                         </div>
                       </div>
                     ))}
@@ -4079,7 +4079,7 @@ const TabHelp = ({ items }) => {
                   <div style={{ padding: 12, borderTop: `1px solid ${T.border}`, background: T.surface }}>
                     {!canSendFreeform && (
                       <div style={{ padding: 10, background: `${T.orange}10`, borderRadius: 8, marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
-   <span style={{ fontSize: 16 }}>ΓÜá∩╕Å</span>
+   <span style={{ fontSize: 16 }}></span>
                         <div>
                           <div style={{ fontSize: 11, fontWeight: 600, color: T.orange }}>24-hour window expired</div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>You can only send pre-approved template messages. Click "Templates" below.</div>
@@ -4089,7 +4089,7 @@ const TabHelp = ({ items }) => {
                     <div style={{ display: "flex", gap: 10 }}>
                       <button type="button" onClick={() => setShowWhatsappTemplates(true)}
                         style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid #25D36640`, background: "#25D36610", color: "#25D366", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                        ≡ƒô¥ Templates
+                         Templates
                       </button>
                       <input value={whatsappMessage} onChange={e => setWhatsappMessage(e.target.value)}
                         onKeyDown={e => {
@@ -4121,7 +4121,7 @@ const TabHelp = ({ items }) => {
                       setWhatsappConversations(prev => prev.map(c => c.id === conv.id ? { ...c, messages: [...(c.messages || []), { from: "customer", text: reply, at: new Date().toISOString() }], lastCustomerMessage: new Date().toISOString(), responded: false } : c));
                     }}
                       style={{ width: "100%", padding: "6px 12px", borderRadius: 5, border: `1px dashed ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
-                      ≡ƒô▒ Simulate Customer Reply (Demo)
+                      📱 Simulate Customer Reply (Demo)
                     </button>
                   </div>
                 </div>
@@ -4133,7 +4133,7 @@ const TabHelp = ({ items }) => {
           <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 8 }}>≡ƒô▒ WhatsApp Business API</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 8 }}>📱 WhatsApp Business API</div>
                 <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.6 }}>
                   Connected via Meta Business API. Messages from customers open a 24-hour free-form messaging window.<br />
                   Outside this window, you must use pre-approved message templates.
@@ -4141,10 +4141,10 @@ const TabHelp = ({ items }) => {
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 <button type="button" style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-   ΓÜÖ∩╕Å API Settings
+    API Settings
                 </button>
                 <button type="button" style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                  ≡ƒôè Delivery Reports
+                  📈 Delivery Reports
                 </button>
               </div>
             </div>
@@ -4156,17 +4156,17 @@ const TabHelp = ({ items }) => {
           {/* KB Categories */}
           {(() => {
             const kbCategories = [
-              { id: "getting-started", label: "Getting Started", icon: "≡ƒÜÇ" },
-   { id: "billing", label: "Billing & Payments", icon: "≡ƒÆ│" },
-              { id: "technical", label: "Technical Issues", icon: "≡ƒöº" },
-              { id: "features", label: "Features & How-To", icon: "Γ¡É" },
-              { id: "account", label: "Account Management", icon: "≡ƒæñ" },
+              { id: "getting-started", label: "Getting Started", icon: "🔇" },
+   { id: "billing", label: "Billing & Payments", icon: "" },
+              { id: "technical", label: "Technical Issues", icon: "" },
+              { id: "features", label: "Features & How-To", icon: "" },
+              { id: "account", label: "Account Management", icon: "" },
             ];
             
             const qrCategories = [
-              { id: "general", label: "General", icon: "≡ƒÆ¼" },
-              { id: "technical", label: "Technical", icon: "≡ƒöº" },
-   { id: "billing", label: "Billing", icon: "≡ƒÆ│" },
+              { id: "general", label: "General", icon: "💼" },
+              { id: "technical", label: "Technical", icon: "" },
+   { id: "billing", label: "Billing", icon: "" },
             ];
             
             const filteredArticles = kbArticles.filter(a => {
@@ -4189,7 +4189,7 @@ const TabHelp = ({ items }) => {
                 <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                     <div style={{ fontSize: 15, fontWeight: 700, color: T.white, display: "flex", alignItems: "center", gap: 8 }}>
-                      ≡ƒôÜ Knowledge Base
+                      📬 Knowledge Base
                       <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>{kbArticles.length} articles</span>
                     </div>
                     <button type="button" onClick={() => { setEditingArticle(null); setArticleForm({ title: "", content: "", category: "getting-started", tags: "" }); setShowKbModal(true); }}
@@ -4214,15 +4214,15 @@ const TabHelp = ({ items }) => {
                     <div style={{ padding: 20, background: T.surfaceAlt, borderRadius: 10 }}>
                       <button type="button" onClick={() => setViewingArticle(null)}
                         style={{ marginBottom: 16, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer" }}>
-                        ΓåÉ Back to articles
+                         Back to articles
                       </button>
                       <h3 style={{ margin: "0 0 12px 0", fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{viewingArticle.title}</h3>
                       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
                         <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>
                           {kbCategories.find(c => c.id === viewingArticle.category)?.icon} {kbCategories.find(c => c.id === viewingArticle.category)?.label}
                         </span>
-                        <span style={{ fontSize: 10, color: T.textMuted }}>≡ƒæü {viewingArticle.views || 0} views</span>
-                        <span style={{ fontSize: 10, color: T.textMuted }}>≡ƒæì {viewingArticle.helpful || 0} helpful</span>
+                        <span style={{ fontSize: 10, color: T.textMuted }}> {viewingArticle.views || 0} views</span>
+                        <span style={{ fontSize: 10, color: T.textMuted }}> {viewingArticle.helpful || 0} helpful</span>
                       </div>
                       <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{viewingArticle.content}</div>
                       {viewingArticle.tags?.length > 0 && (
@@ -4235,7 +4235,7 @@ const TabHelp = ({ items }) => {
                       <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
                         <button type="button" onClick={() => { setEditingArticle(viewingArticle); setArticleForm({ title: viewingArticle.title, content: viewingArticle.content, category: viewingArticle.category, tags: (viewingArticle.tags || []).join(", ") }); setShowKbModal(true); }}
                           style={{ padding: "8px 16px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer" }}>
-   Γ£Å∩╕Å Edit
+   ✅ Edit
                         </button>
                         <button type="button" onClick={async () => {
                           if (!window.confirm("Delete this article?")) return;
@@ -4247,7 +4247,7 @@ const TabHelp = ({ items }) => {
                           } catch (e) { notify("Error: " + e.message); }
                         }}
                           style={{ padding: "8px 16px", borderRadius: 6, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 11, cursor: "pointer" }}>
-   ≡ƒùæ∩╕Å Delete
+    Delete
                         </button>
                       </div>
                     </div>
@@ -4256,7 +4256,7 @@ const TabHelp = ({ items }) => {
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {articlesByCategory.length === 0 ? (
                         <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                          <div style={{ fontSize: 24, marginBottom: 8 }}>≡ƒôÜ</div>
+                          <div style={{ fontSize: 24, marginBottom: 8 }}>📬</div>
                           <div style={{ fontSize: 12 }}>No articles found. Create your first article!</div>
                         </div>
                       ) : (
@@ -4267,7 +4267,7 @@ const TabHelp = ({ items }) => {
                               <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>
                                 {cat.icon} {cat.label} <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 400 }}>({cat.articles.length})</span>
                               </span>
-   <span style={{ color: T.textMuted, fontSize: 12 }}>{expandedKbCategory === cat.id ? "Γû╝" : "Γû╢"}</span>
+   <span style={{ color: T.textMuted, fontSize: 12 }}>{expandedKbCategory === cat.id ? "" : "▶"}</span>
                             </button>
                             {expandedKbCategory === cat.id && (
                               <div style={{ padding: "0 16px 16px" }}>
@@ -4278,8 +4278,8 @@ const TabHelp = ({ items }) => {
                                     onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
                                     <div style={{ fontSize: 13, fontWeight: 500, color: T.white, marginBottom: 4 }}>{article.title}</div>
                                     <div style={{ display: "flex", gap: 12, fontSize: 10, color: T.textMuted }}>
-                                      <span>≡ƒæü {article.views || 0}</span>
-                                      <span>≡ƒæì {article.helpful || 0}</span>
+                                      <span> {article.views || 0}</span>
+                                      <span> {article.helpful || 0}</span>
                                     </div>
                                   </div>
                                 ))}
@@ -4296,7 +4296,7 @@ const TabHelp = ({ items }) => {
                 <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                     <div style={{ fontSize: 15, fontWeight: 700, color: T.white, display: "flex", alignItems: "center", gap: 8 }}>
-                      ΓÜí Quick Responses
+                      ⚡ Quick Responses
                       <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${T.purple}20`, color: T.purple }}>{quickResponses.length} templates</span>
                     </div>
                     <button type="button" onClick={() => { setEditingQuickResponse(null); setQuickResponseForm({ name: "", shortcut: "", content: "", category: "general" }); setShowQuickResponseModal(true); }}
@@ -4307,13 +4307,13 @@ const TabHelp = ({ items }) => {
                   
                   <div style={{ padding: 12, background: `${T.purple}10`, borderRadius: 8, marginBottom: 16 }}>
                     <div style={{ fontSize: 11, color: T.textSecondary }}>
-                      ≡ƒÆí Use shortcuts like <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>/greet</code> in ticket replies to quickly insert templates. Variables: <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{name}}"}</code>, <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{ticket_id}}"}</code>
+                      🆍 Use shortcuts like <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>/greet</code> in ticket replies to quickly insert templates. Variables: <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{name}}"}</code>, <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{ticket_id}}"}</code>
                     </div>
                   </div>
                   
                   {quickResponses.length === 0 ? (
                     <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                      <div style={{ fontSize: 24, marginBottom: 8 }}>ΓÜí</div>
+                      <div style={{ fontSize: 24, marginBottom: 8 }}>⚡</div>
                       <div style={{ fontSize: 12 }}>No quick responses yet. Create your first template!</div>
                     </div>
                   ) : (
@@ -4381,7 +4381,7 @@ const TabHelp = ({ items }) => {
               </div>
               <button type="button" onClick={stopTimer}
                 style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: T.red, color: T.white, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-   ΓÅ╣∩╕Å Stop & Log
+    Stop & Log
               </button>
             </div>
           )}
@@ -4438,18 +4438,18 @@ const TabHelp = ({ items }) => {
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <button type="button" onClick={() => setShowTimeEntryModal(true)}
               style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-              Γ₧ò Manual Entry
+              📌 Manual Entry
             </button>
             <div style={{ flex: 1 }} />
             <div style={{ fontSize: 11, color: T.textMuted }}>
-              ≡ƒÆí Start timer from any ticket drawer, or add manual entries here
+              🆍 Start timer from any ticket drawer, or add manual entries here
             </div>
           </div>
 
           {/* Agent Time Breakdown */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 20 }}>
             <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 16 }}>≡ƒæÑ Agent Breakdown</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 16 }}> Agent Breakdown</div>
               {getAgentTimeStats().length === 0 ? (
                 <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No time logged yet</div>
               ) : (
@@ -4476,7 +4476,7 @@ const TabHelp = ({ items }) => {
             {/* Recent Time Entries */}
             <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
               <div style={{ padding: 16, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>≡ƒô¥ Recent Time Entries</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}> Recent Time Entries</div>
                 <div style={{ fontSize: 10, color: T.textMuted }}>{timeEntries.length} total</div>
               </div>
               <div style={{ maxHeight: 350, overflowY: "auto" }}>
@@ -4492,7 +4492,7 @@ const TabHelp = ({ items }) => {
                           {ticket?.subject || entry.ticketId}
                         </div>
                         <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>
-                          {entry.agentName} ΓÇó {entry.notes} ΓÇó {timeAgo(entry.createdAt)}
+                          {entry.agentName} • {entry.notes} • {timeAgo(entry.createdAt)}
                         </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -4503,7 +4503,7 @@ const TabHelp = ({ items }) => {
                 })}
                 {timeEntries.length === 0 && (
                   <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-   <div style={{ fontSize: 24, marginBottom: 8 }}>ΓÅ▒∩╕Å</div>
+   <div style={{ fontSize: 24, marginBottom: 8 }}></div>
                     <div style={{ fontSize: 12 }}>No time entries yet</div>
                   </div>
                 )}
@@ -4576,7 +4576,7 @@ const TabHelp = ({ items }) => {
           {/* Audit Log Table */}
           <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: 16, borderBottom: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>≡ƒôï Ticket Audit Trail</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}> Ticket Audit Trail</div>
             </div>
             <div style={{ maxHeight: 500, overflowY: "auto" }}>
               {ticketAuditLogs.filter(l => {
@@ -4592,16 +4592,16 @@ const TabHelp = ({ items }) => {
                     {/* Action Icon */}
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: `${getAuditActionColor(log.action)}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <span style={{ fontSize: 12 }}>
-                        {log.action === "created" ? "≡ƒô¥" :
-                         log.action === "status_change" ? "≡ƒöä" :
-                         log.action === "assigned" ? "≡ƒæñ" :
-                         log.action === "reply_sent" ? "≡ƒÆ¼" :
-                         log.action === "note_added" ? "≡ƒôî" :
-   log.action === "tag_added" ? "≡ƒÅ╖∩╕Å" :
-   log.action === "tag_removed" ? "≡ƒÅ╖∩╕Å" :
-   log.action === "time_logged" ? "ΓÅ▒∩╕Å" :
-                         log.action === "escalated" ? "≡ƒÜ¿" :
-                         log.action === "merged" ? "≡ƒöù" : "≡ƒôï"}
+                        {log.action === "created" ? "" :
+                         log.action === "status_change" ? "" :
+                         log.action === "assigned" ? "" :
+                         log.action === "reply_sent" ? "💼" :
+                         log.action === "note_added" ? "📎" :
+   log.action === "tag_added" ? "" :
+   log.action === "tag_removed" ? "" :
+   log.action === "time_logged" ? "" :
+                         log.action === "escalated" ? "🔥" :
+                         log.action === "merged" ? "" : ""}
                       </span>
                     </div>
                     
@@ -4621,7 +4621,7 @@ const TabHelp = ({ items }) => {
                       {log.details && (
                         <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>
                           {log.action === "status_change" && log.details.from && log.details.to && (
-                            <span>{log.details.from} ΓåÆ {log.details.to}</span>
+                            <span>{log.details.from} ↑ {log.details.to}</span>
                           )}
                           {log.action === "assigned" && log.details.to && (
                             <span>Assigned to: {log.details.to}</span>
@@ -4648,14 +4648,14 @@ const TabHelp = ({ items }) => {
                       if (t) { setTicketDrawer(t); setSupportSubTab("all"); }
                     }}
                       style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
-                      View ΓåÆ
+                      View ↑
                     </button>
                   </div>
                 );
               })}
               {ticketAuditLogs.length === 0 && (
                 <div style={{ padding: 60, textAlign: "center", color: T.textMuted }}>
-                  <div style={{ fontSize: 32, marginBottom: 12 }}>≡ƒôï</div>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}></div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>No audit logs yet</div>
                   <div style={{ fontSize: 12 }}>Actions will be logged as you work on tickets</div>
                 </div>
@@ -4670,15 +4670,15 @@ const TabHelp = ({ items }) => {
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <button type="button" onClick={() => setShowExportModal(true)}
               style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: T.teal, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-              ≡ƒôñ Export Tickets
+               Export Tickets
             </button>
             <button type="button" onClick={exportTimeEntries}
               style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-   ΓÅ▒∩╕Å Export Time
+    Export Time
             </button>
             <button type="button" onClick={exportAuditLogs}
               style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid ${T.purple}`, background: "transparent", color: T.purple, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-              ≡ƒôï Export Audit Logs
+               Export Audit Logs
             </button>
           </div>
 
@@ -4687,7 +4687,7 @@ const TabHelp = ({ items }) => {
             <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
               <div style={{ padding: 16, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>≡ƒöù Webhooks</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}> Webhooks</div>
                   <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Send events to external services</div>
                 </div>
                 <button type="button" onClick={() => { setEditingWebhook(null); setWebhookForm({ name: "", url: "", events: ["ticket_created"], enabled: true, secret: "" }); setShowWebhookModal(true); }}
@@ -4698,7 +4698,7 @@ const TabHelp = ({ items }) => {
               <div style={{ maxHeight: 280, overflowY: "auto" }}>
                 {webhooks.length === 0 ? (
                   <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>≡ƒöù</div>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}></div>
                     <div style={{ fontSize: 12 }}>No webhooks configured</div>
                   </div>
                 ) : (
@@ -4725,7 +4725,7 @@ const TabHelp = ({ items }) => {
                         </button>
                         <button type="button" onClick={() => deleteWebhook(webhook.id)}
                           style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 9, cursor: "pointer" }}>
-   ├ù
+   ×
                         </button>
                       </div>
                     </div>
@@ -4738,7 +4738,7 @@ const TabHelp = ({ items }) => {
             <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
               <div style={{ padding: 16, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>≡ƒöÉ Agent Permissions</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>🗉 Agent Permissions</div>
                   <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Role-based access control</div>
                 </div>
                 <button type="button" onClick={() => { setEditingPermission(null); setPermissionForm({ agentId: "", role: "agent" }); setShowPermissionsModal(true); }}
@@ -4749,7 +4749,7 @@ const TabHelp = ({ items }) => {
               <div style={{ maxHeight: 280, overflowY: "auto" }}>
                 {agentPermissions.length === 0 ? (
                   <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>≡ƒöÉ</div>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>🗉</div>
                     <div style={{ fontSize: 12 }}>No permissions configured</div>
                   </div>
                 ) : (
@@ -4773,7 +4773,7 @@ const TabHelp = ({ items }) => {
                         </button>
                         <button type="button" onClick={() => deletePermission(perm.id)}
                           style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 9, cursor: "pointer" }}>
-   ├ù
+   ×
                         </button>
                       </div>
                     );
@@ -4786,7 +4786,7 @@ const TabHelp = ({ items }) => {
           {/* Webhook Logs */}
           <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: 16, borderBottom: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>≡ƒô£ Webhook Logs</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}> Webhook Logs</div>
               <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Recent webhook delivery attempts</div>
             </div>
             <div style={{ maxHeight: 250, overflowY: "auto" }}>
@@ -4800,7 +4800,7 @@ const TabHelp = ({ items }) => {
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: log.status === "success" ? T.green : T.red }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 11, color: T.white }}>{log.webhookName}</div>
-                      <div style={{ fontSize: 10, color: T.textMuted }}>{log.event} ΓÇó {log.statusCode}</div>
+                      <div style={{ fontSize: 10, color: T.textMuted }}>{log.event} • {log.statusCode}</div>
                     </div>
                     <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 4, background: log.status === "success" ? `${T.green}20` : `${T.red}20`, color: log.status === "success" ? T.green : T.red }}>
                       {log.status}
@@ -4814,7 +4814,7 @@ const TabHelp = ({ items }) => {
 
           {/* Role Descriptions */}
           <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 12 }}>≡ƒôû Role Permissions</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 12 }}>📛 Role Permissions</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               {permissionRoles.map(role => (
                 <div key={role.id} style={{ padding: 12, background: `${role.color}10`, borderRadius: 8, border: `1px solid ${role.color}30` }}>
@@ -4834,7 +4834,7 @@ const TabHelp = ({ items }) => {
           </div>
         ) : filteredTickets.length === 0 ? (
           <div style={{ padding: 60, textAlign: "center", color: T.textMuted }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>≡ƒô¡</div>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📡</div>
             <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>No tickets found</div>
             <div style={{ fontSize: 12 }}>{supportSubTab === "open" ? "All caught up!" : "Try adjusting your filters"}</div>
           </div>
@@ -4858,13 +4858,13 @@ const TabHelp = ({ items }) => {
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ticket.subject}</span>
                       {sentiment.sentiment !== "neutral" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${sentiment.color}20`, color: sentiment.color, fontWeight: 600 }}>{sentiment.emoji}</span>}
-                      {ticket.channel && ticket.channel !== "email" && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: ticket.channel === "chat" ? `${T.green}20` : ticket.channel === "whatsapp" ? "#25D36620" : `${T.purple}20`, color: ticket.channel === "chat" ? T.green : ticket.channel === "whatsapp" ? "#25D366" : T.purple, fontWeight: 600 }}>{ticket.channel === "chat" ? "≡ƒÆ¼ CHAT" : ticket.channel === "whatsapp" ? "≡ƒô▒ WA" : "≡ƒô₧ CALL"}</span>}
-                      {slaInfo.status === "breached" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>ΓÅ░ SLA {slaInfo.percent}%</span>}
-   {slaInfo.status === "warning" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.orange}20`, color: T.orange, fontWeight: 600 }}>ΓÜá∩╕Å {slaInfo.percent}%</span>}
-                      {ticket.autoAssignedBy && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green, fontWeight: 600 }}>≡ƒñû Auto</span>}
-                      {ticket.autoEscalated && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>ΓÜí Escalated</span>}
-   {ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.textMuted}20`, color: T.textMuted, fontWeight: 600 }}>Γå¬∩╕Å MERGED</span>}
-                      {(ticket.linkedTickets || []).length > 0 && !ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal, fontWeight: 600 }}>≡ƒöù {ticket.linkedTickets.length}</span>}
+                      {ticket.channel && ticket.channel !== "email" && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: ticket.channel === "chat" ? `${T.green}20` : ticket.channel === "whatsapp" ? "#25D36620" : `${T.purple}20`, color: ticket.channel === "chat" ? T.green : ticket.channel === "whatsapp" ? "#25D366" : T.purple, fontWeight: 600 }}>{ticket.channel === "chat" ? "💼 CHAT" : ticket.channel === "whatsapp" ? "📱 WA" : "📧 CALL"}</span>}
+                      {slaInfo.status === "breached" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>░ SLA {slaInfo.percent}%</span>}
+   {slaInfo.status === "warning" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.orange}20`, color: T.orange, fontWeight: 600 }}> {slaInfo.percent}%</span>}
+                      {ticket.autoAssignedBy && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green, fontWeight: 600 }}>👛 Auto</span>}
+                      {ticket.autoEscalated && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>⚡ Escalated</span>}
+   {ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.textMuted}20`, color: T.textMuted, fontWeight: 600 }}> MERGED</span>}
+                      {(ticket.linkedTickets || []).length > 0 && !ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal, fontWeight: 600 }}> {ticket.linkedTickets.length}</span>}
                       {ticketTags.slice(0, 2).map(tagId => {
                         const tag = availableTags.find(t => t.id === tagId);
                         return tag ? <span key={tagId} style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${tag.color}20`, color: tag.color, fontWeight: 600 }}>{tag.label}</span> : null;
@@ -4877,7 +4877,7 @@ const TabHelp = ({ items }) => {
                       <span style={{ padding: "2px 6px", borderRadius: 4, background: `${cat.color}20`, color: cat.color, fontSize: 10 }}>{cat.icon} {cat.label}</span>
    <span>·</span>
                       <span>{timeAgo(ticket.createdAt)}</span>
-   {ticket.assignedTo && <><span>·</span><span style={{ color: T.purple }}>≡ƒæñ {ticket.assignedToName || "Assigned"}</span></>}
+   {ticket.assignedTo && <><span>·</span><span style={{ color: T.purple }}> {ticket.assignedToName || "Assigned"}</span></>}
                       {/* SLA Progress Bar */}
                       {slaInfo.status !== "resolved" && (
                         <>
@@ -4919,7 +4919,7 @@ const TabHelp = ({ items }) => {
                   ))}
                 </div>
                 <span style={{ fontSize: 11, color: T.purple, fontWeight: 500 }}>
-                  ≡ƒæÇ {viewingAdmins.map(a => a.name).join(", ")} {viewingAdmins.length === 1 ? "is" : "are"} also viewing this ticket
+                   {viewingAdmins.map(a => a.name).join(", ")} {viewingAdmins.length === 1 ? "is" : "are"} also viewing this ticket
                 </span>
               </div>
             )}
@@ -4930,7 +4930,7 @@ const TabHelp = ({ items }) => {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${(categories.find(c => c.id === ticketDrawer.category) || categories[5]).color}20`, color: (categories.find(c => c.id === ticketDrawer.category) || categories[5]).color }}>{(categories.find(c => c.id === ticketDrawer.category) || categories[5]).icon} {(categories.find(c => c.id === ticketDrawer.category) || categories[5]).label}</span>
-                    {isSlaBreached(ticketDrawer) && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>ΓÅ░ SLA Breached</span>}
+                    {isSlaBreached(ticketDrawer) && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>░ SLA Breached</span>}
                     {/* Sentiment Badge */}
                     {(() => {
                       const sentiment = analyzeSentiment(ticketDrawer);
@@ -4946,9 +4946,9 @@ const TabHelp = ({ items }) => {
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <button type="button" onClick={() => setShowAiPanel(!showAiPanel)}
                     style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${showAiPanel ? T.teal : T.border}`, background: showAiPanel ? `${T.teal}15` : "transparent", color: showAiPanel ? T.teal : T.textMuted, fontSize: 10, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                    ≡ƒñû AI
+                    👛 AI
                   </button>
-   <button type="button" onClick={() => setTicketDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>├ù</button>
+   <button type="button" onClick={() => setTicketDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>×</button>
                 </div>
               </div>
               
@@ -4969,8 +4969,8 @@ const TabHelp = ({ items }) => {
                 </select>
                 <select value={ticketDrawer.assignedTo || "unassigned"} onChange={e => { const agent = assignableAgents.find(a => a.id === e.target.value); assignTicket(ticketDrawer.id, e.target.value, agent?.name || ""); }}
                   style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${ticketDrawer.assignedTo ? T.purple : T.border}40`, background: ticketDrawer.assignedTo ? `${T.purple}20` : T.surfaceAlt, color: ticketDrawer.assignedTo ? T.purple : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                  <option value="unassigned">≡ƒæñ Unassigned</option>
-                  {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>≡ƒæñ {a.name}</option>)}
+                  <option value="unassigned"> Unassigned</option>
+                  {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}> {a.name}</option>)}
                 </select>
               </div>
 
@@ -4982,7 +4982,7 @@ const TabHelp = ({ items }) => {
                   return tag ? (
                     <span key={tagId} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${tag.color}20`, color: tag.color, fontWeight: 600 }}>
                       {tag.label}
-   <button type="button" onClick={() => removeTag(ticketDrawer.id, tagId)} style={{ background: "none", border: "none", color: tag.color, cursor: "pointer", fontSize: 12, lineHeight: 1, padding: 0 }}>├ù</button>
+   <button type="button" onClick={() => removeTag(ticketDrawer.id, tagId)} style={{ background: "none", border: "none", color: tag.color, cursor: "pointer", fontSize: 12, lineHeight: 1, padding: 0 }}>×</button>
                     </span>
                   ) : null;
                 })}
@@ -4997,15 +4997,15 @@ const TabHelp = ({ items }) => {
               <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button type="button" onClick={() => setShowMergeModal(true)}
                   style={{ padding: "5px 10px", borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                  ≡ƒöÇ Merge Ticket
+                   Merge Ticket
                 </button>
                 <button type="button" onClick={() => setShowLinkModal(true)}
                   style={{ padding: "5px 10px", borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                  ≡ƒöù Link Related
+                   Link Related
                 </button>
                 {ticketDrawer.mergedInto && (
                   <span style={{ fontSize: 10, color: T.textMuted, fontStyle: "italic" }}>
-   Γå¬∩╕Å Merged into ticket {ticketDrawer.mergedInto}
+    Merged into ticket {ticketDrawer.mergedInto}
                   </span>
                 )}
               </div>
@@ -5014,7 +5014,7 @@ const TabHelp = ({ items }) => {
               {(ticketDrawer.linkedTickets || []).length > 0 && (
                 <div style={{ marginTop: 12, padding: "10px 12px", background: `${T.teal}08`, borderRadius: 8, border: `1px solid ${T.teal}20` }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: T.teal, marginBottom: 8, display: "flex", alignItems: "center", gap: 4 }}>
-                    ≡ƒöù Linked Tickets ({ticketDrawer.linkedTickets.length})
+                     Linked Tickets ({ticketDrawer.linkedTickets.length})
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {ticketDrawer.linkedTickets.map((link, i) => (
@@ -5034,7 +5034,7 @@ const TabHelp = ({ items }) => {
                         {link.type !== "merged" && (
                           <button type="button" onClick={() => unlinkTicket(link.id)}
                             style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 12, padding: 2 }}>
-   ├ù
+   ×
                           </button>
                         )}
                       </div>
@@ -5047,7 +5047,7 @@ const TabHelp = ({ items }) => {
               <div style={{ marginTop: 12, padding: "10px 12px", background: `${T.gold}08`, borderRadius: 8, border: `1px solid ${T.gold}20` }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: T.gold, display: "flex", alignItems: "center", gap: 4 }}>
-   ΓÅ▒∩╕Å Time Tracking
+    Time Tracking
                   </div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: T.white }}>
                     Total: {getTicketTimeTotal(ticketDrawer.id)}m
@@ -5061,13 +5061,13 @@ const TabHelp = ({ items }) => {
                     <span style={{ fontSize: 18, fontWeight: 900, color: T.gold, fontFamily: "'Fraunces',serif", flex: 1 }}>{formatTimerDisplay(timerElapsed)}</span>
                     <button type="button" onClick={stopTimer}
                       style={{ padding: "6px 12px", borderRadius: 6, border: "none", background: T.red, color: T.white, fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
-   ΓÅ╣∩╕Å Stop
+    Stop
                     </button>
                   </div>
                 ) : (
                   <button type="button" onClick={() => startTimer(ticketDrawer.id)} disabled={activeTimer !== null}
                     style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: `1px solid ${activeTimer ? T.border : T.gold}`, background: activeTimer ? "transparent" : `${T.gold}15`, color: activeTimer ? T.textMuted : T.gold, fontSize: 11, fontWeight: 600, cursor: activeTimer ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-   Γû╢∩╕Å {activeTimer ? "Timer running on another ticket" : "Start Timer"}
+   ▶ {activeTimer ? "Timer running on another ticket" : "Start Timer"}
                   </button>
                 )}
                 
@@ -5079,7 +5079,7 @@ const TabHelp = ({ items }) => {
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           <span style={{ fontSize: 11, fontWeight: 600, color: entry.billable ? T.green : T.textMuted }}>{entry.duration}m</span>
                           <span style={{ fontSize: 10, color: T.textSecondary }}>{entry.agentName}</span>
-                          {entry.notes && <span style={{ fontSize: 9, color: T.textMuted }}>ΓÇó {entry.notes.slice(0, 20)}</span>}
+                          {entry.notes && <span style={{ fontSize: 9, color: T.textMuted }}>• {entry.notes.slice(0, 20)}</span>}
                         </div>
                         <span style={{ fontSize: 9, color: T.textMuted }}>{timeAgo(entry.createdAt)}</span>
                       </div>
@@ -5092,7 +5092,7 @@ const TabHelp = ({ items }) => {
               {customFields.length > 0 && (
                 <div style={{ marginTop: 12, padding: "10px 12px", background: `${T.cyan}08`, borderRadius: 8, border: `1px solid ${T.cyan}20` }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: T.cyan, marginBottom: 10, display: "flex", alignItems: "center", gap: 4 }}>
-                    ≡ƒôï Custom Fields
+                     Custom Fields
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                     {customFields.map(field => {
@@ -5161,11 +5161,11 @@ const TabHelp = ({ items }) => {
                 <div style={{ padding: "12px 24px", background: `${T.gold}08`, borderBottom: `1px solid ${T.gold}20` }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: T.gold }}>≡ƒÿè Customer Satisfaction</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: T.gold }}> Customer Satisfaction</span>
                       {ticketCsat ? (
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           <span style={{ fontSize: 14, color: ticketCsat.rating >= 4 ? T.green : ticketCsat.rating >= 3 ? T.orange : T.red }}>
-                            {"Γÿà".repeat(ticketCsat.rating)}{"Γÿå".repeat(5 - ticketCsat.rating)}
+                            {"".repeat(ticketCsat.rating)}{"".repeat(5 - ticketCsat.rating)}
                           </span>
                           <span style={{ fontSize: 11, color: T.textMuted }}>({ticketCsat.rating}/5)</span>
                         </div>
@@ -5194,12 +5194,12 @@ const TabHelp = ({ items }) => {
               <div style={{ padding: "16px 24px", background: `${T.teal}08`, borderBottom: `1px solid ${T.teal}20` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: T.teal }}>≡ƒñû AI Insights</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: T.teal }}>👛 AI Insights</span>
                     {summaryLoading && <span style={{ fontSize: 10, color: T.textMuted }}>Analyzing...</span>}
                   </div>
                   <button type="button" onClick={() => generateAiSummary(ticketDrawer)} disabled={summaryLoading}
                     style={{ padding: "5px 10px", borderRadius: 5, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 10, fontWeight: 600, cursor: summaryLoading ? "not-allowed" : "pointer", opacity: summaryLoading ? 0.5 : 1 }}>
-   {summaryLoading ? "..." : ticketSummary ? "Γå╗ Refresh" : "Generate Summary"}
+   {summaryLoading ? "..." : ticketSummary ? " Refresh" : "Generate Summary"}
                   </button>
                 </div>
                 
@@ -5237,7 +5237,7 @@ const TabHelp = ({ items }) => {
                               {aiPriority.recommended}
                             </div>
                             <div style={{ fontSize: 10, color: T.textMuted }}>
-                              {aiPriority.reasons.slice(0, 2).join(" ΓÇó ")}
+                              {aiPriority.reasons.slice(0, 2).join(" • ")}
                             </div>
                           </div>
                           {needsChange && aiPriority.recommended !== "normal" && (
@@ -5265,7 +5265,7 @@ const TabHelp = ({ items }) => {
                         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                           {ticketSummary.keyPoints.map((point, i) => (
                             <div key={i} style={{ fontSize: 11, color: T.textSecondary, display: "flex", alignItems: "flex-start", gap: 6 }}>
-                              <span style={{ color: T.teal }}>ΓÇó</span> {point}
+                              <span style={{ color: T.teal }}>•</span> {point}
                             </div>
                           ))}
                         </div>
@@ -5285,7 +5285,7 @@ const TabHelp = ({ items }) => {
                         </div>
                       </div>
                       <div style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${T.teal}20`, color: T.teal, fontWeight: 600 }}>
-                        ≡ƒÆí {ticketSummary.aiRecommendation}
+                        🆍 {ticketSummary.aiRecommendation}
                       </div>
                     </div>
                   </div>
@@ -5295,7 +5295,7 @@ const TabHelp = ({ items }) => {
                   </div>
                 ) : (
                   <div style={{ padding: 16, background: T.surface, borderRadius: 8, textAlign: "center" }}>
-                    <div style={{ fontSize: 11, color: T.teal }}>≡ƒöä Analyzing ticket content...</div>
+                    <div style={{ fontSize: 11, color: T.teal }}> Analyzing ticket content...</div>
                   </div>
                 )}
                 
@@ -5303,8 +5303,8 @@ const TabHelp = ({ items }) => {
                 <div style={{ marginTop: 12 }}>
                   <button type="button" onClick={() => { if (!showSimilarTickets) updateSimilarTickets(ticketDrawer); setShowSimilarTickets(!showSimilarTickets); }}
                     style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: showSimilarTickets ? T.surface : "transparent", color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span>≡ƒöù Similar Resolved Tickets {similarTickets.length > 0 && `(${similarTickets.length})`}</span>
-   <span style={{ fontSize: 10, color: T.textMuted }}>{showSimilarTickets ? "Γû▓" : "Γû╝"}</span>
+                    <span> Similar Resolved Tickets {similarTickets.length > 0 && `(${similarTickets.length})`}</span>
+   <span style={{ fontSize: 10, color: T.textMuted }}>{showSimilarTickets ? "" : ""}</span>
                   </button>
                   
                   {showSimilarTickets && (
@@ -5323,7 +5323,7 @@ const TabHelp = ({ items }) => {
                                   {sim.subject}
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                                  <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>Γ£ô Resolved</span>
+                                  <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>✔ Resolved</span>
                                   <span style={{ fontSize: 9, color: T.textMuted }}>{timeAgo(sim.resolvedAt || sim.updatedAt)}</span>
                                 </div>
                               </div>
@@ -5335,12 +5335,12 @@ const TabHelp = ({ items }) => {
                               </div>
                               {sim.solution && (
                                 <div style={{ padding: 8, background: `${T.green}08`, borderRadius: 6, borderLeft: `2px solid ${T.green}` }}>
-                                  <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4 }}>≡ƒÆí Resolution:</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4 }}>🆍 Resolution:</div>
                                   <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.4 }}>{sim.solution}</div>
                                 </div>
                               )}
                               <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
-                                <span style={{ fontSize: 9, color: T.teal }}>Click to view full ticket ΓåÆ</span>
+                                <span style={{ fontSize: 9, color: T.teal }}>Click to view full ticket ↑</span>
                               </div>
                             </div>
                           ))}
@@ -5371,7 +5371,7 @@ const TabHelp = ({ items }) => {
                               </a>
                             ) : (
                               <a href={msg.attachment.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: msg.from === "admin" ? T.bg : T.teal, textDecoration: "none" }}>
-                                <span style={{ fontSize: 20 }}>≡ƒôä</span>
+                                <span style={{ fontSize: 20 }}></span>
                                 <div>
                                   <div style={{ fontSize: 12, fontWeight: 600 }}>{msg.attachment.name}</div>
                                   <div style={{ fontSize: 10, opacity: 0.7 }}>{(msg.attachment.size / 1024).toFixed(1)} KB</div>
@@ -5395,7 +5395,7 @@ const TabHelp = ({ items }) => {
               {(ticketDrawer.internalNotes?.length > 0 || true) && (
                 <div style={{ padding: "16px 24px", background: `${T.orange}08`, borderTop: `1px dashed ${T.orange}30` }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.orange, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-                    ≡ƒöÆ Internal Notes <span style={{ fontWeight: 400, color: T.textMuted }}>(hidden from customer)</span>
+                    🗎 Internal Notes <span style={{ fontWeight: 400, color: T.textMuted }}>(hidden from customer)</span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {(ticketDrawer.internalNotes || []).map((note, i) => (
@@ -5410,7 +5410,7 @@ const TabHelp = ({ items }) => {
                               </a>
                             ) : (
                               <a href={note.attachment.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: T.teal, textDecoration: "none" }}>
-                                <span style={{ fontSize: 18 }}>≡ƒôä</span>
+                                <span style={{ fontSize: 18 }}></span>
                                 <div>
                                   <div style={{ fontSize: 11, fontWeight: 600 }}>{note.attachment.name}</div>
                                   <div style={{ fontSize: 9, color: T.textMuted }}>{(note.attachment.size / 1024).toFixed(1)} KB</div>
@@ -5445,16 +5445,16 @@ const TabHelp = ({ items }) => {
                 <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
                   <button type="button" onClick={() => setReplyMode("reply")}
                     style={{ padding: "6px 14px", borderRadius: 6, border: `1px solid ${replyMode === "reply" ? T.gold : T.border}`, background: replyMode === "reply" ? T.goldGlow : "transparent", color: replyMode === "reply" ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                    ≡ƒÆ¼ Reply to Customer
+                    💼 Reply to Customer
                   </button>
                   <button type="button" onClick={() => setReplyMode("note")}
                     style={{ padding: "6px 14px", borderRadius: 6, border: `1px solid ${replyMode === "note" ? T.orange : T.border}`, background: replyMode === "note" ? `${T.orange}15` : "transparent", color: replyMode === "note" ? T.orange : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                    ≡ƒöÆ Internal Note
+                    🗎 Internal Note
                   </button>
                   <div style={{ flex: 1 }} />
                   <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
                     style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: uploading ? T.textMuted : T.teal, fontSize: 11, fontWeight: 600, cursor: uploading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-   {uploading ? "ΓÅ│ Uploading..." : "≡ƒôÄ Attach File"}
+   {uploading ? " Uploading..." : "📄 Attach File"}
                   </button>
                 </div>
 
@@ -5464,15 +5464,15 @@ const TabHelp = ({ items }) => {
                       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 8 }}>
                         <button type="button" onClick={() => setShowTemplates(!showTemplates)}
                           style={{ fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
-                          {showTemplates ? "Hide Templates" : "≡ƒô¥ Quick Templates"}
+                          {showTemplates ? "Hide Templates" : " Quick Templates"}
                         </button>
                         <button type="button" onClick={() => { if (suggestedReplies.length === 0) generateSmartReplies(ticketDrawer); }}
                           style={{ fontSize: 10, color: T.purple, background: "none", border: "none", cursor: "pointer", textDecoration: suggestedReplies.length > 0 ? "none" : "underline", display: "flex", alignItems: "center", gap: 4 }}>
-   {repliesLoading ? "ΓÅ│ Generating..." : suggestedReplies.length > 0 ? `≡ƒÆí ${suggestedReplies.length} AI Suggestions` : "≡ƒÆí Generate Smart Replies"}
+   {repliesLoading ? " Generating..." : suggestedReplies.length > 0 ? `🆍 ${suggestedReplies.length} AI Suggestions` : "🆍 Generate Smart Replies"}
                         </button>
                         {quickResponses.length > 0 && (
                           <span style={{ fontSize: 10, color: T.textMuted }}>
-                            ΓÜí {quickResponses.length} quick responses
+                            ⚡ {quickResponses.length} quick responses
                           </span>
                         )}
                       </div>
@@ -5481,10 +5481,10 @@ const TabHelp = ({ items }) => {
                       {suggestedReplies.length > 0 && (
                         <div style={{ marginBottom: 12, padding: 12, background: `${T.purple}08`, borderRadius: 10, border: `1px solid ${T.purple}20` }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                            <span style={{ fontSize: 11, fontWeight: 600, color: T.purple }}>≡ƒÆí AI-Suggested Replies</span>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: T.purple }}>🆍 AI-Suggested Replies</span>
                             <button type="button" onClick={() => generateSmartReplies(ticketDrawer)} disabled={repliesLoading}
                               style={{ fontSize: 9, color: T.textMuted, background: "none", border: "none", cursor: "pointer" }}>
-   Γå╗ Regenerate
+    Regenerate
                             </button>
                           </div>
                           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -5509,7 +5509,7 @@ const TabHelp = ({ items }) => {
                                   {reply.preview}
                                 </div>
                                 <div style={{ marginTop: 6, display: "flex", justifyContent: "flex-end" }}>
-                                  <span style={{ fontSize: 9, color: T.purple }}>Click to use ΓåÆ</span>
+                                  <span style={{ fontSize: 9, color: T.purple }}>Click to use ↑</span>
                                 </div>
                               </div>
                             ))}
@@ -5531,7 +5531,7 @@ const TabHelp = ({ items }) => {
                           {/* Quick Responses from DB */}
                           {quickResponses.length > 0 && (
                             <>
-                              <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>ΓÜí Quick Responses</div>
+                              <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>⚡ Quick Responses</div>
                               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                                 {quickResponses.map(qr => (
                                   <button key={qr.id} type="button" onClick={() => {
@@ -5595,7 +5595,7 @@ const TabHelp = ({ items }) => {
                           {t.name}
                         </button>
                       ))}
-                      <span style={{ fontSize: 10, color: T.textMuted, marginLeft: 8 }}>≡ƒÆí Type @ to mention teammates</span>
+                      <span style={{ fontSize: 10, color: T.textMuted, marginLeft: 8 }}>🆍 Type @ to mention teammates</span>
                     </div>
                     <div style={{ position: "relative" }}>
                       <div style={{ display: "flex", gap: 10 }}>
@@ -5639,7 +5639,7 @@ const TabHelp = ({ items }) => {
                   {ticketDrawer.status !== "resolved" && (
                     <button type="button" onClick={() => updateTicketStatus(ticketDrawer.id, "resolved")}
                       style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.green}`, background: `${T.green}10`, color: T.green, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
-                      Γ£ô Mark Resolved
+                      ✔ Mark Resolved
                     </button>
                   )}
                   {ticketDrawer.status === "resolved" && (
@@ -5669,12 +5669,12 @@ const TabHelp = ({ items }) => {
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowMergeModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>≡ƒöÇ Merge Ticket</h3>
-   <button type="button" onClick={() => setShowMergeModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}> Merge Ticket</h3>
+   <button type="button" onClick={() => setShowMergeModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.orange}15`, borderRadius: 8, marginBottom: 16 }}>
-   <div style={{ fontSize: 11, color: T.orange, fontWeight: 600, marginBottom: 4 }}>ΓÜá∩╕Å Warning</div>
+   <div style={{ fontSize: 11, color: T.orange, fontWeight: 600, marginBottom: 4 }}> Warning</div>
               <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
                 Merging will close this ticket and move all messages and notes to the target ticket. This action cannot be undone.
               </div>
@@ -5684,7 +5684,7 @@ const TabHelp = ({ items }) => {
               <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>Current Ticket:</div>
               <div style={{ padding: 12, background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 4 }}>{ticketDrawer.subject}</div>
-                <div style={{ fontSize: 11, color: T.textMuted }}>{ticketDrawer.userEmail} ΓÇó {(ticketDrawer.messages || []).length} messages</div>
+                <div style={{ fontSize: 11, color: T.textMuted }}>{ticketDrawer.userEmail} • {(ticketDrawer.messages || []).length} messages</div>
               </div>
             </div>
             
@@ -5699,7 +5699,7 @@ const TabHelp = ({ items }) => {
               </select>
               {mergeTargetId && (
                 <div style={{ marginTop: 10, padding: 10, background: `${T.green}10`, borderRadius: 6, border: `1px solid ${T.green}30` }}>
-                  <div style={{ fontSize: 11, color: T.green }}>Γ£ô Messages and notes will be combined into this ticket</div>
+                  <div style={{ fontSize: 11, color: T.green }}>✔ Messages and notes will be combined into this ticket</div>
                 </div>
               )}
             </div>
@@ -5711,7 +5711,7 @@ const TabHelp = ({ items }) => {
               </button>
               <button type="button" onClick={mergeTickets} disabled={!mergeTargetId || merging}
                 style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: !mergeTargetId || merging ? T.border : T.orange, color: T.bg, fontSize: 13, fontWeight: 700, cursor: !mergeTargetId || merging ? "not-allowed" : "pointer" }}>
-                {merging ? "Merging..." : "≡ƒöÇ Merge Tickets"}
+                {merging ? "Merging..." : " Merge Tickets"}
               </button>
             </div>
           </div>
@@ -5723,8 +5723,8 @@ const TabHelp = ({ items }) => {
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowLinkModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>≡ƒöù Link Related Ticket</h3>
-   <button type="button" onClick={() => setShowLinkModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}> Link Related Ticket</h3>
+   <button type="button" onClick={() => setShowLinkModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.teal}15`, borderRadius: 8, marginBottom: 16 }}>
@@ -5758,7 +5758,7 @@ const TabHelp = ({ items }) => {
               </button>
               <button type="button" onClick={linkTicket} disabled={!linkTargetId || linking}
                 style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: !linkTargetId || linking ? T.border : T.teal, color: T.bg, fontSize: 13, fontWeight: 700, cursor: !linkTargetId || linking ? "not-allowed" : "pointer" }}>
-                {linking ? "Linking..." : "≡ƒöù Link Tickets"}
+                {linking ? "Linking..." : " Link Tickets"}
               </button>
             </div>
           </div>
@@ -5770,8 +5770,8 @@ const TabHelp = ({ items }) => {
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowFieldsModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 560, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-   <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ΓÜÖ∩╕Å Manage Custom Fields</h3>
-   <button type="button" onClick={() => setShowFieldsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+   <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}> Manage Custom Fields</h3>
+   <button type="button" onClick={() => setShowFieldsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.cyan}15`, borderRadius: 8, marginBottom: 20 }}>
@@ -5783,7 +5783,7 @@ const TabHelp = ({ items }) => {
             {/* Add/Edit Field Form */}
             <div style={{ padding: 16, background: T.surfaceAlt, borderRadius: 10, marginBottom: 20 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-   {editingField ? "Γ£Å∩╕Å Edit Field" : "Γ₧ò Add New Field"}
+   {editingField ? "✅ Edit Field" : "📌 Add New Field"}
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div style={{ gridColumn: "span 2" }}>
@@ -5835,7 +5835,7 @@ const TabHelp = ({ items }) => {
             {/* Existing Fields List */}
             <div>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-                ≡ƒôï Existing Fields ({customFields.length})
+                 Existing Fields ({customFields.length})
               </div>
               {customFields.length === 0 ? (
                 <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>
@@ -5847,7 +5847,7 @@ const TabHelp = ({ items }) => {
                     <div key={field.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <span style={{ fontSize: 18 }}>
-   {field.type === "dropdown" ? "≡ƒôï" : field.type === "date" ? "≡ƒôà" : field.type === "number" ? "≡ƒöó" : field.type === "checkbox" ? "Γÿæ∩╕Å" : "≡ƒô¥"}
+   {field.type === "dropdown" ? "" : field.type === "date" ? "" : field.type === "number" ? "" : field.type === "checkbox" ? "⚠️" : ""}
                         </span>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 600, color: T.white, display: "flex", alignItems: "center", gap: 6 }}>
@@ -5856,7 +5856,7 @@ const TabHelp = ({ items }) => {
                           </div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>
                             {field.type.charAt(0).toUpperCase() + field.type.slice(1)}
-                            {field.type === "dropdown" && field.options?.length > 0 && ` ΓÇó ${field.options.length} options`}
+                            {field.type === "dropdown" && field.options?.length > 0 && ` • ${field.options.length} options`}
                           </div>
                         </div>
                       </div>
@@ -5884,8 +5884,8 @@ const TabHelp = ({ items }) => {
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowAutoAssignModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 600, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>≡ƒñû Auto-Assign Rules</h3>
-   <button type="button" onClick={() => setShowAutoAssignModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>👛 Auto-Assign Rules</h3>
+   <button type="button" onClick={() => setShowAutoAssignModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.green}15`, borderRadius: 8, marginBottom: 20 }}>
@@ -5897,7 +5897,7 @@ const TabHelp = ({ items }) => {
             {/* Add/Edit Rule Form */}
             <div style={{ padding: 16, background: T.surfaceAlt, borderRadius: 10, marginBottom: 20 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-   {editingRule ? "Γ£Å∩╕Å Edit Rule" : "Γ₧ò Add New Rule"}
+   {editingRule ? "✅ Edit Rule" : "📌 Add New Rule"}
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div style={{ gridColumn: "span 2" }}>
@@ -5930,7 +5930,7 @@ const TabHelp = ({ items }) => {
                   <select value={newRuleForm.assignTo} onChange={e => setNewRuleForm(prev => ({ ...prev, assignTo: e.target.value }))}
                     style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
                     <option value="">Select agent...</option>
-                    {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>≡ƒæñ {a.name}</option>)}
+                    {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}> {a.name}</option>)}
                   </select>
                 </div>
                 <div style={{ gridColumn: "span 2", display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
@@ -5958,7 +5958,7 @@ const TabHelp = ({ items }) => {
             {/* Existing Rules List */}
             <div>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-                ≡ƒôï Active Rules ({autoAssignRules.length})
+                 Active Rules ({autoAssignRules.length})
               </div>
               {autoAssignRules.length === 0 ? (
                 <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>
@@ -5976,7 +5976,7 @@ const TabHelp = ({ items }) => {
                             {!rule.enabled && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.textMuted}20`, color: T.textMuted }}>DISABLED</span>}
                           </div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>
-                            If <span style={{ color: T.cyan }}>{rule.condition}</span> = <span style={{ color: T.gold }}>{rule.conditionValue}</span> ΓåÆ assign to <span style={{ color: T.purple }}>{rule.assignToName}</span>
+                            If <span style={{ color: T.cyan }}>{rule.condition}</span> = <span style={{ color: T.gold }}>{rule.conditionValue}</span> ↑ assign to <span style={{ color: T.purple }}>{rule.assignToName}</span>
                           </div>
                         </div>
                       </div>
@@ -6004,7 +6004,7 @@ const TabHelp = ({ items }) => {
             <div style={{ marginTop: 20, padding: 16, background: `${T.gold}10`, borderRadius: 10, border: `1px solid ${T.gold}30` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.gold }}>≡ƒÆí Run Auto-Assign on Unassigned Tickets</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: T.gold }}>🆍 Run Auto-Assign on Unassigned Tickets</div>
                   <div style={{ fontSize: 11, color: T.textMuted }}>{unassignedCount} unassigned tickets</div>
                 </div>
                 <button type="button" onClick={async () => {
@@ -6030,8 +6030,8 @@ const TabHelp = ({ items }) => {
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowSlaModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 500, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-   <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ΓÅ▒∩╕Å SLA Settings</h3>
-   <button type="button" onClick={() => setShowSlaModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+   <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}> SLA Settings</h3>
+   <button type="button" onClick={() => setShowSlaModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.orange}15`, borderRadius: 8, marginBottom: 20 }}>
@@ -6075,7 +6075,7 @@ const TabHelp = ({ items }) => {
                       }}
                         style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
                         <option value="">Select manager...</option>
-                        {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>≡ƒæñ {a.name}</option>)}
+                        {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}> {a.name}</option>)}
                       </select>
                     </div>
                     
@@ -6096,7 +6096,7 @@ const TabHelp = ({ items }) => {
               
               {/* SLA Preview */}
               <div style={{ padding: 16, background: `${T.blue}10`, borderRadius: 10, border: `1px solid ${T.blue}30` }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: T.blue, marginBottom: 8 }}>≡ƒôè SLA Timeline Preview</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: T.blue, marginBottom: 8 }}>📈 SLA Timeline Preview</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <div style={{ flex: 1, height: 8, background: T.border, borderRadius: 4, overflow: "hidden", position: "relative" }}>
                     <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${slaSettings.warningPercent}%`, background: T.green, borderRadius: 4 }} />
@@ -6130,26 +6130,26 @@ const TabHelp = ({ items }) => {
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowWorkflowModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 650, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ΓÜí Workflow Triggers</h3>
-   <button type="button" onClick={() => setShowWorkflowModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>⚡ Workflow Triggers</h3>
+   <button type="button" onClick={() => setShowWorkflowModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.purple}15`, borderRadius: 8, marginBottom: 20 }}>
               <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                Create automated workflows that trigger actions when certain conditions are met. Example: When status changes to "resolved" ΓåÆ add "resolved" tag.
+                Create automated workflows that trigger actions when certain conditions are met. Example: When status changes to "resolved" ↑ add "resolved" tag.
               </div>
             </div>
             
             {/* Add/Edit Workflow Form */}
             <div style={{ padding: 16, background: T.surfaceAlt, borderRadius: 10, marginBottom: 20 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-   {editingWorkflow ? "Γ£Å∩╕Å Edit Workflow" : "Γ₧ò Create Workflow"}
+   {editingWorkflow ? "✅ Edit Workflow" : "📌 Create Workflow"}
               </div>
               
               {/* Workflow Name */}
               <div style={{ marginBottom: 12 }}>
                 <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Workflow Name</label>
-                <input value={newWorkflowForm.name} onChange={e => setNewWorkflowForm(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Resolved ΓåÆ Add Tag..."
+                <input value={newWorkflowForm.name} onChange={e => setNewWorkflowForm(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Resolved ↑ Add Tag..."
                   style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
               </div>
               
@@ -6226,7 +6226,7 @@ const TabHelp = ({ items }) => {
                       {newWorkflowForm.actions.length > 1 && (
                         <button type="button" onClick={() => removeWorkflowAction(idx)}
                           style={{ padding: "6px 10px", borderRadius: 4, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 12, cursor: "pointer" }}>
-   ├ù
+   ×
                         </button>
                       )}
                     </div>
@@ -6259,7 +6259,7 @@ const TabHelp = ({ items }) => {
             {/* Existing Workflows List */}
             <div>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-                ≡ƒôï Active Workflows ({workflowTriggers.length})
+                 Active Workflows ({workflowTriggers.length})
               </div>
               {workflowTriggers.length === 0 ? (
                 <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>
@@ -6272,7 +6272,7 @@ const TabHelp = ({ items }) => {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 600, color: T.white, display: "flex", alignItems: "center", gap: 6 }}>
-                            ΓÜí {wf.name}
+                            ⚡ {wf.name}
                             {!wf.enabled && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.textMuted}20`, color: T.textMuted }}>DISABLED</span>}
                           </div>
                           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>
@@ -6316,8 +6316,8 @@ const TabHelp = ({ items }) => {
         <div style={{ position: "fixed", inset: 0, zIndex: 9100, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowCsatModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 420 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>≡ƒÿè Add CSAT Rating</h3>
-   <button type="button" onClick={() => setShowCsatModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}> Add CSAT Rating</h3>
+   <button type="button" onClick={() => setShowCsatModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.gold}10`, borderRadius: 8, marginBottom: 20 }}>
@@ -6333,7 +6333,7 @@ const TabHelp = ({ items }) => {
                 {[1, 2, 3, 4, 5].map(star => (
                   <button key={star} type="button" onClick={() => setCsatForm(prev => ({ ...prev, rating: star }))}
                     style={{ background: "none", border: "none", cursor: "pointer", fontSize: 32, color: star <= csatForm.rating ? T.gold : T.border, transition: "transform 0.1s", transform: star <= csatForm.rating ? "scale(1.1)" : "scale(1)" }}>
-                    Γÿà
+                    
                   </button>
                 ))}
               </div>
@@ -6396,9 +6396,9 @@ const TabHelp = ({ items }) => {
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 600, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
-   {editingArticle ? "Γ£Å∩╕Å Edit Article" : "≡ƒôÜ New Article"}
+   {editingArticle ? "✅ Edit Article" : "📬 New Article"}
               </h3>
-   <button type="button" onClick={() => setShowKbModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+   <button type="button" onClick={() => setShowKbModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ marginBottom: 16 }}>
@@ -6413,11 +6413,11 @@ const TabHelp = ({ items }) => {
                 <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Category</label>
                 <select value={articleForm.category} onChange={e => setArticleForm(prev => ({ ...prev, category: e.target.value }))}
                   style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                  <option value="getting-started">≡ƒÜÇ Getting Started</option>
-   <option value="billing">≡ƒÆ│ Billing & Payments</option>
-                  <option value="technical">≡ƒöº Technical Issues</option>
-                  <option value="features">Γ¡É Features & How-To</option>
-                  <option value="account">≡ƒæñ Account Management</option>
+                  <option value="getting-started">🔇 Getting Started</option>
+   <option value="billing"> Billing & Payments</option>
+                  <option value="technical"> Technical Issues</option>
+                  <option value="features"> Features & How-To</option>
+                  <option value="account"> Account Management</option>
                 </select>
               </div>
               <div>
@@ -6491,14 +6491,14 @@ const TabHelp = ({ items }) => {
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 550, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
-   {editingQuickResponse ? "Γ£Å∩╕Å Edit Quick Response" : "ΓÜí New Quick Response"}
+   {editingQuickResponse ? "✅ Edit Quick Response" : "⚡ New Quick Response"}
               </h3>
-   <button type="button" onClick={() => setShowQuickResponseModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+   <button type="button" onClick={() => setShowQuickResponseModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.purple}10`, borderRadius: 8, marginBottom: 16 }}>
               <div style={{ fontSize: 11, color: T.textSecondary }}>
-                ≡ƒÆí Available variables: <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{name}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{ticket_id}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{agent_name}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{category}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{tier}}"}</code>
+                🆍 Available variables: <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{name}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{ticket_id}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{agent_name}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{category}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{tier}}"}</code>
               </div>
             </div>
             
@@ -6521,9 +6521,9 @@ const TabHelp = ({ items }) => {
               <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Category</label>
               <select value={quickResponseForm.category} onChange={e => setQuickResponseForm(prev => ({ ...prev, category: e.target.value }))}
                 style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                <option value="general">≡ƒÆ¼ General</option>
-                <option value="technical">≡ƒöº Technical</option>
-   <option value="billing">≡ƒÆ│ Billing</option>
+                <option value="general">💼 General</option>
+                <option value="technical"> Technical</option>
+   <option value="billing"> Billing</option>
               </select>
             </div>
             
@@ -6588,9 +6588,9 @@ const TabHelp = ({ items }) => {
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 500, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
-   ΓÜÖ∩╕Å Live Chat Settings
+    Live Chat Settings
               </h3>
-   <button type="button" onClick={() => setShowChatSettings(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+   <button type="button" onClick={() => setShowChatSettings(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -6678,9 +6678,9 @@ const TabHelp = ({ items }) => {
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 400 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
-   ≡ƒæü∩╕Å Widget Preview
+    Widget Preview
               </h3>
-   <button type="button" onClick={() => setShowWidgetPreview(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+   <button type="button" onClick={() => setShowWidgetPreview(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ background: "#f5f5f5", borderRadius: 12, padding: 20, display: "flex", justifyContent: chatSettings.widgetPosition === "right" ? "flex-end" : "flex-start" }}>
@@ -6689,12 +6689,12 @@ const TabHelp = ({ items }) => {
                 {/* Chat Header */}
                 <div style={{ background: chatSettings.widgetColor, borderRadius: "12px 12px 0 0", padding: 16, color: T.white }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>≡ƒÆ¼</div>
+                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>💼</div>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 14 }}>DXB Analytics</div>
                       <div style={{ fontSize: 11, opacity: 0.9, display: "flex", alignItems: "center", gap: 4 }}>
                         <span style={{ width: 6, height: 6, borderRadius: "50%", background: agentOnline ? "#4ADE80" : "#EF4444" }} />
-                        {agentOnline ? "Online ΓÇó ~2 min" : "Offline"}
+                        {agentOnline ? "Online • ~2 min" : "Offline"}
                       </div>
                     </div>
                   </div>
@@ -6707,7 +6707,7 @@ const TabHelp = ({ items }) => {
                   </div>
                   {!agentOnline && (
                     <div style={{ background: "#FEF3C7", borderRadius: 8, padding: 10, fontSize: 11, color: "#92400E" }}>
-   ΓÜá∩╕Å {chatSettings.offlineMessage}
+    {chatSettings.offlineMessage}
                     </div>
                   )}
                 </div>
@@ -6736,7 +6736,7 @@ const TabHelp = ({ items }) => {
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid #25D36630`, padding: 24, width: "100%", maxWidth: 550, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 24 }}>≡ƒô▒</span>
+                <span style={{ fontSize: 24 }}>📱</span>
                 <div>
                   <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
                     WhatsApp Message Templates
@@ -6744,11 +6744,11 @@ const TabHelp = ({ items }) => {
                   <div style={{ fontSize: 11, color: T.textMuted }}>Pre-approved templates for out-of-window messaging</div>
                 </div>
               </div>
-   <button type="button" onClick={() => setShowWhatsappTemplates(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+   <button type="button" onClick={() => setShowWhatsappTemplates(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.teal}10`, borderRadius: 8, marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10 }}>
-              <span style={{ fontSize: 16 }}>≡ƒÆí</span>
+              <span style={{ fontSize: 16 }}>🆍</span>
               <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>
                 These templates are pre-approved by Meta for WhatsApp Business API. Use <code style={{ background: T.surface, padding: "1px 4px", borderRadius: 3 }}>{"{{name}}"}</code> for customer's name.
                 {activeWhatsappId && " Click a template to send it to the current conversation."}
@@ -6775,14 +6775,14 @@ const TabHelp = ({ items }) => {
                     onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{template.name}</span>
-                      <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 4, background: "#25D36620", color: "#25D366" }}>Γ£ô Approved</span>
+                      <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 4, background: "#25D36620", color: "#25D366" }}>✔ Approved</span>
                     </div>
                     <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5, padding: 10, background: T.surface, borderRadius: 6, borderLeft: `3px solid #25D366` }}>
                       {previewContent}
                     </div>
                     {activeConv && (
                       <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
-                        <span style={{ fontSize: 10, color: "#25D366" }}>Click to send ΓåÆ</span>
+                        <span style={{ fontSize: 10, color: "#25D366" }}>Click to send ↑</span>
                       </div>
                     )}
                   </div>
@@ -6791,7 +6791,7 @@ const TabHelp = ({ items }) => {
             </div>
             
             <div style={{ marginTop: 20, padding: 12, background: T.surfaceAlt, borderRadius: 8 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, marginBottom: 6 }}>≡ƒô¥ Create Custom Template</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, marginBottom: 6 }}> Create Custom Template</div>
               <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.5 }}>
                 Custom templates must be submitted to Meta for approval. This process typically takes 24-48 hours.
               </div>
@@ -6808,8 +6808,8 @@ const TabHelp = ({ items }) => {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 440, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-   <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ΓÅ▒∩╕Å Add Manual Time Entry</div>
-   <button type="button" onClick={() => setShowTimeEntryModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+   <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}> Add Manual Time Entry</div>
+   <button type="button" onClick={() => setShowTimeEntryModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -6848,7 +6848,7 @@ const TabHelp = ({ items }) => {
                 <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                   <input type="checkbox" checked={timeEntryForm.billable} onChange={e => setTimeEntryForm(prev => ({ ...prev, billable: e.target.checked }))}
                     style={{ width: 18, height: 18, accentColor: T.green }} />
-                  <span style={{ fontSize: 12, color: T.textSecondary }}>≡ƒÆ░ Billable time</span>
+                  <span style={{ fontSize: 12, color: T.textSecondary }}> Billable time</span>
                 </label>
               </div>
               
@@ -6872,8 +6872,8 @@ const TabHelp = ({ items }) => {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 500, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>≡ƒöù {editingWebhook ? "Edit Webhook" : "Add Webhook"}</div>
-   <button type="button" onClick={() => setShowWebhookModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}> {editingWebhook ? "Edit Webhook" : "Add Webhook"}</div>
+   <button type="button" onClick={() => setShowWebhookModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -6941,8 +6941,8 @@ const TabHelp = ({ items }) => {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 460, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>≡ƒôñ Export Tickets</div>
-   <button type="button" onClick={() => setShowExportModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}> Export Tickets</div>
+   <button type="button" onClick={() => setShowExportModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -6987,15 +6987,15 @@ const TabHelp = ({ items }) => {
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                     <input type="checkbox" checked={exportConfig.includeMessages} onChange={e => setExportConfig(prev => ({ ...prev, includeMessages: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.teal }} />
-                    <span style={{ fontSize: 12, color: T.textSecondary }}>≡ƒÆ¼ Messages</span>
+                    <span style={{ fontSize: 12, color: T.textSecondary }}>💼 Messages</span>
                   </label>
                   <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                     <input type="checkbox" checked={exportConfig.includeNotes} onChange={e => setExportConfig(prev => ({ ...prev, includeNotes: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.orange }} />
-                    <span style={{ fontSize: 12, color: T.textSecondary }}>≡ƒôî Internal Notes</span>
+                    <span style={{ fontSize: 12, color: T.textSecondary }}>📎 Internal Notes</span>
                   </label>
                   <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                     <input type="checkbox" checked={exportConfig.includeTime} onChange={e => setExportConfig(prev => ({ ...prev, includeTime: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.gold }} />
-   <span style={{ fontSize: 12, color: T.textSecondary }}>ΓÅ▒∩╕Å Time Entries</span>
+   <span style={{ fontSize: 12, color: T.textSecondary }}> Time Entries</span>
                   </label>
                 </div>
               </div>
@@ -7020,8 +7020,8 @@ const TabHelp = ({ items }) => {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 420, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>≡ƒöÉ {editingPermission ? "Edit Permission" : "Add Permission"}</div>
-   <button type="button" onClick={() => setShowPermissionsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>🗉 {editingPermission ? "Edit Permission" : "Add Permission"}</div>
+   <button type="button" onClick={() => setShowPermissionsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 20 }}>

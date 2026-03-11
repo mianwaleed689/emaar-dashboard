@@ -87,8 +87,20 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
   };
   const calculateOverallQuality = () => {
     const projs = emaarProjects || [];
-    if (!projs.length) return 0;
-    return Math.round(projs.reduce((s, p) => s + calculateProjectQuality(getMergedProject(p)), 0) / projs.length);
+    if (!projs.length) return null;
+    const scores = projs.map(p => calculateProjectQuality(getMergedProject(p)));
+    const avg = Math.round(scores.reduce((s, v) => s + v, 0) / scores.length);
+    return {
+      score: avg,
+      color: avg >= 80 ? "#10B981" : avg >= 60 ? "#3B82F6" : avg >= 40 ? "#F97316" : "#EF4444",
+      label: avg >= 80 ? "excellent" : avg >= 60 ? "good" : avg >= 40 ? "fair" : "poor",
+      grades: {
+        excellent: scores.filter(s => s >= 80).length,
+        good:      scores.filter(s => s >= 60 && s < 80).length,
+        fair:      scores.filter(s => s >= 40 && s < 60).length,
+        poor:      scores.filter(s => s < 40).length,
+      }
+    };
   };
   const calculateDataIntel = () => ({ duplicates: 0, stale: 0, missingImages: 0 });
   const findDuplicates = () => [];
@@ -926,34 +938,34 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               <div style={{ 
                                 width: 42, height: 42, borderRadius: 10, 
-                                background: `${quality.color}15`, 
+                                background: `${quality?.color}15`, 
                                 display: "flex", alignItems: "center", justifyContent: "center",
-                                border: `2px solid ${quality.color}`
+                                border: `2px solid ${quality?.color}`
                               }}>
-                                <span style={{ fontSize: 16, fontWeight: 800, color: quality.color, fontFamily: "'Fraunces',serif" }}>{quality.avgScore}</span>
+                                <span style={{ fontSize: 16, fontWeight: 800, color: quality?.color, fontFamily: "'Fraunces',serif" }}>{quality.avgScore}</span>
                               </div>
                               <div>
                                 <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>Data Quality Score</div>
-                                <div style={{ fontSize: 10, color: quality.color, fontWeight: 600, textTransform: "capitalize" }}>{quality.grade}</div>
+                                <div style={{ fontSize: 10, color: quality?.color, fontWeight: 600, textTransform: "capitalize" }}>{quality.grade}</div>
                               </div>
                             </div>
                             
                             {/* Quick Stats */}
                             <div style={{ display: "flex", gap: 16, marginLeft: 16 }}>
                               <div style={{ textAlign: "center" }}>
-                                <div style={{ fontSize: 14, fontWeight: 700, color: "#10B981" }}>{quality.grades.excellent}</div>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "#10B981" }}>{quality?.grades?.excellent}</div>
                                 <div style={{ fontSize: 9, color: T.textMuted }}>Excellent</div>
                               </div>
                               <div style={{ textAlign: "center" }}>
-                                <div style={{ fontSize: 14, fontWeight: 700, color: "#3B82F6" }}>{quality.grades.good}</div>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "#3B82F6" }}>{quality?.grades?.good}</div>
                                 <div style={{ fontSize: 9, color: T.textMuted }}>Good</div>
                               </div>
                               <div style={{ textAlign: "center" }}>
-                                <div style={{ fontSize: 14, fontWeight: 700, color: "#F97316" }}>{quality.grades.fair}</div>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "#F97316" }}>{quality?.grades?.fair}</div>
                                 <div style={{ fontSize: 9, color: T.textMuted }}>Fair</div>
                               </div>
                               <div style={{ textAlign: "center" }}>
-                                <div style={{ fontSize: 14, fontWeight: 700, color: "#EF4444" }}>{quality.grades.poor}</div>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: "#EF4444" }}>{quality?.grades?.poor}</div>
                                 <div style={{ fontSize: 9, color: T.textMuted }}>Poor</div>
                               </div>
                             </div>
@@ -1024,7 +1036,7 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
                             <div style={{ display: "flex", gap: 10, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
                               <button type="button" onClick={() => { setQualityFilter("poor"); setShowDataQualityPanel(false); }}
                                 style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                                Fix {quality.grades.poor} Poor Quality Projects
+                                Fix {quality?.grades?.poor} Poor Quality Projects
                               </button>
                               <button type="button" onClick={() => { setPriceMax("0"); setShowDataQualityPanel(false); }}
                                 style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.orange}40`, background: `${T.orange}10`, color: T.orange, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
@@ -2580,7 +2592,7 @@ function AdminDataTab({ users, T, I, notify, db, logAudit, adminUser, exportCSV,
                                           }}>
                                           <div style={{ 
                                             width: 24, height: 24, borderRadius: 6, fontSize: 10, fontWeight: 700,
-                                            background: `${quality.color}15`, color: quality.color,
+                                            background: `${quality?.color}15`, color: quality?.color,
                                             display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
                                           }}>{quality.score}</div>
                                           <div style={{ flex: 1, minWidth: 0 }}>
