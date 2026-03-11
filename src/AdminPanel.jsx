@@ -27,10 +27,17 @@ import AdminAnalyticsTab     from "./features/admin/tabs/AdminAnalyticsTab";
 import AdminCancellationTab  from "./features/admin/tabs/AdminCancellationTab";
 import AdminTabControlTab    from "./features/admin/tabs/AdminTabControlTab";
 
-// ── Already-extracted inline tabs (kept as JSX below) ────────────────────────
-// UsersTab, NotificationsTab, DigestTab, SupportTab, EiborRatesPanel
-// are still inline in this file until their sessions run.
-// Sessions 24+ will extract them one by one.
+// ── Inline tab stubs — Sessions 24-28 will replace these with real components ─
+// eslint-disable-next-line no-unused-vars
+const UsersTab         = (props) => null; // Session 24 — replaced with full inline JSX below
+// eslint-disable-next-line no-unused-vars
+const NotificationsTab = (props) => null; // Session 25
+// eslint-disable-next-line no-unused-vars
+const DigestTab        = (props) => null; // Session 26
+// eslint-disable-next-line no-unused-vars
+const EiborRatesPanel  = (props) => null; // Session 27
+// eslint-disable-next-line no-unused-vars
+const SupportTab       = (props) => null; // Session 28
 
 /* ─── THEME ─── */
 const T = {

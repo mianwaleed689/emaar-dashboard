@@ -55,6 +55,30 @@ export default function AdminAnalyticsTab({
     </div>
   );
 
+  // ── Analytics-local state (was in AdminPanel useState before extraction) ──
+  const [realtimeUsers, setRealtimeUsers] = React.useState(0);
+  const [realtimeUsers5m, setRealtimeUsers5m] = React.useState(0);
+  const [realtimeLastRefresh, setRealtimeLastRefresh] = React.useState(new Date());
+  const [realtimeEvents, setRealtimeEvents] = React.useState([]);
+  const [realtimeAutoRefresh, setRealtimeAutoRefresh] = React.useState(true);
+  const [sessionMetrics, setSessionMetrics] = React.useState({ avgDuration: 0, bounceRate: 0, pagesPerSession: 0, engagedSessions: 0 });
+  const [deviceBreakdown, setDeviceBreakdown] = React.useState({ desktop: 0, mobile: 0, tablet: 0 });
+  const [browserBreakdown, setBrowserBreakdown] = React.useState([]);
+  const [segmentFilters, setSegmentFilters] = React.useState({ tier: "all", activity: "all", dateRange: "all", geo: "all" });
+  const [savedSegments, setSavedSegments] = React.useState([
+    { id: 1, name: "Power Users",  filters: { tier: "pro",  activity: "high", dateRange: "all", geo: "all" }, color: "#10B981" },
+    { id: 2, name: "At-Risk Free", filters: { tier: "free", activity: "low",  dateRange: "30d", geo: "all" }, color: "#F97316" },
+    { id: 3, name: "New Signups",  filters: { tier: "all",  activity: "all",  dateRange: "7d",  geo: "all" }, color: "#3B82F6" },
+  ]);
+  const [activeSegmentId, setActiveSegmentId] = React.useState(null);
+  const [segmentName, setSegmentName] = React.useState("");
+  const [scheduledReports, setScheduledReports] = React.useState([
+    { id: 1, name: "Weekly KPI Summary",      frequency: "weekly",  day: "monday", time: "09:00", recipients: ["admin@company.com"], metrics: ["dau","mrr","conversion"], enabled: true, lastSent: "2025-03-03" },
+    { id: 2, name: "Monthly Executive Report", frequency: "monthly", day: "1",      time: "08:00", recipients: ["exec@company.com"],  metrics: ["mrr","arr","churn","growth"], enabled: true, lastSent: "2025-03-01" },
+  ]);
+  const [showReportModal, setShowReportModal] = React.useState(false);
+  const [editingReport, setEditingReport] = React.useState(null);
+
             const rangeMap = { "7d": 7, "30d": 30, "90d": 90, "all": 9999 };
             const rangeDays = rangeMap[analyticsRange] || 30;
             const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - rangeDays);
