@@ -30,6 +30,7 @@ const AdminUsersTab         = lazy(() => import("./features/admin/tabs/AdminUser
 const AdminNotificationsTab = lazy(() => import("./features/admin/tabs/AdminNotificationsTab"));
 const AdminDigestTab        = lazy(() => import("./features/admin/tabs/AdminDigestTab"));
 const AdminEiborTab         = lazy(() => import("./features/admin/tabs/AdminEiborTab"));
+const AdminSupportTab       = lazy(() => import("./features/admin/tabs/AdminSupportTab"));
 
 // ── Inline tab stubs — Sessions 24-28 will replace these with real components ─
 // eslint-disable-next-line no-unused-vars
@@ -41,7 +42,7 @@ const DigestTab        = AdminDigestTab;
 // eslint-disable-next-line no-unused-vars
 const EiborRatesPanel  = AdminEiborTab;
 // eslint-disable-next-line no-unused-vars
-const SupportTab       = (props) => null; // Session 28
+const SupportTab       = AdminSupportTab;
 
 /* ─── THEME ─── */
 const T = {
