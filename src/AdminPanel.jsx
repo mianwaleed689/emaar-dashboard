@@ -29,6 +29,7 @@ import AdminTabControlTab    from "./features/admin/tabs/AdminTabControlTab";
 import AdminUsersTab         from "./features/admin/tabs/AdminUsersTab";
 import AdminNotificationsTab from "./features/admin/tabs/AdminNotificationsTab";
 import AdminDigestTab        from "./features/admin/tabs/AdminDigestTab";
+import AdminEiborTab         from "./features/admin/tabs/AdminEiborTab";
 
 // ── Inline tab stubs — Sessions 24-28 will replace these with real components ─
 // eslint-disable-next-line no-unused-vars
@@ -38,7 +39,7 @@ const NotificationsTab = AdminNotificationsTab;
 // eslint-disable-next-line no-unused-vars
 const DigestTab        = AdminDigestTab;
 // eslint-disable-next-line no-unused-vars
-const EiborRatesPanel  = (props) => null; // Session 27
+const EiborRatesPanel  = AdminEiborTab;
 // eslint-disable-next-line no-unused-vars
 const SupportTab       = (props) => null; // Session 28
 
@@ -759,7 +760,7 @@ export default function AdminPanel() {
 
           {tab === "digest" && <DigestTab T={T} I={I} db={db} notify={notify} users={users} adminUser={adminUser} />}
 
-          {tab === "eibor" && <EiborRatesPanel T={T} db={db} notify={notify} />}
+          {tab === "eibor" && <EiborRatesPanel T={T} I={I} db={db} notify={notify} />}
 
           {tab === "cancellation" && (
             <AdminCancellationTab {...sharedProps} />
