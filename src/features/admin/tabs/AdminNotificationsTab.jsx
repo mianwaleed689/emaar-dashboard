@@ -1,5 +1,32 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { doc, setDoc, getDocs, getDoc, deleteDoc, collection, addDoc, query, orderBy, limit } from "firebase/firestore";
+import { doc, setDoc, getDocs, deleteDoc, collection, addDoc, query, orderBy, limit } from "firebase/firestore";
+import { auth, db } from "../../../firebase";
+
+let _cachedIP = null;
+async function getAdminIP() {
+  if (_cachedIP) return _cachedIP;
+  try {
+    const r = await fetch("https://api.ipify.org?format=json");
+    const d = await r.json();
+    _cachedIP = d.ip;
+    return _cachedIP;
+  } catch { return "unknown"; }
+}
+
+let _webhookUrl = null;
+async function logAudit(db, payload) {
+  try {
+    const ip = await getAdminIP();
+    const changedBy = auth.currentUser?.email || "admin";
+    const entry = { ...payload, changedBy, changedAt: new Date().toISOString(), ip };
+    const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    await setDoc(doc(db, "auditLog", id), entry);
+    if (_webhookUrl) {
+      try { fetch(_webhookUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(entry) }); } catch {}
+    }
+    return entry;
+  } catch (e) { console.error("logAudit:", e); }
+}
 
 function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   // State

@@ -27,12 +27,12 @@ import AdminAnalyticsTab     from "./features/admin/tabs/AdminAnalyticsTab";
 import AdminCancellationTab  from "./features/admin/tabs/AdminCancellationTab";
 import AdminTabControlTab    from "./features/admin/tabs/AdminTabControlTab";
 import AdminUsersTab         from "./features/admin/tabs/AdminUsersTab";
+import AdminNotificationsTab from "./features/admin/tabs/AdminNotificationsTab";
 
 // ── Inline tab stubs — Sessions 24-28 will replace these with real components ─
 // eslint-disable-next-line no-unused-vars
 const UsersTab         = AdminUsersTab;
 // eslint-disable-next-line no-unused-vars
-import AdminNotificationsTab  from "./features/admin/tabs/AdminNotificationsTab";
 const NotificationsTab = AdminNotificationsTab;
 // eslint-disable-next-line no-unused-vars
 const DigestTab        = (props) => null; // Session 26
