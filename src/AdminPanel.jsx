@@ -1,7 +1,7 @@
-/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-   DXB ANALYTICS ΓÇö ADMIN PANEL
+/* ═══════════════════════════════════════════════════════════════
+   DXB ANALYTICS — ADMIN PANEL
    Matching dashboard design DNA: sidebar nav, KPI cards, sections
-   ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+   ═══════════════════════════════════════════════════════════════ */
 import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { auth, db, storage, firebaseConfig } from "./firebase";
@@ -16,7 +16,7 @@ import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCo
 import ProjectManager from "./ProjectManager";
 import { useI18n, LANGUAGES } from "./i18n";
 
-/* ΓöÇΓöÇΓöÇ THEME (exact dashboard match) ΓöÇΓöÇΓöÇ */
+/* ─── THEME (exact dashboard match) ─── */
 const T = {
   bg: "#04090F", surface: "#0A1628", surfaceAlt: "#0E1D35", card: "#0D1B30",
   gold: "#D4A843", goldLight: "#E8C96A", goldDim: "#B8912F", goldGlow: "rgba(212,168,67,0.12)",
@@ -27,7 +27,7 @@ const T = {
   cyan: "#06B6D4", orange: "#F59E0B",
 };
 
-/* ΓöÇΓöÇΓöÇ ICONS (matching dashboard SVG style) ΓöÇΓöÇΓöÇ */
+/* ─── ICONS (matching dashboard SVG style) ─── */
 const I = {
   overview: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>,
   users: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
@@ -57,7 +57,7 @@ const I = {
   target: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
 };
 
-/* ΓöÇΓöÇΓöÇ CSS (exactly matching main dashboard design DNA) ΓöÇΓöÇΓöÇ */
+/* ─── CSS (exactly matching main dashboard design DNA) ─── */
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -201,7 +201,7 @@ select option { background: ${T.surface}; color: ${T.textPrimary}; }
 
 `;
 
-/* ΓöÇΓöÇΓöÇ CUSTOM TOOLTIP (matching dashboard) ΓöÇΓöÇΓöÇ */
+/* ─── CUSTOM TOOLTIP (matching dashboard) ─── */
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
@@ -217,7 +217,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-/* ΓöÇΓöÇΓöÇ SAFE FIRESTORE DATA ΓöÇΓöÇΓöÇ */
+/* ─── SAFE FIRESTORE DATA ─── */
 function plainify(obj) {
   if (obj === null || obj === undefined) return "";
   if (typeof obj === "string" || typeof obj === "number" || typeof obj === "boolean") return obj;
@@ -227,7 +227,7 @@ function plainify(obj) {
   return String(obj);
 }
 
-/* ΓöÇΓöÇΓöÇ REUSABLE COMPONENTS (outside component to prevent re-mount on state change) ΓöÇΓöÇΓöÇ */
+/* ─── REUSABLE COMPONENTS (outside component to prevent re-mount on state change) ─── */
 const KPI = ({ label, value, sub, color, delay = 0 }) => (
   <div className="kpi-card fade-up" style={{ animationDelay: `${delay * 0.05}s` }}>
     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>{label}</div>
@@ -257,7 +257,7 @@ const Chart = ({ title, sub, children }) => (
   </div>
 );
 
-/* ΓöÇΓöÇΓöÇ HELP TIP ΓÇö inline ? icon with hover tooltip ΓöÇΓöÇΓöÇ */
+/* ─── HELP TIP — inline ? icon with hover tooltip ─── */
 const HelpTip = ({ text }) => {
   const [show, setShow] = React.useState(false);
   return (
@@ -274,7 +274,7 @@ const HelpTip = ({ text }) => {
   );
 };
 
-/* ΓöÇΓöÇΓöÇ TAB HELP ΓÇö collapsible how-to banner ΓöÇΓöÇΓöÇ */
+/* ─── TAB HELP — collapsible how-to banner ─── */
 const TabHelp = ({ items }) => {
   const [open, setOpen] = React.useState(false);
   return (
@@ -304,15 +304,15 @@ const TabHelp = ({ items }) => {
   );
 };
 
-/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-   SUPPORT TAB COMPONENT ΓÇö TAB 14
+/* ═══════════════════════════════════════════════════════════════════
+   SUPPORT TAB COMPONENT — TAB 14
    Ticket system, conversation threads, SLA tracking, response templates
    Collections: supportTickets, ticketPresence
    Benchmark: Intercom + Zendesk + Freshdesk
    PHASE 1: Internal Notes, Tags, Assignment
    PHASE 1B: Collision Detection, Attachments, @Mentions
    PHASE 2: Merge Tickets, Link Related, Custom Fields
-ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+═══════════════════════════════════════════════════════════════════ */
 function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpenUid }) {
   // State
   const [supportSubTab, setSupportSubTab] = useState("open");
@@ -421,7 +421,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     enabled: true,
     autoAccept: false,
     maxConcurrent: 3,
-    welcomeMessage: "Hi! ≡ƒæï How can we help you today?",
+    welcomeMessage: "Hi! • How can we help you today?",
     offlineMessage: "We're currently offline. Leave a message and we'll get back to you!",
     widgetColor: "#D4A843",
     widgetPosition: "right"
@@ -509,12 +509,12 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
   // Categories and statuses
   const categories = [
-    { id: "bug", label: "Bug Report", color: T.red, icon: "≡ƒÉ¢" },
-    { id: "data", label: "Data Question", color: T.orange, icon: "≡ƒôè" },
-    { id: "feature", label: "Feature Request", color: T.purple, icon: "Γ£¿" },
-    { id: "billing", label: "Billing Query", color: T.green, icon: "≡ƒÆ│" },
-    { id: "account", label: "Account Issue", color: T.blue, icon: "≡ƒæñ" },
-    { id: "other", label: "Other", color: T.textMuted, icon: "≡ƒô¥" },
+    { id: "bug", label: "Bug Report", color: T.red, icon: "🉢" },
+    { id: "data", label: "Data Question", color: T.orange, icon: "📈" },
+    { id: "feature", label: "Feature Request", color: T.purple, icon: "✿" },
+    { id: "billing", label: "Billing Query", color: T.green, icon: "•" },
+    { id: "account", label: "Account Issue", color: T.blue, icon: "•" },
+    { id: "other", label: "Other", color: T.textMuted, icon: "•" },
   ];
 
   const statuses = {
@@ -610,7 +610,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         ]);
         // Default sample workflows
         setWorkflowTriggers([
-          { id: "wf_1", name: "Resolved ΓåÆ Add Tag", trigger: "status_change", triggerValue: "resolved", actions: [{ type: "add_tag", value: "resolved" }], enabled: true },
+          { id: "wf_1", name: "Resolved → Add Tag", trigger: "status_change", triggerValue: "resolved", actions: [{ type: "add_tag", value: "resolved" }], enabled: true },
           { id: "wf_2", name: "VIP Auto-Priority", trigger: "tier_is", triggerValue: "enterprise", actions: [{ type: "set_priority", value: "high" }, { type: "add_tag", value: "vip" }], enabled: true },
         ]);
         // Default sample CSAT
@@ -673,7 +673,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               tags: [...new Set([...(ticket.tags || []), "escalated"])],
               internalNotes: [
                 ...(ticket.internalNotes || []),
-                { text: `ΓÜá∩╕Å AUTO-ESCALATED: SLA breached (>${slaSettings.defaultHours}h without resolution)`, by: "System", at: now.toISOString(), isSystem: true }
+                { text: `⚡️ AUTO-ESCALATED: SLA breached (>${slaSettings.defaultHours}h without resolution)`, by: "System", at: now.toISOString(), isSystem: true }
               ],
               updatedAt: now.toISOString()
             };
@@ -1344,7 +1344,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
       if (isInternalNote) {
         // Add to internal notes as attachment
         const newNote = {
-          text: `≡ƒôÄ Attached file: ${file.name}`,
+          text: `📄 Attached file: ${file.name}`,
           by: adminUser?.email || "admin",
           at: new Date().toISOString(),
           attachment
@@ -1357,7 +1357,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         // Add to public messages
         const newMessage = {
           from: "admin",
-          text: `≡ƒôÄ Attached file: ${file.name}`,
+          text: `📄 Attached file: ${file.name}`,
           at: new Date().toISOString(),
           by: adminUser?.email || "admin",
           attachment
@@ -1472,7 +1472,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   const insertTemplate = (text) => { setTicketReply(text); setShowTemplates(false); };
   const insertNoteTemplate = (text) => { setInternalNote(text); };
   const timeAgo = (date) => {
-    if (!date) return "ΓÇö";
+    if (!date) return "—";
     const seconds = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);
     if (seconds < 60) return "Just now";
     const minutes = Math.floor(seconds / 60);
@@ -1676,12 +1676,12 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
   // Phase 8B: Webhook Functions
   const webhookEvents = [
-    { id: "ticket_created", label: "Ticket Created", icon: "≡ƒô¥" },
-    { id: "ticket_resolved", label: "Ticket Resolved", icon: "Γ£à" },
-    { id: "ticket_assigned", label: "Ticket Assigned", icon: "≡ƒæñ" },
-    { id: "sla_breach", label: "SLA Breached", icon: "ΓÅ░" },
-    { id: "reply_sent", label: "Reply Sent", icon: "≡ƒÆ¼" },
-    { id: "priority_changed", label: "Priority Changed", icon: "≡ƒö┤" },
+    { id: "ticket_created", label: "Ticket Created", icon: "•" },
+    { id: "ticket_resolved", label: "Ticket Resolved", icon: "" },
+    { id: "ticket_assigned", label: "Ticket Assigned", icon: "•" },
+    { id: "sla_breach", label: "SLA Breached", icon: "░" },
+    { id: "reply_sent", label: "Reply Sent", icon: "💼" },
+    { id: "priority_changed", label: "Priority Changed", icon: "•" },
   ];
 
   const saveWebhook = async () => {
@@ -2314,7 +2314,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             autoAssignedBy: rule.name,
             internalNotes: [
               ...(ticket.internalNotes || []),
-              { text: `≡ƒñû Auto-assigned to ${rule.assignToName} by rule: "${rule.name}"`, by: "System", at: new Date().toISOString(), isSystem: true }
+              { text: `👛 Auto-assigned to ${rule.assignToName} by rule: "${rule.name}"`, by: "System", at: new Date().toISOString(), isSystem: true }
             ],
             updatedAt: new Date().toISOString()
           };
@@ -2483,7 +2483,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             if (action.value === "resolved") updates.resolvedAt = new Date().toISOString();
             break;
           case "add_note":
-            newNotes.push({ text: `≡ƒñû ${action.value}`, by: "System", at: new Date().toISOString(), isSystem: true });
+            newNotes.push({ text: `👛 ${action.value}`, by: "System", at: new Date().toISOString(), isSystem: true });
             break;
           case "send_notification":
             // Would integrate with notification system
@@ -2536,11 +2536,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
   // Phase 5B: KB Categories
   const kbCategories = [
-    { id: "getting-started", label: "Getting Started", icon: "≡ƒÜÇ" },
-    { id: "billing", label: "Billing & Payments", icon: "≡ƒÆ│" },
-    { id: "technical", label: "Technical Issues", icon: "≡ƒöº" },
-    { id: "features", label: "Features & Usage", icon: "Γ£¿" },
-    { id: "account", label: "Account & Security", icon: "≡ƒöÉ" },
+    { id: "getting-started", label: "Getting Started", icon: "🔇" },
+    { id: "billing", label: "Billing & Payments", icon: "•" },
+    { id: "technical", label: "Technical Issues", icon: "•" },
+    { id: "features", label: "Features & Usage", icon: "✿" },
+    { id: "account", label: "Account & Security", icon: "🗉" },
   ];
 
   const qrCategories = [
@@ -2707,7 +2707,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
   // Phase 6A: Sentiment Analysis (rule-based)
   const analyzeSentiment = (ticket) => {
-    if (!ticket) return { sentiment: "neutral", emoji: "≡ƒÿÉ", color: T.textMuted, label: "Neutral" };
+    if (!ticket) return { sentiment: "neutral", emoji: "🟉", color: T.textMuted, label: "Neutral" };
     
     const allText = [
       ticket.subject || "",
@@ -2736,12 +2736,12 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     };
     
     // Determine sentiment
-    if (scores.urgent >= 3) return { sentiment: "urgent", emoji: "≡ƒåÿ", color: T.red, label: "Urgent", pulse: true };
-    if (scores.frustrated >= 3) return { sentiment: "frustrated", emoji: "≡ƒÿá", color: T.red, label: "Frustrated" };
-    if (scores.concerned >= 2) return { sentiment: "concerned", emoji: "≡ƒÿƒ", color: T.orange, label: "Concerned" };
-    if (scores.positive >= 2) return { sentiment: "positive", emoji: "≡ƒÿè", color: T.green, label: "Positive" };
+    if (scores.urgent >= 3) return { sentiment: "urgent", emoji: "•", color: T.red, label: "Urgent", pulse: true };
+    if (scores.frustrated >= 3) return { sentiment: "frustrated", emoji: "•", color: T.red, label: "Frustrated" };
+    if (scores.concerned >= 2) return { sentiment: "concerned", emoji: "•", color: T.orange, label: "Concerned" };
+    if (scores.positive >= 2) return { sentiment: "positive", emoji: "•", color: T.green, label: "Positive" };
     
-    return { sentiment: "neutral", emoji: "≡ƒÿÉ", color: T.textMuted, label: "Neutral" };
+    return { sentiment: "neutral", emoji: "🟉", color: T.textMuted, label: "Neutral" };
   };
 
   // Phase 6A: AI Priority Recommendation
@@ -3035,7 +3035,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <button type="button" onClick={() => { setTicketsLoading(true); setTimeout(() => setTicketsLoading(false), 500); notify("Tickets refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
         {[
           { label: "Open Tickets", value: openTickets.length, color: openTickets.length > 0 ? T.orange : T.green },
-          { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "ΓÇö", color: avgResponseHrs !== null && avgResponseHrs > 24 ? T.red : T.green },
+          { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "—", color: avgResponseHrs !== null && avgResponseHrs > 24 ? T.red : T.green },
           { label: "Resolved Today", value: resolvedToday, color: T.green },
           { label: "SLA Breached", value: slaBreached.length, color: slaBreached.length > 0 ? T.red : T.green },
           { label: "Unassigned", value: unassignedCount, color: unassignedCount > 0 ? T.orange : T.green },
@@ -3049,9 +3049,9 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         {/* Channel indicators */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", marginLeft: "auto" }}>
           <span style={{ fontSize: 9, color: T.textMuted }}>Channels:</span>
-          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.blue}20`, color: T.blue }}>≡ƒôº {tickets.filter(t => !t.channel || t.channel === "email").length}</span>
-          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>≡ƒÆ¼ {liveChats.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "chat").length}</span>
-          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: "#25D36620", color: "#25D366" }}>≡ƒô▒ {whatsappConversations.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "whatsapp").length}</span>
+          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.blue}20`, color: T.blue }}>📺 {tickets.filter(t => !t.channel || t.channel === "email").length}</span>
+          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>💼 {liveChats.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "chat").length}</span>
+          <span style={{ fontSize: 10, padding: "3px 6px", borderRadius: 4, background: "#25D36620", color: "#25D366" }}>📱 {whatsappConversations.filter(c => c.status === "active").length + tickets.filter(t => t.channel === "whatsapp").length}</span>
         </div>
       </div>
 
@@ -3062,13 +3062,13 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             { id: "open", label: `Open (${tickets.filter(t => t.status === "open" || t.status === "in_progress").length})` },
             { id: "resolved", label: `Resolved (${tickets.filter(t => t.status === "resolved" || t.status === "closed").length})` },
             { id: "all", label: `All (${tickets.length})` },
-            { id: "livechat", label: `≡ƒÆ¼ Live Chat${liveChats.filter(c => c.status === "active").length > 0 ? ` (${liveChats.filter(c => c.status === "active").length})` : ""}` },
-            { id: "whatsapp", label: `≡ƒô▒ WhatsApp${whatsappConversations.filter(c => c.status === "active").length > 0 ? ` (${whatsappConversations.filter(c => c.status === "active").length})` : ""}` },
-            { id: "analytics", label: "≡ƒôè Analytics" },
-            { id: "kb", label: "≡ƒôÜ KB & Tools" },
-            { id: "timetrack", label: `ΓÅ▒∩╕Å Time${activeTimer ? " ≡ƒö┤" : ""}` },
-            { id: "auditlog", label: "≡ƒôï Audit" },
-            { id: "settings", label: "ΓÜÖ∩╕Å Settings" },
+            { id: "livechat", label: `💼 Live Chat${liveChats.filter(c => c.status === "active").length > 0 ? ` (${liveChats.filter(c => c.status === "active").length})` : ""}` },
+            { id: "whatsapp", label: `📱 WhatsApp${whatsappConversations.filter(c => c.status === "active").length > 0 ? ` (${whatsappConversations.filter(c => c.status === "active").length})` : ""}` },
+            { id: "analytics", label: "📈 Analytics" },
+            { id: "kb", label: "📬 KB & Tools" },
+            { id: "timetrack", label: `▒️ Time${activeTimer ? " •" : ""}` },
+            { id: "auditlog", label: "📋 Audit" },
+            { id: "settings", label: " Settings" },
           ].map(t => (
             <button key={t.id} type="button" onClick={() => setSupportSubTab(t.id)}
               style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${supportSubTab === t.id ? T.gold : T.border}`, background: supportSubTab === t.id ? T.goldGlow : "transparent", color: supportSubTab === t.id ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", position: "relative" }}>
@@ -3090,10 +3090,10 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <select value={channelFilter} onChange={e => setChannelFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${channelFilter !== "all" ? "#25D366" : T.border}`, background: T.surfaceAlt, color: channelFilter !== "all" ? "#25D366" : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Channels</option>
-            <option value="email">≡ƒôº Email</option>
-            <option value="chat">≡ƒÆ¼ Live Chat</option>
-            <option value="whatsapp">≡ƒô▒ WhatsApp</option>
-            <option value="phone">≡ƒô₧ Phone</option>
+            <option value="email">📺 Email</option>
+            <option value="chat">💼 Live Chat</option>
+            <option value="whatsapp">📱 WhatsApp</option>
+            <option value="phone">📧 Phone</option>
           </select>
           <select value={ticketFilter} onChange={e => setTicketFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
@@ -3103,27 +3103,27 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <select value={ticketPriorityFilter} onChange={e => setTicketPriorityFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Priorities</option>
-            <option value="urgent">≡ƒö┤ Urgent</option>
-            <option value="high">≡ƒƒá High</option>
-            <option value="normal">ΓÜ¬ Normal</option>
+            <option value="urgent">• Urgent</option>
+            <option value="high">• High</option>
+            <option value="normal"> Normal</option>
           </select>
           <select value={tagFilter} onChange={e => setTagFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${tagFilter !== "all" ? T.teal : T.border}`, background: T.surfaceAlt, color: tagFilter !== "all" ? T.teal : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Tags</option>
-            {availableTags.map(t => <option key={t.id} value={t.id}>≡ƒÅ╖∩╕Å {t.label}</option>)}
+            {availableTags.map(t => <option key={t.id} value={t.id}>• {t.label}</option>)}
           </select>
           <select value={assignmentFilter} onChange={e => setAssignmentFilter(e.target.value)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${assignmentFilter !== "all" ? T.purple : T.border}`, background: T.surfaceAlt, color: assignmentFilter !== "all" ? T.purple : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
             <option value="all">All Agents</option>
-            <option value="unassigned">≡ƒæñ Unassigned</option>
-            {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>≡ƒæñ {a.name}</option>)}
+            <option value="unassigned">• Unassigned</option>
+            {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>• {a.name}</option>)}
           </select>
           {/* Custom Field Filter */}
           {customFields.length > 0 && (
             <select value={customFieldFilter.fieldId} onChange={e => setCustomFieldFilter({ fieldId: e.target.value, value: "" })}
               style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${customFieldFilter.fieldId ? T.cyan : T.border}`, background: T.surfaceAlt, color: customFieldFilter.fieldId ? T.cyan : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
               <option value="">Custom Field...</option>
-              {customFields.map(f => <option key={f.id} value={f.id}>≡ƒôï {f.name}</option>)}
+              {customFields.map(f => <option key={f.id} value={f.id}>📋 {f.name}</option>)}
             </select>
           )}
           {customFieldFilter.fieldId && (
@@ -3133,22 +3133,22 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <button type="button" onClick={() => setShowFieldsModal(true)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
             title="Custom Fields">
-            ΓÜÖ∩╕Å
+            
           </button>
           <button type="button" onClick={() => setShowAutoAssignModal(true)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${autoAssignRules.filter(r => r.enabled).length > 0 ? T.green : T.border}`, background: autoAssignRules.filter(r => r.enabled).length > 0 ? `${T.green}15` : "transparent", color: autoAssignRules.filter(r => r.enabled).length > 0 ? T.green : T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
             title="Auto-Assign Rules">
-            ≡ƒñû {autoAssignRules.filter(r => r.enabled).length > 0 && <span style={{ fontSize: 9 }}>{autoAssignRules.filter(r => r.enabled).length}</span>}
+            👛 {autoAssignRules.filter(r => r.enabled).length > 0 && <span style={{ fontSize: 9 }}>{autoAssignRules.filter(r => r.enabled).length}</span>}
           </button>
           <button type="button" onClick={() => setShowSlaModal(true)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
             title="SLA Settings">
-            ΓÅ▒∩╕Å
+            ▒️
           </button>
           <button type="button" onClick={() => setShowWorkflowModal(true)}
             style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${workflowTriggers.filter(w => w.enabled).length > 0 ? T.purple : T.border}`, background: workflowTriggers.filter(w => w.enabled).length > 0 ? `${T.purple}15` : "transparent", color: workflowTriggers.filter(w => w.enabled).length > 0 ? T.purple : T.textMuted, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
             title="Workflow Triggers">
-            ΓÜí {workflowTriggers.filter(w => w.enabled).length > 0 && <span style={{ fontSize: 9 }}>{workflowTriggers.filter(w => w.enabled).length}</span>}
+            ⚡ {workflowTriggers.filter(w => w.enabled).length > 0 && <span style={{ fontSize: 9 }}>{workflowTriggers.filter(w => w.enabled).length}</span>}
           </button>
         </div>
         )}
@@ -3179,7 +3179,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <span style={{ fontSize: 32, fontWeight: 900, color: T.white, fontFamily: "'Fraunces',serif" }}>{analytics.total}</span>
                 {analytics.volumeChange !== 0 && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: analytics.volumeChange > 0 ? T.red : T.green }}>
-                    {analytics.volumeChange > 0 ? "Γåæ" : "Γåô"} {Math.abs(analytics.volumeChange)}%
+                    {analytics.volumeChange > 0 ? "←" : "↑"} {Math.abs(analytics.volumeChange)}%
                   </span>
                 )}
               </div>
@@ -3189,7 +3189,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Avg Resolution</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                 <span style={{ fontSize: 32, fontWeight: 900, color: analytics.avgResolutionHrs && analytics.avgResolutionHrs > slaSettings.defaultHours ? T.red : T.green, fontFamily: "'Fraunces',serif" }}>
-                  {analytics.avgResolutionHrs ? `${analytics.avgResolutionHrs}h` : "ΓÇö"}
+                  {analytics.avgResolutionHrs ? `${analytics.avgResolutionHrs}h` : "—"}
                 </span>
               </div>
               <div style={{ fontSize: 10, color: T.textMuted }}>SLA target: {slaSettings.defaultHours}h</div>
@@ -3202,7 +3202,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 </span>
                 {analytics.slaChange !== 0 && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: analytics.slaChange > 0 ? T.green : T.red }}>
-                    {analytics.slaChange > 0 ? "Γåæ" : "Γåô"} {Math.abs(analytics.slaChange)}%
+                    {analytics.slaChange > 0 ? "←" : "↑"} {Math.abs(analytics.slaChange)}%
                   </span>
                 )}
               </div>
@@ -3221,7 +3221,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
             {/* Ticket Volume Chart */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>≡ƒôê Ticket Volume</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>📊 Ticket Volume</div>
               <div style={{ height: 200 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={analytics.dailyVolume.slice(-14)} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
@@ -3261,7 +3261,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
             {/* Category Breakdown */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>≡ƒôè By Category</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>📈 By Category</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.categoryBreakdown.slice(0, 6).map(cat => (
                   <div key={cat.id}>
@@ -3285,7 +3285,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
             {/* Priority Breakdown */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>≡ƒÄ» By Priority</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>• By Priority</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.priorityBreakdown.map(p => (
                   <div key={p.id}>
@@ -3303,7 +3303,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
             {/* Status Breakdown */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>≡ƒôï By Status</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>📋 By Status</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.statusBreakdown.map(s => (
                   <div key={s.id}>
@@ -3321,7 +3321,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
             {/* Resolution Time Buckets */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ΓÅ▒∩╕Å Resolution Time</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>▒️ Resolution Time</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.resolutionBuckets.map((b, idx) => (
                   <div key={idx}>
@@ -3341,7 +3341,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           {/* Agent Performance Table */}
           <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>≡ƒæÑ Agent Performance</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>• Agent Performance</div>
               <div style={{ fontSize: 10, color: T.textMuted }}>Last {analyticsRange === "7d" ? "7 days" : analyticsRange === "30d" ? "30 days" : "90 days"}</div>
             </div>
             {analytics.agentPerformance.length === 0 ? (
@@ -3369,7 +3369,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           <div>
                             <div style={{ fontWeight: 600, color: T.white }}>{agent.name}</div>
                             {idx === 0 && analytics.agentPerformance.length > 1 && (
-                              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold }}>≡ƒÅå Top Performer</span>
+                              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold }}>• Top Performer</span>
                             )}
                           </div>
                         </td>
@@ -3384,7 +3384,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           </div>
                         </td>
                         <td style={{ textAlign: "center", padding: "12px", color: agent.avgResolution && agent.avgResolution > slaSettings.defaultHours ? T.red : T.textSecondary }}>
-                          {agent.avgResolution ? `${agent.avgResolution}h` : "ΓÇö"}
+                          {agent.avgResolution ? `${agent.avgResolution}h` : "—"}
                         </td>
                         <td style={{ textAlign: "center", padding: "12px" }}>
                           <span style={{ padding: "4px 10px", borderRadius: 6, background: agent.slaPercent >= 85 ? `${T.green}20` : agent.slaPercent >= 70 ? `${T.orange}20` : `${T.red}20`, color: agent.slaPercent >= 85 ? T.green : agent.slaPercent >= 70 ? T.orange : T.red, fontWeight: 700, fontSize: 11 }}>
@@ -3403,7 +3403,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
             {/* SLA Trend Chart */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>≡ƒôê SLA Compliance Trend</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>📊 SLA Compliance Trend</div>
               <div style={{ height: 180 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={analytics.slaTrend} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
@@ -3438,7 +3438,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
             {/* Workload Distribution */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>ΓÜû∩╕Å Current Workload</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>⏰️ Current Workload</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.workloadDistribution.length === 0 ? (
                   <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No open tickets</div>
@@ -3451,7 +3451,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                           <span style={{ fontSize: 11, color: T.textSecondary, display: "flex", alignItems: "center", gap: 6 }}>
                             {agent.name}
-                            {isOverloaded && <span style={{ fontSize: 9, padding: "1px 4px", borderRadius: 3, background: `${T.red}20`, color: T.red }}>ΓÜá∩╕Å</span>}
+                            {isOverloaded && <span style={{ fontSize: 9, padding: "1px 4px", borderRadius: 3, background: `${T.red}20`, color: T.red }}>⚡️</span>}
                           </span>
                           <span style={{ fontSize: 11, fontWeight: 600, color: isOverloaded ? T.red : agent.id === "unassigned" ? T.orange : T.white }}>{agent.count}</span>
                         </div>
@@ -3474,7 +3474,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
           {/* CSAT Section Header */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>≡ƒÿè Customer Satisfaction</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>• Customer Satisfaction</div>
             <div style={{ flex: 1, height: 1, background: T.border }} />
           </div>
 
@@ -3484,11 +3484,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Avg CSAT Score</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                 <span style={{ fontSize: 32, fontWeight: 900, color: analytics.avgCsat && analytics.avgCsat >= 4 ? T.green : analytics.avgCsat && analytics.avgCsat >= 3 ? T.orange : T.red, fontFamily: "'Fraunces',serif" }}>
-                  {analytics.avgCsat ? `${analytics.avgCsat}Γÿà` : "ΓÇö"}
+                  {analytics.avgCsat ? `${analytics.avgCsat}` : "—"}
                 </span>
                 {analytics.csatChange !== 0 && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: analytics.csatChange > 0 ? T.green : T.red }}>
-                    {analytics.csatChange > 0 ? "Γåæ" : "Γåô"} {Math.abs(analytics.csatChange)}
+                    {analytics.csatChange > 0 ? "←" : "↑"} {Math.abs(analytics.csatChange)}
                   </span>
                 )}
               </div>
@@ -3527,7 +3527,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
             {/* CSAT Trend */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>≡ƒôê CSAT Trend</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>📊 CSAT Trend</div>
               <div style={{ height: 180 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={analytics.csatTrend.filter(d => d.avgRating !== null)} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
@@ -3543,7 +3543,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <Tooltip 
                       contentStyle={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 12 }}
                       labelStyle={{ color: T.white, fontWeight: 600 }}
-                      formatter={(value) => [`${value} Γÿà`, "Avg Rating"]}
+                      formatter={(value) => [`${value} `, "Avg Rating"]}
                     />
                     <Area type="monotone" dataKey="avgRating" name="Avg Rating" stroke={T.gold} fillOpacity={1} fill="url(#colorCsat)" strokeWidth={2} />
                   </AreaChart>
@@ -3556,7 +3556,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 </div>
                 {analytics.avgCsat && (
                   <div style={{ padding: "4px 10px", borderRadius: 6, background: analytics.avgCsat >= 4 ? `${T.green}20` : analytics.avgCsat >= 3 ? `${T.orange}20` : `${T.red}20`, color: analytics.avgCsat >= 4 ? T.green : analytics.avgCsat >= 3 ? T.orange : T.red, fontSize: 11, fontWeight: 700 }}>
-                    Period Avg: {analytics.avgCsat}Γÿà
+                    Period Avg: {analytics.avgCsat}
                   </div>
                 )}
               </div>
@@ -3564,12 +3564,12 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
             {/* Rating Distribution */}
             <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>Γ¡É Rating Distribution</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}> Rating Distribution</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {analytics.ratingDistribution.map(r => (
                   <div key={r.rating}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                      <span style={{ fontSize: 11, color: T.textSecondary }}>{"Γ¡É".repeat(r.rating)}</span>
+                      <span style={{ fontSize: 11, color: T.textSecondary }}>{"".repeat(r.rating)}</span>
                       <span style={{ fontSize: 11, fontWeight: 600, color: r.color }}>{r.count} ({r.percent}%)</span>
                     </div>
                     <div style={{ height: 6, background: T.border, borderRadius: 3, overflow: "hidden" }}>
@@ -3584,7 +3584,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           {/* Agent CSAT Scores */}
           <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>≡ƒæÑ Agent CSAT Scores</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>• Agent CSAT Scores</div>
               <div style={{ fontSize: 10, color: T.textMuted }}>Based on customer feedback</div>
             </div>
             {analytics.agentCsat.length === 0 ? (
@@ -3610,13 +3610,13 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           <div>
                             <div style={{ fontWeight: 600, color: T.white }}>{agent.name}</div>
                             {idx === 0 && analytics.agentCsat.length > 1 && (
-                              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold }}>Γ¡É Highest Rated</span>
+                              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold }}> Highest Rated</span>
                             )}
                           </div>
                         </td>
                         <td style={{ textAlign: "center", padding: "12px" }}>
                           <span style={{ padding: "6px 12px", borderRadius: 8, background: agent.avgRating >= 4 ? `${T.green}20` : agent.avgRating >= 3 ? `${T.orange}20` : `${T.red}20`, color: agent.avgRating >= 4 ? T.green : agent.avgRating >= 3 ? T.orange : T.red, fontWeight: 700, fontSize: 14 }}>
-                            {agent.avgRating}Γÿà
+                            {agent.avgRating}
                           </span>
                         </td>
                         <td style={{ textAlign: "center", padding: "12px", color: T.textSecondary }}>{agent.totalRatings}</td>
@@ -3624,7 +3624,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           {agent.recentComment ? (
                             <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                               <span style={{ fontSize: 10, color: agent.recentComment.rating >= 4 ? T.green : agent.recentComment.rating >= 3 ? T.orange : T.red }}>
-                                {"Γÿà".repeat(agent.recentComment.rating)}
+                                {"".repeat(agent.recentComment.rating)}
                               </span>
                               <span style={{ fontSize: 11, color: T.textSecondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 "{agent.recentComment.text.length > 40 ? agent.recentComment.text.slice(0, 40) + "..." : agent.recentComment.text}"
@@ -3644,7 +3644,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
           {/* Recent Feedback */}
           <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>≡ƒÆ¼ Recent Feedback</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 16 }}>💼 Recent Feedback</div>
             {analytics.recentFeedback.length === 0 ? (
               <div style={{ padding: 30, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No feedback with comments yet</div>
             ) : (
@@ -3654,7 +3654,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ fontSize: 14, color: feedback.rating >= 4 ? T.green : feedback.rating >= 3 ? T.orange : T.red }}>
-                          {"Γÿà".repeat(feedback.rating)}{"Γÿå".repeat(5 - feedback.rating)}
+                          {"".repeat(feedback.rating)}{"".repeat(5 - feedback.rating)}
                         </span>
                         <span style={{ fontSize: 11, color: T.textMuted }}>by {feedback.userName || "Customer"}</span>
                       </div>
@@ -3662,7 +3662,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     </div>
                     <p style={{ margin: 0, fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>"{feedback.comment}"</p>
                     <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>
-                      Agent: <span style={{ color: T.purple }}>{feedback.agentName || "ΓÇö"}</span>
+                      Agent: <span style={{ color: T.purple }}>{feedback.agentName || "—"}</span>
                     </div>
                   </div>
                 ))}
@@ -3688,11 +3688,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <button type="button" onClick={() => setShowWidgetPreview(true)}
                 style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                ≡ƒæü∩╕Å Widget Preview
+                • Widget Preview
               </button>
               <button type="button" onClick={() => setShowChatSettings(true)}
                 style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                ΓÜÖ∩╕Å Settings
+                 Settings
               </button>
             </div>
           </div>
@@ -3700,11 +3700,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           {/* Chat Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
             {[
-              { label: "Active Chats", value: liveChats.filter(c => c.status === "active").length, color: T.green, icon: "≡ƒÆ¼" },
-              { label: "In Queue", value: chatQueue.length, color: chatQueue.length > 0 ? T.orange : T.textMuted, icon: "ΓÅ│" },
-              { label: "Handled Today", value: liveChats.filter(c => c.status === "ended").length, color: T.teal, icon: "Γ£ô" },
-              { label: "Avg Wait", value: chatQueue.length > 0 ? `${Math.round(chatQueue.reduce((a, c) => a + (Date.now() - new Date(c.queuedAt).getTime()) / 1000, 0) / chatQueue.length / 60)}m` : "ΓÇö", color: T.textSecondary, icon: "ΓÅ▒∩╕Å" },
-              { label: "Avg Duration", value: liveChats.filter(c => c.duration).length > 0 ? `${Math.round(liveChats.filter(c => c.duration).reduce((a, c) => a + c.duration, 0) / liveChats.filter(c => c.duration).length / 60)}m` : "ΓÇö", color: T.textSecondary, icon: "≡ƒôè" },
+              { label: "Active Chats", value: liveChats.filter(c => c.status === "active").length, color: T.green, icon: "💼" },
+              { label: "In Queue", value: chatQueue.length, color: chatQueue.length > 0 ? T.orange : T.textMuted, icon: "" },
+              { label: "Handled Today", value: liveChats.filter(c => c.status === "ended").length, color: T.teal, icon: "✔" },
+              { label: "Avg Wait", value: chatQueue.length > 0 ? `${Math.round(chatQueue.reduce((a, c) => a + (Date.now() - new Date(c.queuedAt).getTime()) / 1000, 0) / chatQueue.length / 60)}m` : "—", color: T.textSecondary, icon: "▒️" },
+              { label: "Avg Duration", value: liveChats.filter(c => c.duration).length > 0 ? `${Math.round(liveChats.filter(c => c.duration).reduce((a, c) => a + c.duration, 0) / liveChats.filter(c => c.duration).length / 60)}m` : "—", color: T.textSecondary, icon: "📈" },
             ].map((stat, i) => (
               <div key={i} style={{ padding: 16, background: T.surface, borderRadius: 10, border: `1px solid ${T.border}`, textAlign: "center" }}>
                 <div style={{ fontSize: 20, marginBottom: 4 }}>{stat.icon}</div>
@@ -3719,7 +3719,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ΓÅ│ Queue</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}> Queue</span>
                   {chatQueue.length > 0 && (
                     <span style={{ padding: "2px 8px", borderRadius: 10, background: `${T.orange}20`, color: T.orange, fontSize: 11, fontWeight: 600 }}>{chatQueue.length} waiting</span>
                   )}
@@ -3740,7 +3740,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               
               {chatQueue.length === 0 ? (
                 <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>≡ƒÄë</div>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>🎯</div>
                   <div style={{ fontSize: 12 }}>No visitors waiting</div>
                 </div>
               ) : (
@@ -3842,11 +3842,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ fontSize: 12, color: T.textMuted, fontFamily: "'Fraunces',serif" }}>
-                          ≡ƒòÉ {durMins}:{durSecs.toString().padStart(2, "0")}
+                          • {durMins}:{durSecs.toString().padStart(2, "0")}
                         </div>
                         <button type="button" onClick={() => setActiveChatId(null)}
                           style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
-                          ΓåÉ Back
+                           Back
                         </button>
                         <button type="button" onClick={async () => {
                           // Convert to ticket
@@ -3873,7 +3873,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           } catch (e) { notify("Error: " + e.message); }
                         }}
                           style={{ padding: "6px 10px", borderRadius: 5, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
-                          ≡ƒôº Convert to Ticket
+                          📺 Convert to Ticket
                         </button>
                         <button type="button" onClick={() => {
                           setLiveChats(prev => prev.map(c => c.id === chat.id ? { ...c, status: "ended", endedAt: new Date().toISOString(), duration: chatDuration } : c));
@@ -3929,7 +3929,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         setLiveChats(prev => prev.map(c => c.id === chat.id ? { ...c, messages: [...(c.messages || []), { from: "visitor", text: reply, at: new Date().toISOString() }] } : c));
                       }}
                         style={{ width: "100%", padding: "6px 12px", borderRadius: 5, border: `1px dashed ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
-                        ≡ƒÆ¼ Simulate Visitor Reply (Demo)
+                        💼 Simulate Visitor Reply (Demo)
                       </button>
                     </div>
                   </div>
@@ -3940,7 +3940,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>≡ƒƒó Active Chats</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>• Active Chats</span>
                     {liveChats.filter(c => c.status === "active").length > 0 && (
                       <span style={{ padding: "2px 8px", borderRadius: 10, background: `${T.green}20`, color: T.green, fontSize: 11, fontWeight: 600 }}>{liveChats.filter(c => c.status === "active").length} live</span>
                     )}
@@ -3949,7 +3949,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 
                 {liveChats.filter(c => c.status === "active").length === 0 ? (
                   <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 28, marginBottom: 8 }}>≡ƒÆ¼</div>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>💼</div>
                     <div style={{ fontSize: 12 }}>No active chats</div>
                     <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Accept a visitor from the queue to start</div>
                   </div>
@@ -3987,7 +3987,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           )}
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             <span style={{ fontSize: 10, color: T.textMuted }}>{chat.messages?.length || 0} messages</span>
-                            <span style={{ fontSize: 10, color: T.green }}>Click to open ΓåÆ</span>
+                            <span style={{ fontSize: 10, color: T.green }}>Click to open →</span>
                           </div>
                         </div>
                       );
@@ -4006,9 +4006,9 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               <span style={{ fontSize: 12, fontWeight: 500, color: T.textSecondary }}>{chat.visitorName}</span>
                               <span style={{ fontSize: 10, color: T.textMuted }}>{chat.messages?.length || 0} msgs</span>
-                              {chat.convertedToTicket && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>ΓåÆ Ticket</span>}
+                              {chat.convertedToTicket && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>→ Ticket</span>}
                             </div>
-                            <span style={{ fontSize: 10, color: T.textMuted }}>{chat.duration ? `${Math.floor(chat.duration / 60)}m ${chat.duration % 60}s` : "ΓÇö"}</span>
+                            <span style={{ fontSize: 10, color: T.textMuted }}>{chat.duration ? `${Math.floor(chat.duration / 60)}m ${chat.duration % 60}s` : "—"}</span>
                           </div>
                         </div>
                       ))}
@@ -4021,13 +4021,13 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
           {/* Embed Code Section */}
           <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12 }}>≡ƒöù Widget Embed Code</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12 }}>🗙 Widget Embed Code</div>
             <div style={{ padding: 12, background: T.bg, borderRadius: 8, fontFamily: "monospace", fontSize: 11, color: T.teal, lineHeight: 1.6, overflow: "auto" }}>
               {`<script src="https://chat.dxbanalytics.com/widget.js"></script>\n<script>\n  DXBChat.init({\n    apiKey: "your_api_key",\n    color: "${chatSettings.widgetColor}",\n    position: "${chatSettings.widgetPosition}",\n    welcomeMessage: "${chatSettings.welcomeMessage}"\n  });\n</script>`}
             </div>
             <button type="button" onClick={() => { navigator.clipboard.writeText(`<script src="https://chat.dxbanalytics.com/widget.js"></script>\n<script>\n  DXBChat.init({\n    apiKey: "your_api_key",\n    color: "${chatSettings.widgetColor}",\n    position: "${chatSettings.widgetPosition}"\n  });\n</script>`); notify("Embed code copied!"); }}
               style={{ marginTop: 10, padding: "8px 16px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-              ≡ƒôï Copy Code
+              📋 Copy Code
             </button>
           </div>
         </div>
@@ -4039,19 +4039,19 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#25D366", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{ fontSize: 18 }}>≡ƒô▒</span>
+                  <span style={{ fontSize: 18 }}>📱</span>
                 </div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>WhatsApp Business</div>
                   <div style={{ fontSize: 11, color: T.textMuted }}>+971 4 XXX XXXX</div>
                 </div>
               </div>
-              <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "#25D36620", color: "#25D366", fontWeight: 600 }}>Γ£ô Connected</span>
+              <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "#25D36620", color: "#25D366", fontWeight: 600 }}>✔ Connected</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <button type="button" onClick={() => setShowWhatsappTemplates(true)}
                 style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid #25D36640`, background: "#25D36610", color: "#25D366", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                ≡ƒô¥ Message Templates
+                • Message Templates
               </button>
             </div>
           </div>
@@ -4059,11 +4059,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           {/* WhatsApp Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
             {[
-              { label: "Active", value: whatsappConversations.filter(c => c.status === "active").length, color: "#25D366", icon: "≡ƒÆ¼" },
-              { label: "Unread", value: whatsappConversations.filter(c => !c.responded && c.status === "active").length, color: T.orange, icon: "≡ƒöö" },
-              { label: "Today", value: whatsappConversations.filter(c => new Date(c.createdAt) > new Date(Date.now() - 86400000)).length, color: T.teal, icon: "≡ƒôè" },
-              { label: "Converted", value: whatsappConversations.filter(c => c.convertedToTicket).length, color: T.purple, icon: "≡ƒÄ½" },
-              { label: "Avg Response", value: "~5m", color: T.textSecondary, icon: "ΓÅ▒∩╕Å" },
+              { label: "Active", value: whatsappConversations.filter(c => c.status === "active").length, color: "#25D366", icon: "💼" },
+              { label: "Unread", value: whatsappConversations.filter(c => !c.responded && c.status === "active").length, color: T.orange, icon: "🔔" },
+              { label: "Today", value: whatsappConversations.filter(c => new Date(c.createdAt) > new Date(Date.now() - 86400000)).length, color: T.teal, icon: "📈" },
+              { label: "Converted", value: whatsappConversations.filter(c => c.convertedToTicket).length, color: T.purple, icon: "•" },
+              { label: "Avg Response", value: "~5m", color: T.textSecondary, icon: "▒️" },
             ].map((stat, i) => (
               <div key={i} style={{ padding: 16, background: T.surface, borderRadius: 10, border: `1px solid ${T.border}`, textAlign: "center" }}>
                 <div style={{ fontSize: 20, marginBottom: 4 }}>{stat.icon}</div>
@@ -4078,7 +4078,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>≡ƒô▒ Conversations</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>📱 Conversations</span>
                   {whatsappConversations.filter(c => c.status === "active").length > 0 && (
                     <span style={{ padding: "2px 8px", borderRadius: 10, background: "#25D36620", color: "#25D366", fontSize: 11, fontWeight: 600 }}>{whatsappConversations.filter(c => c.status === "active").length}</span>
                   )}
@@ -4087,7 +4087,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               
               {whatsappConversations.length === 0 ? (
                 <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>≡ƒô▒</div>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>📱</div>
                   <div style={{ fontSize: 12 }}>No WhatsApp conversations</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Messages will appear here when customers contact you</div>
                 </div>
@@ -4122,9 +4122,9 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold, textTransform: "uppercase" }}>{conv.customerTier || "free"}</span>
                           {windowRemaining > 0 ? (
-                            <span style={{ fontSize: 9, color: windowRemaining < 4 ? T.orange : T.textMuted }}>ΓÅ▒∩╕Å {Math.round(windowRemaining)}h window</span>
+                            <span style={{ fontSize: 9, color: windowRemaining < 4 ? T.orange : T.textMuted }}>▒️ {Math.round(windowRemaining)}h window</span>
                           ) : (
-                            <span style={{ fontSize: 9, color: T.red }}>ΓÜá∩╕Å Window expired</span>
+                            <span style={{ fontSize: 9, color: T.red }}>⚡️ Window expired</span>
                           )}
                         </div>
                       </div>
@@ -4195,7 +4195,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       </div>
                       <button type="button" onClick={() => setActiveWhatsappId(null)}
                         style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
-                        ΓåÉ Back
+                         Back
                       </button>
                       <button type="button" onClick={async () => {
                         // Convert to ticket
@@ -4222,7 +4222,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         } catch (e) { notify("Error: " + e.message); }
                       }}
                         style={{ padding: "6px 10px", borderRadius: 5, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
-                        ≡ƒÄ½ Convert to Ticket
+                        • Convert to Ticket
                       </button>
                     </div>
                   </div>
@@ -4238,7 +4238,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           <span style={{ fontSize: 9, color: "#667781" }}>
                             {new Date(msg.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                           </span>
-                          {msg.from === "agent" && <span style={{ fontSize: 9, color: "#53BDEB" }}>Γ£ôΓ£ô</span>}
+                          {msg.from === "agent" && <span style={{ fontSize: 9, color: "#53BDEB" }}>✔✔</span>}
                         </div>
                       </div>
                     ))}
@@ -4248,7 +4248,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   <div style={{ padding: 12, borderTop: `1px solid ${T.border}`, background: T.surface }}>
                     {!canSendFreeform && (
                       <div style={{ padding: 10, background: `${T.orange}10`, borderRadius: 8, marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 16 }}>ΓÜá∩╕Å</span>
+                        <span style={{ fontSize: 16 }}>⚡️</span>
                         <div>
                           <div style={{ fontSize: 11, fontWeight: 600, color: T.orange }}>24-hour window expired</div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>You can only send pre-approved template messages. Click "Templates" below.</div>
@@ -4258,7 +4258,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div style={{ display: "flex", gap: 10 }}>
                       <button type="button" onClick={() => setShowWhatsappTemplates(true)}
                         style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid #25D36640`, background: "#25D36610", color: "#25D366", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                        ≡ƒô¥ Templates
+                        • Templates
                       </button>
                       <input value={whatsappMessage} onChange={e => setWhatsappMessage(e.target.value)}
                         onKeyDown={e => {
@@ -4290,7 +4290,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       setWhatsappConversations(prev => prev.map(c => c.id === conv.id ? { ...c, messages: [...(c.messages || []), { from: "customer", text: reply, at: new Date().toISOString() }], lastCustomerMessage: new Date().toISOString(), responded: false } : c));
                     }}
                       style={{ width: "100%", padding: "6px 12px", borderRadius: 5, border: `1px dashed ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
-                      ≡ƒô▒ Simulate Customer Reply (Demo)
+                      📱 Simulate Customer Reply (Demo)
                     </button>
                   </div>
                 </div>
@@ -4302,7 +4302,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ padding: 16, background: T.surface, borderRadius: 12, border: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 8 }}>≡ƒô▒ WhatsApp Business API</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 8 }}>📱 WhatsApp Business API</div>
                 <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.6 }}>
                   Connected via Meta Business API. Messages from customers open a 24-hour free-form messaging window.<br />
                   Outside this window, you must use pre-approved message templates.
@@ -4310,10 +4310,10 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 <button type="button" style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                  ΓÜÖ∩╕Å API Settings
+                   API Settings
                 </button>
                 <button type="button" style={{ padding: "8px 14px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                  ≡ƒôè Delivery Reports
+                  📈 Delivery Reports
                 </button>
               </div>
             </div>
@@ -4325,17 +4325,17 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           {/* KB Categories */}
           {(() => {
             const kbCategories = [
-              { id: "getting-started", label: "Getting Started", icon: "≡ƒÜÇ" },
-              { id: "billing", label: "Billing & Payments", icon: "≡ƒÆ│" },
-              { id: "technical", label: "Technical Issues", icon: "≡ƒöº" },
-              { id: "features", label: "Features & How-To", icon: "Γ¡É" },
-              { id: "account", label: "Account Management", icon: "≡ƒæñ" },
+              { id: "getting-started", label: "Getting Started", icon: "🔇" },
+              { id: "billing", label: "Billing & Payments", icon: "•" },
+              { id: "technical", label: "Technical Issues", icon: "•" },
+              { id: "features", label: "Features & How-To", icon: "" },
+              { id: "account", label: "Account Management", icon: "•" },
             ];
             
             const qrCategories = [
-              { id: "general", label: "General", icon: "≡ƒÆ¼" },
-              { id: "technical", label: "Technical", icon: "≡ƒöº" },
-              { id: "billing", label: "Billing", icon: "≡ƒÆ│" },
+              { id: "general", label: "General", icon: "💼" },
+              { id: "technical", label: "Technical", icon: "•" },
+              { id: "billing", label: "Billing", icon: "•" },
             ];
             
             const filteredArticles = kbArticles.filter(a => {
@@ -4358,7 +4358,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                     <div style={{ fontSize: 15, fontWeight: 700, color: T.white, display: "flex", alignItems: "center", gap: 8 }}>
-                      ≡ƒôÜ Knowledge Base
+                      📬 Knowledge Base
                       <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>{kbArticles.length} articles</span>
                     </div>
                     <button type="button" onClick={() => { setEditingArticle(null); setArticleForm({ title: "", content: "", category: "getting-started", tags: "" }); setShowKbModal(true); }}
@@ -4383,15 +4383,15 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div style={{ padding: 20, background: T.surfaceAlt, borderRadius: 10 }}>
                       <button type="button" onClick={() => setViewingArticle(null)}
                         style={{ marginBottom: 16, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer" }}>
-                        ΓåÉ Back to articles
+                         Back to articles
                       </button>
                       <h3 style={{ margin: "0 0 12px 0", fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{viewingArticle.title}</h3>
                       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
                         <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>
                           {kbCategories.find(c => c.id === viewingArticle.category)?.icon} {kbCategories.find(c => c.id === viewingArticle.category)?.label}
                         </span>
-                        <span style={{ fontSize: 10, color: T.textMuted }}>≡ƒæü {viewingArticle.views || 0} views</span>
-                        <span style={{ fontSize: 10, color: T.textMuted }}>≡ƒæì {viewingArticle.helpful || 0} helpful</span>
+                        <span style={{ fontSize: 10, color: T.textMuted }}>• {viewingArticle.views || 0} views</span>
+                        <span style={{ fontSize: 10, color: T.textMuted }}>🎌 {viewingArticle.helpful || 0} helpful</span>
                       </div>
                       <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{viewingArticle.content}</div>
                       {viewingArticle.tags?.length > 0 && (
@@ -4404,7 +4404,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
                         <button type="button" onClick={() => { setEditingArticle(viewingArticle); setArticleForm({ title: viewingArticle.title, content: viewingArticle.content, category: viewingArticle.category, tags: (viewingArticle.tags || []).join(", ") }); setShowKbModal(true); }}
                           style={{ padding: "8px 16px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer" }}>
-                          Γ£Å∩╕Å Edit
+                          ✅️ Edit
                         </button>
                         <button type="button" onClick={async () => {
                           if (!window.confirm("Delete this article?")) return;
@@ -4416,7 +4416,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           } catch (e) { notify("Error: " + e.message); }
                         }}
                           style={{ padding: "8px 16px", borderRadius: 6, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 11, cursor: "pointer" }}>
-                          ≡ƒùæ∩╕Å Delete
+                          🙞️ Delete
                         </button>
                       </div>
                     </div>
@@ -4425,7 +4425,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {articlesByCategory.length === 0 ? (
                         <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                          <div style={{ fontSize: 24, marginBottom: 8 }}>≡ƒôÜ</div>
+                          <div style={{ fontSize: 24, marginBottom: 8 }}>📬</div>
                           <div style={{ fontSize: 12 }}>No articles found. Create your first article!</div>
                         </div>
                       ) : (
@@ -4436,7 +4436,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                               <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>
                                 {cat.icon} {cat.label} <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 400 }}>({cat.articles.length})</span>
                               </span>
-                              <span style={{ color: T.textMuted, fontSize: 12 }}>{expandedKbCategory === cat.id ? "Γû╝" : "Γû╢"}</span>
+                              <span style={{ color: T.textMuted, fontSize: 12 }}>{expandedKbCategory === cat.id ? "◼" : "▶"}</span>
                             </button>
                             {expandedKbCategory === cat.id && (
                               <div style={{ padding: "0 16px 16px" }}>
@@ -4447,8 +4447,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                                     onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
                                     <div style={{ fontSize: 13, fontWeight: 500, color: T.white, marginBottom: 4 }}>{article.title}</div>
                                     <div style={{ display: "flex", gap: 12, fontSize: 10, color: T.textMuted }}>
-                                      <span>≡ƒæü {article.views || 0}</span>
-                                      <span>≡ƒæì {article.helpful || 0}</span>
+                                      <span>• {article.views || 0}</span>
+                                      <span>🎌 {article.helpful || 0}</span>
                                     </div>
                                   </div>
                                 ))}
@@ -4465,7 +4465,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <div style={{ padding: 20, background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                     <div style={{ fontSize: 15, fontWeight: 700, color: T.white, display: "flex", alignItems: "center", gap: 8 }}>
-                      ΓÜí Quick Responses
+                      ⚡ Quick Responses
                       <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${T.purple}20`, color: T.purple }}>{quickResponses.length} templates</span>
                     </div>
                     <button type="button" onClick={() => { setEditingQuickResponse(null); setQuickResponseForm({ name: "", shortcut: "", content: "", category: "general" }); setShowQuickResponseModal(true); }}
@@ -4476,13 +4476,13 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   
                   <div style={{ padding: 12, background: `${T.purple}10`, borderRadius: 8, marginBottom: 16 }}>
                     <div style={{ fontSize: 11, color: T.textSecondary }}>
-                      ≡ƒÆí Use shortcuts like <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>/greet</code> in ticket replies to quickly insert templates. Variables: <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{name}}"}</code>, <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{ticket_id}}"}</code>
+                      🆍 Use shortcuts like <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>/greet</code> in ticket replies to quickly insert templates. Variables: <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{name}}"}</code>, <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{ticket_id}}"}</code>
                     </div>
                   </div>
                   
                   {quickResponses.length === 0 ? (
                     <div style={{ padding: 30, textAlign: "center", color: T.textMuted }}>
-                      <div style={{ fontSize: 24, marginBottom: 8 }}>ΓÜí</div>
+                      <div style={{ fontSize: 24, marginBottom: 8 }}>⚡</div>
                       <div style={{ fontSize: 12 }}>No quick responses yet. Create your first template!</div>
                     </div>
                   ) : (
@@ -4550,7 +4550,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               </div>
               <button type="button" onClick={stopTimer}
                 style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: T.red, color: T.white, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                ΓÅ╣∩╕Å Stop & Log
+                 Stop & Log
               </button>
             </div>
           )}
@@ -4607,18 +4607,18 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <button type="button" onClick={() => setShowTimeEntryModal(true)}
               style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-              Γ₧ò Manual Entry
+              📌 Manual Entry
             </button>
             <div style={{ flex: 1 }} />
             <div style={{ fontSize: 11, color: T.textMuted }}>
-              ≡ƒÆí Start timer from any ticket drawer, or add manual entries here
+              🆍 Start timer from any ticket drawer, or add manual entries here
             </div>
           </div>
 
           {/* Agent Time Breakdown */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 20 }}>
             <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 16 }}>≡ƒæÑ Agent Breakdown</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 16 }}>• Agent Breakdown</div>
               {getAgentTimeStats().length === 0 ? (
                 <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No time logged yet</div>
               ) : (
@@ -4645,7 +4645,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             {/* Recent Time Entries */}
             <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
               <div style={{ padding: 16, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>≡ƒô¥ Recent Time Entries</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>• Recent Time Entries</div>
                 <div style={{ fontSize: 10, color: T.textMuted }}>{timeEntries.length} total</div>
               </div>
               <div style={{ maxHeight: 350, overflowY: "auto" }}>
@@ -4661,7 +4661,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           {ticket?.subject || entry.ticketId}
                         </div>
                         <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>
-                          {entry.agentName} ΓÇó {entry.notes} ΓÇó {timeAgo(entry.createdAt)}
+                          {entry.agentName} • {entry.notes} • {timeAgo(entry.createdAt)}
                         </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -4672,7 +4672,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 })}
                 {timeEntries.length === 0 && (
                   <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>ΓÅ▒∩╕Å</div>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>▒️</div>
                     <div style={{ fontSize: 12 }}>No time entries yet</div>
                   </div>
                 )}
@@ -4745,7 +4745,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           {/* Audit Log Table */}
           <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: 16, borderBottom: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>≡ƒôï Ticket Audit Trail</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>📋 Ticket Audit Trail</div>
             </div>
             <div style={{ maxHeight: 500, overflowY: "auto" }}>
               {ticketAuditLogs.filter(l => {
@@ -4761,16 +4761,16 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     {/* Action Icon */}
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: `${getAuditActionColor(log.action)}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <span style={{ fontSize: 12 }}>
-                        {log.action === "created" ? "≡ƒô¥" :
-                         log.action === "status_change" ? "≡ƒöä" :
-                         log.action === "assigned" ? "≡ƒæñ" :
-                         log.action === "reply_sent" ? "≡ƒÆ¼" :
-                         log.action === "note_added" ? "≡ƒôî" :
-                         log.action === "tag_added" ? "≡ƒÅ╖∩╕Å" :
-                         log.action === "tag_removed" ? "≡ƒÅ╖∩╕Å" :
-                         log.action === "time_logged" ? "ΓÅ▒∩╕Å" :
-                         log.action === "escalated" ? "≡ƒÜ¿" :
-                         log.action === "merged" ? "≡ƒöù" : "≡ƒôï"}
+                        {log.action === "created" ? "•" :
+                         log.action === "status_change" ? "🗄" :
+                         log.action === "assigned" ? "•" :
+                         log.action === "reply_sent" ? "💼" :
+                         log.action === "note_added" ? "📎" :
+                         log.action === "tag_added" ? "•" :
+                         log.action === "tag_removed" ? "•" :
+                         log.action === "time_logged" ? "▒️" :
+                         log.action === "escalated" ? "🔥" :
+                         log.action === "merged" ? "🗙" : "📋"}
                       </span>
                     </div>
                     
@@ -4790,7 +4790,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       {log.details && (
                         <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>
                           {log.action === "status_change" && log.details.from && log.details.to && (
-                            <span>{log.details.from} ΓåÆ {log.details.to}</span>
+                            <span>{log.details.from} → {log.details.to}</span>
                           )}
                           {log.action === "assigned" && log.details.to && (
                             <span>Assigned to: {log.details.to}</span>
@@ -4817,14 +4817,14 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       if (t) { setTicketDrawer(t); setSupportSubTab("all"); }
                     }}
                       style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, cursor: "pointer" }}>
-                      View ΓåÆ
+                      View →
                     </button>
                   </div>
                 );
               })}
               {ticketAuditLogs.length === 0 && (
                 <div style={{ padding: 60, textAlign: "center", color: T.textMuted }}>
-                  <div style={{ fontSize: 32, marginBottom: 12 }}>≡ƒôï</div>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>No audit logs yet</div>
                   <div style={{ fontSize: 12 }}>Actions will be logged as you work on tickets</div>
                 </div>
@@ -4839,15 +4839,15 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <button type="button" onClick={() => setShowExportModal(true)}
               style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: T.teal, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-              ≡ƒôñ Export Tickets
+              📑 Export Tickets
             </button>
             <button type="button" onClick={exportTimeEntries}
               style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-              ΓÅ▒∩╕Å Export Time
+              ▒️ Export Time
             </button>
             <button type="button" onClick={exportAuditLogs}
               style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid ${T.purple}`, background: "transparent", color: T.purple, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-              ≡ƒôï Export Audit Logs
+              📋 Export Audit Logs
             </button>
           </div>
 
@@ -4856,7 +4856,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
               <div style={{ padding: 16, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>≡ƒöù Webhooks</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>🗙 Webhooks</div>
                   <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Send events to external services</div>
                 </div>
                 <button type="button" onClick={() => { setEditingWebhook(null); setWebhookForm({ name: "", url: "", events: ["ticket_created"], enabled: true, secret: "" }); setShowWebhookModal(true); }}
@@ -4867,7 +4867,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ maxHeight: 280, overflowY: "auto" }}>
                 {webhooks.length === 0 ? (
                   <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>≡ƒöù</div>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>🗙</div>
                     <div style={{ fontSize: 12 }}>No webhooks configured</div>
                   </div>
                 ) : (
@@ -4907,7 +4907,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
               <div style={{ padding: 16, borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>≡ƒöÉ Agent Permissions</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>🗉 Agent Permissions</div>
                   <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Role-based access control</div>
                 </div>
                 <button type="button" onClick={() => { setEditingPermission(null); setPermissionForm({ agentId: "", role: "agent" }); setShowPermissionsModal(true); }}
@@ -4918,7 +4918,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ maxHeight: 280, overflowY: "auto" }}>
                 {agentPermissions.length === 0 ? (
                   <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>≡ƒöÉ</div>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>🗉</div>
                     <div style={{ fontSize: 12 }}>No permissions configured</div>
                   </div>
                 ) : (
@@ -4955,7 +4955,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           {/* Webhook Logs */}
           <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: 16, borderBottom: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>≡ƒô£ Webhook Logs</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>📜 Webhook Logs</div>
               <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Recent webhook delivery attempts</div>
             </div>
             <div style={{ maxHeight: 250, overflowY: "auto" }}>
@@ -4969,7 +4969,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: log.status === "success" ? T.green : T.red }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 11, color: T.white }}>{log.webhookName}</div>
-                      <div style={{ fontSize: 10, color: T.textMuted }}>{log.event} ΓÇó {log.statusCode}</div>
+                      <div style={{ fontSize: 10, color: T.textMuted }}>{log.event} • {log.statusCode}</div>
                     </div>
                     <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 4, background: log.status === "success" ? `${T.green}20` : `${T.red}20`, color: log.status === "success" ? T.green : T.red }}>
                       {log.status}
@@ -4983,7 +4983,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
 
           {/* Role Descriptions */}
           <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 12 }}>≡ƒôû Role Permissions</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 12 }}>📛 Role Permissions</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               {permissionRoles.map(role => (
                 <div key={role.id} style={{ padding: 12, background: `${role.color}10`, borderRadius: 8, border: `1px solid ${role.color}30` }}>
@@ -5003,7 +5003,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           </div>
         ) : filteredTickets.length === 0 ? (
           <div style={{ padding: 60, textAlign: "center", color: T.textMuted }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>≡ƒô¡</div>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📡</div>
             <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>No tickets found</div>
             <div style={{ fontSize: 12 }}>{supportSubTab === "open" ? "All caught up!" : "Try adjusting your filters"}</div>
           </div>
@@ -5027,13 +5027,13 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ticket.subject}</span>
                       {sentiment.sentiment !== "neutral" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${sentiment.color}20`, color: sentiment.color, fontWeight: 600 }}>{sentiment.emoji}</span>}
-                      {ticket.channel && ticket.channel !== "email" && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: ticket.channel === "chat" ? `${T.green}20` : ticket.channel === "whatsapp" ? "#25D36620" : `${T.purple}20`, color: ticket.channel === "chat" ? T.green : ticket.channel === "whatsapp" ? "#25D366" : T.purple, fontWeight: 600 }}>{ticket.channel === "chat" ? "≡ƒÆ¼ CHAT" : ticket.channel === "whatsapp" ? "≡ƒô▒ WA" : "≡ƒô₧ CALL"}</span>}
-                      {slaInfo.status === "breached" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>ΓÅ░ SLA {slaInfo.percent}%</span>}
-                      {slaInfo.status === "warning" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.orange}20`, color: T.orange, fontWeight: 600 }}>ΓÜá∩╕Å {slaInfo.percent}%</span>}
-                      {ticket.autoAssignedBy && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green, fontWeight: 600 }}>≡ƒñû Auto</span>}
-                      {ticket.autoEscalated && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>ΓÜí Escalated</span>}
-                      {ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.textMuted}20`, color: T.textMuted, fontWeight: 600 }}>Γå¬∩╕Å MERGED</span>}
-                      {(ticket.linkedTickets || []).length > 0 && !ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal, fontWeight: 600 }}>≡ƒöù {ticket.linkedTickets.length}</span>}
+                      {ticket.channel && ticket.channel !== "email" && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: ticket.channel === "chat" ? `${T.green}20` : ticket.channel === "whatsapp" ? "#25D36620" : `${T.purple}20`, color: ticket.channel === "chat" ? T.green : ticket.channel === "whatsapp" ? "#25D366" : T.purple, fontWeight: 600 }}>{ticket.channel === "chat" ? "💼 CHAT" : ticket.channel === "whatsapp" ? "📱 WA" : "📧 CALL"}</span>}
+                      {slaInfo.status === "breached" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>░ SLA {slaInfo.percent}%</span>}
+                      {slaInfo.status === "warning" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.orange}20`, color: T.orange, fontWeight: 600 }}>⚡️ {slaInfo.percent}%</span>}
+                      {ticket.autoAssignedBy && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green, fontWeight: 600 }}>👛 Auto</span>}
+                      {ticket.autoEscalated && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>⚡ Escalated</span>}
+                      {ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.textMuted}20`, color: T.textMuted, fontWeight: 600 }}> MERGED</span>}
+                      {(ticket.linkedTickets || []).length > 0 && !ticket.mergedInto && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal, fontWeight: 600 }}>🗙 {ticket.linkedTickets.length}</span>}
                       {ticketTags.slice(0, 2).map(tagId => {
                         const tag = availableTags.find(t => t.id === tagId);
                         return tag ? <span key={tagId} style={{ fontSize: 8, padding: "2px 6px", borderRadius: 4, background: `${tag.color}20`, color: tag.color, fontWeight: 600 }}>{tag.label}</span> : null;
@@ -5046,7 +5046,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       <span style={{ padding: "2px 6px", borderRadius: 4, background: `${cat.color}20`, color: cat.color, fontSize: 10 }}>{cat.icon} {cat.label}</span>
                       <span>┬╖</span>
                       <span>{timeAgo(ticket.createdAt)}</span>
-                      {ticket.assignedTo && <><span>┬╖</span><span style={{ color: T.purple }}>≡ƒæñ {ticket.assignedToName || "Assigned"}</span></>}
+                      {ticket.assignedTo && <><span>┬╖</span><span style={{ color: T.purple }}>• {ticket.assignedToName || "Assigned"}</span></>}
                       {/* SLA Progress Bar */}
                       {slaInfo.status !== "resolved" && (
                         <>
@@ -5088,7 +5088,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   ))}
                 </div>
                 <span style={{ fontSize: 11, color: T.purple, fontWeight: 500 }}>
-                  ≡ƒæÇ {viewingAdmins.map(a => a.name).join(", ")} {viewingAdmins.length === 1 ? "is" : "are"} also viewing this ticket
+                  • {viewingAdmins.map(a => a.name).join(", ")} {viewingAdmins.length === 1 ? "is" : "are"} also viewing this ticket
                 </span>
               </div>
             )}
@@ -5099,7 +5099,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${(categories.find(c => c.id === ticketDrawer.category) || categories[5]).color}20`, color: (categories.find(c => c.id === ticketDrawer.category) || categories[5]).color }}>{(categories.find(c => c.id === ticketDrawer.category) || categories[5]).icon} {(categories.find(c => c.id === ticketDrawer.category) || categories[5]).label}</span>
-                    {isSlaBreached(ticketDrawer) && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>ΓÅ░ SLA Breached</span>}
+                    {isSlaBreached(ticketDrawer) && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.red}20`, color: T.red, fontWeight: 600 }}>░ SLA Breached</span>}
                     {/* Sentiment Badge */}
                     {(() => {
                       const sentiment = analyzeSentiment(ticketDrawer);
@@ -5115,7 +5115,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <button type="button" onClick={() => setShowAiPanel(!showAiPanel)}
                     style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${showAiPanel ? T.teal : T.border}`, background: showAiPanel ? `${T.teal}15` : "transparent", color: showAiPanel ? T.teal : T.textMuted, fontSize: 10, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                    ≡ƒñû AI
+                    👛 AI
                   </button>
                   <button type="button" onClick={() => setTicketDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>├ù</button>
                 </div>
@@ -5138,8 +5138,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 </select>
                 <select value={ticketDrawer.assignedTo || "unassigned"} onChange={e => { const agent = assignableAgents.find(a => a.id === e.target.value); assignTicket(ticketDrawer.id, e.target.value, agent?.name || ""); }}
                   style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${ticketDrawer.assignedTo ? T.purple : T.border}40`, background: ticketDrawer.assignedTo ? `${T.purple}20` : T.surfaceAlt, color: ticketDrawer.assignedTo ? T.purple : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                  <option value="unassigned">≡ƒæñ Unassigned</option>
-                  {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>≡ƒæñ {a.name}</option>)}
+                  <option value="unassigned">• Unassigned</option>
+                  {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>• {a.name}</option>)}
                 </select>
               </div>
 
@@ -5166,15 +5166,15 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button type="button" onClick={() => setShowMergeModal(true)}
                   style={{ padding: "5px 10px", borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                  ≡ƒöÇ Merge Ticket
+                  • Merge Ticket
                 </button>
                 <button type="button" onClick={() => setShowLinkModal(true)}
                   style={{ padding: "5px 10px", borderRadius: 5, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 10, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                  ≡ƒöù Link Related
+                  🗙 Link Related
                 </button>
                 {ticketDrawer.mergedInto && (
                   <span style={{ fontSize: 10, color: T.textMuted, fontStyle: "italic" }}>
-                    Γå¬∩╕Å Merged into ticket {ticketDrawer.mergedInto}
+                     Merged into ticket {ticketDrawer.mergedInto}
                   </span>
                 )}
               </div>
@@ -5183,7 +5183,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               {(ticketDrawer.linkedTickets || []).length > 0 && (
                 <div style={{ marginTop: 12, padding: "10px 12px", background: `${T.teal}08`, borderRadius: 8, border: `1px solid ${T.teal}20` }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: T.teal, marginBottom: 8, display: "flex", alignItems: "center", gap: 4 }}>
-                    ≡ƒöù Linked Tickets ({ticketDrawer.linkedTickets.length})
+                    🗙 Linked Tickets ({ticketDrawer.linkedTickets.length})
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {ticketDrawer.linkedTickets.map((link, i) => (
@@ -5216,7 +5216,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ marginTop: 12, padding: "10px 12px", background: `${T.gold}08`, borderRadius: 8, border: `1px solid ${T.gold}20` }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: T.gold, display: "flex", alignItems: "center", gap: 4 }}>
-                    ΓÅ▒∩╕Å Time Tracking
+                    ▒️ Time Tracking
                   </div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: T.white }}>
                     Total: {getTicketTimeTotal(ticketDrawer.id)}m
@@ -5230,13 +5230,13 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <span style={{ fontSize: 18, fontWeight: 900, color: T.gold, fontFamily: "'Fraunces',serif", flex: 1 }}>{formatTimerDisplay(timerElapsed)}</span>
                     <button type="button" onClick={stopTimer}
                       style={{ padding: "6px 12px", borderRadius: 6, border: "none", background: T.red, color: T.white, fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
-                      ΓÅ╣∩╕Å Stop
+                       Stop
                     </button>
                   </div>
                 ) : (
                   <button type="button" onClick={() => startTimer(ticketDrawer.id)} disabled={activeTimer !== null}
                     style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: `1px solid ${activeTimer ? T.border : T.gold}`, background: activeTimer ? "transparent" : `${T.gold}15`, color: activeTimer ? T.textMuted : T.gold, fontSize: 11, fontWeight: 600, cursor: activeTimer ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                    Γû╢∩╕Å {activeTimer ? "Timer running on another ticket" : "Start Timer"}
+                    ▶️ {activeTimer ? "Timer running on another ticket" : "Start Timer"}
                   </button>
                 )}
                 
@@ -5248,7 +5248,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           <span style={{ fontSize: 11, fontWeight: 600, color: entry.billable ? T.green : T.textMuted }}>{entry.duration}m</span>
                           <span style={{ fontSize: 10, color: T.textSecondary }}>{entry.agentName}</span>
-                          {entry.notes && <span style={{ fontSize: 9, color: T.textMuted }}>ΓÇó {entry.notes.slice(0, 20)}</span>}
+                          {entry.notes && <span style={{ fontSize: 9, color: T.textMuted }}>• {entry.notes.slice(0, 20)}</span>}
                         </div>
                         <span style={{ fontSize: 9, color: T.textMuted }}>{timeAgo(entry.createdAt)}</span>
                       </div>
@@ -5261,7 +5261,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               {customFields.length > 0 && (
                 <div style={{ marginTop: 12, padding: "10px 12px", background: `${T.cyan}08`, borderRadius: 8, border: `1px solid ${T.cyan}20` }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: T.cyan, marginBottom: 10, display: "flex", alignItems: "center", gap: 4 }}>
-                    ≡ƒôï Custom Fields
+                    📋 Custom Fields
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                     {customFields.map(field => {
@@ -5330,11 +5330,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <div style={{ padding: "12px 24px", background: `${T.gold}08`, borderBottom: `1px solid ${T.gold}20` }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: T.gold }}>≡ƒÿè Customer Satisfaction</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: T.gold }}>• Customer Satisfaction</span>
                       {ticketCsat ? (
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           <span style={{ fontSize: 14, color: ticketCsat.rating >= 4 ? T.green : ticketCsat.rating >= 3 ? T.orange : T.red }}>
-                            {"Γÿà".repeat(ticketCsat.rating)}{"Γÿå".repeat(5 - ticketCsat.rating)}
+                            {"".repeat(ticketCsat.rating)}{"".repeat(5 - ticketCsat.rating)}
                           </span>
                           <span style={{ fontSize: 11, color: T.textMuted }}>({ticketCsat.rating}/5)</span>
                         </div>
@@ -5363,12 +5363,12 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ padding: "16px 24px", background: `${T.teal}08`, borderBottom: `1px solid ${T.teal}20` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: T.teal }}>≡ƒñû AI Insights</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: T.teal }}>👛 AI Insights</span>
                     {summaryLoading && <span style={{ fontSize: 10, color: T.textMuted }}>Analyzing...</span>}
                   </div>
                   <button type="button" onClick={() => generateAiSummary(ticketDrawer)} disabled={summaryLoading}
                     style={{ padding: "5px 10px", borderRadius: 5, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, fontSize: 10, fontWeight: 600, cursor: summaryLoading ? "not-allowed" : "pointer", opacity: summaryLoading ? 0.5 : 1 }}>
-                    {summaryLoading ? "..." : ticketSummary ? "Γå╗ Refresh" : "Generate Summary"}
+                    {summaryLoading ? "..." : ticketSummary ? " Refresh" : "Generate Summary"}
                   </button>
                 </div>
                 
@@ -5406,7 +5406,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                               {aiPriority.recommended}
                             </div>
                             <div style={{ fontSize: 10, color: T.textMuted }}>
-                              {aiPriority.reasons.slice(0, 2).join(" ΓÇó ")}
+                              {aiPriority.reasons.slice(0, 2).join(" • ")}
                             </div>
                           </div>
                           {needsChange && aiPriority.recommended !== "normal" && (
@@ -5434,7 +5434,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                           {ticketSummary.keyPoints.map((point, i) => (
                             <div key={i} style={{ fontSize: 11, color: T.textSecondary, display: "flex", alignItems: "flex-start", gap: 6 }}>
-                              <span style={{ color: T.teal }}>ΓÇó</span> {point}
+                              <span style={{ color: T.teal }}>•</span> {point}
                             </div>
                           ))}
                         </div>
@@ -5454,7 +5454,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         </div>
                       </div>
                       <div style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${T.teal}20`, color: T.teal, fontWeight: 600 }}>
-                        ≡ƒÆí {ticketSummary.aiRecommendation}
+                        🆍 {ticketSummary.aiRecommendation}
                       </div>
                     </div>
                   </div>
@@ -5464,7 +5464,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   </div>
                 ) : (
                   <div style={{ padding: 16, background: T.surface, borderRadius: 8, textAlign: "center" }}>
-                    <div style={{ fontSize: 11, color: T.teal }}>≡ƒöä Analyzing ticket content...</div>
+                    <div style={{ fontSize: 11, color: T.teal }}>🗄 Analyzing ticket content...</div>
                   </div>
                 )}
                 
@@ -5472,8 +5472,8 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <div style={{ marginTop: 12 }}>
                   <button type="button" onClick={() => { if (!showSimilarTickets) updateSimilarTickets(ticketDrawer); setShowSimilarTickets(!showSimilarTickets); }}
                     style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: showSimilarTickets ? T.surface : "transparent", color: T.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span>≡ƒöù Similar Resolved Tickets {similarTickets.length > 0 && `(${similarTickets.length})`}</span>
-                    <span style={{ fontSize: 10, color: T.textMuted }}>{showSimilarTickets ? "Γû▓" : "Γû╝"}</span>
+                    <span>🗙 Similar Resolved Tickets {similarTickets.length > 0 && `(${similarTickets.length})`}</span>
+                    <span style={{ fontSize: 10, color: T.textMuted }}>{showSimilarTickets ? "" : "◼"}</span>
                   </button>
                   
                   {showSimilarTickets && (
@@ -5492,7 +5492,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                                   {sim.subject}
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                                  <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>Γ£ô Resolved</span>
+                                  <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.green}20`, color: T.green }}>✔ Resolved</span>
                                   <span style={{ fontSize: 9, color: T.textMuted }}>{timeAgo(sim.resolvedAt || sim.updatedAt)}</span>
                                 </div>
                               </div>
@@ -5504,12 +5504,12 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                               </div>
                               {sim.solution && (
                                 <div style={{ padding: 8, background: `${T.green}08`, borderRadius: 6, borderLeft: `2px solid ${T.green}` }}>
-                                  <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4 }}>≡ƒÆí Resolution:</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4 }}>🆍 Resolution:</div>
                                   <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.4 }}>{sim.solution}</div>
                                 </div>
                               )}
                               <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
-                                <span style={{ fontSize: 9, color: T.teal }}>Click to view full ticket ΓåÆ</span>
+                                <span style={{ fontSize: 9, color: T.teal }}>Click to view full ticket →</span>
                               </div>
                             </div>
                           ))}
@@ -5540,7 +5540,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                               </a>
                             ) : (
                               <a href={msg.attachment.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: msg.from === "admin" ? T.bg : T.teal, textDecoration: "none" }}>
-                                <span style={{ fontSize: 20 }}>≡ƒôä</span>
+                                <span style={{ fontSize: 20 }}>📄</span>
                                 <div>
                                   <div style={{ fontSize: 12, fontWeight: 600 }}>{msg.attachment.name}</div>
                                   <div style={{ fontSize: 10, opacity: 0.7 }}>{(msg.attachment.size / 1024).toFixed(1)} KB</div>
@@ -5564,7 +5564,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               {(ticketDrawer.internalNotes?.length > 0 || true) && (
                 <div style={{ padding: "16px 24px", background: `${T.orange}08`, borderTop: `1px dashed ${T.orange}30` }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.orange, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-                    ≡ƒöÆ Internal Notes <span style={{ fontWeight: 400, color: T.textMuted }}>(hidden from customer)</span>
+                    🗎 Internal Notes <span style={{ fontWeight: 400, color: T.textMuted }}>(hidden from customer)</span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {(ticketDrawer.internalNotes || []).map((note, i) => (
@@ -5579,7 +5579,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                               </a>
                             ) : (
                               <a href={note.attachment.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: T.teal, textDecoration: "none" }}>
-                                <span style={{ fontSize: 18 }}>≡ƒôä</span>
+                                <span style={{ fontSize: 18 }}>📄</span>
                                 <div>
                                   <div style={{ fontSize: 11, fontWeight: 600 }}>{note.attachment.name}</div>
                                   <div style={{ fontSize: 9, color: T.textMuted }}>{(note.attachment.size / 1024).toFixed(1)} KB</div>
@@ -5614,16 +5614,16 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
                   <button type="button" onClick={() => setReplyMode("reply")}
                     style={{ padding: "6px 14px", borderRadius: 6, border: `1px solid ${replyMode === "reply" ? T.gold : T.border}`, background: replyMode === "reply" ? T.goldGlow : "transparent", color: replyMode === "reply" ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                    ≡ƒÆ¼ Reply to Customer
+                    💼 Reply to Customer
                   </button>
                   <button type="button" onClick={() => setReplyMode("note")}
                     style={{ padding: "6px 14px", borderRadius: 6, border: `1px solid ${replyMode === "note" ? T.orange : T.border}`, background: replyMode === "note" ? `${T.orange}15` : "transparent", color: replyMode === "note" ? T.orange : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                    ≡ƒöÆ Internal Note
+                    🗎 Internal Note
                   </button>
                   <div style={{ flex: 1 }} />
                   <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
                     style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: uploading ? T.textMuted : T.teal, fontSize: 11, fontWeight: 600, cursor: uploading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                    {uploading ? "ΓÅ│ Uploading..." : "≡ƒôÄ Attach File"}
+                    {uploading ? " Uploading..." : "📄 Attach File"}
                   </button>
                 </div>
 
@@ -5633,15 +5633,15 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 8 }}>
                         <button type="button" onClick={() => setShowTemplates(!showTemplates)}
                           style={{ fontSize: 10, color: T.teal, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
-                          {showTemplates ? "Hide Templates" : "≡ƒô¥ Quick Templates"}
+                          {showTemplates ? "Hide Templates" : "• Quick Templates"}
                         </button>
                         <button type="button" onClick={() => { if (suggestedReplies.length === 0) generateSmartReplies(ticketDrawer); }}
                           style={{ fontSize: 10, color: T.purple, background: "none", border: "none", cursor: "pointer", textDecoration: suggestedReplies.length > 0 ? "none" : "underline", display: "flex", alignItems: "center", gap: 4 }}>
-                          {repliesLoading ? "ΓÅ│ Generating..." : suggestedReplies.length > 0 ? `≡ƒÆí ${suggestedReplies.length} AI Suggestions` : "≡ƒÆí Generate Smart Replies"}
+                          {repliesLoading ? " Generating..." : suggestedReplies.length > 0 ? `🆍 ${suggestedReplies.length} AI Suggestions` : "🆍 Generate Smart Replies"}
                         </button>
                         {quickResponses.length > 0 && (
                           <span style={{ fontSize: 10, color: T.textMuted }}>
-                            ΓÜí {quickResponses.length} quick responses
+                            ⚡ {quickResponses.length} quick responses
                           </span>
                         )}
                       </div>
@@ -5650,10 +5650,10 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       {suggestedReplies.length > 0 && (
                         <div style={{ marginBottom: 12, padding: 12, background: `${T.purple}08`, borderRadius: 10, border: `1px solid ${T.purple}20` }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                            <span style={{ fontSize: 11, fontWeight: 600, color: T.purple }}>≡ƒÆí AI-Suggested Replies</span>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: T.purple }}>🆍 AI-Suggested Replies</span>
                             <button type="button" onClick={() => generateSmartReplies(ticketDrawer)} disabled={repliesLoading}
                               style={{ fontSize: 9, color: T.textMuted, background: "none", border: "none", cursor: "pointer" }}>
-                              Γå╗ Regenerate
+                               Regenerate
                             </button>
                           </div>
                           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -5678,7 +5678,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                                   {reply.preview}
                                 </div>
                                 <div style={{ marginTop: 6, display: "flex", justifyContent: "flex-end" }}>
-                                  <span style={{ fontSize: 9, color: T.purple }}>Click to use ΓåÆ</span>
+                                  <span style={{ fontSize: 9, color: T.purple }}>Click to use →</span>
                                 </div>
                               </div>
                             ))}
@@ -5700,7 +5700,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           {/* Quick Responses from DB */}
                           {quickResponses.length > 0 && (
                             <>
-                              <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>ΓÜí Quick Responses</div>
+                              <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>⚡ Quick Responses</div>
                               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                                 {quickResponses.map(qr => (
                                   <button key={qr.id} type="button" onClick={() => {
@@ -5764,7 +5764,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           {t.name}
                         </button>
                       ))}
-                      <span style={{ fontSize: 10, color: T.textMuted, marginLeft: 8 }}>≡ƒÆí Type @ to mention teammates</span>
+                      <span style={{ fontSize: 10, color: T.textMuted, marginLeft: 8 }}>🆍 Type @ to mention teammates</span>
                     </div>
                     <div style={{ position: "relative" }}>
                       <div style={{ display: "flex", gap: 10 }}>
@@ -5808,7 +5808,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   {ticketDrawer.status !== "resolved" && (
                     <button type="button" onClick={() => updateTicketStatus(ticketDrawer.id, "resolved")}
                       style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.green}`, background: `${T.green}10`, color: T.green, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
-                      Γ£ô Mark Resolved
+                      ✔ Mark Resolved
                     </button>
                   )}
                   {ticketDrawer.status === "resolved" && (
@@ -5838,12 +5838,12 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowMergeModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>≡ƒöÇ Merge Ticket</h3>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>• Merge Ticket</h3>
               <button type="button" onClick={() => setShowMergeModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.orange}15`, borderRadius: 8, marginBottom: 16 }}>
-              <div style={{ fontSize: 11, color: T.orange, fontWeight: 600, marginBottom: 4 }}>ΓÜá∩╕Å Warning</div>
+              <div style={{ fontSize: 11, color: T.orange, fontWeight: 600, marginBottom: 4 }}>⚡️ Warning</div>
               <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
                 Merging will close this ticket and move all messages and notes to the target ticket. This action cannot be undone.
               </div>
@@ -5853,7 +5853,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>Current Ticket:</div>
               <div style={{ padding: 12, background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 4 }}>{ticketDrawer.subject}</div>
-                <div style={{ fontSize: 11, color: T.textMuted }}>{ticketDrawer.userEmail} ΓÇó {(ticketDrawer.messages || []).length} messages</div>
+                <div style={{ fontSize: 11, color: T.textMuted }}>{ticketDrawer.userEmail} • {(ticketDrawer.messages || []).length} messages</div>
               </div>
             </div>
             
@@ -5868,7 +5868,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               </select>
               {mergeTargetId && (
                 <div style={{ marginTop: 10, padding: 10, background: `${T.green}10`, borderRadius: 6, border: `1px solid ${T.green}30` }}>
-                  <div style={{ fontSize: 11, color: T.green }}>Γ£ô Messages and notes will be combined into this ticket</div>
+                  <div style={{ fontSize: 11, color: T.green }}>✔ Messages and notes will be combined into this ticket</div>
                 </div>
               )}
             </div>
@@ -5880,7 +5880,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               </button>
               <button type="button" onClick={mergeTickets} disabled={!mergeTargetId || merging}
                 style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: !mergeTargetId || merging ? T.border : T.orange, color: T.bg, fontSize: 13, fontWeight: 700, cursor: !mergeTargetId || merging ? "not-allowed" : "pointer" }}>
-                {merging ? "Merging..." : "≡ƒöÇ Merge Tickets"}
+                {merging ? "Merging..." : "• Merge Tickets"}
               </button>
             </div>
           </div>
@@ -5892,7 +5892,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowLinkModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>≡ƒöù Link Related Ticket</h3>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>🗙 Link Related Ticket</h3>
               <button type="button" onClick={() => setShowLinkModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
             </div>
             
@@ -5927,7 +5927,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               </button>
               <button type="button" onClick={linkTicket} disabled={!linkTargetId || linking}
                 style={{ flex: 1, padding: "12px 16px", borderRadius: 8, border: "none", background: !linkTargetId || linking ? T.border : T.teal, color: T.bg, fontSize: 13, fontWeight: 700, cursor: !linkTargetId || linking ? "not-allowed" : "pointer" }}>
-                {linking ? "Linking..." : "≡ƒöù Link Tickets"}
+                {linking ? "Linking..." : "🗙 Link Tickets"}
               </button>
             </div>
           </div>
@@ -5939,7 +5939,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowFieldsModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 560, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ΓÜÖ∩╕Å Manage Custom Fields</h3>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}> Manage Custom Fields</h3>
               <button type="button" onClick={() => setShowFieldsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
             </div>
             
@@ -5952,7 +5952,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             {/* Add/Edit Field Form */}
             <div style={{ padding: 16, background: T.surfaceAlt, borderRadius: 10, marginBottom: 20 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-                {editingField ? "Γ£Å∩╕Å Edit Field" : "Γ₧ò Add New Field"}
+                {editingField ? "✅️ Edit Field" : "📌 Add New Field"}
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div style={{ gridColumn: "span 2" }}>
@@ -6004,7 +6004,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             {/* Existing Fields List */}
             <div>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-                ≡ƒôï Existing Fields ({customFields.length})
+                📋 Existing Fields ({customFields.length})
               </div>
               {customFields.length === 0 ? (
                 <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>
@@ -6016,7 +6016,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div key={field.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <span style={{ fontSize: 18 }}>
-                          {field.type === "dropdown" ? "≡ƒôï" : field.type === "date" ? "≡ƒôà" : field.type === "number" ? "≡ƒöó" : field.type === "checkbox" ? "Γÿæ∩╕Å" : "≡ƒô¥"}
+                          {field.type === "dropdown" ? "📋" : field.type === "date" ? "📀" : field.type === "number" ? "🗓" : field.type === "checkbox" ? "⚠️" : "•"}
                         </span>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 600, color: T.white, display: "flex", alignItems: "center", gap: 6 }}>
@@ -6025,7 +6025,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                           </div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>
                             {field.type.charAt(0).toUpperCase() + field.type.slice(1)}
-                            {field.type === "dropdown" && field.options?.length > 0 && ` ΓÇó ${field.options.length} options`}
+                            {field.type === "dropdown" && field.options?.length > 0 && ` • ${field.options.length} options`}
                           </div>
                         </div>
                       </div>
@@ -6053,20 +6053,20 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowAutoAssignModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 600, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>≡ƒñû Auto-Assign Rules</h3>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>👛 Auto-Assign Rules</h3>
               <button type="button" onClick={() => setShowAutoAssignModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.green}15`, borderRadius: 8, marginBottom: 20 }}>
               <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                Create rules to automatically assign tickets based on category, priority, user tier, or keywords. Rules are applied in order ΓÇö first match wins.
+                Create rules to automatically assign tickets based on category, priority, user tier, or keywords. Rules are applied in order — first match wins.
               </div>
             </div>
             
             {/* Add/Edit Rule Form */}
             <div style={{ padding: 16, background: T.surfaceAlt, borderRadius: 10, marginBottom: 20 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-                {editingRule ? "Γ£Å∩╕Å Edit Rule" : "Γ₧ò Add New Rule"}
+                {editingRule ? "✅️ Edit Rule" : "📌 Add New Rule"}
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div style={{ gridColumn: "span 2" }}>
@@ -6099,7 +6099,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   <select value={newRuleForm.assignTo} onChange={e => setNewRuleForm(prev => ({ ...prev, assignTo: e.target.value }))}
                     style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
                     <option value="">Select agent...</option>
-                    {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>≡ƒæñ {a.name}</option>)}
+                    {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>• {a.name}</option>)}
                   </select>
                 </div>
                 <div style={{ gridColumn: "span 2", display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
@@ -6127,7 +6127,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             {/* Existing Rules List */}
             <div>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-                ≡ƒôï Active Rules ({autoAssignRules.length})
+                📋 Active Rules ({autoAssignRules.length})
               </div>
               {autoAssignRules.length === 0 ? (
                 <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>
@@ -6145,7 +6145,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                             {!rule.enabled && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.textMuted}20`, color: T.textMuted }}>DISABLED</span>}
                           </div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>
-                            If <span style={{ color: T.cyan }}>{rule.condition}</span> = <span style={{ color: T.gold }}>{rule.conditionValue}</span> ΓåÆ assign to <span style={{ color: T.purple }}>{rule.assignToName}</span>
+                            If <span style={{ color: T.cyan }}>{rule.condition}</span> = <span style={{ color: T.gold }}>{rule.conditionValue}</span> → assign to <span style={{ color: T.purple }}>{rule.assignToName}</span>
                           </div>
                         </div>
                       </div>
@@ -6173,7 +6173,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             <div style={{ marginTop: 20, padding: 16, background: `${T.gold}10`, borderRadius: 10, border: `1px solid ${T.gold}30` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.gold }}>≡ƒÆí Run Auto-Assign on Unassigned Tickets</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: T.gold }}>🆍 Run Auto-Assign on Unassigned Tickets</div>
                   <div style={{ fontSize: 11, color: T.textMuted }}>{unassignedCount} unassigned tickets</div>
                 </div>
                 <button type="button" onClick={async () => {
@@ -6199,7 +6199,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowSlaModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 500, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ΓÅ▒∩╕Å SLA Settings</h3>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>▒️ SLA Settings</h3>
               <button type="button" onClick={() => setShowSlaModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
             </div>
             
@@ -6244,7 +6244,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       }}
                         style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
                         <option value="">Select manager...</option>
-                        {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>≡ƒæñ {a.name}</option>)}
+                        {assignableAgents.filter(a => a.id !== "unassigned").map(a => <option key={a.id} value={a.id}>• {a.name}</option>)}
                       </select>
                     </div>
                     
@@ -6265,7 +6265,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               
               {/* SLA Preview */}
               <div style={{ padding: 16, background: `${T.blue}10`, borderRadius: 10, border: `1px solid ${T.blue}30` }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: T.blue, marginBottom: 8 }}>≡ƒôè SLA Timeline Preview</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: T.blue, marginBottom: 8 }}>📈 SLA Timeline Preview</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <div style={{ flex: 1, height: 8, background: T.border, borderRadius: 4, overflow: "hidden", position: "relative" }}>
                     <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${slaSettings.warningPercent}%`, background: T.green, borderRadius: 4 }} />
@@ -6299,26 +6299,26 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowWorkflowModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 650, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>ΓÜí Workflow Triggers</h3>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>⚡ Workflow Triggers</h3>
               <button type="button" onClick={() => setShowWorkflowModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.purple}15`, borderRadius: 8, marginBottom: 20 }}>
               <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                Create automated workflows that trigger actions when certain conditions are met. Example: When status changes to "resolved" ΓåÆ add "resolved" tag.
+                Create automated workflows that trigger actions when certain conditions are met. Example: When status changes to "resolved" → add "resolved" tag.
               </div>
             </div>
             
             {/* Add/Edit Workflow Form */}
             <div style={{ padding: 16, background: T.surfaceAlt, borderRadius: 10, marginBottom: 20 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-                {editingWorkflow ? "Γ£Å∩╕Å Edit Workflow" : "Γ₧ò Create Workflow"}
+                {editingWorkflow ? "✅️ Edit Workflow" : "📌 Create Workflow"}
               </div>
               
               {/* Workflow Name */}
               <div style={{ marginBottom: 12 }}>
                 <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Workflow Name</label>
-                <input value={newWorkflowForm.name} onChange={e => setNewWorkflowForm(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Resolved ΓåÆ Add Tag..."
+                <input value={newWorkflowForm.name} onChange={e => setNewWorkflowForm(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Resolved → Add Tag..."
                   style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
               </div>
               
@@ -6428,7 +6428,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             {/* Existing Workflows List */}
             <div>
               <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 12 }}>
-                ≡ƒôï Active Workflows ({workflowTriggers.length})
+                📋 Active Workflows ({workflowTriggers.length})
               </div>
               {workflowTriggers.length === 0 ? (
                 <div style={{ padding: 20, textAlign: "center", color: T.textMuted, fontSize: 12 }}>
@@ -6441,7 +6441,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 600, color: T.white, display: "flex", alignItems: "center", gap: 6 }}>
-                            ΓÜí {wf.name}
+                            ⚡ {wf.name}
                             {!wf.enabled && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.textMuted}20`, color: T.textMuted }}>DISABLED</span>}
                           </div>
                           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>
@@ -6467,7 +6467,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                         {(wf.actions || []).map((action, aIdx) => (
                           <span key={aIdx} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 4, background: `${T.purple}20`, color: T.purple }}>
-                            {actionOptions.find(a => a.id === action.type)?.label || action.type}: {action.value || "ΓÇö"}
+                            {actionOptions.find(a => a.id === action.type)?.label || action.type}: {action.value || "—"}
                           </span>
                         ))}
                       </div>
@@ -6485,7 +6485,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, zIndex: 9100, background: "rgba(4,9,15,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowCsatModal(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 420 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>≡ƒÿè Add CSAT Rating</h3>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>• Add CSAT Rating</h3>
               <button type="button" onClick={() => setShowCsatModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
             </div>
             
@@ -6502,7 +6502,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 {[1, 2, 3, 4, 5].map(star => (
                   <button key={star} type="button" onClick={() => setCsatForm(prev => ({ ...prev, rating: star }))}
                     style={{ background: "none", border: "none", cursor: "pointer", fontSize: 32, color: star <= csatForm.rating ? T.gold : T.border, transition: "transform 0.1s", transform: star <= csatForm.rating ? "scale(1.1)" : "scale(1)" }}>
-                    Γÿà
+                    
                   </button>
                 ))}
               </div>
@@ -6565,7 +6565,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 600, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
-                {editingArticle ? "Γ£Å∩╕Å Edit Article" : "≡ƒôÜ New Article"}
+                {editingArticle ? "✅️ Edit Article" : "📬 New Article"}
               </h3>
               <button type="button" onClick={() => setShowKbModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
             </div>
@@ -6582,11 +6582,11 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Category</label>
                 <select value={articleForm.category} onChange={e => setArticleForm(prev => ({ ...prev, category: e.target.value }))}
                   style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                  <option value="getting-started">≡ƒÜÇ Getting Started</option>
-                  <option value="billing">≡ƒÆ│ Billing & Payments</option>
-                  <option value="technical">≡ƒöº Technical Issues</option>
-                  <option value="features">Γ¡É Features & How-To</option>
-                  <option value="account">≡ƒæñ Account Management</option>
+                  <option value="getting-started">🔇 Getting Started</option>
+                  <option value="billing">• Billing & Payments</option>
+                  <option value="technical">• Technical Issues</option>
+                  <option value="features"> Features & How-To</option>
+                  <option value="account">• Account Management</option>
                 </select>
               </div>
               <div>
@@ -6660,14 +6660,14 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 550, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
-                {editingQuickResponse ? "Γ£Å∩╕Å Edit Quick Response" : "ΓÜí New Quick Response"}
+                {editingQuickResponse ? "✅️ Edit Quick Response" : "⚡ New Quick Response"}
               </h3>
               <button type="button" onClick={() => setShowQuickResponseModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.purple}10`, borderRadius: 8, marginBottom: 16 }}>
               <div style={{ fontSize: 11, color: T.textSecondary }}>
-                ≡ƒÆí Available variables: <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{name}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{ticket_id}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{agent_name}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{category}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{tier}}"}</code>
+                🆍 Available variables: <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{name}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{ticket_id}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{agent_name}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{category}}"}</code> <code style={{ background: T.surface, padding: "2px 6px", borderRadius: 4 }}>{"{{tier}}"}</code>
               </div>
             </div>
             
@@ -6690,9 +6690,9 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <label style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, display: "block" }}>Category</label>
               <select value={quickResponseForm.category} onChange={e => setQuickResponseForm(prev => ({ ...prev, category: e.target.value }))}
                 style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                <option value="general">≡ƒÆ¼ General</option>
-                <option value="technical">≡ƒöº Technical</option>
-                <option value="billing">≡ƒÆ│ Billing</option>
+                <option value="general">💼 General</option>
+                <option value="technical">• Technical</option>
+                <option value="billing">• Billing</option>
               </select>
             </div>
             
@@ -6757,7 +6757,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 500, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
-                ΓÜÖ∩╕Å Live Chat Settings
+                 Live Chat Settings
               </h3>
               <button type="button" onClick={() => setShowChatSettings(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
             </div>
@@ -6847,7 +6847,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 400 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
-                ≡ƒæü∩╕Å Widget Preview
+                • Widget Preview
               </h3>
               <button type="button" onClick={() => setShowWidgetPreview(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
             </div>
@@ -6858,12 +6858,12 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 {/* Chat Header */}
                 <div style={{ background: chatSettings.widgetColor, borderRadius: "12px 12px 0 0", padding: 16, color: T.white }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>≡ƒÆ¼</div>
+                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>💼</div>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 14 }}>DXB Analytics</div>
                       <div style={{ fontSize: 11, opacity: 0.9, display: "flex", alignItems: "center", gap: 4 }}>
                         <span style={{ width: 6, height: 6, borderRadius: "50%", background: agentOnline ? "#4ADE80" : "#EF4444" }} />
-                        {agentOnline ? "Online ΓÇó ~2 min" : "Offline"}
+                        {agentOnline ? "Online • ~2 min" : "Offline"}
                       </div>
                     </div>
                   </div>
@@ -6876,7 +6876,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   </div>
                   {!agentOnline && (
                     <div style={{ background: "#FEF3C7", borderRadius: 8, padding: 10, fontSize: 11, color: "#92400E" }}>
-                      ΓÜá∩╕Å {chatSettings.offlineMessage}
+                      ⚡️ {chatSettings.offlineMessage}
                     </div>
                   )}
                 </div>
@@ -6905,7 +6905,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid #25D36630`, padding: 24, width: "100%", maxWidth: 550, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 24 }}>≡ƒô▒</span>
+                <span style={{ fontSize: 24 }}>📱</span>
                 <div>
                   <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
                     WhatsApp Message Templates
@@ -6917,7 +6917,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             </div>
             
             <div style={{ padding: 12, background: `${T.teal}10`, borderRadius: 8, marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10 }}>
-              <span style={{ fontSize: 16 }}>≡ƒÆí</span>
+              <span style={{ fontSize: 16 }}>🆍</span>
               <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>
                 These templates are pre-approved by Meta for WhatsApp Business API. Use <code style={{ background: T.surface, padding: "1px 4px", borderRadius: 3 }}>{"{{name}}"}</code> for customer's name.
                 {activeWhatsappId && " Click a template to send it to the current conversation."}
@@ -6944,14 +6944,14 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{template.name}</span>
-                      <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 4, background: "#25D36620", color: "#25D366" }}>Γ£ô Approved</span>
+                      <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 4, background: "#25D36620", color: "#25D366" }}>✔ Approved</span>
                     </div>
                     <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5, padding: 10, background: T.surface, borderRadius: 6, borderLeft: `3px solid #25D366` }}>
                       {previewContent}
                     </div>
                     {activeConv && (
                       <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
-                        <span style={{ fontSize: 10, color: "#25D366" }}>Click to send ΓåÆ</span>
+                        <span style={{ fontSize: 10, color: "#25D366" }}>Click to send →</span>
                       </div>
                     )}
                   </div>
@@ -6960,7 +6960,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
             </div>
             
             <div style={{ marginTop: 20, padding: 12, background: T.surfaceAlt, borderRadius: 8 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, marginBottom: 6 }}>≡ƒô¥ Create Custom Template</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, marginBottom: 6 }}>• Create Custom Template</div>
               <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.5 }}>
                 Custom templates must be submitted to Meta for approval. This process typically takes 24-48 hours.
               </div>
@@ -6977,7 +6977,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 440, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>ΓÅ▒∩╕Å Add Manual Time Entry</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>▒️ Add Manual Time Entry</div>
               <button type="button" onClick={() => setShowTimeEntryModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
             </div>
             
@@ -7017,7 +7017,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                   <input type="checkbox" checked={timeEntryForm.billable} onChange={e => setTimeEntryForm(prev => ({ ...prev, billable: e.target.checked }))}
                     style={{ width: 18, height: 18, accentColor: T.green }} />
-                  <span style={{ fontSize: 12, color: T.textSecondary }}>≡ƒÆ░ Billable time</span>
+                  <span style={{ fontSize: 12, color: T.textSecondary }}>🏆 Billable time</span>
                 </label>
               </div>
               
@@ -7041,7 +7041,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 500, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>≡ƒöù {editingWebhook ? "Edit Webhook" : "Add Webhook"}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>🗙 {editingWebhook ? "Edit Webhook" : "Add Webhook"}</div>
               <button type="button" onClick={() => setShowWebhookModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
             </div>
             
@@ -7110,7 +7110,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 460, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>≡ƒôñ Export Tickets</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>📑 Export Tickets</div>
               <button type="button" onClick={() => setShowExportModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
             </div>
             
@@ -7156,15 +7156,15 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                     <input type="checkbox" checked={exportConfig.includeMessages} onChange={e => setExportConfig(prev => ({ ...prev, includeMessages: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.teal }} />
-                    <span style={{ fontSize: 12, color: T.textSecondary }}>≡ƒÆ¼ Messages</span>
+                    <span style={{ fontSize: 12, color: T.textSecondary }}>💼 Messages</span>
                   </label>
                   <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                     <input type="checkbox" checked={exportConfig.includeNotes} onChange={e => setExportConfig(prev => ({ ...prev, includeNotes: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.orange }} />
-                    <span style={{ fontSize: 12, color: T.textSecondary }}>≡ƒôî Internal Notes</span>
+                    <span style={{ fontSize: 12, color: T.textSecondary }}>📎 Internal Notes</span>
                   </label>
                   <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                     <input type="checkbox" checked={exportConfig.includeTime} onChange={e => setExportConfig(prev => ({ ...prev, includeTime: e.target.checked }))} style={{ width: 16, height: 16, accentColor: T.gold }} />
-                    <span style={{ fontSize: 12, color: T.textSecondary }}>ΓÅ▒∩╕Å Time Entries</span>
+                    <span style={{ fontSize: 12, color: T.textSecondary }}>▒️ Time Entries</span>
                   </label>
                 </div>
               </div>
@@ -7189,7 +7189,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 420, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>≡ƒöÉ {editingPermission ? "Edit Permission" : "Add Permission"}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>🗉 {editingPermission ? "Edit Permission" : "Add Permission"}</div>
               <button type="button" onClick={() => setShowPermissionsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
             </div>
             
@@ -7964,10 +7964,10 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
 }
 
 
-/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-   TAB 11: EMAIL DIGEST COMPONENT ΓÇö PRO LEVEL
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 11: EMAIL DIGEST COMPONENT — PRO LEVEL
    Schedule, preview, send, track. EmailJS bulk send.
-ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+═══════════════════════════════════════════════════════════════════ */
 function DigestTab({ users, db, notify, adminUser, T, I }) {
   const [digestSubTab, setDigestSubTab] = useState("compose");
   const [sending, setSending] = useState(false);
@@ -7980,7 +7980,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
     greeting: "Hi {{name}},",
     intro: "Here's your weekly update on Dubai's real estate market.",
     sections: ["market_pulse", "top_yields", "handovers", "golden_visa", "cta"],
-    cta: "View Full Dashboard ΓåÆ",
+    cta: "View Full Dashboard →",
     footer: "You're receiving this because you're a Pro subscriber."
   });
   const [previewMode, setPreviewMode] = useState(false);
@@ -8002,13 +8002,13 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
   })();
 
   const sectionMeta = {
-    market_pulse: { label: "Market Pulse", desc: "Revenue, profit, backlog from Emaar", icon: "≡ƒôè", color: T.gold },
-    top_yields: { label: "Top 5 Yields", desc: "Highest rental yield projects", icon: "≡ƒôê", color: T.green },
-    handovers: { label: "Upcoming Handovers", desc: "Projects handing over in 6 months", icon: "≡ƒÅù", color: T.teal },
-    golden_visa: { label: "Golden Visa Projects", desc: "2M+ AED eligible properties", icon: "≡ƒîƒ", color: "#F59E0B" },
-    new_launches: { label: "New Launches", desc: "Recently announced projects", icon: "≡ƒÜÇ", color: T.purple },
-    price_changes: { label: "Price Movements", desc: "Notable price changes this week", icon: "≡ƒÆ░", color: T.blue },
-    cta: { label: "Call to Action", desc: "Link back to dashboard", icon: "≡ƒöù", color: T.gold },
+    market_pulse: { label: "Market Pulse", desc: "Revenue, profit, backlog from Emaar", icon: "📈", color: T.gold },
+    top_yields: { label: "Top 5 Yields", desc: "Highest rental yield projects", icon: "📊", color: T.green },
+    handovers: { label: "Upcoming Handovers", desc: "Projects handing over in 6 months", icon: "•", color: T.teal },
+    golden_visa: { label: "Golden Visa Projects", desc: "2M+ AED eligible properties", icon: "•", color: "#F59E0B" },
+    new_launches: { label: "New Launches", desc: "Recently announced projects", icon: "🔇", color: T.purple },
+    price_changes: { label: "Price Movements", desc: "Notable price changes this week", icon: "🏆", color: T.blue },
+    cta: { label: "Call to Action", desc: "Link back to dashboard", icon: "🗙", color: T.gold },
   };
 
   useEffect(() => {
@@ -8124,16 +8124,16 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
           </div>
         ))}
         <div style={{ marginLeft: "auto", padding: "10px 16px", display: "flex", gap: 8 }}>
-          <button type="button" onClick={() => setPreviewMode(!previewMode)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${previewMode ? T.purple : T.border}`, background: previewMode ? `${T.purple}15` : "transparent", color: previewMode ? T.purple : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{previewMode ? "Γ£ô Preview" : "Preview"}</button>
+          <button type="button" onClick={() => setPreviewMode(!previewMode)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${previewMode ? T.purple : T.border}`, background: previewMode ? `${T.purple}15` : "transparent", color: previewMode ? T.purple : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{previewMode ? "✔ Preview" : "Preview"}</button>
         </div>
       </div>
 
       {/* SUB-TABS */}
       <div style={{ display: "flex", gap: 8 }}>
         {[
-          { id: "compose", label: "Compose & Send", icon: "Γ£ë" },
-          { id: "history", label: `History (${digestLog.length})`, icon: "≡ƒôï" },
-          { id: "settings", label: "Settings", icon: "ΓÜÖ" },
+          { id: "compose", label: "Compose & Send", icon: "" },
+          { id: "history", label: `History (${digestLog.length})`, icon: "📋" },
+          { id: "settings", label: "Settings", icon: "" },
         ].map(t => (
           <button key={t.id} type="button" onClick={() => setDigestSubTab(t.id)}
             style={{ padding: "10px 18px", borderRadius: 8, border: `1px solid ${digestSubTab === t.id ? T.gold : T.border}`, background: digestSubTab === t.id ? T.goldGlow : "transparent", color: digestSubTab === t.id ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
@@ -8211,7 +8211,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
                   <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, marginBottom: 8 }}>SECTIONS INCLUDED</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {digestTemplate.sections.map((sec, i) => {
-                      const meta = sectionMeta[sec] || { label: sec, icon: "≡ƒôä", color: T.textMuted };
+                      const meta = sectionMeta[sec] || { label: sec, icon: "📄", color: T.textMuted };
                       return (
                         <div key={sec} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                           <span style={{ fontSize: 14 }}>{meta.icon}</span>
@@ -8243,13 +8243,13 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
             {/* Send Button */}
             <button type="button" onClick={sendDigest} disabled={sending || segmentUsers.length === 0}
               style={{ padding: "16px 28px", background: sending ? T.surfaceAlt : `linear-gradient(135deg,${T.gold},#B8912F)`, border: "none", borderRadius: 12, color: sending ? T.textMuted : T.bg, fontWeight: 800, fontSize: 16, cursor: sending || segmentUsers.length === 0 ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-              {sending ? "Sending..." : `Send Digest Now ΓåÆ ${segmentUsers.length} users`}
+              {sending ? "Sending..." : `Send Digest Now → ${segmentUsers.length} users`}
             </button>
 
             {lastResult && (
               <div style={{ padding: "14px 18px", borderRadius: 10, background: lastResult.success ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)", border: `1px solid ${lastResult.success ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}` }}>
                 <div style={{ fontSize: 13, color: lastResult.success ? T.green : T.red, fontWeight: 700 }}>
-                  {lastResult.success ? `Γ£ô Sent to ${lastResult.sent}/${lastResult.total} users` : `Γ£ù Error: ${lastResult.error}`}
+                  {lastResult.success ? `✔ Sent to ${lastResult.sent}/${lastResult.total} users` : ` Error: ${lastResult.error}`}
                   {lastResult.failed > 0 && <span style={{ color: T.orange }}> ┬╖ {lastResult.failed} failed</span>}
                 </div>
               </div>
@@ -8270,7 +8270,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
                   <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.6 }}>{digestTemplate.intro}</div>
                 </div>
                 {digestTemplate.sections.map((sec, i) => {
-                  const meta = sectionMeta[sec] || { label: sec, icon: "≡ƒôä", color: T.textMuted };
+                  const meta = sectionMeta[sec] || { label: sec, icon: "📄", color: T.textMuted };
                   return (
                     <div key={sec} style={{ padding: "12px 0", borderBottom: i < digestTemplate.sections.length - 1 ? `1px solid ${T.border}` : "none" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
@@ -8302,7 +8302,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
           </div>
           {digestLog.length === 0 ? (
             <div style={{ padding: 60, textAlign: "center", color: T.textMuted }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>≡ƒô¡</div>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>📡</div>
               <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>No digests sent yet</div>
               <div style={{ fontSize: 12 }}>Go to Compose tab to send your first digest</div>
             </div>
@@ -8311,7 +8311,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
               {digestLog.map((log, i) => (
                 <div key={log.id} style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 16 }}>
                   <div style={{ width: 40, height: 40, borderRadius: "50%", background: log.failed > 0 ? `${T.orange}20` : `${T.green}20`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: 18 }}>{log.failed > 0 ? "ΓÜá" : "Γ£ô"}</span>
+                    <span style={{ fontSize: 18 }}>{log.failed > 0 ? "⚡" : "✔"}</span>
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 2 }}>
@@ -8319,11 +8319,11 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
                       {log.failed > 0 && <span style={{ color: T.orange }}> ┬╖ {log.failed} failed</span>}
                     </div>
                     <div style={{ fontSize: 11, color: T.textMuted }}>
-                      {log.sentAt ? new Date(log.sentAt).toLocaleString("en-AE", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "ΓÇö"} ┬╖ by {log.sentBy || "admin"} ┬╖ Segment: {log.segment || "all"}
+                      {log.sentAt ? new Date(log.sentAt).toLocaleString("en-AE", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"} ┬╖ by {log.sentBy || "admin"} ┬╖ Segment: {log.segment || "all"}
                     </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>{log.durationMs ? `${(log.durationMs / 1000).toFixed(1)}s` : "ΓÇö"}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>{log.durationMs ? `${(log.durationMs / 1000).toFixed(1)}s` : "—"}</div>
                   </div>
                 </div>
               ))}
@@ -8520,14 +8520,14 @@ function EiborRatesPanel({ db, T, I, notify }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* ΓòÉΓòÉΓòÉ KPI TOPBAR ΓòÉΓòÉΓòÉ */}
+      {/* ═══ KPI TOPBAR ═══ */}
       <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, overflow: "hidden" }}>
         <button type="button" onClick={fetchEibor} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: "rgba(212,168,67,0.06)", border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I?.refresh || "\u21BB"}</button>
         {[
-          { label: "1M EIBOR", value: eiborCurrent?.["1m"] ? `${parseFloat(eiborCurrent["1m"]).toFixed(3)}%` : "ΓÇö", color: T.blue },
-          { label: "3M EIBOR", value: eiborCurrent?.["3m"] ? `${parseFloat(eiborCurrent["3m"]).toFixed(3)}%` : "ΓÇö", color: T.gold, primary: true },
-          { label: "6M EIBOR", value: eiborCurrent?.["6m"] ? `${parseFloat(eiborCurrent["6m"]).toFixed(3)}%` : "ΓÇö", color: T.teal },
-          { label: "1Y EIBOR", value: eiborCurrent?.["1y"] ? `${parseFloat(eiborCurrent["1y"]).toFixed(3)}%` : "ΓÇö", color: T.purple },
+          { label: "1M EIBOR", value: eiborCurrent?.["1m"] ? `${parseFloat(eiborCurrent["1m"]).toFixed(3)}%` : "—", color: T.blue },
+          { label: "3M EIBOR", value: eiborCurrent?.["3m"] ? `${parseFloat(eiborCurrent["3m"]).toFixed(3)}%` : "—", color: T.gold, primary: true },
+          { label: "6M EIBOR", value: eiborCurrent?.["6m"] ? `${parseFloat(eiborCurrent["6m"]).toFixed(3)}%` : "—", color: T.teal },
+          { label: "1Y EIBOR", value: eiborCurrent?.["1y"] ? `${parseFloat(eiborCurrent["1y"]).toFixed(3)}%` : "—", color: T.purple },
         ].map((item, i) => (
           <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 20px", borderRight: `1px solid ${T.border}`, flexShrink: 0, background: item.primary ? "rgba(212,168,67,0.04)" : "transparent" }}>
             <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
@@ -8535,12 +8535,12 @@ function EiborRatesPanel({ db, T, I, notify }) {
           </div>
         ))}
         <div style={{ marginLeft: "auto", padding: "10px 16px", display: "flex", gap: 8 }}>
-          <button type="button" onClick={() => setEiborCompareMode(!eiborCompareMode)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${eiborCompareMode ? T.blue : T.border}`, background: eiborCompareMode ? `${T.blue}15` : "transparent", color: eiborCompareMode ? T.blue : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{eiborCompareMode ? "Γ£ô Compare" : "Compare"}</button>
+          <button type="button" onClick={() => setEiborCompareMode(!eiborCompareMode)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${eiborCompareMode ? T.blue : T.border}`, background: eiborCompareMode ? `${T.blue}15` : "transparent", color: eiborCompareMode ? T.blue : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{eiborCompareMode ? "✔ Compare" : "Compare"}</button>
           <button type="button" onClick={pushRateUpdate} disabled={!eiborCurrent} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}`, background: "rgba(20,184,166,0.08)", color: T.teal, cursor: eiborCurrent ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Push to Users</button>
         </div>
       </div>
 
-      {/* ΓòÉΓòÉΓòÉ COMPARISON PANEL ΓòÉΓòÉΓòÉ */}
+      {/* ═══ COMPARISON PANEL ═══ */}
       {eiborCompareMode && compareData && (
         <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.blue}40`, borderRadius: 14, padding: "16px 20px" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: T.blue, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>Historical Comparison</div>
@@ -8578,10 +8578,10 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
-      {/* ΓòÉΓòÉΓòÉ RATE ALERT ΓòÉΓòÉΓòÉ */}
+      {/* ═══ RATE ALERT ═══ */}
       {rateAlert && (
         <div className="fade-up" style={{ padding: "14px 20px", borderRadius: 12, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 18 }}>ΓÜá</span>
+          <span style={{ fontSize: 18 }}>⚡</span>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: T.red }}>Significant Rate Change Detected</div>
             <div style={{ fontSize: 11, color: T.textMuted }}>3M EIBOR changed by more than 0.25% from the previous update. Consider notifying users.</div>
@@ -8589,12 +8589,12 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
-      {/* ΓòÉΓòÉΓòÉ CURRENT RATES + COMPARISON ΓòÉΓòÉΓòÉ */}
+      {/* ═══ CURRENT RATES + COMPARISON ═══ */}
       {eiborCurrent && (
         <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
-              <div style={{ fontSize: 11, color: T.green, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Live Rates ΓÇö {eiborCurrent.asOf}</div>
+              <div style={{ fontSize: 11, color: T.green, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Live Rates — {eiborCurrent.asOf}</div>
               <div style={{ fontSize: 10, color: T.textMuted }}>Source: {eiborCurrent.source || "UAE Central Bank"}</div>
             </div>
             <a href="https://www.centralbank.ae/en/forex-eibor/eibor-rates/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: T.gold, textDecoration: "none" }}>View Source \u2197</a>
@@ -8625,13 +8625,13 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
-      {/* ΓòÉΓòÉΓòÉ RATE HISTORY CHART (12-month SVG) ΓòÉΓòÉΓòÉ */}
+      {/* ═══ RATE HISTORY CHART (12-month SVG) ═══ */}
       {eiborHistory.length > 1 && (
         <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Rate History</div>
-              <div style={{ fontSize: 11, color: T.textMuted }}>All 4 tenors over time ΓÇö color coded</div>
+              <div style={{ fontSize: 11, color: T.textMuted }}>All 4 tenors over time — color coded</div>
             </div>
             <div style={{ display: "flex", gap: 12 }}>
               {[{ label: "1M", color: T.blue }, { label: "3M", color: T.gold }, { label: "6M", color: T.teal }, { label: "1Y", color: T.purple }].map(l => (
@@ -8719,7 +8719,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
-      {/* ΓòÉΓòÉΓòÉ MORTGAGE CALCULATOR ΓòÉΓòÉΓòÉ */}
+      {/* ═══ MORTGAGE CALCULATOR ═══ */}
       <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 16 }}>Mortgage Impact Calculator</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
@@ -8765,7 +8765,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       </div>
 
-      {/* ΓòÉΓòÉΓòÉ UPDATE FORM ΓòÉΓòÉΓòÉ */}
+      {/* ═══ UPDATE FORM ═══ */}
       <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Update Rates</div>
@@ -8795,7 +8795,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       </div>
 
-      {/* ΓòÉΓòÉΓòÉ UPDATE HISTORY ΓòÉΓòÉΓòÉ */}
+      {/* ═══ UPDATE HISTORY ═══ */}
       <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, overflow: "hidden" }}>
         <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Update History</div>
@@ -8818,17 +8818,17 @@ function EiborRatesPanel({ db, T, I, notify }) {
                   const change = h.previousRates ? parseFloat(h["3m"]) - parseFloat(h.previousRates["3m"]) : null;
                   return (
                     <tr key={h.id} style={{ borderBottom: `1px solid ${T.border}` }}>
-                      <td style={{ padding: "10px 14px", color: T.textSecondary }}>{h.asOf || (h.updatedAt ? new Date(h.updatedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short" }) : "ΓÇö")}</td>
-                      <td style={{ padding: "10px 14px", color: T.blue }}>{h["1m"] ? `${parseFloat(h["1m"]).toFixed(3)}%` : "ΓÇö"}</td>
-                      <td style={{ padding: "10px 14px", color: T.gold, fontWeight: 600 }}>{h["3m"] ? `${parseFloat(h["3m"]).toFixed(3)}%` : "ΓÇö"}</td>
-                      <td style={{ padding: "10px 14px", color: T.teal }}>{h["6m"] ? `${parseFloat(h["6m"]).toFixed(3)}%` : "ΓÇö"}</td>
-                      <td style={{ padding: "10px 14px", color: T.purple }}>{h["1y"] ? `${parseFloat(h["1y"]).toFixed(3)}%` : "ΓÇö"}</td>
+                      <td style={{ padding: "10px 14px", color: T.textSecondary }}>{h.asOf || (h.updatedAt ? new Date(h.updatedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short" }) : "—")}</td>
+                      <td style={{ padding: "10px 14px", color: T.blue }}>{h["1m"] ? `${parseFloat(h["1m"]).toFixed(3)}%` : "—"}</td>
+                      <td style={{ padding: "10px 14px", color: T.gold, fontWeight: 600 }}>{h["3m"] ? `${parseFloat(h["3m"]).toFixed(3)}%` : "—"}</td>
+                      <td style={{ padding: "10px 14px", color: T.teal }}>{h["6m"] ? `${parseFloat(h["6m"]).toFixed(3)}%` : "—"}</td>
+                      <td style={{ padding: "10px 14px", color: T.purple }}>{h["1y"] ? `${parseFloat(h["1y"]).toFixed(3)}%` : "—"}</td>
                       <td style={{ padding: "10px 14px" }}>
                         {change !== null ? (
                           <span style={{ color: change > 0 ? T.red : change < 0 ? T.green : T.textMuted, fontWeight: 600 }}>
                             {change > 0 ? "+" : ""}{change.toFixed(3)}%
                           </span>
-                        ) : "ΓÇö"}
+                        ) : "—"}
                       </td>
                       <td style={{ padding: "10px 14px", color: T.textMuted }}>{h.updatedBy || "admin"}</td>
                     </tr>
@@ -8845,12 +8845,12 @@ function EiborRatesPanel({ db, T, I, notify }) {
 
 
 
-/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-   USERS TAB COMPONENT ΓÇö Professional SaaS User Management
+/* ══════════════════════════════════════════════════════
+   USERS TAB COMPONENT — Professional SaaS User Management
    Full rebuild: all 36 audit issues resolved
-ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+══════════════════════════════════════════════════════ */
 
-/* ΓöÇΓöÇΓöÇ PROFILE DRAWER (top-level component ΓÇö stable reference, portal to root) ΓöÇΓöÇΓöÇ */
+/* ─── PROFILE DRAWER (top-level component — stable reference, portal to root) ─── */
 const EditIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -8879,7 +8879,7 @@ const ProfileDrawerComponent = ({
     const health = getHealth(u);
     const days  = trialDaysLeft(u);
 
-    // Clean SVG icons ΓÇö no emojis
+    // Clean SVG icons — no emojis
     const IconUser     = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
     const IconTier     = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
     const IconActivity = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>;
@@ -8906,7 +8906,7 @@ const ProfileDrawerComponent = ({
     return ReactDOM.createPortal(
         <div className="drawer-panel" style={{ position: "fixed", top: 0, right: 0, width: 520, height: "100%", zIndex: 1500, background: T.bg, borderLeft: `1px solid ${T.border}`, boxShadow: "-24px 0 80px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-          {/* ΓöÇΓöÇ Header ΓöÇΓöÇ */}
+          {/* ── Header ── */}
           <div style={{ padding: "22px 24px 20px", borderBottom: `1px solid ${T.border}`, position: "relative", background: `linear-gradient(160deg, ${badge.color}0a 0%, transparent 60%)` }}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${badge.color} 0%, ${badge.color}00 100%)`, borderRadius: "0 0 2px 2px" }} />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -8940,18 +8940,18 @@ const ProfileDrawerComponent = ({
                 style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, transition: "all 0.15s", flexShrink: 0 }}
                 onMouseEnter={e => { e.currentTarget.style.background = T.surfaceAlt; e.currentTarget.style.color = T.white; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}>
-                Γ£ò
+                
               </button>
             </div>
           </div>
 
-          {/* ΓöÇΓöÇ Stats bar ΓÇö big value, tiny label ΓöÇΓöÇ */}
+          {/* ── Stats bar — big value, tiny label ── */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", borderBottom: `1px solid ${T.border}`, background: T.surface }}>
             {[
               { label: "Plan",        value: getUserLTV(u),    color: u.tier === "pro" || u.tier === "enterprise" ? T.green : T.textSecondary },
-              { label: "Trial",       value: days !== null ? `${days}d left` : u.tier === "pro" ? "Active" : "ΓÇö", color: days !== null && days <= 3 ? T.red : days !== null ? T.gold : T.textSecondary },
+              { label: "Trial",       value: days !== null ? `${days}d left` : u.tier === "pro" ? "Active" : "—", color: days !== null && days <= 3 ? T.red : days !== null ? T.gold : T.textSecondary },
               { label: "Last Active", value: lastActiveLabel(u), color: lastActiveColor(u) },
-              { label: "Joined",      value: (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { month: "short", day: "numeric" }); } catch { return "ΓÇö"; } })(), color: T.white },
+              { label: "Joined",      value: (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { month: "short", day: "numeric" }); } catch { return "—"; } })(), color: T.white },
             ].map((s, i) => (
               <div key={i} style={{ padding: "14px 8px", textAlign: "center", borderRight: i < 3 ? `1px solid ${T.border}` : "none" }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: s.color, fontFamily: "'Fraunces',serif", lineHeight: 1, letterSpacing: -0.3 }}>{s.value}</div>
@@ -8960,7 +8960,7 @@ const ProfileDrawerComponent = ({
             ))}
           </div>
 
-          {/* ΓöÇΓöÇ Tab nav ΓÇö pill style, active has solid background ΓöÇΓöÇ */}
+          {/* ── Tab nav — pill style, active has solid background ── */}
           <div style={{ display: "flex", background: T.bg, borderBottom: `1px solid ${T.border}`, padding: "6px 8px", gap: 3 }}>
             {TABS.map(({ key, label, Icon }) => (
               <button key={key} type="button" onClick={() => setDrawerTab(key)}
@@ -8971,7 +8971,7 @@ const ProfileDrawerComponent = ({
             ))}
           </div>
 
-          {/* ΓöÇΓöÇ Tab body ΓöÇΓöÇ */}
+          {/* ── Tab body ── */}
           <div style={{ padding: "20px 24px", flex: 1, minHeight: 0, overflowY: "auto" }}>
 
             {/* DETAILS */}
@@ -8980,15 +8980,15 @@ const ProfileDrawerComponent = ({
                 <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 12 }}>Account Details</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}`, marginBottom: 20 }}>
                   {[
-                    ["UID",           u.uid || "ΓÇö",    "uid"],
-                    ["Phone",         u.phone || "ΓÇö",  null],
-                    ["Country",       u.country || "ΓÇö", null],
+                    ["UID",           u.uid || "—",    "uid"],
+                    ["Phone",         u.phone || "—",  null],
+                    ["Country",       u.country || "—", null],
                     ["Sign-in",       u.provider || "email", null],
                     ["Email Verified", u.emailVerified ? "Verified" : "Not verified", null, u.emailVerified ? T.green : T.red],
                     ["Last Login",    u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Never", null],
-                    ["Signed Up",     (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" }); } catch { return "ΓÇö"; } })(), null],
+                    ["Signed Up",     (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" }); } catch { return "—"; } })(), null],
                     ["Created By",    u.createdByAdmin ? `Admin (${u.createdByAdmin})` : "Self-signup", null],
-                    ["Trial End",     u.trialEnd ? new Date(u.trialEnd).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }) : "ΓÇö", null],
+                    ["Trial End",     u.trialEnd ? new Date(u.trialEnd).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }) : "—", null],
                   ].map(([label, value, copyKey, valColor], idx, arr) => (
                     <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 16px", background: "transparent", borderBottom: idx < arr.length - 1 ? `1px solid ${T.border}` : "none", transition: "background 0.1s", cursor: "default" }}
                       onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
@@ -9047,7 +9047,7 @@ const ProfileDrawerComponent = ({
 
                 <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 12 }}>Job Role</div>
                 <select value={u.role || "user"} onChange={e => handleJobRoleChange(u.uid, e.target.value)} style={{ ...inputStyle, cursor: "pointer", marginBottom: 16 }}>
-                  <option value="user">ΓÇö No role assigned ΓÇö</option>
+                  <option value="user">— No role assigned —</option>
                   {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
 
@@ -9138,14 +9138,14 @@ const ProfileDrawerComponent = ({
                                   {actionLabel(l.action)}
                                 </div>
                                 <div style={{ fontSize: 10, color: T.textMuted, whiteSpace: "nowrap", flexShrink: 0 }}>
-                                  {(() => { try { return new Date(l.changedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "ΓÇö"; } })()}
+                                  {(() => { try { return new Date(l.changedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "—"; } })()}
                                 </div>
                               </div>
-                              {/* from ΓåÆ to */}
+                              {/* from → to */}
                               {(l.from || l.to) && (
                                 <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
                                   {l.from && <span style={{ color: T.red }}>{l.from}</span>}
-                                  {l.from && l.to && <span style={{ margin: "0 5px", color: T.textMuted }}>ΓåÆ</span>}
+                                  {l.from && l.to && <span style={{ margin: "0 5px", color: T.textMuted }}>→</span>}
                                   {l.to && <span style={{ color: T.green }}>{l.to}</span>}
                                 </div>
                               )}
@@ -9168,7 +9168,7 @@ const ProfileDrawerComponent = ({
                     </div>
                   )}
 
-                  {/* Login history below audit log ΓÇö kept as secondary info */}
+                  {/* Login history below audit log — kept as secondary info */}
                   {(u.loginHistory || []).length > 0 && (
                     <div style={{ marginTop: 20 }}>
                       <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 10 }}>Login History</div>
@@ -9184,7 +9184,7 @@ const ProfileDrawerComponent = ({
                               </div>
                               <span style={{ fontSize: 11, color: T.textSecondary }}>{h.browser || "Browser"} ┬╖ {h.device || "Desktop"}</span>
                             </div>
-                            <span style={{ fontSize: 10, color: T.textMuted }}>{(() => { try { return new Date(h.time).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "ΓÇö"; } })()}</span>
+                            <span style={{ fontSize: 10, color: T.textMuted }}>{(() => { try { return new Date(h.time).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "—"; } })()}</span>
                           </div>
                         ))}
                       </div>
@@ -9263,7 +9263,7 @@ const ProfileDrawerComponent = ({
 
 function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, suspendUser, sendResetEmail, extendTrial, openEditUser, saveEditUser, editingUser, setEditingUser, editUserForm, setEditUserForm, editUserLoading, showAddUser, setShowAddUser, addUserForm, setAddUserForm, addUserManually, addUserLoading, exportCSV, userSearch, setUserSearch, tierFilter, setTierFilter, notify, db, T, I, trialDaysLeft, timeSince, pendingOpenUid, setPendingOpenUid, onDrawerChange, auditLog, showBulkImport, setShowBulkImport, bulkImportData, setBulkImportData, bulkImportLoading, setBulkImportLoading }) {
 
-  /* ΓöÇΓöÇΓöÇ STATE ΓöÇΓöÇΓöÇ */
+  /* ─── STATE ─── */
   const [drawerUser,         setDrawerUser]         = useState(null);
   const [bulkSel,            setBulkSel]            = useState([]);
   const [bulkTier,           setBulkTier]           = useState("");
@@ -9297,10 +9297,10 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const [drawerTab,          setDrawerTab]           = useState("details"); // drawer sub-nav
 
   const PAGE_SIZE    = 25;
-  const AT_RISK_DAYS = 3; // FIX #6 ΓÇö single source of truth
+  const AT_RISK_DAYS = 3; // FIX #6 — single source of truth
   const now          = new Date();
 
-  /* ΓöÇΓöÇΓöÇ REFS for keyboard nav ΓöÇΓöÇΓöÇ */
+  /* ─── REFS for keyboard nav ─── */
   const pagedUsersRef = React.useRef([]);
   const focusedRowRef = React.useRef(0);
   focusedRowRef.current = focusedRow;
@@ -9320,7 +9320,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     }
   }, [pendingOpenUid, users]);
 
-  /* ΓöÇΓöÇΓöÇ KEYBOARD NAVIGATION ΓöÇΓöÇΓöÇ */
+  /* ─── KEYBOARD NAVIGATION ─── */
   useEffect(() => {
     const handler = (e) => {
       const anyModalOpen = sendEmailUser || noteUser || confirmDelete || confirmSuspend ||
@@ -9338,7 +9338,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     return () => window.removeEventListener("keydown", handler);
   }, [sendEmailUser, noteUser, confirmDelete, confirmSuspend, confirmExtend, tagUser, editingUser, showAddUser, notifUser]);
 
-  /* ΓöÇΓöÇΓöÇ ICONS ΓöÇΓöÇΓöÇ */
+  /* ─── ICONS ─── */
   const EditIcon = () => (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -9352,7 +9352,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </svg>
   );
 
-  /* ΓöÇΓöÇΓöÇ FIX #11: Separate billing tiers from job roles ΓöÇΓöÇΓöÇ */
+  /* ─── FIX #11: Separate billing tiers from job roles ─── */
   const BILLING_TIERS = [
     { value: "free",       label: "Free",       color: "#64748B", bg: "rgba(100,116,139,0.12)", price: "" },
     { value: "pro_trial",  label: "Pro Trial",  color: "#D4A843", bg: "rgba(212,168,67,0.12)",  price: "" },
@@ -9370,9 +9370,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     { value: "admin",            label: "Admin",             color: "#D4A843", bg: "rgba(212,168,67,0.2)" },
   ];
 
-  /* ΓöÇΓöÇΓöÇ FIX #12: Tags = labels only, no overlap with roles ΓöÇΓöÇΓöÇ */
+  /* ─── FIX #12: Tags = labels only, no overlap with roles ─── */
   const TAGS_OPTIONS = [
-    { value: "vip",      label: "Γ¡É VIP",        color: "#F59E0B" },
+    { value: "vip",      label: " VIP",        color: "#F59E0B" },
     { value: "hot_lead", label: "Hot Lead",    color: "#EF4444" },
     { value: "followup", label: "Follow-up",   color: "#3B82F6" },
     { value: "churning", label: "Churning",    color: "#F97316" },
@@ -9380,7 +9380,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     { value: "partner",  label: "Partner",     color: "#06B6D4" },
   ];
 
-  /* ΓöÇΓöÇΓöÇ FIX #9+10: Single, clean getRoleBadge ΓöÇΓöÇΓöÇ */
+  /* ─── FIX #9+10: Single, clean getRoleBadge ─── */
   const getTierBadge = (u) => {
     const expired = u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) <= now;
     if (expired) return { value: "expired", label: "Expired", color: T.red, bg: "rgba(239,68,68,0.12)", price: "" };
@@ -9420,7 +9420,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     return h < 24 ? T.green : h < 72 ? T.gold : T.textMuted;
   };
 
-  /* ΓöÇΓöÇΓöÇ STATS ΓÇö FIX #2, #6 ΓöÇΓöÇΓöÇ */
+  /* ─── STATS — FIX #2, #6 ─── */
   const total       = users.length;
   const paid        = users.filter(u => u.tier === "pro" || u.tier === "enterprise").length; // FIX #2
   const trial       = users.filter(u => u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) > now).length;
@@ -9432,7 +9432,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const suspended   = users.filter(u => u.suspended).length;
   const activeToday = users.filter(u => u.lastLoginAt && (now - new Date(u.lastLoginAt)) < 86400000).length;
 
-  /* ΓöÇΓöÇΓöÇ FILTERING + SORTING ΓÇö FIX #1, #3, #27 ΓöÇΓöÇΓöÇ */
+  /* ─── FILTERING + SORTING — FIX #1, #3, #27 ─── */
   const allFiltered = users
     .filter(u => {
       const q = userSearch.toLowerCase();
@@ -9483,7 +9483,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const activeFilterCount = [filterCountry, filterRole, sortField !== "newest" ? "sort" : ""].filter(Boolean).length; // FIX #32
 
-  /* ΓöÇΓöÇΓöÇ TRIAL EXPIRY EMAILS ΓÇö FIX #6 consistent threshold ΓöÇΓöÇΓöÇ */
+  /* ─── TRIAL EXPIRY EMAILS — FIX #6 consistent threshold ─── */
   const sendTrialExpiryEmails = async () => {
     setSendingTrialEmails(true);
     let sent = 0;
@@ -9494,7 +9494,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           user_email:   u.email,
           user_name:    u.name || u.email,
           project_name: "DXB Analytics Platform",
-          change_type:  days === 0 ? "ΓÅ░ Your Trial Has Expired" : `ΓÜá Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
+          change_type:  days === 0 ? "░ Your Trial Has Expired" : `⚡ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
           new_value:    days === 0
             ? "Your 7-day trial has ended. Upgrade now to keep full access."
             : `Only ${days} day${days !== 1 ? "s" : ""} left on your free trial. Upgrade before you lose access.`,
@@ -9505,10 +9505,10 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       } catch(e) {}
     }
     setSendingTrialEmails(false);
-    notify(sent > 0 ? `[v] Sent ${sent} trial expiry email${sent > 1 ? "s" : ""}` : "Γä╣ No at-risk trials to email");
+    notify(sent > 0 ? `[v] Sent ${sent} trial expiry email${sent > 1 ? "s" : ""}` : " No at-risk trials to email");
   };
 
-  /* ΓöÇΓöÇΓöÇ ACTIONS ΓöÇΓöÇΓöÇ */
+  /* ─── ACTIONS ─── */
   const handleBulkAction = async () => {
     if (!bulkTier || bulkSel.length === 0) return;
     for (const uid of bulkSel) await changeTier(uid, bulkTier);
@@ -9552,7 +9552,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       }, "USkwUhp0csGCVDkdQ");
       notify(`Email sent to ${sendEmailUser.email}`);
       setSendEmailUser(null); setEmailSubject(""); setEmailBody("");
-    } catch(e) { notify("Error: Email failed ΓÇö check EmailJS config"); }
+    } catch(e) { notify("Error: Email failed — check EmailJS config"); }
     setEmailSending(false);
   };
 
@@ -9625,7 +9625,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const exportFiltered = () => {
     const headers = "Name,Email,Tier,Role,Trial Status,Tags,Country,Last Active,Signed Up\n";
     const rows = allFiltered.map(u =>
-      `"${u.name || ""}","${u.email || ""}","${u.tier || "free"}","${u.role || ""}","${u.trialEnd ? (new Date(u.trialEnd) > now ? "Active" : "Expired") : "ΓÇö"}","${(u.tags || []).join("; ")}","${u.country || ""}","${u.lastLoginAt || ""}","${u.createdAt || ""}"`
+      `"${u.name || ""}","${u.email || ""}","${u.tier || "free"}","${u.role || ""}","${u.trialEnd ? (new Date(u.trialEnd) > now ? "Active" : "Expired") : "—"}","${(u.tags || []).join("; ")}","${u.country || ""}","${u.lastLoginAt || ""}","${u.createdAt || ""}"`
     ).join("\n");
     const blob = new Blob([headers + rows], { type: "text/csv" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
@@ -9633,7 +9633,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     notify(`Exported ${allFiltered.length} users`);
   };
 
-  /* ΓöÇΓöÇΓöÇ SHARED STYLE HELPERS ΓöÇΓöÇΓöÇ */
+  /* ─── SHARED STYLE HELPERS ─── */
   const inputStyle = { width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.15)", borderRadius: 9, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" };
   const focusIn  = e => e.target.style.borderColor = T.gold;
   const focusOut = e => e.target.style.borderColor = "rgba(212,168,67,0.15)";
@@ -9652,7 +9652,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{title}</div>
         {sub && <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{sub}</div>}
       </div>
-      <button type="button" onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>Γ£ò</button>
+      <button type="button" onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}></button>
     </div>
   );
 
@@ -9676,9 +9676,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </div>
   );
 
-  /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  /* ══════════════════════════════════════════════
      MODALS
-  ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+  ══════════════════════════════════════════════ */
 
   const DeleteConfirmModal = () => confirmDelete && (
     <Modal onClose={() => setConfirmDelete(null)} maxWidth={420}>
@@ -9688,8 +9688,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 6 }}><strong style={{ color: T.white }}>{confirmDelete.name || confirmDelete.email}</strong></div>
         <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 20, padding: "10px 16px", background: "rgba(239,68,68,0.06)", borderRadius: 10, border: "1px solid rgba(239,68,68,0.15)", lineHeight: 1.6 }}>
           Permanently removes them from Firestore and revokes all access.
-          {confirmDelete.tier === "pro"        && <><br /><span style={{ color: T.red, fontWeight: 700 }}>ΓÜá Active Pro subscription (AED 99/mo) will be cancelled.</span></>}
-          {confirmDelete.tier === "enterprise" && <><br /><span style={{ color: T.red, fontWeight: 700 }}>ΓÜá Active Enterprise account (AED 499/mo) will be cancelled.</span></>}
+          {confirmDelete.tier === "pro"        && <><br /><span style={{ color: T.red, fontWeight: 700 }}>⚡ Active Pro subscription (AED 99/mo) will be cancelled.</span></>}
+          {confirmDelete.tier === "enterprise" && <><br /><span style={{ color: T.red, fontWeight: 700 }}>⚡ Active Enterprise account (AED 499/mo) will be cancelled.</span></>}
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <BtnGhost onClick={() => setConfirmDelete(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
@@ -9702,7 +9702,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const SuspendConfirmModal = () => confirmSuspend && (
     <Modal onClose={() => setConfirmSuspend(null)} maxWidth={420}>
       <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
-        <div style={{ width: 48, height: 48, borderRadius: 12, background: confirmSuspend?.suspended ? "rgba(16,185,129,0.08)" : "rgba(245,158,11,0.08)", border: "1px solid", borderColor: confirmSuspend?.suspended ? "rgba(16,185,129,0.2)" : "rgba(245,158,11,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", color: confirmSuspend?.suspended ? "#10B981" : "#F59E0B" }}>{confirmSuspend?.suspended ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> : "ΓÅ╕"}</div>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: confirmSuspend?.suspended ? "rgba(16,185,129,0.08)" : "rgba(245,158,11,0.08)", border: "1px solid", borderColor: confirmSuspend?.suspended ? "rgba(16,185,129,0.2)" : "rgba(245,158,11,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", color: confirmSuspend?.suspended ? "#10B981" : "#F59E0B" }}>{confirmSuspend?.suspended ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> : ""}</div>
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: confirmSuspend.suspended ? T.green : "#F59E0B", marginBottom: 8 }}>
           {confirmSuspend.suspended ? "Unsuspend User?" : "Suspend User?"}
         </div>
@@ -9722,7 +9722,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const ExtendConfirmModal = () => confirmExtend && (
     <Modal onClose={() => setConfirmExtend(null)} maxWidth={400}>
       <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>ΓÅ▒</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>▒</div>
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.green, marginBottom: 8 }}>Extend Trial?</div>
         <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 6 }}>
           Add <strong style={{ color: T.white }}>{confirmExtend.days} days</strong> to <strong style={{ color: T.white }}>{confirmExtend.user.name || confirmExtend.user.email}</strong>'s trial
@@ -9752,7 +9752,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const NoteModal = () => noteUser && (
     <Modal onClose={() => setNoteUser(null)} maxWidth={440}>
-      <ModalHeader title={`Note ΓÇö ${noteUser.name || noteUser.email}`} onClose={() => setNoteUser(null)} />
+      <ModalHeader title={`Note — ${noteUser.name || noteUser.email}`} onClose={() => setNoteUser(null)} />
       <textarea placeholder="Add internal admin notes..." value={noteText} onChange={e => setNoteText(e.target.value)} rows={5} style={{ ...inputStyle, resize: "vertical", marginBottom: 16 }} onFocus={focusIn} onBlur={focusOut} />
       <div style={{ display: "flex", gap: 10 }}>
         <BtnGhost onClick={() => setNoteUser(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
@@ -9763,7 +9763,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const TagsModal = () => tagUser && (
     <Modal onClose={() => setTagUser(null)} maxWidth={400}>
-      <ModalHeader title={`Tags ΓÇö ${tagUser.name || tagUser.email}`} onClose={() => setTagUser(null)} />
+      <ModalHeader title={`Tags — ${tagUser.name || tagUser.email}`} onClose={() => setTagUser(null)} />
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
         {TAGS_OPTIONS.map(tag => {
           const active = (tagUser.tags || []).includes(tag.value);
@@ -9783,12 +9783,12 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </Modal>
   );
 
-  /* FIX #14: Add User ΓåÆ Invite User (client SDK limitation explained) */
+  /* FIX #14: Add User → Invite User (client SDK limitation explained) */
   const AddUserModal = () => showAddUser && (
     <Modal onClose={() => setShowAddUser(false)} maxWidth={520}>
       <ModalHeader title="Add New User" sub="Create a new account directly from admin" onClose={() => setShowAddUser(false)} />
       <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 18, fontSize: 12, color: "#93C5FD", lineHeight: 1.6 }}>
-        Γä╣ <strong>Note:</strong> Creating an account here uses Firebase client-side auth. The new user will receive a verification email. You will remain logged in as admin.
+         <strong>Note:</strong> Creating an account here uses Firebase client-side auth. The new user will receive a verification email. You will remain logged in as admin.
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         {[
@@ -9803,7 +9803,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             </Field>
             {/* FIX #29: password validation */}
             {f.key === "password" && addUserForm.password && addUserForm.password.length < 6 && (
-              <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>ΓÜá Password must be at least 6 characters</div>
+              <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>⚡ Password must be at least 6 characters</div>
             )}
           </div>
         ))}
@@ -9815,7 +9815,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` ┬╖ ${r.price}` : ""}</option>)}
         </select></Field></div>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Job Role"><select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="user">ΓÇö No role assigned ΓÇö</option>
+          <option value="user">— No role assigned —</option>
           {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
         </select></Field></div>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
@@ -9827,7 +9827,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </Modal>
   );
 
-  /* ΓöÇΓöÇ BULK IMPORT MODAL ΓöÇΓöÇ */
+  /* ── BULK IMPORT MODAL ── */
   const BulkImportModal = () => showBulkImport && (
     <Modal onClose={() => { setShowBulkImport(false); setBulkImportData([]); }} maxWidth={700}>
       <ModalHeader title="Bulk Import Users" sub="Upload a CSV file to import multiple users at once" onClose={() => { setShowBulkImport(false); setBulkImportData([]); }} />
@@ -9867,7 +9867,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             reader.readAsText(file);
           }} />
           <label htmlFor="csvUpload" style={{ cursor: "pointer" }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>≡ƒôä</div>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📄</div>
             <div style={{ fontSize: 14, fontWeight: 600, color: T.white, marginBottom: 4 }}>Drop CSV file or click to upload</div>
             <div style={{ fontSize: 12, color: T.textMuted }}>Supports .csv files up to 1000 rows</div>
           </label>
@@ -9893,10 +9893,10 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               <tbody>
                 {bulkImportData.map((row, i) => (
                   <tr key={i} style={{ borderTop: `1px solid ${T.border}` }}>
-                    <td style={{ padding: "8px 10px", color: T.white }}>{row.name || "ΓÇö"}</td>
+                    <td style={{ padding: "8px 10px", color: T.white }}>{row.name || "—"}</td>
                     <td style={{ padding: "8px 10px", color: row.valid ? T.textSecondary : T.red }}>{row.email}</td>
                     <td style={{ padding: "8px 10px" }}><span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: row.tier === "pro" ? `${T.gold}20` : row.tier === "enterprise" ? `${T.purple}20` : `${T.textMuted}20`, color: row.tier === "pro" ? T.gold : row.tier === "enterprise" ? T.purple : T.textMuted }}>{row.tier || "free"}</span></td>
-                    <td style={{ padding: "8px 10px", textAlign: "center" }}>{row.imported ? <span style={{ color: T.green }}>Γ£ô</span> : row.valid ? <span style={{ color: T.textMuted }}>ΓÇö</span> : <span style={{ color: T.red }}>Γ£ù</span>}</td>
+                    <td style={{ padding: "8px 10px", textAlign: "center" }}>{row.imported ? <span style={{ color: T.green }}>✔</span> : row.valid ? <span style={{ color: T.textMuted }}>—</span> : <span style={{ color: T.red }}></span>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -9953,7 +9953,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` ┬╖ ${r.price}` : ""}</option>)}
         </select></Field>
         <Field label="Job Role"><select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="user">ΓÇö No role assigned ΓÇö</option>
+          <option value="user">— No role assigned —</option>
           {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
         </select></Field>
         {/* FIX #8: normalize trial date to ISO format */}
@@ -9969,12 +9969,12 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const NotifUserModal = () => notifUser && (
     <Modal onClose={() => setNotifUser(null)} maxWidth={440}>
-      <ModalHeader title={`Notify ΓÇö ${notifUser.name || notifUser.email}`} sub="Appears instantly in their notification bell" onClose={() => setNotifUser(null)} />
+      <ModalHeader title={`Notify — ${notifUser.name || notifUser.email}`} sub="Appears instantly in their notification bell" onClose={() => setNotifUser(null)} />
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div>
           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>Icon</label>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {["","","","[^]","ΓÜá","","[v]","","",""].map(ic => (
+            {["","","","[^]","⚡","","[v]","","",""].map(ic => (
               <button key={ic} type="button" onClick={() => setNotifIcon(ic)}
                 style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${notifIcon === ic ? T.gold : T.border}`, background: notifIcon === ic ? T.goldGlow : T.surfaceAlt, cursor: "pointer", fontSize: 16 }}>{ic}</button>
             ))}
@@ -9999,13 +9999,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </Modal>
   );
 
-  /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-     PROFILE DRAWER ΓÇö rebuilt for professional SaaS quality
-  ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+  /* ══════════════════════════════════════════════
+     PROFILE DRAWER — rebuilt for professional SaaS quality
+  ══════════════════════════════════════════════ */
 
-    /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-     LOADING SKELETON ΓÇö FIX #30
-  ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+    /* ══════════════════════════════════════════════
+     LOADING SKELETON — FIX #30
+  ══════════════════════════════════════════════ */
   const SkeletonRow = () => (
     <div style={{ display: "grid", gridTemplateColumns: "36px 28px minmax(160px,2fr) minmax(150px,1.5fr) 100px 110px 75px 75px 140px", gap: 6, padding: "12px 16px", borderBottom: `1px solid ${T.border}`, alignItems: "center" }}>
       {[36,28,160,150,100,110,75,75,140].map((w,i) => (
@@ -10014,9 +10014,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </div>
   );
 
-  /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  /* ══════════════════════════════════════════════
      MAIN RENDER
-  ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+  ══════════════════════════════════════════════ */
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
 
@@ -10083,7 +10083,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                 <button key={r.value} type="button" onClick={() => handleTierChange(inlineTierUser.user.uid, r.value, inlineTierUser.user.tier)}
                   style={{ width: "100%", padding: "8px 10px", borderRadius: 7, border: "none", background: isCurrent ? r.bg : "transparent", color: isCurrent ? r.color : T.textSecondary, fontSize: 12, fontWeight: isCurrent ? 700 : 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", display: "flex", justifyContent: "space-between" }}>
                   <span>{r.label}</span>
-                  <span style={{ fontSize: 10, color: isCurrent ? r.color : T.textMuted }}>{r.price || (isCurrent ? "Γ£ô" : "")}</span>
+                  <span style={{ fontSize: 10, color: isCurrent ? r.color : T.textMuted }}>{r.price || (isCurrent ? "✔" : "")}</span>
                 </button>
               );
             })}
@@ -10091,7 +10091,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
       )}
 
-      {/* ΓòÉΓòÉ HEADER ΓòÉΓòÉ */}
+      {/* ══ HEADER ══ */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.white, margin: 0 }}>User Management</h2>
@@ -10109,26 +10109,26 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             </button>
             {atRiskCount > 0 && (
               <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: T.surface, border: `1px solid ${T.red}30`, borderRadius: 8, padding: "8px 12px", fontSize: 11, color: T.textMuted, whiteSpace: "nowrap", zIndex: 50, pointerEvents: "none", boxShadow: "0 8px 24px rgba(0,0,0,0.4)", opacity: 0, transition: "opacity 0.2s" }} className="risk-tooltip">
-                Will email: {atRisk.map(u => u.name || u.email).join(", ")} ┬╖ Γëñ{AT_RISK_DAYS} days left
+                Will email: {atRisk.map(u => u.name || u.email).join(", ")} ┬╖ {AT_RISK_DAYS} days left
               </div>
             )}
           </div>
           <button type="button" onClick={exportFiltered} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} Export ({allFiltered.length})</button>
-          <button type="button" onClick={() => setShowBulkImport && setShowBulkImport(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Γåæ Import CSV</button>
+          <button type="button" onClick={() => setShowBulkImport && setShowBulkImport(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>← Import CSV</button>
           <button type="button" onClick={() => setShowAddUser(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700 }}>+ Add User <span style={{ fontSize: 10, opacity: 0.6 }}>[N]</span></button>
         </div>
       </div>
 
-      {/* ΓòÉΓòÉ KPI CARDS ΓÇö FIX #1, #2, #18 ΓòÉΓòÉ */}
+      {/* ══ KPI CARDS — FIX #1, #2, #18 ══ */}
       <div className="users-kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10, marginBottom: 16 }}>
         {[
           { label: "Total",        value: total,          color: T.white,     sub: "All accounts",    border: T.border,         filter: "All",      tip: "Show all users" },
           { label: "Paying",       value: paid,           color: "#10B981",   sub: `AED ${mrr}/mo`,   border: "#10B98125",       filter: "Pro",      tip: "Pro + Enterprise" }, // FIX #2
           { label: "Trial",        value: trial,          color: T.gold,      sub: "7-day trial",     border: `${T.gold}25`,    filter: "Pro Trial", tip: "Active trial users" },
           { label: "Free",         value: free,           color: T.textMuted, sub: "To convert",      border: T.border,         filter: "Free",     tip: "Free tier users" },
-          { label: "At Risk",      value: atRiskCount,    color: T.red,       sub: `Γëñ${AT_RISK_DAYS}d left`, border: `${T.red}25`, filter: "AtRisk", tip: `Trial ending in Γëñ${AT_RISK_DAYS} days` }, // FIX #1 + #6
+          { label: "At Risk",      value: atRiskCount,    color: T.red,       sub: `${AT_RISK_DAYS}d left`, border: `${T.red}25`, filter: "AtRisk", tip: `Trial ending in ${AT_RISK_DAYS} days` }, // FIX #1 + #6
           { label: "Active Today", value: activeToday,    color: T.teal,      sub: "Logged in today", border: `${T.teal}25`,    filter: null,       tip: "Logged in within 24h" },
-          { label: "Conversion",   value: convRate + "%", color: "#06B6D4",   sub: "Free ΓåÆ Paid",     border: "#06B6D425",      filter: null,       tip: "Free to paid conversion rate" },
+          { label: "Conversion",   value: convRate + "%", color: "#06B6D4",   sub: "Free → Paid",     border: "#06B6D425",      filter: null,       tip: "Free to paid conversion rate" },
         ].map(s => (
           <div key={s.label} className="kpi-card"
             onClick={() => { if (s.filter) { setTierFilter(s.filter); setPage(1); } }}
@@ -10138,16 +10138,16 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             <div style={{ fontSize: 22, fontWeight: 800, color: s.color, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>{s.value}</div>
             <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 4 }}>{s.label}</div>
             <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{s.sub}</div>
-            {s.filter && <div style={{ fontSize: 10, color: s.color, marginTop: 3, opacity: tierFilter === s.filter ? 1 : 0.5 }}>{tierFilter === s.filter ? "Γ£ô filtered" : "click to filter"}</div>}
+            {s.filter && <div style={{ fontSize: 10, color: s.color, marginTop: 3, opacity: tierFilter === s.filter ? 1 : 0.5 }}>{tierFilter === s.filter ? "✔ filtered" : "click to filter"}</div>}
           </div>
         ))}
       </div>
 
-      {/* ΓòÉΓòÉ CONVERSION FUNNEL ΓÇö FIX #16 (removed duplicate MRR), #26 ΓòÉΓòÉ */}
+      {/* ══ CONVERSION FUNNEL — FIX #16 (removed duplicate MRR), #26 ══ */}
       <div style={{ background: T.surfaceAlt, borderRadius: 14, padding: "16px 20px", border: `1px solid ${T.border}`, marginBottom: 18 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Conversion Funnel</div>
-          {suspended > 0 && <span style={{ color: T.red, fontSize: 11, fontWeight: 700 }}>ΓÅ╕ {suspended} suspended</span>}
+          {suspended > 0 && <span style={{ color: T.red, fontSize: 11, fontWeight: 700 }}> {suspended} suspended</span>}
         </div>
         <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
           {[
@@ -10162,13 +10162,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                 <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, marginTop: 2, position: "relative" }}>{s.label}</div>
                 {i > 0 && total > 0 && <div style={{ fontSize: 11, color: s.color, fontWeight: 700, marginTop: 2, position: "relative" }}>{s.pct}% of total</div>}
               </div>
-              {i < 2 && <div style={{ display: "flex", alignItems: "center", padding: "0 8px", color: T.textMuted, fontSize: 18 }}>ΓåÆ</div>}
+              {i < 2 && <div style={{ display: "flex", alignItems: "center", padding: "0 8px", color: T.textMuted, fontSize: 18 }}>→</div>}
             </React.Fragment>
           ))}
         </div>
       </div>
 
-      {/* ΓòÉΓòÉ SAVED VIEWS ΓòÉΓòÉ */}
+      {/* ══ SAVED VIEWS ══ */}
       <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginRight: 4 }}>Quick Views:</span>
         {[
@@ -10176,7 +10176,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           { label: "Enterprise",   tier: "Enterprise" },
           { label: "Free Users",   tier: "Free" },
           { label: "Suspended",    tier: "Suspended" },
-          { label: "Γî¢ Expired",      tier: "Expired" },
+          { label: " Expired",      tier: "Expired" },
         ].map(v => (
           <button key={v.label} type="button" onClick={() => { setTierFilter(v.tier); setPage(1); }}
             style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${tierFilter === v.tier ? T.gold : T.border}`, background: tierFilter === v.tier ? T.goldGlow : "transparent", color: tierFilter === v.tier ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
@@ -10185,14 +10185,14 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         ))}
         {tierFilter !== "All" && (
           <button type="button" onClick={() => { setTierFilter("All"); setPage(1); }}
-            style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Γ£ò Clear</button>
+            style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}> Clear</button>
         )}
         <div style={{ marginLeft: "auto", fontSize: 10, color: T.textMuted, fontStyle: "italic" }}>
-          ΓåæΓåô J/K ┬╖ Enter=open ┬╖ E=edit ┬╖ N=new
+          ←↑ J/K ┬╖ Enter=open ┬╖ E=edit ┬╖ N=new
         </div>
       </div>
 
-      {/* ΓòÉΓòÉ SEARCH + FILTERS ΓÇö FIX #32 (active sort badge) ΓòÉΓòÉ */}
+      {/* ══ SEARCH + FILTERS — FIX #32 (active sort badge) ══ */}
       <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ position: "relative", flex: "1 1 280px", maxWidth: 360 }}>
           <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</span>
@@ -10209,11 +10209,11 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
         <button type="button" onClick={() => setShowFilters(p => !p)}
           style={{ padding: "7px 12px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", border: `1px solid ${(showFilters || activeFilterCount > 0) ? T.teal : T.border}`, background: (showFilters || activeFilterCount > 0) ? "rgba(6,182,212,0.08)" : "transparent", color: (showFilters || activeFilterCount > 0) ? T.teal : T.textMuted }}>
-          Filters {activeFilterCount > 0 ? `ΓÇó ${activeFilterCount}` : ""}
+          Filters {activeFilterCount > 0 ? `• ${activeFilterCount}` : ""}
         </button>
       </div>
 
-      {/* Advanced filters ΓÇö FIX #27 (role filter), FIX #32 (sort badge) */}
+      {/* Advanced filters — FIX #27 (role filter), FIX #32 (sort badge) */}
       {showFilters && (
         <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 14, display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
           <div>
@@ -10235,7 +10235,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               <select value={sortField} onChange={e => { setSortField(e.target.value); setPage(1); }} style={{ ...inputStyle, cursor: "pointer", maxWidth: 180 }}>
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
-                <option value="name">Name AΓÇôZ</option>
+                <option value="name">Name A–Z</option>
                 <option value="tier">Tier</option>
                 <option value="trial">Trial Days Left</option>
                 <option value="lastActive">Last Active</option>
@@ -10243,14 +10243,14 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             </Field>
           </div>
           <button type="button" onClick={() => { setFilterCountry(""); setFilterRole(""); setSortField("newest"); setSortDir("desc"); setPage(1); }}
-            style={{ padding: "9px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Γå║ Reset All</button>
+            style={{ padding: "9px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}> Reset All</button>
         </div>
       )}
 
-      {/* ΓöÇΓöÇ BULK ACTIONS ΓÇö FIX #7: billing tiers only ΓöÇΓöÇ */}
+      {/* ── BULK ACTIONS — FIX #7: billing tiers only ── */}
       {bulkSel.length > 0 && (
         <div style={{ background: "rgba(212,168,67,0.06)", border: "1px solid rgba(212,168,67,0.25)", borderRadius: 10, padding: "10px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>Γ£ô {bulkSel.length} users selected</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>✔ {bulkSel.length} users selected</span>
           <select value={bulkTier} onChange={e => setBulkTier(e.target.value)} style={{ padding: "6px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" }}>
             <option value="">Change access tier to...</option>
             {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` ┬╖ ${r.price}` : ""}</option>)}
@@ -10260,7 +10260,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
       )}
 
-      {/* ΓòÉΓòÉ DESKTOP TABLE ΓòÉΓòÉ */}
+      {/* ══ DESKTOP TABLE ══ */}
       <div className="users-table-desktop" style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
         {/* Header */}
         <div style={{ display: "grid", gridTemplateColumns: "36px 28px 2fr 1.6fr 110px 115px 85px 85px 145px", gap: 6, padding: "10px 16px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt, alignItems: "center" }}>
@@ -10277,7 +10277,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
         {/* FIX #30: skeleton on initial load, FIX #24: context-aware empty state */}
         {users.length === 0 && !userSearch && tierFilter === "All" ? (
-          // Initial load ΓÇö data hasn't arrived from Firestore yet
+          // Initial load — data hasn't arrived from Firestore yet
           <div>
             {[...Array(5)].map((_, i) => <SkeletonRow key={i} />)}
           </div>
@@ -10347,14 +10347,14 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
               <span style={{ fontSize: 11, color: T.textSecondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</span>
 
-              {/* FIX #19: tier badge has Γû╛ to signal it's clickable */}
+              {/* FIX #19: tier badge has  to signal it's clickable */}
               <div>
                 <button type="button"
                   onClick={e => { const rect = e.currentTarget.getBoundingClientRect(); setInlineTierUser({ user: u, x: rect.left, y: rect.bottom + 4 }); }}
                   title="Click to change tier"
                   style={{ fontSize: 10, fontWeight: 700, padding: "4px 9px", borderRadius: 7, background: badge.bg, color: badge.color, border: `1px solid ${badge.color}25`, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 3 }}>
                   {badge.label}{badge.price ? ` ┬╖ ${badge.price}` : ""}
-                  <span style={{ opacity: 0.6, fontSize: 9 }}>Γû╛</span>
+                  <span style={{ opacity: 0.6, fontSize: 9 }}></span>
                 </button>
               </div>
 
@@ -10367,21 +10367,21 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                     </div>
                     <span style={{ fontSize: 10, color: days <= AT_RISK_DAYS ? T.red : T.gold, fontWeight: 700 }}>{days > 0 ? `${days}d left` : "Expired"}</span>
                   </div>
-                ) : u.tier === "pro" ? <span style={{ fontSize: 10, color: T.green, fontWeight: 600 }}>Active Γ£ô</span>
-                  : u.tier === "enterprise" ? <span style={{ fontSize: 10, color: T.teal, fontWeight: 600 }}>Enterprise Γ£ô</span>
-                  : <span style={{ fontSize: 11, color: T.textMuted }}>ΓÇö</span>}
+                ) : u.tier === "pro" ? <span style={{ fontSize: 10, color: T.green, fontWeight: 600 }}>Active ✔</span>
+                  : u.tier === "enterprise" ? <span style={{ fontSize: 10, color: T.teal, fontWeight: 600 }}>Enterprise ✔</span>
+                  : <span style={{ fontSize: 11, color: T.textMuted }}>—</span>}
               </div>
 
               <div><div style={{ fontSize: 10, fontWeight: 700, color: lastActiveColor(u) }}>{lastActiveLabel(u)}</div></div>
 
               <div>
-                <div style={{ fontSize: 11, color: T.textSecondary }}>{(() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "short" }); } catch { return "ΓÇö"; } })()}</div>
+                <div style={{ fontSize: 11, color: T.textSecondary }}>{(() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "short" }); } catch { return "—"; } })()}</div>
                 <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>{timeSince(u.createdAt)}</div>
               </div>
 
               <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                 <button type="button" title="View profile [Enter]" onClick={() => { setDrawerUser(u); setDrawerTab("details"); }}
-                  style={{ height: 28, padding: "0 8px", borderRadius: 7, border: `1px solid ${T.gold}40`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>View ΓåÆ</button>
+                  style={{ height: 28, padding: "0 8px", borderRadius: 7, border: `1px solid ${T.gold}40`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>View →</button>
                 <button type="button" title="Edit user [E]" onClick={() => openEditUser(u)}
                   style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <EditIcon />
@@ -10396,7 +10396,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         })}
       </div>
 
-      {/* ΓòÉΓòÉ MOBILE CARD VIEW ΓÇö FIX #22: Edit, Tags, Suspend added ΓòÉΓòÉ */}
+      {/* ══ MOBILE CARD VIEW — FIX #22: Edit, Tags, Suspend added ══ */}
       <div className="users-table-mobile" style={{ flexDirection: "column", gap: 10 }}>
         {pagedUsers.length === 0 ? (
           <div style={{ textAlign: "center", padding: "40px 20px", background: T.surface, borderRadius: 16, border: `1px solid ${T.border}` }}>
@@ -10424,7 +10424,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
                 {[
                   { label: "Status", value: health.label, color: health.dot },
-                  { label: "Trial",  value: days !== null ? (days > 0 ? `${days}d left` : "Expired") : (u.tier === "pro" ? "Active" : "ΓÇö"), color: days !== null ? (days <= AT_RISK_DAYS ? T.red : T.gold) : T.green },
+                  { label: "Trial",  value: days !== null ? (days > 0 ? `${days}d left` : "Expired") : (u.tier === "pro" ? "Active" : "—"), color: days !== null ? (days <= AT_RISK_DAYS ? T.red : T.gold) : T.green },
                   { label: "Active", value: lastActiveLabel(u), color: lastActiveColor(u) },
                 ].map(s => (
                   <div key={s.label} style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
@@ -10435,7 +10435,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               </div>
               {/* FIX #22: all 9 actions available on mobile */}
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                <button type="button" onClick={() => { setDrawerUser(u); setDrawerTab("details"); }} style={{ flex: 1, minWidth: 60, padding: "8px", borderRadius: 8, border: `1px solid ${T.gold}40`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>View ΓåÆ</button>
+                <button type="button" onClick={() => { setDrawerUser(u); setDrawerTab("details"); }} style={{ flex: 1, minWidth: 60, padding: "8px", borderRadius: 8, border: `1px solid ${T.gold}40`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>View →</button>
                 <button type="button" onClick={() => openEditUser(u)} style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} title="Edit"><EditIcon /></button>
                 <button type="button" onClick={() => setTagUser(u)} style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid rgba(139,92,246,0.3)", background: "rgba(139,92,246,0.06)", color: "#8B5CF6", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }} title="Tags"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></button>
                 <button type="button" onClick={() => setConfirmSuspend(u)} style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.06)", color: "#F59E0B", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }} title={u.suspended ? "Unsuspend" : "Suspend"}>{u.suspended ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>}</button>
@@ -10447,19 +10447,19 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         })}
       </div>
 
-      {/* ΓòÉΓòÉ PAGINATION ΓÇö FIX #4 ΓòÉΓòÉ */}
+      {/* ══ PAGINATION — FIX #4 ══ */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, padding: "0 2px", flexWrap: "wrap", gap: 10 }}>
         {/* FIX #4: handle 0 results gracefully */}
         <span style={{ fontSize: 11, color: T.textMuted }}>
           {allFiltered.length === 0
             ? "No users shown"
-            : <>Showing <strong style={{ color: T.white }}>{(page - 1) * PAGE_SIZE + 1}ΓÇô{Math.min(page * PAGE_SIZE, allFiltered.length)}</strong> of <strong style={{ color: T.white }}>{allFiltered.length}</strong> users</>
+            : <>Showing <strong style={{ color: T.white }}>{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, allFiltered.length)}</strong> of <strong style={{ color: T.white }}>{allFiltered.length}</strong> users</>
           }
           {tierFilter !== "All" && <span style={{ color: T.gold }}> ┬╖ {tierFilter}</span>}
         </span>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <button type="button" onClick={() => setPage(1)} disabled={page === 1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === 1 ? T.textMuted : T.textSecondary, cursor: page === 1 ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>┬½</button>
-          <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === 1 ? T.textMuted : T.textSecondary, cursor: page === 1 ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>ΓÇ╣ Prev</button>
+          <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === 1 ? T.textMuted : T.textSecondary, cursor: page === 1 ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}> Prev</button>
           {Array.from({ length: Math.min(5, totalPages) }, (_, idx) => {
             const p = totalPages <= 5 ? idx + 1 : Math.max(1, Math.min(page - 2, totalPages - 4)) + idx;
             return (
@@ -10469,11 +10469,11 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               </button>
             );
           })}
-          <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>Next ΓÇ║</button>
+          <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>Next </button>
           <button type="button" onClick={() => setPage(totalPages)} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>┬╗</button>
           <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>Page {page} of {totalPages}</span>
         </div>
-        {/* FIX #16: MRR only shown once ΓÇö here at bottom */}
+        {/* FIX #16: MRR only shown once — here at bottom */}
         <span style={{ fontSize: 11, color: T.textMuted }}>
           MRR <span style={{ color: T.gold, fontWeight: 700 }}>AED {mrr}</span> ┬╖ Conv <span style={{ color: T.green, fontWeight: 700 }}>{convRate}%</span>
         </span>
@@ -10482,13 +10482,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   );
 }
 
-/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+/* ═══════════════════════════════════════════════════════
    CENTRAL AUDIT INFRASTRUCTURE
    - getAdminIP()   : cached IP fetch from ipify
    - _webhookUrl    : module-level webhook target (set from Firestore)
    - logAudit()     : single write point for ALL audit events
    - checkAlerts()  : suspicious-activity email trigger
-   ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+   ═══════════════════════════════════════════════════════ */
 
 let _cachedIP = null;
 async function getAdminIP() {
@@ -10536,25 +10536,25 @@ async function checkAlerts(db) {
         emailjs.send("service_da7nshv", "template_gl1xqhy", {
           user_email: adminEmail,
           user_name: "DXB Admin",
-          message: `ΓÜá SUSPICIOUS ACTIVITY: ${recent.length} tier changes in the last 5 minutes by ${adminEmail}. Please review the Audit Log immediately.`,
+          message: `⚡ SUSPICIOUS ACTIVITY: ${recent.length} tier changes in the last 5 minutes by ${adminEmail}. Please review the Audit Log immediately.`,
         }, "USkwUhp0csGCVDkdQ");
       }
     }
   } catch {}
 }
 
-/* ΓöÇΓöÇΓöÇ DATA CALENDAR (interactive, Firestore-persisted) ΓöÇΓöÇΓöÇ */
+/* ─── DATA CALENDAR (interactive, Firestore-persisted) ─── */
 function DataCalendar({ T, now }) {
   const [checked, setChecked] = useState({});
   const [loading, setLoading] = useState(true);
 
   const calendarItems = [
-    { id: "emaar_q1_2026",  event: "Emaar Q1 2026 Results",  due: "2026-04-15", note: "emaar.com ΓåÆ Investor Relations",     icon: "[=]", priority: "high"     },
+    { id: "emaar_q1_2026",  event: "Emaar Q1 2026 Results",  due: "2026-04-15", note: "emaar.com → Investor Relations",     icon: "[=]", priority: "high"     },
     { id: "market_q1_2026", event: "Dubai Market Report Q1", due: "2026-04-30", note: "DLD Open Data + DXBinteract",         icon: "", priority: "medium"   },
-    { id: "emaar_q2_2026",  event: "Emaar Q2 2026 Results",  due: "2026-07-15", note: "emaar.com ΓåÆ Investor Relations",     icon: "[=]", priority: "high"     },
+    { id: "emaar_q2_2026",  event: "Emaar Q2 2026 Results",  due: "2026-07-15", note: "emaar.com → Investor Relations",     icon: "[=]", priority: "high"     },
     { id: "market_q2_2026", event: "Dubai Market Report Q2", due: "2026-07-30", note: "DLD Open Data + DXBinteract",         icon: "", priority: "medium"   },
-    { id: "emaar_q3_2026",  event: "Emaar Q3 2026 Results",  due: "2026-10-15", note: "emaar.com ΓåÆ Investor Relations",     icon: "[=]", priority: "high"     },
-    { id: "emaar_fy_2026",  event: "Emaar FY 2026 Results",  due: "2027-02-15", note: "Annual results ΓÇö biggest of the year", icon: "", priority: "critical" },
+    { id: "emaar_q3_2026",  event: "Emaar Q3 2026 Results",  due: "2026-10-15", note: "emaar.com → Investor Relations",     icon: "[=]", priority: "high"     },
+    { id: "emaar_fy_2026",  event: "Emaar FY 2026 Results",  due: "2027-02-15", note: "Annual results — biggest of the year", icon: "", priority: "critical" },
   ];
 
   useEffect(() => {
@@ -10585,7 +10585,7 @@ function DataCalendar({ T, now }) {
         </div>
       </div>
       {loading ? (
-        <div style={{ padding: "30px 20px", textAlign: "center", fontSize: 11, color: T.textMuted }}>LoadingΓÇª</div>
+        <div style={{ padding: "30px 20px", textAlign: "center", fontSize: 11, color: T.textMuted }}>Loading</div>
       ) : calendarItems.map((item, i) => {
         const daysLeft = Math.ceil((new Date(item.due) - now) / (1000 * 60 * 60 * 24));
         const isPast   = daysLeft < 0;
@@ -10611,7 +10611,7 @@ function DataCalendar({ T, now }) {
               )}
               <button type="button" onClick={() => toggle(item.id)}
                 style={{ fontSize: 10, fontWeight: 700, padding: "4px 10px", borderRadius: 7, border: `1px solid ${isDone ? T.green : T.border}`, background: isDone ? `${T.green}15` : "transparent", color: isDone ? T.green : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}>
-                {isDone ? "Γ£ô Done" : "Mark done"}
+                {isDone ? "✔ Done" : "Mark done"}
               </button>
             </div>
           </div>
@@ -10621,13 +10621,13 @@ function DataCalendar({ T, now }) {
   );
 }
 
-/* ΓöÇΓöÇΓöÇ UPDATE CHECKLIST (interactive, Firestore-persisted) ΓöÇΓöÇΓöÇ */
+/* ─── UPDATE CHECKLIST (interactive, Firestore-persisted) ─── */
 function UpdateChecklist({ T }) {
   const steps = [
     { id: "s1", icon: "", text: "Go to emaar.com/investor-relations",   sub: "Download the latest quarterly PDF" },
     { id: "s2", icon: "[n]", text: "Update data.js",                        sub: "Revenue, profit, EBITDA, sales, backlog" },
     { id: "s3", icon: "", text: "Update construction %",               sub: "For projects nearing handover date" },
-    { id: "s4", icon: "Γî¿", text: "Run git commands",                     sub: "git add . ΓåÆ git commit -m msg ΓåÆ git push" },
+    { id: "s4", icon: "", text: "Run git commands",                     sub: "git add . → git commit -m msg → git push" },
     { id: "s5", icon: "", text: "Live in 3 minutes",                    sub: "Vercel deploys automatically on push" },
   ];
   const [checked, setChecked] = useState({});
@@ -10677,7 +10677,7 @@ function UpdateChecklist({ T }) {
         <div style={{ height: 3, width: `${(doneCount / steps.length) * 100}%`, background: allDone ? T.green : T.gold, transition: "width 0.4s ease, background 0.4s ease", borderRadius: "0 2px 2px 0" }} />
       </div>
       {loading ? (
-        <div style={{ padding: "30px 20px", textAlign: "center", fontSize: 11, color: T.textMuted }}>LoadingΓÇª</div>
+        <div style={{ padding: "30px 20px", textAlign: "center", fontSize: 11, color: T.textMuted }}>Loading</div>
       ) : (
         <div style={{ padding: "4px 0" }}>
           {steps.map((item, i) => {
@@ -10689,7 +10689,7 @@ function UpdateChecklist({ T }) {
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                 {/* Checkbox */}
                 <div style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${done ? T.green : T.border}`, background: done ? `${T.green}20` : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s" }}>
-                  {done && <span style={{ fontSize: 11, color: T.green, fontWeight: 900 }}>Γ£ô</span>}
+                  {done && <span style={{ fontSize: 11, color: T.green, fontWeight: 900 }}>✔</span>}
                 </div>
                 {/* Step number */}
                 <div style={{ width: 22, height: 22, borderRadius: 7, background: done ? `${T.green}15` : `${T.gold}15`, border: `1px solid ${done ? T.green : T.gold}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 900, color: done ? T.green : T.gold, flexShrink: 0 }}>{i + 1}</div>
@@ -10706,7 +10706,7 @@ function UpdateChecklist({ T }) {
         </div>
       )}
       <div style={{ margin: "0 16px 16px", padding: "10px 14px", borderRadius: 9, background: allDone ? `${T.green}10` : `${T.green}08`, border: `1px solid ${allDone ? T.green : T.green}20`, display: "flex", alignItems: "center", gap: 8, transition: "all 0.3s" }}>
-        <span style={{ fontSize: 16 }}>{allDone ? "" : "ΓÜí"}</span>
+        <span style={{ fontSize: 16 }}>{allDone ? "" : "⚡"}</span>
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, color: allDone ? T.green : T.green }}>{allDone ? "All done! Dashboard is live." : "Under 10 minutes total"}</div>
           <div style={{ fontSize: 10, color: T.textMuted }}>{allDone ? `${doneCount}/${steps.length} steps completed` : "From PDF download to live dashboard"}</div>
@@ -10734,17 +10734,17 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
     bulk_tier_change:  { label: "Bulk Tier Change",  color: "#8B5CF6",  icon: "" },
     project_update:    { label: "Project Updated",   color: T.blue,     icon: "" },
     project_rollback:  { label: "Version Rollback",  color: "#8B5CF6",  icon: "[<]" },
-    project_create:    { label: "Project Created",   color: T.green,    icon: "Γ£¿" },
+    project_create:    { label: "Project Created",   color: T.green,    icon: "✿" },
     community_update:  { label: "Community Updated", color: "#8B5CF6",  icon: "[c]" },
     tab_visibility:    { label: "Tab Visibility",    color: T.gold,     icon: "" },
     yield_update:      { label: "Yield Updated",     color: T.teal,     icon: "[^]" },
     role_change:       { label: "Role Changed",      color: T.red,      icon: "" },
     admin_login:       { label: "Admin Login",       color: T.green,    icon: "" },
     admin_logout:      { label: "Admin Logout",      color: T.textMuted,icon: "" },
-    user_created:      { label: "User Created",      color: T.teal,     icon: "Γ₧ò" },
+    user_created:      { label: "User Created",      color: T.teal,     icon: "📌" },
     user_deleted:      { label: "User Deleted",      color: T.red,      icon: "" },
-    user_suspended:    { label: "User Suspended",    color: T.orange,   icon: "ΓÅ╕" },
-    user_unsuspended:  { label: "User Unsuspended",  color: T.green,    icon: "Γû╢" },
+    user_suspended:    { label: "User Suspended",    color: T.orange,   icon: "" },
+    user_unsuspended:  { label: "User Unsuspended",  color: T.green,    icon: "▶" },
     eibor_update:      { label: "EIBOR Updated",     color: "#14B8A6",  icon: "[=]" },
     csv_export:        { label: "Export",            color: T.cyan,     icon: "" },
   };
@@ -10776,8 +10776,8 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
       const u = users.find(u => u.uid === l.uid);
       const userStr = u ? (u.name || u.email || l.uid || "") : (l.uid || "");
       const proj = emaarProjects.find(p => String(p.id) === String(l.projectId));
-      const detail = l.action === "tier_change" ? `${l.from} ΓåÆ ${l.to}`
-        : l.action === "bulk_tier_change" ? `${(l.uids||[]).length} users ΓåÆ ${l.newTier}`
+      const detail = l.action === "tier_change" ? `${l.from} → ${l.to}`
+        : l.action === "bulk_tier_change" ? `${(l.uids||[]).length} users → ${l.newTier}`
         : l.action?.includes("project") ? (proj?.name || l.projectId || "")
         : (l.tabId || l.communityKey || "");
       rows.push([time, action, by, ip, userStr, detail, l.from || "", l.to || l.newTier || ""]);
@@ -10831,7 +10831,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
 
 
   const timeAgo = ts => {
-    if (!ts) return "ΓÇö";
+    if (!ts) return "—";
     const diff = Date.now() - new Date(ts).getTime();
     const mins = Math.floor(diff/60000), hrs = Math.floor(diff/3600000), days = Math.floor(diff/86400000);
     if (mins < 1) return "just now";
@@ -10861,7 +10861,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
 
   return (
     <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden" }}>
-      {/* ΓöÇΓöÇ Header ΓöÇΓöÇ */}
+      {/* ── Header ── */}
       <div style={{ padding: "18px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>Audit Log</div>
@@ -10889,26 +10889,26 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
             style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: `${T.teal}12`, border: `1px solid ${T.teal}35`, borderRadius: 9, color: T.teal, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}
             onMouseEnter={e => { e.currentTarget.style.background = `${T.teal}22`; }}
             onMouseLeave={e => { e.currentTarget.style.background = `${T.teal}12`; }}>
-            Γåô CSV
+            ↑ CSV
           </button>
           {/* JSON export */}
           <button type="button" onClick={exportJSON}
             style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: `${T.purple}12`, border: `1px solid ${T.purple}35`, borderRadius: 9, color: T.purple, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}
             onMouseEnter={e => { e.currentTarget.style.background = `${T.purple}22`; }}
             onMouseLeave={e => { e.currentTarget.style.background = `${T.purple}12`; }}>
-            Γåô JSON
+            ↑ JSON
           </button>
           {/* Refresh */}
           <button type="button" onClick={fetchAuditLog}
             style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: `${T.gold}12`, border: `1px solid ${T.gold}35`, borderRadius: 9, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}
             onMouseEnter={e => { e.currentTarget.style.background = `${T.gold}22`; }}
             onMouseLeave={e => { e.currentTarget.style.background = `${T.gold}12`; }}>
-            Γå╗ Refresh
+             Refresh
           </button>
         </div>
       </div>
 
-      {/* ΓöÇΓöÇ Filter + Search ΓöÇΓöÇ */}
+      {/* ── Filter + Search ── */}
       <div style={{ padding: "12px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", background: `${T.surfaceAlt}` }}>
         {[
           { id: "all",     label: "All",             count: filterCounts.all     },
@@ -10939,7 +10939,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
         </div>
       </div>
 
-      {/* ΓöÇΓöÇ Empty State ΓöÇΓöÇ */}
+      {/* ── Empty State ── */}
       {auditLog.length === 0 && (
         <div style={{ padding: "60px 24px", textAlign: "center" }}>
           <div style={{ fontSize: 40, marginBottom: 14 }}></div>
@@ -10954,7 +10954,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
         </div>
       )}
 
-      {/* ΓöÇΓöÇ By Admin View ΓöÇΓöÇ */}
+      {/* ── By Admin View ── */}
       {auditViewMode === "byAdmin" && (
         <div style={{ maxHeight: 580, overflowY: "auto", padding: "16px 24px" }}>
           {(() => {
@@ -10988,7 +10988,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
         </div>
       )}
 
-      {/* ΓöÇΓöÇ By Action View ΓöÇΓöÇ */}
+      {/* ── By Action View ── */}
       {auditViewMode === "byAction" && (
         <div style={{ maxHeight: 580, overflowY: "auto", padding: "16px 24px" }}>
           {(() => {
@@ -10999,7 +10999,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
               actions[action].push(log);
             });
             return Object.entries(actions).sort((a, b) => b[1].length - a[1].length).map(([action, logs]) => {
-              const meta = actionMeta[action] || { label: action, color: T.textMuted, icon: "ΓÜÖ" };
+              const meta = actionMeta[action] || { label: action, color: T.textMuted, icon: "" };
               return (
                 <div key={action} style={{ marginBottom: 12, background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, overflow: "hidden" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderBottom: `1px solid ${T.border}`, background: `${meta.color}08` }}>
@@ -11013,7 +11013,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                     {logs.slice(0, 5).map((log, i) => (
                       <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: 10, color: T.textMuted }}>
                         <span>{log.changedBy || "Unknown"}</span>
-                        <span>{log.changedAt ? new Date(log.changedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "ΓÇö"}</span>
+                        <span>{log.changedAt ? new Date(log.changedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}</span>
                       </div>
                     ))}
                     {logs.length > 5 && <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", padding: "4px 0" }}>+ {logs.length - 5} more</div>}
@@ -11025,7 +11025,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
         </div>
       )}
 
-      {/* ΓöÇΓöÇ Timeline Feed ΓöÇΓöÇ */}
+      {/* ── Timeline Feed ── */}
       {auditViewMode === "timeline" && (
       <div style={{ maxHeight: 580, overflowY: "auto", padding: "8px 0" }}>
         {groups.map((group, gi) => (
@@ -11039,7 +11039,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
 
             {/* Events in this group */}
             {group.items.map(({ log, idx }) => {
-              const meta = actionMeta[log.action] || { label: log.action || "Unknown", color: T.textMuted, icon: "ΓÜÖ" };
+              const meta = actionMeta[log.action] || { label: log.action || "Unknown", color: T.textMuted, icon: "" };
               const isTier = log.action === "tier_change";
               const isBulk = log.action === "bulk_tier_change";
               const isProject = ["project_update","project_create"].includes(log.action);
@@ -11070,7 +11070,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                       </span>
                       <span style={{ fontSize: 10, color: T.textMuted }}>{timeAgo(log.changedAt)}</span>
                       <span style={{ fontSize: 9, color: T.textMuted }}>┬╖</span>
-                      <span style={{ fontSize: 10, color: T.textMuted }}>{log.changedAt ? new Date(log.changedAt).toLocaleString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : "ΓÇö"}</span>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>{log.changedAt ? new Date(log.changedAt).toLocaleString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : "—"}</span>
                       <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
                         {log.ip && log.ip !== "unknown" && (
                           <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: T.textMuted, fontFamily: "'Courier New', monospace" }}>
@@ -11100,14 +11100,14 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                           )}
                           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
                             <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${tierColor[log.from]||"#94A3B8"}18`, color: tierColor[log.from]||"#94A3B8", border: `1px solid ${tierColor[log.from]||"#94A3B8"}35` }}>
-                              {tierLabel[log.from]||log.from||"ΓÇö"}
+                              {tierLabel[log.from]||log.from||"—"}
                             </span>
-                            <span style={{ fontSize: 12, color: T.textMuted, fontWeight: 700 }}>ΓåÆ</span>
+                            <span style={{ fontSize: 12, color: T.textMuted, fontWeight: 700 }}>→</span>
                             <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${tierColor[log.to]||"#94A3B8"}18`, color: tierColor[log.to]||"#94A3B8", border: `1px solid ${tierColor[log.to]||"#94A3B8"}35` }}>
-                              {tierLabel[log.to]||log.to||"ΓÇö"}
+                              {tierLabel[log.to]||log.to||"—"}
                             </span>
                             {isClickable && (
-                              <span style={{ fontSize: 10, color: T.gold, fontWeight: 600, marginLeft: 4 }}>View profile ΓåÆ</span>
+                              <span style={{ fontSize: 10, color: T.gold, fontWeight: 600, marginLeft: 4 }}>View profile →</span>
                             )}
                           </div>
                         </div>
@@ -11155,9 +11155,9 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                                 {shown.map(([k,v]) => (
                                   <div key={k} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, background: "rgba(255,255,255,0.04)", padding: "4px 10px", borderRadius: 7, border: `1px solid ${T.border}` }}>
                                     <span style={{ color: T.textMuted, fontWeight: 700, fontSize: 10, textTransform: "uppercase" }}>{k}:</span>
-                                    <span style={{ color: "#F87171", textDecoration: "line-through", fontSize: 10 }}>{String(v.old||"ΓÇö").slice(0,20)}</span>
-                                    <span style={{ color: T.textMuted, fontSize: 10 }}>ΓåÆ</span>
-                                    <span style={{ color: "#4ADE80", fontSize: 10, fontWeight: 600 }}>{String(v.new||"ΓÇö").slice(0,20)}</span>
+                                    <span style={{ color: "#F87171", textDecoration: "line-through", fontSize: 10 }}>{String(v.old||"—").slice(0,20)}</span>
+                                    <span style={{ color: T.textMuted, fontSize: 10 }}>→</span>
+                                    <span style={{ color: "#4ADE80", fontSize: 10, fontWeight: 600 }}>{String(v.new||"—").slice(0,20)}</span>
                                   </div>
                                 ))}
                                 {entries.length > 4 && <span style={{ fontSize: 10, color: T.textMuted, padding: "4px 8px" }}>+{entries.length - 4} more fields</span>}
@@ -11175,7 +11175,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 5 }}>
                             {Object.entries(log.diff).slice(0,3).map(([k,v]) => (
                               <span key={k} style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", padding: "3px 8px", borderRadius: 5, color: T.textMuted }}>
-                                {k}: <span style={{ color: "#F87171", textDecoration: "line-through" }}>{String(v.old||"ΓÇö").slice(0,12)}</span> ΓåÆ <span style={{ color: "#4ADE80" }}>{String(v.new||"ΓÇö").slice(0,12)}</span>
+                                {k}: <span style={{ color: "#F87171", textDecoration: "line-through" }}>{String(v.old||"—").slice(0,12)}</span> → <span style={{ color: "#4ADE80" }}>{String(v.new||"—").slice(0,12)}</span>
                               </span>
                             ))}
                           </div>
@@ -11233,7 +11233,7 @@ export default function AdminPanel() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
-  /* ΓöÇΓöÇΓöÇ DATA MANAGER STATE ΓöÇΓöÇΓöÇ */
+  /* ─── DATA MANAGER STATE ─── */
   const [dataSubTab, setDataSubTab] = useState(() => {
     try { return localStorage.getItem("admin_dataSubTab") || "projects"; } catch { return "projects"; }
   }); // projects | communities | yields
@@ -11337,11 +11337,11 @@ export default function AdminPanel() {
   const [stalenessFilter, setStalenessFilter] = useState("all"); // all | fresh | stale30 | stale60 | stale90
   const [showDuplicatesModal, setShowDuplicatesModal] = useState(false);
 
-  /* ΓöÇΓöÇΓöÇ KYC VERIFICATION STATE ΓöÇΓöÇΓöÇ */
+  /* ─── KYC VERIFICATION STATE ─── */
   const [verifications, setVerifications] = useState([]);
   const [leads, setLeads] = useState([]);
   
-  /* ΓöÇΓöÇΓöÇ LEADS CRM STATE ΓöÇΓöÇΓöÇ */
+  /* ─── LEADS CRM STATE ─── */
   const [leadDrawer, setLeadDrawer] = useState(null); // lead object or null
   const [leadFilter, setLeadFilter] = useState(() => {
     try { return localStorage.getItem("admin_leadFilter") || "all"; } catch { return "all"; }
@@ -11433,7 +11433,7 @@ export default function AdminPanel() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [editingReport, setEditingReport] = useState(null);
 
-  /* ΓöÇΓöÇΓöÇ PERSIST TAB STATE ΓöÇΓöÇΓöÇ */
+  /* ─── PERSIST TAB STATE ─── */
   const isHydrated = React.useRef(false);
   
   // Mark as hydrated after initial mount
@@ -11495,14 +11495,14 @@ export default function AdminPanel() {
     try { localStorage.setItem("admin_leadFilter", leadFilter); } catch {}
   }, [leadFilter]);
 
-  /* ΓöÇΓöÇΓöÇ ESCAPE KEY ΓöÇΓöÇΓöÇ */
+  /* ─── ESCAPE KEY ─── */
   useEffect(() => {
     const handleKey = (e) => { if (e.key === "Escape") setSidebarOpen(false); };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  /* ΓöÇΓöÇΓöÇ AUTH ΓöÇΓöÇΓöÇ */
+  /* ─── AUTH ─── */
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       if (u) {
@@ -11511,7 +11511,7 @@ export default function AdminPanel() {
           const snap = await getDoc(doc(db, "users", u.uid));
           if (snap.exists() && snap.data().role === "admin") {
             setIsAdmin(true);
-            // Log admin login (best-effort ΓÇö audit infra may not be ready yet)
+            // Log admin login (best-effort — audit infra may not be ready yet)
             logAudit(db, { action: "admin_login", uid: u.uid }).catch(() => {});
           }
           else setIsAdmin(false);
@@ -11522,7 +11522,7 @@ export default function AdminPanel() {
     return () => unsub();
   }, []);
 
-  /* ΓöÇΓöÇΓöÇ FETCH USERS ΓöÇΓöÇΓöÇ */
+  /* ─── FETCH USERS ─── */
   const fetchUsers = useCallback(async () => {
     try {
       const snap = await getDocs(collection(db, "users"));
@@ -11532,7 +11532,7 @@ export default function AdminPanel() {
     } catch (e) { console.error("Fetch users:", e); }
   }, []);
 
-  // Real-time listener ΓÇö auto-updates table when any user doc changes
+  // Real-time listener — auto-updates table when any user doc changes
   useEffect(() => {
     if (!isAdmin) return;
     let unsub;
@@ -11549,7 +11549,7 @@ export default function AdminPanel() {
     return () => { if (unsub) unsub(); };
   }, [isAdmin]);
 
-  /* ΓöÇΓöÇΓöÇ FETCH LIVE DATA FROM FIRESTORE ΓöÇΓöÇΓöÇ */
+  /* ─── FETCH LIVE DATA FROM FIRESTORE ─── */
   const fetchLiveData = useCallback(async () => {
     try {
       // Fetch project overrides
@@ -11650,7 +11650,7 @@ export default function AdminPanel() {
     return () => { unsubs.forEach(u => { try { u(); } catch {} }); };
   }, [isAdmin]);
 
-  /* ΓöÇΓöÇΓöÇ FETCH KYC VERIFICATIONS ΓöÇΓöÇΓöÇ */
+  /* ─── FETCH KYC VERIFICATIONS ─── */
   const fetchVerifications = useCallback(async () => {
     try {
       const snap = await getDocs(collection(db, "verifications"));
@@ -11705,7 +11705,7 @@ export default function AdminPanel() {
     return () => { if (unsub) unsub(); };
   }, [isAdmin, fetchLeads]);
 
-  /* ΓöÇΓöÇΓöÇ FETCH AUDIT LOG ΓöÇΓöÇΓöÇ */
+  /* ─── FETCH AUDIT LOG ─── */
   const fetchAuditLog = useCallback(async () => {
     try {
       const q = query(collection(db, "auditLog"), orderBy("changedAt", "desc"), limit(100));
@@ -11724,7 +11724,7 @@ export default function AdminPanel() {
     }
   }, []);
 
-  // Real-time listener ΓÇö activity feed updates instantly on tier changes
+  // Real-time listener — activity feed updates instantly on tier changes
   useEffect(() => {
     if (!isAdmin) return;
     let unsub;
@@ -11748,7 +11748,7 @@ export default function AdminPanel() {
           if (keysDoc.exists()) setApiKeys(keysDoc.data().keys || []);
         } catch {}
       } catch (e) {
-        // index not ready ΓÇö fall back to polling every 10s
+        // index not ready — fall back to polling every 10s
         fetchAuditLog();
         const interval = setInterval(fetchAuditLog, 10000);
         unsub = () => clearInterval(interval);
@@ -11946,19 +11946,19 @@ export default function AdminPanel() {
     } catch (e) { notify("Error: " + e.message); }
   };
 
-  /* ΓöÇΓöÇΓöÇ USER STATS ΓöÇΓöÇΓöÇ */
-  /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-     DATA FOUNDATION ΓÇö Single source of truth
+  /* ─── USER STATS ─── */
+  /* ══════════════════════════════════════════════
+     DATA FOUNDATION — Single source of truth
      All calculations derived here once, used everywhere
-  ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+  ══════════════════════════════════════════════ */
 
-  // Single now reference ΓÇö all time comparisons use this exact moment
+  // Single now reference — all time comparisons use this exact moment
   const now = new Date();
   const todayStr = now.toDateString();
   const msPerDay = 86400000;
   const msPerWeek = 7 * msPerDay;
 
-  // ΓöÇΓöÇ USER COUNTS ΓöÇΓöÇ
+  // ── USER COUNTS ──
   const stats = {
     total:     users.length,
     today:     users.filter(u => { try { return new Date(u.createdAt).toDateString() === todayStr; } catch { return false; } }).length,
@@ -11975,22 +11975,22 @@ export default function AdminPanel() {
     activeThisWeek: users.filter(u => u.lastLoginAt && (now - new Date(u.lastLoginAt)) < msPerWeek).length,
   };
   stats.paid        = stats.pro + stats.enterprise;
-  stats.freeOnly    = stats.free;   // pure free ΓÇö never trialled
+  stats.freeOnly    = stats.free;   // pure free — never trialled
   stats.atRisk      = users.filter(u => { try { const d = trialDaysLeft(u); return d !== null && d <= 3 && d >= 0; } catch { return false; } }).length;
   stats.atRiskUsers = users.filter(u => { try { const d = trialDaysLeft(u); return d !== null && d <= 3 && d >= 0; } catch { return false; } });
 
-  // ΓöÇΓöÇ REVENUE ΓÇö single calculation, used everywhere ΓöÇΓöÇ
+  // ── REVENUE — single calculation, used everywhere ──
   const mrr  = (stats.pro * 99) + (stats.enterprise * 499);
   const arr  = mrr * 12;
   const arpu = stats.paid > 0 ? Math.round(mrr / stats.paid) : 0;       // per paying user
   const arpuAll = stats.total > 0 ? Math.round(mrr / stats.total) : 0;  // per all users
 
-  // ΓöÇΓöÇ TRIAL CONVERSION ΓÇö correct formula ΓöÇΓöÇ
+  // ── TRIAL CONVERSION — correct formula ──
   // denominator = everyone who ever started a trial (active + converted + expired)
   const everTrialled = stats.proTrial + stats.pro + stats.expired;
   const trialConversion = everTrialled > 0 ? Math.round((stats.pro / everTrialled) * 100) : 0;
 
-  // ΓöÇΓöÇ WEEK-OVER-WEEK TRENDS ΓöÇΓöÇ
+  // ── WEEK-OVER-WEEK TRENDS ──
   // Users who joined in the PREVIOUS 7-day window (7-14 days ago)
   const usersLastWeekTotal = users.filter(u => {
     try { const ms = now - new Date(u.createdAt); return ms >= msPerWeek && ms < msPerWeek * 2; } catch { return false; }
@@ -12007,15 +12007,15 @@ export default function AdminPanel() {
   })();
 
   const weekTrend = (current, previous) => {
-    if (previous === 0 && current === 0) return { pct: 0, dir: "flat", label: "ΓÇö" };
+    if (previous === 0 && current === 0) return { pct: 0, dir: "flat", label: "—" };
     if (previous === 0) return { pct: 100, dir: "up", label: `+${current} new` };
     const pct = Math.round(((current - previous) / previous) * 100);
-    return { pct: Math.abs(pct), dir: pct > 0 ? "up" : pct < 0 ? "down" : "flat", label: pct > 0 ? `Γåæ${Math.abs(pct)}%` : pct < 0 ? `Γåô${Math.abs(pct)}%` : "=" };
+    return { pct: Math.abs(pct), dir: pct > 0 ? "up" : pct < 0 ? "down" : "flat", label: pct > 0 ? `←${Math.abs(pct)}%` : pct < 0 ? `↑${Math.abs(pct)}%` : "=" };
   };
   const usersTrend  = weekTrend(stats.thisWeek, usersLastWeekTotal);
   const mrrTrend    = weekTrend(paidLastWeek.thisWeek, paidLastWeek.lastWeek);
 
-  // ΓöÇΓöÇ CHURN ΓÇö derived from auditLog ΓöÇΓöÇ
+  // ── CHURN — derived from auditLog ──
   // A churn event = tier_change where from is pro/enterprise and to is free/pro_trial
   const churnEvents = auditLog.filter(l =>
     l.action === "tier_change" &&
@@ -12037,7 +12037,7 @@ export default function AdminPanel() {
   }).reduce((sum, u) => sum + (u.tier === "enterprise" ? 499 : 99), 0);
   const netMRR = newMRRThisMonth - churnedMRR;
 
-  // ΓöÇΓöÇ PLATFORM HEALTH SCORE (0ΓÇô100) ΓöÇΓöÇ
+  // ── PLATFORM HEALTH SCORE (0–100) ──
   // Based on: conversion rate, at-risk %, active rate, churn
   const healthScore = (() => {
     let score = 100;
@@ -12056,12 +12056,12 @@ export default function AdminPanel() {
   const healthLabel = healthScore >= 80 ? "Excellent" : healthScore >= 60 ? "Good" : healthScore >= 40 ? "Needs Attention" : "Critical";
   const healthColor = healthScore >= 80 ? T.green : healthScore >= 60 ? T.gold : healthScore >= 40 ? "#F59E0B" : T.red;
 
-  // ΓöÇΓöÇ PENDING ITEMS (from other collections) ΓöÇΓöÇ
+  // ── PENDING ITEMS (from other collections) ──
   const pendingVerifications = verifications.filter(v => v.status === "pending").length;
   const newLeadsToday = leads.filter(l => { try { return new Date(l.createdAt).toDateString() === todayStr; } catch { return false; } }).length;
   const newLeadsThisWeek = leads.filter(l => { try { return (now - new Date(l.createdAt)) < msPerWeek; } catch { return false; } }).length;
 
-  // ΓöÇΓöÇ SIGNUP TIMELINE ΓÇö 14 days with last-week comparison ΓöÇΓöÇ
+  // ── SIGNUP TIMELINE — 14 days with last-week comparison ──
   const signupTimeline = (() => {
     const days = [];
     for (let i = 13; i >= 0; i--) {
@@ -12083,7 +12083,7 @@ export default function AdminPanel() {
   const signupLastWeek = signupTimeline.slice(-7).reduce((s, d) => s + d.lastWeek, 0);
   const signupTrend = weekTrend(signupThisWeek, signupLastWeek);
 
-  // ΓöÇΓöÇ TIER DISTRIBUTION ΓöÇΓöÇ
+  // ── TIER DISTRIBUTION ──
   const tierData = [
     { name: "Pro Trial", value: stats.proTrial, color: T.gold },
     { name: "Free",      value: stats.freeOnly, color: T.textMuted },
@@ -12092,7 +12092,7 @@ export default function AdminPanel() {
     { name: "Expired",   value: stats.expired,   color: T.red },
   ].filter(d => d.value > 0);
 
-  // ΓöÇΓöÇ MRR MOVEMENT (for chart) ΓöÇΓöÇ
+  // ── MRR MOVEMENT (for chart) ──
   const mrrMovement = [
     { label: "Start of Month", value: mrr - netMRR },
     { label: "New MRR",        value: newMRRThisMonth },
@@ -12100,7 +12100,7 @@ export default function AdminPanel() {
     { label: "Net MRR",        value: mrr },
   ];
 
-  // ΓöÇΓöÇ CUMULATIVE GROWTH ΓÇö used by Analytics tab ΓöÇΓöÇ
+  // ── CUMULATIVE GROWTH — used by Analytics tab ──
   const cumulativeData = (() => {
     const sorted = [...users].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
     return sorted.map((u, i) => {
@@ -12109,7 +12109,7 @@ export default function AdminPanel() {
     });
   })();
 
-  // ΓöÇΓöÇ REVENUE PROJECTION ΓÇö kept for Revenue tab, clearly labelled as estimate ΓöÇΓöÇ
+  // ── REVENUE PROJECTION — kept for Revenue tab, clearly labelled as estimate ──
   const projectedMRR = mrr + Math.round(stats.proTrial * 99 * (trialConversion / 100 || 0.3));
   const revenueProjection = [
     { month: "Now",   revenue: mrr },
@@ -12119,7 +12119,7 @@ export default function AdminPanel() {
     { month: "+6mo",  revenue: Math.round((mrr + projectedMRR) * 1.8) },
   ];
 
-  // ΓöÇΓöÇ CROSS-PLATFORM ACTIVITY FEED ΓöÇΓöÇ
+  // ── CROSS-PLATFORM ACTIVITY FEED ──
   // Combines users, auditLog, leads, verifications into one sorted feed
   const activityFeed = (() => {
     const items = [];
@@ -12143,7 +12143,7 @@ export default function AdminPanel() {
       items.push({
         type: isUpgrade ? "upgrade" : "downgrade",
         uid: l.uid, user: u,
-        time: l.changedAt, icon: isUpgrade ? "Γ¼å" : "Γ¼ç",
+        time: l.changedAt, icon: isUpgrade ? "" : "",
         label: `${u?.name || u?.email?.split("@")[0] || "User"} ${l.to === "free" ? "downgraded to free" : l.from === "free" || l.from === "pro_trial" ? "upgraded to" : "downgraded to"} ${l.to}`,
         sub: isUpgrade ? l.to : l.to, color: isUpgrade ? T.green : T.red,
       });
@@ -12169,7 +12169,7 @@ export default function AdminPanel() {
       .slice(0, 10);
   })();
 
-  /* ΓöÇΓöÇΓöÇ DATA MANAGER ACTIONS ΓöÇΓöÇΓöÇ */
+  /* ─── DATA MANAGER ACTIONS ─── */
   
   
   const uploadProjectImage = async (projectId, file) => {
@@ -12283,9 +12283,9 @@ export default function AdminPanel() {
     notify("Columns reset to default");
   };
   
-  // ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  // ═══════════════════════════════════════
   // DATA QUALITY SCORE SYSTEM
-  // ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  // ═══════════════════════════════════════
   
   // Quality weights for each field (total = 100)
   const QUALITY_WEIGHTS = {
@@ -12353,9 +12353,9 @@ export default function AdminPanel() {
     };
   };
   
-  // ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  // ═══════════════════════════════════════
   // DATA INTELLIGENCE & AUTOMATION
-  // ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  // ═══════════════════════════════════════
   
   // Calculate data staleness for a project
   const calculateStaleness = (project) => {
@@ -12555,7 +12555,7 @@ export default function AdminPanel() {
     } catch(e) { notify("Error: " + e.message); }
   };
 
-  /* ΓöÇΓöÇΓöÇ VERSION HISTORY ΓöÇΓöÇΓöÇ */
+  /* ─── VERSION HISTORY ─── */
   const fetchProjectVersions = async (projectId) => {
     try {
       const snap = await getDocs(collection(db, "projectVersions"));
@@ -12588,7 +12588,7 @@ export default function AdminPanel() {
         rolledBackTo: version.savedAt,
         changedBy: adminUser?.email || "admin"
       });
-      notify("Rolled back successfully ΓÇö changes are live");
+      notify("Rolled back successfully — changes are live");
       setViewingVersions(null);
       fetchLiveData();
       fetchProjectVersions(projectId);
@@ -12607,7 +12607,7 @@ export default function AdminPanel() {
     if (data.unitsAvail && data.unitsTotal && Number(data.unitsAvail) > Number(data.unitsTotal)) errors.push("Available units (" + data.unitsAvail + ") cannot exceed total units (" + data.unitsTotal + ")");
     if (data.construction !== undefined && data.construction !== "" && (Number(data.construction) < 0 || Number(data.construction) > 100)) errors.push("Construction % must be between 0 and 100");
     if (data.ratingOverride !== undefined && data.ratingOverride !== "" && (Number(data.ratingOverride) < 0 || Number(data.ratingOverride) > 10)) errors.push("Rating override must be between 0 and 10");
-    // Duplicate name check ΓÇö warn only (not block) for new projects
+    // Duplicate name check — warn only (not block) for new projects
     return errors;
   };
 
@@ -12628,7 +12628,7 @@ export default function AdminPanel() {
       try {
         const oldDoc = liveProjects[projectId] || {};
         const diff = {};
-        Object.keys(clean).forEach(k => { if (k !== "updatedAt" && k !== "updatedBy" && clean[k] !== oldDoc[k]) diff[k] = { old: oldDoc[k] ?? "ΓÇö", new: clean[k] }; });
+        Object.keys(clean).forEach(k => { if (k !== "updatedAt" && k !== "updatedBy" && clean[k] !== oldDoc[k]) diff[k] = { old: oldDoc[k] ?? "—", new: clean[k] }; });
         await logAudit(db, { action: "project_update", projectId, changes: clean, diff });
         // Save full version snapshot for rollback
         const p = emaarProjects.find(x => String(x.id) === String(projectId));
@@ -12696,7 +12696,7 @@ export default function AdminPanel() {
     setDataSaving(false);
   };
 
-  /* ΓöÇΓöÇΓöÇ BULK PRICE UPDATE ΓöÇΓöÇΓöÇ */
+  /* ─── BULK PRICE UPDATE ─── */
   const handleBulkPriceUpdate = async ({ changeType, priceChange }) => {
     if (bulkSelected.length === 0) { notify("No projects selected"); return; }
     setBulkLoading(true);
@@ -12748,7 +12748,7 @@ export default function AdminPanel() {
     setBulkLoading(false);
   };
 
-  /* ΓöÇΓöÇΓöÇ ADD MANUAL PRICE HISTORY ENTRY ΓöÇΓöÇΓöÇ */
+  /* ─── ADD MANUAL PRICE HISTORY ENTRY ─── */
   const addManualPriceHistory = async (entry) => {
     try {
       await setDoc(doc(db, "priceHistory", entry.projectId + "_" + Date.now()), {
@@ -12761,7 +12761,7 @@ export default function AdminPanel() {
   };
 
   const resetProjectData = async (projectId) => {
-    if (!window.confirm(`ΓÜá RESET PROJECT DATA: ${projectId}\n\nThis will:\nΓÇó Remove all live Firestore overrides for this project\nΓÇó Dashboard will revert to default data.js values\nΓÇó Any custom prices, units, or details you edited will be lost\n\nContinue?`)) return;
+    if (!window.confirm(`⚡ RESET PROJECT DATA: ${projectId}\n\nThis will:\n• Remove all live Firestore overrides for this project\n• Dashboard will revert to default data.js values\n• Any custom prices, units, or details you edited will be lost\n\nContinue?`)) return;
     try {
       await deleteDoc(doc(db, "projectData", projectId));
       notify("Reset to defaults");
@@ -12770,7 +12770,7 @@ export default function AdminPanel() {
   };
 
   const resetCommunityROI = async (key) => {
-    if (!window.confirm(`ΓÜá RESET COMMUNITY ROI: ${key}\n\nThis will:\nΓÇó Remove all live yield/ROI overrides for this community\nΓÇó Dashboard will show default values from data.js\nΓÇó Any custom gross/net yield or rental data will be lost\n\nContinue?`)) return;
+    if (!window.confirm(`⚡ RESET COMMUNITY ROI: ${key}\n\nThis will:\n• Remove all live yield/ROI overrides for this community\n• Dashboard will show default values from data.js\n• Any custom gross/net yield or rental data will be lost\n\nContinue?`)) return;
     try {
       await deleteDoc(doc(db, "communityROI", key));
       notify("Reset to defaults");
@@ -12802,7 +12802,7 @@ export default function AdminPanel() {
     } catch (e) { notify("Error: " + e.message); }
   };
 
-  /* ΓöÇΓöÇΓöÇ COMBINED COMMUNITY SAVE (ROI + INTEL) ΓöÇΓöÇΓöÇ */
+  /* ─── COMBINED COMMUNITY SAVE (ROI + INTEL) ─── */
   const saveCombinedCommunity = async (communityKey, roiData, intelData) => {
     setDataSaving(true);
     try {
@@ -12826,14 +12826,14 @@ export default function AdminPanel() {
       }
       
       await logAudit(db, { action: "community_combined_update", communityKey }).catch(() => {});
-      notify("Community data saved ΓåÆ Live on dashboard");
+      notify("Community data saved → Live on dashboard");
       fetchLiveData();
     } catch (e) { notify("Error: " + e.message); }
     setDataSaving(false);
   };
 
   const resetCombinedCommunity = async (key) => {
-    if (!window.confirm("ΓÜá RESET COMMUNITY: " + key + "\n\nThis will remove ALL custom data (yields, rents, lifestyle info) and revert to data.js defaults.\n\nContinue?")) return;
+    if (!window.confirm("⚡ RESET COMMUNITY: " + key + "\n\nThis will remove ALL custom data (yields, rents, lifestyle info) and revert to data.js defaults.\n\nContinue?")) return;
     try {
       await deleteDoc(doc(db, "communityROI", key));
       await deleteDoc(doc(db, "communityIntel", key));
@@ -12846,7 +12846,7 @@ export default function AdminPanel() {
   const getMergedProject = (p) => ({ ...p, ...(liveProjects[p.id] || {}) });
   const getMergedROI = (key) => ({ ...(defaultCommunityROI[key] || {}), ...(liveCommunityROI[key] || {}) });
 
-  /* ΓöÇΓöÇΓöÇ ACTIONS ΓöÇΓöÇΓöÇ */
+  /* ─── ACTIONS ─── */
   const changeTier = async (uid, tier) => {
     try {
       const data = { tier };
@@ -12955,7 +12955,7 @@ export default function AdminPanel() {
         emailVerified: false,
       });
       await logAudit(db, { action: "user_created", uid: cred.user.uid, userName: addUserForm.name.trim(), userEmail: addUserForm.email.trim(), tier: addUserForm.tier || "free" });
-      notify(`User "${addUserForm.name}" created ΓÇö admin session preserved`);
+      notify(`User "${addUserForm.name}" created — admin session preserved`);
       setShowAddUser(false);
       setAddUserForm({ name: "", email: "", password: "", phone: "", country: "", tier: "free", role: "user", notes: "" });
       fetchUsers();
@@ -12979,12 +12979,12 @@ export default function AdminPanel() {
     setDataSaving(true);
     try {
       const newId = "custom_" + Date.now();
-      // Write to BOTH collections ΓÇö projectData for dashboard, projects for reference
+      // Write to BOTH collections — projectData for dashboard, projects for reference
       const projectDoc = { ...form, id: newId, createdAt: new Date().toISOString(), createdBy: adminUser?.email, updatedAt: new Date().toISOString(), updatedBy: adminUser?.email, isCustom: true };
       await setDoc(doc(db, "projectData", String(newId)), projectDoc);
       await setDoc(doc(db, "projects", String(newId)), projectDoc);
       await logAudit(db, { action: "project_create", projectId: newId, changes: form });
-      notify("Project added ΓÇö live on dashboard!");
+      notify("Project added — live on dashboard!");
       setEditingProject(null);
       setProjectForm({});
       fetchLiveData();
@@ -12992,7 +12992,7 @@ export default function AdminPanel() {
     setDataSaving(false);
   };
 
-  /* ΓöÇΓöÇΓöÇ CSV IMPORT PRO SYSTEM ΓöÇΓöÇΓöÇ */
+  /* ─── CSV IMPORT PRO SYSTEM ─── */
   const IMPORT_FIELDS = [
     { key: "id", label: "Project ID", required: true, type: "text" },
     { key: "name", label: "Project Name", required: true, type: "text" },
@@ -13227,7 +13227,7 @@ export default function AdminPanel() {
 
   const exportCSV = () => {
     const headers = "Name,Email,Tier,Trial Status,Signed Up\n";
-    const rows = users.map(u => `${u.name || ""},${u.email || ""},${u.tier || "free"},${u.trialEnd ? (new Date(u.trialEnd) > now ? "Active" : "Expired") : "ΓÇö"},${u.createdAt || ""}`).join("\n");
+    const rows = users.map(u => `${u.name || ""},${u.email || ""},${u.tier || "free"},${u.trialEnd ? (new Date(u.trialEnd) > now ? "Active" : "Expired") : "—"},${u.createdAt || ""}`).join("\n");
     const blob = new Blob([headers + rows], { type: "text/csv" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `dxb-users-${now.toISOString().slice(0, 10)}.csv`; a.click();
     notify("CSV exported");
@@ -13235,7 +13235,7 @@ export default function AdminPanel() {
 
   const notify = (msg) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
 
-  /* ΓöÇΓöÇΓöÇ KPI DRILL-DOWN MODAL ΓöÇΓöÇΓöÇ */
+  /* ─── KPI DRILL-DOWN MODAL ─── */
   const KpiDrillModal = () => {
     if (!kpiDrill) return null;
     const { title, color, subtitle, items, chart, actions } = kpiDrill;
@@ -13308,7 +13308,7 @@ export default function AdminPanel() {
     try {
       const ms = now - new Date(d); const m = Math.floor(ms / 60000); const h = Math.floor(ms / 3600000); const dy = Math.floor(ms / 86400000);
       if (m < 1) return "Just now"; if (m < 60) return `${m}m ago`; if (h < 24) return `${h}h ago`; return `${dy}d ago`;
-    } catch { return "ΓÇö"; }
+    } catch { return "—"; }
   };
 
   const trialDaysLeft = (u) => {
@@ -13326,7 +13326,7 @@ export default function AdminPanel() {
     return { label: "Free", bg: "rgba(148,163,184,0.1)", color: T.textMuted };
   };
 
-  /* ΓöÇΓöÇΓöÇ LOADING ΓöÇΓöÇΓöÇ */
+  /* ─── LOADING ─── */
   if (loading) return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
       <style>{css}</style>
@@ -13348,12 +13348,12 @@ export default function AdminPanel() {
       </svg>
       <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: T.white }}>Admin Access Required</h1>
       <p style={{ color: T.textSecondary, fontSize: 13 }}>You don't have permission to access this page.</p>
-      <a href="/" style={{ color: T.gold, fontSize: 13, textDecoration: "none", padding: "10px 24px", border: `1px solid ${T.gold}`, borderRadius: 10, fontWeight: 600, transition: "all 0.2s" }}>ΓåÉ Back to Dashboard</a>
+      <a href="/" style={{ color: T.gold, fontSize: 13, textDecoration: "none", padding: "10px 24px", border: `1px solid ${T.gold}`, borderRadius: 10, fontWeight: 600, transition: "all 0.2s" }}> Back to Dashboard</a>
     </div>
   );
 
-  /* ΓöÇΓöÇΓöÇ REUSABLE COMPONENTS ΓöÇΓöÇΓöÇ */
-  /* ΓöÇΓöÇΓöÇ TABS CONFIG ΓöÇΓöÇΓöÇ */
+  /* ─── REUSABLE COMPONENTS ─── */
+  /* ─── TABS CONFIG ─── */
   const TABS = [
     { id: "overview", label: "Overview", icon: I.overview },
     { id: "auditlog", label: "Audit Log", icon: I.overview },
@@ -13371,9 +13371,9 @@ export default function AdminPanel() {
     { id: "tabcontrol", label: "Tab Control", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="18" height="4" rx="1"/><line x1="7" y1="5" x2="7" y2="5"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="7" y1="19" x2="7" y2="19"/></svg> },
   ];
 
-  /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  /* ═══════════════════════════════════════
      RENDER
-     ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+     ═══════════════════════════════════════ */
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit',sans-serif", color: T.textPrimary }}>
       <style>{css}</style>
@@ -13389,7 +13389,7 @@ export default function AdminPanel() {
                 <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{`Cohort: ${cohortDrilldown.cohortLabel} ┬╖ Week ${cohortDrilldown.weekNum}`}</div>
                 <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{`${cohortDrilldown.users.length} users retained`}</div>
               </div>
-              <button type="button" onClick={() => setCohortDrilldown(null)} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>Γ£ò</button>
+              <button type="button" onClick={() => setCohortDrilldown(null)} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}></button>
             </div>
             <div style={{ maxHeight: 400, overflowY: "auto" }}>
               {cohortDrilldown.users.map((u, i) => (
@@ -13409,7 +13409,7 @@ export default function AdminPanel() {
               ))}
               <button type="button" onClick={() => { setCohortDrilldown(null); setTab("users"); }}
                 style={{ width: "100%", marginTop: 16, padding: "10px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                View All in Users Tab ΓåÆ
+                View All in Users Tab →
               </button>
             </div>
           </div>
@@ -13420,7 +13420,7 @@ export default function AdminPanel() {
       {/* Mobile overlay */}
       <div className={`mobile-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
 
-      {/* ΓöÇΓöÇΓöÇ SIDEBAR (matching dashboard exactly) ΓöÇΓöÇΓöÇ */}
+      {/* ─── SIDEBAR (matching dashboard exactly) ─── */}
       <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`} style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 240, background: T.surface, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", zIndex: 100, transition: "transform 0.3s ease" }}>
         {/* Logo */}
         <div style={{ padding: "24px 20px 20px", borderBottom: `1px solid ${T.border}` }}>
@@ -13468,7 +13468,7 @@ export default function AdminPanel() {
         </div>
       </aside>
 
-      {/* ΓöÇΓöÇΓöÇ MAIN CONTENT ΓöÇΓöÇΓöÇ */}
+      {/* ─── MAIN CONTENT ─── */}
       <main dir={dir} className="admin-main" style={{ marginLeft: 240, minHeight: "100vh" }}>
         {/* Top bar (matching dashboard) */}
         <header className="admin-topbar" style={{ position: "sticky", top: 0, zIndex: 20, height: 60, background: `${T.surface}ee`, backdropFilter: "blur(16px)", borderBottom: `1px solid ${T.border}`, padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -13489,7 +13489,7 @@ export default function AdminPanel() {
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 6 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, animation: "pulse 2s infinite" }} />
-              <span style={{ fontSize: 11, fontWeight: 600, color: T.green }}>ΓùÅ LIVE</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: T.green }}> LIVE</span>
             </div>
             <div style={{ background: T.surfaceAlt, borderRadius: 10, padding: "6px 12px", border: `1px solid ${T.border}` }}>
               <span style={{ fontSize: 10, color: T.textMuted }}>MRR </span>
@@ -13530,19 +13530,19 @@ export default function AdminPanel() {
 
         <div style={{ padding: "28px 28px 60px" }}>
 
-          {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+          {/* ═══════════════════════════════════════
              OVERVIEW TAB
-             ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+             ═══════════════════════════════════════ */}
           {tab === "overview" && (
             <>
 
-              {/* ΓòÉΓòÉ OVERVIEW TOPBAR ΓÇö health + alerts + actions in one row ΓòÉΓòÉ */}
+              {/* ══ OVERVIEW TOPBAR — health + alerts + actions in one row ══ */}
               {(() => {
                 const urgentAlerts = [
                   stats.atRisk > 0 && { key: "atrisk", color: T.red, icon: "", label: `${stats.atRisk} at risk`, action: () => {
                     stats.atRiskUsers.forEach(u => {
                       const days = trialDaysLeft(u);
-                      emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `ΓÜá Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`, new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {});
+                      emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `⚡ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`, new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {});
                     });
                     notify(`Sent ${stats.atRisk} at-risk emails`);
                   }},
@@ -13555,14 +13555,14 @@ export default function AdminPanel() {
                 return (
                   <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 18, flexWrap: "wrap" }}>
 
-                    {/* Health indicator ΓÇö left */}
+                    {/* Health indicator — left */}
                     <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 14, borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
                       <div style={{ width: 8, height: 8, borderRadius: "50%", background: healthColor, boxShadow: `0 0 6px ${healthColor}` }} />
                       <span style={{ fontSize: 12, fontWeight: 700, color: healthColor }}>{healthLabel}</span>
                       <span style={{ fontSize: 11, color: T.textMuted }}>┬╖ Score {healthScore}</span>
                     </div>
 
-                    {/* Alert chips ΓÇö center, only shown if issues exist */}
+                    {/* Alert chips — center, only shown if issues exist */}
                     <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, flexWrap: "wrap" }}>
                       {urgentAlerts.length === 0 ? (
                         <span style={{ fontSize: 11, color: T.textMuted }}>No urgent items</span>
@@ -13586,14 +13586,14 @@ export default function AdminPanel() {
                       <button type="button" onClick={() => { fetchUsers(); fetchLeads(); fetchVerifications(); fetchAuditLog(); notify("Refreshed"); }}
                         style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
                         title="Refresh all data">
-                        Γå╗
+                        
                       </button>
                     </div>
 
                   </div>
                 );
               })()}
-              {/* ΓòÉΓòÉ STEP 3 ΓÇö KPI CARDS WITH TRENDS ΓòÉΓòÉ */}
+              {/* ══ STEP 3 — KPI CARDS WITH TRENDS ══ */}
               <div style={{ marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                   <div style={{ borderLeft: `3px solid ${T.gold}`, paddingLeft: 14 }}>
@@ -13603,7 +13603,7 @@ export default function AdminPanel() {
                 </div>
                 <div className="kpi-grid-overview" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10 }}>
 
-                  {/* 1 ΓÇö MRR */}
+                  {/* 1 — MRR */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.00s", cursor: "pointer" }} onClick={() => setKpiDrill({
                     title: "MRR Breakdown", color: T.green,
                     subtitle: `Monthly Recurring Revenue ┬╖ ARR: AED ${arr.toLocaleString()}`,
@@ -13624,13 +13624,13 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>ARR: AED {arr.toLocaleString()}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 5 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: mrrTrend.dir === "up" ? T.green : mrrTrend.dir === "down" ? T.red : T.textMuted }}>
-                        {mrrTrend.dir === "up" ? "Γåæ" : mrrTrend.dir === "down" ? "Γåô" : "ΓÇö"} {mrrTrend.label}
+                        {mrrTrend.dir === "up" ? "←" : mrrTrend.dir === "down" ? "↑" : "—"} {mrrTrend.label}
                       </span>
                       <span style={{ fontSize: 9, color: T.textMuted }}>vs last week</span>
                     </div>
                   </div>
 
-                  {/* 2 ΓÇö Total Users */}
+                  {/* 2 — Total Users */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.04s", cursor: "pointer" }} onClick={() => setKpiDrill({
                     title: "Total Users Breakdown", color: T.gold,
                     subtitle: `${stats.total} registered accounts ┬╖ ${stats.today} joined today`,
@@ -13651,14 +13651,14 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>+{stats.today} today</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 5 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: usersTrend.dir === "up" ? T.green : usersTrend.dir === "down" ? T.red : T.textMuted }}>
-                        {usersTrend.dir === "up" ? "Γåæ" : usersTrend.dir === "down" ? "Γåô" : "ΓÇö"} {usersTrend.label}
+                        {usersTrend.dir === "up" ? "←" : usersTrend.dir === "down" ? "↑" : "—"} {usersTrend.label}
                       </span>
                       <span style={{ fontSize: 9, color: T.textMuted }}>vs last week</span>
                     </div>
-                    <div style={{ fontSize: 9, color: T.gold, marginTop: 4, opacity: 0.7 }}>click to view ΓåÆ</div>
+                    <div style={{ fontSize: 9, color: T.gold, marginTop: 4, opacity: 0.7 }}>click to view →</div>
                   </div>
 
-                  {/* 3 ΓÇö Paid Users */}
+                  {/* 3 — Paid Users */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.08s", cursor: "pointer" }} onClick={() => setKpiDrill({
                     title: "Paid Users Breakdown", color: T.teal,
                     subtitle: `${stats.paid} paying accounts ┬╖ AED ${mrr.toLocaleString()} MRR`,
@@ -13667,7 +13667,7 @@ export default function AdminPanel() {
                       { label: "Pro (AED 99/mo)", value: stats.pro, note: `AED ${(stats.pro * 99).toLocaleString()} MRR` },
                       { label: "Enterprise (AED 499/mo)", value: stats.enterprise, note: `AED ${(stats.enterprise * 499).toLocaleString()} MRR`, color: T.gold },
                       { label: "Conversion Rate", value: `${stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0}%`, note: "Paid ├╖ Total Users" },
-                      { label: "Trial ΓåÆ Paid Rate", value: `${trialConversion}%`, note: "Of all who ever trialled" },
+                      { label: "Trial → Paid Rate", value: `${trialConversion}%`, note: "Of all who ever trialled" },
                       { label: "ARPU (paying users)", value: `AED ${arpu}`, color: T.teal },
                     ],
                     actions: [
@@ -13683,20 +13683,20 @@ export default function AdminPanel() {
                       <span style={{ fontSize: 10, fontWeight: 700, color: T.teal }}>{stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0}%</span>
                       <span style={{ fontSize: 9, color: T.textMuted }}>conversion rate</span>
                     </div>
-                    <div style={{ fontSize: 9, color: T.teal, marginTop: 4, opacity: 0.7 }}>click to view ΓåÆ</div>
+                    <div style={{ fontSize: 9, color: T.teal, marginTop: 4, opacity: 0.7 }}>click to view →</div>
                   </div>
 
-                  {/* 4 ΓÇö Active Trials */}
+                  {/* 4 — Active Trials */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.12s", cursor: "pointer" }} onClick={() => setKpiDrill({
                     title: "Active Trials Breakdown", color: T.gold,
                     subtitle: `${stats.proTrial} users on 7-day Pro Trial`,
                     items: [
                       { label: "Active Trials", value: stats.proTrial, color: T.gold },
-                      { label: "At Risk (Γëñ3 days left)", value: stats.atRisk, color: stats.atRisk > 0 ? T.red : T.textMuted, note: stats.atRisk > 0 ? "Need immediate attention" : "None at risk" },
+                      { label: "At Risk (3 days left)", value: stats.atRisk, color: stats.atRisk > 0 ? T.red : T.textMuted, note: stats.atRisk > 0 ? "Need immediate attention" : "None at risk" },
                       { label: "Expiring in 7 days", value: users.filter(u => u.tier === "pro_trial" && u.trialEnd && trialDaysLeft(u) >= 0 && trialDaysLeft(u) <= 7).length, color: T.gold },
                       { label: "Expired (not converted)", value: stats.expired, color: stats.expired > 0 ? T.red : T.textMuted },
-                      { label: "Trial ΓåÆ Paid conversion", value: `${trialConversion}%`, note: `${stats.pro} converted of ${everTrialled} ever trialled` },
-                      { label: "Avg days left (active)", value: (() => { const active = users.filter(u => u.tier === "pro_trial"); if (!active.length) return "ΓÇö"; const avg = active.reduce((s, u) => s + Math.max(0, trialDaysLeft(u)), 0) / active.length; return `${Math.round(avg)} days`; })() },
+                      { label: "Trial → Paid conversion", value: `${trialConversion}%`, note: `${stats.pro} converted of ${everTrialled} ever trialled` },
+                      { label: "Avg days left (active)", value: (() => { const active = users.filter(u => u.tier === "pro_trial"); if (!active.length) return "—"; const avg = active.reduce((s, u) => s + Math.max(0, trialDaysLeft(u)), 0) / active.length; return `${Math.round(avg)} days`; })() },
                     ],
                     actions: [
                       { label: `Email All ${stats.atRisk} At-Risk`, color: T.red, fn: () => { stats.atRiskUsers.forEach(u => { const days = trialDaysLeft(u); emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`, new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {}); }); notify(`Sent ${stats.atRisk} at-risk emails`); } },
@@ -13710,12 +13710,12 @@ export default function AdminPanel() {
                       {stats.atRisk > 0 ? `${stats.atRisk} at risk` : "No at-risk trials"}
                     </div>
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{stats.expired} expired</div>
-                    <div style={{ fontSize: 9, color: T.gold, marginTop: 4, opacity: 0.7 }}>click to view ΓåÆ</div>
+                    <div style={{ fontSize: 9, color: T.gold, marginTop: 4, opacity: 0.7 }}>click to view →</div>
                   </div>
 
-                  {/* 5 ΓÇö Trial Conversion */}
+                  {/* 5 — Trial Conversion */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.16s", cursor: "pointer" }} onClick={() => setKpiDrill({
-                    title: "Trial ΓåÆ Paid Conversion", color: "#3B82F6",
+                    title: "Trial → Paid Conversion", color: "#3B82F6",
                     subtitle: "How effectively trials convert to paying users",
                     items: [
                       { label: "Conversion Rate", value: `${trialConversion}%`, color: "#3B82F6" },
@@ -13729,7 +13729,7 @@ export default function AdminPanel() {
                     actions: [{ label: "View Expired Trials", color: "#3B82F6", fn: () => { setTab("users"); setTierFilter("Expired"); } }]
                   })}>
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "#3B82F6", opacity: 0.7, borderRadius: "16px 16px 0 0" }} />
-                    <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Trial ΓåÆ Paid</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Trial → Paid</div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: "#3B82F6", lineHeight: 1 }}>{trialConversion}%</div>
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{stats.pro} converted</div>
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{stats.expired} expired</div>
@@ -13738,7 +13738,7 @@ export default function AdminPanel() {
                     </div>
                   </div>
 
-                  {/* 6 ΓÇö ARPU */}
+                  {/* 6 — ARPU */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.20s", cursor: "pointer" }} onClick={() => setKpiDrill({
                     title: "ARPU Breakdown", color: "#8B5CF6",
                     subtitle: "Average Revenue Per User",
@@ -13748,7 +13748,7 @@ export default function AdminPanel() {
                       { label: "Enterprise ARPU", value: "AED 499", note: "Per enterprise user/mo" },
                       { label: "Pro ARPU", value: "AED 99", note: "Per pro user/mo" },
                       { label: "LTV estimate (12mo)", value: `AED ${(arpu * 12).toLocaleString()}`, note: "ARPU ├ù 12 months", color: "#8B5CF6" },
-                      { label: "To reach AED 10K MRR", value: (() => { if (arpu === 0) return "ΓÇö"; const needed = Math.ceil((10000 - mrr) / arpu); return needed > 0 ? `${needed} more paid users` : "Already exceeded"; })(), note: "At current ARPU" },
+                      { label: "To reach AED 10K MRR", value: (() => { if (arpu === 0) return "—"; const needed = Math.ceil((10000 - mrr) / arpu); return needed > 0 ? `${needed} more paid users` : "Already exceeded"; })(), note: "At current ARPU" },
                     ],
                   })}>
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "#8B5CF6", opacity: 0.7, borderRadius: "16px 16px 0 0" }} />
@@ -13758,7 +13758,7 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>AED {arpuAll} all users</div>
                   </div>
 
-                  {/* 7 ΓÇö Active Today */}
+                  {/* 7 — Active Today */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.24s", cursor: "pointer" }} onClick={() => setKpiDrill({
                     title: "User Activity", color: T.teal,
                     subtitle: "Login and engagement metrics",
@@ -13768,7 +13768,7 @@ export default function AdminPanel() {
                       { label: "Daily Active Rate", value: `${stats.total > 0 ? Math.round((stats.activeToday / stats.total) * 100) : 0}%`, note: "Today ├╖ total users" },
                       { label: "Weekly Active Rate", value: `${stats.total > 0 ? Math.round((stats.activeThisWeek / stats.total) * 100) : 0}%`, note: "7-day ├╖ total users" },
                       { label: "Never Logged In", value: users.filter(u => !u.lastLoginAt).length, color: users.filter(u => !u.lastLoginAt).length > 0 ? "#F59E0B" : T.textMuted, note: "Registered but never signed in" },
-                      { label: "Industry DAU/MAU Benchmark", value: "~15ΓÇô20%", color: T.textMuted, note: "Healthy SaaS range" },
+                      { label: "Industry DAU/MAU Benchmark", value: "~15–20%", color: T.textMuted, note: "Healthy SaaS range" },
                     ],
                     actions: [{ label: "View Active Users", color: T.teal, fn: () => setTab("users") }]
                   })}>
@@ -13777,19 +13777,19 @@ export default function AdminPanel() {
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.teal, lineHeight: 1 }}>{stats.activeToday}</div>
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{stats.activeThisWeek} this week</div>
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{stats.total > 0 ? Math.round((stats.activeToday / stats.total) * 100) : 0}% of all users</div>
-                    <div style={{ fontSize: 9, color: T.teal, marginTop: 4, opacity: 0.7 }}>click to view ΓåÆ</div>
+                    <div style={{ fontSize: 9, color: T.teal, marginTop: 4, opacity: 0.7 }}>click to view →</div>
                   </div>
 
                 </div>
               </div>
 
-              {/* ΓòÉΓòÉ STEP 4 ΓÇö THREE CHARTS ΓòÉΓòÉ */}
+              {/* ══ STEP 4 — THREE CHARTS ══ */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Growth & Distribution</div>
 
               {/* Row 1: Signup Timeline (wide) + Tier Donut (narrow) */}
               <div className="charts-row-overview" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 14, marginBottom: 14 }}>
 
-                {/* Chart 1 ΓÇö Signup Timeline with last-week comparison */}
+                {/* Chart 1 — Signup Timeline with last-week comparison */}
                 <div className="chart-box fade-up" style={{ padding: 20 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
                     <div>
@@ -13806,7 +13806,7 @@ export default function AdminPanel() {
                         <span style={{ color: T.textMuted }}>Last week</span>
                       </div>
                       <div style={{ padding: "3px 10px", borderRadius: 6, background: signupTrend.dir === "up" ? "rgba(16,185,129,0.1)" : signupTrend.dir === "down" ? "rgba(239,68,68,0.1)" : T.surfaceAlt, fontSize: 11, fontWeight: 700, color: signupTrend.dir === "up" ? T.green : signupTrend.dir === "down" ? T.red : T.textMuted }}>
-                        {signupTrend.dir === "up" ? "Γåæ" : signupTrend.dir === "down" ? "Γåô" : ""} {signupThisWeek} vs {signupLastWeek} last week
+                        {signupTrend.dir === "up" ? "←" : signupTrend.dir === "down" ? "↑" : ""} {signupThisWeek} vs {signupLastWeek} last week
                       </div>
                     </div>
                   </div>
@@ -13822,7 +13822,7 @@ export default function AdminPanel() {
                   </ResponsiveContainer>
                 </div>
 
-                {/* Chart 2 ΓÇö Tier Donut with total in centre, clickable slices */}
+                {/* Chart 2 — Tier Donut with total in centre, clickable slices */}
                 <div className="chart-box fade-up" style={{ padding: 20 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Tier Distribution</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Click a slice to filter users</div>
@@ -13864,7 +13864,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* ΓòÉΓòÉ STEP 5 ΓÇö CROSS-PLATFORM ACTIVITY FEED ΓòÉΓòÉ */}
+              {/* ══ STEP 5 — CROSS-PLATFORM ACTIVITY FEED ══ */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Live Activity</div>
               <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
@@ -13924,11 +13924,11 @@ export default function AdminPanel() {
                 )}
               </div>
 
-              {/* ΓòÉΓòÉ USER INTELLIGENCE + GEO ΓòÉΓòÉ */}
+              {/* ══ USER INTELLIGENCE + GEO ══ */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>User Intelligence</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 24 }} className="charts-row-overview">
 
-                {/* Needs Attention ΓÇö trial users expiring */}
+                {/* Needs Attention — trial users expiring */}
                 <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: `1px solid ${T.border}` }}>
                     <div>
@@ -13947,7 +13947,7 @@ export default function AdminPanel() {
                       .sort((a, b) => a.daysLeft - b.daysLeft);
                     if (expiring.length === 0) return (
                       <div style={{ padding: "28px 18px", textAlign: "center" }}>
-                        <div style={{ fontSize: 22, color: T.green, marginBottom: 6 }}>Γ£ô</div>
+                        <div style={{ fontSize: 22, color: T.green, marginBottom: 6 }}>✔</div>
                         <div style={{ fontSize: 12, color: T.textMuted }}>No trials expiring soon</div>
                       </div>
                     );
@@ -13980,7 +13980,7 @@ export default function AdminPanel() {
                   })()}
                 </div>
 
-                {/* Free users ΓÇö conversion opportunity */}
+                {/* Free users — conversion opportunity */}
                 <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", animationDelay: "0.05s" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: `1px solid ${T.border}` }}>
                     <div>
@@ -14019,7 +14019,7 @@ export default function AdminPanel() {
                             <button type="button"
                               onClick={e => {
                                 e.stopPropagation();
-                                emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: "Start Your Free Pro Trial", new_value: "Try all Pro features free for 7 days ΓÇö no credit card needed.", old_value: "Free Plan", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").then(() => notify(`Email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
+                                emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: "Start Your Free Pro Trial", new_value: "Try all Pro features free for 7 days — no credit card needed.", old_value: "Free Plan", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").then(() => notify(`Email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
                               }}
                               style={{ fontSize: 10, fontWeight: 700, color: T.teal, background: `${T.teal}10`, border: `1px solid ${T.teal}30`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
                               Invite
@@ -14049,7 +14049,7 @@ export default function AdminPanel() {
                     if (sorted.length === 0) return (
                       <div style={{ textAlign: "center", padding: "24px 0" }}>
                         <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 4 }}>No country data yet</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>Country is collected on email signup ΓÇö Google sign-ins may not have it</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>Country is collected on email signup — Google sign-ins may not have it</div>
                       </div>
                     );
                     return (
@@ -14079,7 +14079,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* ΓòÉΓòÉ STEP 7 ΓÇö CHURN & RETENTION PANEL ΓòÉΓòÉ */}
+              {/* ══ STEP 7 — CHURN & RETENTION PANEL ══ */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Churn & Retention</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 24 }} className="charts-row-overview">
 
@@ -14139,7 +14139,7 @@ export default function AdminPanel() {
                   </div>
                   {churnEvents.length === 0 ? (
                     <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 12 }}>
-                      <div style={{ fontSize: 28, marginBottom: 8, color: T.green, opacity: 0.7 }}>Γ£ô</div>
+                      <div style={{ fontSize: 28, marginBottom: 8, color: T.green, opacity: 0.7 }}>✔</div>
                       No churn events recorded
                     </div>
                   ) : (
@@ -14149,7 +14149,7 @@ export default function AdminPanel() {
                           <div>
                             <div style={{ fontSize: 12, color: T.white, fontWeight: 600 }}>{(() => { const u = users.find(x => x.uid === ev.uid || x.uid === ev.userId); return ev.userName || ev.userEmail || u?.name || u?.email || ev.uid?.slice(0,8) || "Unknown"; })()}</div>
                             <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>
-                              <span style={{ color: T.red, fontWeight: 600 }}>{ev.from}</span> ΓåÆ <span style={{ color: T.textSecondary }}>{ev.to}</span>
+                              <span style={{ color: T.red, fontWeight: 600 }}>{ev.from}</span> → <span style={{ color: T.textSecondary }}>{ev.to}</span>
                             </div>
                           </div>
                           <span style={{ fontSize: 10, color: T.textMuted, flexShrink: 0 }}>{timeSince(ev.changedAt)}</span>
@@ -14163,7 +14163,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* ΓòÉΓòÉ ARPU TREND ΓòÉΓòÉ */}
+              {/* ══ ARPU TREND ══ */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Revenue Trend</div>
               <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 24 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
@@ -14207,7 +14207,7 @@ export default function AdminPanel() {
                       if (userChanges.length > 0) {
                         tierAtMonth = userChanges[0].newTier;
                       } else {
-                        // No changes recorded ΓÇö use current tier if they existed
+                        // No changes recorded — use current tier if they existed
                         // If it's the current month use current tier, otherwise assume they started as pro_trial
                         tierAtMonth = m === 0 ? u.tier : "pro_trial";
                       }
@@ -14231,7 +14231,7 @@ export default function AdminPanel() {
 
                   if (!hasData) return (
                     <div style={{ textAlign: "center", padding: "40px 0", color: T.textMuted, fontSize: 12 }}>
-                      No revenue data yet ΓÇö will populate as users upgrade to paid plans
+                      No revenue data yet — will populate as users upgrade to paid plans
                     </div>
                   );
 
@@ -14302,7 +14302,7 @@ export default function AdminPanel() {
                         {[
                           { label: "Current MRR", value: `AED ${mrr.toLocaleString()}`, color: T.green },
                           { label: "Current ARPU", value: `AED ${arpu}`, color: "#8B5CF6" },
-                          { label: "MRR Growth", value: (() => { const prev = monthData[monthData.length - 2]?.mrr || 0; if (!prev) return "ΓÇö"; const g = Math.round(((mrr - prev) / prev) * 100); return `${g >= 0 ? "+" : ""}${g}%`; })(), color: (() => { const prev = monthData[monthData.length - 2]?.mrr || 0; if (!prev) return T.textMuted; return mrr >= prev ? T.green : T.red; })() },
+                          { label: "MRR Growth", value: (() => { const prev = monthData[monthData.length - 2]?.mrr || 0; if (!prev) return "—"; const g = Math.round(((mrr - prev) / prev) * 100); return `${g >= 0 ? "+" : ""}${g}%`; })(), color: (() => { const prev = monthData[monthData.length - 2]?.mrr || 0; if (!prev) return T.textMuted; return mrr >= prev ? T.green : T.red; })() },
                           { label: "Projected ARR", value: `AED ${arr.toLocaleString()}`, color: T.gold },
                         ].map((s, i) => (
                           <div key={i} style={{ textAlign: "center" }}>
@@ -14316,7 +14316,7 @@ export default function AdminPanel() {
                 })()}
               </div>
 
-              {/* ΓòÉΓòÉ TRIAL EXPIRY + CONVERSION FUNNEL ΓòÉΓòÉ */}
+              {/* ══ TRIAL EXPIRY + CONVERSION FUNNEL ══ */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Trial Pipeline</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }} className="charts-row-overview">
 
@@ -14360,10 +14360,10 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* Expired ΓÇö never converted */}
+                {/* Expired — never converted */}
                 <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.05s" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2 }}>Expired ΓÇö Not Converted</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2 }}>Expired — Not Converted</div>
                     <span style={{ fontSize: 10, color: stats.expired > 0 ? T.red : T.green, fontWeight: 700, background: stats.expired > 0 ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)", padding: "2px 8px", borderRadius: 20 }}>{stats.expired} total</span>
                   </div>
                   {(() => {
@@ -14373,7 +14373,7 @@ export default function AdminPanel() {
                       .slice(0, 5);
                     if (expired.length === 0) return (
                       <div style={{ textAlign: "center", padding: "24px 0" }}>
-                        <div style={{ fontSize: 22, color: T.green, marginBottom: 6 }}>Γ£ô</div>
+                        <div style={{ fontSize: 22, color: T.green, marginBottom: 6 }}>✔</div>
                         <div style={{ fontSize: 12, color: T.textMuted }}>No expired trials yet</div>
                       </div>
                     );
@@ -14395,7 +14395,7 @@ export default function AdminPanel() {
                             <button type="button"
                               onClick={e => {
                                 e.stopPropagation();
-                                emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: "Come Back ΓÇö Special Offer", new_value: "Your trial ended but we'd love to have you back. Contact us for a special rate.", old_value: "Expired Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").then(() => notify(`Win-back email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
+                                emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: "Come Back — Special Offer", new_value: "Your trial ended but we'd love to have you back. Contact us for a special rate.", old_value: "Expired Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").then(() => notify(`Win-back email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
                               }}
                               style={{ fontSize: 10, fontWeight: 700, color: T.red, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
                               Win-back
@@ -14411,15 +14411,15 @@ export default function AdminPanel() {
             </>
           )}
 
-          {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+          {/* ═══════════════════════════════════════
              USERS TAB
-             ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+             ═══════════════════════════════════════ */}
           {tab === "users" && <UsersTab users={users} filteredUsers={filteredUsers} fetchUsers={fetchUsers} changeTier={changeTier} deleteUser={deleteUser} suspendUser={suspendUser} sendResetEmail={sendResetEmail} extendTrial={extendTrial} openEditUser={openEditUser} saveEditUser={saveEditUser} editingUser={editingUser} setEditingUser={setEditingUser} editUserForm={editUserForm} setEditUserForm={setEditUserForm} editUserLoading={editUserLoading} showAddUser={showAddUser} setShowAddUser={setShowAddUser} addUserForm={addUserForm} setAddUserForm={setAddUserForm} addUserManually={addUserManually} addUserLoading={addUserLoading} exportCSV={exportCSV} userSearch={userSearch} setUserSearch={setUserSearch} tierFilter={tierFilter} setTierFilter={setTierFilter} notify={notify} db={db} T={T} I={I} trialDaysLeft={trialDaysLeft} timeSince={timeSince} pendingOpenUid={pendingOpenUid} setPendingOpenUid={setPendingOpenUid} onDrawerChange={setDrawerOpen} auditLog={auditLog} showBulkImport={showBulkImport} setShowBulkImport={setShowBulkImport} bulkImportData={bulkImportData} setBulkImportData={setBulkImportData} bulkImportLoading={bulkImportLoading} setBulkImportLoading={setBulkImportLoading} />}
 
           
               {tab === "auditlog" && (() => {
 
-                  // ΓöÇΓöÇ STATS ΓöÇΓöÇ
+                  // ── STATS ──
                   const thisWeek = auditLog.filter(l => {
                     try { return (Date.now() - new Date(l.changedAt).getTime()) < 7 * 24 * 60 * 60 * 1000; } catch { return false; }
                   }).length;
@@ -14427,7 +14427,7 @@ export default function AdminPanel() {
                   const bulkActions    = auditLog.filter(l => l.action === "bulk_tier_change").length;
                   const projectUpdates = auditLog.filter(l => ["project_update","project_create"].includes(l.action)).length;
 
-                  // ΓöÇΓöÇ 7-DAY SPARKLINE ΓöÇΓöÇ
+                  // ── 7-DAY SPARKLINE ──
                   const last7 = Array.from({length:7}, (_,i) => {
                     const d = new Date(); d.setDate(d.getDate() - (6-i));
                     const day = d.toDateString();
@@ -14435,7 +14435,7 @@ export default function AdminPanel() {
                   });
                   const maxDay = Math.max(...last7.map(d=>d.count), 1);
 
-                  // ΓöÇΓöÇ 30-DAY ACTIVITY DATA ΓöÇΓöÇ
+                  // ── 30-DAY ACTIVITY DATA ──
                   const last30 = Array.from({ length: 30 }, (_, i) => {
                     const d = new Date(); d.setDate(d.getDate() - (29 - i));
                     const day = d.toDateString();
@@ -14446,7 +14446,7 @@ export default function AdminPanel() {
 
                   return (
                     <>
-                      {/* ΓòÉΓòÉ STATS TOPBAR ΓòÉΓòÉ */}
+                      {/* ══ STATS TOPBAR ══ */}
                       <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 24, overflow: "hidden" }}>
                         <button type="button" onClick={fetchAuditLog} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "10px 14px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 18px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
@@ -14479,11 +14479,11 @@ export default function AdminPanel() {
                         </div>
                       </div>
 
-                      {/* ΓòÉΓòÉ 30-DAY ACTIVITY CHART ΓòÉΓòÉ */}
+                      {/* ══ 30-DAY ACTIVITY CHART ══ */}
                       <div className="chart-box fade-up" style={{ marginBottom: 24, padding: "16px 20px 12px" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                           <div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Activity ΓÇö Last 30 Days</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Activity — Last 30 Days</div>
                             <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{auditLog.length} total events ┬╖ {last30.filter(d => d.count > 0).length} active days</div>
                           </div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>
@@ -14505,19 +14505,19 @@ export default function AdminPanel() {
                         </div>
                       </div>
 
-                      {/* ΓòÉΓòÉ SECTION LABEL ΓòÉΓòÉ */}
+                      {/* ══ SECTION LABEL ══ */}
                       <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 12 }}>Data Update Calendar</div>
 
-                      {/* ΓòÉΓòÉ CALENDAR + CHECKLIST ΓòÉΓòÉ */}
+                      {/* ══ CALENDAR + CHECKLIST ══ */}
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
                         <DataCalendar T={T} now={now} />
                         <UpdateChecklist T={T} />
                       </div>
 
-                      {/* ΓòÉΓòÉ SECTION LABEL ΓòÉΓòÉ */}
+                      {/* ══ SECTION LABEL ══ */}
                       <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 12 }}>Action History</div>
 
-                      {/* ΓòÉΓòÉ AUDIT LOG TABLE ΓòÉΓòÉ */}
+                      {/* ══ AUDIT LOG TABLE ══ */}
                       <AuditLogTable
                         auditLog={auditLog}
                         users={users}
@@ -14528,7 +14528,7 @@ export default function AdminPanel() {
                         T={T}
                       />
 
-                      {/* ΓòÉΓòÉ AUDIT SETTINGS PANEL ΓòÉΓòÉ */}
+                      {/* ══ AUDIT SETTINGS PANEL ══ */}
                       <div style={{ marginTop: 28 }}>
                         <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 14 }}>Audit Settings & Integrations</div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
@@ -14554,7 +14554,7 @@ export default function AdminPanel() {
                               } catch(e) {}
                             }}
                               style={{ width: "100%", padding: "7px 0", borderRadius: 8, border: `1px solid ${auditRetentionSaved ? T.green : T.border}`, background: auditRetentionSaved ? `${T.green}15` : "transparent", color: auditRetentionSaved ? T.green : T.textSecondary, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                              {auditRetentionSaved ? "Γ£ô Saved" : "Save Policy"}
+                              {auditRetentionSaved ? "✔ Saved" : "Save Policy"}
                             </button>
                           </div>
 
@@ -14575,7 +14575,7 @@ export default function AdminPanel() {
                               } catch(e) {}
                             }}
                               style={{ width: "100%", padding: "7px 0", borderRadius: 8, border: `1px solid ${auditWebhookSaved ? T.green : T.border}`, background: auditWebhookSaved ? `${T.green}15` : "transparent", color: auditWebhookSaved ? T.green : T.textSecondary, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                              {auditWebhookSaved ? "Γ£ô Webhook Active" : "Save Webhook"}
+                              {auditWebhookSaved ? "✔ Webhook Active" : "Save Webhook"}
                             </button>
                             <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>Compatible: Splunk HEC ┬╖ Datadog ┬╖ Azure Event Hub ┬╖ custom endpoints</div>
                           </div>
@@ -14599,14 +14599,14 @@ export default function AdminPanel() {
                               } catch(e) {}
                             }}
                               style={{ width: "100%", padding: "7px 0", borderRadius: 8, border: `1px solid ${auditAlertSaved ? T.green : T.border}`, background: auditAlertSaved ? `${T.green}15` : "transparent", color: auditAlertSaved ? T.green : T.textSecondary, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                              {auditAlertSaved ? "Γ£ô Threshold Set" : "Save Threshold"}
+                              {auditAlertSaved ? "✔ Threshold Set" : "Save Threshold"}
                             </button>
                             <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>Alert sent via EmailJS to {adminUser?.email || "admin"}</div>
                           </div>
                         </div>
                       </div>
 
-                      {/* ΓòÉΓòÉ REST API PANEL ΓòÉΓòÉ */}
+                      {/* ══ REST API PANEL ══ */}
                       <div style={{ marginTop: 20 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                           <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5 }}>REST API</div>
@@ -14622,7 +14622,7 @@ export default function AdminPanel() {
                           {/* API Key Generator */}
                           <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.gold}30`, padding: "18px 20px" }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, marginBottom: 4 }}> Generate API Key</div>
-                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 12 }}>Keys authenticate external systems. Each key is hashed ΓÇö shown once only.</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 12 }}>Keys authenticate external systems. Each key is hashed — shown once only.</div>
 
                             <input value={apiKeyLabel} onChange={e => setApiKeyLabel(e.target.value)}
                               placeholder="Label e.g. Splunk Integration"
@@ -14650,17 +14650,17 @@ export default function AdminPanel() {
                               setApiKeyGenerating(false);
                             }}
                               style={{ width: "100%", padding: "9px 0", borderRadius: 9, border: `1px solid ${T.gold}40`, background: `${T.gold}12`, color: T.gold, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                              {apiKeyGenerating ? "Generating..." : "Γ£ª Generate New Key"}
+                              {apiKeyGenerating ? "Generating..." : " Generate New Key"}
                             </button>
 
                             {newApiKey && (
                               <div style={{ marginTop: 12, padding: "12px 14px", borderRadius: 10, background: `${T.green}08`, border: `1px solid ${T.green}30` }}>
-                                <div style={{ fontSize: 10, fontWeight: 700, color: T.green, marginBottom: 6 }}>ΓÜá Copy now ΓÇö not shown again</div>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: T.green, marginBottom: 6 }}>⚡ Copy now — not shown again</div>
                                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                                   <div style={{ flex: 1, fontSize: 9, fontFamily: "'Courier New', monospace", color: T.white, wordBreak: "break-all", lineHeight: 1.4, background: T.surfaceAlt, padding: "6px 8px", borderRadius: 6 }}>{newApiKey}</div>
                                   <button type="button" onClick={() => { navigator.clipboard.writeText(newApiKey); setApiKeyCopied(true); setTimeout(() => setApiKeyCopied(false), 2000); }}
                                     style={{ padding: "6px 10px", borderRadius: 7, border: `1px solid ${apiKeyCopied ? T.green : T.border}`, background: apiKeyCopied ? `${T.green}15` : T.surfaceAlt, color: apiKeyCopied ? T.green : T.textSecondary, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700, flexShrink: 0 }}>
-                                    {apiKeyCopied ? "Γ£ô" : "Copy"}
+                                    {apiKeyCopied ? "✔" : "Copy"}
                                   </button>
                                 </div>
                               </div>
@@ -14696,7 +14696,7 @@ export default function AdminPanel() {
                           <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "18px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 2 }}> API Reference</div>
                             {[
-                              { method: "GET", path: "/health", auth: false, desc: "Health check ΓÇö no auth required" },
+                              { method: "GET", path: "/health", auth: false, desc: "Health check — no auth required" },
                               { method: "GET", path: "/logs", auth: true, desc: "Fetch events. Params: from, to, action, actor, ip, limit, offset, format=csv" },
                               { method: "GET", path: "/stats", auth: true, desc: "Summary counts by action, today, this week, IP tracked, unique actors" },
                               { method: "POST", path: "/apikey", auth: true, desc: "Generate a new API key. Body: { label, revokeHash }" },
@@ -14738,18 +14738,18 @@ export default function AdminPanel() {
                   logAudit(db, { action: "tab_view", tabId: "revenue" }).catch(() => {});
                 }
 
-                // ΓöÇΓöÇ CHURN RATE % ΓöÇΓöÇ
+                // ── CHURN RATE % ──
                 const churnRate = (() => {
                   const base = stats.paid + churnThisMonth.length;
                   return base > 0 ? parseFloat(((churnThisMonth.length / base) * 100).toFixed(1)) : 0;
                 })();
 
-                // ΓöÇΓöÇ LTV BY TIER ΓöÇΓöÇ
+                // ── LTV BY TIER ──
                 const proLTV     = churnRate > 0 ? Math.round(99  / (churnRate / 100)) : 99  * 24;
                 const entLTV     = churnRate > 0 ? Math.round(499 / (churnRate / 100)) : 499 * 24;
                 const blendedLTV = stats.paid > 0 ? Math.round((stats.pro * proLTV + stats.enterprise * entLTV) / stats.paid) : 0;
 
-                // ΓöÇΓöÇ MRR HISTORY (6 actual + 3 projected) ΓöÇΓöÇ
+                // ── MRR HISTORY (6 actual + 3 projected) ──
                 const revHistory = (() => {
                   const months = [];
                   for (let m = 5; m >= 0; m--) {
@@ -14787,12 +14787,12 @@ export default function AdminPanel() {
                   return Math.round(((curr - prev) / prev) * 100);
                 })();
 
-                // ΓöÇΓöÇ TRIAL PIPELINE BUCKETS ΓöÇΓöÇ
+                // ── TRIAL PIPELINE BUCKETS ──
                 const pipeline = (() => {
                   const buckets = [
-                    { label: "1ΓÇô2 days", color: T.red,     min: 0, max: 2,   users: [] },
-                    { label: "3ΓÇô5 days", color: "#F59E0B", min: 3, max: 5,   users: [] },
-                    { label: "6ΓÇô7 days", color: T.gold,    min: 6, max: 7,   users: [] },
+                    { label: "1–2 days", color: T.red,     min: 0, max: 2,   users: [] },
+                    { label: "3–5 days", color: "#F59E0B", min: 3, max: 5,   users: [] },
+                    { label: "6–7 days", color: T.gold,    min: 6, max: 7,   users: [] },
                     { label: "8+ days",  color: T.teal,    min: 8, max: 999, users: [] },
                   ];
                   users.filter(u => u.tier === "pro_trial").forEach(u => {
@@ -14805,12 +14805,12 @@ export default function AdminPanel() {
                 })();
                 const totalPipeline = pipeline.reduce((s, b) => s + b.value, 0);
 
-                // ΓöÇΓöÇ PAYING USERS TABLE ΓöÇΓöÇ
+                // ── PAYING USERS TABLE ──
                 const payingUsers = [...users]
                   .filter(u => u.tier === "pro" || u.tier === "enterprise")
                   .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
-                // ΓöÇΓöÇ MILESTONES ΓöÇΓöÇ
+                // ── MILESTONES ──
                 const milestones = [1000, 5000, 10000, 50000, 100000].map(target => ({
                   target,
                   label: `AED ${target >= 1000 ? (target / 1000).toFixed(0) + "K" : target}`,
@@ -14822,7 +14822,7 @@ export default function AdminPanel() {
 
                 return (
                   <>
-                    {/* ΓòÉΓòÉ SECTION 1 ΓÇö REVENUE HEALTH TOPBAR ΓòÉΓòÉ */}
+                    {/* ══ SECTION 1 — REVENUE HEALTH TOPBAR ══ */}
                     <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, flexWrap: "wrap" }}>
                       <button type="button" onClick={() => { fetchUsers(); fetchAuditLog(); window._revenuePaymentsLoaded = false; notify("Revenue refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, marginRight: 8 }}>{I.refresh}</button>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 14, borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
@@ -14854,17 +14854,17 @@ export default function AdminPanel() {
                       )}
                     </div>
 
-                    {/* ΓòÉΓòÉ SECTION 2 ΓÇö MRR MOVEMENT + BREAKDOWN + LTV ΓòÉΓòÉ */}
+                    {/* ══ SECTION 2 — MRR MOVEMENT + BREAKDOWN + LTV ══ */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Revenue Breakdown</div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 20 }} className="charts-row-overview">
 
                       {/* MRR Movement */}
                       <div className="chart-box fade-up" style={{ padding: 20 }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 16 }}>MRR Movement ΓÇö This Month</div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 16 }}>MRR Movement — This Month</div>
                         {[
                           { label: "Starting MRR",  value: mrr - netMRR,       color: T.textSecondary },
-                          { label: "New MRR",        value: newMRRThisMonth,    color: T.green,  arrow: "Γåæ" },
-                          { label: "Churned MRR",    value: -churnedMRR,        color: T.red,    arrow: "Γåô" },
+                          { label: "New MRR",        value: newMRRThisMonth,    color: T.green,  arrow: "←" },
+                          { label: "Churned MRR",    value: -churnedMRR,        color: T.red,    arrow: "↑" },
                           { label: "Net MRR",        value: mrr,                color: netMRR >= 0 ? T.green : T.red, bold: true },
                         ].map((row, i) => (
                           <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none" }}>
@@ -14911,8 +14911,8 @@ export default function AdminPanel() {
                           <span style={{ fontSize: 15, fontWeight: 800, color: T.green, fontFamily: "'Fraunces',serif" }}>AED {mrr.toLocaleString()}</span>
                         </div>
                         <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ fontSize: 11, color: T.textMuted, cursor: "pointer" }} onClick={() => { setTab("users"); setTierFilter("Pro"); }}>View Pro users ΓåÆ</span>
-                          <span style={{ fontSize: 11, color: T.textMuted, cursor: "pointer" }} onClick={() => { setTab("users"); setTierFilter("Enterprise"); }}>View Enterprise ΓåÆ</span>
+                          <span style={{ fontSize: 11, color: T.textMuted, cursor: "pointer" }} onClick={() => { setTab("users"); setTierFilter("Pro"); }}>View Pro users →</span>
+                          <span style={{ fontSize: 11, color: T.textMuted, cursor: "pointer" }} onClick={() => { setTab("users"); setTierFilter("Enterprise"); }}>View Enterprise →</span>
                         </div>
                       </div>
 
@@ -14935,18 +14935,18 @@ export default function AdminPanel() {
                         ))}
                         {churnRate === 0 && (
                           <div style={{ marginTop: 12, padding: "8px 10px", borderRadius: 8, background: `${T.gold}08`, border: `1px solid ${T.gold}20`, fontSize: 10, color: T.textMuted }}>
-                            No churn data yet ΓÇö LTV shown as 24-month estimate. Will update as users churn.
+                            No churn data yet — LTV shown as 24-month estimate. Will update as users churn.
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* ΓòÉΓòÉ SECTION 3 ΓÇö MRR HISTORY + FORECAST ΓòÉΓòÉ */}
+                    {/* ══ SECTION 3 — MRR HISTORY + FORECAST ══ */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>MRR History & Forecast</div>
                     <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 20 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>MRR ΓÇö 6 Months Actual + 3 Month Forecast</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>MRR — 6 Months Actual + 3 Month Forecast</div>
                           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Derived from user tier history ┬╖ Forecast based on current growth rate</div>
                         </div>
                         <div style={{ display: "flex", gap: 14 }}>
@@ -14979,7 +14979,7 @@ export default function AdminPanel() {
                       </ResponsiveContainer>
                     </div>
 
-                    {/* ΓòÉΓòÉ SECTION 4 ΓÇö TRIAL PIPELINE + CONVERSION FUNNEL ΓòÉΓòÉ */}
+                    {/* ══ SECTION 4 — TRIAL PIPELINE + CONVERSION FUNNEL ══ */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Trial Pipeline</div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }} className="charts-row-overview">
 
@@ -15022,7 +15022,7 @@ export default function AdminPanel() {
                       {/* Conversion Funnel */}
                       <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.05s" }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 4 }}>Conversion Funnel</div>
-                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Signup ΓåÆ Trial ΓåÆ Paid</div>
+                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Signup → Trial → Paid</div>
                         {[
                           { label: "Total Signups",     value: stats.total,    color: T.textSecondary, filter: null },
                           { label: "Started Trial",     value: everTrialled,   color: T.gold,          filter: "Pro Trial" },
@@ -15057,17 +15057,17 @@ export default function AdminPanel() {
                             </div>
                           </div>
                           <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, fontWeight: 700 }}>Trial ΓåÆ Paid</div>
+                            <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, fontWeight: 700 }}>Trial → Paid</div>
                             <div style={{ fontSize: 18, fontWeight: 800, color: trialConversion >= 25 ? T.green : T.gold, fontFamily: "'Fraunces',serif" }}>
                               {trialConversion}%
                             </div>
-                            <div style={{ fontSize: 9, color: T.textMuted }}>{trialConversion >= 25 ? "Γåæ Above" : "Γåô Below"} 25% SaaS avg</div>
+                            <div style={{ fontSize: 9, color: T.textMuted }}>{trialConversion >= 25 ? "← Above" : "↑ Below"} 25% SaaS avg</div>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* ΓòÉΓòÉ SECTION 5 ΓÇö PAYING USERS TABLE ΓòÉΓòÉ */}
+                    {/* ══ SECTION 5 — PAYING USERS TABLE ══ */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Paying Customers</div>
                     <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 20 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
@@ -15087,11 +15087,11 @@ export default function AdminPanel() {
                             a.download = `paying-customers-${new Date().toISOString().slice(0,10)}.csv`; a.click();
                             logAudit(db, { action: "csv_export", exportType: "paying_customers", exportedCount: payingUsers.length }).catch(() => {});
                           }} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.teal}`, background: "transparent", color: T.teal, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
-                            Γåô CSV
+                            ↑ CSV
                           </button>
                           <button type="button" onClick={() => { setTab("users"); setTierFilter("Pro"); }}
                             style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
-                            Manage Users ΓåÆ
+                            Manage Users →
                           </button>
                         </div>
                       </div>
@@ -15149,14 +15149,14 @@ export default function AdminPanel() {
                       )}
                     </div>
 
-                    {/* ΓòÉΓòÉ SECTION 6 ΓÇö REVENUE MILESTONES ΓòÉΓòÉ */}
+                    {/* ══ SECTION 6 — REVENUE MILESTONES ══ */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Revenue Milestones</div>
                     <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 20 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>MRR Milestones</div>
                           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-                            {nextMilestone ? `Next: ${nextMilestone.label} ΓÇö ${nextMilestone.usersNeeded} more paying user${nextMilestone.usersNeeded !== 1 ? "s" : ""} needed` : "All milestones reached "}
+                            {nextMilestone ? `Next: ${nextMilestone.label} — ${nextMilestone.usersNeeded} more paying user${nextMilestone.usersNeeded !== 1 ? "s" : ""} needed` : "All milestones reached "}
                           </div>
                         </div>
                         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.green }}>
@@ -15168,12 +15168,12 @@ export default function AdminPanel() {
                           <div key={i}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                <span style={{ fontSize: 14 }}>{m.reached ? "[v]" : i === milestones.findIndex(x => !x.reached) ? "" : "Γùï"}</span>
+                                <span style={{ fontSize: 14 }}>{m.reached ? "[v]" : i === milestones.findIndex(x => !x.reached) ? "" : ""}</span>
                                 <span style={{ fontSize: 12, fontWeight: m.reached ? 700 : 400, color: m.reached ? T.white : T.textMuted }}>{m.label} MRR</span>
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                 {!m.reached && <span style={{ fontSize: 10, color: T.textMuted }}>{m.usersNeeded} users needed</span>}
-                                <span style={{ fontSize: 11, fontWeight: 700, color: m.reached ? T.green : T.textMuted }}>{m.reached ? "Reached Γ£ô" : `${m.pct}%`}</span>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: m.reached ? T.green : T.textMuted }}>{m.reached ? "Reached ✔" : `${m.pct}%`}</span>
                               </div>
                             </div>
                             <div style={{ height: 5, background: T.surfaceAlt, borderRadius: 3, overflow: "hidden" }}>
@@ -15184,19 +15184,19 @@ export default function AdminPanel() {
                       </div>
                     </div>
 
-                    {/* ΓòÉΓòÉ STAGE 2 DIVIDER ΓòÉΓòÉ */}
+                    {/* ══ STAGE 2 DIVIDER ══ */}
                     <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "10px 0 20px" }}>
                       <div style={{ flex: 1, height: 1, background: T.border }} />
                       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 20, background: `${T.gold}10`, border: `1px solid ${T.gold}30` }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase" }}>Paddle Payments ΓÇö Stage 2</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase" }}>Paddle Payments — Stage 2</span>
                         <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 6, background: `${T.gold}20`, color: T.gold, fontWeight: 700 }}>LIVE WHEN CONNECTED</span>
                       </div>
                       <div style={{ flex: 1, height: 1, background: T.border }} />
                     </div>
 
-                    {/* ΓòÉΓòÉ SECTION 7 ΓÇö PAYMENT EVENTS LOG ΓòÉΓòÉ */}
+                    {/* ══ SECTION 7 — PAYMENT EVENTS LOG ══ */}
                     {(() => {
-                      // Read from payments collection ΓÇö empty until Paddle webhook is live
+                      // Read from payments collection — empty until Paddle webhook is live
                       const payments = (window._revenuePayments || []);
                       const hasPaddle = payments.length > 0;
                       return (
@@ -15219,7 +15219,7 @@ export default function AdminPanel() {
                               <div style={{ fontSize: 36, marginBottom: 12 }}></div>
                               <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary, marginBottom: 6 }}>Waiting for Paddle Connection</div>
                               <div style={{ fontSize: 12, color: T.textMuted, maxWidth: 360, margin: "0 auto", lineHeight: 1.6 }}>
-                                Once your Paddle webhook is connected and writing to Firestore, every payment event will appear here in real time ΓÇö success, failed, refunded, and chargeback.
+                                Once your Paddle webhook is connected and writing to Firestore, every payment event will appear here in real time — success, failed, refunded, and chargeback.
                               </div>
                               <div style={{ marginTop: 20, display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 10, background: `${T.gold}08`, border: `1px solid ${T.gold}20` }}>
                                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.gold, opacity: 0.5 }} />
@@ -15258,7 +15258,7 @@ export default function AdminPanel() {
                       );
                     })()}
 
-                    {/* ΓòÉΓòÉ SECTION 8 ΓÇö FAILED PAYMENTS ΓòÉΓòÉ */}
+                    {/* ══ SECTION 8 — FAILED PAYMENTS ══ */}
                     {(() => {
                       const failedPayments = []; // Will read from payments where type === "payment_failed"
                       const hasFailed = failedPayments.length > 0;
@@ -15309,7 +15309,7 @@ export default function AdminPanel() {
                               <div key={i} style={{ marginBottom: 12 }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                                   <span style={{ fontSize: 12, color: T.textSecondary }}>{r.reason}</span>
-                                  <span style={{ fontSize: 11, fontWeight: 700, color: r.pct > 0 ? r.color : T.textMuted }}>{r.pct > 0 ? `${r.pct}%` : "ΓÇö"}</span>
+                                  <span style={{ fontSize: 11, fontWeight: 700, color: r.pct > 0 ? r.color : T.textMuted }}>{r.pct > 0 ? `${r.pct}%` : "—"}</span>
                                 </div>
                                 <div style={{ height: 3, background: T.surfaceAlt, borderRadius: 2, overflow: "hidden" }}>
                                   <div style={{ width: `${r.pct}%`, height: "100%", background: r.color, borderRadius: 2 }} />
@@ -15324,7 +15324,7 @@ export default function AdminPanel() {
                       );
                     })()}
 
-                    {/* ΓòÉΓòÉ SECTION 9 ΓÇö REAL REVENUE BY MONTH (PADDLE) ΓòÉΓòÉ */}
+                    {/* ══ SECTION 9 — REAL REVENUE BY MONTH (PADDLE) ══ */}
                     {(() => {
                       const paddleRevenue = []; // Will read from payments collection grouped by month
                       const hasPaddleRevenue = paddleRevenue.length > 0;
@@ -15334,21 +15334,21 @@ export default function AdminPanel() {
                             <div>
                               <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Real Revenue by Month</div>
                               <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-                                {hasPaddleRevenue ? "Actual amounts charged via Paddle ΓÇö not estimates" : "Stage 1 shows calculated MRR ┬╖ This will show real Paddle amounts"}
+                                {hasPaddleRevenue ? "Actual amounts charged via Paddle — not estimates" : "Stage 1 shows calculated MRR ┬╖ This will show real Paddle amounts"}
                               </div>
                             </div>
                             <div style={{ fontSize: 10, padding: "4px 10px", borderRadius: 8, background: hasPaddleRevenue ? `${T.green}15` : `${T.gold}10`, border: `1px solid ${hasPaddleRevenue ? T.green : T.gold}30`, color: hasPaddleRevenue ? T.green : T.gold, fontWeight: 700 }}>
-                              {hasPaddleRevenue ? "ΓùÅ LIVE DATA" : "ΓùÅ PENDING PADDLE"}
+                              {hasPaddleRevenue ? " LIVE DATA" : " PENDING PADDLE"}
                             </div>
                           </div>
                           {!hasPaddleRevenue ? (
                             <div style={{ padding: "32px 0", textAlign: "center" }}>
                               <div style={{ fontSize: 11, color: T.textMuted, maxWidth: 420, margin: "0 auto", lineHeight: 1.7 }}>
-                                This chart will show real money received via Paddle ΓÇö including partial months, refunds, and actual AED amounts. Until Paddle is connected, use the MRR History chart above (Stage 1) which calculates revenue from user tiers.
+                                This chart will show real money received via Paddle — including partial months, refunds, and actual AED amounts. Until Paddle is connected, use the MRR History chart above (Stage 1) which calculates revenue from user tiers.
                               </div>
                               <div style={{ marginTop: 20, display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
-                                {["Connect Paddle Webhook", "ΓåÆ", "Firebase Cloud Function", "ΓåÆ", "payments collection", "ΓåÆ", "Chart fills automatically"].map((s, i) => (
-                                  <span key={i} style={{ fontSize: 11, color: s === "ΓåÆ" ? T.gold : T.textMuted, fontWeight: s === "ΓåÆ" ? 700 : 400 }}>{s}</span>
+                                {["Connect Paddle Webhook", "→", "Firebase Cloud Function", "→", "payments collection", "→", "Chart fills automatically"].map((s, i) => (
+                                  <span key={i} style={{ fontSize: 11, color: s === "→" ? T.gold : T.textMuted, fontWeight: s === "→" ? 700 : 400 }}>{s}</span>
                                 ))}
                               </div>
                             </div>
@@ -15372,14 +15372,14 @@ export default function AdminPanel() {
                 );
               })()}
 
-          {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+          {/* ═══════════════════════════════════════
              DATA MANAGER TAB (Bloomberg-Level Design)
-             ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+             ═══════════════════════════════════════ */}
           {tab === "data" && (
             <>
-              {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+              {/* ═══════════════════════════════════════
                  CSV IMPORT PRO MODAL
-                 ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+                 ═══════════════════════════════════════ */}
               {showDataImport && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => importProgress.status !== "importing" && resetImport()}>
                   <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 20, width: "100%", maxWidth: 900, maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", animation: "slideUp 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
@@ -15446,7 +15446,7 @@ export default function AdminPanel() {
                               <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase" }}>Invalid</div>
                             </div>
                             <div style={{ padding: "12px 16px", background: "rgba(212,168,67,0.06)", borderRadius: 10, border: "1px solid rgba(212,168,67,0.2)" }}>
-                              <div style={{ fontSize: 20, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>{importProgress.status === "done" ? importStats.imported : "ΓÇö"}</div>
+                              <div style={{ fontSize: 20, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>{importProgress.status === "done" ? importStats.imported : "—"}</div>
                               <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase" }}>Imported</div>
                             </div>
                           </div>
@@ -15461,10 +15461,10 @@ export default function AdminPanel() {
                               {importHeaders.map((header, idx) => (
                                 <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                   <div style={{ flex: 1, fontSize: 11, color: T.textSecondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={header}>{header}</div>
-                                  <span style={{ color: T.textMuted }}>ΓåÆ</span>
+                                  <span style={{ color: T.textMuted }}>→</span>
                                   <select value={importMapping[idx] || ""} onChange={e => setImportMapping(prev => ({ ...prev, [idx]: e.target.value || undefined }))}
                                     style={{ flex: 1, padding: "6px 8px", background: T.bg, border: `1px solid ${importMapping[idx] ? "rgba(16,185,129,0.3)" : T.border}`, borderRadius: 6, color: importMapping[idx] ? T.green : T.textMuted, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                                    <option value="">ΓÇö Skip ΓÇö</option>
+                                    <option value="">— Skip —</option>
                                     {IMPORT_FIELDS.map(f => (
                                       <option key={f.key} value={f.key}>{f.label}{f.required ? " *" : ""}</option>
                                     ))}
@@ -15496,7 +15496,7 @@ export default function AdminPanel() {
                                       <tr key={rowIdx} style={{ background: hasError ? "rgba(239,68,68,0.04)" : "transparent" }}>
                                         <td style={{ padding: "8px 12px", color: T.textMuted, borderBottom: `1px solid ${T.border}` }}>{row._rowNum}</td>
                                         {importHeaders.slice(0, 6).map((h, colIdx) => (
-                                          <td key={colIdx} style={{ padding: "8px 12px", color: T.textSecondary, borderBottom: `1px solid ${T.border}`, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row[h] || "ΓÇö"}</td>
+                                          <td key={colIdx} style={{ padding: "8px 12px", color: T.textSecondary, borderBottom: `1px solid ${T.border}`, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row[h] || "—"}</td>
                                         ))}
                                         {importHeaders.length > 6 && <td style={{ padding: "8px 12px", textAlign: "center", color: T.textMuted, borderBottom: `1px solid ${T.border}` }}>...</td>}
                                       </tr>
@@ -15564,7 +15564,7 @@ export default function AdminPanel() {
                     {/* Footer */}
                     <div style={{ padding: "16px 24px", borderTop: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: T.surfaceAlt }}>
                       <div style={{ fontSize: 11, color: T.textMuted }}>
-                        {importProgress.status === "done" ? "Import finished ΓÇö data is now live" : importFile ? `${importStats.valid} rows ready to import` : "Upload a CSV file to begin"}
+                        {importProgress.status === "done" ? "Import finished — data is now live" : importFile ? `${importStats.valid} rows ready to import` : "Upload a CSV file to begin"}
                       </div>
                       <div style={{ display: "flex", gap: 10 }}>
                         <button type="button" onClick={resetImport} disabled={importProgress.status === "importing"} style={{ fontSize: 12, padding: "10px 20px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: importProgress.status === "importing" ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
@@ -15635,7 +15635,7 @@ export default function AdminPanel() {
                       if (missingPpsf > 0) issues.push({ label: `${missingPpsf} missing PPSF`, color: T.orange });
                       if (missingImage > 0) issues.push({ label: `${missingImage} no images`, color: T.textMuted });
                       if (outdatedYields > 0) issues.push({ label: `${outdatedYields} yields need update`, color: T.orange });
-                      if (issues.length === 0) return <span style={{ fontSize: 11, color: T.green, fontWeight: 600 }}>Γ£ô All data complete</span>;
+                      if (issues.length === 0) return <span style={{ fontSize: 11, color: T.green, fontWeight: 600 }}>✔ All data complete</span>;
                       return issues.map((issue, i) => (
                         <span key={i} style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: `${issue.color}15`, color: issue.color, fontWeight: 600 }}>{issue.label}</span>
                       ));
@@ -15694,9 +15694,9 @@ export default function AdminPanel() {
                 ))}
               </div>
 
-              {/* ΓöÇΓöÇΓöÇ PROJECTS EDITOR ΓöÇΓöÇΓöÇ */}
+              {/* ─── PROJECTS EDITOR ─── */}
               {dataSubTab === "projects" && (
-                <Section title="Project Data Manager" sub="Edit prices, PPSF, status ΓÇö changes go live instantly" action={
+                <Section title="Project Data Manager" sub="Edit prices, PPSF, status — changes go live instantly" action={
                 <div style={{ display: "flex", gap: 8 }}>
                     <button type="button" onClick={exportProjectsExcel} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(100,116,139,0.3)",background:"transparent",color:T.textSecondary,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>Export</button>
                     <button type="button" onClick={() => setShowDataImport(true)} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(20,184,166,0.4)",background:"rgba(20,184,166,0.08)",color:T.teal,cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>
@@ -15710,14 +15710,14 @@ export default function AdminPanel() {
                   {/* Search */}
                   <TabHelp items={[
                     { icon: "[q]", title: "Data Quality Score", desc: "Each project gets a 0-100 score based on completeness. Click the panel to see field breakdown and quick actions." },
-                    { icon: "[≡ƒôè]", title: "Data Intelligence", desc: "Track recent changes, find stale data, detect duplicates, and identify integrity issues. Click to expand." },
+                    { icon: "[📈]", title: "Data Intelligence", desc: "Track recent changes, find stale data, detect duplicates, and identify integrity issues. Click to expand." },
                     { icon: "[f]", title: "Advanced Filters", desc: "Filter by price, PPSF, tier, quality, staleness, and more. Save custom filter views." },
-                    { icon: "[≡ƒöù]", title: "Linked Records", desc: "When editing a project, see community stats and quickly jump to related projects." },
+                    { icon: "[🗙]", title: "Linked Records", desc: "When editing a project, see community stats and quickly jump to related projects." },
                     { icon: "[b]", title: "Bulk Actions", desc: "Select multiple projects with checkboxes. Export, update prices, or delete in bulk." },
                   ]} />
-                  {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+                  {/* ══════════════════════════════════════
                      ADVANCED FILTER PRO SYSTEM
-                     ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+                     ══════════════════════════════════════ */}
                   
                   {/* Saved Filter Views Pills - Always visible */}
                   <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
@@ -15734,7 +15734,7 @@ export default function AdminPanel() {
                         notify("Default filters restored!");
                       }}
                         style={{ padding: "6px 12px", borderRadius: 20, border: `1px dashed ${T.gold}`, background: `${T.gold}10`, color: T.gold, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
-                        Γå╗ Restore Defaults
+                         Restore Defaults
                       </button>
                     )}
                     {savedFilterViews.map(view => (
@@ -15815,7 +15815,7 @@ export default function AdminPanel() {
                   <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", alignItems: "center", padding: "10px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
                     {/* Search */}
                     <div style={{ position: "relative", flex: "1 1 200px", minWidth: 160 }}>
-                      <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.textMuted, fontSize: 13, pointerEvents: "none" }}>Γîò</span>
+                      <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: T.textMuted, fontSize: 13, pointerEvents: "none" }}></span>
                       <input value={dataSearch} onChange={e => { setDataSearch(e.target.value); setActiveFilterViewId(null); }} placeholder="Search projects..."
                         style={{ width: "100%", padding: "8px 10px 8px 28px", background: T.surface, border: `1px solid ${dataSearch ? T.gold : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
                     </div>
@@ -15837,14 +15837,14 @@ export default function AdminPanel() {
                     {/* Sort */}
                     <select value={projectSortKey + "_" + projectSortDir} onChange={e => { const [k,d] = e.target.value.split("_"); setProjectSortKey(k); setProjectSortDir(d); }}
                       style={{ padding: "8px 10px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                      <option value="name_asc">Name AΓåÆZ</option>
-                      <option value="name_desc">Name ZΓåÆA</option>
-                      <option value="price_asc">Price LowΓåÆHigh</option>
-                      <option value="price_desc">Price HighΓåÆLow</option>
-                      <option value="ppsf_desc">PPSF HighΓåÆLow</option>
+                      <option value="name_asc">Name A→Z</option>
+                      <option value="name_desc">Name Z→A</option>
+                      <option value="price_asc">Price Low→High</option>
+                      <option value="price_desc">Price High→Low</option>
+                      <option value="ppsf_desc">PPSF High→Low</option>
                       <option value="construction_desc">Construction % High</option>
-                      <option value="status_asc">Status AΓåÆZ</option>
-                      <option value="community_asc">Community AΓåÆZ</option>
+                      <option value="status_asc">Status A→Z</option>
+                      <option value="community_asc">Community A→Z</option>
                     </select>
                     
                     {/* Advanced Filters Toggle */}
@@ -15919,7 +15919,7 @@ export default function AdminPanel() {
                         setHasImageFilter("all"); setQualityFilter("all"); setStalenessFilter("all"); setActiveFilterViewId(null);
                       }}
                         style={{ padding: "8px 12px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, color: T.red, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" }}>
-                        Γ£ò Clear All
+                         Clear All
                       </button>
                     )}
                   </div>
@@ -15937,7 +15937,7 @@ export default function AdminPanel() {
                         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                           <input type="number" value={priceMin} onChange={e => { setPriceMin(e.target.value); setActiveFilterViewId(null); }} placeholder="Min"
                             style={{ flex: 1, padding: "7px 10px", background: T.bg, border: `1px solid ${priceMin ? T.teal : T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                          <span style={{ color: T.textMuted, fontSize: 11 }}>ΓÇö</span>
+                          <span style={{ color: T.textMuted, fontSize: 11 }}>—</span>
                           <input type="number" value={priceMax} onChange={e => { setPriceMax(e.target.value); setActiveFilterViewId(null); }} placeholder="Max"
                             style={{ flex: 1, padding: "7px 10px", background: T.bg, border: `1px solid ${priceMax ? T.teal : T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
                         </div>
@@ -15949,7 +15949,7 @@ export default function AdminPanel() {
                         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                           <input type="number" value={ppsfMin} onChange={e => { setPpsfMin(e.target.value); setActiveFilterViewId(null); }} placeholder="Min"
                             style={{ flex: 1, padding: "7px 10px", background: T.bg, border: `1px solid ${ppsfMin ? T.teal : T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                          <span style={{ color: T.textMuted, fontSize: 11 }}>ΓÇö</span>
+                          <span style={{ color: T.textMuted, fontSize: 11 }}>—</span>
                           <input type="number" value={ppsfMax} onChange={e => { setPpsfMax(e.target.value); setActiveFilterViewId(null); }} placeholder="Max"
                             style={{ flex: 1, padding: "7px 10px", background: T.bg, border: `1px solid ${ppsfMax ? T.teal : T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
                         </div>
@@ -16033,16 +16033,16 @@ export default function AdminPanel() {
                           style={{ width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", marginBottom: 16, outline: "none", boxSizing: "border-box" }} />
                         <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16, padding: 12, background: T.surfaceAlt, borderRadius: 8 }}>
                           <div style={{ marginBottom: 4 }}>Current filters:</div>
-                          {projectCommunityFilter !== "All" && <div>ΓÇó Community: {projectCommunityFilter}</div>}
-                          {projectStatusFilter !== "All" && <div>ΓÇó Status: {projectStatusFilter}</div>}
-                          {projectTierFilter !== "All" && <div>ΓÇó Tier: {projectTierFilter}</div>}
-                          {priceMin && <div>ΓÇó Price min: AED {Number(priceMin).toLocaleString()}</div>}
-                          {priceMax && <div>ΓÇó Price max: AED {Number(priceMax).toLocaleString()}</div>}
-                          {ppsfMin && <div>ΓÇó PPSF min: {ppsfMin}</div>}
-                          {ppsfMax && <div>ΓÇó PPSF max: {ppsfMax}</div>}
-                          {dataSourceFilter !== "all" && <div>ΓÇó Source: {dataSourceFilter}</div>}
-                          {modifiedDateFilter !== "all" && <div>ΓÇó Modified: {modifiedDateFilter}</div>}
-                          {hasImageFilter !== "all" && <div>ΓÇó Has image: {hasImageFilter}</div>}
+                          {projectCommunityFilter !== "All" && <div>• Community: {projectCommunityFilter}</div>}
+                          {projectStatusFilter !== "All" && <div>• Status: {projectStatusFilter}</div>}
+                          {projectTierFilter !== "All" && <div>• Tier: {projectTierFilter}</div>}
+                          {priceMin && <div>• Price min: AED {Number(priceMin).toLocaleString()}</div>}
+                          {priceMax && <div>• Price max: AED {Number(priceMax).toLocaleString()}</div>}
+                          {ppsfMin && <div>• PPSF min: {ppsfMin}</div>}
+                          {ppsfMax && <div>• PPSF max: {ppsfMax}</div>}
+                          {dataSourceFilter !== "all" && <div>• Source: {dataSourceFilter}</div>}
+                          {modifiedDateFilter !== "all" && <div>• Modified: {modifiedDateFilter}</div>}
+                          {hasImageFilter !== "all" && <div>• Has image: {hasImageFilter}</div>}
                         </div>
                         <div style={{ display: "flex", gap: 10 }}>
                           <button type="button" onClick={() => setShowSaveFilterModal(false)}
@@ -16076,9 +16076,9 @@ export default function AdminPanel() {
                     </div>
                   )}
                   
-                  {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+                  {/* ══════════════════════════════════════
                      DATA QUALITY SCORE PANEL
-                     ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+                     ══════════════════════════════════════ */}
                   {(() => {
                     const quality = calculateOverallQuality();
                     if (!quality) return null;
@@ -16214,9 +16214,9 @@ export default function AdminPanel() {
                     );
                   })()}
                   
-                  {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+                  {/* ══════════════════════════════════════
                      DATA INTELLIGENCE PANEL
-                     ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+                     ══════════════════════════════════════ */}
                   {(() => {
                     const intel = calculateDataIntel();
                     if (!intel) return null;
@@ -16340,7 +16340,7 @@ export default function AdminPanel() {
                                 </div>
                                 {intel.integrityIssues.length === 0 ? (
                                   <div style={{ padding: 16, background: "rgba(16,185,129,0.08)", borderRadius: 8, textAlign: "center", color: T.green, fontSize: 11, border: `1px solid ${T.green}30` }}>
-                                    Γ£ô No data integrity issues found
+                                    ✔ No data integrity issues found
                                   </div>
                                 ) : (
                                   <div style={{ maxHeight: 180, overflowY: "auto", background: T.surfaceAlt, borderRadius: 8 }}>
@@ -16382,7 +16382,7 @@ export default function AdminPanel() {
                                   {intel.duplicates.slice(0, 3).map((dup, i) => (
                                     <div key={i} style={{ padding: "8px 12px", background: `${T.orange}10`, borderRadius: 8, border: `1px solid ${T.orange}30`, fontSize: 11 }}>
                                       <span style={{ color: T.white }}>{dup.project1.name}</span>
-                                      <span style={{ color: T.orange, margin: "0 6px" }}>Γåö</span>
+                                      <span style={{ color: T.orange, margin: "0 6px" }}></span>
                                       <span style={{ color: T.white }}>{dup.project2.name}</span>
                                     </div>
                                   ))}
@@ -16411,9 +16411,9 @@ export default function AdminPanel() {
                     );
                   })()}
                   
-                  {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+                  {/* ══════════════════════════════════════
                      DUPLICATES REVIEW MODAL
-                     ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+                     ══════════════════════════════════════ */}
                   {showDuplicatesModal && (() => {
                     const duplicates = findDuplicates();
                     return (
@@ -16429,7 +16429,7 @@ export default function AdminPanel() {
                           <div style={{ padding: 20 }}>
                             {duplicates.length === 0 ? (
                               <div style={{ textAlign: "center", padding: 40 }}>
-                                <div style={{ fontSize: 40, marginBottom: 12 }}>Γ£ô</div>
+                                <div style={{ fontSize: 40, marginBottom: 12 }}>✔</div>
                                 <div style={{ fontSize: 14, color: T.green, fontWeight: 600 }}>No duplicates detected</div>
                                 <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Your data is clean!</div>
                               </div>
@@ -16448,7 +16448,7 @@ export default function AdminPanel() {
                                           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{dup.project1.community}</div>
                                           <div style={{ fontSize: 11, color: T.gold, marginTop: 4 }}>{m1.price ? `AED ${(m1.price/1e6).toFixed(2)}M` : "No price"}</div>
                                         </div>
-                                        <div style={{ color: T.orange, fontSize: 20 }}>Γåö</div>
+                                        <div style={{ color: T.orange, fontSize: 20 }}></div>
                                         <div onClick={() => { setEditingProject(dup.project2.id); setProjectForm(liveProjects[dup.project2.id] || {}); setShowDuplicatesModal(false); }}
                                           style={{ padding: 12, background: T.surface, borderRadius: 8, cursor: "pointer" }}>
                                           <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{dup.project2.name}</div>
@@ -16624,7 +16624,7 @@ export default function AdminPanel() {
                       { key: "handover", label: "Handover", type: "text", placeholder: "e.g. Q4 2027", tip: "Expected handover/completion date. Shown on the project detail page with countdown." },
                       { key: "type", label: "Type", type: "select", options: ["Apartments", "Apts & TH", "Apts & Villas", "Apts & PH", "Townhouses", "Villas", "Branded Res."], tip: "Property type used for filtering on the dashboard and yield calculations." },
                       { key: "beds", label: "Bedrooms", type: "text", placeholder: "e.g. 1-3 BR", tip: "Available bedroom configurations, e.g. '1-3 BR' or 'Studio-4 BR'." },
-                      { key: "paymentPlan", label: "Payment Plan", type: "text", placeholder: "e.g. 80/20", tip: "Payment split ΓÇö affects investment score rating on project cards." },
+                      { key: "paymentPlan", label: "Payment Plan", type: "text", placeholder: "e.g. 80/20", tip: "Payment split — affects investment score rating on project cards." },
                       { key: "construction", label: "Construction %", type: "number", placeholder: "e.g. 75", tip: "Construction progress percentage (0-100). Shown as a progress bar on the project card and detail page." },
                       { key: "tier", label: "Tier", type: "select", options: ["Affordable", "Mid-Market", "Mid-Premium", "Premium", "Luxury", "Ultra-Luxury", "Luxury Branded", "Ultra-Lux Branded"], tip: "Price/quality tier badge shown on project cards and in the tier filter on the dashboard." },
                       { key: "emaarUrl", label: "PropertyFinder / Source URL", type: "text", placeholder: "e.g. https://www.propertyfinder.ae/...", tip: "Official listing URL shown as the SOURCE button on the project detail page." },
@@ -16639,7 +16639,7 @@ export default function AdminPanel() {
                       { key: "name", label: "Project Name", type: "text", placeholder: "e.g. The Golf Residence", tip: "Display name of the project shown everywhere on the dashboard." },
                       { key: "community", label: "Community", type: "text", placeholder: "e.g. Dubai Hills Estate", tip: "Master community name. Must match exactly for ROI data to link correctly." },
                       { key: "district", label: "District Code", type: "text", placeholder: "e.g. DHE", tip: "Short district code used for filtering (DHE, DCH, EBF, ES, GPC, TV, RYM, TO, BB, TH)." },
-                      { key: "brand", label: "Brand Name", type: "select", options: ["ΓÇö", "Address", "Vida", "Palace", "Bristol"], tip: "Branded hotel/lifestyle brand. Shows as a gold badge on the project detail page." },
+                      { key: "brand", label: "Brand Name", type: "select", options: ["—", "Address", "Vida", "Palace", "Bristol"], tip: "Branded hotel/lifestyle brand. Shows as a gold badge on the project detail page." },
                       { key: "ratingOverride", label: "Rating Override (/10)", type: "number", placeholder: "Leave blank = auto-calculated", tip: "Override the auto-calculated investment score. Set 0-10. Leave blank to use the automatic score based on yield, PPSF, handover, and payment plan." },
                     ];
                     return (
@@ -16660,7 +16660,7 @@ export default function AdminPanel() {
                         {hasOverride && (merged.updatedBy || merged.updatedAt) && (
                           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 14px", borderRadius: 8, background: "rgba(212,168,67,0.05)", border: "1px solid rgba(212,168,67,0.1)", marginBottom: 16, fontSize: 11, flexWrap: "wrap" }}>
                             <span style={{ color: T.textMuted }}>Last saved by</span>
-                            <span style={{ color: T.gold, fontWeight: 700 }}>{merged.updatedBy || "ΓÇö"}</span>
+                            <span style={{ color: T.gold, fontWeight: 700 }}>{merged.updatedBy || "—"}</span>
                             {merged.updatedAt && <><span style={{ color: T.textMuted }}>┬╖</span><span style={{ color: T.textSecondary }}>{new Date(merged.updatedAt).toLocaleString("en-AE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span></>}
                             {merged.rolledBackFrom && <span style={{ color: T.teal, fontSize: 10, fontWeight: 700 }}>[Rolled back from {new Date(merged.rolledBackFrom).toLocaleString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}]</span>}
                           </div>
@@ -16675,7 +16675,7 @@ export default function AdminPanel() {
                                 return f.type === "select" ? (
                                   <select value={projectForm[f.key] ?? merged[f.key] ?? ""} onChange={e => { setProjectForm(prev => ({ ...prev, [f.key]: e.target.value })); setValidationErrors(prev => ({ ...prev, [f.key]: null })); }}
                                     style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${borderColor}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                                    <option value="">ΓÇö</option>
+                                    <option value="">—</option>
                                     {f.options.map(o => <option key={o} value={o}>{o}</option>)}
                                   </select>
                                 ) : (
@@ -16685,7 +16685,7 @@ export default function AdminPanel() {
                               })()}
                               {validationErrors[f.key] && <div style={{ fontSize: 10, color: "#EF4444", marginTop: 3 }}>{validationErrors[f.key]}</div>}
                               {hasOverride && liveProjects[p.id]?.[f.key] !== undefined && (
-                                <div style={{ fontSize: 9, color: T.green, marginTop: 2 }}>Live: {liveProjects[p.id][f.key]} ┬╖ Default: {p[f.key] ?? "ΓÇö"}</div>
+                                <div style={{ fontSize: 9, color: T.green, marginTop: 2 }}>Live: {liveProjects[p.id][f.key]} ┬╖ Default: {p[f.key] ?? "—"}</div>
                               )}
                             </div>
                           ))}
@@ -16720,14 +16720,14 @@ export default function AdminPanel() {
                           </div>
                         </div>
 
-                        {/* ΓöÇΓöÇ COORDINATES FOR MAP ΓöÇΓöÇ */}
+                        {/* ── COORDINATES FOR MAP ── */}
                         <div style={{ marginTop: 12, padding: 16, borderRadius: 10, border: "1px solid rgba(20,184,166,0.2)", background: "rgba(20,184,166,0.04)" }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                             <div>
                               <div style={{ fontSize: 11, fontWeight: 700, color: T.teal, letterSpacing: 1, textTransform: "uppercase" }}>Map Coordinates</div>
                               <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Set the pin location on the Map tab. Get coordinates from Google Maps.</div>
                             </div>
-                            <a href={`https://www.google.com/maps/search/${encodeURIComponent((merged.name || p.name) + " Dubai")}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(20,184,166,0.3)", background: "rgba(20,184,166,0.08)" }}>Find on Google Maps Γåù</a>
+                            <a href={`https://www.google.com/maps/search/${encodeURIComponent((merged.name || p.name) + " Dubai")}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(20,184,166,0.3)", background: "rgba(20,184,166,0.08)" }}>Find on Google Maps </a>
                           </div>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                             <div>
@@ -16743,8 +16743,8 @@ export default function AdminPanel() {
                           </div>
                           {(projectForm.lat || merged.lat) && (projectForm.lng || merged.lng) && (
                             <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 10 }}>
-                              <div style={{ fontSize: 10, color: T.green }}>Γ£ô Coordinates set: {projectForm.lat || merged.lat}, {projectForm.lng || merged.lng}</div>
-                              <a href={`https://www.google.com/maps?q=${projectForm.lat || merged.lat},${projectForm.lng || merged.lng}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.teal, textDecoration: "none" }}>Preview on Map Γåù</a>
+                              <div style={{ fontSize: 10, color: T.green }}>✔ Coordinates set: {projectForm.lat || merged.lat}, {projectForm.lng || merged.lng}</div>
+                              <a href={`https://www.google.com/maps?q=${projectForm.lat || merged.lat},${projectForm.lng || merged.lng}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.teal, textDecoration: "none" }}>Preview on Map </a>
                             </div>
                           )}
                         </div>
@@ -16784,7 +16784,7 @@ export default function AdminPanel() {
                                 <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{doc.label}</label>
                                 <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, padding: "8px 12px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.12)", background: T.bg, color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                                  {projectForm[doc.key + "_uploading"] ? "Uploading..." : (projectForm[doc.key] || liveProjects[p.id]?.[doc.key]) ? "Uploaded Γ£ô" : "Upload PDF"}
+                                  {projectForm[doc.key + "_uploading"] ? "Uploading..." : (projectForm[doc.key] || liveProjects[p.id]?.[doc.key]) ? "Uploaded ✔" : "Upload PDF"}
                                   <input type="file" accept=".pdf,image/*" style={{ display: "none" }} onChange={async e => {
                                     const file = e.target.files[0]; if (!file) return;
                                     setProjectForm(prev => ({ ...prev, [doc.key + "_uploading"]: true }));
@@ -16798,7 +16798,7 @@ export default function AdminPanel() {
                                   }} />
                                 </label>
                                 {(projectForm[doc.key] || liveProjects[p.id]?.[doc.key]) && (
-                                  <a href={projectForm[doc.key] || liveProjects[p.id]?.[doc.key]} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", marginTop: 3, display: "block" }}>View ΓåÆ</a>
+                                  <a href={projectForm[doc.key] || liveProjects[p.id]?.[doc.key]} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", marginTop: 3, display: "block" }}>View →</a>
                                 )}
                               </div>
                             ))}
@@ -16855,9 +16855,9 @@ export default function AdminPanel() {
                             );
                           })()}
                         
-                        {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+                        {/* ═══════════════════════════════════════
                            LINKED RECORDS PANEL
-                           ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+                           ═══════════════════════════════════════ */}
                         {(() => {
                           const communityName = p.community;
                           const communityProjects = emaarProjects.filter(proj => proj.community === communityName && proj.id !== p.id);
@@ -16885,7 +16885,7 @@ export default function AdminPanel() {
                                 </div>
                                 <button type="button" onClick={() => { setDataSubTab("communities"); setEditingCommunity(communityName); setEditingProject(null); }}
                                   style={{ fontSize: 10, padding: "5px 12px", borderRadius: 6, border: `1px solid ${T.purple}40`, background: "transparent", color: T.purple, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
-                                  Edit Community ΓåÆ
+                                  Edit Community →
                                 </button>
                               </div>
                               
@@ -16896,15 +16896,15 @@ export default function AdminPanel() {
                                   <div style={{ fontSize: 9, color: T.textMuted }}>Projects</div>
                                 </div>
                                 <div style={{ padding: 10, background: T.surface, borderRadius: 8, textAlign: "center" }}>
-                                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPrice > 0 ? `${(avgPrice/1e6).toFixed(1)}M` : "ΓÇö"}</div>
+                                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPrice > 0 ? `${(avgPrice/1e6).toFixed(1)}M` : "—"}</div>
                                   <div style={{ fontSize: 9, color: T.textMuted }}>Avg Price</div>
                                 </div>
                                 <div style={{ padding: 10, background: T.surface, borderRadius: 8, textAlign: "center" }}>
-                                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPpsf > 0 ? avgPpsf.toLocaleString() : "ΓÇö"}</div>
+                                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPpsf > 0 ? avgPpsf.toLocaleString() : "—"}</div>
                                   <div style={{ fontSize: 9, color: T.textMuted }}>Avg PPSF</div>
                                 </div>
                                 <div style={{ padding: 10, background: T.surface, borderRadius: 8, textAlign: "center" }}>
-                                  <div style={{ fontSize: 14, fontWeight: 700, color: communityROI.yield ? T.green : T.textMuted, fontFamily: "'Fraunces',serif" }}>{communityROI.yield ? `${communityROI.yield}%` : "ΓÇö"}</div>
+                                  <div style={{ fontSize: 14, fontWeight: 700, color: communityROI.yield ? T.green : T.textMuted, fontFamily: "'Fraunces',serif" }}>{communityROI.yield ? `${communityROI.yield}%` : "—"}</div>
                                   <div style={{ fontSize: 9, color: T.textMuted }}>Yield</div>
                                 </div>
                               </div>
@@ -16963,13 +16963,13 @@ export default function AdminPanel() {
 
                         <button type="button" disabled={dataSaving} onClick={() => saveProjectData(p.id, projectForm)}
                           style={{ marginTop: 20, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
-                          {dataSaving ? "Saving..." : "Save to Firestore ΓÇö Goes Live Instantly"}
+                          {dataSaving ? "Saving..." : "Save to Firestore — Goes Live Instantly"}
                         </button>
                       </div>
                     );
                   })()}
 
-                  {/* ΓöÇΓöÇ VERSION HISTORY MODAL ΓöÇΓöÇ */}
+                  {/* ── VERSION HISTORY MODAL ── */}
                   {viewingVersions && (() => {
                     const pid = viewingVersions;
                     const p = emaarProjects.find(x => String(x.id) === pid) || { name: "Project " + pid, id: pid };
@@ -17018,15 +17018,15 @@ export default function AdminPanel() {
                                     {Object.entries(v.diff).map(([field, change]) => (
                                       <div key={field} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", padding: "5px 10px", borderRadius: 8 }}>
                                         <span style={{ color: T.textMuted, fontWeight: 700, fontSize: 10, textTransform: "uppercase" }}>{field}</span>
-                                        <span style={{ color: "#F87171", fontSize: 11, textDecoration: "line-through" }}>{String(change.old || "ΓÇö").slice(0, 22)}</span>
-                                        <span style={{ color: T.textMuted, fontSize: 10 }}>ΓåÆ</span>
-                                        <span style={{ color: "#4ADE80", fontSize: 11 }}>{String(change.new || "ΓÇö").slice(0, 22)}</span>
+                                        <span style={{ color: "#F87171", fontSize: 11, textDecoration: "line-through" }}>{String(change.old || "—").slice(0, 22)}</span>
+                                        <span style={{ color: T.textMuted, fontSize: 10 }}>→</span>
+                                        <span style={{ color: "#4ADE80", fontSize: 11 }}>{String(change.new || "—").slice(0, 22)}</span>
                                       </div>
                                     ))}
                                   </div>
                                 )}
                                 {(!v.diff || Object.keys(v.diff).length === 0) && (
-                                  <div style={{ fontSize: 11, color: T.textMuted, fontStyle: "italic" }}>Initial save ΓÇö full snapshot stored</div>
+                                  <div style={{ fontSize: 11, color: T.textMuted, fontStyle: "italic" }}>Initial save — full snapshot stored</div>
                                 )}
                               </div>
                             ))}
@@ -17036,21 +17036,21 @@ export default function AdminPanel() {
                     );
                   })()}
 
-                  {/* ΓöÇΓöÇ Bulk Edit Bar ΓÇö only visible when rows are checked ΓöÇΓöÇ */}
+                  {/* ── Bulk Edit Bar — only visible when rows are checked ── */}
                   {bulkSelected.length > 0 && (
                     <div className="fade-up" style={{ marginBottom: 12, borderRadius: 10, background: "#0C1B2E", border: `2px solid ${T.gold}`, overflow: "hidden" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px 8px", borderBottom: "1px solid rgba(212,168,67,0.2)" }}>
                         <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 7, background: T.gold, fontSize: 12, fontWeight: 900, color: T.bg, flexShrink: 0 }}>{bulkSelected.length}</span>
                         <span style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>projects selected</span>
                         <span style={{ fontSize: 11, color: T.textMuted }}>Set a value below, then click Apply to All</span>
-                        <button type="button" onClick={() => { setBulkSelected([]); setBulkForm({}); }} style={{ marginLeft: "auto", fontSize: 11, padding: "4px 12px", borderRadius: 7, border: "1px solid rgba(100,116,139,0.3)", background: "transparent", color: T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Γ£ò Deselect all</button>
+                        <button type="button" onClick={() => { setBulkSelected([]); setBulkForm({}); }} style={{ marginLeft: "auto", fontSize: 11, padding: "4px 12px", borderRadius: 7, border: "1px solid rgba(100,116,139,0.3)", background: "transparent", color: T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}> Deselect all</button>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 8, padding: "12px 16px" }}>
                         <div>
                           <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Status</div>
                           <select value={bulkForm.status || ""} onChange={e => setBulkForm(prev => ({ ...prev, status: e.target.value }))}
                             style={{ width: "100%", padding: "7px 10px", background: bulkForm.status ? `${T.gold}15` : T.surface, border: `1px solid ${bulkForm.status ? T.gold : T.border}`, borderRadius: 8, color: bulkForm.status ? T.gold : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                            <option value="">ΓÇö unchanged ΓÇö</option>
+                            <option value="">— unchanged —</option>
                             {["Under Construction","Off-Plan","Completed","Selling","Upcoming","Sold Out","Ready"].map(o => <option key={o} value={o}>{o}</option>)}
                           </select>
                         </div>
@@ -17058,7 +17058,7 @@ export default function AdminPanel() {
                           <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Tier</div>
                           <select value={bulkForm.tier || ""} onChange={e => setBulkForm(prev => ({ ...prev, tier: e.target.value }))}
                             style={{ width: "100%", padding: "7px 10px", background: bulkForm.tier ? `${T.gold}15` : T.surface, border: `1px solid ${bulkForm.tier ? T.gold : T.border}`, borderRadius: 8, color: bulkForm.tier ? T.gold : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                            <option value="">ΓÇö unchanged ΓÇö</option>
+                            <option value="">— unchanged —</option>
                             {["Affordable","Mid-Market","Mid-Premium","Premium","Luxury","Ultra-Luxury","Luxury Branded","Ultra-Lux Branded"].map(o => <option key={o} value={o}>{o}</option>)}
                           </select>
                         </div>
@@ -17066,7 +17066,7 @@ export default function AdminPanel() {
                           <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Availability</div>
                           <select value={bulkForm.availability || ""} onChange={e => setBulkForm(prev => ({ ...prev, availability: e.target.value }))}
                             style={{ width: "100%", padding: "7px 10px", background: bulkForm.availability ? `${T.gold}15` : T.surface, border: `1px solid ${bulkForm.availability ? T.gold : T.border}`, borderRadius: 8, color: bulkForm.availability ? T.gold : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                            <option value="">ΓÇö unchanged ΓÇö</option>
+                            <option value="">— unchanged —</option>
                             {["Available","Sold Out","Limited Units","Coming Soon"].map(o => <option key={o} value={o}>{o}</option>)}
                           </select>
                         </div>
@@ -17122,7 +17122,7 @@ export default function AdminPanel() {
                         { label: "", key: null, always: true },
                       ].filter(h => h.always || visibleColumns[h.col]);
                       
-                      // Deduplicate by id ΓÇö safety net in case data.js has duplicates
+                      // Deduplicate by id — safety net in case data.js has duplicates
                       const _seen = new Set();
                       const allProjects = emaarProjects.filter(p => { if (_seen.has(p.id)) return false; _seen.add(p.id); return true; });
                       const now = new Date();
@@ -17214,7 +17214,7 @@ export default function AdminPanel() {
                               {headers.map(h => (
                                 <span key={h.label || "edit"} onClick={() => { if (!h.key) return; if (projectSortKey === h.key) setProjectSortDir(d => d === "asc" ? "desc" : "asc"); else { setProjectSortKey(h.key); setProjectSortDir("asc"); } }}
                                   style={{ fontSize: 9, fontWeight: 700, color: projectSortKey === h.key ? T.gold : T.textMuted, letterSpacing: 1, textTransform: "uppercase", cursor: h.key ? "pointer" : "default", userSelect: "none" }}>
-                                  {h.label}{projectSortKey === h.key ? (projectSortDir === "asc" ? " Γåæ" : " Γåô") : ""}
+                                  {h.label}{projectSortKey === h.key ? (projectSortDir === "asc" ? " ←" : " ↑") : ""}
                                 </span>
                               ))}
                             </div>
@@ -17239,7 +17239,7 @@ export default function AdminPanel() {
                             </div>
                             {filtered.length === 0 && (
                               <div style={{ padding: "40px 20px", textAlign: "center" }}>
-                                <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>≡ƒöì</div>
+                                <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>•</div>
                                 <div style={{ fontSize: 14, fontWeight: 600, color: T.white, marginBottom: 4 }}>No projects match your filters</div>
                                 <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Try adjusting your filter criteria</div>
                                 <button type="button" onClick={() => { 
@@ -17266,12 +17266,12 @@ export default function AdminPanel() {
                                onClick={e => e.stopPropagation()} style={{ cursor: "pointer", accentColor: T.gold }} />
                             <div>
                               <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</div>
-                              <div style={{ fontSize: 10, color: T.textMuted }}>{merged.type || "ΓÇö"}{visibleColumns.beds ? "" : ` ┬╖ ${merged.beds || "ΓÇö"}`}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>{merged.type || "—"}{visibleColumns.beds ? "" : ` ┬╖ ${merged.beds || "—"}`}</div>
                             </div>
                             {visibleColumns.community && <span style={{ fontSize: 11, color: T.textSecondary }}>{p.community}</span>}
                             {visibleColumns.price && <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{merged.price ? `AED ${(merged.price / 1e6).toFixed(2)}M` : "TBA"}</span>}
-                            {visibleColumns.ppsf && <span style={{ fontSize: 12, color: T.textPrimary }}>{merged.ppsf ? merged.ppsf.toLocaleString() : "ΓÇö"}</span>}
-                            {visibleColumns.status && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: merged.status === "Selling" ? "rgba(16,185,129,0.12)" : merged.status === "Upcoming" ? "rgba(212,168,67,0.12)" : "rgba(148,163,184,0.1)", color: merged.status === "Selling" ? T.green : merged.status === "Upcoming" ? T.gold : T.textMuted }}>{merged.status || "ΓÇö"}</span>}
+                            {visibleColumns.ppsf && <span style={{ fontSize: 12, color: T.textPrimary }}>{merged.ppsf ? merged.ppsf.toLocaleString() : "—"}</span>}
+                            {visibleColumns.status && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: merged.status === "Selling" ? "rgba(16,185,129,0.12)" : merged.status === "Upcoming" ? "rgba(212,168,67,0.12)" : "rgba(148,163,184,0.1)", color: merged.status === "Selling" ? T.green : merged.status === "Upcoming" ? T.gold : T.textMuted }}>{merged.status || "—"}</span>}
                             {visibleColumns.quality && (
                               <div style={{ display: "flex", alignItems: "center", gap: 4 }} title={`Missing: ${pQuality.missing.join(", ") || "None"}`}>
                                 <div style={{ 
@@ -17284,11 +17284,11 @@ export default function AdminPanel() {
                                 </div>
                               </div>
                             )}
-                            {visibleColumns.tier && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.tier || "ΓÇö"}</span>}
-                            {visibleColumns.handover && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.handover || "ΓÇö"}</span>}
-                            {visibleColumns.beds && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.beds || "ΓÇö"}</span>}
-                            {visibleColumns.source && <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? "ΓùÅ Live" : "Γùï Default"}</span>}
-                            <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>Edit ΓåÆ</span>
+                            {visibleColumns.tier && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.tier || "—"}</span>}
+                            {visibleColumns.handover && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.handover || "—"}</span>}
+                            {visibleColumns.beds && <span style={{ fontSize: 10, color: T.textSecondary }}>{merged.beds || "—"}</span>}
+                            {visibleColumns.source && <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? " Live" : " Default"}</span>}
+                            <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>Edit →</span>
                           </div>
                         );
                       })}
@@ -17299,9 +17299,9 @@ export default function AdminPanel() {
                 </Section>
               )}
 
-              {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+              {/* ═══════════════════════════════════════
                  UNIFIED COMMUNITIES EDITOR (ROI + INTEL)
-                 ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+                 ═══════════════════════════════════════ */}
               {dataSubTab === "communities" && (() => {
                 const communities = Object.keys(defaultCommunityROI);
                 const activeKey = editingCommunity || communities[0];
@@ -17346,15 +17346,15 @@ export default function AdminPanel() {
                 return (
                   <div style={{ position: "fixed", top: 60, left: 240, right: 0, bottom: 0, display: "flex", zIndex: 50, background: "#04090F" }}>
 
-                    {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-                        LEFT NAV ΓÇö Community List
-                    ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+                    {/* ══════════════════════════════
+                        LEFT NAV — Community List
+                    ══════════════════════════════ */}
                     <div style={{ width: 280, flexShrink: 0, background: "#060D1A", borderRight: "1px solid rgba(212,168,67,0.1)", display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
 
                       {/* Back Button */}
                       <button type="button" onClick={() => setDataSubTab("projects")}
                         style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 20px", background: "rgba(212,168,67,0.06)", border: "none", borderBottom: "1px solid rgba(212,168,67,0.1)", color: "#D4A843", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left" }}>
-                        <span style={{ fontSize: 16 }}>ΓåÉ</span> Back to Data Manager
+                        <span style={{ fontSize: 16 }}></span> Back to Data Manager
                       </button>
 
                       {/* Nav Header */}
@@ -17389,7 +17389,7 @@ export default function AdminPanel() {
                                   : <span style={{ fontSize: 8, fontWeight: 600, padding: "2px 6px", borderRadius: 4, background: "rgba(100,116,139,0.1)", color: "#475569", flexShrink: 0, marginLeft: 6 }}>DEFAULT</span>}
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                                <span style={{ fontSize: 13, fontWeight: 700, color: isActive ? "#D4A843" : "#94A3B8" }}>{avgYield ? avgYield.toFixed(1) + "%" : intel.avgYield || "ΓÇö"}</span>
+                                <span style={{ fontSize: 13, fontWeight: 700, color: isActive ? "#D4A843" : "#94A3B8" }}>{avgYield ? avgYield.toFixed(1) + "%" : intel.avgYield || "—"}</span>
                                 {roi.goldenVisa && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: 3, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700 }}>VISA</span>}
                                 <span style={{ fontSize: 10, color: roi.riskLevel === "Low" ? "#10B981" : roi.riskLevel === "Medium" ? "#F59E0B" : "#64748B" }}>{roi.riskLevel || ""}</span>
                               </div>
@@ -17405,9 +17405,9 @@ export default function AdminPanel() {
                       </div>
                     </div>
 
-                    {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-                        RIGHT ΓÇö Combined Editor
-                    ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+                    {/* ══════════════════════════════
+                        RIGHT — Combined Editor
+                    ══════════════════════════════ */}
                     <div style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100%", scrollbarWidth: "thin" }}>
 
                       {/* Hero Banner */}
@@ -17418,7 +17418,7 @@ export default function AdminPanel() {
                           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                             <span style={{ width: 8, height: 8, borderRadius: "50%", background: hasAnyOverride ? "#10B981" : "#475569", boxShadow: hasAnyOverride ? "0 0 8px #10B981" : "none" }} />
                             <span style={{ fontSize: 12, color: hasAnyOverride ? "#10B981" : "#64748B" }}>
-                              {hasAnyOverride ? "Live ΓÇö dashboard shows your custom data" : "Default ΓÇö showing data.js values"}
+                              {hasAnyOverride ? "Live — dashboard shows your custom data" : "Default — showing data.js values"}
                             </span>
                           </div>
                         </div>
@@ -17435,7 +17435,7 @@ export default function AdminPanel() {
                           )}
                           <button type="button" disabled={dataSaving} onClick={() => saveCombinedCommunity(activeKey, communityForm, communityIntelForm)}
                             style={{ fontSize: 14, padding: "11px 28px", borderRadius: 9, border: "none", background: "linear-gradient(135deg,#D4A843,#B8860B)", color: "#000", fontWeight: 800, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", boxShadow: "0 6px 24px rgba(212,168,67,0.3)" }}>
-                            {dataSaving ? "Saving..." : "Publish ΓåÆ Live"}
+                            {dataSaving ? "Saving..." : "Publish → Live"}
                           </button>
                         </div>
                       </div>
@@ -17443,7 +17443,7 @@ export default function AdminPanel() {
                       {/* Editor Content */}
                       <div style={{ padding: "28px 36px" }}>
 
-                        {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ INVESTMENT DATA SECTION ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+                        {/* ══════ INVESTMENT DATA SECTION ══════ */}
                         <div style={{ marginBottom: 32, padding: 24, background: "rgba(212,168,67,0.03)", border: "1px solid rgba(212,168,67,0.12)", borderRadius: 14 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
                             <div style={{ width: 4, height: 24, background: "#D4A843", borderRadius: 2 }} />
@@ -17544,7 +17544,7 @@ export default function AdminPanel() {
                           </div>
                         </div>
 
-                        {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ LIFESTYLE DATA SECTION ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+                        {/* ══════ LIFESTYLE DATA SECTION ══════ */}
                         <div style={{ padding: 24, background: "rgba(0,191,165,0.03)", border: "1px solid rgba(0,191,165,0.12)", borderRadius: 14 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
                             <div style={{ width: 4, height: 24, background: "#00BFA5", borderRadius: 2 }} />
@@ -17649,9 +17649,9 @@ export default function AdminPanel() {
                           </div>
                         </div>
                         
-                        {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+                        {/* ═══════════════════════════════════════
                            LINKED PROJECTS PANEL
-                           ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+                           ═══════════════════════════════════════ */}
                         {(() => {
                           const communityProjects = emaarProjects.filter(p => p.community === activeKey);
                           
@@ -17686,7 +17686,7 @@ export default function AdminPanel() {
                                 </div>
                                 <button type="button" onClick={() => { setDataSubTab("projects"); setProjectCommunityFilter(activeKey); }}
                                   style={{ fontSize: 11, padding: "6px 14px", borderRadius: 6, border: `1px solid ${T.purple}40`, background: "transparent", color: T.purple, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
-                                  View All in Projects ΓåÆ
+                                  View All in Projects →
                                 </button>
                               </div>
                               
@@ -17697,11 +17697,11 @@ export default function AdminPanel() {
                                   <div style={{ fontSize: 9, color: T.textMuted }}>Total Projects</div>
                                 </div>
                                 <div style={{ padding: 12, background: T.surface, borderRadius: 8, textAlign: "center" }}>
-                                  <div style={{ fontSize: 15, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPrice > 0 ? `${(avgPrice/1e6).toFixed(1)}M` : "ΓÇö"}</div>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPrice > 0 ? `${(avgPrice/1e6).toFixed(1)}M` : "—"}</div>
                                   <div style={{ fontSize: 9, color: T.textMuted }}>Avg Price</div>
                                 </div>
                                 <div style={{ padding: 12, background: T.surface, borderRadius: 8, textAlign: "center" }}>
-                                  <div style={{ fontSize: 15, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPpsf > 0 ? avgPpsf.toLocaleString() : "ΓÇö"}</div>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>{avgPpsf > 0 ? avgPpsf.toLocaleString() : "—"}</div>
                                   <div style={{ fontSize: 9, color: T.textMuted }}>Avg PPSF</div>
                                 </div>
                                 <div style={{ padding: 12, background: T.surface, borderRadius: 8, textAlign: "center" }}>
@@ -17761,7 +17761,7 @@ export default function AdminPanel() {
                                             <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
                                             <div style={{ fontSize: 10, color: T.textMuted, display: "flex", gap: 6 }}>
                                               <span>{merged.price ? `${(merged.price/1e6).toFixed(1)}M` : "TBA"}</span>
-                                              {hasOverride && <span style={{ color: T.green }}>ΓùÅ Live</span>}
+                                              {hasOverride && <span style={{ color: T.green }}> Live</span>}
                                             </div>
                                           </div>
                                         </button>
@@ -17773,7 +17773,7 @@ export default function AdminPanel() {
                               
                               {totalProjects === 0 && (
                                 <div style={{ textAlign: "center", padding: 20, color: T.textMuted }}>
-                                  <div style={{ fontSize: 24, marginBottom: 8 }}>≡ƒô¡</div>
+                                  <div style={{ fontSize: 24, marginBottom: 8 }}>📡</div>
                                   <div style={{ fontSize: 12 }}>No projects in this community yet</div>
                                 </div>
                               )}
@@ -17789,7 +17789,7 @@ export default function AdminPanel() {
                           </div>
                           <button type="button" disabled={dataSaving} onClick={() => saveCombinedCommunity(activeKey, communityForm, communityIntelForm)}
                             style={{ fontSize: 14, padding: "12px 36px", borderRadius: 9, border: "none", background: "linear-gradient(135deg,#D4A843,#B8860B)", color: "#000", fontWeight: 800, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", boxShadow: "0 6px 28px rgba(212,168,67,0.32)" }}>
-                            {dataSaving ? "Publishing..." : "Publish ΓåÆ Goes Live Now"}
+                            {dataSaving ? "Publishing..." : "Publish → Goes Live Now"}
                           </button>
                         </div>
 
@@ -17800,7 +17800,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ΓöÇΓöÇΓöÇ YIELD TABLE EDITOR ΓöÇΓöÇΓöÇ */}
+              {/* ─── YIELD TABLE EDITOR ─── */}
               {dataSubTab === "yields" && (
                 <Section title="Yield Table Data" sub="Edit yield table entries shown in the Yields tab" action={
                   <button type="button" onClick={fetchLiveData} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
@@ -17830,7 +17830,7 @@ export default function AdminPanel() {
                       <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: `1px solid ${T.gold}30` }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                           <div>
-                            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{y.unit} ΓÇö {y.community}</h3>
+                            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{y.unit} — {y.community}</h3>
                             {hasOverride && <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 600 }}>LIVE DATA</span>}
                           </div>
                           <button type="button" onClick={() => setEditingYield(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
@@ -17885,7 +17885,7 @@ export default function AdminPanel() {
                             <span style={{ fontSize: 12, fontWeight: 700, color: T.green }}>{merged.gross}%</span>
                             <span style={{ fontSize: 12, color: T.teal }}>{merged.net}%</span>
                             <span style={{ fontSize: 10, color: merged.demand === "Very High" ? T.gold : T.textSecondary }}>{merged.demand}</span>
-                            <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? "ΓùÅ" : "ΓÇö"}</span>
+                            <span style={{ fontSize: 10, color: hasOverride ? T.green : T.textMuted, fontWeight: hasOverride ? 600 : 400 }}>{hasOverride ? "" : "—"}</span>
                           </div>
                         );
                       })}
@@ -17894,7 +17894,7 @@ export default function AdminPanel() {
                 </Section>
               )}
 
-              {/* ΓöÇΓöÇΓöÇ PRICE HISTORY SUB-TAB ΓöÇΓöÇΓöÇ */}
+              {/* ─── PRICE HISTORY SUB-TAB ─── */}
               {dataSubTab === "pricehistory" && (() => {
                 const selectedProject = emaarProjects.find(p => String(p.id) === String(phSelId));
                 const history         = phSelId ? (priceHistory[phSelId] || []) : [];
@@ -17960,18 +17960,18 @@ export default function AdminPanel() {
                     <TabHelp items={[
                       { icon: "[v]", title: "What is this?", desc: "An audit trail of every price change per project. Automatically records when you save a new price in the Projects tab." },
                       { icon: "[?]", title: "Select a Project", desc: "Choose any of the 48 projects from the dropdown. The chart and table will load its full price history." },
-                      { icon: "[n]", title: "Manual Entry", desc: "Add historical price points manually ΓÇö useful for logging past prices before the system was set up." },
+                      { icon: "[n]", title: "Manual Entry", desc: "Add historical price points manually — useful for logging past prices before the system was set up." },
                       { icon: "[x]", title: "Delete Entry", desc: "Click the ├ù button on any row to remove that price entry. A confirmation will appear first." },
                       { icon: "[^]", title: "Chart", desc: "Gold line chart shows price trend over time. Needs at least 2 data points to appear." },
                     ]} />
 
-                    {/* ΓöÇΓöÇ PROJECT SELECTOR ΓöÇΓöÇ */}
+                    {/* ── PROJECT SELECTOR ── */}
                     <div style={{ display: "flex", gap: 10, alignItems: "flex-end", marginBottom: 24, flexWrap: "wrap" }}>
                       <div style={{ flex: "1 1 300px" }}>
                         <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Select Project</label>
                         <select value={phSelId} onChange={e => { setPhSelId(e.target.value); if (e.target.value) loadHistory(e.target.value); }}
                           style={{ ...inputSt, cursor: "pointer" }}>
-                          <option value="">ΓÇö Choose a project ΓÇö</option>
+                          <option value="">— Choose a project —</option>
                           {[...emaarProjects].sort((a,b) => (a.name||"").localeCompare(b.name||"")).map(p => (
                             <option key={p.id} value={p.id}>{p.name} ({p.community})</option>
                           ))}
@@ -17980,12 +17980,12 @@ export default function AdminPanel() {
                       {phSelId && (
                         <button type="button" onClick={() => loadHistory(phSelId)} disabled={phLoading}
                           style={{ padding: "9px 16px", borderRadius: 8, border: `1px solid ${T.gold}40`, background: T.goldGlow, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", opacity: phLoading ? 0.6 : 1 }}>
-                          {phLoading ? "Loading..." : "Γå║ Refresh"}
+                          {phLoading ? "Loading..." : " Refresh"}
                         </button>
                       )}
                     </div>
 
-                    {/* ΓöÇΓöÇ EMPTY STATE ΓöÇΓöÇ */}
+                    {/* ── EMPTY STATE ── */}
                     {!phSelId && (
                       <div style={{ textAlign: "center", padding: "48px 20px", background: T.surfaceAlt, borderRadius: 14, border: `1px solid ${T.border}` }}>
                         <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", color: T.gold }}>
@@ -17996,7 +17996,7 @@ export default function AdminPanel() {
                       </div>
                     )}
 
-                    {/* ΓöÇΓöÇ LOADED STATE ΓöÇΓöÇ */}
+                    {/* ── LOADED STATE ── */}
                     {phSelId && !phLoading && (
                       <>
                         {/* KPI row */}
@@ -18028,7 +18028,7 @@ export default function AdminPanel() {
                         {/* SVG CHART */}
                         {history.length >= 2 ? (
                           <div className="chart-box fade-up" style={{ padding: "16px 20px 12px", marginBottom: 20 }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>{selectedProject?.name} ΓÇö Price Timeline</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>{selectedProject?.name} — Price Timeline</div>
                             <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>{history.length} data points ┬╖ AED values</div>
                             <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: "100%", height: chartH, overflow: "visible" }}>
                               {/* Grid lines */}
@@ -18071,7 +18071,7 @@ export default function AdminPanel() {
                           </div>
                         ) : history.length === 1 ? (
                           <div style={{ padding: "16px 20px", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}`, marginBottom: 20, fontSize: 12, color: T.textMuted }}>
-                            Only 1 data point ΓÇö chart requires at least 2 entries. Add more price records below.
+                            Only 1 data point — chart requires at least 2 entries. Add more price records below.
                           </div>
                         ) : (
                           <div style={{ padding: "24px", textAlign: "center", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}`, marginBottom: 20 }}>
@@ -18100,11 +18100,11 @@ export default function AdminPanel() {
                                 <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 40px", gap: 8, padding: "11px 20px", borderBottom: i < arr.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : T.surfaceAlt, alignItems: "center" }}>
                                   <span style={{ fontSize: 12, color: T.textSecondary }}>{new Date(h.recordedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}</span>
                                   <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>AED {h.price.toLocaleString()}</span>
-                                  <span style={{ fontSize: 12, color: T.textSecondary }}>{h.ppsf ? h.ppsf.toLocaleString() : "ΓÇö"}</span>
+                                  <span style={{ fontSize: 12, color: T.textSecondary }}>{h.ppsf ? h.ppsf.toLocaleString() : "—"}</span>
                                   <span style={{ fontSize: 11, fontWeight: 700, color: changePct === null ? T.textMuted : changePct >= 0 ? T.green : T.red }}>
-                                    {changePct === null ? "ΓÇö" : `${changePct >= 0 ? "+" : ""}${changePct}%`}
+                                    {changePct === null ? "—" : `${changePct >= 0 ? "+" : ""}${changePct}%`}
                                   </span>
-                                  <span style={{ fontSize: 11, color: T.textMuted }}>{h.recordedBy || "ΓÇö"}{h.manual ? " (manual)" : ""}</span>
+                                  <span style={{ fontSize: 11, color: T.textMuted }}>{h.recordedBy || "—"}{h.manual ? " (manual)" : ""}</span>
                                   <button type="button" onClick={() => deletePriceHistoryEntry(h.id, phSelId)}
                                     style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
                                     ├ù
@@ -18154,7 +18154,7 @@ export default function AdminPanel() {
 
               {/* Data sync info */}
               {dataSubTab !== "communities" && <div className="chart-box fade-up" style={{ padding: 16, marginTop: 8, display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ fontSize: 24 }}>Γä╣</div>
+                <div style={{ fontSize: 24 }}></div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>How Live Data Works</div>
                   <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6 }}>
@@ -18166,11 +18166,11 @@ export default function AdminPanel() {
             </>
           )}
 
-          {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+          {/* ═══════════════════════════════════════
              LEADS TAB
-             ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+             ═══════════════════════════════════════ */}
           {tab === "leads" && (() => {
-            /* ΓöÇΓöÇΓöÇ LEADS CRM ΓöÇΓöÇΓöÇ */
+            /* ─── LEADS CRM ─── */
             const now = new Date();
             const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -18244,7 +18244,7 @@ export default function AdminPanel() {
                 }
                 await setDoc(doc(db, "leads", leadId), update, { merge: true });
                 await logAudit(db, { action: "lead_status_change", leadId, to: newStatus });
-                notify(`Status ΓåÆ ${newStatus}`);
+                notify(`Status → ${newStatus}`);
                 fetchLeads();
                 if (leadDrawer?.id === leadId) setLeadDrawer(prev => ({ ...prev, status: newStatus, ...update }));
               } catch (e) { notify("Error: " + e.message); }
@@ -18340,7 +18340,7 @@ export default function AdminPanel() {
 
             return (
               <>
-                {/* ΓòÉΓòÉΓòÉ KPI TOPBAR ΓòÉΓòÉΓòÉ */}
+                {/* ═══ KPI TOPBAR ═══ */}
                 <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, overflow: "hidden" }}>
                   <button type="button" onClick={() => { fetchLeads(); notify("Leads refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                   {[
@@ -18348,7 +18348,7 @@ export default function AdminPanel() {
                     { label: "New", value: stats.new, color: "#3B82F6" },
                     { label: "This Week", value: stats.thisWeek, color: T.teal },
                     { label: "Conversion", value: `${conversionRate}%`, color: T.green },
-                    { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "ΓÇö", color: T.purple },
+                    { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "—", color: T.purple },
                   ].map((item, i) => (
                     <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 20px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
                       <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
@@ -18357,15 +18357,15 @@ export default function AdminPanel() {
                   ))}
                   <div style={{ marginLeft: "auto", padding: "10px 16px", display: "flex", gap: 8 }}>
                     <div style={{ display: "flex", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-                      <button type="button" onClick={() => setLeadsViewMode("table")} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: leadsViewMode === "table" ? T.gold + "20" : "transparent", color: leadsViewMode === "table" ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}>Γÿ░ Table</button>
-                      <button type="button" onClick={() => setLeadsViewMode("kanban")} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: leadsViewMode === "kanban" ? T.gold + "20" : "transparent", color: leadsViewMode === "kanban" ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}>Γè₧ Kanban</button>
+                      <button type="button" onClick={() => setLeadsViewMode("table")} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: leadsViewMode === "table" ? T.gold + "20" : "transparent", color: leadsViewMode === "table" ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}> Table</button>
+                      <button type="button" onClick={() => setLeadsViewMode("kanban")} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: leadsViewMode === "kanban" ? T.gold + "20" : "transparent", color: leadsViewMode === "kanban" ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}> Kanban</button>
                     </div>
                     <button type="button" onClick={() => setShowAddLead(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.08)", color: T.green, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>+ Add Lead</button>
                     <button type="button" onClick={exportLeadsCSV} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} Export</button>
                   </div>
                 </div>
 
-                {/* ΓòÉΓòÉΓòÉ PIPELINE CARDS ΓòÉΓòÉΓòÉ */}
+                {/* ═══ PIPELINE CARDS ═══ */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 20 }}>
                   {[
                     { id: "new", label: "New", count: stats.new, color: "#3B82F6", icon: "+" },
@@ -18391,7 +18391,7 @@ export default function AdminPanel() {
                   ))}
                 </div>
 
-                {/* ΓòÉΓòÉΓòÉ FILTERS ΓòÉΓòÉΓòÉ */}
+                {/* ═══ FILTERS ═══ */}
                 <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
                   <input type="text" placeholder="Search name, email, phone, project..." value={leadSearch} onChange={e => setLeadSearch(e.target.value)}
                     style={{ flex: 1, minWidth: 200, padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
@@ -18415,7 +18415,7 @@ export default function AdminPanel() {
                   <span style={{ fontSize: 11, color: T.textMuted }}>{filtered.length} of {leads.length} leads</span>
                 </div>
 
-                {/* ΓòÉΓòÉΓòÉ KANBAN VIEW ΓòÉΓòÉΓòÉ */}
+                {/* ═══ KANBAN VIEW ═══ */}
                 {leadsViewMode === "kanban" && (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 20 }}>
                     {[
@@ -18445,7 +18445,7 @@ export default function AdminPanel() {
                                   <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 4 }}>{lead.name || "Unknown"}</div>
                                   <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>{lead.project || "No project"}</div>
                                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <span style={{ fontSize: 9, color: T.textMuted }}>{lead.createdAt ? timeSince(new Date(lead.createdAt)) : "ΓÇö"}</span>
+                                    <span style={{ fontSize: 9, color: T.textMuted }}>{lead.createdAt ? timeSince(new Date(lead.createdAt)) : "—"}</span>
                                     {lead.notes?.length > 0 && <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>{lead.notes.length} notes</span>}
                                   </div>
                                 </div>
@@ -18458,7 +18458,7 @@ export default function AdminPanel() {
                   </div>
                 )}
 
-                {/* ΓòÉΓòÉΓòÉ LEADS TABLE ΓòÉΓòÉΓòÉ */}
+                {/* ═══ LEADS TABLE ═══ */}
                 {leadsViewMode === "table" && (
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
                   {filtered.length === 0 ? (
@@ -18485,19 +18485,19 @@ export default function AdminPanel() {
                                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                                 onClick={() => setLeadDrawer(lead)}>
                                 <td style={{ padding: "12px 14px" }}>
-                                  <div style={{ fontWeight: 600, color: T.white }}>{lead.name || "ΓÇö"}</div>
+                                  <div style={{ fontWeight: 600, color: T.white }}>{lead.name || "—"}</div>
                                   {lead.notes?.length > 0 && <span style={{ fontSize: 9, color: T.textMuted }}>{lead.notes.length} note{lead.notes.length > 1 ? "s" : ""}</span>}
                                 </td>
                                 <td style={{ padding: "12px 14px" }}>
-                                  <div style={{ fontSize: 11, color: T.textSecondary }}>{lead.email || "ΓÇö"}</div>
+                                  <div style={{ fontSize: 11, color: T.textSecondary }}>{lead.email || "—"}</div>
                                   {lead.phone && <div style={{ fontSize: 10, color: T.textMuted }}>{lead.phone}</div>}
                                 </td>
                                 <td style={{ padding: "12px 14px" }}>
-                                  <div style={{ color: T.gold, fontWeight: 600 }}>{lead.project || "ΓÇö"}</div>
+                                  <div style={{ color: T.gold, fontWeight: 600 }}>{lead.project || "—"}</div>
                                   {lead.community && <div style={{ fontSize: 10, color: T.textMuted }}>{lead.community}</div>}
                                 </td>
                                 <td style={{ padding: "12px 14px" }}>
-                                  <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: lead.source === "WhatsApp" ? "rgba(37,211,102,0.15)" : lead.source === "Email Inquiry" ? "rgba(59,130,246,0.12)" : "rgba(148,163,184,0.1)", color: lead.source === "WhatsApp" ? T.green : lead.source === "Email Inquiry" ? T.blue : T.textSecondary }}>{lead.source || "ΓÇö"}</span>
+                                  <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: lead.source === "WhatsApp" ? "rgba(37,211,102,0.15)" : lead.source === "Email Inquiry" ? "rgba(59,130,246,0.12)" : "rgba(148,163,184,0.1)", color: lead.source === "WhatsApp" ? T.green : lead.source === "Email Inquiry" ? T.blue : T.textSecondary }}>{lead.source || "—"}</span>
                                 </td>
                                 <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
                                   <select value={lead.status || "New"} onChange={e => {
@@ -18512,7 +18512,7 @@ export default function AdminPanel() {
                                   </select>
                                 </td>
                                 <td style={{ padding: "12px 14px", fontSize: 11, color: T.textMuted }}>
-                                  {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "ΓÇö"}
+                                  {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
                                 </td>
                                 <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
                                   <div style={{ display: "flex", gap: 6 }}>
@@ -18536,7 +18536,7 @@ export default function AdminPanel() {
                 </div>
                 )}
 
-                {/* ΓòÉΓòÉΓòÉ ADD LEAD MODAL ΓòÉΓòÉΓòÉ */}
+                {/* ═══ ADD LEAD MODAL ═══ */}
                 {showAddLead && (
                   <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowAddLead(false)}>
                     <div style={{ background: T.surface, border: `1px solid ${T.green}40`, borderRadius: 16, width: "95%", maxWidth: 500, padding: 24 }} onClick={e => e.stopPropagation()}>
@@ -18584,7 +18584,7 @@ export default function AdminPanel() {
                   </div>
                 )}
 
-                {/* ΓòÉΓòÉΓòÉ LOSS REASON MODAL ΓòÉΓòÉΓòÉ */}
+                {/* ═══ LOSS REASON MODAL ═══ */}
                 {showLossReason && (
                   <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowLossReason(null)}>
                     <div style={{ background: T.surface, border: `1px solid ${T.red}40`, borderRadius: 16, width: "95%", maxWidth: 400, padding: 24 }} onClick={e => e.stopPropagation()}>
@@ -18611,7 +18611,7 @@ export default function AdminPanel() {
                   </div>
                 )}
 
-                {/* ΓòÉΓòÉΓòÉ LEAD DRAWER ΓòÉΓòÉΓòÉ */}
+                {/* ═══ LEAD DRAWER ═══ */}
                 {leadDrawer && (
                   <div style={{ position: "fixed", inset: 0, zIndex: 8000, background: "rgba(4,9,15,0.85)", backdropFilter: "blur(4px)" }} onClick={() => setLeadDrawer(null)}>
                     <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "100%", maxWidth: 480, background: T.surface, borderLeft: `1px solid ${T.gold}30`, display: "flex", flexDirection: "column", animation: "slideIn 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
@@ -18685,11 +18685,11 @@ export default function AdminPanel() {
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
                           <div>
                             <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 2 }}>Created</div>
-                            <div style={{ fontSize: 12, color: T.textSecondary }}>{leadDrawer.createdAt ? new Date(leadDrawer.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", year: "numeric" }) : "ΓÇö"}</div>
+                            <div style={{ fontSize: 12, color: T.textSecondary }}>{leadDrawer.createdAt ? new Date(leadDrawer.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</div>
                           </div>
                           <div>
                             <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 2 }}>Updated</div>
-                            <div style={{ fontSize: 12, color: T.textSecondary }}>{leadDrawer.updatedAt ? new Date(leadDrawer.updatedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short" }) : "ΓÇö"}</div>
+                            <div style={{ fontSize: 12, color: T.textSecondary }}>{leadDrawer.updatedAt ? new Date(leadDrawer.updatedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short" }) : "—"}</div>
                           </div>
                         </div>
                         {leadDrawer.lossReason && (
@@ -18752,16 +18752,16 @@ export default function AdminPanel() {
             );
           })()}
 
-          {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+          {/* ═══════════════════════════════════════
              NOTIFICATIONS TAB
-             ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+             ═══════════════════════════════════════ */}
           {tab === "notifications" && <NotificationsTab T={T} notify={notify} adminUser={adminUser} I={I} users={users} db={db} />}
 
-          {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+          {/* ═══════════════════════════════════════
              VERIFICATION TAB (Binance-style KYC)
-             ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+             ═══════════════════════════════════════ */}
           {tab === "verification" && (() => {
-            /* ΓöÇΓöÇΓöÇ KYC VERIFICATION TAB ΓöÇΓöÇΓöÇ */
+            /* ─── KYC VERIFICATION TAB ─── */
             const todayStart = new Date(); todayStart.setHours(0,0,0,0);
             const vPending = verifications.filter(v => v.status === "pending");
             const vApproved = verifications.filter(v => v.status === "approved");
@@ -18802,14 +18802,14 @@ export default function AdminPanel() {
             const getUserContext = (uid) => users.find(u => u.uid === uid || u.id === uid);
 
             return <>
-              {/* ΓòÉΓòÉΓòÉ KPI TOPBAR ΓòÉΓòÉΓòÉ */}
+              {/* ═══ KPI TOPBAR ═══ */}
               <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, overflow: "hidden" }}>
                 <button type="button" onClick={() => { fetchVerifications(); notify("Refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                 {[
                   { label: "Pending", value: vPending.length, color: T.orange },
                   { label: "Approved Today", value: approvedToday, color: T.green },
                   { label: "Rejected Today", value: rejectedToday, color: T.red },
-                  { label: "Avg Review", value: avgReviewHrs !== null ? `${avgReviewHrs}h` : "ΓÇö", color: T.teal },
+                  { label: "Avg Review", value: avgReviewHrs !== null ? `${avgReviewHrs}h` : "—", color: T.teal },
                   { label: "Total", value: verifications.length, color: T.textSecondary },
                 ].map((item, i) => (
                   <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 20px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
@@ -18819,7 +18819,7 @@ export default function AdminPanel() {
                 ))}
               </div>
 
-              {/* ΓòÉΓòÉΓòÉ VERIFICATION LEVELS ΓòÉΓòÉΓòÉ */}
+              {/* ═══ VERIFICATION LEVELS ═══ */}
               <div className="fade-up" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
                 {[
                   { level: "Basic", id: "basic", color: T.blue, icon: "1", desc: "Email verified", features: ["Email confirmation", "Basic profile", "Limited access"] },
@@ -18844,7 +18844,7 @@ export default function AdminPanel() {
                 ))}
               </div>
 
-              {/* ΓòÉΓòÉΓòÉ SUB-TABS: Queue | History ΓòÉΓòÉΓòÉ */}
+              {/* ═══ SUB-TABS: Queue | History ═══ */}
               <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
                 {[
                   { id: "queue", label: `Review Queue (${vPending.length})` },
@@ -18855,7 +18855,7 @@ export default function AdminPanel() {
                 ))}
               </div>
 
-              {/* ΓòÉΓòÉΓòÉ FILTERS + BATCH MODE ΓòÉΓòÉΓòÉ */}
+              {/* ═══ FILTERS + BATCH MODE ═══ */}
               <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
                 {(verifySubTab === "history" ? ["all", "approved", "rejected"] : ["all", "pending"]).map(f => (
                   <button key={f} type="button" onClick={() => setVerifyFilter(f)}
@@ -18866,7 +18866,7 @@ export default function AdminPanel() {
                 <div style={{ height: 20, width: 1, background: T.border }} />
                 <button type="button" onClick={() => { setVerifyBatchMode(!verifyBatchMode); setVerifyBatchSelected([]); }}
                   style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${verifyBatchMode ? T.purple : T.border}`, background: verifyBatchMode ? `${T.purple}15` : "transparent", color: verifyBatchMode ? T.purple : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                  {verifyBatchMode ? `Γ£ô Batch Mode (${verifyBatchSelected.length})` : "Batch Mode"}
+                  {verifyBatchMode ? `✔ Batch Mode (${verifyBatchSelected.length})` : "Batch Mode"}
                 </button>
                 {verifyBatchMode && verifyBatchSelected.length > 0 && (
                   <>
@@ -18886,7 +18886,7 @@ export default function AdminPanel() {
                 {/* SLA Warning */}
                 {vPending.filter(v => isUrgent(v)).length > 0 && (
                   <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: T.red }}>ΓÜá {vPending.filter(v => isUrgent(v)).length} past SLA</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: T.red }}>⚡ {vPending.filter(v => isUrgent(v)).length} past SLA</span>
                     <span style={{ fontSize: 9, color: T.textMuted }}>&gt;24h</span>
                   </div>
                 )}
@@ -18894,7 +18894,7 @@ export default function AdminPanel() {
                   style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", width: 200 }} />
               </div>
 
-              {/* ΓòÉΓòÉΓòÉ VERIFICATION TABLE ΓòÉΓòÉΓòÉ */}
+              {/* ═══ VERIFICATION TABLE ═══ */}
               <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
                 {filtered.length === 0 ? (
                   <div style={{ textAlign: "center", padding: 60 }}>
@@ -18946,8 +18946,8 @@ export default function AdminPanel() {
                                   </div>
                                   <div>
                                     <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{v.name || "No name"}</div>
-                                    <div style={{ fontSize: 10, color: T.textMuted }}>{v.email || "ΓÇö"}</div>
-                                    {userCtx && <div style={{ fontSize: 9, color: T.teal }}>{userCtx.tier} ┬╖ joined {userCtx.createdAt ? new Date(userCtx.createdAt).toLocaleDateString("en-AE", { month: "short", year: "numeric" }) : "ΓÇö"}</div>}
+                                    <div style={{ fontSize: 10, color: T.textMuted }}>{v.email || "—"}</div>
+                                    {userCtx && <div style={{ fontSize: 9, color: T.teal }}>{userCtx.tier} ┬╖ joined {userCtx.createdAt ? new Date(userCtx.createdAt).toLocaleDateString("en-AE", { month: "short", year: "numeric" }) : "—"}</div>}
                                   </div>
                                 </div>
                               </td>
@@ -18961,7 +18961,7 @@ export default function AdminPanel() {
                                 </span>
                               </td>
                               <td style={{ padding: "12px 14px", fontSize: 11, color: T.textSecondary }}>
-                                {v.submittedAt ? new Date(v.submittedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "ΓÇö"}
+                                {v.submittedAt ? new Date(v.submittedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
                               </td>
                               <td style={{ padding: "12px 14px" }}>
                                 {v.status === "pending" ? (
@@ -18969,7 +18969,7 @@ export default function AdminPanel() {
                                     {waitHrs}h {urgent && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "rgba(239,68,68,0.15)", color: T.red, marginLeft: 4 }}>URGENT</span>}
                                   </span>
                                 ) : (
-                                  <span style={{ fontSize: 10, color: T.textMuted }}>{v.reviewedAt ? `Reviewed ${new Date(v.reviewedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short" })}` : "ΓÇö"}</span>
+                                  <span style={{ fontSize: 10, color: T.textMuted }}>{v.reviewedAt ? `Reviewed ${new Date(v.reviewedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short" })}` : "—"}</span>
                                 )}
                               </td>
                               <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
@@ -18992,7 +18992,7 @@ export default function AdminPanel() {
                 )}
               </div>
 
-              {/* ΓòÉΓòÉΓòÉ REVIEW DRAWER ΓòÉΓòÉΓòÉ */}
+              {/* ═══ REVIEW DRAWER ═══ */}
               {reviewingUser && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 8000 }} onClick={() => { setReviewingUser(null); setRejectReason(""); }}>
                   <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "100%", maxWidth: 540, background: T.surface, borderLeft: `1px solid ${T.gold}30`, display: "flex", flexDirection: "column", animation: "slideIn 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
@@ -19018,9 +19018,9 @@ export default function AdminPanel() {
                           <div style={{ fontSize: 10, fontWeight: 700, color: T.teal, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>User Context</div>
                           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                             <div><span style={{ fontSize: 10, color: T.textMuted }}>Tier: </span><span style={{ fontSize: 11, color: T.white, fontWeight: 600 }}>{userCtx.tier}</span></div>
-                            <div><span style={{ fontSize: 10, color: T.textMuted }}>Joined: </span><span style={{ fontSize: 11, color: T.white }}>{userCtx.createdAt ? new Date(userCtx.createdAt).toLocaleDateString("en-AE") : "ΓÇö"}</span></div>
-                            <div><span style={{ fontSize: 10, color: T.textMuted }}>Last Active: </span><span style={{ fontSize: 11, color: T.white }}>{userCtx.lastLoginAt ? new Date(userCtx.lastLoginAt).toLocaleDateString("en-AE") : "ΓÇö"}</span></div>
-                            <div><span style={{ fontSize: 10, color: T.textMuted }}>Country: </span><span style={{ fontSize: 11, color: T.white }}>{userCtx.country || "ΓÇö"}</span></div>
+                            <div><span style={{ fontSize: 10, color: T.textMuted }}>Joined: </span><span style={{ fontSize: 11, color: T.white }}>{userCtx.createdAt ? new Date(userCtx.createdAt).toLocaleDateString("en-AE") : "—"}</span></div>
+                            <div><span style={{ fontSize: 10, color: T.textMuted }}>Last Active: </span><span style={{ fontSize: 11, color: T.white }}>{userCtx.lastLoginAt ? new Date(userCtx.lastLoginAt).toLocaleDateString("en-AE") : "—"}</span></div>
+                            <div><span style={{ fontSize: 10, color: T.textMuted }}>Country: </span><span style={{ fontSize: 11, color: T.white }}>{userCtx.country || "—"}</span></div>
                           </div>
                         </div>
                       );
@@ -19033,12 +19033,12 @@ export default function AdminPanel() {
                         <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Personal Information</div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                           {[
-                            { label: "Full Name", value: reviewingUser.name || "ΓÇö" },
-                            { label: "Email", value: reviewingUser.email || "ΓÇö" },
-                            { label: "Phone", value: reviewingUser.phone || "ΓÇö" },
-                            { label: "Nationality", value: reviewingUser.nationality || "ΓÇö" },
-                            { label: "Date of Birth", value: reviewingUser.dob || "ΓÇö" },
-                            { label: "Address", value: reviewingUser.address || "ΓÇö" },
+                            { label: "Full Name", value: reviewingUser.name || "—" },
+                            { label: "Email", value: reviewingUser.email || "—" },
+                            { label: "Phone", value: reviewingUser.phone || "—" },
+                            { label: "Nationality", value: reviewingUser.nationality || "—" },
+                            { label: "Date of Birth", value: reviewingUser.dob || "—" },
+                            { label: "Address", value: reviewingUser.address || "—" },
                           ].map((item, i) => (
                             <div key={i} style={{ padding: "8px 12px", borderRadius: 8, background: T.surfaceAlt }}>
                               <div style={{ fontSize: 9, fontWeight: 600, color: T.textMuted, textTransform: "uppercase", marginBottom: 2 }}>{item.label}</div>
@@ -19088,7 +19088,7 @@ export default function AdminPanel() {
 
                       {/* Timestamps */}
                       <div style={{ display: "flex", gap: 16, fontSize: 10, color: T.textMuted, marginBottom: 20 }}>
-                        <span>Submitted: {reviewingUser.submittedAt ? new Date(reviewingUser.submittedAt).toLocaleString("en-AE") : "ΓÇö"}</span>
+                        <span>Submitted: {reviewingUser.submittedAt ? new Date(reviewingUser.submittedAt).toLocaleString("en-AE") : "—"}</span>
                         <span>UID: {reviewingUser.uid?.slice(0, 12)}...</span>
                       </div>
 
@@ -19110,7 +19110,7 @@ export default function AdminPanel() {
                       {/* View User Button */}
                       {reviewingUser.uid && (
                         <button type="button" onClick={() => { setTab("users"); setPendingOpenUid(reviewingUser.uid); setReviewingUser(null); }}
-                          style={{ marginTop: 16, width: "100%", padding: "10px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View Full User Profile ΓåÆ</button>
+                          style={{ marginTop: 16, width: "100%", padding: "10px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View Full User Profile →</button>
                       )}
                     </div>
                   </div>
@@ -19119,19 +19119,19 @@ export default function AdminPanel() {
             </>;
           })()}
 
-          {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+          {/* ═══════════════════════════════════════
              ANALYTICS TAB
-             ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
-          {/* ΓöÇΓöÇΓöÇ EMAIL DIGEST TAB ΓöÇΓöÇΓöÇ */}
+             ═══════════════════════════════════════ */}
+          {/* ─── EMAIL DIGEST TAB ─── */}
           {tab === "digest" && <DigestTab users={users} db={db} notify={notify} adminUser={adminUser} T={T} I={I} />}
 
 
           {tab === "analytics" && (() => {
-            /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-               TAB 10: ANALYTICS ΓÇö PRO LEVEL
+            /* ═══════════════════════════════════════════════════════════════════
+               TAB 10: ANALYTICS — PRO LEVEL
                Mixpanel + Amplitude + ChartMogul + Baremetrics
                Date range filtering, MRR charts, cohort drill-downs, export
-            ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+            ═══════════════════════════════════════════════════════════════════ */
             
             // Date range calculation
             const rangeMap = { "7d": 7, "30d": 30, "90d": 90, "all": 9999 };
@@ -19215,7 +19215,7 @@ export default function AdminPanel() {
               return weeks;
             })();
 
-            // FIXED: Cohort Retention Heatmap ΓÇö proper calculation
+            // FIXED: Cohort Retention Heatmap — proper calculation
             const cohortHeatmap = (() => {
               const cohorts = [];
               const cohortCount = analyticsRange === "7d" ? 2 : analyticsRange === "30d" ? 5 : 8;
@@ -19401,7 +19401,7 @@ export default function AdminPanel() {
 
             return (
             <>
-              {/* ΓòÉΓòÉΓòÉ HEADER BAR: Date Range + Export ΓòÉΓòÉΓòÉ */}
+              {/* ═══ HEADER BAR: Date Range + Export ═══ */}
               <div className="fade-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Analytics</div>
@@ -19440,7 +19440,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* ΓòÉΓòÉΓòÉ REAL-TIME ANALYTICS PANEL (Phase 1A) ΓòÉΓòÉΓòÉ */}
+              {/* ═══ REAL-TIME ANALYTICS PANEL (Phase 1A) ═══ */}
               <div className="fade-up" style={{ background: `linear-gradient(135deg, ${T.surface} 0%, ${T.card} 100%)`, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20, marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -19535,9 +19535,9 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Device Type</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {[
-                        { name: "Desktop", value: deviceBreakdown.desktop, icon: "≡ƒûÑ∩╕Å", color: T.blue },
-                        { name: "Mobile", value: deviceBreakdown.mobile, icon: "≡ƒô▒", color: T.teal },
-                        { name: "Tablet", value: deviceBreakdown.tablet, icon: "≡ƒô▓", color: T.purple },
+                        { name: "Desktop", value: deviceBreakdown.desktop, icon: "•", color: T.blue },
+                        { name: "Mobile", value: deviceBreakdown.mobile, icon: "📱", color: T.teal },
+                        { name: "Tablet", value: deviceBreakdown.tablet, icon: "•", color: T.purple },
                       ].map(d => (
                         <div key={d.name}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
@@ -19574,7 +19574,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* ΓòÉΓòÉΓòÉ ENGAGEMENT ANALYTICS PANEL (Phase 2A) ΓòÉΓòÉΓòÉ */}
+              {/* ═══ ENGAGEMENT ANALYTICS PANEL (Phase 2A) ═══ */}
               {(() => {
                 // Calculate Engagement Score (0-100)
                 const engagementScore = (() => {
@@ -19787,7 +19787,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ΓòÉΓòÉΓòÉ KPI ROW WITH SPARKLINES + DELTAS ΓòÉΓòÉΓòÉ */}
+              {/* ═══ KPI ROW WITH SPARKLINES + DELTAS ═══ */}
               <div className="fade-up" style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 20 }}>
                 {[
                   { label: "DAU", value: dau, delta: dauDelta, color: T.green, spark: dailySignups },
@@ -19808,7 +19808,7 @@ export default function AdminPanel() {
                     {item.delta !== undefined && (
                       <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 6 }}>
                         <span style={{ fontSize: 10, color: item.delta > 0 ? T.green : item.delta < 0 ? T.red : T.textMuted }}>
-                          {item.delta > 0 ? "Γåæ" : item.delta < 0 ? "Γåô" : "ΓÇö"} {Math.abs(item.delta)}
+                          {item.delta > 0 ? "←" : item.delta < 0 ? "↑" : "—"} {Math.abs(item.delta)}
                         </span>
                         <span style={{ fontSize: 9, color: T.textMuted }}>vs prev</span>
                       </div>
@@ -19817,7 +19817,7 @@ export default function AdminPanel() {
                 ))}
               </div>
 
-              {/* ΓòÉΓòÉΓòÉ USER LIFECYCLE ANALYTICS (Phase 2B) ΓòÉΓòÉΓòÉ */}
+              {/* ═══ USER LIFECYCLE ANALYTICS (Phase 2B) ═══ */}
               {(() => {
                 const now = new Date();
                 const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -20043,7 +20043,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ΓòÉΓòÉΓòÉ ADVANCED FUNNELS & DROP-OFF ANALYSIS (Phase 2C) ΓòÉΓòÉΓòÉ */}
+              {/* ═══ ADVANCED FUNNELS & DROP-OFF ANALYSIS (Phase 2C) ═══ */}
               {(() => {
                 // Define funnel stages with user data
                 const funnelStages = [
@@ -20280,7 +20280,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ΓòÉΓòÉΓòÉ SEGMENT BUILDER (Phase 3A) ΓòÉΓòÉΓòÉ */}
+              {/* ═══ SEGMENT BUILDER (Phase 3A) ═══ */}
               {(() => {
                 const now = new Date();
                 const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -20586,7 +20586,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ΓòÉΓòÉΓòÉ SCHEDULED REPORTS & EXPORT CENTER (Phase 3B) ΓòÉΓòÉΓòÉ */}
+              {/* ═══ SCHEDULED REPORTS & EXPORT CENTER (Phase 3B) ═══ */}
               {(() => {
                 const metricOptions = [
                   { key: "dau", label: "Daily Active Users", icon: "\uD83D\uDC64" },
@@ -20888,7 +20888,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ΓòÉΓòÉΓòÉ AI INSIGHTS & ANOMALY DETECTION (Phase 3C) ΓòÉΓòÉΓòÉ */}
+              {/* ═══ AI INSIGHTS & ANOMALY DETECTION (Phase 3C) ═══ */}
               {(() => {
                 const now = new Date();
                 
@@ -21153,7 +21153,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ΓòÉΓòÉΓòÉ HEALTH SCORE DASHBOARD & CORRELATIONS (Phase 3C-2) ΓòÉΓòÉΓòÉ */}
+              {/* ═══ HEALTH SCORE DASHBOARD & CORRELATIONS (Phase 3C-2) ═══ */}
               {(() => {
                 // Calculate Health Score Components (0-100 each)
                 const healthComponents = {
@@ -21408,7 +21408,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ΓòÉΓòÉΓòÉ FORECASTING & GOAL TRACKING (Phase 3C-3 Final) ΓòÉΓòÉΓòÉ */}
+              {/* ═══ FORECASTING & GOAL TRACKING (Phase 3C-3 Final) ═══ */}
               {(() => {
                 // Generate forecast data based on current trends
                 const generateForecast = (current, growthRate, months = 6) => {
@@ -21709,7 +21709,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ΓòÉΓòÉΓòÉ ROW 1: MRR Chart + User Growth + Funnel ΓòÉΓòÉΓòÉ */}
+              {/* ═══ ROW 1: MRR Chart + User Growth + Funnel ═══ */}
               <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 0.8fr", gap: 16, marginBottom: 20 }}>
                 <Chart title="MRR History" sub="Monthly Recurring Revenue trend">
                   <ResponsiveContainer width="100%" height={200}>
@@ -21775,7 +21775,7 @@ export default function AdminPanel() {
                 </Chart>
               </div>
 
-              {/* ΓòÉΓòÉΓòÉ COHORT RETENTION HEATMAP (Clickable) ΓòÉΓòÉΓòÉ */}
+              {/* ═══ COHORT RETENTION HEATMAP (Clickable) ═══ */}
               <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px", marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <div>
@@ -21791,7 +21791,7 @@ export default function AdminPanel() {
                 
                 {cohortHeatmap.every(c => c.total === 0) ? (
                   <div style={{ padding: "40px 20px", textAlign: "center" }}>
-                    <div style={{ fontSize: 32, marginBottom: 12 }}>≡ƒôè</div>
+                    <div style={{ fontSize: 32, marginBottom: 12 }}>📈</div>
                     <div style={{ fontSize: 14, color: T.textMuted, marginBottom: 8 }}>Not enough data for cohort analysis</div>
                     <div style={{ fontSize: 12, color: T.textMuted }}>Cohorts will populate as users sign up over multiple weeks</div>
                   </div>
@@ -21814,7 +21814,7 @@ export default function AdminPanel() {
                             <td style={{ padding: "6px 10px", textAlign: "center", color: T.white, fontWeight: 700, borderBottom: `1px solid ${T.border}` }}>{cohort.total}</td>
                             {Array.from({ length: weekCount }, (_, wi) => {
                               const weekData = cohort.weeks.find(w => w.week === wi);
-                              if (!weekData) return <td key={wi} style={{ padding: "4px", borderBottom: `1px solid ${T.border}` }}><div style={{ padding: "6px 8px", textAlign: "center", color: T.textMuted }}>ΓÇö</div></td>;
+                              if (!weekData) return <td key={wi} style={{ padding: "4px", borderBottom: `1px solid ${T.border}` }}><div style={{ padding: "6px 8px", textAlign: "center", color: T.textMuted }}>—</div></td>;
                               const pct = weekData.pct;
                               const bgColor = pct >= 70 ? T.green : pct >= 40 ? T.gold : pct >= 20 ? T.orange : pct > 0 ? T.red : T.textMuted;
                               return (
@@ -21843,7 +21843,7 @@ export default function AdminPanel() {
                 )}
               </div>
 
-              {/* ΓòÉΓòÉΓòÉ ROW 3: Geographic + Tier Movement + Churn ΓòÉΓòÉΓòÉ */}
+              {/* ═══ ROW 3: Geographic + Tier Movement + Churn ═══ */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
                 <Chart title="Signups by Country" sub={`Top 10 ┬╖ ${analyticsRange}`}>
                   {geoData.length === 0 ? (
@@ -21864,14 +21864,14 @@ export default function AdminPanel() {
                   )}
                 </Chart>
 
-                <Chart title="Tier Movement" sub="Upgrades Γåæ ┬╖ Downgrades Γåô">
+                <Chart title="Tier Movement" sub="Upgrades ← ┬╖ Downgrades ↑">
                   <div style={{ padding: "10px 0" }}>
                     {[
-                      { label: "Free ΓåÆ Trial", value: tierMovement.freeToTrial, color: T.blue, icon: "Γåæ", good: true },
-                      { label: "Trial ΓåÆ Pro", value: tierMovement.trialToPro, color: T.green, icon: "Γåæ", good: true },
-                      { label: "Pro ΓåÆ Enterprise", value: tierMovement.proToEnt, color: T.purple, icon: "Γåæ", good: true },
-                      { label: "Trial ΓåÆ Free", value: tierMovement.trialToFree, color: T.red, icon: "Γåô", good: false },
-                      { label: "Pro ΓåÆ Free", value: tierMovement.proToFree, color: T.red, icon: "Γåô", good: false },
+                      { label: "Free → Trial", value: tierMovement.freeToTrial, color: T.blue, icon: "←", good: true },
+                      { label: "Trial → Pro", value: tierMovement.trialToPro, color: T.green, icon: "←", good: true },
+                      { label: "Pro → Enterprise", value: tierMovement.proToEnt, color: T.purple, icon: "←", good: true },
+                      { label: "Trial → Free", value: tierMovement.trialToFree, color: T.red, icon: "↑", good: false },
+                      { label: "Pro → Free", value: tierMovement.proToFree, color: T.red, icon: "↑", good: false },
                     ].map((m, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: i < 4 ? `1px solid ${T.border}` : "none" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -21883,7 +21883,7 @@ export default function AdminPanel() {
                     ))}
                     <div style={{ marginTop: 12, padding: "8px 10px", borderRadius: 8, background: tierMovement.trialToPro > tierMovement.trialToFree ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)" }}>
                       <div style={{ fontSize: 10, color: tierMovement.trialToPro > tierMovement.trialToFree ? T.green : T.red }}>
-                        {tierMovement.trialToPro > tierMovement.trialToFree ? "Γ£ô Healthy: More upgrades than downgrades" : "ΓÜá Warning: More downgrades than upgrades"}
+                        {tierMovement.trialToPro > tierMovement.trialToFree ? "✔ Healthy: More upgrades than downgrades" : "⚡ Warning: More downgrades than upgrades"}
                       </div>
                     </div>
                   </div>
@@ -21904,14 +21904,14 @@ export default function AdminPanel() {
                     ))}
                     {churnTiming.every(c => c.count === 0) && (
                       <div style={{ padding: "12px", textAlign: "center", background: "rgba(16,185,129,0.08)", borderRadius: 8 }}>
-                        <div style={{ fontSize: 11, color: T.green }}>≡ƒÄë No churned users yet!</div>
+                        <div style={{ fontSize: 11, color: T.green }}>🎯 No churned users yet!</div>
                       </div>
                     )}
                   </div>
                 </Chart>
               </div>
 
-              {/* ΓòÉΓòÉΓòÉ ROW 4: Feature Usage + Top Users + Sources ΓòÉΓòÉΓòÉ */}
+              {/* ═══ ROW 4: Feature Usage + Top Users + Sources ═══ */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
                 <Chart title="Feature Usage" sub="Top admin actions">
                   {featureUsage.length === 0 ? (
@@ -21950,7 +21950,7 @@ export default function AdminPanel() {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 10, fontWeight: 600, color: T.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{u.name || u.email?.split("@")[0]}</div>
                           </div>
-                          <div style={{ fontSize: 9, color: T.textMuted }}>{u.lastLoginAt ? timeSince(new Date(u.lastLoginAt)) : "ΓÇö"}</div>
+                          <div style={{ fontSize: 9, color: T.textMuted }}>{u.lastLoginAt ? timeSince(new Date(u.lastLoginAt)) : "—"}</div>
                         </div>
                         );
                       })}
@@ -21977,7 +21977,7 @@ export default function AdminPanel() {
                 </Chart>
               </div>
 
-              {/* ΓòÉΓòÉΓòÉ MILESTONES ΓòÉΓòÉΓòÉ */}
+              {/* ═══ MILESTONES ═══ */}
               <Section title="Growth Milestones" sub="Track progress towards key business goals">
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
                   {[
@@ -21996,7 +21996,7 @@ export default function AdminPanel() {
                       <div key={i} className="chart-box fade-up" style={{ padding: 14, animationDelay: `${i * 0.03}s`, border: done ? `1px solid ${T.green}40` : `1px solid ${T.border}`, background: done ? "rgba(16,185,129,0.04)" : T.surface }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                           <span style={{ fontSize: 9, fontWeight: 800, color: done ? T.green : T.gold }}>{i + 1}</span>
-                          {done ? <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "rgba(16,185,129,0.15)", color: T.green }}>Γ£ô DONE</span> : <span style={{ fontSize: 9, color: T.textMuted }}>{pct}%</span>}
+                          {done ? <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "rgba(16,185,129,0.15)", color: T.green }}>✔ DONE</span> : <span style={{ fontSize: 9, color: T.textMuted }}>{pct}%</span>}
                         </div>
                         <div style={{ fontSize: 11, fontWeight: 600, color: done ? T.white : T.textSecondary, marginBottom: 6 }}>{m.label}</div>
                         <div style={{ height: 4, borderRadius: 2, background: T.surfaceAlt }}>
@@ -22012,15 +22012,15 @@ export default function AdminPanel() {
             );
           })()}
 
-          {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+          {/* ═══════════════════════════════════════
              CANCELLATION INSIGHTS TAB
-             ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+             ═══════════════════════════════════════ */}
           {tab === "cancellation" && (() => {
-            /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-               TAB 13: CANCELLATION INSIGHTS ΓÇö PRO LEVEL
+            /* ═══════════════════════════════════════════════════════════════════
+               TAB 13: CANCELLATION INSIGHTS — PRO LEVEL
                Exit surveys, reason charts, win-back campaigns, churn analysis
                Collections: cancellations, winbackCampaigns
-            ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+            ═══════════════════════════════════════════════════════════════════ */
             
             // Simulated cancellation data (would come from Firestore)
             const cancellations = users.filter(u => u.cancelledAt || u.status === "cancelled" || u.tier === "cancelled");
@@ -22127,7 +22127,7 @@ export default function AdminPanel() {
                     
                     <div style={{ marginTop: 20, padding: "12px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
                       <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6 }}>TOP INSIGHT</div>
-                      <div style={{ fontSize: 13, color: T.white }}>≡ƒÆí <strong style={{ color: T.gold }}>28%</strong> cite pricing ΓÇö consider a downgrade option or annual discount</div>
+                      <div style={{ fontSize: 13, color: T.white }}>🆍 <strong style={{ color: T.gold }}>28%</strong> cite pricing — consider a downgrade option or annual discount</div>
                     </div>
                   </div>
 
@@ -22219,7 +22219,7 @@ export default function AdminPanel() {
                   </div>
                   {atRiskUsers.length === 0 ? (
                     <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                      <div style={{ fontSize: 24, marginBottom: 8 }}>≡ƒÄë</div>
+                      <div style={{ fontSize: 24, marginBottom: 8 }}>🎯</div>
                       <div style={{ fontSize: 13 }}>No at-risk users! All paid users are active.</div>
                     </div>
                   ) : (
@@ -22282,11 +22282,11 @@ export default function AdminPanel() {
           {tab === "support" && <SupportTab T={T} I={I} db={db} notify={notify} adminUser={adminUser} users={users} setTab={setTab} setPendingOpenUid={setPendingOpenUid} />}
 
           {tab === "tabcontrol" && (() => {
-            /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-               TAB 9: TAB CONTROL ΓÇö PRO LEVEL
+            /* ═══════════════════════════════════════════════════════════════════
+               TAB 9: TAB CONTROL — PRO LEVEL
                LaunchDarkly + Statsig + Flagsmith inspired feature flags
                Search, badges, descriptions, usage stats, bulk actions
-            ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+            ═══════════════════════════════════════════════════════════════════ */
 
             const ALL_TABS = [
               { id: "Overview", category: "Core", desc: "Dashboard home with key metrics" },
@@ -22376,7 +22376,7 @@ export default function AdminPanel() {
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-                {/* ΓòÉΓòÉΓòÉ HEADER WITH SEARCH ΓòÉΓòÉΓòÉ */}
+                {/* ═══ HEADER WITH SEARCH ═══ */}
                 <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                     <div>
@@ -22392,7 +22392,7 @@ export default function AdminPanel() {
                     <div style={{ flex: 1, minWidth: 200, position: "relative" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                       <input type="text" placeholder="Search tabs..." value={tabSearch} onChange={e => setTabSearch(e.target.value)} style={{ width: "100%", padding: "10px 12px 10px 36px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                      {tabSearch && <button type="button" onClick={() => setTabSearch("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 14 }}>Γ£ò</button>}
+                      {tabSearch && <button type="button" onClick={() => setTabSearch("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 14 }}></button>}
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
                       {[{ label: `${ALL_TABS.length - hiddenCount} visible`, color: T.green }, { label: `${hiddenCount} hidden`, color: T.textMuted }, { label: `${proCount} Pro`, color: T.gold }, { label: `${entCount} Ent`, color: T.purple }, { label: `${betaCount} Beta`, color: T.blue }].map((s, i) => (
@@ -22402,7 +22402,7 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* ΓòÉΓòÉΓòÉ PREVIEW MODE ΓòÉΓòÉΓòÉ */}
+                {/* ═══ PREVIEW MODE ═══ */}
                 <div className="fade-up" style={{ background: previewTier ? `${TIER_COLORS[previewTier]}10` : T.surface, borderRadius: 14, border: `1px solid ${previewTier ? TIER_COLORS[previewTier] + "40" : T.border}`, padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={previewTier ? TIER_COLORS[previewTier] : T.textMuted} strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/></svg>
@@ -22421,7 +22421,7 @@ export default function AdminPanel() {
                 {/* Preview Sidebar */}
                 {previewTier && (
                   <div className="fade-up" style={{ background: T.surfaceAlt, borderRadius: 14, border: `1px solid ${TIER_COLORS[previewTier]}30`, padding: "16px 20px" }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: TIER_COLORS[previewTier], textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Sidebar ΓÇö {TIER_LABELS[previewTier]}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: TIER_COLORS[previewTier], textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Sidebar — {TIER_LABELS[previewTier]}</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                       {ALL_TABS.map(tabObj => {
                         const setting = getTabSetting(tabObj.id);
@@ -22443,16 +22443,16 @@ export default function AdminPanel() {
                   </div>
                 )}
 
-                {/* ΓòÉΓòÉΓòÉ BULK ACTIONS ΓòÉΓòÉΓòÉ */}
+                {/* ═══ BULK ACTIONS ═══ */}
                 <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "14px 20px" }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Bulk Actions</div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     {[
                       { label: "Show All", color: T.green, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { ...getTabSetting(t.id), visible: true }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("All visible"); } },
                       { label: "Hide All", color: T.red, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { ...getTabSetting(t.id), visible: false }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("All hidden"); } },
-                      { label: "All ΓåÆ Free", color: T.textSecondary, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { ...getTabSetting(t.id), minTier: "free" }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("All free"); } },
-                      { label: "All ΓåÆ Pro", color: T.gold, action: async () => { const u = {}; ALL_TABS.forEach(t => { if (t.id !== "Overview") u[t.id] = { ...getTabSetting(t.id), minTier: "pro" }; }); const f = { ...tabSettings, ...u }; setTabSettings(f); await setDoc(doc(db, "platformSettings", "tabs"), f); notify("Locked to Pro"); } },
-                      { label: "Analytics ΓåÆ Ent", color: T.purple, action: async () => { const analytics = ["Developer Health", "DLD Volumes", "Competitors", "Risk", "Market"]; const u = { ...tabSettings }; analytics.forEach(t => { u[t] = { ...getTabSetting(t), minTier: "enterprise" }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("Analytics locked"); } },
+                      { label: "All → Free", color: T.textSecondary, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { ...getTabSetting(t.id), minTier: "free" }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("All free"); } },
+                      { label: "All → Pro", color: T.gold, action: async () => { const u = {}; ALL_TABS.forEach(t => { if (t.id !== "Overview") u[t.id] = { ...getTabSetting(t.id), minTier: "pro" }; }); const f = { ...tabSettings, ...u }; setTabSettings(f); await setDoc(doc(db, "platformSettings", "tabs"), f); notify("Locked to Pro"); } },
+                      { label: "Analytics → Ent", color: T.purple, action: async () => { const analytics = ["Developer Health", "DLD Volumes", "Competitors", "Risk", "Market"]; const u = { ...tabSettings }; analytics.forEach(t => { u[t] = { ...getTabSetting(t), minTier: "enterprise" }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("Analytics locked"); } },
                       { label: "Clear Badges", color: T.orange, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { ...getTabSetting(t.id), badge: "none" }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("Badges cleared"); } },
                       { label: "Reset All", color: T.textMuted, action: async () => { const u = {}; ALL_TABS.forEach(t => { u[t.id] = { visible: true, minTier: "free", badge: "none", description: "" }; }); setTabSettings(u); await setDoc(doc(db, "platformSettings", "tabs"), u); notify("Reset complete"); } },
                     ].map(({ label, action, color }) => (
@@ -22461,7 +22461,7 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* ΓòÉΓòÉΓòÉ TAB LIST BY CATEGORY ΓòÉΓòÉΓòÉ */}
+                {/* ═══ TAB LIST BY CATEGORY ═══ */}
                 <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
                   <div style={{ padding: "12px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>All Tabs ({filteredTabs.length})</div>
@@ -22470,7 +22470,7 @@ export default function AdminPanel() {
                   
                   {filteredTabs.length === 0 ? (
                     <div style={{ padding: "40px 20px", textAlign: "center" }}>
-                      <div style={{ fontSize: 32, marginBottom: 8 }}>≡ƒöì</div>
+                      <div style={{ fontSize: 32, marginBottom: 8 }}>•</div>
                       <div style={{ fontSize: 13, color: T.textMuted }}>No tabs match "{tabSearch}"</div>
                       <button type="button" onClick={() => setTabSearch("")} style={{ marginTop: 12, padding: "6px 14px", borderRadius: 8, fontSize: 11, background: T.goldGlow, border: `1px solid ${T.gold}`, color: T.gold, cursor: "pointer" }}>Clear</button>
                     </div>
@@ -22506,7 +22506,7 @@ export default function AdminPanel() {
                                   </div>
                                   <div style={{ textAlign: "center", minWidth: 50 }}><div style={{ fontSize: 12, fontWeight: 700, color: usage > 0 ? T.teal : T.textMuted }}>{usage}</div><div style={{ fontSize: 8, color: T.textMuted }}>views</div></div>
                                   <div style={{ minWidth: 70 }}><span style={{ fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 5, background: `${TIER_COLORS[minTier]}15`, color: TIER_COLORS[minTier] }}>{TIER_LABELS[minTier].toUpperCase()}</span></div>
-                                  <div style={{ fontSize: 9, color: T.textMuted, minWidth: 70, textAlign: "right" }}>{lastMod ? timeSince(new Date(lastMod)) : "ΓÇö"}</div>
+                                  <div style={{ fontSize: 9, color: T.textMuted, minWidth: 70, textAlign: "right" }}>{lastMod ? timeSince(new Date(lastMod)) : "—"}</div>
                                   <div onClick={e => e.stopPropagation()}><button type="button" onClick={() => updateTabSetting(tabObj.id, "visible", !isVisible)} style={{ width: 36, height: 20, borderRadius: 10, background: isVisible ? T.green : "rgba(255,255,255,0.08)", border: "none", cursor: "pointer", position: "relative" }}><div style={{ position: "absolute", top: 3, left: isVisible ? 19 : 3, width: 14, height: 14, borderRadius: "50%", background: T.white, transition: "left 0.2s" }} /></button></div>
                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isSelected ? T.gold : T.textMuted} strokeWidth="2" style={{ transform: isSelected ? "rotate(90deg)" : "none", transition: "transform 0.2s" }}><path d="m9 18 6-6-6-6"/></svg>
                                 </div>
@@ -22519,7 +22519,7 @@ export default function AdminPanel() {
                   )}
                 </div>
 
-                {/* ΓòÉΓòÉΓòÉ SELECTED TAB CONFIG ΓòÉΓòÉΓòÉ */}
+                {/* ═══ SELECTED TAB CONFIG ═══ */}
                 {selectedTabControl && (
                   <div className="fade-up" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.gold}40`, padding: "16px 20px" }}>
@@ -22528,7 +22528,7 @@ export default function AdminPanel() {
                           <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{selectedTabControl}</div>
                           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Configure access, badge, and description</div>
                         </div>
-                        <button type="button" onClick={() => setSelectedTabControl(null)} style={{ background: "none", border: "none", color: T.textMuted, fontSize: 18, cursor: "pointer" }}>Γ£ò</button>
+                        <button type="button" onClick={() => setSelectedTabControl(null)} style={{ background: "none", border: "none", color: T.textMuted, fontSize: 18, cursor: "pointer" }}></button>
                       </div>
                       <div style={{ marginBottom: 16 }}>
                         <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Min Tier</div>
@@ -22562,7 +22562,7 @@ export default function AdminPanel() {
                           <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Data Table</div>
                           <div style={{ display: "flex", gap: 8 }}>
                             <button type="button" onClick={addRow} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary }}>+ Row</button>
-                            <button type="button" onClick={saveTabData} disabled={tabDataSaving} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.1)", color: T.gold }}>{tabDataSaving ? "SavingΓÇª" : "Save"}</button>
+                            <button type="button" onClick={saveTabData} disabled={tabDataSaving} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.1)", color: T.gold }}>{tabDataSaving ? "Saving" : "Save"}</button>
                           </div>
                         </div>
                         <div style={{ overflowX: "auto" }}>
@@ -22572,7 +22572,7 @@ export default function AdminPanel() {
                               {getEditableRows().map((row, rowIdx) => (
                                 <tr key={rowIdx} style={{ borderBottom: `1px solid ${T.border}` }}>
                                   {activeTabData.fields.map(f => <td key={f} style={{ padding: "6px 8px" }}><input value={row[f] ?? ""} onChange={e => updateCell(rowIdx, f, e.target.value)} style={{ width: "100%", minWidth: 80, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, borderRadius: 6, padding: "5px 8px", color: T.white, fontSize: 12, fontFamily: "'Outfit', sans-serif", outline: "none" }} /></td>)}
-                                  <td style={{ padding: "6px 8px" }}><button type="button" onClick={() => deleteRow(rowIdx)} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, color: "#EF4444", fontSize: 11, padding: "4px 8px", cursor: "pointer" }}>Γ£ò</button></td>
+                                  <td style={{ padding: "6px 8px" }}><button type="button" onClick={() => deleteRow(rowIdx)} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, color: "#EF4444", fontSize: 11, padding: "4px 8px", cursor: "pointer" }}></button></td>
                                 </tr>
                               ))}
                             </tbody>
@@ -22589,7 +22589,7 @@ export default function AdminPanel() {
                 )}
 
                 <div style={{ fontSize: 11, color: T.textMuted, padding: "10px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
-                  ≡ƒÆí <strong>Tips:</strong> Tabs with <span style={{ color: T.blue }}>DATA</span> have editable tables. Badge labels show in sidebar. Changes sync instantly.
+                  🆍 <strong>Tips:</strong> Tabs with <span style={{ color: T.blue }}>DATA</span> have editable tables. Badge labels show in sidebar. Changes sync instantly.
                 </div>
               </div>
             );
@@ -22601,7 +22601,7 @@ export default function AdminPanel() {
         </div>
       </main>
 
-      {/* ΓöÇΓöÇΓöÇ PROFILE MODAL ΓöÇΓöÇΓöÇ */}
+      {/* ─── PROFILE MODAL ─── */}
       {showProfile && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowProfile(false)}>
           <div onClick={e => e.stopPropagation()} style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, width: "100%", maxWidth: 400, padding: 32, boxShadow: "0 25px 80px rgba(0,0,0,0.5)" }}>
@@ -22645,9 +22645,9 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+      {/* ═══════════════════════════════════════
          BULK PRICE UPDATE MODAL
-         ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
+         ═══════════════════════════════════════ */}
       {showBulkModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 420, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
@@ -22686,7 +22686,7 @@ export default function AdminPanel() {
                 <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8 }}>PREVIEW</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 13, color: T.textSecondary }}>Original: AED 1,000,000</span>
-                  <span style={{ color: bulkPriceChange >= 0 ? T.green : T.red }}>{"ΓåÆ"}</span>
+                  <span style={{ color: bulkPriceChange >= 0 ? T.green : T.red }}>{"→"}</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: bulkPriceChange >= 0 ? T.green : T.red }}>
                     New: AED {bulkChangeType === "percent" ? (1000000 * (1 + bulkPriceChange / 100)).toLocaleString() : (1000000 + bulkPriceChange).toLocaleString()}
                   </span>
