@@ -2,6 +2,25 @@ import React, { useState, useEffect, useCallback } from "react";
 import { collection, getDocs, doc, setDoc, deleteDoc, addDoc, query, orderBy, limit } from "firebase/firestore";
 import { auth, db } from "../../../firebase";
 
+
+let _cachedIP2 = null;
+async function getAdminIP2() {
+  if (_cachedIP2) return _cachedIP2;
+  try { const r = await fetch("https://api.ipify.org?format=json"); const d = await r.json(); _cachedIP2 = d.ip; return _cachedIP2; } catch { return "unknown"; }
+}
+async function logAudit(db, payload) {
+  try {
+    const ip = await getAdminIP2();
+    const { auth } = await import("../../../firebase");
+    const changedBy = auth.currentUser?.email || "admin";
+    const entry = { ...payload, changedBy, changedAt: new Date().toISOString(), ip };
+    const id = Date.now() + "_" + Math.random().toString(36).slice(2,8);
+    const { doc, setDoc } = await import("firebase/firestore");
+    await setDoc(doc(db, "auditLog", id), entry);
+  } catch(e) { console.error("logAudit:", e); }
+}
+
+
 function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   // State
   const [notifSubTab, setNotifSubTab] = useState("compose"); // compose | templates | history | settings
