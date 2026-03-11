@@ -5,7 +5,6 @@
    ─────────────────────────────────────────────────────────────────────────── */
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import emailjs from "@emailjs/browser";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { auth, db } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -50,8 +49,6 @@ const getHandoverCountdown = (handover) => {
 const fmtM = (v) => v ? `AED ${(v / 1_000_000).toFixed(2)}M` : "—";
 const fmtNum = (v) => v ? `AED ${Number(v).toLocaleString()}` : "—";
 
-const whatsappLink = (name, community) =>
-  `https://wa.me/971542410599?text=${encodeURIComponent(`Hi Mian Waleed, I'm interested in *${name}* at ${community}. Could you share more details?`)}`;
 
 const getUnitEntries = (units) => {
   if (!units) return [];
@@ -110,10 +107,6 @@ const css = `
   .pd-card { background: #0A1628; border: 1px solid rgba(212,168,67,0.12); border-radius: 14px; padding: 22px; margin-bottom: 16px; animation: fadeUp 0.4s ease-out both; }
   .pd-back { display: inline-flex; align-items: center; gap: 6px; color: #94A3B8; font-size: 13px; text-decoration: none; transition: color 0.2s; font-family: 'Outfit', sans-serif; }
   .pd-back:hover { color: #D4A843; }
-  .pd-cta-wa { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 0; background: #25D366; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700; text-decoration: none; font-family: 'Outfit', sans-serif; transition: opacity 0.2s; }
-  .pd-cta-wa:hover { opacity: 0.9; }
-  .pd-cta-email { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 0; background: transparent; border: 1px solid rgba(212,168,67,0.4); border-radius: 12px; color: #D4A843; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Outfit', sans-serif; transition: background 0.2s; width: 100%; }
-  .pd-cta-email:hover { background: rgba(212,168,67,0.08); }
   .pd-share { display: flex; align-items: center; gap: 6px; padding: "8px 16px"; background: transparent; border: 1px solid rgba(212,168,67,0.25); border-radius: 8px; color: #94A3B8; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif; transition: all 0.2s; }
   .pd-share:hover { color: #D4A843; border-color: rgba(212,168,67,0.5); }
   .amenity-card { background: #0E1D35; border-radius: 10px; padding: 12px; border-left: 3px solid; }
@@ -122,7 +115,6 @@ const css = `
     .pd-grid-2 { grid-template-columns: 1fr !important; }
     .pd-main { grid-template-columns: 1fr !important; }
     .pd-hero-row { flex-direction: column !important; align-items: flex-start !important; }
-    .pd-cta-row { flex-direction: column !important; }
   }
 `;
 
@@ -139,7 +131,6 @@ export default function ProjectDetail() {
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
   const [copied, setCopied] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
 
   const isPro = ["pro", "pro_trial", "enterprise", "admin"].includes(userTier);
 
@@ -220,30 +211,6 @@ export default function ProjectDetail() {
     });
   };
 
-  const handleEmail = async () => {
-    try {
-      await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-        user_email: userEmail || "visitor@dxbanalytics.com",
-        user_name: userName || "Visitor",
-        project_name: project.name,
-        change_type: "Inquiry",
-        new_value: `${project.community} — Starting ${fmtM(price)}`,
-        old_value: "N/A",
-        updated_at: new Date().toLocaleString("en-AE"),
-      }, "USkwUhp0csGCVDkdQ");
-    } catch {}
-    // Log lead regardless
-    try {
-      await setDoc(doc(db, "leads", Date.now().toString()), {
-        name: userName || "Visitor", email: userEmail || "",
-        project: project.name, community: project.community,
-        source: "Email Inquiry — Project Page", status: "New",
-        createdAt: new Date().toISOString(),
-      });
-    } catch {}
-    setEmailSent(true);
-    setTimeout(() => setEmailSent(false), 3000);
-  };
 
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit', sans-serif", color: T.textPrimary }}>
@@ -546,22 +513,6 @@ export default function ProjectDetail() {
               </div>
             </div>
 
-            {/* CTA box */}
-            <div className="pd-card" style={{ animationDelay: "0.1s", background: "linear-gradient(135deg, rgba(212,168,67,0.08), rgba(4,9,15,0))", border: `1px solid ${T.border}` }}>
-              <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: 17, fontWeight: 800, color: T.white, marginBottom: 4 }}>Interested in {project.name}?</h3>
-              <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 16, lineHeight: 1.5 }}>Get latest pricing, floor plans, and availability directly from our team.</p>
-              <div className="pd-cta-row" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <a href={whatsappLink(project.name, project.community)} target="_blank" rel="noopener noreferrer"
-                  onClick={async () => { try { await setDoc(doc(db, "leads", Date.now().toString()), { name: userName || "Visitor", email: userEmail || "", project: project.name, community: project.community, source: "WhatsApp — Project Page", status: "New", createdAt: new Date().toISOString() }); } catch {} }}
-                  className="pd-cta-wa">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                  WhatsApp Inquiry
-                </a>
-                <button onClick={handleEmail} className="pd-cta-email" disabled={emailSent}>
-                  {emailSent ? "✅ Inquiry Sent!" : "📧 Send Email Inquiry"}
-                </button>
-              </div>
-            </div>
 
             {/* Location summary */}
             {ci && isPro && (
