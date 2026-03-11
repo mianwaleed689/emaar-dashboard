@@ -1,9 +1,19 @@
+import emailjs from "@emailjs/browser";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, orderBy, limit, where, addDoc } from "firebase/firestore";
 import { auth, db } from "../../../firebase";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-function AdminLeadsTab({ adminUser, fetchUsers = () => {}, leads, users, T, I, notify, db, timeSince, logAudit, exportCSV, fetchLeads, leadFilter, setLeadFilter, leadSearch, setLeadSearch, leadDrawer, setLeadDrawer, showAddLead, setShowAddLead, addLeadForm, setAddLeadForm, addLeadLoading, setAddLeadLoading, leadsViewMode, setLeadsViewMode, setTab, setPendingOpenUid }) {
+function AdminLeadsTab({ adminUser, fetchUsers = () => {}, leads, users, T, I, notify, db, timeSince, logAudit, exportCSV, fetchLeads, leadFilter, setLeadFilter, leadSearch, setLeadSearch, leadDrawer, setLeadDrawer, showAddLead, setShowAddLead, addLeadForm, setAddLeadForm, addLeadLoading, setAddLeadLoading, leadsViewMode, setLeadsViewMode, setTab, setPendingOpenUid },
+  T = {
+    bg:"#060D1A",surface:"#0A1628",surfaceAlt:"#111C2E",surfaceHover:"#162238",
+    border:"rgba(255,255,255,0.06)",gold:"#D4A843",goldLight:"#E8C86A",
+    blue:"#3B82F6",green:"#10B981",red:"#EF4444",orange:"#F59E0B",
+    purple:"#8B5CF6",cyan:"#06B6D4",pink:"#EC4899",
+    white:"#FFFFFF",textPrimary:"#E2E8F0",textSecondary:"#94A3B8",textMuted:"#64748B",
+  },
+  I = {}
+) {
 
   // ── Internal state (was in AdminPanel IIFE) ─────────────────────
   const [leadSourceFilter, setLeadSourceFilter] = React.useState("all");

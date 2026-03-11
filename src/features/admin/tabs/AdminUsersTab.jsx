@@ -4,12 +4,12 @@ import { doc, setDoc, getDocs, getDoc, collection, addDoc } from "firebase/fires
 import { auth, db } from "../../../firebase";
 import emailjs from "@emailjs/browser";
 
-/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-   USERS TAB COMPONENT ΓÇö Professional SaaS User Management
+/* ══════════════════════════════════════════════════════
+   USERS TAB COMPONENT — Professional SaaS User Management
    Full rebuild: all 36 audit issues resolved
-ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+══════════════════════════════════════════════════════ */
 
-/* ΓöÇΓöÇΓöÇ PROFILE DRAWER (top-level component ΓÇö stable reference, portal to root) ΓöÇΓöÇΓöÇ */
+/* ─── PROFILE DRAWER (top-level component — stable reference, portal to root) ─── */
 const EditIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -38,7 +38,7 @@ const ProfileDrawerComponent = ({
     const health = getHealth(u);
     const days  = trialDaysLeft(u);
 
-    // Clean SVG icons ΓÇö no emojis
+    // Clean SVG icons — no emojis
     const IconUser     = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
     const IconTier     = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
     const IconActivity = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>;
@@ -65,7 +65,7 @@ const ProfileDrawerComponent = ({
     return ReactDOM.createPortal(
         <div className="drawer-panel" style={{ position: "fixed", top: 0, right: 0, width: 520, height: "100%", zIndex: 1500, background: T.bg, borderLeft: `1px solid ${T.border}`, boxShadow: "-24px 0 80px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-          {/* ΓöÇΓöÇ Header ΓöÇΓöÇ */}
+          {/* ── Header ── */}
           <div style={{ padding: "22px 24px 20px", borderBottom: `1px solid ${T.border}`, position: "relative", background: `linear-gradient(160deg, ${badge.color}0a 0%, transparent 60%)` }}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${badge.color} 0%, ${badge.color}00 100%)`, borderRadius: "0 0 2px 2px" }} />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -85,7 +85,7 @@ const ProfileDrawerComponent = ({
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: badge.bg, color: badge.color, border: `1px solid ${badge.color}30` }}>
-                      {badge.label}{badge.price ? ` ┬╖ ${badge.price}` : ""}
+                      {badge.label}{badge.price ? ` · ${badge.price}` : ""}
                     </span>
                     <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20, background: `${health.dot}14`, color: health.dot, border: `1px solid ${health.dot}28`, display: "flex", alignItems: "center", gap: 4 }}>
                       <span style={{ width: 6, height: 6, borderRadius: "50%", background: health.dot, flexShrink: 0 }} />{health.label}
@@ -104,13 +104,13 @@ const ProfileDrawerComponent = ({
             </div>
           </div>
 
-          {/* ΓöÇΓöÇ Stats bar ΓÇö big value, tiny label ΓöÇΓöÇ */}
+          {/* ── Stats bar — big value, tiny label ── */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", borderBottom: `1px solid ${T.border}`, background: T.surface }}>
             {[
               { label: "Plan",        value: getUserLTV(u),    color: u.tier === "pro" || u.tier === "enterprise" ? T.green : T.textSecondary },
-              { label: "Trial",       value: days !== null ? `${days}d left` : u.tier === "pro" ? "Active" : "ΓÇö", color: days !== null && days <= 3 ? T.red : days !== null ? T.gold : T.textSecondary },
+              { label: "Trial",       value: days !== null ? `${days}d left` : u.tier === "pro" ? "Active" : "—", color: days !== null && days <= 3 ? T.red : days !== null ? T.gold : T.textSecondary },
               { label: "Last Active", value: lastActiveLabel(u), color: lastActiveColor(u) },
-              { label: "Joined",      value: (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { month: "short", day: "numeric" }); } catch { return "ΓÇö"; } })(), color: T.white },
+              { label: "Joined",      value: (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { month: "short", day: "numeric" }); } catch { return "—"; } })(), color: T.white },
             ].map((s, i) => (
               <div key={i} style={{ padding: "14px 8px", textAlign: "center", borderRight: i < 3 ? `1px solid ${T.border}` : "none" }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: s.color, fontFamily: "'Fraunces',serif", lineHeight: 1, letterSpacing: -0.3 }}>{s.value}</div>
@@ -119,18 +119,18 @@ const ProfileDrawerComponent = ({
             ))}
           </div>
 
-          {/* ΓöÇΓöÇ Tab nav ΓÇö pill style, active has solid background ΓöÇΓöÇ */}
+          {/* ── Tab nav — pill style, active has solid background ── */}
           <div style={{ display: "flex", background: T.bg, borderBottom: `1px solid ${T.border}`, padding: "6px 8px", gap: 3 }}>
-            {TABS.map(({ key, label, Icon }) => (
+            {TABS.map(({ key, label, Icon: TabIcon }) => (
               <button key={key} type="button" onClick={() => setDrawerTab(key)}
                 style={{ flex: 1, padding: "7px 4px", borderRadius: 7, border: drawerTab === key ? `1px solid ${T.border}` : "1px solid transparent", background: drawerTab === key ? T.surface : "transparent", color: drawerTab === key ? T.white : T.textMuted, fontSize: 11, fontWeight: drawerTab === key ? 700 : 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                <span style={{ opacity: drawerTab === key ? 1 : 0.45, transition: "opacity 0.15s" }}><Icon /></span>
+                <span style={{ opacity: drawerTab === key ? 1 : 0.45, transition: "opacity 0.15s" }}><TabIcon /></span>
                 {label}
               </button>
             ))}
           </div>
 
-          {/* ΓöÇΓöÇ Tab body ΓöÇΓöÇ */}
+          {/* ── Tab body ── */}
           <div style={{ padding: "20px 24px", flex: 1, minHeight: 0, overflowY: "auto" }}>
 
             {/* DETAILS */}
@@ -139,15 +139,15 @@ const ProfileDrawerComponent = ({
                 <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 12 }}>Account Details</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}`, marginBottom: 20 }}>
                   {[
-                    ["UID",           u.uid || "ΓÇö",    "uid"],
-                    ["Phone",         u.phone || "ΓÇö",  null],
-                    ["Country",       u.country || "ΓÇö", null],
+                    ["UID",           u.uid || "—",    "uid"],
+                    ["Phone",         u.phone || "—",  null],
+                    ["Country",       u.country || "—", null],
                     ["Sign-in",       u.provider || "email", null],
                     ["Email Verified", u.emailVerified ? "Verified" : "Not verified", null, u.emailVerified ? T.green : T.red],
                     ["Last Login",    u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Never", null],
-                    ["Signed Up",     (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" }); } catch { return "ΓÇö"; } })(), null],
+                    ["Signed Up",     (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" }); } catch { return "—"; } })(), null],
                     ["Created By",    u.createdByAdmin ? `Admin (${u.createdByAdmin})` : "Self-signup", null],
-                    ["Trial End",     u.trialEnd ? new Date(u.trialEnd).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }) : "ΓÇö", null],
+                    ["Trial End",     u.trialEnd ? new Date(u.trialEnd).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }) : "—", null],
                   ].map(([label, value, copyKey, valColor], idx, arr) => (
                     <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 16px", background: "transparent", borderBottom: idx < arr.length - 1 ? `1px solid ${T.border}` : "none", transition: "background 0.1s", cursor: "default" }}
                       onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
@@ -206,7 +206,7 @@ const ProfileDrawerComponent = ({
 
                 <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 12 }}>Job Role</div>
                 <select value={u.role || "user"} onChange={e => handleJobRoleChange(u.uid, e.target.value)} style={{ ...inputStyle, cursor: "pointer", marginBottom: 16 }}>
-                  <option value="user">ΓÇö No role assigned ΓÇö</option>
+                  <option value="user">— No role assigned —</option>
                   {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
 
@@ -297,7 +297,7 @@ const ProfileDrawerComponent = ({
                                   {actionLabel(l.action)}
                                 </div>
                                 <div style={{ fontSize: 10, color: T.textMuted, whiteSpace: "nowrap", flexShrink: 0 }}>
-                                  {(() => { try { return new Date(l.changedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "ΓÇö"; } })()}
+                                  {(() => { try { return new Date(l.changedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "—"; } })()}
                                 </div>
                               </div>
                               {/* from ΓåÆ to */}
@@ -327,7 +327,7 @@ const ProfileDrawerComponent = ({
                     </div>
                   )}
 
-                  {/* Login history below audit log ΓÇö kept as secondary info */}
+                  {/* Login history below audit log — kept as secondary info */}
                   {(u.loginHistory || []).length > 0 && (
                     <div style={{ marginTop: 20 }}>
                       <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 10 }}>Login History</div>
@@ -341,9 +341,9 @@ const ProfileDrawerComponent = ({
                                   : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                                 }
                               </div>
-                              <span style={{ fontSize: 11, color: T.textSecondary }}>{h.browser || "Browser"} ┬╖ {h.device || "Desktop"}</span>
+                              <span style={{ fontSize: 11, color: T.textSecondary }}>{h.browser || "Browser"} · {h.device || "Desktop"}</span>
                             </div>
-                            <span style={{ fontSize: 10, color: T.textMuted }}>{(() => { try { return new Date(h.time).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "ΓÇö"; } })()}</span>
+                            <span style={{ fontSize: 10, color: T.textMuted }}>{(() => { try { return new Date(h.time).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "—"; } })()}</span>
                           </div>
                         ))}
                       </div>
@@ -422,7 +422,7 @@ const ProfileDrawerComponent = ({
 
 function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, suspendUser, sendResetEmail, extendTrial, openEditUser, saveEditUser, editingUser, setEditingUser, editUserForm, setEditUserForm, editUserLoading, showAddUser, setShowAddUser, addUserForm, setAddUserForm, addUserManually, addUserLoading, exportCSV, userSearch, setUserSearch, tierFilter, setTierFilter, notify, db, T, I, trialDaysLeft, timeSince, pendingOpenUid, setPendingOpenUid, onDrawerChange, auditLog, showBulkImport, setShowBulkImport, bulkImportData, setBulkImportData, bulkImportLoading, setBulkImportLoading }) {
 
-  /* ΓöÇΓöÇΓöÇ STATE ΓöÇΓöÇΓöÇ */
+  /* ─── STATE ─── */
   const [drawerUser,         setDrawerUser]         = useState(null);
   const [bulkSel,            setBulkSel]            = useState([]);
   const [bulkTier,           setBulkTier]           = useState("");
@@ -456,10 +456,10 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const [drawerTab,          setDrawerTab]           = useState("details"); // drawer sub-nav
 
   const PAGE_SIZE    = 25;
-  const AT_RISK_DAYS = 3; // FIX #6 ΓÇö single source of truth
+  const AT_RISK_DAYS = 3; // FIX #6 — single source of truth
   const now          = new Date();
 
-  /* ΓöÇΓöÇΓöÇ REFS for keyboard nav ΓöÇΓöÇΓöÇ */
+  /* ─── REFS for keyboard nav ─── */
   const pagedUsersRef = React.useRef([]);
   const focusedRowRef = React.useRef(0);
   focusedRowRef.current = focusedRow;
@@ -479,7 +479,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     }
   }, [pendingOpenUid, users]);
 
-  /* ΓöÇΓöÇΓöÇ KEYBOARD NAVIGATION ΓöÇΓöÇΓöÇ */
+  /* ─── KEYBOARD NAVIGATION ─── */
   useEffect(() => {
     const handler = (e) => {
       const anyModalOpen = sendEmailUser || noteUser || confirmDelete || confirmSuspend ||
@@ -497,7 +497,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     return () => window.removeEventListener("keydown", handler);
   }, [sendEmailUser, noteUser, confirmDelete, confirmSuspend, confirmExtend, tagUser, editingUser, showAddUser, notifUser]);
 
-  /* ΓöÇΓöÇΓöÇ ICONS ΓöÇΓöÇΓöÇ */
+  /* ─── ICONS ─── */
   const EditIcon = () => (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -511,7 +511,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </svg>
   );
 
-  /* ΓöÇΓöÇΓöÇ FIX #11: Separate billing tiers from job roles ΓöÇΓöÇΓöÇ */
+  /* ─── FIX #11: Separate billing tiers from job roles ─── */
   const BILLING_TIERS = [
     { value: "free",       label: "Free",       color: "#64748B", bg: "rgba(100,116,139,0.12)", price: "" },
     { value: "pro_trial",  label: "Pro Trial",  color: "#D4A843", bg: "rgba(212,168,67,0.12)",  price: "" },
@@ -529,7 +529,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     { value: "admin",            label: "Admin",             color: "#D4A843", bg: "rgba(212,168,67,0.2)" },
   ];
 
-  /* ΓöÇΓöÇΓöÇ FIX #12: Tags = labels only, no overlap with roles ΓöÇΓöÇΓöÇ */
+  /* ─── FIX #12: Tags = labels only, no overlap with roles ─── */
   const TAGS_OPTIONS = [
     { value: "vip",      label: "Γ¡É VIP",        color: "#F59E0B" },
     { value: "hot_lead", label: "Hot Lead",    color: "#EF4444" },
@@ -539,7 +539,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     { value: "partner",  label: "Partner",     color: "#06B6D4" },
   ];
 
-  /* ΓöÇΓöÇΓöÇ FIX #9+10: Single, clean getRoleBadge ΓöÇΓöÇΓöÇ */
+  /* ─── FIX #9+10: Single, clean getRoleBadge ─── */
   const getTierBadge = (u) => {
     const expired = u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) <= now;
     if (expired) return { value: "expired", label: "Expired", color: T.red, bg: "rgba(239,68,68,0.12)", price: "" };
@@ -579,7 +579,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     return h < 24 ? T.green : h < 72 ? T.gold : T.textMuted;
   };
 
-  /* ΓöÇΓöÇΓöÇ STATS ΓÇö FIX #2, #6 ΓöÇΓöÇΓöÇ */
+  /* ─── STATS — FIX #2, #6 ─── */
   const total       = users.length;
   const paid        = users.filter(u => u.tier === "pro" || u.tier === "enterprise").length; // FIX #2
   const trial       = users.filter(u => u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) > now).length;
@@ -591,7 +591,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const suspended   = users.filter(u => u.suspended).length;
   const activeToday = users.filter(u => u.lastLoginAt && (now - new Date(u.lastLoginAt)) < 86400000).length;
 
-  /* ΓöÇΓöÇΓöÇ FILTERING + SORTING ΓÇö FIX #1, #3, #27 ΓöÇΓöÇΓöÇ */
+  /* ─── FILTERING + SORTING — FIX #1, #3, #27 ─── */
   const allFiltered = users
     .filter(u => {
       const q = userSearch.toLowerCase();
@@ -642,7 +642,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const activeFilterCount = [filterCountry, filterRole, sortField !== "newest" ? "sort" : ""].filter(Boolean).length; // FIX #32
 
-  /* ΓöÇΓöÇΓöÇ TRIAL EXPIRY EMAILS ΓÇö FIX #6 consistent threshold ΓöÇΓöÇΓöÇ */
+  /* ─── TRIAL EXPIRY EMAILS — FIX #6 consistent threshold ─── */
   const sendTrialExpiryEmails = async () => {
     setSendingTrialEmails(true);
     let sent = 0;
@@ -667,7 +667,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     notify(sent > 0 ? `[v] Sent ${sent} trial expiry email${sent > 1 ? "s" : ""}` : "Γä╣ No at-risk trials to email");
   };
 
-  /* ΓöÇΓöÇΓöÇ ACTIONS ΓöÇΓöÇΓöÇ */
+  /* ─── ACTIONS ─── */
   const handleBulkAction = async () => {
     if (!bulkTier || bulkSel.length === 0) return;
     for (const uid of bulkSel) await changeTier(uid, bulkTier);
@@ -711,7 +711,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       }, "USkwUhp0csGCVDkdQ");
       notify(`Email sent to ${sendEmailUser.email}`);
       setSendEmailUser(null); setEmailSubject(""); setEmailBody("");
-    } catch(e) { notify("Error: Email failed ΓÇö check EmailJS config"); }
+    } catch(e) { notify("Error: Email failed — check EmailJS config"); }
     setEmailSending(false);
   };
 
@@ -784,7 +784,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const exportFiltered = () => {
     const headers = "Name,Email,Tier,Role,Trial Status,Tags,Country,Last Active,Signed Up\n";
     const rows = allFiltered.map(u =>
-      `"${u.name || ""}","${u.email || ""}","${u.tier || "free"}","${u.role || ""}","${u.trialEnd ? (new Date(u.trialEnd) > now ? "Active" : "Expired") : "ΓÇö"}","${(u.tags || []).join("; ")}","${u.country || ""}","${u.lastLoginAt || ""}","${u.createdAt || ""}"`
+      `"${u.name || ""}","${u.email || ""}","${u.tier || "free"}","${u.role || ""}","${u.trialEnd ? (new Date(u.trialEnd) > now ? "Active" : "Expired") : "—"}","${(u.tags || []).join("; ")}","${u.country || ""}","${u.lastLoginAt || ""}","${u.createdAt || ""}"`
     ).join("\n");
     const blob = new Blob([headers + rows], { type: "text/csv" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
@@ -792,7 +792,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     notify(`Exported ${allFiltered.length} users`);
   };
 
-  /* ΓöÇΓöÇΓöÇ SHARED STYLE HELPERS ΓöÇΓöÇΓöÇ */
+  /* ─── SHARED STYLE HELPERS ─── */
   const inputStyle = { width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.15)", borderRadius: 9, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" };
   const focusIn  = e => e.target.style.borderColor = T.gold;
   const focusOut = e => e.target.style.borderColor = "rgba(212,168,67,0.15)";
@@ -835,9 +835,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </div>
   );
 
-  /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  /* ══════════════════════════════════════════════
      MODALS
-  ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+  ══════════════════════════════════════════════ */
 
   const DeleteConfirmModal = () => confirmDelete && (
     <Modal onClose={() => setConfirmDelete(null)} maxWidth={420}>
@@ -897,7 +897,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const EmailModal = () => sendEmailUser && (
     <Modal onClose={() => setSendEmailUser(null)}>
-      <ModalHeader title="Send Email" sub={`To: ${sendEmailUser.name || sendEmailUser.email} ┬╖ ${sendEmailUser.email}`} onClose={() => setSendEmailUser(null)} />
+      <ModalHeader title="Send Email" sub={`To: ${sendEmailUser.name || sendEmailUser.email} · ${sendEmailUser.email}`} onClose={() => setSendEmailUser(null)} />
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <Field label="Subject"><input type="text" placeholder="Email subject..." value={emailSubject} onChange={e => setEmailSubject(e.target.value)} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
         <Field label="Message"><textarea placeholder="Write your message..." value={emailBody} onChange={e => setEmailBody(e.target.value)} rows={5} style={{ ...inputStyle, resize: "vertical" }} onFocus={focusIn} onBlur={focusOut} /></Field>
@@ -911,7 +911,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const NoteModal = () => noteUser && (
     <Modal onClose={() => setNoteUser(null)} maxWidth={440}>
-      <ModalHeader title={`Note ΓÇö ${noteUser.name || noteUser.email}`} onClose={() => setNoteUser(null)} />
+      <ModalHeader title={`Note — ${noteUser.name || noteUser.email}`} onClose={() => setNoteUser(null)} />
       <textarea placeholder="Add internal admin notes..." value={noteText} onChange={e => setNoteText(e.target.value)} rows={5} style={{ ...inputStyle, resize: "vertical", marginBottom: 16 }} onFocus={focusIn} onBlur={focusOut} />
       <div style={{ display: "flex", gap: 10 }}>
         <BtnGhost onClick={() => setNoteUser(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
@@ -922,7 +922,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const TagsModal = () => tagUser && (
     <Modal onClose={() => setTagUser(null)} maxWidth={400}>
-      <ModalHeader title={`Tags ΓÇö ${tagUser.name || tagUser.email}`} onClose={() => setTagUser(null)} />
+      <ModalHeader title={`Tags — ${tagUser.name || tagUser.email}`} onClose={() => setTagUser(null)} />
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
         {TAGS_OPTIONS.map(tag => {
           const active = (tagUser.tags || []).includes(tag.value);
@@ -971,10 +971,10 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           {[" UAE"," Saudi Arabia"," Qatar"," Kuwait"," Bahrain"," Oman"," UK"," USA"," India"," Pakistan"," Egypt"," Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
         </select></Field></div>
         <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` ┬╖ ${r.price}` : ""}</option>)}
+          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
         </select></Field></div>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Job Role"><select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="user">ΓÇö No role assigned ΓÇö</option>
+          <option value="user">— No role assigned —</option>
           {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
         </select></Field></div>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
@@ -986,7 +986,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </Modal>
   );
 
-  /* ΓöÇΓöÇ BULK IMPORT MODAL ΓöÇΓöÇ */
+  /* ── BULK IMPORT MODAL ── */
   const BulkImportModal = () => showBulkImport && (
     <Modal onClose={() => { setShowBulkImport(false); setBulkImportData([]); }} maxWidth={700}>
       <ModalHeader title="Bulk Import Users" sub="Upload a CSV file to import multiple users at once" onClose={() => { setShowBulkImport(false); setBulkImportData([]); }} />
@@ -998,7 +998,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           Jane Doe,jane@email.com,+971509876543,free,UK
         </div>
         <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>
-          Valid tiers: free, pro_trial, pro, enterprise ┬╖ Password will be auto-generated and emailed
+          Valid tiers: free, pro_trial, pro, enterprise · Password will be auto-generated and emailed
         </div>
       </div>
       
@@ -1052,10 +1052,10 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               <tbody>
                 {bulkImportData.map((row, i) => (
                   <tr key={i} style={{ borderTop: `1px solid ${T.border}` }}>
-                    <td style={{ padding: "8px 10px", color: T.white }}>{row.name || "ΓÇö"}</td>
+                    <td style={{ padding: "8px 10px", color: T.white }}>{row.name || "—"}</td>
                     <td style={{ padding: "8px 10px", color: row.valid ? T.textSecondary : T.red }}>{row.email}</td>
                     <td style={{ padding: "8px 10px" }}><span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: row.tier === "pro" ? `${T.gold}20` : row.tier === "enterprise" ? `${T.purple}20` : `${T.textMuted}20`, color: row.tier === "pro" ? T.gold : row.tier === "enterprise" ? T.purple : T.textMuted }}>{row.tier || "free"}</span></td>
-                    <td style={{ padding: "8px 10px", textAlign: "center" }}>{row.imported ? <span style={{ color: T.green }}>Γ£ô</span> : row.valid ? <span style={{ color: T.textMuted }}>ΓÇö</span> : <span style={{ color: T.red }}>Γ£ù</span>}</td>
+                    <td style={{ padding: "8px 10px", textAlign: "center" }}>{row.imported ? <span style={{ color: T.green }}>Γ£ô</span> : row.valid ? <span style={{ color: T.textMuted }}>—</span> : <span style={{ color: T.red }}>Γ£ù</span>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1109,10 +1109,10 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           {[" UAE"," Saudi Arabia"," Qatar"," Kuwait"," Bahrain"," Oman"," UK"," USA"," India"," Pakistan"," Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
         </select></Field>
         <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` ┬╖ ${r.price}` : ""}</option>)}
+          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
         </select></Field>
         <Field label="Job Role"><select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="user">ΓÇö No role assigned ΓÇö</option>
+          <option value="user">— No role assigned —</option>
           {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
         </select></Field>
         {/* FIX #8: normalize trial date to ISO format */}
@@ -1128,7 +1128,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const NotifUserModal = () => notifUser && (
     <Modal onClose={() => setNotifUser(null)} maxWidth={440}>
-      <ModalHeader title={`Notify ΓÇö ${notifUser.name || notifUser.email}`} sub="Appears instantly in their notification bell" onClose={() => setNotifUser(null)} />
+      <ModalHeader title={`Notify — ${notifUser.name || notifUser.email}`} sub="Appears instantly in their notification bell" onClose={() => setNotifUser(null)} />
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div>
           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>Icon</label>
@@ -1158,13 +1158,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </Modal>
   );
 
-  /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-     PROFILE DRAWER ΓÇö rebuilt for professional SaaS quality
-  ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+  /* ══════════════════════════════════════════════
+     PROFILE DRAWER — rebuilt for professional SaaS quality
+  ══════════════════════════════════════════════ */
 
-    /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-     LOADING SKELETON ΓÇö FIX #30
-  ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+    /* ══════════════════════════════════════════════
+     LOADING SKELETON — FIX #30
+  ══════════════════════════════════════════════ */
   const SkeletonRow = () => (
     <div style={{ display: "grid", gridTemplateColumns: "36px 28px minmax(160px,2fr) minmax(150px,1.5fr) 100px 110px 75px 75px 140px", gap: 6, padding: "12px 16px", borderBottom: `1px solid ${T.border}`, alignItems: "center" }}>
       {[36,28,160,150,100,110,75,75,140].map((w,i) => (
@@ -1173,9 +1173,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </div>
   );
 
-  /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  /* ══════════════════════════════════════════════
      MAIN RENDER
-  ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+  ══════════════════════════════════════════════ */
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
 
@@ -1250,12 +1250,12 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
       )}
 
-      {/* ΓòÉΓòÉ HEADER ΓòÉΓòÉ */}
+      {/* ══ HEADER ══ */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.white, margin: 0 }}>User Management</h2>
           <p style={{ fontSize: 13, color: T.textMuted, margin: "4px 0 0" }}>
-            {total} registered ┬╖ Live Firestore ┬╖ {allFiltered.length} shown ┬╖ <span style={{ color: T.green }}>{activeToday} active today</span>
+            {total} registered · Live Firestore · {allFiltered.length} shown · <span style={{ color: T.green }}>{activeToday} active today</span>
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -1268,17 +1268,17 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             </button>
             {atRiskCount > 0 && (
               <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: T.surface, border: `1px solid ${T.red}30`, borderRadius: 8, padding: "8px 12px", fontSize: 11, color: T.textMuted, whiteSpace: "nowrap", zIndex: 50, pointerEvents: "none", boxShadow: "0 8px 24px rgba(0,0,0,0.4)", opacity: 0, transition: "opacity 0.2s" }} className="risk-tooltip">
-                Will email: {atRisk.map(u => u.name || u.email).join(", ")} ┬╖ Γëñ{AT_RISK_DAYS} days left
+                Will email: {atRisk.map(u => u.name || u.email).join(", ")} · Γëñ{AT_RISK_DAYS} days left
               </div>
             )}
           </div>
           <button type="button" onClick={exportFiltered} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} Export ({allFiltered.length})</button>
-          <button type="button" onClick={() => setShowBulkImport && setShowBulkImport(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Γåæ Import CSV</button>
+          <button type="button" onClick={() => setShowBulkImport && setShowBulkImport(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>↑ Import CSV</button>
           <button type="button" onClick={() => setShowAddUser(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700 }}>+ Add User <span style={{ fontSize: 10, opacity: 0.6 }}>[N]</span></button>
         </div>
       </div>
 
-      {/* ΓòÉΓòÉ KPI CARDS ΓÇö FIX #1, #2, #18 ΓòÉΓòÉ */}
+      {/* ══ KPI CARDS — FIX #1, #2, #18 ══ */}
       <div className="users-kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10, marginBottom: 16 }}>
         {[
           { label: "Total",        value: total,          color: T.white,     sub: "All accounts",    border: T.border,         filter: "All",      tip: "Show all users" },
@@ -1302,7 +1302,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         ))}
       </div>
 
-      {/* ΓòÉΓòÉ CONVERSION FUNNEL ΓÇö FIX #16 (removed duplicate MRR), #26 ΓòÉΓòÉ */}
+      {/* ══ CONVERSION FUNNEL — FIX #16 (removed duplicate MRR), #26 ══ */}
       <div style={{ background: T.surfaceAlt, borderRadius: 14, padding: "16px 20px", border: `1px solid ${T.border}`, marginBottom: 18 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Conversion Funnel</div>
@@ -1327,7 +1327,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
       </div>
 
-      {/* ΓòÉΓòÉ SAVED VIEWS ΓòÉΓòÉ */}
+      {/* ══ SAVED VIEWS ══ */}
       <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginRight: 4 }}>Quick Views:</span>
         {[
@@ -1347,11 +1347,11 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Γ£ò Clear</button>
         )}
         <div style={{ marginLeft: "auto", fontSize: 10, color: T.textMuted, fontStyle: "italic" }}>
-          ΓåæΓåô J/K ┬╖ Enter=open ┬╖ E=edit ┬╖ N=new
+          ↑↓ J/K · Enter=open · E=edit · N=new
         </div>
       </div>
 
-      {/* ΓòÉΓòÉ SEARCH + FILTERS ΓÇö FIX #32 (active sort badge) ΓòÉΓòÉ */}
+      {/* ══ SEARCH + FILTERS — FIX #32 (active sort badge) ══ */}
       <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ position: "relative", flex: "1 1 280px", maxWidth: 360 }}>
           <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</span>
@@ -1372,7 +1372,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </button>
       </div>
 
-      {/* Advanced filters ΓÇö FIX #27 (role filter), FIX #32 (sort badge) */}
+      {/* Advanced filters — FIX #27 (role filter), FIX #32 (sort badge) */}
       {showFilters && (
         <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 14, display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
           <div>
@@ -1394,7 +1394,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               <select value={sortField} onChange={e => { setSortField(e.target.value); setPage(1); }} style={{ ...inputStyle, cursor: "pointer", maxWidth: 180 }}>
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
-                <option value="name">Name AΓÇôZ</option>
+                <option value="name">Name A–Z</option>
                 <option value="tier">Tier</option>
                 <option value="trial">Trial Days Left</option>
                 <option value="lastActive">Last Active</option>
@@ -1406,20 +1406,20 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
       )}
 
-      {/* ΓöÇΓöÇ BULK ACTIONS ΓÇö FIX #7: billing tiers only ΓöÇΓöÇ */}
+      {/* ── BULK ACTIONS — FIX #7: billing tiers only ── */}
       {bulkSel.length > 0 && (
         <div style={{ background: "rgba(212,168,67,0.06)", border: "1px solid rgba(212,168,67,0.25)", borderRadius: 10, padding: "10px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>Γ£ô {bulkSel.length} users selected</span>
           <select value={bulkTier} onChange={e => setBulkTier(e.target.value)} style={{ padding: "6px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" }}>
             <option value="">Change access tier to...</option>
-            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` ┬╖ ${r.price}` : ""}</option>)}
+            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
           </select>
           <button type="button" onClick={handleBulkAction} disabled={!bulkTier} style={{ padding: "6px 14px", borderRadius: 7, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: bulkTier ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", opacity: bulkTier ? 1 : 0.5 }}>Apply</button>
           <button type="button" onClick={() => setBulkSel([])} style={{ padding: "6px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
         </div>
       )}
 
-      {/* ΓòÉΓòÉ DESKTOP TABLE ΓòÉΓòÉ */}
+      {/* ══ DESKTOP TABLE ══ */}
       <div className="users-table-desktop" style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
         {/* Header */}
         <div style={{ display: "grid", gridTemplateColumns: "36px 28px 2fr 1.6fr 110px 115px 85px 85px 145px", gap: 6, padding: "10px 16px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt, alignItems: "center" }}>
@@ -1436,7 +1436,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
         {/* FIX #30: skeleton on initial load, FIX #24: context-aware empty state */}
         {users.length === 0 && !userSearch && tierFilter === "All" ? (
-          // Initial load ΓÇö data hasn't arrived from Firestore yet
+          // Initial load — data hasn't arrived from Firestore yet
           <div>
             {[...Array(5)].map((_, i) => <SkeletonRow key={i} />)}
           </div>
@@ -1497,8 +1497,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                     <span style={{ width: 5, height: 5, borderRadius: "50%", background: health.dot, display: "inline-block", flexShrink: 0 }} />
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {health.label}
-                      {jobRole && <span style={{ marginLeft: 5, color: jobRole.color, fontWeight: 700 }}>┬╖ {jobRole.label}</span>}
-                      {(u.tags || []).length > 0 && <span style={{ marginLeft: 5, color: "#8B5CF6" }}>┬╖ {(u.tags || []).map(t => TAGS_OPTIONS.find(x => x.value === t)?.label).filter(Boolean).join(", ")}</span>}
+                      {jobRole && <span style={{ marginLeft: 5, color: jobRole.color, fontWeight: 700 }}>· {jobRole.label}</span>}
+                      {(u.tags || []).length > 0 && <span style={{ marginLeft: 5, color: "#8B5CF6" }}>· {(u.tags || []).map(t => TAGS_OPTIONS.find(x => x.value === t)?.label).filter(Boolean).join(", ")}</span>}
                     </span>
                   </div>
                 </div>
@@ -1512,7 +1512,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                   onClick={e => { const rect = e.currentTarget.getBoundingClientRect(); setInlineTierUser({ user: u, x: rect.left, y: rect.bottom + 4 }); }}
                   title="Click to change tier"
                   style={{ fontSize: 10, fontWeight: 700, padding: "4px 9px", borderRadius: 7, background: badge.bg, color: badge.color, border: `1px solid ${badge.color}25`, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 3 }}>
-                  {badge.label}{badge.price ? ` ┬╖ ${badge.price}` : ""}
+                  {badge.label}{badge.price ? ` · ${badge.price}` : ""}
                   <span style={{ opacity: 0.6, fontSize: 9 }}>Γû╛</span>
                 </button>
               </div>
@@ -1528,13 +1528,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                   </div>
                 ) : u.tier === "pro" ? <span style={{ fontSize: 10, color: T.green, fontWeight: 600 }}>Active Γ£ô</span>
                   : u.tier === "enterprise" ? <span style={{ fontSize: 10, color: T.teal, fontWeight: 600 }}>Enterprise Γ£ô</span>
-                  : <span style={{ fontSize: 11, color: T.textMuted }}>ΓÇö</span>}
+                  : <span style={{ fontSize: 11, color: T.textMuted }}>—</span>}
               </div>
 
               <div><div style={{ fontSize: 10, fontWeight: 700, color: lastActiveColor(u) }}>{lastActiveLabel(u)}</div></div>
 
               <div>
-                <div style={{ fontSize: 11, color: T.textSecondary }}>{(() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "short" }); } catch { return "ΓÇö"; } })()}</div>
+                <div style={{ fontSize: 11, color: T.textSecondary }}>{(() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "short" }); } catch { return "—"; } })()}</div>
                 <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>{timeSince(u.createdAt)}</div>
               </div>
 
@@ -1555,7 +1555,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         })}
       </div>
 
-      {/* ΓòÉΓòÉ MOBILE CARD VIEW ΓÇö FIX #22: Edit, Tags, Suspend added ΓòÉΓòÉ */}
+      {/* ══ MOBILE CARD VIEW — FIX #22: Edit, Tags, Suspend added ══ */}
       <div className="users-table-mobile" style={{ flexDirection: "column", gap: 10 }}>
         {pagedUsers.length === 0 ? (
           <div style={{ textAlign: "center", padding: "40px 20px", background: T.surface, borderRadius: 16, border: `1px solid ${T.border}` }}>
@@ -1583,7 +1583,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
                 {[
                   { label: "Status", value: health.label, color: health.dot },
-                  { label: "Trial",  value: days !== null ? (days > 0 ? `${days}d left` : "Expired") : (u.tier === "pro" ? "Active" : "ΓÇö"), color: days !== null ? (days <= AT_RISK_DAYS ? T.red : T.gold) : T.green },
+                  { label: "Trial",  value: days !== null ? (days > 0 ? `${days}d left` : "Expired") : (u.tier === "pro" ? "Active" : "—"), color: days !== null ? (days <= AT_RISK_DAYS ? T.red : T.gold) : T.green },
                   { label: "Active", value: lastActiveLabel(u), color: lastActiveColor(u) },
                 ].map(s => (
                   <div key={s.label} style={{ background: T.surfaceAlt, borderRadius: 8, padding: "8px 10px" }}>
@@ -1606,15 +1606,15 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         })}
       </div>
 
-      {/* ΓòÉΓòÉ PAGINATION ΓÇö FIX #4 ΓòÉΓòÉ */}
+      {/* ══ PAGINATION — FIX #4 ══ */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, padding: "0 2px", flexWrap: "wrap", gap: 10 }}>
         {/* FIX #4: handle 0 results gracefully */}
         <span style={{ fontSize: 11, color: T.textMuted }}>
           {allFiltered.length === 0
             ? "No users shown"
-            : <>Showing <strong style={{ color: T.white }}>{(page - 1) * PAGE_SIZE + 1}ΓÇô{Math.min(page * PAGE_SIZE, allFiltered.length)}</strong> of <strong style={{ color: T.white }}>{allFiltered.length}</strong> users</>
+            : <>Showing <strong style={{ color: T.white }}>{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, allFiltered.length)}</strong> of <strong style={{ color: T.white }}>{allFiltered.length}</strong> users</>
           }
-          {tierFilter !== "All" && <span style={{ color: T.gold }}> ┬╖ {tierFilter}</span>}
+          {tierFilter !== "All" && <span style={{ color: T.gold }}> · {tierFilter}</span>}
         </span>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <button type="button" onClick={() => setPage(1)} disabled={page === 1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === 1 ? T.textMuted : T.textSecondary, cursor: page === 1 ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>┬½</button>
@@ -1632,22 +1632,22 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           <button type="button" onClick={() => setPage(totalPages)} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>┬╗</button>
           <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>Page {page} of {totalPages}</span>
         </div>
-        {/* FIX #16: MRR only shown once ΓÇö here at bottom */}
+        {/* FIX #16: MRR only shown once — here at bottom */}
         <span style={{ fontSize: 11, color: T.textMuted }}>
-          MRR <span style={{ color: T.gold, fontWeight: 700 }}>AED {mrr}</span> ┬╖ Conv <span style={{ color: T.green, fontWeight: 700 }}>{convRate}%</span>
+          MRR <span style={{ color: T.gold, fontWeight: 700 }}>AED {mrr}</span> · Conv <span style={{ color: T.green, fontWeight: 700 }}>{convRate}%</span>
         </span>
       </div>
     </div>
   );
 }
 
-/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+/* ═══════════════════════════════════════════════════════
    CENTRAL AUDIT INFRASTRUCTURE
    - getAdminIP()   : cached IP fetch from ipify
    - _webhookUrl    : module-level webhook target (set from Firestore)
    - logAudit()     : single write point for ALL audit events
    - checkAlerts()  : suspicious-activity email trigger
-   ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+   ═══════════════════════════════════════════════════════ */
 
 let _cachedIP = null;
 async function getAdminIP() {
@@ -1702,7 +1702,7 @@ async function checkAlerts(db) {
   } catch {}
 }
 
-/* ΓöÇΓöÇΓöÇ DATA CALENDAR (interactive, Firestore-persisted) ΓöÇΓöÇΓöÇ */
+/* ─── DATA CALENDAR (interactive, Firestore-persisted) ─── */
 function DataCalendar({ T, now }) {
   const [checked, setChecked] = useState({});
   const [loading, setLoading] = useState(true);
@@ -1713,7 +1713,7 @@ function DataCalendar({ T, now }) {
     { id: "emaar_q2_2026",  event: "Emaar Q2 2026 Results",  due: "2026-07-15", note: "emaar.com ΓåÆ Investor Relations",     icon: "[=]", priority: "high"     },
     { id: "market_q2_2026", event: "Dubai Market Report Q2", due: "2026-07-30", note: "DLD Open Data + DXBinteract",         icon: "", priority: "medium"   },
     { id: "emaar_q3_2026",  event: "Emaar Q3 2026 Results",  due: "2026-10-15", note: "emaar.com ΓåÆ Investor Relations",     icon: "[=]", priority: "high"     },
-    { id: "emaar_fy_2026",  event: "Emaar FY 2026 Results",  due: "2027-02-15", note: "Annual results ΓÇö biggest of the year", icon: "", priority: "critical" },
+    { id: "emaar_fy_2026",  event: "Emaar FY 2026 Results",  due: "2027-02-15", note: "Annual results — biggest of the year", icon: "", priority: "critical" },
   ];
 
   useEffect(() => {
@@ -1780,7 +1780,7 @@ function DataCalendar({ T, now }) {
   );
 }
 
-/* ΓöÇΓöÇΓöÇ UPDATE CHECKLIST (interactive, Firestore-persisted) ΓöÇΓöÇΓöÇ */
+/* ─── UPDATE CHECKLIST (interactive, Firestore-persisted) ─── */
 function UpdateChecklist({ T }) {
   const steps = [
     { id: "s1", icon: "", text: "Go to emaar.com/investor-relations",   sub: "Download the latest quarterly PDF" },
@@ -1990,7 +1990,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
 
 
   const timeAgo = ts => {
-    if (!ts) return "ΓÇö";
+    if (!ts) return "—";
     const diff = Date.now() - new Date(ts).getTime();
     const mins = Math.floor(diff/60000), hrs = Math.floor(diff/3600000), days = Math.floor(diff/86400000);
     if (mins < 1) return "just now";
@@ -2020,12 +2020,12 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
 
   return (
     <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden" }}>
-      {/* ΓöÇΓöÇ Header ΓöÇΓöÇ */}
+      {/* ── Header ── */}
       <div style={{ padding: "18px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>Audit Log</div>
           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-            {filteredLog.length} of {auditLog.length} events ┬╖ Complete admin action history
+            {filteredLog.length} of {auditLog.length} events · Complete admin action history
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -2048,14 +2048,14 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
             style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: `${T.teal}12`, border: `1px solid ${T.teal}35`, borderRadius: 9, color: T.teal, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}
             onMouseEnter={e => { e.currentTarget.style.background = `${T.teal}22`; }}
             onMouseLeave={e => { e.currentTarget.style.background = `${T.teal}12`; }}>
-            Γåô CSV
+            ↓ CSV
           </button>
           {/* JSON export */}
           <button type="button" onClick={exportJSON}
             style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: `${T.purple}12`, border: `1px solid ${T.purple}35`, borderRadius: 9, color: T.purple, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}
             onMouseEnter={e => { e.currentTarget.style.background = `${T.purple}22`; }}
             onMouseLeave={e => { e.currentTarget.style.background = `${T.purple}12`; }}>
-            Γåô JSON
+            ↓ JSON
           </button>
           {/* Refresh */}
           <button type="button" onClick={fetchAuditLog}
@@ -2067,7 +2067,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
         </div>
       </div>
 
-      {/* ΓöÇΓöÇ Filter + Search ΓöÇΓöÇ */}
+      {/* ── Filter + Search ── */}
       <div style={{ padding: "12px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", background: `${T.surfaceAlt}` }}>
         {[
           { id: "all",     label: "All",             count: filterCounts.all     },
@@ -2098,7 +2098,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
         </div>
       </div>
 
-      {/* ΓöÇΓöÇ Empty State ΓöÇΓöÇ */}
+      {/* ── Empty State ── */}
       {auditLog.length === 0 && (
         <div style={{ padding: "60px 24px", textAlign: "center" }}>
           <div style={{ fontSize: 40, marginBottom: 14 }}></div>
@@ -2113,7 +2113,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
         </div>
       )}
 
-      {/* ΓöÇΓöÇ By Admin View ΓöÇΓöÇ */}
+      {/* ── By Admin View ── */}
       {auditViewMode === "byAdmin" && (
         <div style={{ maxHeight: 580, overflowY: "auto", padding: "16px 24px" }}>
           {(() => {
@@ -2147,7 +2147,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
         </div>
       )}
 
-      {/* ΓöÇΓöÇ By Action View ΓöÇΓöÇ */}
+      {/* ── By Action View ── */}
       {auditViewMode === "byAction" && (
         <div style={{ maxHeight: 580, overflowY: "auto", padding: "16px 24px" }}>
           {(() => {
@@ -2172,7 +2172,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                     {logs.slice(0, 5).map((log, i) => (
                       <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: 10, color: T.textMuted }}>
                         <span>{log.changedBy || "Unknown"}</span>
-                        <span>{log.changedAt ? new Date(log.changedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "ΓÇö"}</span>
+                        <span>{log.changedAt ? new Date(log.changedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}</span>
                       </div>
                     ))}
                     {logs.length > 5 && <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", padding: "4px 0" }}>+ {logs.length - 5} more</div>}
@@ -2184,7 +2184,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
         </div>
       )}
 
-      {/* ΓöÇΓöÇ Timeline Feed ΓöÇΓöÇ */}
+      {/* ── Timeline Feed ── */}
       {auditViewMode === "timeline" && (
       <div style={{ maxHeight: 580, overflowY: "auto", padding: "8px 0" }}>
         {groups.map((group, gi) => (
@@ -2228,8 +2228,8 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                         {meta.label}
                       </span>
                       <span style={{ fontSize: 10, color: T.textMuted }}>{timeAgo(log.changedAt)}</span>
-                      <span style={{ fontSize: 9, color: T.textMuted }}>┬╖</span>
-                      <span style={{ fontSize: 10, color: T.textMuted }}>{log.changedAt ? new Date(log.changedAt).toLocaleString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : "ΓÇö"}</span>
+                      <span style={{ fontSize: 9, color: T.textMuted }}>·</span>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>{log.changedAt ? new Date(log.changedAt).toLocaleString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : "—"}</span>
                       <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
                         {log.ip && log.ip !== "unknown" && (
                           <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: T.textMuted, fontFamily: "'Courier New', monospace" }}>
@@ -2259,11 +2259,11 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                           )}
                           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
                             <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${tierColor[log.from]||"#94A3B8"}18`, color: tierColor[log.from]||"#94A3B8", border: `1px solid ${tierColor[log.from]||"#94A3B8"}35` }}>
-                              {tierLabel[log.from]||log.from||"ΓÇö"}
+                              {tierLabel[log.from]||log.from||"—"}
                             </span>
                             <span style={{ fontSize: 12, color: T.textMuted, fontWeight: 700 }}>ΓåÆ</span>
                             <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: `${tierColor[log.to]||"#94A3B8"}18`, color: tierColor[log.to]||"#94A3B8", border: `1px solid ${tierColor[log.to]||"#94A3B8"}35` }}>
-                              {tierLabel[log.to]||log.to||"ΓÇö"}
+                              {tierLabel[log.to]||log.to||"—"}
                             </span>
                             {isClickable && (
                               <span style={{ fontSize: 10, color: T.gold, fontWeight: 600, marginLeft: 4 }}>View profile ΓåÆ</span>
@@ -2314,9 +2314,9 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                                 {shown.map(([k,v]) => (
                                   <div key={k} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, background: "rgba(255,255,255,0.04)", padding: "4px 10px", borderRadius: 7, border: `1px solid ${T.border}` }}>
                                     <span style={{ color: T.textMuted, fontWeight: 700, fontSize: 10, textTransform: "uppercase" }}>{k}:</span>
-                                    <span style={{ color: "#F87171", textDecoration: "line-through", fontSize: 10 }}>{String(v.old||"ΓÇö").slice(0,20)}</span>
+                                    <span style={{ color: "#F87171", textDecoration: "line-through", fontSize: 10 }}>{String(v.old||"—").slice(0,20)}</span>
                                     <span style={{ color: T.textMuted, fontSize: 10 }}>ΓåÆ</span>
-                                    <span style={{ color: "#4ADE80", fontSize: 10, fontWeight: 600 }}>{String(v.new||"ΓÇö").slice(0,20)}</span>
+                                    <span style={{ color: "#4ADE80", fontSize: 10, fontWeight: 600 }}>{String(v.new||"—").slice(0,20)}</span>
                                   </div>
                                 ))}
                                 {entries.length > 4 && <span style={{ fontSize: 10, color: T.textMuted, padding: "4px 8px" }}>+{entries.length - 4} more fields</span>}
@@ -2334,7 +2334,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 5 }}>
                             {Object.entries(log.diff).slice(0,3).map(([k,v]) => (
                               <span key={k} style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", padding: "3px 8px", borderRadius: 5, color: T.textMuted }}>
-                                {k}: <span style={{ color: "#F87171", textDecoration: "line-through" }}>{String(v.old||"ΓÇö").slice(0,12)}</span> ΓåÆ <span style={{ color: "#4ADE80" }}>{String(v.new||"ΓÇö").slice(0,12)}</span>
+                                {k}: <span style={{ color: "#F87171", textDecoration: "line-through" }}>{String(v.old||"—").slice(0,12)}</span> ΓåÆ <span style={{ color: "#4ADE80" }}>{String(v.new||"—").slice(0,12)}</span>
                               </span>
                             ))}
                           </div>

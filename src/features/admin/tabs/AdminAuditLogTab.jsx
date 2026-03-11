@@ -4,6 +4,105 @@ import { auth, db } from "../../../firebase";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 
 function AdminAuditLogTab({ auditLog, users, emaarProjects, fetchAuditLog, setTab, setPendingOpenUid, T, I, notify, db, auditRetentionDays, setAuditRetentionDays, auditWebhookUrl, setAuditWebhookUrl, auditAlertThr, setAuditAlertThr, apiKeys, setApiKeys, logAudit }) {
+
+  // ── Local state ──────────────────────────────────────────────────
+  const [auditRetentionSaved, setAuditRetentionSaved] = React.useState(false);
+  const [auditWebhookSaved, setAuditWebhookSaved] = React.useState(false);
+  const [auditAlertSaved, setAuditAlertSaved] = React.useState(false);
+  const [apiKeyLabel, setApiKeyLabel] = React.useState("");
+  const [apiKeyGenerating, setApiKeyGenerating] = React.useState(false);
+  const [newApiKey, setNewApiKey] = React.useState(null);
+  const [apiKeyCopied, setApiKeyCopied] = React.useState(false);
+  const API_BASE = "https://dxbanalytics.com/api";
+  const adminUser = { email: "admin@dxbanalytics.com" };
+
+  // ── Helper functions ─────────────────────────────────────────────
+  const setAuditWebhook = (url) => { if (setAuditWebhookUrl) setAuditWebhookUrl(url); };
+  const setAlertThreshold = (n) => { if (setAuditAlertThr) setAuditAlertThr(n); };
+
+  // ── Inline helper components ─────────────────────────────────────
+  const DataCalendar = ({ T: t }) => {
+    const today = new Date();
+    const days = Array.from({ length: 30 }, (_, i) => {
+      const d = new Date(today); d.setDate(d.getDate() - (29 - i));
+      const count = (auditLog || []).filter(e => {
+        const ed = new Date(e.changedAt || e.timestamp || 0);
+        return ed.toDateString() === d.toDateString();
+      }).length;
+      return { date: d, count };
+    });
+    const max = Math.max(...days.map(d => d.count), 1);
+    return (
+      <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+        {days.map((d, i) => (
+          <div key={i} title={d.date.toLocaleDateString() + ": " + d.count + " events"}
+            style={{ width: 14, height: 14, borderRadius: 3,
+              background: d.count === 0 ? (t||T).surfaceAlt : \`rgba(212,168,67,\${d.count/max})\`,
+              border: "1px solid rgba(255,255,255,0.05)"
+            }} />
+        ))}
+      </div>
+    );
+  };
+
+  const UpdateChecklist = ({ T: t }) => {
+    const items = [
+      { label: "Audit retention configured", done: (auditRetentionDays || 0) > 0 },
+      { label: "Webhook URL set", done: !!(auditWebhookUrl) },
+      { label: "Alert threshold set", done: (auditAlertThr || 0) > 0 },
+      { label: "API keys configured", done: (apiKeys || []).length > 0 },
+    ];
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {items.map((item, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ color: item.done ? (t||T).green : (t||T).textMuted, fontSize: 14 }}>
+              {item.done ? "✓" : "○"}
+            </span>
+            <span style={{ fontSize: 12, color: item.done ? (t||T).textPrimary : (t||T).textMuted }}>
+              {item.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const AuditLogTable = ({ auditLog: al, users: us, emaarProjects: ep, fetchAuditLog: fal, setTab: st, setPendingOpenUid: spu, T: t }) => {
+    const entries = (al || auditLog || []).slice(0, 100);
+    const th = t || T;
+    return (
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+          <thead>
+            <tr style={{ borderBottom: "1px solid " + th.border }}>
+              {["Time","Action","User","Details"].map(h => (
+                <th key={h} style={{ textAlign: "left", padding: "8px 12px", color: th.textMuted, fontWeight: 600 }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {entries.length === 0 ? (
+              <tr><td colSpan={4} style={{ padding: 24, textAlign: "center", color: th.textMuted }}>No audit events yet</td></tr>
+            ) : entries.map((e, i) => (
+              <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                <td style={{ padding: "8px 12px", color: th.textMuted }}>
+                  {e.changedAt ? new Date(e.changedAt).toLocaleString("en-AE") : "—"}
+                </td>
+                <td style={{ padding: "8px 12px", color: th.gold }}>{e.action || e.type || "—"}</td>
+                <td style={{ padding: "8px 12px", color: th.textPrimary }}>{e.changedBy || e.email || "—"}</td>
+                <td style={{ padding: "8px 12px", color: th.textSecondary, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {e.details || e.note || JSON.stringify(e.changes || {}).slice(0, 80)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+  // ─────────────────────────────────────────────────────────────────
+
   // ── Computed stats ────────────────────────────────────────────────
   const now = new Date();
   const msPerDay = 86400000;

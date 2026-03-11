@@ -502,7 +502,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                     <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 2 }}>{n.title}</div>
                     <div style={{ fontSize: 11, color: T.textMuted }}>{n.message?.slice(0, 60)}{n.message?.length > 60 ? "..." : ""}</div>
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>
-                      To: {n.userName || n.userId || "All"} ┬╖ {n.createdAt ? new Date(n.createdAt).toLocaleString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
+                      To: {n.userName || n.userId || "All"} · {n.createdAt ? new Date(n.createdAt).toLocaleString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>

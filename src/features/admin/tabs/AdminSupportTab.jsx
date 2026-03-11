@@ -47,7 +47,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-/* ΓöÇΓöÇΓöÇ SAFE FIRESTORE DATA ΓöÇΓöÇΓöÇ */
+/* ─── SAFE FIRESTORE DATA ─── */
 function plainify(obj) {
   if (obj === null || obj === undefined) return "";
   if (typeof obj === "string" || typeof obj === "number" || typeof obj === "boolean") return obj;
@@ -57,7 +57,7 @@ function plainify(obj) {
   return String(obj);
 }
 
-/* ΓöÇΓöÇΓöÇ REUSABLE COMPONENTS (outside component to prevent re-mount on state change) ΓöÇΓöÇΓöÇ */
+/* ─── REUSABLE COMPONENTS (outside component to prevent re-mount on state change) ─── */
 const KPI = ({ label, value, sub, color, delay = 0 }) => (
   <div className="kpi-card fade-up" style={{ animationDelay: `${delay * 0.05}s` }}>
     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>{label}</div>
@@ -87,7 +87,7 @@ const Chart = ({ title, sub, children }) => (
   </div>
 );
 
-/* ΓöÇΓöÇΓöÇ HELP TIP ΓÇö inline ? icon with hover tooltip ΓöÇΓöÇΓöÇ */
+/* ─── HELP TIP — inline ? icon with hover tooltip ─── */
 const HelpTip = ({ text }) => {
   const [show, setShow] = React.useState(false);
   return (
@@ -104,7 +104,7 @@ const HelpTip = ({ text }) => {
   );
 };
 
-/* ΓöÇΓöÇΓöÇ TAB HELP ΓÇö collapsible how-to banner ΓöÇΓöÇΓöÇ */
+/* ─── TAB HELP — collapsible how-to banner ─── */
 const TabHelp = ({ items }) => {
   const [open, setOpen] = React.useState(false);
   return (
@@ -134,8 +134,8 @@ const TabHelp = ({ items }) => {
   );
 };
 
-/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-   SUPPORT TAB COMPONENT ΓÇö TAB 14
+/* ═══════════════════════════════════════════════════════════════════
+   SUPPORT TAB COMPONENT — TAB 14
    Ticket system, conversation threads, SLA tracking, response templates
    Collections: supportTickets, ticketPresence
    Benchmark: Intercom + Zendesk + Freshdesk
@@ -626,7 +626,7 @@ const TabHelp = ({ items }) => {
   }, [db]);
 
   // Computed stats
-  const now = new Date();
+  // now already defined above
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const openTickets = tickets.filter(t => t.status === "open" || t.status === "in_progress");
   const resolvedToday = tickets.filter(t => t.resolvedAt && new Date(t.resolvedAt) >= todayStart).length;
@@ -1301,7 +1301,7 @@ const TabHelp = ({ items }) => {
   const insertTemplate = (text) => { setTicketReply(text); setShowTemplates(false); };
   const insertNoteTemplate = (text) => { setInternalNote(text); };
   const timeAgo = (date) => {
-    if (!date) return "ΓÇö";
+    if (!date) return "—";
     const seconds = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);
     if (seconds < 60) return "Just now";
     const minutes = Math.floor(seconds / 60);
@@ -2180,7 +2180,7 @@ const TabHelp = ({ items }) => {
     if (ticket.status === "resolved" || ticket.status === "closed") return { status: "resolved", percent: 0 };
     
     const created = new Date(ticket.createdAt);
-    const now = new Date();
+  // now already defined above
     const elapsed = now.getTime() - created.getTime();
     const slaMs = slaSettings.defaultHours * 60 * 60 * 1000;
     const percent = Math.round((elapsed / slaMs) * 100);
@@ -2864,7 +2864,7 @@ const TabHelp = ({ items }) => {
         <button type="button" onClick={() => { setTicketsLoading(true); setTimeout(() => setTicketsLoading(false), 500); notify("Tickets refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
         {[
           { label: "Open Tickets", value: openTickets.length, color: openTickets.length > 0 ? T.orange : T.green },
-          { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "ΓÇö", color: avgResponseHrs !== null && avgResponseHrs > 24 ? T.red : T.green },
+          { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "—", color: avgResponseHrs !== null && avgResponseHrs > 24 ? T.red : T.green },
           { label: "Resolved Today", value: resolvedToday, color: T.green },
           { label: "SLA Breached", value: slaBreached.length, color: slaBreached.length > 0 ? T.red : T.green },
           { label: "Unassigned", value: unassignedCount, color: unassignedCount > 0 ? T.orange : T.green },
@@ -3008,7 +3008,7 @@ const TabHelp = ({ items }) => {
                 <span style={{ fontSize: 32, fontWeight: 900, color: T.white, fontFamily: "'Fraunces',serif" }}>{analytics.total}</span>
                 {analytics.volumeChange !== 0 && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: analytics.volumeChange > 0 ? T.red : T.green }}>
-                    {analytics.volumeChange > 0 ? "Γåæ" : "Γåô"} {Math.abs(analytics.volumeChange)}%
+                    {analytics.volumeChange > 0 ? "↑" : "↓"} {Math.abs(analytics.volumeChange)}%
                   </span>
                 )}
               </div>
@@ -3018,7 +3018,7 @@ const TabHelp = ({ items }) => {
               <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Avg Resolution</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                 <span style={{ fontSize: 32, fontWeight: 900, color: analytics.avgResolutionHrs && analytics.avgResolutionHrs > slaSettings.defaultHours ? T.red : T.green, fontFamily: "'Fraunces',serif" }}>
-                  {analytics.avgResolutionHrs ? `${analytics.avgResolutionHrs}h` : "ΓÇö"}
+                  {analytics.avgResolutionHrs ? `${analytics.avgResolutionHrs}h` : "—"}
                 </span>
               </div>
               <div style={{ fontSize: 10, color: T.textMuted }}>SLA target: {slaSettings.defaultHours}h</div>
@@ -3031,7 +3031,7 @@ const TabHelp = ({ items }) => {
                 </span>
                 {analytics.slaChange !== 0 && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: analytics.slaChange > 0 ? T.green : T.red }}>
-                    {analytics.slaChange > 0 ? "Γåæ" : "Γåô"} {Math.abs(analytics.slaChange)}%
+                    {analytics.slaChange > 0 ? "↑" : "↓"} {Math.abs(analytics.slaChange)}%
                   </span>
                 )}
               </div>
@@ -3213,7 +3213,7 @@ const TabHelp = ({ items }) => {
                           </div>
                         </td>
                         <td style={{ textAlign: "center", padding: "12px", color: agent.avgResolution && agent.avgResolution > slaSettings.defaultHours ? T.red : T.textSecondary }}>
-                          {agent.avgResolution ? `${agent.avgResolution}h` : "ΓÇö"}
+                          {agent.avgResolution ? `${agent.avgResolution}h` : "—"}
                         </td>
                         <td style={{ textAlign: "center", padding: "12px" }}>
                           <span style={{ padding: "4px 10px", borderRadius: 6, background: agent.slaPercent >= 85 ? `${T.green}20` : agent.slaPercent >= 70 ? `${T.orange}20` : `${T.red}20`, color: agent.slaPercent >= 85 ? T.green : agent.slaPercent >= 70 ? T.orange : T.red, fontWeight: 700, fontSize: 11 }}>
@@ -3313,11 +3313,11 @@ const TabHelp = ({ items }) => {
               <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Avg CSAT Score</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                 <span style={{ fontSize: 32, fontWeight: 900, color: analytics.avgCsat && analytics.avgCsat >= 4 ? T.green : analytics.avgCsat && analytics.avgCsat >= 3 ? T.orange : T.red, fontFamily: "'Fraunces',serif" }}>
-                  {analytics.avgCsat ? `${analytics.avgCsat}Γÿà` : "ΓÇö"}
+                  {analytics.avgCsat ? `${analytics.avgCsat}Γÿà` : "—"}
                 </span>
                 {analytics.csatChange !== 0 && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: analytics.csatChange > 0 ? T.green : T.red }}>
-                    {analytics.csatChange > 0 ? "Γåæ" : "Γåô"} {Math.abs(analytics.csatChange)}
+                    {analytics.csatChange > 0 ? "↑" : "↓"} {Math.abs(analytics.csatChange)}
                   </span>
                 )}
               </div>
@@ -3491,7 +3491,7 @@ const TabHelp = ({ items }) => {
                     </div>
                     <p style={{ margin: 0, fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>"{feedback.comment}"</p>
                     <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>
-                      Agent: <span style={{ color: T.purple }}>{feedback.agentName || "ΓÇö"}</span>
+                      Agent: <span style={{ color: T.purple }}>{feedback.agentName || "—"}</span>
                     </div>
                   </div>
                 ))}
@@ -3532,8 +3532,8 @@ const TabHelp = ({ items }) => {
               { label: "Active Chats", value: liveChats.filter(c => c.status === "active").length, color: T.green, icon: "≡ƒÆ¼" },
    { label: "In Queue", value: chatQueue.length, color: chatQueue.length > 0 ? T.orange : T.textMuted, icon: "ΓÅ│" },
               { label: "Handled Today", value: liveChats.filter(c => c.status === "ended").length, color: T.teal, icon: "Γ£ô" },
-   { label: "Avg Wait", value: chatQueue.length > 0 ? `${Math.round(chatQueue.reduce((a, c) => a + (Date.now() - new Date(c.queuedAt).getTime()) / 1000, 0) / chatQueue.length / 60)}m` : "ΓÇö", color: T.textSecondary, icon: "ΓÅ▒∩╕Å" },
-              { label: "Avg Duration", value: liveChats.filter(c => c.duration).length > 0 ? `${Math.round(liveChats.filter(c => c.duration).reduce((a, c) => a + c.duration, 0) / liveChats.filter(c => c.duration).length / 60)}m` : "ΓÇö", color: T.textSecondary, icon: "≡ƒôè" },
+   { label: "Avg Wait", value: chatQueue.length > 0 ? `${Math.round(chatQueue.reduce((a, c) => a + (Date.now() - new Date(c.queuedAt).getTime()) / 1000, 0) / chatQueue.length / 60)}m` : "—", color: T.textSecondary, icon: "ΓÅ▒∩╕Å" },
+              { label: "Avg Duration", value: liveChats.filter(c => c.duration).length > 0 ? `${Math.round(liveChats.filter(c => c.duration).reduce((a, c) => a + c.duration, 0) / liveChats.filter(c => c.duration).length / 60)}m` : "—", color: T.textSecondary, icon: "≡ƒôè" },
             ].map((stat, i) => (
               <div key={i} style={{ padding: 16, background: T.surface, borderRadius: 10, border: `1px solid ${T.border}`, textAlign: "center" }}>
                 <div style={{ fontSize: 20, marginBottom: 4 }}>{stat.icon}</div>
@@ -3837,7 +3837,7 @@ const TabHelp = ({ items }) => {
                               <span style={{ fontSize: 10, color: T.textMuted }}>{chat.messages?.length || 0} msgs</span>
                               {chat.convertedToTicket && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>ΓåÆ Ticket</span>}
                             </div>
-                            <span style={{ fontSize: 10, color: T.textMuted }}>{chat.duration ? `${Math.floor(chat.duration / 60)}m ${chat.duration % 60}s` : "ΓÇö"}</span>
+                            <span style={{ fontSize: 10, color: T.textMuted }}>{chat.duration ? `${Math.floor(chat.duration / 60)}m ${chat.duration % 60}s` : "—"}</span>
                           </div>
                         </div>
                       ))}
@@ -4871,15 +4871,15 @@ const TabHelp = ({ items }) => {
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: T.textMuted }}>
                       <span>{ticket.userName || ticket.userEmail}</span>
-   <span>┬╖</span>
+   <span>·</span>
                       <span style={{ padding: "2px 6px", borderRadius: 4, background: `${cat.color}20`, color: cat.color, fontSize: 10 }}>{cat.icon} {cat.label}</span>
-   <span>┬╖</span>
+   <span>·</span>
                       <span>{timeAgo(ticket.createdAt)}</span>
-   {ticket.assignedTo && <><span>┬╖</span><span style={{ color: T.purple }}>≡ƒæñ {ticket.assignedToName || "Assigned"}</span></>}
+   {ticket.assignedTo && <><span>·</span><span style={{ color: T.purple }}>≡ƒæñ {ticket.assignedToName || "Assigned"}</span></>}
                       {/* SLA Progress Bar */}
                       {slaInfo.status !== "resolved" && (
                         <>
-   <span>┬╖</span>
+   <span>·</span>
                           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                             <div style={{ width: 40, height: 4, background: T.border, borderRadius: 2, overflow: "hidden" }}>
                               <div style={{ width: `${Math.min(slaInfo.percent, 100)}%`, height: "100%", background: slaInfo.color, borderRadius: 2 }} />
@@ -5381,7 +5381,7 @@ const TabHelp = ({ items }) => {
                       </div>
                       <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
                         <span>{msg.from === "admin" ? (msg.by || "Admin") : ticketDrawer.userName}</span>
-   <span>┬╖</span>
+   <span>·</span>
                         <span>{timeAgo(msg.at)}</span>
                       </div>
                     </div>
@@ -5419,9 +5419,9 @@ const TabHelp = ({ items }) => {
                         )}
                         <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6, display: "flex", alignItems: "center", gap: 6 }}>
                           <span>{note.by}</span>
-   <span>┬╖</span>
+   <span>·</span>
                           <span>{timeAgo(note.at)}</span>
-   {note.mentions?.length > 0 && <><span>┬╖</span><span style={{ color: T.teal }}>@{note.mentions.join(", @")}</span></>}
+   {note.mentions?.length > 0 && <><span>·</span><span style={{ color: T.teal }}>@{note.mentions.join(", @")}</span></>}
                         </div>
                       </div>
                     ))}
@@ -5888,7 +5888,7 @@ const TabHelp = ({ items }) => {
             
             <div style={{ padding: 12, background: `${T.green}15`, borderRadius: 8, marginBottom: 20 }}>
               <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>
-                Create rules to automatically assign tickets based on category, priority, user tier, or keywords. Rules are applied in order ΓÇö first match wins.
+                Create rules to automatically assign tickets based on category, priority, user tier, or keywords. Rules are applied in order — first match wins.
               </div>
             </div>
             
@@ -6296,7 +6296,7 @@ const TabHelp = ({ items }) => {
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                         {(wf.actions || []).map((action, aIdx) => (
                           <span key={aIdx} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 4, background: `${T.purple}20`, color: T.purple }}>
-                            {actionOptions.find(a => a.id === action.type)?.label || action.type}: {action.value || "ΓÇö"}
+                            {actionOptions.find(a => a.id === action.type)?.label || action.type}: {action.value || "—"}
                           </span>
                         ))}
                       </div>

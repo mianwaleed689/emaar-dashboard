@@ -145,14 +145,14 @@ function EiborRatesPanel({ db, T, I, notify }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* ΓòÉΓòÉΓòÉ KPI TOPBAR ΓòÉΓòÉΓòÉ */}
+      {/* ═══ KPI TOPBAR ═══ */}
       <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, overflow: "hidden" }}>
         <button type="button" onClick={fetchEibor} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: "rgba(212,168,67,0.06)", border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I?.refresh || "\u21BB"}</button>
         {[
-          { label: "1M EIBOR", value: eiborCurrent?.["1m"] ? `${parseFloat(eiborCurrent["1m"]).toFixed(3)}%` : "ΓÇö", color: T.blue },
-          { label: "3M EIBOR", value: eiborCurrent?.["3m"] ? `${parseFloat(eiborCurrent["3m"]).toFixed(3)}%` : "ΓÇö", color: T.gold, primary: true },
-          { label: "6M EIBOR", value: eiborCurrent?.["6m"] ? `${parseFloat(eiborCurrent["6m"]).toFixed(3)}%` : "ΓÇö", color: T.teal },
-          { label: "1Y EIBOR", value: eiborCurrent?.["1y"] ? `${parseFloat(eiborCurrent["1y"]).toFixed(3)}%` : "ΓÇö", color: T.purple },
+          { label: "1M EIBOR", value: eiborCurrent?.["1m"] ? `${parseFloat(eiborCurrent["1m"]).toFixed(3)}%` : "—", color: T.blue },
+          { label: "3M EIBOR", value: eiborCurrent?.["3m"] ? `${parseFloat(eiborCurrent["3m"]).toFixed(3)}%` : "—", color: T.gold, primary: true },
+          { label: "6M EIBOR", value: eiborCurrent?.["6m"] ? `${parseFloat(eiborCurrent["6m"]).toFixed(3)}%` : "—", color: T.teal },
+          { label: "1Y EIBOR", value: eiborCurrent?.["1y"] ? `${parseFloat(eiborCurrent["1y"]).toFixed(3)}%` : "—", color: T.purple },
         ].map((item, i) => (
           <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 20px", borderRight: `1px solid ${T.border}`, flexShrink: 0, background: item.primary ? "rgba(212,168,67,0.04)" : "transparent" }}>
             <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
@@ -165,7 +165,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       </div>
 
-      {/* ΓòÉΓòÉΓòÉ COMPARISON PANEL ΓòÉΓòÉΓòÉ */}
+      {/* ═══ COMPARISON PANEL ═══ */}
       {eiborCompareMode && compareData && (
         <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.blue}40`, borderRadius: 14, padding: "16px 20px" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: T.blue, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>Historical Comparison</div>
@@ -203,7 +203,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
-      {/* ΓòÉΓòÉΓòÉ RATE ALERT ΓòÉΓòÉΓòÉ */}
+      {/* ═══ RATE ALERT ═══ */}
       {rateAlert && (
         <div className="fade-up" style={{ padding: "14px 20px", borderRadius: 12, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontSize: 18 }}>ΓÜá</span>
@@ -214,12 +214,12 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
-      {/* ΓòÉΓòÉΓòÉ CURRENT RATES + COMPARISON ΓòÉΓòÉΓòÉ */}
+      {/* ═══ CURRENT RATES + COMPARISON ═══ */}
       {eiborCurrent && (
         <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
-              <div style={{ fontSize: 11, color: T.green, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Live Rates ΓÇö {eiborCurrent.asOf}</div>
+              <div style={{ fontSize: 11, color: T.green, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Live Rates — {eiborCurrent.asOf}</div>
               <div style={{ fontSize: 10, color: T.textMuted }}>Source: {eiborCurrent.source || "UAE Central Bank"}</div>
             </div>
             <a href="https://www.centralbank.ae/en/forex-eibor/eibor-rates/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: T.gold, textDecoration: "none" }}>View Source \u2197</a>
@@ -250,13 +250,13 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
-      {/* ΓòÉΓòÉΓòÉ RATE HISTORY CHART (12-month SVG) ΓòÉΓòÉΓòÉ */}
+      {/* ═══ RATE HISTORY CHART (12-month SVG) ═══ */}
       {eiborHistory.length > 1 && (
         <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Rate History</div>
-              <div style={{ fontSize: 11, color: T.textMuted }}>All 4 tenors over time ΓÇö color coded</div>
+              <div style={{ fontSize: 11, color: T.textMuted }}>All 4 tenors over time — color coded</div>
             </div>
             <div style={{ display: "flex", gap: 12 }}>
               {[{ label: "1M", color: T.blue }, { label: "3M", color: T.gold }, { label: "6M", color: T.teal }, { label: "1Y", color: T.purple }].map(l => (
@@ -344,7 +344,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
-      {/* ΓòÉΓòÉΓòÉ MORTGAGE CALCULATOR ΓòÉΓòÉΓòÉ */}
+      {/* ═══ MORTGAGE CALCULATOR ═══ */}
       <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 16 }}>Mortgage Impact Calculator</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
@@ -390,7 +390,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       </div>
 
-      {/* ΓòÉΓòÉΓòÉ UPDATE FORM ΓòÉΓòÉΓòÉ */}
+      {/* ═══ UPDATE FORM ═══ */}
       <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Update Rates</div>
@@ -420,7 +420,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       </div>
 
-      {/* ΓòÉΓòÉΓòÉ UPDATE HISTORY ΓòÉΓòÉΓòÉ */}
+      {/* ═══ UPDATE HISTORY ═══ */}
       <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, overflow: "hidden" }}>
         <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Update History</div>
@@ -443,17 +443,17 @@ function EiborRatesPanel({ db, T, I, notify }) {
                   const change = h.previousRates ? parseFloat(h["3m"]) - parseFloat(h.previousRates["3m"]) : null;
                   return (
                     <tr key={h.id} style={{ borderBottom: `1px solid ${T.border}` }}>
-                      <td style={{ padding: "10px 14px", color: T.textSecondary }}>{h.asOf || (h.updatedAt ? new Date(h.updatedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short" }) : "ΓÇö")}</td>
-                      <td style={{ padding: "10px 14px", color: T.blue }}>{h["1m"] ? `${parseFloat(h["1m"]).toFixed(3)}%` : "ΓÇö"}</td>
-                      <td style={{ padding: "10px 14px", color: T.gold, fontWeight: 600 }}>{h["3m"] ? `${parseFloat(h["3m"]).toFixed(3)}%` : "ΓÇö"}</td>
-                      <td style={{ padding: "10px 14px", color: T.teal }}>{h["6m"] ? `${parseFloat(h["6m"]).toFixed(3)}%` : "ΓÇö"}</td>
-                      <td style={{ padding: "10px 14px", color: T.purple }}>{h["1y"] ? `${parseFloat(h["1y"]).toFixed(3)}%` : "ΓÇö"}</td>
+                      <td style={{ padding: "10px 14px", color: T.textSecondary }}>{h.asOf || (h.updatedAt ? new Date(h.updatedAt).toLocaleDateString("en-AE", { day: "numeric", month: "short" }) : "—")}</td>
+                      <td style={{ padding: "10px 14px", color: T.blue }}>{h["1m"] ? `${parseFloat(h["1m"]).toFixed(3)}%` : "—"}</td>
+                      <td style={{ padding: "10px 14px", color: T.gold, fontWeight: 600 }}>{h["3m"] ? `${parseFloat(h["3m"]).toFixed(3)}%` : "—"}</td>
+                      <td style={{ padding: "10px 14px", color: T.teal }}>{h["6m"] ? `${parseFloat(h["6m"]).toFixed(3)}%` : "—"}</td>
+                      <td style={{ padding: "10px 14px", color: T.purple }}>{h["1y"] ? `${parseFloat(h["1y"]).toFixed(3)}%` : "—"}</td>
                       <td style={{ padding: "10px 14px" }}>
                         {change !== null ? (
                           <span style={{ color: change > 0 ? T.red : change < 0 ? T.green : T.textMuted, fontWeight: 600 }}>
                             {change > 0 ? "+" : ""}{change.toFixed(3)}%
                           </span>
-                        ) : "ΓÇö"}
+                        ) : "—"}
                       </td>
                       <td style={{ padding: "10px 14px", color: T.textMuted }}>{h.updatedBy || "admin"}</td>
                     </tr>

@@ -811,7 +811,7 @@ export default function AdminAnalyticsTab({
 
               {/* ═══ USER LIFECYCLE ANALYTICS (Phase 2B) ═══ */}
               {(() => {
-                const now = new Date();
+  // now already defined above
                 const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
                 const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
                 const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
@@ -1274,7 +1274,7 @@ export default function AdminAnalyticsTab({
 
               {/* ═══ SEGMENT BUILDER (Phase 3A) ═══ */}
               {(() => {
-                const now = new Date();
+  // now already defined above
                 const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
                 const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
                 const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
@@ -1882,7 +1882,7 @@ export default function AdminAnalyticsTab({
 
               {/* ═══ AI INSIGHTS & ANOMALY DETECTION (Phase 3C) ═══ */}
               {(() => {
-                const now = new Date();
+  // now already defined above
                 
                 // Generate AI Insights based on actual data
                 const generateInsights = () => {
@@ -3006,7 +3006,7 @@ export default function AdminAnalyticsTab({
               {analyticsSubTab === "cohort" && (<>
                 <Section title="Cohort Retention Heatmap" sub="Weekly cohorts — % of users still active N weeks after signup">
                   {(() => {
-                    const now2 = new Date();
+  // now already defined above
                     const WEEKS = 8;
                     // Build cohorts: group users by signup week
                     const cohorts = [];

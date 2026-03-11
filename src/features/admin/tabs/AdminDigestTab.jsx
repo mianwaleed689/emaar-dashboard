@@ -320,7 +320,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
               <div style={{ padding: "14px 18px", borderRadius: 10, background: lastResult.success ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)", border: `1px solid ${lastResult.success ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}` }}>
                 <div style={{ fontSize: 13, color: lastResult.success ? T.green : T.red, fontWeight: 700 }}>
                   {lastResult.success ? `Γ£ô Sent to ${lastResult.sent}/${lastResult.total} users` : `Γ£ù Error: ${lastResult.error}`}
-                  {lastResult.failed > 0 && <span style={{ color: T.orange }}> ┬╖ {lastResult.failed} failed</span>}
+                  {lastResult.failed > 0 && <span style={{ color: T.orange }}> · {lastResult.failed} failed</span>}
                 </div>
               </div>
             )}
@@ -386,14 +386,14 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 2 }}>
                       Sent to <span style={{ color: T.gold }}>{log.sent}</span> of {log.total} users
-                      {log.failed > 0 && <span style={{ color: T.orange }}> ┬╖ {log.failed} failed</span>}
+                      {log.failed > 0 && <span style={{ color: T.orange }}> · {log.failed} failed</span>}
                     </div>
                     <div style={{ fontSize: 11, color: T.textMuted }}>
-                      {log.sentAt ? new Date(log.sentAt).toLocaleString("en-AE", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "ΓÇö"} ┬╖ by {log.sentBy || "admin"} ┬╖ Segment: {log.segment || "all"}
+                      {log.sentAt ? new Date(log.sentAt).toLocaleString("en-AE", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"} · by {log.sentBy || "admin"} · Segment: {log.segment || "all"}
                     </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>{log.durationMs ? `${(log.durationMs / 1000).toFixed(1)}s` : "ΓÇö"}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>{log.durationMs ? `${(log.durationMs / 1000).toFixed(1)}s` : "—"}</div>
                   </div>
                 </div>
               ))}

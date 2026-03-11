@@ -1,3 +1,4 @@
+import emailjs from "@emailjs/browser";
 /**
  * AdminOverviewTab.jsx
  * Extracted from AdminPanel.jsx — Session 22
@@ -34,7 +35,7 @@ const CustomTooltip = ({ active, payload, label }) => {
     }}>
       {label && <div style={{ color: "#94A3B8", marginBottom: 6, fontSize: 11 }}>{label}</div>}
       {payload.map((p, i) => (
-        <div key={i} style={{ color: p.color || T.gold, fontWeight: 700 }}>
+        <div key={i} style={{ color: p.color || "#D4A843", fontWeight: 700 }}>
           {p.name}: {typeof p.value === "number" ? p.value.toLocaleString() : p.value}
         </div>
       ))}
@@ -62,6 +63,14 @@ export default function AdminOverviewTab({
   overviewCompare,
   setOverviewCompare,
   setKpiDrill,
+  T = {
+    bg:"#060D1A",surface:"#0A1628",surfaceAlt:"#111C2E",surfaceHover:"#162238",
+    border:"rgba(255,255,255,0.06)",gold:"#D4A843",goldLight:"#E8C86A",
+    blue:"#3B82F6",green:"#10B981",red:"#EF4444",orange:"#F59E0B",
+    purple:"#8B5CF6",cyan:"#06B6D4",pink:"#EC4899",
+    white:"#FFFFFF",textPrimary:"#E2E8F0",textSecondary:"#94A3B8",textMuted:"#64748B",
+  },
+  I = {},
 }) {
 
   // ── TIME CONSTANTS ──────────────────────────────────────────────────────────

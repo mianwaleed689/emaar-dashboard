@@ -3,6 +3,50 @@ import { collection, getDocs, doc, getDoc, setDoc, query, where } from "firebase
 import { auth } from "../../../firebase";
 
 function AdminVerificationTab({ verifications = [], users = [], T, I, notify, db, timeSince = () => '—', logAudit, fetchVerifications = () => {}, verifyFilter = 'all', setVerifyFilter = () => {}, verifySearch = '', setVerifySearch = () => {}, verifySubTab = 'queue', setVerifySubTab = () => {}, reviewingUser, setReviewingUser = () => {}, rejectReason = '', setRejectReason = () => {}, setTab, setPendingOpenUid }) {
+
+  // ── Verification action functions ────────────────────────────────
+  const approveVerification = async (v) => {
+    if (approveLoading) return;
+    setApproveLoading(true);
+    try {
+      const { setDoc, doc } = await import("firebase/firestore");
+      const { db: firedb } = await import("../../../firebase");
+      await setDoc(doc(firedb || db, "kyc", v.id), {
+        status: "approved",
+        reviewedAt: new Date().toISOString(),
+        reviewedBy: "admin",
+      }, { merge: true });
+      notify("Verification approved");
+      if (fetchVerifications) fetchVerifications();
+      setReviewingUser(null);
+    } catch (err) {
+      notify("Error approving verification");
+    }
+    setApproveLoading(false);
+  };
+
+  const rejectVerification = async (v, reason) => {
+    if (rejectLoading) return;
+    setRejectLoading(true);
+    try {
+      const { setDoc, doc } = await import("firebase/firestore");
+      const { db: firedb } = await import("../../../firebase");
+      await setDoc(doc(firedb || db, "kyc", v.id), {
+        status: "rejected",
+        rejectReason: reason || rejectReason || "Does not meet requirements",
+        reviewedAt: new Date().toISOString(),
+        reviewedBy: "admin",
+      }, { merge: true });
+      notify("Verification rejected");
+      if (fetchVerifications) fetchVerifications();
+      setReviewingUser(null);
+    } catch (err) {
+      notify("Error rejecting verification");
+    }
+    setRejectLoading(false);
+  };
+  // ─────────────────────────────────────────────────────────────────
+
   const [verifyBatchMode, setVerifyBatchMode] = React.useState(false);
   const [verifyBatchSelected, setVerifyBatchSelected] = React.useState([]);
   const [batchProcessing, setBatchProcessing] = React.useState(false);

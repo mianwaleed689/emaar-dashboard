@@ -43,7 +43,7 @@ function AdminCancellationTab({ users, auditLog, T, I, notify, db, timeSince, lo
             });
             
             // Compute stats
-            const now = new Date();
+            // now already defined above
             const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
             const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
             const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1);

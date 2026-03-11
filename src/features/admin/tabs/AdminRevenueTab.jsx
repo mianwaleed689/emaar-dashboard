@@ -3,7 +3,42 @@ import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, orderBy, li
 import { auth, db } from "../../../firebase";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 
-function AdminRevenueTab({ users, auditLog, T, I, notify, db, timeSince, trialDaysLeft, logAudit, exportCSV, setTab, setPendingOpenUid }) {
+function AdminRevenueTab({ users, auditLog, T, I, notify, db, timeSince, trialDaysLeft, logAudit, exportCSV, setTab, setPendingOpenUid, setTierFilter = () => {}, fetchUsers = () => {}, fetchAuditLog = () => {} }) {
+
+  // ── Computed revenue metrics ─────────────────────────────────────
+  const _pro = users.filter(u => u.tier === "pro").length;
+  const _ent = users.filter(u => u.tier === "enterprise").length;
+  const _paid = _pro + _ent;
+  const mrr = (_pro * 99) + (_ent * 499);
+  const arpu = _paid > 0 ? Math.round(mrr / _paid) : 0;
+  const netMRR = mrr;
+  const now2 = new Date();
+  const thisMonthStart = new Date(now2.getFullYear(), now2.getMonth(), 1);
+  const lastMonthStart = new Date(now2.getFullYear(), now2.getMonth() - 1, 1);
+  const newMRRThisMonth = users.filter(u => {
+    try { return new Date(u.createdAt) >= thisMonthStart && (u.tier === "pro" || u.tier === "enterprise"); }
+    catch { return false; }
+  }).reduce((s, u) => s + (u.tier === "enterprise" ? 499 : 99), 0);
+  const trialConverted = users.filter(u => u.previousTier === "pro_trial" && (u.tier === "pro" || u.tier === "enterprise")).length;
+  const trialTotal = users.filter(u => u.tier === "pro_trial" || u.previousTier === "pro_trial").length;
+  const trialConversion = trialTotal > 0 ? Math.round(trialConverted / trialTotal * 100) : 0;
+
+  // ── CustomTooltip ────────────────────────────────────────────────
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div style={{ background: "#1E293B", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "10px 14px", fontSize: 12 }}>
+        {label && <div style={{ color: T.textMuted, marginBottom: 6, fontSize: 11 }}>{label}</div>}
+        {payload.map((p, i) => (
+          <div key={i} style={{ color: p.color || T.gold, fontWeight: 700 }}>
+            {p.name}: {typeof p.value === "number" ? "AED " + p.value.toLocaleString() : p.value}
+          </div>
+        ))}
+      </div>
+    );
+  };
+  // ─────────────────────────────────────────────────────────────────
+
   // ── Computed stats ────────────────────────────────────────────────
   const now = new Date();
   const msPerDay = 86400000;
