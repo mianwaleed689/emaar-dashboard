@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { doc, setDoc, getDoc, getDocs, addDoc, deleteDoc, collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
-import { auth } from "../../../firebase";
+import { auth, storage } from "../../../firebase";
 import emailjs from "@emailjs/browser";
 
 let _cachedIP = null;
@@ -29,20 +31,6 @@ async function logAudit(db, payload) {
   } catch (e) { console.error("logAudit:", e); }
 }
 
-const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div style={{ background: "rgba(10,22,40,0.95)", border: `1px solid ${T.border}`, borderRadius: 10, padding: "10px 14px", backdropFilter: "blur(12px)" }}>
-      <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, fontWeight: 600 }}>{label}</div>
-      {payload.map((p, i) => (
-        <div key={i} style={{ fontSize: 12, color: p.color, fontWeight: 600, display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
-          <div style={{ width: 8, height: 8, borderRadius: 2, background: p.color }} />
-          {p.name}: {typeof p.value === "number" ? p.value.toLocaleString() : p.value}
-        </div>
-      ))}
-    </div>
-  );
-};
 
 /* ΓöÇΓöÇΓöÇ SAFE FIRESTORE DATA ΓöÇΓöÇΓöÇ */
 function plainify(obj) {
