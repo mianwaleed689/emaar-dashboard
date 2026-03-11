@@ -32,7 +32,8 @@ import AdminUsersTab         from "./features/admin/tabs/AdminUsersTab";
 // eslint-disable-next-line no-unused-vars
 const UsersTab         = AdminUsersTab;
 // eslint-disable-next-line no-unused-vars
-const NotificationsTab = (props) => null; // Session 25
+import AdminNotificationsTab  from "./features/admin/tabs/AdminNotificationsTab";
+const NotificationsTab = AdminNotificationsTab;
 // eslint-disable-next-line no-unused-vars
 const DigestTab        = (props) => null; // Session 26
 // eslint-disable-next-line no-unused-vars
@@ -734,7 +735,7 @@ export default function AdminPanel() {
             />
           )}
 
-          {tab === "notifications" && <NotificationsTab T={T} db={db} notify={notify} users={users} />}
+          {tab === "notifications" && <NotificationsTab T={T} I={I} db={db} notify={notify} users={users} adminUser={adminUser} />}
 
           {tab === "verification" && (
             <AdminVerificationTab
