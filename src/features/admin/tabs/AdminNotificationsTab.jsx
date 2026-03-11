@@ -1,37 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { doc, setDoc, getDocs, deleteDoc, collection, addDoc, query, orderBy, limit } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, deleteDoc, addDoc, query, orderBy, limit } from "firebase/firestore";
 import { auth, db } from "../../../firebase";
-
-let _cachedIP = null;
-async function getAdminIP() {
-  if (_cachedIP) return _cachedIP;
-  try {
-    const r = await fetch("https://api.ipify.org?format=json");
-    const d = await r.json();
-    _cachedIP = d.ip;
-    return _cachedIP;
-  } catch { return "unknown"; }
-}
-
-let _webhookUrl = null;
-async function logAudit(db, payload) {
-  try {
-    const ip = await getAdminIP();
-    const changedBy = auth.currentUser?.email || "admin";
-    const entry = { ...payload, changedBy, changedAt: new Date().toISOString(), ip };
-    const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    await setDoc(doc(db, "auditLog", id), entry);
-    if (_webhookUrl) {
-      try { fetch(_webhookUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(entry) }); } catch {}
-    }
-    return entry;
-  } catch (e) { console.error("logAudit:", e); }
-}
 
 function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   // State
   const [notifSubTab, setNotifSubTab] = useState("compose"); // compose | templates | history | settings
-  const [notifForm, setNotifForm] = useState({ title: "", message: "", icon: "≡ƒöö", type: "info", link: "" });
+  const [notifForm, setNotifForm] = useState({ title: "", message: "", icon: "🔔", type: "info", link: "" });
   const [notifSending, setNotifSending] = useState(false);
   const [sentNotifs, setSentNotifs] = useState([]);
   const [templates, setTemplates] = useState([]);
@@ -50,7 +24,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   const [lastResult, setLastResult] = useState(null);
 
   // Icons and types
-  const ICONS = ["≡ƒöö", "≡ƒôó", "≡ƒÄë", "ΓÜá∩╕Å", "≡ƒÆ░", "≡ƒÅá", "≡ƒôè", "≡ƒÜÇ", "Γ£¿", "≡ƒôê", "≡ƒöÑ", "≡ƒÆÄ"];
+  const ICONS = ["🔔", "📣", "🎊", "⚡", "🏡", "💎", "📊", "🚀", "✿", "📌", "🔑", "🏙"];
   const TYPES = [
     { id: "info", label: "Info", color: T.blue },
     { id: "success", label: "Success", color: T.green },
@@ -123,7 +97,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
       await logAudit(db, { action: "notification_sent", targetType, sent, failed });
       setLastResult({ success: true, sent, failed, total: targetUsers.length, durationMs: Date.now() - startTime });
       notify(`Sent to ${sent} users!`);
-      setNotifForm({ title: "", message: "", icon: "≡ƒöö", type: "info", link: "" });
+      setNotifForm({ title: "", message: "", icon: "🔔", type: "info", link: "" });
       fetchNotifications();
     } catch (e) {
       setLastResult({ success: false, error: e.message });
@@ -156,7 +130,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
     setNotifForm({
       title: template.title || "",
       message: template.message || "",
-      icon: template.icon || "≡ƒöö",
+      icon: template.icon || "🔔",
       type: template.type || "info",
       link: template.link || "",
     });
@@ -233,9 +207,9 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
       {/* SUB-TABS */}
       <div style={{ display: "flex", gap: 8 }}>
         {[
-          { id: "compose", label: "Compose", icon: "Γ£Å∩╕Å" },
-          { id: "templates", label: `Templates (${templates.length})`, icon: "≡ƒôï" },
-          { id: "history", label: `History (${sentNotifs.length})`, icon: "≡ƒô£" },
+          { id: "compose", label: "Compose", icon: "✅" },
+          { id: "templates", label: `Templates (${templates.length})`, icon: "📋" },
+          { id: "history", label: `History (${sentNotifs.length})`, icon: "📃" },
         ].map(t => (
           <button key={t.id} type="button" onClick={() => setNotifSubTab(t.id)}
             style={{ padding: "10px 18px", borderRadius: 8, border: `1px solid ${notifSubTab === t.id ? T.gold : T.border}`, background: notifSubTab === t.id ? T.goldGlow : "transparent", color: notifSubTab === t.id ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
@@ -365,7 +339,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
             {lastResult && (
               <div style={{ padding: "14px 18px", borderRadius: 10, background: lastResult.success ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)", border: `1px solid ${lastResult.success ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}` }}>
                 <div style={{ fontSize: 13, color: lastResult.success ? T.green : T.red, fontWeight: 700 }}>
-                  {lastResult.success ? `Γ£ô Sent to ${lastResult.sent}/${lastResult.total} users in ${(lastResult.durationMs / 1000).toFixed(1)}s` : `Γ£ù Error: ${lastResult.error}`}
+                  {lastResult.success ? `✔ Sent to ${lastResult.sent}/${lastResult.total} users in ${(lastResult.durationMs / 1000).toFixed(1)}s` : `✙ Error: ${lastResult.error}`}
                 </div>
               </div>
             )}
@@ -384,7 +358,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                     <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 4 }}>{notifForm.title || "Notification Title"}</div>
                     <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>{notifForm.message || "Your notification message will appear here..."}</div>
                     {notifForm.link && (
-                      <div style={{ marginTop: 8, fontSize: 11, color: T.teal }}>≡ƒöù {notifForm.link}</div>
+                      <div style={{ marginTop: 8, fontSize: 11, color: T.teal }}>🔗 {notifForm.link}</div>
                     )}
                     <div style={{ marginTop: 10, fontSize: 10, color: T.textMuted }}>Just now</div>
                   </div>
@@ -405,7 +379,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                       style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = T.gold}
                       onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
-                      <span style={{ fontSize: 16 }}>{t.icon || "≡ƒôï"}</span>
+                      <span style={{ fontSize: 16 }}>{t.icon || "📋"}</span>
                       <div>
                         <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{t.name}</div>
                         <div style={{ fontSize: 10, color: T.textMuted }}>{t.title}</div>
@@ -427,12 +401,12 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
               <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>Notification Templates</div>
               <div style={{ fontSize: 11, color: T.textMuted }}>{templates.length} templates saved</div>
             </div>
-            <button type="button" onClick={() => { setNotifForm({ title: "", message: "", icon: "≡ƒöö", type: "info", link: "" }); setShowTemplateModal(true); }}
+            <button type="button" onClick={() => { setNotifForm({ title: "", message: "", icon: "🔔", type: "info", link: "" }); setShowTemplateModal(true); }}
               style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>+ New Template</button>
           </div>
           {templates.length === 0 ? (
             <div style={{ padding: 60, textAlign: "center", color: T.textMuted }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>≡ƒôï</div>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
               <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>No templates yet</div>
               <div style={{ fontSize: 12 }}>Create templates for frequently used notifications</div>
             </div>
@@ -442,7 +416,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                 <div key={t.id} style={{ background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}`, padding: 16 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 24 }}>{t.icon || "≡ƒôï"}</span>
+                      <span style={{ fontSize: 24 }}>{t.icon || "📋"}</span>
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{t.name}</div>
                         <div style={{ fontSize: 10, color: T.textMuted }}>{t.type || "info"}</div>
@@ -489,7 +463,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
           </div>
           {filteredHistory.length === 0 ? (
             <div style={{ padding: 60, textAlign: "center", color: T.textMuted }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>≡ƒô¡</div>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>📡</div>
               <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary }}>No notifications found</div>
             </div>
           ) : (
@@ -503,13 +477,13 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                     else setSelectedNotifs(selectedNotifs.filter(id => id !== n.id));
                   }} style={{ cursor: "pointer" }} />
                   <div style={{ width: 36, height: 36, borderRadius: 8, background: `${TYPES.find(t => t.id === n.type)?.color || T.blue}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
-                    {n.icon || "≡ƒöö"}
+                    {n.icon || "🔔"}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 2 }}>{n.title}</div>
                     <div style={{ fontSize: 11, color: T.textMuted }}>{n.message?.slice(0, 60)}{n.message?.length > 60 ? "..." : ""}</div>
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>
-                      To: {n.userName || n.userId || "All"} ┬╖ {n.createdAt ? new Date(n.createdAt).toLocaleString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "ΓÇö"}
+                      To: {n.userName || n.userId || "All"} ┬╖ {n.createdAt ? new Date(n.createdAt).toLocaleString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
@@ -550,9 +524,10 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   );
 }
 
-/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-   TAB 11: EMAIL DIGEST COMPONENT ΓÇö PRO LEVEL
+/* ═══════════════════════════════════════════════════════════════════
+   TAB 11: EMAIL DIGEST COMPONENT — PRO LEVEL
    Schedule, preview, send, track. EmailJS bulk send.
-ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+═══════════════════════════════════════════════════════════════════ */
+
 
 export default NotificationsTab;
