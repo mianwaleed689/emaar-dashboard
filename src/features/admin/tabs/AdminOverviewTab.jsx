@@ -22,7 +22,6 @@ import {
   PieChart, Pie, Cell,
   ResponsiveContainer,
 } from "recharts";
-import { T } from "../../../styles/theme";
 
 // ─── Custom Recharts Tooltip ────────────────────────────────────────────────
 const CustomTooltip = ({ active, payload, label }) => {

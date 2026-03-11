@@ -1,7 +1,7 @@
-import React, {{ useState, useEffect, useRef, useCallback }} from "react";
-import {{ collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, orderBy, limit, where, addDoc, updateDoc }} from "firebase/firestore";
-import {{ auth, db }} from "../../../firebase";
-import {{ BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line }} from "recharts";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, orderBy, limit, where, addDoc, updateDoc } from "firebase/firestore";
+import { auth, db } from "../../../firebase";
+import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 
 function AdminAuditLogTab({ auditLog, users, emaarProjects, fetchAuditLog, setTab, setPendingOpenUid, T, I, notify, db, auditRetentionDays, setAuditRetentionDays, auditWebhookUrl, setAuditWebhookUrl, auditAlertThr, setAuditAlertThr, apiKeys, setApiKeys, logAudit }) {
   // ── Computed stats ────────────────────────────────────────────────

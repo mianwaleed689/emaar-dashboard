@@ -3,7 +3,18 @@ import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, orderBy, li
 import { auth, db } from "../../../firebase";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-function AdminLeadsTab({ leads, users, T, I, notify, db, timeSince, logAudit, exportCSV, fetchLeads, leadFilter, setLeadFilter, leadSearch, setLeadSearch, leadDrawer, setLeadDrawer, showAddLead, setShowAddLead, addLeadForm, setAddLeadForm, addLeadLoading, setAddLeadLoading, leadsViewMode, setLeadsViewMode, setTab, setPendingOpenUid }) {
+function AdminLeadsTab({ adminUser, fetchUsers = () => {}, leads, users, T, I, notify, db, timeSince, logAudit, exportCSV, fetchLeads, leadFilter, setLeadFilter, leadSearch, setLeadSearch, leadDrawer, setLeadDrawer, showAddLead, setShowAddLead, addLeadForm, setAddLeadForm, addLeadLoading, setAddLeadLoading, leadsViewMode, setLeadsViewMode, setTab, setPendingOpenUid }) {
+
+  // ── Internal state (was in AdminPanel IIFE) ─────────────────────
+  const [leadSourceFilter, setLeadSourceFilter] = React.useState("all");
+  const [leadDateRange, setLeadDateRange] = React.useState("all");
+  const [leadNote, setLeadNote] = React.useState("");
+  const [leadNoteSaving, setLeadNoteSaving] = React.useState(false);
+  const [convertingLead, setConvertingLead] = React.useState(null);
+  const [showLossReason, setShowLossReason] = React.useState(false);
+  const [lossReason, setLossReason] = React.useState("");
+  // ─────────────────────────────────────────────────────────────────
+
             /* ─── LEADS CRM ─── */
             const now = new Date();
             const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());

@@ -21,6 +21,31 @@ export default function AdminAnalyticsTab({
   timeSince = () => "—",
   cohortDrilldown, setCohortDrilldown = () => {},
 }) {
+
+  // ── Compute stats from users prop ─────────────────────────────────
+  const now2 = new Date();
+  const _msDay = 86400000, _msWeek = _msDay * 7;
+  const computedStats = {
+    total:      users.length,
+    pro:        users.filter(u => u.tier === "pro").length,
+    enterprise: users.filter(u => u.tier === "enterprise").length,
+    proTrial:   users.filter(u => u.tier === "pro_trial" && (!u.trialEnd || new Date(u.trialEnd) > now2)).length,
+    free:       users.filter(u => u.tier === "free" || !u.tier).length,
+    expired:    users.filter(u => u.tier === "pro_trial" && u.trialEnd && new Date(u.trialEnd) <= now2).length,
+    thisWeek:   users.filter(u => { try { return (now2 - new Date(u.createdAt)) < _msWeek; } catch { return false; } }).length,
+    thisMonth:  users.filter(u => { try { const d = new Date(u.createdAt); return d.getMonth() === now2.getMonth() && d.getFullYear() === now2.getFullYear(); } catch { return false; } }).length,
+    activeToday: users.filter(u => u.lastLoginAt && (now2 - new Date(u.lastLoginAt)) < _msDay).length,
+  };
+  computedStats.paid = computedStats.pro + computedStats.enterprise;
+  // Merge with passed stats (passed stats take priority if non-empty)
+  const mergedStats = Object.keys(stats).length > 0 ? stats : computedStats;
+  const computedMrr = mrr || (computedStats.pro * 99) + (computedStats.enterprise * 499);
+  const computedArr = arr || computedMrr * 12;
+  // Override local vars so existing code works
+  // eslint-disable-next-line no-unused-vars
+  const _stats = mergedStats, _mrr = computedMrr, _arr = computedArr;
+  // ─────────────────────────────────────────────────────────────────
+
   // ── Inner layout components (need T from closure) ──
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null;

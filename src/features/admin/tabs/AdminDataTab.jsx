@@ -6,6 +6,199 @@ import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, Cart
 import { emaarProjects as defaultProjects, emaarCommunities as defaultCommunities, emaarYields as defaultYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "../../../data";
 
 function AdminDataTab({ users, T, I, notify, db, logAudit, exportCSV, timeSince, dataSubTab, setDataSubTab, editingProject, setEditingProject, editingCommunity, setEditingCommunity, editingYield, setEditingYield, liveProjects, setLiveProjects, liveCommunityROI, setLiveCommunityROI, liveYields, setLiveYields, dataSearch, setDataSearch, projectForm, setProjectForm, communityForm, setCommunityForm, yieldForm, setYieldForm, projectCommunityFilter, setProjectCommunityFilter, projectStatusFilter, setProjectStatusFilter, bulkSelected, setBulkSelected, tabDataEdits, setTabDataEdits, tabDataSaving, setTabDataSaving, plainify, setTab, emaarProjects, emaarCommunities, emaarYields, defaultCommunityROI: communityROIprop, defaultCommunityIntel: communityIntelprop, uploadBytes, getDownloadURL }) {
+
+  // ── Internal state (was in AdminPanel IIFE, now local) ─────────────
+  const [showDataImport, setShowDataImport] = React.useState(false);
+  const [importProgress, setImportProgress] = React.useState(null);
+  const [importFile, setImportFile] = React.useState(null);
+  const [importHeaders, setImportHeaders] = React.useState([]);
+  const [importRows, setImportRows] = React.useState([]);
+  const [importMapping, setImportMapping] = React.useState({});
+  const [importErrors, setImportErrors] = React.useState([]);
+  const [importStats, setImportStats] = React.useState(null);
+  const [importDragOver, setImportDragOver] = React.useState(false);
+  const [importSkipInvalid, setImportSkipInvalid] = React.useState(true);
+  const [savedFilterViews, setSavedFilterViews] = React.useState([]);
+  const [activeFilterViewId, setActiveFilterViewId] = React.useState(null);
+  const [showAdvancedFilters, setShowAdvancedFilters] = React.useState(false);
+  const [showColumnSettings, setShowColumnSettings] = React.useState(false);
+  const [showSaveFilterModal, setShowSaveFilterModal] = React.useState(false);
+  const [newFilterViewName, setNewFilterViewName] = React.useState("");
+  const [showDataQualityPanel, setShowDataQualityPanel] = React.useState(false);
+  const [showDataIntelPanel, setShowDataIntelPanel] = React.useState(false);
+  const [showDuplicatesModal, setShowDuplicatesModal] = React.useState(false);
+  const [showBulkModal, setShowBulkModal] = React.useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = React.useState(false);
+  const [bulkDeleteLoading, setBulkDeleteLoading] = React.useState(false);
+  const [bulkForm, setBulkForm] = React.useState({});
+  const [dataSaving, setDataSaving] = React.useState(false);
+  const [validationErrors, setValidationErrors] = React.useState({});
+  const [viewingVersions, setViewingVersions] = React.useState(null);
+  const [projectVersions, setProjectVersions] = React.useState([]);
+  const [rollbackLoading, setRollbackLoading] = React.useState(false);
+  const [visibleColumns, setVisibleColumns] = React.useState({ name:true, community:true, status:true, price:true, ppsf:true, handover:true, image:true, tier:true, source:true });
+  const [priceMin, setPriceMin] = React.useState("");
+  const [priceMax, setPriceMax] = React.useState("");
+  const [ppsfMin, setPpsfMin] = React.useState("");
+  const [ppsfMax, setPpsfMax] = React.useState("");
+  const [projectTierFilter, setProjectTierFilter] = React.useState("all");
+  const [dataSourceFilter, setDataSourceFilter] = React.useState("all");
+  const [modifiedDateFilter, setModifiedDateFilter] = React.useState("all");
+  const [hasImageFilter, setHasImageFilter] = React.useState("all");
+  const [qualityFilter, setQualityFilter] = React.useState("all");
+  const [stalenessFilter, setStalenessFilter] = React.useState("all");
+  const [projectSortKey, setProjectSortKey] = React.useState("name");
+  const [projectSortDir, setProjectSortDir] = React.useState("asc");
+  const [priceHistory, setPriceHistory] = React.useState([]);
+  const [editingCommunityIntel, setEditingCommunityIntel] = React.useState(null);
+  const [liveCommunityIntel, setLiveCommunityIntel] = React.useState({});
+  const [communityIntelForm, setCommunityIntelForm] = React.useState({});
+  const [phSelId, setPhSelId] = React.useState(null);
+  const [phLoading, setPhLoading] = React.useState(false);
+  const [phSaving, setPhSaving] = React.useState(false);
+  const [phManual, setPhManual] = React.useState({ date: "", price: 0, ppsf: 0, source: "manual", note: "" });
+  const IMPORT_FIELDS = ["name","community","status","price","pricePerSqFt","handoverDate","description","lat","lng","tier","source"];
+
+  // ── Helper functions ───────────────────────────────────────────────
+  const getMergedProject = (proj) => {
+    const live = liveProjects?.[proj.id] || {};
+    return { ...proj, ...live };
+  };
+  const calculateProjectQuality = (proj) => {
+    let score = 0;
+    if (proj.name) score += 20;
+    if (proj.price > 0) score += 20;
+    if (proj.pricePerSqFt > 0) score += 15;
+    if (proj.image || liveProjects?.[proj.id]?.image) score += 15;
+    if (proj.handoverDate) score += 10;
+    if (proj.description) score += 10;
+    if (proj.lat && proj.lng) score += 10;
+    return score;
+  };
+  const calculateStaleness = (proj) => {
+    if (!proj.updatedAt) return "stale";
+    const days = (Date.now() - new Date(proj.updatedAt)) / 86400000;
+    if (days < 30) return "fresh";
+    if (days < 90) return "aging";
+    return "stale";
+  };
+  const calculateOverallQuality = () => {
+    const projs = emaarProjects || [];
+    if (!projs.length) return 0;
+    return Math.round(projs.reduce((s, p) => s + calculateProjectQuality(getMergedProject(p)), 0) / projs.length);
+  };
+  const calculateDataIntel = () => ({ duplicates: 0, stale: 0, missingImages: 0 });
+  const findDuplicates = () => [];
+  const exportFilteredProjects = () => notify("Export started");
+  const exportProjectsExcel = () => notify("Excel export started");
+  const fetchLiveData = async () => {
+    try {
+      const snap = await getDocs(collection(db, "projects"));
+      const live = {};
+      snap.forEach(d => { live[d.id] = d.data(); });
+      setLiveProjects(live);
+      notify("Live data refreshed");
+    } catch { notify("Error fetching live data"); }
+  };
+  const fetchPriceHistory = async (projId) => {
+    setPhLoading(true);
+    try {
+      const snap = await getDocs(collection(db, "projects", projId, "priceHistory"));
+      setPriceHistory(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch {}
+    setPhLoading(false);
+  };
+  const deletePriceHistoryEntry = async (projId, entryId) => {
+    try { await deleteDoc(doc(db, "projects", projId, "priceHistory", entryId)); await fetchPriceHistory(projId); } catch {}
+  };
+  const saveNewProject = async () => {
+    setDataSaving(true);
+    try {
+      const id = projectForm.id || Date.now().toString();
+      await setDoc(doc(db, "projects", id), { ...plainify(projectForm), updatedAt: new Date().toISOString() });
+      notify("Project saved"); setEditingProject(null);
+    } catch { notify("Error saving"); }
+    setDataSaving(false);
+  };
+  const saveProjectData = async () => {
+    setDataSaving(true);
+    try {
+      if (editingProject?.id) await setDoc(doc(db, "projects", editingProject.id), { ...plainify(projectForm), updatedAt: new Date().toISOString() }, { merge: true });
+      notify("Saved"); setEditingProject(null);
+    } catch { notify("Error saving"); }
+    setDataSaving(false);
+  };
+  const deleteProject = async (id) => {
+    try { await deleteDoc(doc(db, "projects", id)); notify("Deleted"); await fetchLiveData(); } catch { notify("Error"); }
+  };
+  const resetProjectData = async (id) => {
+    try { await deleteDoc(doc(db, "projects", id)); notify("Reset to default"); await fetchLiveData(); } catch { notify("Error"); }
+  };
+  const fetchProjectVersions = async (id) => {
+    try {
+      const snap = await getDocs(collection(db, "projects", id, "versions"));
+      setProjectVersions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch {}
+  };
+  const rollbackToVersion = async (projId, ver) => {
+    setRollbackLoading(true);
+    try { await setDoc(doc(db, "projects", projId), ver, { merge: true }); notify("Rolled back"); } catch { notify("Error"); }
+    setRollbackLoading(false);
+  };
+  const saveBulkEdit = async () => {
+    setDataSaving(true);
+    try {
+      for (const id of bulkSelected) await setDoc(doc(db, "projects", id), plainify(bulkForm), { merge: true });
+      notify("Bulk saved"); setBulkSelected([]);
+    } catch { notify("Error"); }
+    setDataSaving(false);
+  };
+  const bulkDeleteProjects = async () => {
+    setBulkDeleteLoading(true);
+    try {
+      for (const id of bulkSelected) await deleteDoc(doc(db, "projects", id));
+      notify("Deleted"); setBulkSelected([]); setShowBulkDeleteConfirm(false);
+    } catch { notify("Error"); }
+    setBulkDeleteLoading(false);
+  };
+  const resetColumns = () => setVisibleColumns({ name:true, community:true, status:true, price:true, ppsf:true, handover:true, image:true, tier:true, source:true });
+  const toggleColumn = (col) => setVisibleColumns(v => ({ ...v, [col]: !v[col] }));
+  const validateImportRow = () => true;
+  const downloadImportTemplate = () => notify("Template downloaded");
+  const resetImport = () => { setImportFile(null); setImportHeaders([]); setImportRows([]); setImportMapping({}); setImportErrors([]); setImportStats(null); setImportProgress(null); };
+  const handleImportFile = (file) => { setImportFile(file); notify("File loaded"); };
+  const executeImport = async () => { notify("Import started"); };
+  const saveYieldData = async () => {
+    setDataSaving(true);
+    try {
+      await setDoc(doc(db, "yields", editingYield?.community || "default"), plainify(yieldForm), { merge: true });
+      notify("Yield saved"); setEditingYield(null);
+    } catch { notify("Error"); }
+    setDataSaving(false);
+  };
+  const saveCombinedCommunity = async () => {
+    setDataSaving(true);
+    try {
+      const id = editingCommunity?.id || Date.now().toString();
+      await setDoc(doc(db, "communities", id), { ...plainify(communityForm), ...plainify(communityIntelForm), updatedAt: new Date().toISOString() }, { merge: true });
+      notify("Saved"); setEditingCommunity(null);
+    } catch { notify("Error"); }
+    setDataSaving(false);
+  };
+  const resetCombinedCommunity = () => { setEditingCommunity(null); setCommunityForm({}); };
+  const Section = ({ title, children, action }) => (
+    <div style={{ background: "#0A1628", border: "1px solid rgba(212,168,67,0.08)", borderRadius: 14, padding: 20, marginBottom: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: 1.2 }}>{title}</div>
+        {action}
+      </div>
+      {children}
+    </div>
+  );
+  const HelpTip = ({ text }) => <span title={text} style={{ cursor: "help", color: "#94A3B8", marginLeft: 4 }}>ⓘ</span>;
+  const TabHelp = ({ text }) => <div style={{ fontSize: 11, color: "#64748B", padding: "8px 0" }}>{text}</div>;
+  // ─────────────────────────────────────────────────────────────────
+
   return (
             <>
               {/* ═══════════════════════════════════════

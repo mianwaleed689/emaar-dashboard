@@ -3,7 +3,23 @@ import { collection, getDocs, doc, setDoc, query, orderBy } from "firebase/fires
 import { auth, db } from "../../../firebase";
 import { signOut } from "firebase/auth";
 
-function AdminTabControlTab({ T, I, notify, db, logAudit, tabSettings, setTabSettings, tabSearch, setTabSearch, selectedTabControl, setSelectedTabControl, users, adminUser }) {
+function AdminTabControlTab({ T, I, notify, db, logAudit = () => {},
+  tabSettings = [], setTabSettings = () => {},
+  tabSearch = '', setTabSearch = () => {},
+  selectedTabControl, setSelectedTabControl = () => {},
+  users = [], adminUser,
+  auditLog = [],
+  timeSince = () => '—',
+  liveCommunityROI = {},
+  tabDataEdits = {}, setTabDataEdits = () => {},
+  tabDataSaving = false, setTabDataSaving = () => {}
+}) {
+
+  // ── Internal state ────────────────────────────────────────────────
+  const [tabSettingsSaving, setTabSettingsSaving] = React.useState(false);
+  const [previewTier, setPreviewTier] = React.useState("pro");
+  // ─────────────────────────────────────────────────────────────────
+
             /* ═══════════════════════════════════════════════════════════════════
                TAB 9: TAB CONTROL — PRO LEVEL
                LaunchDarkly + Statsig + Flagsmith inspired feature flags
