@@ -4894,7 +4894,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         </button>
                         <button type="button" onClick={() => deleteWebhook(webhook.id)}
                           style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 9, cursor: "pointer" }}>
-                          ├ù
+                          ×
                         </button>
                       </div>
                     </div>
@@ -4942,7 +4942,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         </button>
                         <button type="button" onClick={() => deletePermission(perm.id)}
                           style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 9, cursor: "pointer" }}>
-                          ├ù
+                          ×
                         </button>
                       </div>
                     );
@@ -5042,15 +5042,15 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: T.textMuted }}>
                       <span>{ticket.userName || ticket.userEmail}</span>
-                      <span>┬╖</span>
+                      <span>·</span>
                       <span style={{ padding: "2px 6px", borderRadius: 4, background: `${cat.color}20`, color: cat.color, fontSize: 10 }}>{cat.icon} {cat.label}</span>
-                      <span>┬╖</span>
+                      <span>·</span>
                       <span>{timeAgo(ticket.createdAt)}</span>
-                      {ticket.assignedTo && <><span>┬╖</span><span style={{ color: T.purple }}>• {ticket.assignedToName || "Assigned"}</span></>}
+                      {ticket.assignedTo && <><span>·</span><span style={{ color: T.purple }}>• {ticket.assignedToName || "Assigned"}</span></>}
                       {/* SLA Progress Bar */}
                       {slaInfo.status !== "resolved" && (
                         <>
-                          <span>┬╖</span>
+                          <span>·</span>
                           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                             <div style={{ width: 40, height: 4, background: T.border, borderRadius: 2, overflow: "hidden" }}>
                               <div style={{ width: `${Math.min(slaInfo.percent, 100)}%`, height: "100%", background: slaInfo.color, borderRadius: 2 }} />
@@ -5117,7 +5117,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${showAiPanel ? T.teal : T.border}`, background: showAiPanel ? `${T.teal}15` : "transparent", color: showAiPanel ? T.teal : T.textMuted, fontSize: 10, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
                     👛 AI
                   </button>
-                  <button type="button" onClick={() => setTicketDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>├ù</button>
+                  <button type="button" onClick={() => setTicketDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>×</button>
                 </div>
               </div>
               
@@ -5151,7 +5151,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   return tag ? (
                     <span key={tagId} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, padding: "3px 8px", borderRadius: 4, background: `${tag.color}20`, color: tag.color, fontWeight: 600 }}>
                       {tag.label}
-                      <button type="button" onClick={() => removeTag(ticketDrawer.id, tagId)} style={{ background: "none", border: "none", color: tag.color, cursor: "pointer", fontSize: 12, lineHeight: 1, padding: 0 }}>├ù</button>
+                      <button type="button" onClick={() => removeTag(ticketDrawer.id, tagId)} style={{ background: "none", border: "none", color: tag.color, cursor: "pointer", fontSize: 12, lineHeight: 1, padding: 0 }}>×</button>
                     </span>
                   ) : null;
                 })}
@@ -5203,7 +5203,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         {link.type !== "merged" && (
                           <button type="button" onClick={() => unlinkTicket(link.id)}
                             style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 12, padding: 2 }}>
-                            ├ù
+                            ×
                           </button>
                         )}
                       </div>
@@ -5552,7 +5552,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       </div>
                       <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
                         <span>{msg.from === "admin" ? (msg.by || "Admin") : ticketDrawer.userName}</span>
-                        <span>┬╖</span>
+                        <span>·</span>
                         <span>{timeAgo(msg.at)}</span>
                       </div>
                     </div>
@@ -5590,9 +5590,9 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                         )}
                         <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6, display: "flex", alignItems: "center", gap: 6 }}>
                           <span>{note.by}</span>
-                          <span>┬╖</span>
+                          <span>·</span>
                           <span>{timeAgo(note.at)}</span>
-                          {note.mentions?.length > 0 && <><span>┬╖</span><span style={{ color: T.teal }}>@{note.mentions.join(", @")}</span></>}
+                          {note.mentions?.length > 0 && <><span>·</span><span style={{ color: T.teal }}>@{note.mentions.join(", @")}</span></>}
                         </div>
                       </div>
                     ))}
@@ -5839,7 +5839,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>• Merge Ticket</h3>
-              <button type="button" onClick={() => setShowMergeModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <button type="button" onClick={() => setShowMergeModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.orange}15`, borderRadius: 8, marginBottom: 16 }}>
@@ -5893,7 +5893,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 480, maxHeight: "80vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>🗙 Link Related Ticket</h3>
-              <button type="button" onClick={() => setShowLinkModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <button type="button" onClick={() => setShowLinkModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.teal}15`, borderRadius: 8, marginBottom: 16 }}>
@@ -5940,7 +5940,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 560, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}> Manage Custom Fields</h3>
-              <button type="button" onClick={() => setShowFieldsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <button type="button" onClick={() => setShowFieldsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.cyan}15`, borderRadius: 8, marginBottom: 20 }}>
@@ -6054,7 +6054,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 600, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>👛 Auto-Assign Rules</h3>
-              <button type="button" onClick={() => setShowAutoAssignModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <button type="button" onClick={() => setShowAutoAssignModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.green}15`, borderRadius: 8, marginBottom: 20 }}>
@@ -6200,7 +6200,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 500, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>▒️ SLA Settings</h3>
-              <button type="button" onClick={() => setShowSlaModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <button type="button" onClick={() => setShowSlaModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.orange}15`, borderRadius: 8, marginBottom: 20 }}>
@@ -6300,7 +6300,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 650, maxHeight: "90vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>⚡ Workflow Triggers</h3>
-              <button type="button" onClick={() => setShowWorkflowModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <button type="button" onClick={() => setShowWorkflowModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.purple}15`, borderRadius: 8, marginBottom: 20 }}>
@@ -6395,7 +6395,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                       {newWorkflowForm.actions.length > 1 && (
                         <button type="button" onClick={() => removeWorkflowAction(idx)}
                           style={{ padding: "6px 10px", borderRadius: 4, border: `1px solid ${T.red}40`, background: `${T.red}10`, color: T.red, fontSize: 12, cursor: "pointer" }}>
-                          ├ù
+                          ×
                         </button>
                       )}
                     </div>
@@ -6486,7 +6486,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}30`, padding: 24, width: "100%", maxWidth: 420 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>• Add CSAT Rating</h3>
-              <button type="button" onClick={() => setShowCsatModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <button type="button" onClick={() => setShowCsatModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.gold}10`, borderRadius: 8, marginBottom: 20 }}>
@@ -6567,7 +6567,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
                 {editingArticle ? "✅️ Edit Article" : "📬 New Article"}
               </h3>
-              <button type="button" onClick={() => setShowKbModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <button type="button" onClick={() => setShowKbModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ marginBottom: 16 }}>
@@ -6662,7 +6662,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
                 {editingQuickResponse ? "✅️ Edit Quick Response" : "⚡ New Quick Response"}
               </h3>
-              <button type="button" onClick={() => setShowQuickResponseModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <button type="button" onClick={() => setShowQuickResponseModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.purple}10`, borderRadius: 8, marginBottom: 16 }}>
@@ -6759,7 +6759,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
                  Live Chat Settings
               </h3>
-              <button type="button" onClick={() => setShowChatSettings(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <button type="button" onClick={() => setShowChatSettings(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -6849,7 +6849,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>
                 • Widget Preview
               </h3>
-              <button type="button" onClick={() => setShowWidgetPreview(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <button type="button" onClick={() => setShowWidgetPreview(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ background: "#f5f5f5", borderRadius: 12, padding: 20, display: "flex", justifyContent: chatSettings.widgetPosition === "right" ? "flex-end" : "flex-start" }}>
@@ -6913,7 +6913,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                   <div style={{ fontSize: 11, color: T.textMuted }}>Pre-approved templates for out-of-window messaging</div>
                 </div>
               </div>
-              <button type="button" onClick={() => setShowWhatsappTemplates(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <button type="button" onClick={() => setShowWhatsappTemplates(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 12, background: `${T.teal}10`, borderRadius: 8, marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10 }}>
@@ -6978,7 +6978,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ width: 440, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>▒️ Add Manual Time Entry</div>
-              <button type="button" onClick={() => setShowTimeEntryModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <button type="button" onClick={() => setShowTimeEntryModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -7042,7 +7042,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ width: 500, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>🗙 {editingWebhook ? "Edit Webhook" : "Add Webhook"}</div>
-              <button type="button" onClick={() => setShowWebhookModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <button type="button" onClick={() => setShowWebhookModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -7111,7 +7111,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ width: 460, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>📑 Export Tickets</div>
-              <button type="button" onClick={() => setShowExportModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <button type="button" onClick={() => setShowExportModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -7190,7 +7190,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
           <div style={{ width: 420, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>🗉 {editingPermission ? "Edit Permission" : "Add Permission"}</div>
-              <button type="button" onClick={() => setShowPermissionsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>├ù</button>
+              <button type="button" onClick={() => setShowPermissionsModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
             </div>
             
             <div style={{ padding: 20 }}>
@@ -8250,7 +8250,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
               <div style={{ padding: "14px 18px", borderRadius: 10, background: lastResult.success ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)", border: `1px solid ${lastResult.success ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}` }}>
                 <div style={{ fontSize: 13, color: lastResult.success ? T.green : T.red, fontWeight: 700 }}>
                   {lastResult.success ? `✔ Sent to ${lastResult.sent}/${lastResult.total} users` : ` Error: ${lastResult.error}`}
-                  {lastResult.failed > 0 && <span style={{ color: T.orange }}> ┬╖ {lastResult.failed} failed</span>}
+                  {lastResult.failed > 0 && <span style={{ color: T.orange }}> · {lastResult.failed} failed</span>}
                 </div>
               </div>
             )}
@@ -8316,10 +8316,10 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 2 }}>
                       Sent to <span style={{ color: T.gold }}>{log.sent}</span> of {log.total} users
-                      {log.failed > 0 && <span style={{ color: T.orange }}> ┬╖ {log.failed} failed</span>}
+                      {log.failed > 0 && <span style={{ color: T.orange }}> · {log.failed} failed</span>}
                     </div>
                     <div style={{ fontSize: 11, color: T.textMuted }}>
-                      {log.sentAt ? new Date(log.sentAt).toLocaleString("en-AE", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"} ┬╖ by {log.sentBy || "admin"} ┬╖ Segment: {log.segment || "all"}
+                      {log.sentAt ? new Date(log.sentAt).toLocaleString("en-AE", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"} · by {log.sentBy || "admin"} · Segment: {log.segment || "all"}
                     </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
@@ -8926,7 +8926,7 @@ const ProfileDrawerComponent = ({
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: badge.bg, color: badge.color, border: `1px solid ${badge.color}30` }}>
-                      {badge.label}{badge.price ? ` ┬╖ ${badge.price}` : ""}
+                      {badge.label}{badge.price ? ` · ${badge.price}` : ""}
                     </span>
                     <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20, background: `${health.dot}14`, color: health.dot, border: `1px solid ${health.dot}28`, display: "flex", alignItems: "center", gap: 4 }}>
                       <span style={{ width: 6, height: 6, borderRadius: "50%", background: health.dot, flexShrink: 0 }} />{health.label}
@@ -9182,7 +9182,7 @@ const ProfileDrawerComponent = ({
                                   : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                                 }
                               </div>
-                              <span style={{ fontSize: 11, color: T.textSecondary }}>{h.browser || "Browser"} ┬╖ {h.device || "Desktop"}</span>
+                              <span style={{ fontSize: 11, color: T.textSecondary }}>{h.browser || "Browser"} · {h.device || "Desktop"}</span>
                             </div>
                             <span style={{ fontSize: 10, color: T.textMuted }}>{(() => { try { return new Date(h.time).toLocaleDateString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return "—"; } })()}</span>
                           </div>
@@ -9738,7 +9738,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const EmailModal = () => sendEmailUser && (
     <Modal onClose={() => setSendEmailUser(null)}>
-      <ModalHeader title="Send Email" sub={`To: ${sendEmailUser.name || sendEmailUser.email} ┬╖ ${sendEmailUser.email}`} onClose={() => setSendEmailUser(null)} />
+      <ModalHeader title="Send Email" sub={`To: ${sendEmailUser.name || sendEmailUser.email} · ${sendEmailUser.email}`} onClose={() => setSendEmailUser(null)} />
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <Field label="Subject"><input type="text" placeholder="Email subject..." value={emailSubject} onChange={e => setEmailSubject(e.target.value)} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
         <Field label="Message"><textarea placeholder="Write your message..." value={emailBody} onChange={e => setEmailBody(e.target.value)} rows={5} style={{ ...inputStyle, resize: "vertical" }} onFocus={focusIn} onBlur={focusOut} /></Field>
@@ -9812,7 +9812,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           {[" UAE"," Saudi Arabia"," Qatar"," Kuwait"," Bahrain"," Oman"," UK"," USA"," India"," Pakistan"," Egypt"," Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
         </select></Field></div>
         <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` ┬╖ ${r.price}` : ""}</option>)}
+          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
         </select></Field></div>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Job Role"><select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           <option value="user">— No role assigned —</option>
@@ -9839,7 +9839,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           Jane Doe,jane@email.com,+971509876543,free,UK
         </div>
         <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>
-          Valid tiers: free, pro_trial, pro, enterprise ┬╖ Password will be auto-generated and emailed
+          Valid tiers: free, pro_trial, pro, enterprise · Password will be auto-generated and emailed
         </div>
       </div>
       
@@ -9950,7 +9950,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           {[" UAE"," Saudi Arabia"," Qatar"," Kuwait"," Bahrain"," Oman"," UK"," USA"," India"," Pakistan"," Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
         </select></Field>
         <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` ┬╖ ${r.price}` : ""}</option>)}
+          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
         </select></Field>
         <Field label="Job Role"><select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           <option value="user">— No role assigned —</option>
@@ -10096,7 +10096,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.white, margin: 0 }}>User Management</h2>
           <p style={{ fontSize: 13, color: T.textMuted, margin: "4px 0 0" }}>
-            {total} registered ┬╖ Live Firestore ┬╖ {allFiltered.length} shown ┬╖ <span style={{ color: T.green }}>{activeToday} active today</span>
+            {total} registered · Live Firestore · {allFiltered.length} shown · <span style={{ color: T.green }}>{activeToday} active today</span>
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -10109,7 +10109,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             </button>
             {atRiskCount > 0 && (
               <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: T.surface, border: `1px solid ${T.red}30`, borderRadius: 8, padding: "8px 12px", fontSize: 11, color: T.textMuted, whiteSpace: "nowrap", zIndex: 50, pointerEvents: "none", boxShadow: "0 8px 24px rgba(0,0,0,0.4)", opacity: 0, transition: "opacity 0.2s" }} className="risk-tooltip">
-                Will email: {atRisk.map(u => u.name || u.email).join(", ")} ┬╖ {AT_RISK_DAYS} days left
+                Will email: {atRisk.map(u => u.name || u.email).join(", ")} · {AT_RISK_DAYS} days left
               </div>
             )}
           </div>
@@ -10188,7 +10188,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}> Clear</button>
         )}
         <div style={{ marginLeft: "auto", fontSize: 10, color: T.textMuted, fontStyle: "italic" }}>
-          ←↑ J/K ┬╖ Enter=open ┬╖ E=edit ┬╖ N=new
+          ←↑ J/K · Enter=open · E=edit · N=new
         </div>
       </div>
 
@@ -10253,7 +10253,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>✔ {bulkSel.length} users selected</span>
           <select value={bulkTier} onChange={e => setBulkTier(e.target.value)} style={{ padding: "6px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" }}>
             <option value="">Change access tier to...</option>
-            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` ┬╖ ${r.price}` : ""}</option>)}
+            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
           </select>
           <button type="button" onClick={handleBulkAction} disabled={!bulkTier} style={{ padding: "6px 14px", borderRadius: 7, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: bulkTier ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", opacity: bulkTier ? 1 : 0.5 }}>Apply</button>
           <button type="button" onClick={() => setBulkSel([])} style={{ padding: "6px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
@@ -10338,8 +10338,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                     <span style={{ width: 5, height: 5, borderRadius: "50%", background: health.dot, display: "inline-block", flexShrink: 0 }} />
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {health.label}
-                      {jobRole && <span style={{ marginLeft: 5, color: jobRole.color, fontWeight: 700 }}>┬╖ {jobRole.label}</span>}
-                      {(u.tags || []).length > 0 && <span style={{ marginLeft: 5, color: "#8B5CF6" }}>┬╖ {(u.tags || []).map(t => TAGS_OPTIONS.find(x => x.value === t)?.label).filter(Boolean).join(", ")}</span>}
+                      {jobRole && <span style={{ marginLeft: 5, color: jobRole.color, fontWeight: 700 }}>· {jobRole.label}</span>}
+                      {(u.tags || []).length > 0 && <span style={{ marginLeft: 5, color: "#8B5CF6" }}>· {(u.tags || []).map(t => TAGS_OPTIONS.find(x => x.value === t)?.label).filter(Boolean).join(", ")}</span>}
                     </span>
                   </div>
                 </div>
@@ -10353,7 +10353,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                   onClick={e => { const rect = e.currentTarget.getBoundingClientRect(); setInlineTierUser({ user: u, x: rect.left, y: rect.bottom + 4 }); }}
                   title="Click to change tier"
                   style={{ fontSize: 10, fontWeight: 700, padding: "4px 9px", borderRadius: 7, background: badge.bg, color: badge.color, border: `1px solid ${badge.color}25`, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 3 }}>
-                  {badge.label}{badge.price ? ` ┬╖ ${badge.price}` : ""}
+                  {badge.label}{badge.price ? ` · ${badge.price}` : ""}
                   <span style={{ opacity: 0.6, fontSize: 9 }}></span>
                 </button>
               </div>
@@ -10455,10 +10455,10 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             ? "No users shown"
             : <>Showing <strong style={{ color: T.white }}>{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, allFiltered.length)}</strong> of <strong style={{ color: T.white }}>{allFiltered.length}</strong> users</>
           }
-          {tierFilter !== "All" && <span style={{ color: T.gold }}> ┬╖ {tierFilter}</span>}
+          {tierFilter !== "All" && <span style={{ color: T.gold }}> · {tierFilter}</span>}
         </span>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <button type="button" onClick={() => setPage(1)} disabled={page === 1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === 1 ? T.textMuted : T.textSecondary, cursor: page === 1 ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>┬½</button>
+          <button type="button" onClick={() => setPage(1)} disabled={page === 1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === 1 ? T.textMuted : T.textSecondary, cursor: page === 1 ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>½</button>
           <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === 1 ? T.textMuted : T.textSecondary, cursor: page === 1 ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}> Prev</button>
           {Array.from({ length: Math.min(5, totalPages) }, (_, idx) => {
             const p = totalPages <= 5 ? idx + 1 : Math.max(1, Math.min(page - 2, totalPages - 4)) + idx;
@@ -10470,12 +10470,12 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             );
           })}
           <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>Next </button>
-          <button type="button" onClick={() => setPage(totalPages)} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>┬╗</button>
+          <button type="button" onClick={() => setPage(totalPages)} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>»</button>
           <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>Page {page} of {totalPages}</span>
         </div>
         {/* FIX #16: MRR only shown once — here at bottom */}
         <span style={{ fontSize: 11, color: T.textMuted }}>
-          MRR <span style={{ color: T.gold, fontWeight: 700 }}>AED {mrr}</span> ┬╖ Conv <span style={{ color: T.green, fontWeight: 700 }}>{convRate}%</span>
+          MRR <span style={{ color: T.gold, fontWeight: 700 }}>AED {mrr}</span> · Conv <span style={{ color: T.green, fontWeight: 700 }}>{convRate}%</span>
         </span>
       </div>
     </div>
@@ -10866,7 +10866,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, color: T.white, fontFamily: "'Fraunces',serif" }}>Audit Log</div>
           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-            {filteredLog.length} of {auditLog.length} events ┬╖ Complete admin action history
+            {filteredLog.length} of {auditLog.length} events · Complete admin action history
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -11069,7 +11069,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
                         {meta.label}
                       </span>
                       <span style={{ fontSize: 10, color: T.textMuted }}>{timeAgo(log.changedAt)}</span>
-                      <span style={{ fontSize: 9, color: T.textMuted }}>┬╖</span>
+                      <span style={{ fontSize: 9, color: T.textMuted }}>·</span>
                       <span style={{ fontSize: 10, color: T.textMuted }}>{log.changedAt ? new Date(log.changedAt).toLocaleString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : "—"}</span>
                       <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
                         {log.ip && log.ip !== "unknown" && (
@@ -13250,7 +13250,7 @@ export default function AdminPanel() {
               <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 4 }}>{title}</div>
               {subtitle && <div style={{ fontSize: 12, color: T.textSecondary }}>{subtitle}</div>}
             </div>
-            <button type="button" onClick={() => setKpiDrill(null)} style={{ background: "none", border: `1px solid ${T.border}`, borderRadius: 8, width: 28, height: 28, cursor: "pointer", color: T.textMuted, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>├ù</button>
+            <button type="button" onClick={() => setKpiDrill(null)} style={{ background: "none", border: `1px solid ${T.border}`, borderRadius: 8, width: 28, height: 28, cursor: "pointer", color: T.textMuted, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
           </div>
           {/* Metric items */}
           {items && items.map((item, i) => (
@@ -13386,7 +13386,7 @@ export default function AdminPanel() {
           <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth: 500, maxHeight: "90vh", overflowY: "auto", animation: "slideUp 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22 }}>
               <div>
-                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{`Cohort: ${cohortDrilldown.cohortLabel} ┬╖ Week ${cohortDrilldown.weekNum}`}</div>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{`Cohort: ${cohortDrilldown.cohortLabel} · Week ${cohortDrilldown.weekNum}`}</div>
                 <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{`${cohortDrilldown.users.length} users retained`}</div>
               </div>
               <button type="button" onClick={() => setCohortDrilldown(null)} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}></button>
@@ -13483,7 +13483,7 @@ export default function AdminPanel() {
             </button>
             <div>
               <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>{i18t("sidebar", "adminConsole")}</h1>
-              <p style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1 }}>{new Date().toLocaleDateString("en-AE", { weekday: "short", day: "numeric", month: "short", year: "numeric" })} ┬╖ {stats.total} users</p>
+              <p style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1 }}>{new Date().toLocaleDateString("en-AE", { weekday: "short", day: "numeric", month: "short", year: "numeric" })} · {stats.total} users</p>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -13559,7 +13559,7 @@ export default function AdminPanel() {
                     <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 14, borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
                       <div style={{ width: 8, height: 8, borderRadius: "50%", background: healthColor, boxShadow: `0 0 6px ${healthColor}` }} />
                       <span style={{ fontSize: 12, fontWeight: 700, color: healthColor }}>{healthLabel}</span>
-                      <span style={{ fontSize: 11, color: T.textMuted }}>┬╖ Score {healthScore}</span>
+                      <span style={{ fontSize: 11, color: T.textMuted }}>· Score {healthScore}</span>
                     </div>
 
                     {/* Alert chips — center, only shown if issues exist */}
@@ -13606,11 +13606,11 @@ export default function AdminPanel() {
                   {/* 1 — MRR */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.00s", cursor: "pointer" }} onClick={() => setKpiDrill({
                     title: "MRR Breakdown", color: T.green,
-                    subtitle: `Monthly Recurring Revenue ┬╖ ARR: AED ${arr.toLocaleString()}`,
+                    subtitle: `Monthly Recurring Revenue · ARR: AED ${arr.toLocaleString()}`,
                     items: [
                       { label: "Total MRR", value: `AED ${mrr.toLocaleString()}`, color: T.green },
-                      { label: "Enterprise (AED 499/mo)", value: `${stats.enterprise} users ┬╖ AED ${(stats.enterprise * 499).toLocaleString()}`, note: "AED 499 ├ù users" },
-                      { label: "Pro (AED 99/mo)", value: `${stats.pro} users ┬╖ AED ${(stats.pro * 99).toLocaleString()}`, note: "AED 99 ├ù users" },
+                      { label: "Enterprise (AED 499/mo)", value: `${stats.enterprise} users · AED ${(stats.enterprise * 499).toLocaleString()}`, note: "AED 499 × users" },
+                      { label: "Pro (AED 99/mo)", value: `${stats.pro} users · AED ${(stats.pro * 99).toLocaleString()}`, note: "AED 99 × users" },
                       { label: "Annual Run Rate (ARR)", value: `AED ${arr.toLocaleString()}`, color: T.green },
                       { label: "New MRR this month", value: `+AED ${newMRRThisMonth.toLocaleString()}`, color: T.green },
                       { label: "Churned MRR this month", value: `-AED ${churnedMRR.toLocaleString()}`, color: churnedMRR > 0 ? T.red : T.textMuted },
@@ -13633,7 +13633,7 @@ export default function AdminPanel() {
                   {/* 2 — Total Users */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.04s", cursor: "pointer" }} onClick={() => setKpiDrill({
                     title: "Total Users Breakdown", color: T.gold,
-                    subtitle: `${stats.total} registered accounts ┬╖ ${stats.today} joined today`,
+                    subtitle: `${stats.total} registered accounts · ${stats.today} joined today`,
                     items: [
                       { label: "Total Registered", value: stats.total, color: T.gold },
                       { label: "Joined Today", value: stats.today, color: stats.today > 0 ? T.green : T.textMuted },
@@ -13661,12 +13661,12 @@ export default function AdminPanel() {
                   {/* 3 — Paid Users */}
                   <div className="kpi-card fade-up" style={{ animationDelay: "0.08s", cursor: "pointer" }} onClick={() => setKpiDrill({
                     title: "Paid Users Breakdown", color: T.teal,
-                    subtitle: `${stats.paid} paying accounts ┬╖ AED ${mrr.toLocaleString()} MRR`,
+                    subtitle: `${stats.paid} paying accounts · AED ${mrr.toLocaleString()} MRR`,
                     items: [
                       { label: "Total Paid", value: stats.paid, color: T.teal },
                       { label: "Pro (AED 99/mo)", value: stats.pro, note: `AED ${(stats.pro * 99).toLocaleString()} MRR` },
                       { label: "Enterprise (AED 499/mo)", value: stats.enterprise, note: `AED ${(stats.enterprise * 499).toLocaleString()} MRR`, color: T.gold },
-                      { label: "Conversion Rate", value: `${stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0}%`, note: "Paid ├╖ Total Users" },
+                      { label: "Conversion Rate", value: `${stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0}%`, note: "Paid ÷ Total Users" },
                       { label: "Trial → Paid Rate", value: `${trialConversion}%`, note: "Of all who ever trialled" },
                       { label: "ARPU (paying users)", value: `AED ${arpu}`, color: T.teal },
                     ],
@@ -13678,7 +13678,7 @@ export default function AdminPanel() {
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.teal, opacity: 0.7, borderRadius: "16px 16px 0 0" }} />
                     <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 8 }}>Paid Users</div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: T.teal, lineHeight: 1 }}>{stats.paid}</div>
-                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{stats.pro} Pro ┬╖ {stats.enterprise} Ent</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{stats.pro} Pro · {stats.enterprise} Ent</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 5 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: T.teal }}>{stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0}%</span>
                       <span style={{ fontSize: 9, color: T.textMuted }}>conversion rate</span>
@@ -13744,10 +13744,10 @@ export default function AdminPanel() {
                     subtitle: "Average Revenue Per User",
                     items: [
                       { label: "ARPU (paying users)", value: `AED ${arpu}`, color: "#8B5CF6" },
-                      { label: "ARPU (all users)", value: `AED ${arpuAll}`, note: "MRR ├╖ total users" },
+                      { label: "ARPU (all users)", value: `AED ${arpuAll}`, note: "MRR ÷ total users" },
                       { label: "Enterprise ARPU", value: "AED 499", note: "Per enterprise user/mo" },
                       { label: "Pro ARPU", value: "AED 99", note: "Per pro user/mo" },
-                      { label: "LTV estimate (12mo)", value: `AED ${(arpu * 12).toLocaleString()}`, note: "ARPU ├ù 12 months", color: "#8B5CF6" },
+                      { label: "LTV estimate (12mo)", value: `AED ${(arpu * 12).toLocaleString()}`, note: "ARPU × 12 months", color: "#8B5CF6" },
                       { label: "To reach AED 10K MRR", value: (() => { if (arpu === 0) return "—"; const needed = Math.ceil((10000 - mrr) / arpu); return needed > 0 ? `${needed} more paid users` : "Already exceeded"; })(), note: "At current ARPU" },
                     ],
                   })}>
@@ -13765,8 +13765,8 @@ export default function AdminPanel() {
                     items: [
                       { label: "Active Today", value: stats.activeToday, color: T.teal },
                       { label: "Active This Week", value: stats.activeThisWeek },
-                      { label: "Daily Active Rate", value: `${stats.total > 0 ? Math.round((stats.activeToday / stats.total) * 100) : 0}%`, note: "Today ├╖ total users" },
-                      { label: "Weekly Active Rate", value: `${stats.total > 0 ? Math.round((stats.activeThisWeek / stats.total) * 100) : 0}%`, note: "7-day ├╖ total users" },
+                      { label: "Daily Active Rate", value: `${stats.total > 0 ? Math.round((stats.activeToday / stats.total) * 100) : 0}%`, note: "Today ÷ total users" },
+                      { label: "Weekly Active Rate", value: `${stats.total > 0 ? Math.round((stats.activeThisWeek / stats.total) * 100) : 0}%`, note: "7-day ÷ total users" },
                       { label: "Never Logged In", value: users.filter(u => !u.lastLoginAt).length, color: users.filter(u => !u.lastLoginAt).length > 0 ? "#F59E0B" : T.textMuted, note: "Registered but never signed in" },
                       { label: "Industry DAU/MAU Benchmark", value: "~15–20%", color: T.textMuted, note: "Healthy SaaS range" },
                     ],
@@ -13794,7 +13794,7 @@ export default function AdminPanel() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Signup Timeline</div>
-                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>14 days ┬╖ vs prior week</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>14 days · vs prior week</div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 11 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
@@ -13870,7 +13870,7 @@ export default function AdminPanel() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Activity Feed</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Signups ┬╖ tier changes ┬╖ leads ┬╖ verifications</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Signups · tier changes · leads · verifications</div>
                   </div>
                   <div style={{ fontSize: 10, color: T.textMuted }}>{activityFeed.length} recent events</div>
                 </div>
@@ -14013,7 +14013,7 @@ export default function AdminPanel() {
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.name || u.email?.split("@")[0]}</div>
-                            <div style={{ fontSize: 10, color: T.textMuted }}>{daysSinceJoin}d on free ┬╖ {u.country || "no country"}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted }}>{daysSinceJoin}d on free · {u.country || "no country"}</div>
                           </div>
                           {isWarm && (
                             <button type="button"
@@ -14169,7 +14169,7 @@ export default function AdminPanel() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>ARPU & MRR Over Time</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Derived from user tier history ┬╖ Updates as users join and upgrade</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Derived from user tier history · Updates as users join and upgrade</div>
                   </div>
                   <div style={{ display: "flex", gap: 16 }}>
                     {[["MRR", T.green], ["ARPU", "#8B5CF6"], ["Paid Users", T.teal]].map(([name, color]) => (
@@ -14484,7 +14484,7 @@ export default function AdminPanel() {
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                           <div>
                             <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Activity — Last 30 Days</div>
-                            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{auditLog.length} total events ┬╖ {last30.filter(d => d.count > 0).length} active days</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{auditLog.length} total events · {last30.filter(d => d.count > 0).length} active days</div>
                           </div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>
                             Peak: <span style={{ color: T.gold, fontWeight: 700 }}>{max30} events/day</span>
@@ -14577,7 +14577,7 @@ export default function AdminPanel() {
                               style={{ width: "100%", padding: "7px 0", borderRadius: 8, border: `1px solid ${auditWebhookSaved ? T.green : T.border}`, background: auditWebhookSaved ? `${T.green}15` : "transparent", color: auditWebhookSaved ? T.green : T.textSecondary, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                               {auditWebhookSaved ? "✔ Webhook Active" : "Save Webhook"}
                             </button>
-                            <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>Compatible: Splunk HEC ┬╖ Datadog ┬╖ Azure Event Hub ┬╖ custom endpoints</div>
+                            <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>Compatible: Splunk HEC · Datadog · Azure Event Hub · custom endpoints</div>
                           </div>
 
                           {/* Alert Threshold */}
@@ -14675,7 +14675,7 @@ export default function AdminPanel() {
                                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, flexShrink: 0 }} />
                                     <div style={{ flex: 1 }}>
                                       <div style={{ fontSize: 11, fontWeight: 600, color: T.white }}>{k.label}</div>
-                                      <div style={{ fontSize: 9, color: T.textMuted }}>{k.createdAt?.slice(0,10)} ┬╖ {k.useCount || 0} uses</div>
+                                      <div style={{ fontSize: 9, color: T.textMuted }}>{k.createdAt?.slice(0,10)} · {k.useCount || 0} uses</div>
                                     </div>
                                     <button type="button" onClick={async () => {
                                       const updated = apiKeys.map(key => key.hash === k.hash ? { ...key, active: false, revokedAt: new Date().toISOString() } : key);
@@ -14897,7 +14897,7 @@ export default function AdminPanel() {
                                 </div>
                                 <div style={{ textAlign: "right" }}>
                                   <div style={{ fontSize: 13, fontWeight: 800, color: row.color, fontFamily: "'Fraunces',serif" }}>AED {row.revenue.toLocaleString()}</div>
-                                  <div style={{ fontSize: 10, color: T.textMuted }}>{row.count} users ┬╖ {pct}%</div>
+                                  <div style={{ fontSize: 10, color: T.textMuted }}>{row.count} users · {pct}%</div>
                                 </div>
                               </div>
                               <div style={{ height: 6, background: T.surfaceAlt, borderRadius: 3, overflow: "hidden" }}>
@@ -14947,7 +14947,7 @@ export default function AdminPanel() {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>MRR — 6 Months Actual + 3 Month Forecast</div>
-                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Derived from user tier history ┬╖ Forecast based on current growth rate</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Derived from user tier history · Forecast based on current growth rate</div>
                         </div>
                         <div style={{ display: "flex", gap: 14 }}>
                           {[["Actual MRR", T.green], ["Projected", T.gold]].map(([name, color]) => (
@@ -15001,7 +15001,7 @@ export default function AdminPanel() {
                             <div style={{ flex: 1 }}>
                               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                                 <span style={{ fontSize: 12, color: T.textSecondary }}>{bucket.label}</span>
-                                <span style={{ fontSize: 12, fontWeight: 700, color: bucket.color }}>{bucket.count} users ┬╖ AED {bucket.value.toLocaleString()}</span>
+                                <span style={{ fontSize: 12, fontWeight: 700, color: bucket.color }}>{bucket.count} users · AED {bucket.value.toLocaleString()}</span>
                               </div>
                               <div style={{ height: 3, background: T.surfaceAlt, borderRadius: 2, overflow: "hidden" }}>
                                 <div style={{ width: stats.proTrial > 0 ? `${(bucket.count / stats.proTrial) * 100}%` : "0%", height: "100%", background: bucket.color, borderRadius: 2, transition: "width 0.6s ease" }} />
@@ -15073,7 +15073,7 @@ export default function AdminPanel() {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Revenue per Customer</div>
-                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{payingUsers.length} paying users ┬╖ AED {mrr.toLocaleString()} total MRR</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{payingUsers.length} paying users · AED {mrr.toLocaleString()} total MRR</div>
                         </div>
                         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                           <button type="button" onClick={() => {
@@ -15334,7 +15334,7 @@ export default function AdminPanel() {
                             <div>
                               <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Real Revenue by Month</div>
                               <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
-                                {hasPaddleRevenue ? "Actual amounts charged via Paddle — not estimates" : "Stage 1 shows calculated MRR ┬╖ This will show real Paddle amounts"}
+                                {hasPaddleRevenue ? "Actual amounts charged via Paddle — not estimates" : "Stage 1 shows calculated MRR · This will show real Paddle amounts"}
                               </div>
                             </div>
                             <div style={{ fontSize: 10, padding: "4px 10px", borderRadius: 8, background: hasPaddleRevenue ? `${T.green}15` : `${T.gold}10`, border: `1px solid ${hasPaddleRevenue ? T.green : T.gold}30`, color: hasPaddleRevenue ? T.green : T.gold, fontWeight: 700 }}>
@@ -15391,7 +15391,7 @@ export default function AdminPanel() {
                       </div>
                       <div style={{ display: "flex", gap: 8 }}>
                         <button type="button" onClick={downloadImportTemplate} style={{ fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>Download Template</button>
-                        <button type="button" onClick={() => importProgress.status !== "importing" && resetImport()} disabled={importProgress.status === "importing"} style={{ fontSize: 16, width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: importProgress.status === "importing" ? "not-allowed" : "pointer" }}>├ù</button>
+                        <button type="button" onClick={() => importProgress.status !== "importing" && resetImport()} disabled={importProgress.status === "importing"} style={{ fontSize: 16, width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: importProgress.status === "importing" ? "not-allowed" : "pointer" }}>×</button>
                       </div>
                     </div>
                     
@@ -15425,7 +15425,7 @@ export default function AdminPanel() {
                               </div>
                               <div>
                                 <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{importFile.name}</div>
-                                <div style={{ fontSize: 11, color: T.textMuted }}>{importRows.length} rows ┬╖ {importHeaders.length} columns</div>
+                                <div style={{ fontSize: 11, color: T.textMuted }}>{importRows.length} rows · {importHeaders.length} columns</div>
                               </div>
                             </div>
                             <button type="button" onClick={() => { setImportFile(null); setImportHeaders([]); setImportRows([]); setImportMapping({}); setImportErrors([]); }} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Change File</button>
@@ -15518,7 +15518,7 @@ export default function AdminPanel() {
                                 {importErrors.slice(0, 10).map((err, idx) => (
                                   <div key={idx} style={{ padding: "8px 0", borderBottom: idx < importErrors.length - 1 ? `1px solid ${T.border}` : "none" }}>
                                     <div style={{ fontSize: 11, fontWeight: 600, color: T.white, marginBottom: 4 }}>Row {err.rowNum}: {err.data?.name || err.data?.id || "Unknown"}</div>
-                                    <div style={{ fontSize: 10, color: T.red }}>{err.errors.join(" ┬╖ ")}</div>
+                                    <div style={{ fontSize: 10, color: T.red }}>{err.errors.join(" · ")}</div>
                                   </div>
                                 ))}
                                 {importErrors.length > 10 && <div style={{ fontSize: 11, color: T.textMuted, paddingTop: 8 }}>...and {importErrors.length - 10} more errors</div>}
@@ -15801,7 +15801,7 @@ export default function AdminPanel() {
                           }}
                           onMouseEnter={e => { e.currentTarget.style.color = T.red; e.currentTarget.style.background = `${T.red}10`; }}
                           onMouseLeave={e => { e.currentTarget.style.color = T.textMuted; e.currentTarget.style.background = "transparent"; }}>
-                          ├ù
+                          ×
                         </button>
                       </div>
                     ))}
@@ -16246,7 +16246,7 @@ export default function AdminPanel() {
                               <div>
                                 <div style={{ fontSize: 12, fontWeight: 700, color: T.white }}>Data Intelligence</div>
                                 <div style={{ fontSize: 10, color: T.teal, fontWeight: 600 }}>
-                                  {intel.recentChanges.length} changes this week ┬╖ {intel.duplicates.length} potential duplicates
+                                  {intel.recentChanges.length} changes this week · {intel.duplicates.length} potential duplicates
                                 </div>
                               </div>
                             </div>
@@ -16424,7 +16424,7 @@ export default function AdminPanel() {
                               <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.orange, margin: 0 }}>Potential Duplicates</h3>
                               <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{duplicates.length} potential duplicate pairs found</p>
                             </div>
-                            <button type="button" onClick={() => setShowDuplicatesModal(false)} style={{ background: "transparent", border: "none", color: T.textMuted, fontSize: 20, cursor: "pointer", padding: "4px 10px" }}>├ù</button>
+                            <button type="button" onClick={() => setShowDuplicatesModal(false)} style={{ background: "transparent", border: "none", color: T.textMuted, fontSize: 20, cursor: "pointer", padding: "4px 10px" }}>×</button>
                           </div>
                           <div style={{ padding: 20 }}>
                             {duplicates.length === 0 ? (
@@ -16647,7 +16647,7 @@ export default function AdminPanel() {
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                           <div>
                             <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.white }}>{merged.name || p.name}</h3>
-                            <span style={{ fontSize: 12, color: T.textMuted }}>{p.community} ┬╖ ID: {p.id}</span>
+                            <span style={{ fontSize: 12, color: T.textMuted }}>{p.community} · ID: {p.id}</span>
                             {hasOverride && <span style={{ marginLeft: 8, fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 600 }}>LIVE DATA</span>}
                           </div>
                           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -16661,7 +16661,7 @@ export default function AdminPanel() {
                           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 14px", borderRadius: 8, background: "rgba(212,168,67,0.05)", border: "1px solid rgba(212,168,67,0.1)", marginBottom: 16, fontSize: 11, flexWrap: "wrap" }}>
                             <span style={{ color: T.textMuted }}>Last saved by</span>
                             <span style={{ color: T.gold, fontWeight: 700 }}>{merged.updatedBy || "—"}</span>
-                            {merged.updatedAt && <><span style={{ color: T.textMuted }}>┬╖</span><span style={{ color: T.textSecondary }}>{new Date(merged.updatedAt).toLocaleString("en-AE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span></>}
+                            {merged.updatedAt && <><span style={{ color: T.textMuted }}>·</span><span style={{ color: T.textSecondary }}>{new Date(merged.updatedAt).toLocaleString("en-AE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span></>}
                             {merged.rolledBackFrom && <span style={{ color: T.teal, fontSize: 10, fontWeight: 700 }}>[Rolled back from {new Date(merged.rolledBackFrom).toLocaleString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}]</span>}
                           </div>
                         )}
@@ -16685,7 +16685,7 @@ export default function AdminPanel() {
                               })()}
                               {validationErrors[f.key] && <div style={{ fontSize: 10, color: "#EF4444", marginTop: 3 }}>{validationErrors[f.key]}</div>}
                               {hasOverride && liveProjects[p.id]?.[f.key] !== undefined && (
-                                <div style={{ fontSize: 9, color: T.green, marginTop: 2 }}>Live: {liveProjects[p.id][f.key]} ┬╖ Default: {p[f.key] ?? "—"}</div>
+                                <div style={{ fontSize: 9, color: T.green, marginTop: 2 }}>Live: {liveProjects[p.id][f.key]} · Default: {p[f.key] ?? "—"}</div>
                               )}
                             </div>
                           ))}
@@ -16881,7 +16881,7 @@ export default function AdminPanel() {
                                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.purple} strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                                   <span style={{ fontSize: 12, fontWeight: 700, color: T.purple }}>Linked Records</span>
-                                  <span style={{ fontSize: 10, color: T.textMuted }}>┬╖ {communityName}</span>
+                                  <span style={{ fontSize: 10, color: T.textMuted }}>· {communityName}</span>
                                 </div>
                                 <button type="button" onClick={() => { setDataSubTab("communities"); setEditingCommunity(communityName); setEditingProject(null); }}
                                   style={{ fontSize: 10, padding: "5px 12px", borderRadius: 6, border: `1px solid ${T.purple}40`, background: "transparent", color: T.purple, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
@@ -16980,7 +16980,7 @@ export default function AdminPanel() {
                           <div style={{ padding: "20px 24px", borderBottom: "1px solid rgba(212,168,67,0.15)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             <div>
                               <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold, margin: 0 }}>Version History</h3>
-                              <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{p.name} ┬╖ Every save is captured. Click Rollback to restore any version.</p>
+                              <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{p.name} · Every save is captured. Click Rollback to restore any version.</p>
                             </div>
                             <button type="button" onClick={() => setViewingVersions(null)} style={{ background: "transparent", border: "none", color: T.textMuted, fontSize: 20, cursor: "pointer", padding: "4px 10px" }}>x</button>
                           </div>
@@ -17001,9 +17001,9 @@ export default function AdminPanel() {
                                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                                       {i === 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 5, background: "rgba(16,185,129,0.15)", color: "#10B981" }}>CURRENT</span>}
                                       <span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{new Date(v.savedAt).toLocaleString("en-AE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
-                                      <span style={{ fontSize: 11, color: T.textMuted }}>┬╖</span>
+                                      <span style={{ fontSize: 11, color: T.textMuted }}>·</span>
                                       <span style={{ fontSize: 11, color: T.gold }}>{v.savedBy || "admin"}</span>
-                                      <span style={{ fontSize: 10, color: T.textMuted }}>┬╖ {v.fieldsChanged || 0} field{v.fieldsChanged !== 1 ? "s" : ""} changed</span>
+                                      <span style={{ fontSize: 10, color: T.textMuted }}>· {v.fieldsChanged || 0} field{v.fieldsChanged !== 1 ? "s" : ""} changed</span>
                                     </div>
                                   </div>
                                   {i !== 0 && (
@@ -17223,7 +17223,7 @@ export default function AdminPanel() {
                               <div>
                                 Showing <strong style={{ color: T.gold }}>{filtered.length}</strong> of {allProjects.length} projects
                                 {activeFilterCount > 0 && <span style={{ marginLeft: 8, padding: "2px 8px", borderRadius: 10, background: `${T.teal}20`, color: T.teal, fontSize: 10, fontWeight: 600 }}>{activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""}</span>}
-                                {bulkSelected.length > 0 && <span style={{ marginLeft: 12, color: T.gold }}>┬╖ {bulkSelected.length} selected</span>}
+                                {bulkSelected.length > 0 && <span style={{ marginLeft: 12, color: T.gold }}>· {bulkSelected.length} selected</span>}
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                 {filtered.length > 0 && (
@@ -17266,7 +17266,7 @@ export default function AdminPanel() {
                                onClick={e => e.stopPropagation()} style={{ cursor: "pointer", accentColor: T.gold }} />
                             <div>
                               <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</div>
-                              <div style={{ fontSize: 10, color: T.textMuted }}>{merged.type || "—"}{visibleColumns.beds ? "" : ` ┬╖ ${merged.beds || "—"}`}</div>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>{merged.type || "—"}{visibleColumns.beds ? "" : ` · ${merged.beds || "—"}`}</div>
                             </div>
                             {visibleColumns.community && <span style={{ fontSize: 11, color: T.textSecondary }}>{p.community}</span>}
                             {visibleColumns.price && <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{merged.price ? `AED ${(merged.price / 1e6).toFixed(2)}M` : "TBA"}</span>}
@@ -17360,7 +17360,7 @@ export default function AdminPanel() {
                       {/* Nav Header */}
                       <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                         <div style={{ fontSize: 10, fontWeight: 700, color: "#D4A843", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Communities</div>
-                        <div style={{ fontSize: 12, color: "#64748B" }}>{communities.length} areas ┬╖ {Object.keys(liveCommunityROI).length + Object.keys(liveCommunityIntel).length} live overrides</div>
+                        <div style={{ fontSize: 12, color: "#64748B" }}>{communities.length} areas · {Object.keys(liveCommunityROI).length + Object.keys(liveCommunityIntel).length} live overrides</div>
                       </div>
 
                       {/* Community List */}
@@ -17604,7 +17604,7 @@ export default function AdminPanel() {
                                   <button type="button" onClick={() => {
                                     const arr = (communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? []).filter((_, i) => i !== idx);
                                     setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr }));
-                                  }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>├ù</button>
+                                  }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>×</button>
                                 </div>
                               ))}
                             </div>
@@ -17638,7 +17638,7 @@ export default function AdminPanel() {
                                   <button type="button" onClick={() => {
                                     const arr = (communityIntelForm.distances ?? intelMerged.distances ?? []).filter((_, i) => i !== idx);
                                     setCommunityIntelForm(prev => ({ ...prev, distances: arr }));
-                                  }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>├ù</button>
+                                  }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>×</button>
                                 </div>
                               ))}
                             </div>
@@ -17961,7 +17961,7 @@ export default function AdminPanel() {
                       { icon: "[v]", title: "What is this?", desc: "An audit trail of every price change per project. Automatically records when you save a new price in the Projects tab." },
                       { icon: "[?]", title: "Select a Project", desc: "Choose any of the 48 projects from the dropdown. The chart and table will load its full price history." },
                       { icon: "[n]", title: "Manual Entry", desc: "Add historical price points manually — useful for logging past prices before the system was set up." },
-                      { icon: "[x]", title: "Delete Entry", desc: "Click the ├ù button on any row to remove that price entry. A confirmation will appear first." },
+                      { icon: "[x]", title: "Delete Entry", desc: "Click the × button on any row to remove that price entry. A confirmation will appear first." },
                       { icon: "[^]", title: "Chart", desc: "Gold line chart shows price trend over time. Needs at least 2 data points to appear." },
                     ]} />
 
@@ -18029,7 +18029,7 @@ export default function AdminPanel() {
                         {history.length >= 2 ? (
                           <div className="chart-box fade-up" style={{ padding: "16px 20px 12px", marginBottom: 20 }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>{selectedProject?.name} — Price Timeline</div>
-                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>{history.length} data points ┬╖ AED values</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>{history.length} data points · AED values</div>
                             <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: "100%", height: chartH, overflow: "visible" }}>
                               {/* Grid lines */}
                               {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
@@ -18107,7 +18107,7 @@ export default function AdminPanel() {
                                   <span style={{ fontSize: 11, color: T.textMuted }}>{h.recordedBy || "—"}{h.manual ? " (manual)" : ""}</span>
                                   <button type="button" onClick={() => deletePriceHistoryEntry(h.id, phSelId)}
                                     style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
-                                    ├ù
+                                    ×
                                   </button>
                                 </div>
                               );
@@ -18623,7 +18623,7 @@ export default function AdminPanel() {
                           <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>{leadDrawer.email || "No email"}</div>
                           {leadDrawer.phone && <div style={{ fontSize: 12, color: T.textMuted }}>{leadDrawer.phone}</div>}
                         </div>
-                        <button type="button" onClick={() => setLeadDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>├ù</button>
+                        <button type="button" onClick={() => setLeadDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>×</button>
                       </div>
 
                       {/* Status + Actions */}
@@ -18716,7 +18716,7 @@ export default function AdminPanel() {
                             {(leadDrawer.notes || []).slice().reverse().map((note, i) => (
                               <div key={i} style={{ padding: "10px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
                                 <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>{note.text}</div>
-                                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{note.by} ┬╖ {note.at ? new Date(note.at).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}</div>
+                                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{note.by} · {note.at ? new Date(note.at).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}</div>
                               </div>
                             ))}
                           </div>
@@ -18947,7 +18947,7 @@ export default function AdminPanel() {
                                   <div>
                                     <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{v.name || "No name"}</div>
                                     <div style={{ fontSize: 10, color: T.textMuted }}>{v.email || "—"}</div>
-                                    {userCtx && <div style={{ fontSize: 9, color: T.teal }}>{userCtx.tier} ┬╖ joined {userCtx.createdAt ? new Date(userCtx.createdAt).toLocaleDateString("en-AE", { month: "short", year: "numeric" }) : "—"}</div>}
+                                    {userCtx && <div style={{ fontSize: 9, color: T.teal }}>{userCtx.tier} · joined {userCtx.createdAt ? new Date(userCtx.createdAt).toLocaleDateString("en-AE", { month: "short", year: "numeric" }) : "—"}</div>}
                                   </div>
                                 </div>
                               </td>
@@ -21739,7 +21739,7 @@ export default function AdminPanel() {
                   </div>
                 </Chart>
 
-                <Chart title="User Growth by Tier" sub={`Last ${weekCount} weeks ┬╖ color by tier`}>
+                <Chart title="User Growth by Tier" sub={`Last ${weekCount} weeks · color by tier`}>
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={weeklySignups} barGap={2}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
@@ -21780,7 +21780,7 @@ export default function AdminPanel() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Cohort Retention Heatmap</div>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>Click any cell to see users ┬╖ % still active by week since signup</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>Click any cell to see users · % still active by week since signup</div>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 10 }}>
                     <span style={{ color: T.red }}>0%</span>
@@ -21845,7 +21845,7 @@ export default function AdminPanel() {
 
               {/* ═══ ROW 3: Geographic + Tier Movement + Churn ═══ */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
-                <Chart title="Signups by Country" sub={`Top 10 ┬╖ ${analyticsRange}`}>
+                <Chart title="Signups by Country" sub={`Top 10 · ${analyticsRange}`}>
                   {geoData.length === 0 ? (
                     <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>No data</div>
                   ) : (
@@ -21864,7 +21864,7 @@ export default function AdminPanel() {
                   )}
                 </Chart>
 
-                <Chart title="Tier Movement" sub="Upgrades ← ┬╖ Downgrades ↑">
+                <Chart title="Tier Movement" sub="Upgrades ← · Downgrades ↑">
                   <div style={{ padding: "10px 0" }}>
                     {[
                       { label: "Free → Trial", value: tierMovement.freeToTrial, color: T.blue, icon: "←", good: true },
@@ -22171,7 +22171,7 @@ export default function AdminPanel() {
                   <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>Win-back Campaigns</div>
-                      <div style={{ fontSize: 11, color: T.textMuted }}>{winbackCampaigns.length} campaigns ┬╖ {winbackCampaigns.reduce((s, c) => s + c.converted, 0)} users recovered</div>
+                      <div style={{ fontSize: 11, color: T.textMuted }}>{winbackCampaigns.length} campaigns · {winbackCampaigns.reduce((s, c) => s + c.converted, 0)} users recovered</div>
                     </div>
                     <button type="button" onClick={() => notify("Campaign creation coming soon")} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>+ New Campaign</button>
                   </div>
@@ -22230,7 +22230,7 @@ export default function AdminPanel() {
                           <div key={u.uid || u.id} style={{ padding: "12px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             <div>
                               <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || u.email}</div>
-                              <div style={{ fontSize: 11, color: T.textMuted }}>{u.email} ┬╖ {u.tier}</div>
+                              <div style={{ fontSize: 11, color: T.textMuted }}>{u.email} · {u.tier}</div>
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                               <div style={{ textAlign: "right" }}>
