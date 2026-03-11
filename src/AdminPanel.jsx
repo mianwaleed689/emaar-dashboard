@@ -4,6 +4,22 @@
    ═══════════════════════════════════════════════════════════════ */
 import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import ReactDOM from "react-dom";
+
+class TabErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(e) { return { error: e }; }
+  render() {
+    if (this.state.error) return (
+      <div style={{ padding: 40, textAlign: "center", color: "#EF4444", fontFamily: "'Outfit',sans-serif" }}>
+        <div style={{ fontSize: 24, marginBottom: 8 }}>⚠️</div>
+        <div style={{ fontWeight: 700, marginBottom: 4 }}>Tab failed to load</div>
+        <div style={{ fontSize: 12, color: "#94A3B8" }}>{this.state.error?.message}</div>
+        <button onClick={() => this.setState({ error: null })} style={{ marginTop: 16, padding: "8px 20px", borderRadius: 8, background: "#1E293B", border: "1px solid #334155", color: "#94A3B8", cursor: "pointer" }}>Retry</button>
+      </div>
+    );
+    return this.props.children;
+  }
+}
 import { auth, db, storage, firebaseConfig } from "./firebase";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
@@ -17,20 +33,20 @@ import ProjectManager from "./ProjectManager";
 import { useI18n, LANGUAGES } from "./i18n";
 
 // ── Extracted Tab Components ──────────────────────────────────────────────────
-const AdminOverviewTab      = lazy(() => import("./features/admin/tabs/AdminOverviewTab"));
-const AdminAuditLogTab      = lazy(() => import("./features/admin/tabs/AdminAuditLogTab"));
-const AdminRevenueTab       = lazy(() => import("./features/admin/tabs/AdminRevenueTab"));
-const AdminDataTab          = lazy(() => import("./features/admin/tabs/AdminDataTab"));
-const AdminLeadsTab         = lazy(() => import("./features/admin/tabs/AdminLeadsTab"));
-const AdminVerificationTab  = lazy(() => import("./features/admin/tabs/AdminVerificationTab"));
-const AdminAnalyticsTab     = lazy(() => import("./features/admin/tabs/AdminAnalyticsTab"));
-const AdminCancellationTab  = lazy(() => import("./features/admin/tabs/AdminCancellationTab"));
-const AdminTabControlTab    = lazy(() => import("./features/admin/tabs/AdminTabControlTab"));
-const AdminUsersTab         = lazy(() => import("./features/admin/tabs/AdminUsersTab"));
-const AdminNotificationsTab = lazy(() => import("./features/admin/tabs/AdminNotificationsTab"));
-const AdminDigestTab        = lazy(() => import("./features/admin/tabs/AdminDigestTab"));
-const AdminEiborTab         = lazy(() => import("./features/admin/tabs/AdminEiborTab"));
-const AdminSupportTab       = lazy(() => import("./features/admin/tabs/AdminSupportTab"));
+const AdminOverviewTab      = lazy(() => import("./features/admin/tabs/AdminOverviewTab").then(m => m.default ? m : { default: Object.values(m).find(v => typeof v === "function") || (() => null) }));
+const AdminAuditLogTab      = lazy(() => import("./features/admin/tabs/AdminAuditLogTab").then(m => m.default ? m : { default: Object.values(m).find(v => typeof v === "function") || (() => null) }));
+const AdminRevenueTab       = lazy(() => import("./features/admin/tabs/AdminRevenueTab").then(m => m.default ? m : { default: Object.values(m).find(v => typeof v === "function") || (() => null) }));
+const AdminDataTab          = lazy(() => import("./features/admin/tabs/AdminDataTab").then(m => m.default ? m : { default: Object.values(m).find(v => typeof v === "function") || (() => null) }));
+const AdminLeadsTab         = lazy(() => import("./features/admin/tabs/AdminLeadsTab").then(m => m.default ? m : { default: Object.values(m).find(v => typeof v === "function") || (() => null) }));
+const AdminVerificationTab  = lazy(() => import("./features/admin/tabs/AdminVerificationTab").then(m => m.default ? m : { default: Object.values(m).find(v => typeof v === "function") || (() => null) }));
+const AdminAnalyticsTab     = lazy(() => import("./features/admin/tabs/AdminAnalyticsTab").then(m => m.default ? m : { default: Object.values(m).find(v => typeof v === "function") || (() => null) }));
+const AdminCancellationTab  = lazy(() => import("./features/admin/tabs/AdminCancellationTab").then(m => m.default ? m : { default: Object.values(m).find(v => typeof v === "function") || (() => null) }));
+const AdminTabControlTab    = lazy(() => import("./features/admin/tabs/AdminTabControlTab").then(m => m.default ? m : { default: Object.values(m).find(v => typeof v === "function") || (() => null) }));
+const AdminUsersTab         = lazy(() => import("./features/admin/tabs/AdminUsersTab").then(m => m.default ? m : { default: Object.values(m).find(v => typeof v === "function") || (() => null) }));
+const AdminNotificationsTab = lazy(() => import("./features/admin/tabs/AdminNotificationsTab").then(m => m.default ? m : { default: Object.values(m).find(v => typeof v === "function") || (() => null) }));
+const AdminDigestTab        = lazy(() => import("./features/admin/tabs/AdminDigestTab").then(m => m.default ? m : { default: Object.values(m).find(v => typeof v === "function") || (() => null) }));
+const AdminEiborTab         = lazy(() => import("./features/admin/tabs/AdminEiborTab").then(m => m.default ? m : { default: Object.values(m).find(v => typeof v === "function") || (() => null) }));
+const AdminSupportTab       = lazy(() => import("./features/admin/tabs/AdminSupportTab").then(m => m.default ? m : { default: Object.values(m).find(v => typeof v === "function") || (() => null) }));
 
 // ── Inline tab stubs — Sessions 24-28 will replace these with real components ─
 // eslint-disable-next-line no-unused-vars
@@ -651,6 +667,7 @@ export default function AdminPanel() {
 
         {/* ── TAB CONTENT ── */}
         <div style={{ padding: "28px 28px 60px" }}>
+          <TabErrorBoundary>
           <Suspense fallback={<div style={{ padding: 40, textAlign: "center", color: "#94A3B8" }}>Loading...</div>}>
 
           {tab === "overview" && (
@@ -780,6 +797,7 @@ export default function AdminPanel() {
           )}
 
           </Suspense>
+          </TabErrorBoundary>
         </div>
       </main>
     </div>
