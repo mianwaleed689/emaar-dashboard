@@ -2,7 +2,7 @@
    DXB ANALYTICS — ADMIN PANEL (SLIM SHELL)
    Session 23: All tabs extracted — shell is ~300 lines
    ═══════════════════════════════════════════════════════════════ */
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import ReactDOM from "react-dom";
 import { auth, db, storage, firebaseConfig } from "./firebase";
 import { initializeApp, deleteApp } from "firebase/app";
@@ -17,19 +17,19 @@ import ProjectManager from "./ProjectManager";
 import { useI18n, LANGUAGES } from "./i18n";
 
 // ── Extracted Tab Components ──────────────────────────────────────────────────
-import AdminOverviewTab      from "./features/admin/tabs/AdminOverviewTab";
-import AdminAuditLogTab      from "./features/admin/tabs/AdminAuditLogTab";
-import AdminRevenueTab       from "./features/admin/tabs/AdminRevenueTab";
-import AdminDataTab          from "./features/admin/tabs/AdminDataTab";
-import AdminLeadsTab         from "./features/admin/tabs/AdminLeadsTab";
-import AdminVerificationTab  from "./features/admin/tabs/AdminVerificationTab";
-import AdminAnalyticsTab     from "./features/admin/tabs/AdminAnalyticsTab";
-import AdminCancellationTab  from "./features/admin/tabs/AdminCancellationTab";
-import AdminTabControlTab    from "./features/admin/tabs/AdminTabControlTab";
-import AdminUsersTab         from "./features/admin/tabs/AdminUsersTab";
-import AdminNotificationsTab from "./features/admin/tabs/AdminNotificationsTab";
-import AdminDigestTab        from "./features/admin/tabs/AdminDigestTab";
-import AdminEiborTab         from "./features/admin/tabs/AdminEiborTab";
+const AdminOverviewTab      = lazy(() => import("./features/admin/tabs/AdminOverviewTab"));
+const AdminAuditLogTab      = lazy(() => import("./features/admin/tabs/AdminAuditLogTab"));
+const AdminRevenueTab       = lazy(() => import("./features/admin/tabs/AdminRevenueTab"));
+const AdminDataTab          = lazy(() => import("./features/admin/tabs/AdminDataTab"));
+const AdminLeadsTab         = lazy(() => import("./features/admin/tabs/AdminLeadsTab"));
+const AdminVerificationTab  = lazy(() => import("./features/admin/tabs/AdminVerificationTab"));
+const AdminAnalyticsTab     = lazy(() => import("./features/admin/tabs/AdminAnalyticsTab"));
+const AdminCancellationTab  = lazy(() => import("./features/admin/tabs/AdminCancellationTab"));
+const AdminTabControlTab    = lazy(() => import("./features/admin/tabs/AdminTabControlTab"));
+const AdminUsersTab         = lazy(() => import("./features/admin/tabs/AdminUsersTab"));
+const AdminNotificationsTab = lazy(() => import("./features/admin/tabs/AdminNotificationsTab"));
+const AdminDigestTab        = lazy(() => import("./features/admin/tabs/AdminDigestTab"));
+const AdminEiborTab         = lazy(() => import("./features/admin/tabs/AdminEiborTab"));
 
 // ── Inline tab stubs — Sessions 24-28 will replace these with real components ─
 // eslint-disable-next-line no-unused-vars
@@ -650,6 +650,7 @@ export default function AdminPanel() {
 
         {/* ── TAB CONTENT ── */}
         <div style={{ padding: "28px 28px 60px" }}>
+          <Suspense fallback={<div style={{ padding: 40, textAlign: "center", color: "#94A3B8" }}>Loading...</div>}>
 
           {tab === "overview" && (
             <AdminOverviewTab
@@ -777,6 +778,7 @@ export default function AdminPanel() {
             />
           )}
 
+          </Suspense>
         </div>
       </main>
     </div>
