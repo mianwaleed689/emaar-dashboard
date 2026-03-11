@@ -17,6 +17,9 @@ export default function AdminAnalyticsTab({
   analyticsRange, setAnalyticsRange,
   setTab, setPendingOpenUid,
   notify,
+  fetchUsers = () => {}, fetchAuditLog = () => {},
+  timeSince = () => "—",
+  cohortDrilldown, setCohortDrilldown = () => {},
 }) {
   // ── Inner layout components (need T from closure) ──
   const CustomTooltip = ({ active, payload, label }) => {
