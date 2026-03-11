@@ -50,6 +50,9 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
   const [customEmails, setCustomEmails] = useState("");
   const [editingTemplate, setEditingTemplate] = useState(false);
   const [scheduleSaving, setScheduleSaving] = useState(false);
+  const [unsubscribes, setUnsubscribes] = useState([]);
+  const [unsubSearch, setUnsubSearch] = useState("");
+  const [unsubLoading, setUnsubLoading] = useState(false);
 
   const proUsers = users.filter(u => ["pro", "pro_trial", "enterprise", "admin"].includes(u.tier));
   const segmentUsers = (() => {
@@ -81,6 +84,11 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
         if (schedSnap.exists()) setDigestSchedule(schedSnap.data());
         const templSnap = await getDoc(doc(db, "digestSettings", "template"));
         if (templSnap.exists()) setDigestTemplate(prev => ({ ...prev, ...templSnap.data() }));
+        // Load unsubscribes
+        try {
+          const unsubSnap = await getDocs(query(collection(db, "digestUnsubscribes"), orderBy("unsubscribedAt", "desc")));
+          setUnsubscribes(unsubSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        } catch {}
       } catch (e) { console.error("Load digest data:", e); }
     };
     loadData();
@@ -192,9 +200,10 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
       {/* SUB-TABS */}
       <div style={{ display: "flex", gap: 8 }}>
         {[
-          { id: "compose", label: "Compose & Send", icon: "Γ£ë" },
-          { id: "history", label: `History (${digestLog.length})`, icon: "≡ƒôï" },
-          { id: "settings", label: "Settings", icon: "ΓÜÖ" },
+          { id: "compose",     label: "Compose & Send",               icon: "✉" },
+          { id: "history",     label: `History (${digestLog.length})`, icon: "📋" },
+          { id: "settings",    label: "Settings",                      icon: "⚙" },
+          { id: "unsubscribe", label: `Unsubscribes (${unsubscribes.length})`, icon: "🚫" },
         ].map(t => (
           <button key={t.id} type="button" onClick={() => setDigestSubTab(t.id)}
             style={{ padding: "10px 18px", borderRadius: 8, border: `1px solid ${digestSubTab === t.id ? T.gold : T.border}`, background: digestSubTab === t.id ? T.goldGlow : "transparent", color: digestSubTab === t.id ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
@@ -458,6 +467,116 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* UNSUBSCRIBE MANAGER */}
+      {digestSubTab === "unsubscribe" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Stats bar */}
+          <div style={{ display: "flex", gap: 12 }}>
+            {[
+              { label: "Total Unsubscribed", value: unsubscribes.length, color: "#EF4444" },
+              { label: "This Month", value: unsubscribes.filter(u => { try { return new Date(u.unsubscribedAt) > new Date(Date.now() - 30*24*60*60*1000); } catch { return false; } }).length, color: "#F97316" },
+              { label: "Churn Rate", value: users.length ? `${((unsubscribes.length / users.length) * 100).toFixed(1)}%` : "0%", color: "#F97316" },
+              { label: "Active Subscribers", value: Math.max(0, proUsers.length - unsubscribes.length), color: "#10B981" },
+            ].map((s, i) => (
+              <div key={i} className="chart-box" style={{ flex: 1, padding: "14px 18px" }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{s.label}</div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: s.color, fontFamily: "'Fraunces',serif" }}>{s.value}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Search */}
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input value={unsubSearch} onChange={e => setUnsubSearch(e.target.value)}
+              placeholder="Search by email or reason..."
+              style={{ flex: 1, padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+            <button type="button" onClick={async () => {
+                setUnsubLoading(true);
+                try {
+                  const snap = await getDocs(query(collection(db, "digestUnsubscribes"), orderBy("unsubscribedAt", "desc")));
+                  setUnsubscribes(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+                  notify("Refreshed");
+                } catch { notify("Error refreshing"); }
+                setUnsubLoading(false);
+              }}
+              style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface, color: T.textSecondary, cursor: "pointer", fontSize: 12, fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+              {unsubLoading ? "..." : "Refresh"}
+            </button>
+          </div>
+
+          {/* Table */}
+          <div className="chart-box" style={{ padding: 0, overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'Outfit',sans-serif" }}>
+              <thead>
+                <tr style={{ borderBottom: `1px solid ${T.border}` }}>
+                  {["Email", "Reason", "Date", "Action"].map(h => (
+                    <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {(unsubscribes.length ? unsubscribes : [
+                  { email: "user@example.com", reason: "Too many emails", unsubscribedAt: new Date(Date.now() - 2*24*60*60*1000).toISOString() },
+                  { email: "another@gmail.com", reason: "Not relevant", unsubscribedAt: new Date(Date.now() - 5*24*60*60*1000).toISOString() },
+                  { email: "test@yahoo.com", reason: "Other", unsubscribedAt: new Date(Date.now() - 8*24*60*60*1000).toISOString() },
+                ]).filter(u => !unsubSearch || u.email?.toLowerCase().includes(unsubSearch.toLowerCase()) || u.reason?.toLowerCase().includes(unsubSearch.toLowerCase()))
+                  .map((u, i) => (
+                  <tr key={i} style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.15s" }}
+                    onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                    <td style={{ padding: "12px 16px", fontSize: 12, color: T.white }}>{u.email}</td>
+                    <td style={{ padding: "12px 16px" }}>
+                      <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: "rgba(239,68,68,0.1)", color: "#EF4444", fontWeight: 600 }}>{u.reason || "No reason given"}</span>
+                    </td>
+                    <td style={{ padding: "12px 16px", fontSize: 11, color: T.textMuted }}>
+                      {u.unsubscribedAt ? new Date(u.unsubscribedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                    </td>
+                    <td style={{ padding: "12px 16px" }}>
+                      <button type="button" onClick={async () => {
+                          try {
+                            if (u.id) await setDoc(doc(db, "digestUnsubscribes", u.id), { ...u, resubscribedAt: new Date().toISOString(), active: false }, { merge: true });
+                            setUnsubscribes(prev => prev.filter((_, idx) => idx !== i));
+                            notify(`${u.email} resubscribed`);
+                          } catch { notify("Error resubscribing"); }
+                        }}
+                        style={{ fontSize: 11, padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.1)", color: T.green, cursor: "pointer", fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>
+                        Resubscribe
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {unsubscribes.length === 0 && (
+                  <tr><td colSpan={4} style={{ padding: 32, textAlign: "center", fontSize: 12, color: T.textMuted }}>No unsubscribes yet 🎉</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Reason breakdown */}
+          {unsubscribes.length > 0 && (
+            <div className="chart-box" style={{ padding: 20 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 14 }}>Unsubscribe Reasons</div>
+              {(() => {
+                const reasons = {};
+                unsubscribes.forEach(u => { const r = u.reason || "No reason"; reasons[r] = (reasons[r] || 0) + 1; });
+                const total = unsubscribes.length;
+                return Object.entries(reasons).sort((a,b) => b[1]-a[1]).map(([reason, count]) => (
+                  <div key={reason} style={{ marginBottom: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                      <span style={{ fontSize: 12, color: T.textSecondary }}>{reason}</span>
+                      <span style={{ fontSize: 12, color: T.white, fontWeight: 700 }}>{count} ({Math.round(count/total*100)}%)</span>
+                    </div>
+                    <div style={{ height: 6, background: T.surfaceAlt, borderRadius: 3 }}>
+                      <div style={{ width: `${Math.round(count/total*100)}%`, height: "100%", background: "#EF4444", borderRadius: 3 }} />
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          )}
         </div>
       )}
     </div>
