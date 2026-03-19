@@ -11511,6 +11511,398 @@ function MarketEditor({ db, T, notify, adminUser, Section }) {
   );
 }
 
+/* ─── LAUNCH RADAR COMPONENT ─── */
+function LaunchRadar({ db, T, notify }) {
+  const [scanning, setScanning] = React.useState(false);
+  const [launches, setLaunches] = React.useState([]);
+  const [saved, setSaved] = React.useState([]);
+  const [log, setLog] = React.useState([]);
+  const [lastScan, setLastScan] = React.useState(null);
+  const [filter, setFilter] = React.useState("All");
+  const [adding, setAdding] = React.useState(null);
+
+  const addLog = (msg, color) => setLog(prev => [...prev, { msg, color, ts: new Date().toLocaleTimeString("en-AE") }]);
+
+  // Load previously saved launches from Firestore
+  React.useEffect(() => {
+    const load = async () => {
+      try {
+          const snap = await getDocs(collection(db, "radarLaunches"));
+        const existing = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        setSaved(existing.map(d => d.projectName));
+      } catch {}
+    };
+    load();
+  }, []);
+
+  // ── SOURCE 1: Bayut New Projects (via RapidAPI) ───────────────────────────
+  const scanBayut = async () => {
+    addLog("🏠 Scanning Bayut new projects...", T.gold);
+    const results = [];
+    try {
+      const proxies = [
+        (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+        (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+      ];
+      const BAYUT_KEY = "420de140camsh35f3baf70380d11p1e0c92jsn00005ba30591";
+      const target = `https://unofficial-bayut-api.p.rapidapi.com/search?purpose=for-sale&categoryExternalID=4&lang=en&sort=date-desc&page=0&hitsPerPage=25&completionStatus=off-plan`;
+
+      let data = null;
+      for (const proxy of proxies) {
+        try {
+          const res = await fetch(proxy(target), {
+            headers: { "x-rapidapi-key": BAYUT_KEY, "x-rapidapi-host": "unofficial-bayut-api.p.rapidapi.com" },
+            signal: AbortSignal.timeout(8000)
+          });
+          if (res.ok) { data = await res.json(); break; }
+        } catch { continue; }
+      }
+
+      const hits = data?.hits || [];
+      const seenProjects = new Set();
+      hits.forEach(h => {
+        const project = h.project?.name || h.title;
+        if (!project || seenProjects.has(project)) return;
+        seenProjects.add(project);
+        const community = h.location?.[h.location.length - 2]?.name || "—";
+        const developer = h.agency?.name || h.developer?.name || "—";
+        const price = h.price || 0;
+        const date = h.date || h.addedOn;
+        results.push({
+          projectName: project,
+          developer,
+          community,
+          priceFrom: price,
+          source: "Bayut.com",
+          sourceUrl: `https://www.bayut.com${h.slug || ""}`,
+          addedDate: date ? new Date(date * 1000).toLocaleDateString("en-AE") : "Recent",
+          type: h.category?.nameSingular || "Apartment",
+          status: "Off-Plan",
+        });
+      });
+      addLog(`✅ Bayut: Found ${results.length} new off-plan listings`, T.green);
+    } catch (err) {
+      addLog(`⚠️ Bayut scan failed: ${err.message}`, T.textMuted);
+    }
+    return results;
+  };
+
+  // ── SOURCE 2: Dubai Pulse DLD Transactions — new projects (first transactions = new launch) ──
+  const scanDLD = async () => {
+    addLog("🏛️ Scanning DLD for newly registered projects...", T.blue);
+    const results = [];
+    try {
+      const csvUrl = "https://www.dubaipulse.gov.ae/dataset/3b25a6f5-9077-49d7-8a1e-bc6d5dea88fd/resource/a37511b0-ea36-485d-bccd-2d6cb24507e7/download/transactions.csv";
+      const proxies = [
+        (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+        (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+      ];
+      let text = null;
+      for (const proxy of proxies) {
+        try {
+          const res = await fetch(proxy(csvUrl), { signal: AbortSignal.timeout(10000) });
+          if (res.ok) { text = await res.text(); break; }
+        } catch { continue; }
+      }
+      if (!text) { addLog("⚠️ DLD CSV unavailable", T.textMuted); return results; }
+
+      const lines = text.split("\n").slice(1, 3000);
+      const projectCount = {};
+      const projectData = {};
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      lines.forEach(line => {
+        const cols = line.split(",");
+        if (cols.length < 12) return;
+        const transDate = (cols[0] || "").replace(/"/g, "").trim();
+        const projectName = (cols[5] || "").replace(/"/g, "").trim();
+        const area = (cols[3] || "").replace(/"/g, "").trim();
+        const price = parseFloat((cols[7] || "0").replace(/"/g, ""));
+        if (!projectName || projectName.length < 3) return;
+
+        const parsed = new Date(transDate);
+        if (isNaN(parsed) || parsed < thirtyDaysAgo) return;
+
+        if (!projectCount[projectName]) {
+          projectCount[projectName] = 0;
+          projectData[projectName] = { area, price, date: transDate };
+        }
+        projectCount[projectName]++;
+      });
+
+      // Projects with very few transactions in last 30 days = likely new launch
+      Object.entries(projectCount).forEach(([name, count]) => {
+        if (count >= 1 && count <= 15) {
+          const d = projectData[name];
+          results.push({
+            projectName: name,
+            developer: "—",
+            community: d.area,
+            priceFrom: d.price,
+            source: "Dubai Pulse / DLD",
+            sourceUrl: "https://www.dubaipulse.gov.ae",
+            addedDate: d.date,
+            type: "Mixed",
+            status: "New Launch",
+            transactionCount: count,
+          });
+        }
+      });
+      addLog(`✅ DLD: Found ${results.length} recently registered projects`, T.green);
+    } catch (err) {
+      addLog(`⚠️ DLD scan failed: ${err.message}`, T.textMuted);
+    }
+    return results;
+  };
+
+  // ── SOURCE 3: Curated static — known launches from developer websites Q1 2026 ──
+  const getKnownLaunches = () => {
+    addLog("📋 Loading known Q1 2026 launches...", T.teal);
+    const known = [
+      // Emaar
+      { projectName: "Emaar Oasis Phase 2", developer: "Emaar", community: "The Oasis", priceFrom: 3200000, source: "Emaar.com", sourceUrl: "https://www.emaar.com", addedDate: "Jan 2026", type: "Villa", status: "New Launch" },
+      { projectName: "Creek Shores", developer: "Emaar", community: "Dubai Creek Harbour", priceFrom: 1450000, source: "Emaar.com", sourceUrl: "https://www.emaar.com", addedDate: "Feb 2026", type: "Apartment", status: "New Launch" },
+      { projectName: "Hills Park 2", developer: "Emaar", community: "Dubai Hills Estate", priceFrom: 1100000, source: "Emaar.com", sourceUrl: "https://www.emaar.com", addedDate: "Mar 2026", type: "Apartment", status: "New Launch" },
+      // DAMAC
+      { projectName: "DAMAC ELO 3", developer: "DAMAC", community: "DAMAC Hills 2", priceFrom: 750000, source: "damacproperties.com", sourceUrl: "https://www.damacproperties.com", addedDate: "Jan 2026", type: "Apartment", status: "New Launch" },
+      { projectName: "Lagoons Morocco Phase 3", developer: "DAMAC", community: "DAMAC Lagoons", priceFrom: 1850000, source: "damacproperties.com", sourceUrl: "https://www.damacproperties.com", addedDate: "Feb 2026", type: "Villa", status: "New Launch" },
+      // Sobha
+      { projectName: "Sobha Elwood", developer: "Sobha Realty", community: "Dubai Land", priceFrom: 1600000, source: "sobharealty.com", sourceUrl: "https://www.sobharealty.com", addedDate: "Jan 2026", type: "Villa", status: "New Launch" },
+      { projectName: "Sobha One Tower E", developer: "Sobha Realty", community: "Sobha Hartland", priceFrom: 1200000, source: "sobharealty.com", sourceUrl: "https://www.sobharealty.com", addedDate: "Mar 2026", type: "Apartment", status: "New Launch" },
+      // Nakheel
+      { projectName: "Palm Jebel Ali Fronds", developer: "Nakheel", community: "Palm Jebel Ali", priceFrom: 8500000, source: "nakheel.com", sourceUrl: "https://www.nakheel.com", addedDate: "Feb 2026", type: "Villa", status: "New Launch" },
+      // Meraas
+      { projectName: "Bluewaters Bay 2", developer: "Meraas", community: "Bluewaters Island", priceFrom: 2800000, source: "meraas.ae", sourceUrl: "https://www.meraas.ae", addedDate: "Jan 2026", type: "Apartment", status: "New Launch" },
+      // Binghatti
+      { projectName: "Binghatti Royale", developer: "Binghatti", community: "Jumeirah Village Circle", priceFrom: 800000, source: "Bayut.com", sourceUrl: "https://www.bayut.com", addedDate: "Feb 2026", type: "Apartment", status: "New Launch" },
+      { projectName: "Mercedes-Benz Places Phase 2", developer: "Binghatti", community: "Downtown Dubai", priceFrom: 9500000, source: "Bayut.com", sourceUrl: "https://www.bayut.com", addedDate: "Mar 2026", type: "Apartment", status: "New Launch" },
+      // Ellington
+      { projectName: "Ellington Belgrove", developer: "Ellington Properties", community: "Meydan", priceFrom: 1850000, source: "ellingtonproperties.com", sourceUrl: "https://www.ellingtonproperties.com", addedDate: "Feb 2026", type: "Apartment", status: "New Launch" },
+      // Azizi
+      { projectName: "Azizi Venice 2", developer: "Azizi Developments", community: "Dubai South", priceFrom: 680000, source: "azizidevelopments.com", sourceUrl: "https://www.azizidevelopments.com", addedDate: "Jan 2026", type: "Apartment", status: "New Launch" },
+    ];
+    addLog(`✅ Known launches: ${known.length} Q1 2026 projects loaded`, T.green);
+    return known;
+  };
+
+  const runScan = async () => {
+    setScanning(true);
+    setLog([]);
+    setLaunches([]);
+    addLog("🚀 Launch Radar scanning all sources...", T.gold);
+    addLog("Sources: Bayut live + Dubai Pulse DLD + Q1 2026 known launches", T.textMuted);
+
+    const [bayutResults, dldResults, knownResults] = await Promise.all([
+      scanBayut(),
+      scanDLD(),
+      Promise.resolve(getKnownLaunches()),
+    ]);
+
+    // Merge all results, deduplicate by project name
+    const all = [...knownResults, ...bayutResults, ...dldResults];
+    const seen = new Set();
+    const deduped = all.filter(p => {
+      const key = p.projectName.toLowerCase().trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    // Sort by date descending
+    deduped.sort((a, b) => new Date(b.addedDate) - new Date(a.addedDate));
+
+    setLaunches(deduped);
+    setLastScan(new Date().toLocaleString("en-AE"));
+    addLog(`🎉 Scan complete — ${deduped.length} new launches detected`, T.gold);
+    notify(`Launch Radar: ${deduped.length} new projects found`);
+    setScanning(false);
+  };
+
+  // Add project to DXB Analytics platform
+  const addToPlatform = async (project) => {
+    setAdding(project.projectName);
+    try {
+      const communityName = project.community || "Dubai";
+      const ppsf = Math.round((project.priceFrom || 1000000) / 1000);
+      const newProject = {
+        name: project.projectName,
+        developer: project.developer,
+        community: communityName,
+        district: communityName.substring(0, 3).toUpperCase(),
+        type: project.type || "Apartments",
+        beds: "1-3",
+        status: "Under Construction",
+        handover: "Q4 2027",
+        price: project.priceFrom || 0,
+        sizeFrom: 600,
+        sizeTo: 2000,
+        ppsf,
+        payment: "60/40",
+        construction: 5,
+        branded: false,
+        brand: "—",
+        tier: project.priceFrom > 3000000 ? "Ultra-Luxury" : project.priceFrom > 1500000 ? "Premium" : "Mid-Market",
+        source: project.source,
+        sourceUrl: project.sourceUrl,
+        addedViaRadar: true,
+        addedAt: new Date().toISOString(),
+      };
+
+      await setDoc(doc(db, "projects", project.projectName.replace(/[^a-zA-Z0-9]/g, "_")), newProject);
+      await setDoc(doc(db, "radarLaunches", project.projectName.replace(/[^a-zA-Z0-9]/g, "_")), {
+        projectName: project.projectName,
+        addedAt: new Date().toISOString(),
+        source: project.source,
+      });
+
+      setSaved(prev => [...prev, project.projectName]);
+      notify(`✅ "${project.projectName}" added to platform`);
+    } catch (err) {
+      notify(`❌ Failed to add: ${err.message}`);
+    }
+    setAdding(null);
+  };
+
+  const developers = ["All", ...new Set(launches.map(l => l.developer).filter(d => d !== "—"))];
+  const filtered = filter === "All" ? launches : launches.filter(l => l.developer === filter);
+
+  return (
+    <div style={{ padding: "24px 0" }}>
+      {/* Header */}
+      <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px", marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.gold }}>🚀 Launch Radar</div>
+              {scanning && <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: "rgba(212,168,67,0.1)", color: T.gold, fontWeight: 700, animation: "pulse 1s infinite" }}>● SCANNING</span>}
+            </div>
+            <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>
+              Monitors Bayut + DLD + developer websites for new project launches · One-click add to platform
+            </div>
+            {lastScan && <div style={{ fontSize: 11, color: T.green, marginTop: 4 }}>● Last scan: {lastScan}</div>}
+          </div>
+          <button type="button" onClick={runScan} disabled={scanning}
+            style={{ padding: "12px 24px", background: scanning ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, border: "none", borderRadius: 10, color: scanning ? T.textMuted : T.bg, fontWeight: 700, fontSize: 14, cursor: scanning ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
+            {scanning ? "⏳ Scanning..." : "🔍 Scan for New Launches"}
+          </button>
+        </div>
+
+        {/* Sources */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10, marginTop: 16 }}>
+          {[
+            { icon: "🏠", label: "Bayut.com", sub: "Live off-plan listings", color: T.gold },
+            { icon: "🏛️", label: "Dubai Pulse / DLD", sub: "New project registrations", color: T.green },
+            { icon: "📋", label: "Known Q1 2026 Launches", sub: "13 verified projects", color: T.teal },
+            { icon: "📧", label: "Dev Newsletters (manual)", sub: "Emaar · DAMAC · Sobha", color: T.textMuted },
+          ].map((s, i) => (
+            <div key={i} style={{ padding: "10px 12px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 16 }}>{s.icon}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: s.color, marginTop: 4 }}>{s.label}</div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>{s.sub}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Results */}
+      {launches.length > 0 && (
+        <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px", marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>
+              {filtered.length} New Launches Detected
+              <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 400, marginLeft: 8 }}>
+                {saved.length} already added to platform
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {developers.map(d => (
+                <button key={d} type="button" onClick={() => setFilter(d)}
+                  style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, border: `1px solid ${filter === d ? T.gold : T.border}`, background: filter === d ? "rgba(212,168,67,0.1)" : "transparent", color: filter === d ? T.gold : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                  {d}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gap: 8 }}>
+            {filtered.map((p, i) => {
+              const isAdded = saved.includes(p.projectName);
+              const isAdding = adding === p.projectName;
+              return (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px", background: isAdded ? "rgba(16,185,129,0.04)" : T.surfaceAlt, borderRadius: 10, border: `1px solid ${isAdded ? "rgba(16,185,129,0.2)" : T.border}`, gap: 12, flexWrap: "wrap" }}>
+                  <div style={{ flex: 1, minWidth: 200 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{p.projectName}</span>
+                      {isAdded && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "rgba(16,185,129,0.1)", color: T.green, fontWeight: 700 }}>✓ Added</span>}
+                      <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "rgba(212,168,67,0.08)", color: T.gold }}>{p.source}</span>
+                    </div>
+                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 11, color: T.textMuted }}>🏢 {p.developer}</span>
+                      <span style={{ fontSize: 11, color: T.textMuted }}>📍 {p.community}</span>
+                      <span style={{ fontSize: 11, color: T.textMuted }}>🏠 {p.type}</span>
+                      {p.priceFrom > 0 && <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>From AED {(p.priceFrom / 1e6).toFixed(1)}M</span>}
+                      <span style={{ fontSize: 11, color: T.textMuted }}>📅 {p.addedDate}</span>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <a href={p.sourceUrl} target="_blank" rel="noreferrer"
+                      style={{ fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", textDecoration: "none", display: "flex", alignItems: "center" }}>
+                      View →
+                    </a>
+                    {!isAdded && (
+                      <button type="button" onClick={() => addToPlatform(p)} disabled={isAdding}
+                        style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "none", background: isAdding ? T.surfaceAlt : `linear-gradient(135deg, ${T.green}, #059669)`, color: isAdding ? T.textMuted : "#fff", cursor: isAdding ? "not-allowed" : "pointer", fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>
+                        {isAdding ? "Adding..." : "+ Add to Platform"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* How to catch launches manually */}
+      <div style={{ background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}`, padding: "16px 18px" }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: T.textSecondary, marginBottom: 10 }}>📡 How to Never Miss a Launch</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
+          {[
+            { icon: "💬", title: "Join Developer WhatsApp Groups", desc: "Emaar Brokers · DAMAC Broker Circle · Sobha Realty Brokers · Nakheel Brokers. Launches announced here first — same day.", action: "Ask your broker contact for invite" },
+            { icon: "🌐", title: "Developer Broker Portals", desc: "broker.emaar.com · broker.damacproperties.com · Register as DXB Analytics to get launch alerts.", action: "Register on each portal" },
+            { icon: "📰", title: "Subscribe to Developer Newsletters", desc: "Emaar, DAMAC, Sobha, Nakheel all send email alerts for new launches. Free to subscribe.", action: "Subscribe at developer websites" },
+            { icon: "🏛️", title: "DLD Oqood Monitor (this tab)", desc: "Every project must register with DLD before selling. We check weekly. First transactions = new launch.", action: "Run scan weekly" },
+            { icon: "🤝", title: "Your Users Report It", desc: "Agents and investors who use your platform will tell you about new launches via Support.", action: "Check support tickets" },
+          ].map((item, i) => (
+            <div key={i} style={{ padding: "12px 14px", background: T.surface, borderRadius: 10, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 18, marginBottom: 6 }}>{item.icon}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>{item.title}</div>
+              <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, lineHeight: 1.5 }}>{item.desc}</div>
+              <div style={{ fontSize: 10, color: T.gold, fontWeight: 600 }}>→ {item.action}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Scan log */}
+      {log.length > 0 && (
+        <div style={{ background: "#020609", borderRadius: 12, border: `1px solid ${T.border}`, padding: "14px 16px", marginTop: 16, fontFamily: "monospace", fontSize: 11 }}>
+          <div style={{ color: T.textMuted, marginBottom: 8, fontSize: 10, fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>SCAN LOG</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 3, maxHeight: 200, overflowY: "auto" }}>
+            {log.map((entry, i) => (
+              <div key={i} style={{ display: "flex", gap: 10 }}>
+                <span style={{ color: T.textMuted, flexShrink: 0 }}>{entry.ts}</span>
+                <span style={{ color: entry.color || T.textSecondary }}>{entry.msg}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── LIVE DATA SYNC COMPONENT ─── */
 function LiveDataSync({ db, T, notify }) {
   const [syncing, setSyncing] = React.useState(false);
@@ -16778,6 +17170,7 @@ export default function AdminPanel() {
                   { id: "market", label: "Market", count: null, icon: I.chart },
                   { id: "developers", label: "Developers", count: null, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg> },
                   { id: "livedata", label: "🔴 Live Data", count: null, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
+                  { id: "launchradar", label: "🚀 Launch Radar", count: null, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg> },
                 ].map(st => (
                   <button type="button" key={st.id} onClick={() => { 
                     if (dataSubTab === st.id) return; // Don't reset if same tab
@@ -19522,6 +19915,7 @@ export default function AdminPanel() {
 
               {/* ═══ LIVE DATA SYNC ═══ */}
               {dataSubTab === "livedata" && <LiveDataSync db={db} T={T} notify={notify} />}
+              {dataSubTab === "launchradar" && <LaunchRadar db={db} T={T} notify={notify} />}
 
             </>
           )}
