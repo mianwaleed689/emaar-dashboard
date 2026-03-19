@@ -11520,6 +11520,22 @@ function LiveDataSync({ db, T, notify }) {
 
   const BAYUT_KEY = "420de140camsh35f3baf70380d11p1e0c92jsn00005ba30591";
 
+  // Must be defined first — all other fetch functions depend on this
+  const fetchWithProxy = async (url, options = {}) => {
+    const proxies = [
+      (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+      (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+      (u) => `https://thingproxy.freeboard.io/fetch/${u}`,
+    ];
+    for (const proxy of proxies) {
+      try {
+        const res = await fetch(proxy(url), { ...options, signal: AbortSignal.timeout(8000) });
+        if (res.ok) return res;
+      } catch { continue; }
+    }
+    throw new Error("All proxies failed");
+  };
+
   const COMMUNITIES = [
     // ── EMAAR ─────────────────────────────────────────
     { name: "Downtown Dubai",          locationId: "5269" },
@@ -11566,14 +11582,22 @@ function LiveDataSync({ db, T, notify }) {
     { name: "JBR",                     locationId: "5256" },
     { name: "Al Furjan",               locationId: "7120" },
     { name: "Dubai South",             locationId: "7205" },
+    // ── ADDITIONAL TOP 10 ────────────────────────────
+    { name: "Arabian Ranches",         locationId: "5471" },
+    { name: "Arabian Ranches 2",       locationId: "7108" },
+    { name: "The Springs",             locationId: "5462" },
+    { name: "The Lakes",               locationId: "5464" },
+    { name: "Dubai Silicon Oasis",     locationId: "7161" },
+    { name: "International City",      locationId: "7154" },
+    { name: "Town Square",             locationId: "7196" },
+    { name: "Mudon",                   locationId: "7186" },
+    { name: "Barsha Heights",          locationId: "7155" },
+    { name: "Nad Al Sheba",            locationId: "7172" },
   ];
 
   const log = (msg, color) => setSyncLog(prev => [...prev, { msg, color, ts: new Date().toLocaleTimeString("en-AE") }]);
 
   // ── SOURCE 1: Bayut RapidAPI ──────────────────────────────────────────────
-  // CORS proxy — routes browser requests through a free proxy to avoid CORS blocks
-  const PROXY = "https://corsproxy.io/?url=";
-
   const fetchBayut = async (comm) => {
     const target = `https://unofficial-bayut-api.p.rapidapi.com/search?locationExternalIDs=${comm.locationId}&purpose=for-sale&categoryExternalID=4&lang=en&sort=price-asc&page=0&hitsPerPage=10`;
     const res = await fetchWithProxy(target, {
@@ -11684,6 +11708,17 @@ function LiveDataSync({ db, T, notify }) {
           "DUBAI SOUTH": "Dubai South",
           "YAS ISLAND": "Yas Island",
           "SAADIYAT ISLAND": "Saadiyat Island",
+          // New 10
+          "ARABIAN RANCHES": "Arabian Ranches",
+          "ARABIAN RANCHES 2": "Arabian Ranches 2",
+          "THE SPRINGS": "The Springs",
+          "THE LAKES": "The Lakes",
+          "DUBAI SILICON OASIS": "Dubai Silicon Oasis",
+          "INTERNATIONAL CITY": "International City",
+          "TOWN SQUARE": "Town Square",
+          "MUDON": "Mudon",
+          "BARSHA HEIGHTS": "Barsha Heights",
+          "NAD AL SHEBA": "Nad Al Sheba",
         };
 
         const mapped = communityMap2[area.toUpperCase()];
@@ -11746,6 +11781,12 @@ function LiveDataSync({ db, T, notify }) {
       "Jumeirah Lake Towers": 1350, "Arjan": 1050, "Motor City": 950,
       "Dubai South": 1000, "Jumeirah Village Triangle": 1100,
       "Yas Island": 1300, "Saadiyat Island": 2400,
+      // ── NEW 10 ───────────────────────────────────────
+      "Arabian Ranches": 1650, "Arabian Ranches 2": 1580,
+      "The Springs": 1420, "The Lakes": 1550,
+      "Dubai Silicon Oasis": 880, "International City": 620,
+      "Town Square": 1050, "Mudon": 1280,
+      "Barsha Heights": 1100, "Nad Al Sheba": 1750,
     };
 
     try {
@@ -11788,21 +11829,6 @@ function LiveDataSync({ db, T, notify }) {
   };
 
   // Try multiple CORS proxies in order until one works
-  const fetchWithProxy = async (url, options = {}) => {
-    const proxies = [
-      (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-      (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-      (u) => `https://thingproxy.freeboard.io/fetch/${u}`,
-    ];
-    for (const proxy of proxies) {
-      try {
-        const res = await fetch(proxy(url), { ...options, signal: AbortSignal.timeout(8000) });
-        if (res.ok) return res;
-      } catch { continue; }
-    }
-    throw new Error("All proxies failed");
-  };
-
   const runSync = async () => {
     setSyncing(true);
     setSyncLog([]);
@@ -11934,7 +11960,7 @@ function LiveDataSync({ db, T, notify }) {
           <div>
             <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Live Data Sync</div>
             <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>
-              Fetches live listing prices from Bayut + Dubai Pulse DLD for 35 communities covering all 228 developers · Free · No Cloud Function needed
+              Fetches live listing prices from Bayut + Dubai Pulse DLD for 45 communities covering all 228 developers · Free · No Cloud Function needed
             </div>
             {lastSync && <div style={{ fontSize: 11, color: T.green, marginTop: 6 }}>● Last synced: {lastSync}</div>}
           </div>
@@ -11953,7 +11979,7 @@ function LiveDataSync({ db, T, notify }) {
             { icon: "🔍", label: "Source 2", value: "PropertyFinder (p2)", sub: "Cross-verified prices" },
             { icon: "🏛️", label: "Source 3", value: "Dubai Pulse DLD", sub: "Gov transaction data (free)" },
             { icon: "📊", label: "Source 4", value: "Q1 2026 Benchmarks", sub: "ValuStrat + Property Monitor" },
-            { icon: "🌍", label: "Communities", value: "35", sub: "All Dubai + Abu Dhabi" },
+            { icon: "🌍", label: "Communities", value: "45", sub: "All Dubai + Abu Dhabi" },
             { icon: "💰", label: "Cost", value: "FREE", sub: "All 4 sources are free" },
           ].map((item, i) => (
             <div key={i} style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
