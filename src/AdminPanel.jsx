@@ -11474,6 +11474,178 @@ function MarketEditor({ db, T, notify, adminUser, Section }) {
   );
 }
 
+/* ─── DEVELOPER MANAGER SUB-COMPONENT ─── */
+function DeveloperManager({ db, T, notify, adminUser, Section }) {
+  const [devs, setDevs] = React.useState(null);
+  const [saving, setSaving] = React.useState(null);
+  const [editingDev, setEditingDev] = React.useState(null);
+  const [form, setForm] = React.useState({});
+  const [adding, setAdding] = React.useState(false);
+
+  React.useEffect(() => {
+    getDocs(collection(db, "developers")).then(snap => {
+      const list = [];
+      snap.forEach(d => list.push({ docId: d.id, ...d.data() }));
+      list.sort((a, b) => (a.phase || 1) - (b.phase || 1) || (a.name || "").localeCompare(b.name || ""));
+      setDevs(list);
+    }).catch(() => setDevs([]));
+  }, [db]);
+
+  const saveDev = async (devId, data) => {
+    setSaving(devId);
+    try {
+      await setDoc(doc(db, "developers", devId), data, { merge: true });
+      setDevs(prev => prev.map(d => d.docId === devId ? { ...d, ...data } : d));
+      setEditingDev(null);
+      setForm({});
+      notify("✅ Developer saved!");
+    } catch(e) { notify("Save failed"); }
+    setSaving(null);
+  };
+
+  const addDeveloper = async () => {
+    if (!form.id || !form.name) { notify("ID and Name are required"); return; }
+    setSaving("new");
+    try {
+      const newDev = {
+        id: form.id, name: form.name, shortName: form.shortName || form.name,
+        listed: form.listed === "true", exchange: form.exchange || "",
+        ticker: form.ticker || "", founded: parseInt(form.founded) || null,
+        headquarters: form.headquarters || "Dubai, UAE", description: form.description || "",
+        totalProjects: 0, active: false, phase: parseInt(form.phase) || 2,
+        addedAt: new Date().toISOString(), addedBy: adminUser?.email,
+      };
+      await setDoc(doc(db, "developers", form.id), newDev);
+      setDevs(prev => [...prev, { docId: form.id, ...newDev }]);
+      setForm({});
+      setAdding(false);
+      notify(`✅ ${form.name} added! Activate when ready.`);
+    } catch(e) { notify("Failed to add developer"); }
+    setSaving(null);
+  };
+
+  if (!devs) return <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>Loading developers...</div>;
+
+  const activeDev = devs.filter(d => d.active);
+  const pendingDev = devs.filter(d => !d.active);
+
+  return (
+    <Section title="Developer Manager" sub="Manage all developers on the platform — activate to show in dashboard">
+      <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
+        💡 Set a developer to <strong style={{ color: T.green }}>Active</strong> to show it in the dashboard developer selector. Projects with that developer's ID will automatically appear. The platform supports 228+ developers.
+      </div>
+
+      {/* Active Developers */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: T.green, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>✅ Active ({activeDev.length})</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {activeDev.map(dev => (
+            <div key={dev.docId} style={{ padding: "14px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid rgba(16,185,129,0.2)` }}>
+              {editingDev === dev.docId ? (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                  {[
+                    { key: "name", label: "Name" }, { key: "shortName", label: "Short Name" },
+                    { key: "ticker", label: "Ticker" }, { key: "exchange", label: "Exchange" },
+                    { key: "founded", label: "Founded" }, { key: "totalProjects", label: "Total Projects" },
+                    { key: "description", label: "Description" },
+                  ].map(f => (
+                    <div key={f.key} style={{ gridColumn: f.key === "description" ? "1/-1" : "auto" }}>
+                      <label style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", display: "block", marginBottom: 4 }}>{f.label}</label>
+                      <input value={form[f.key] ?? dev[f.key] ?? ""} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
+                        style={{ width: "100%", padding: "8px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                    </div>
+                  ))}
+                  <div style={{ gridColumn: "1/-1", display: "flex", gap: 8, marginTop: 4 }}>
+                    <button type="button" onClick={() => saveDev(dev.docId, { ...dev, ...form })} disabled={saving === dev.docId}
+                      style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      {saving === dev.docId ? "Saving..." : "Save"}
+                    </button>
+                    <button type="button" onClick={() => { setEditingDev(null); setForm({}); }}
+                      style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                    <button type="button" onClick={() => saveDev(dev.docId, { ...dev, active: false })}
+                      style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif", marginLeft: "auto" }}>Deactivate</button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{dev.name}</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
+                      {dev.listed ? `${dev.exchange}: ${dev.ticker}` : "Private"} · {dev.totalProjects || 0} projects · Phase {dev.phase || 1}
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => { setEditingDev(dev.docId); setForm({}); }}
+                    style={{ padding: "7px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Edit</button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Pending Developers */}
+      {pendingDev.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>⏳ Pending / Phase 2+ ({pendingDev.length})</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {pendingDev.map(dev => (
+              <div key={dev.docId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                <div>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: T.textSecondary }}>{dev.name}</span>
+                  <span style={{ marginLeft: 8, fontSize: 10, color: T.textMuted }}>Phase {dev.phase || 2} · {dev.totalProjects || 0} projects</span>
+                </div>
+                <button type="button" onClick={() => saveDev(dev.docId, { ...dev, active: true })} disabled={saving === dev.docId}
+                  style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(16,185,129,0.4)", background: "rgba(16,185,129,0.08)", color: T.green, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                  {saving === dev.docId ? "Activating..." : "Activate"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Add New Developer */}
+      {adding ? (
+        <div style={{ padding: 20, background: T.surfaceAlt, borderRadius: 12, border: `1px solid rgba(16,185,129,0.3)` }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: T.green, marginBottom: 16 }}>+ Add New Developer</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 12 }}>
+            {[
+              { key: "id", label: "ID (e.g. damac) *", placeholder: "damac" },
+              { key: "name", label: "Full Name *", placeholder: "DAMAC Properties" },
+              { key: "shortName", label: "Short Name", placeholder: "DAMAC" },
+              { key: "phase", label: "Phase", placeholder: "2" },
+              { key: "founded", label: "Founded", placeholder: "2002" },
+              { key: "headquarters", label: "Headquarters", placeholder: "Dubai, UAE" },
+              { key: "exchange", label: "Exchange", placeholder: "DFM / ADX" },
+              { key: "ticker", label: "Ticker", placeholder: "EMAAR" },
+              { key: "description", label: "Description", placeholder: "Brief description..." },
+            ].map(f => (
+              <div key={f.key}>
+                <label style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", display: "block", marginBottom: 4 }}>{f.label}</label>
+                <input placeholder={f.placeholder} value={form[f.key] || ""} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
+                  style={{ width: "100%", padding: "8px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" onClick={addDeveloper} disabled={saving === "new"}
+              style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+              {saving === "new" ? "Adding..." : "Add Developer"}
+            </button>
+            <button type="button" onClick={() => { setAdding(false); setForm({}); }}
+              style={{ padding: "9px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" onClick={() => setAdding(true)}
+          style={{ width: "100%", padding: "12px", borderRadius: 10, border: "1px dashed rgba(212,168,67,0.3)", background: "transparent", color: T.gold, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+          + Add New Developer
+        </button>
+      )}
+    </Section>
+  );
+}
+
 
 export default function AdminPanel() {
   const { lang, setLang, t: i18t, dir, langInfo } = useI18n();
@@ -11565,6 +11737,7 @@ export default function AdminPanel() {
   const [projectStatusFilter, setProjectStatusFilter] = useState(() => {
     try { return localStorage.getItem("admin_projectStatusFilter") || "All"; } catch { return "All"; }
   });
+  const [projectDeveloperFilter, setProjectDeveloperFilter] = useState("All");
   const [projectSortKey, setProjectSortKey] = useState("name");
   const [projectSortDir, setProjectSortDir] = useState("asc");
   const [validationErrors, setValidationErrors] = useState({});
@@ -15949,6 +16122,7 @@ export default function AdminPanel() {
                   { id: "financials", label: "Financials", count: 6, icon: I.revenue },
                   { id: "risk", label: "Risk", count: 9, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> },
                   { id: "market", label: "Market", count: null, icon: I.chart },
+                  { id: "developers", label: "Developers", count: null, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg> },
                 ].map(st => (
                   <button type="button" key={st.id} onClick={() => { 
                     if (dataSubTab === st.id) return; // Don't reset if same tab
@@ -16103,6 +16277,13 @@ export default function AdminPanel() {
                         style={{ width: "100%", padding: "8px 10px 8px 28px", background: T.surface, border: `1px solid ${dataSearch ? T.gold : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
                     </div>
                     
+                    {/* Developer Filter */}
+                    <select value={projectDeveloperFilter} onChange={e => { setProjectDeveloperFilter(e.target.value); setActiveFilterViewId(null); }}
+                      style={{ padding: "8px 10px", background: projectDeveloperFilter !== "All" ? `${T.gold}15` : T.surface, border: `1px solid ${projectDeveloperFilter !== "All" ? T.gold : T.border}`, borderRadius: 8, color: projectDeveloperFilter !== "All" ? T.gold : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: projectDeveloperFilter !== "All" ? 700 : 400 }}>
+                      <option value="All">All Developers</option>
+                      {[...new Set(emaarProjects.map(p => p.developer || "Emaar Properties"))].sort().map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+
                     {/* Community Filter */}
                     <select value={projectCommunityFilter} onChange={e => { setProjectCommunityFilter(e.target.value); setActiveFilterViewId(null); }}
                       style={{ padding: "8px 10px", background: projectCommunityFilter !== "All" ? `${T.gold}15` : T.surface, border: `1px solid ${projectCommunityFilter !== "All" ? T.gold : T.border}`, borderRadius: 8, color: projectCommunityFilter !== "All" ? T.gold : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: projectCommunityFilter !== "All" ? 700 : 400, maxWidth: 180 }}>
@@ -17559,6 +17740,7 @@ export default function AdminPanel() {
                             const matchSearch = !dataSearch || (p.name||"").toLowerCase().includes(dataSearch.toLowerCase()) || (p.community||"").toLowerCase().includes(dataSearch.toLowerCase());
                             const matchCommunity = projectCommunityFilter === "All" || p.community === projectCommunityFilter;
                             const matchStatus = projectStatusFilter === "All" || (merged.status||"") === projectStatusFilter;
+                            const matchDeveloper = projectDeveloperFilter === "All" || (merged.developer||p.developer||"Emaar Properties") === projectDeveloperFilter;
                             
                             // Advanced filters
                             const price = merged.price || 0;
@@ -17603,7 +17785,7 @@ export default function AdminPanel() {
                               (stalenessFilter === "stale60" && (staleness.status === "stale60" || staleness.status === "stale90")) ||
                               (stalenessFilter === "never" && staleness.status === "never");
                             
-                            return matchSearch && matchCommunity && matchStatus && 
+                            return matchSearch && matchCommunity && matchStatus && matchDeveloper &&
                                    matchPriceMin && matchPriceMax && matchPpsfMin && matchPpsfMax &&
                                    matchTier && matchDataSource && matchModifiedDate && matchHasImage && matchQuality && matchStaleness;
                           })
@@ -18594,6 +18776,8 @@ export default function AdminPanel() {
 
               {/* ─── MARKET EDITOR ─── */}
               {dataSubTab === "market" && <MarketEditor db={db} T={T} notify={notify} adminUser={adminUser} Section={Section} />}
+
+              {dataSubTab === "developers" && <DeveloperManager db={db} T={T} notify={notify} adminUser={adminUser} Section={Section} />}
 
             </>
           )}
@@ -22448,86 +22632,47 @@ export default function AdminPanel() {
              CANCELLATION INSIGHTS TAB
              ═══════════════════════════════════════ */}
           {tab === "cancellation" && (() => {
-            /* ═══════════════════════════════════════════════════════════════════
-               TAB 13: CANCELLATION INSIGHTS — PRO LEVEL
-               Exit surveys, reason charts, win-back campaigns, churn analysis
-               Collections: cancellations, winbackCampaigns
-            ═══════════════════════════════════════════════════════════════════ */
-            
-            // Simulated cancellation data (would come from Firestore)
-            const cancellations = users.filter(u => u.cancelledAt || u.status === "cancelled" || u.tier === "cancelled");
-            const churned = users.filter(u => {
-              if (u.tier === "free" && u.previousTier && u.previousTier !== "free") return true;
-              if (u.cancelledAt) return true;
-              return false;
-            });
-            
-            // Compute stats
+            /* Real Firestore cancellations collection */
+            if (!window._cancelLoaded) {
+              window._cancelLoaded = true;
+              getDocs(collection(db, "cancellations"))
+                .then(snap => { const list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() })); list.sort((a, b) => new Date(b.cancelledAt||0) - new Date(a.cancelledAt||0)); window._cancelData = list; })
+                .catch(() => { window._cancelData = []; });
+            }
+            const realCancellations = window._cancelData || [];
+            const reasonMap = { too_expensive: { reason: "Too expensive", color: T.red }, not_using: { reason: "Not using enough", color: T.orange }, missing_features: { reason: "Missing features", color: T.purple }, found_alternative: { reason: "Found alternative", color: T.blue }, technical_issues: { reason: "Technical issues", color: T.teal }, other: { reason: "Other", color: T.textMuted } };
+            const reasonCounts = {};
+            realCancellations.forEach(c => { const key = c.reason || "other"; reasonCounts[key] = (reasonCounts[key] || 0) + 1; });
+            const totalReal = realCancellations.length;
+            const reasons = Object.entries(reasonMap).map(([key, meta]) => ({ ...meta, count: reasonCounts[key] || 0, percent: totalReal > 0 ? Math.round(((reasonCounts[key]||0)/totalReal)*100) : 0 })).filter(r => r.count > 0);
             const now = new Date();
             const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-            const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-            
-            const churnedThisMonth = churned.filter(u => {
-              const d = new Date(u.cancelledAt || u.updatedAt || 0);
-              return d >= thisMonth;
-            }).length;
-            const churnedLastMonth = churned.filter(u => {
-              const d = new Date(u.cancelledAt || u.updatedAt || 0);
-              return d >= lastMonth && d < thisMonth;
-            }).length;
-            
-            const totalPaid = users.filter(u => ["pro", "enterprise", "pro_trial"].includes(u.tier)).length;
-            const churnRate = totalPaid > 0 ? ((churnedThisMonth / totalPaid) * 100).toFixed(1) : 0;
-            
-            // Cancellation reasons (simulated - would come from exit surveys)
-            const reasons = [
-              { reason: "Too expensive", count: 12, percent: 28, color: T.red },
-              { reason: "Not using enough", count: 9, percent: 21, color: T.orange },
-              { reason: "Missing features", count: 8, percent: 19, color: T.purple },
-              { reason: "Found alternative", count: 6, percent: 14, color: T.blue },
-              { reason: "Technical issues", count: 4, percent: 9, color: T.teal },
-              { reason: "Other", count: 4, percent: 9, color: T.textMuted },
-            ];
-            const totalCancellations = reasons.reduce((sum, r) => sum + r.count, 0);
-            
-            // Win-back campaigns (simulated)
-            const winbackCampaigns = [
-              { id: 1, name: "20% Comeback Offer", status: "active", sent: 45, opened: 28, converted: 5, revenue: 2475 },
-              { id: 2, name: "Free Month Trial", status: "active", sent: 32, opened: 18, converted: 3, revenue: 891 },
-              { id: 3, name: "Feature Update Alert", status: "paused", sent: 67, opened: 41, converted: 7, revenue: 3465 },
-            ];
-            
-            // Monthly churn trend (simulated)
-            const churnTrend = [
-              { month: "Oct", churned: 3, recovered: 1 },
-              { month: "Nov", churned: 5, recovered: 2 },
-              { month: "Dec", churned: 4, recovered: 1 },
-              { month: "Jan", churned: 6, recovered: 3 },
-              { month: "Feb", churned: 4, recovered: 2 },
-              { month: "Mar", churned: churnedThisMonth || 2, recovered: 1 },
-            ];
-            
-            // At-risk users (no login in 14+ days, paid tier)
-            const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-            const atRiskUsers = users.filter(u => {
-              if (!["pro", "enterprise"].includes(u.tier)) return false;
-              if (!u.lastLoginAt) return true;
-              return new Date(u.lastLoginAt) < fourteenDaysAgo;
-            });
-            
+            const lastMonth = new Date(now.getFullYear(), now.getMonth()-1, 1);
+            const churnedThisMonth = realCancellations.filter(c => new Date(c.cancelledAt||0) >= thisMonth).length;
+            const churnedLastMonth = realCancellations.filter(c => { const d = new Date(c.cancelledAt||0); return d >= lastMonth && d < thisMonth; }).length;
+            const totalPaid = users.filter(u => ["pro","enterprise","pro_trial"].includes(u.tier)).length;
+            const churnRate = totalPaid > 0 ? ((churnedThisMonth/totalPaid)*100).toFixed(1) : 0;
+            const fourteenDaysAgo = new Date(now.getTime() - 14*24*60*60*1000);
+            const atRiskUsers = users.filter(u => { if (!["pro","enterprise"].includes(u.tier)) return false; if (!u.lastLoginAt) return true; return new Date(u.lastLoginAt) < fourteenDaysAgo; });
+            const churnTrend = [];
+            for (let m = 5; m >= 0; m--) {
+              const start = new Date(now.getFullYear(), now.getMonth()-m, 1);
+              const end = new Date(now.getFullYear(), now.getMonth()-m+1, 0, 23, 59, 59);
+              const label = start.toLocaleDateString("en-AE", { month: "short" });
+              const churned = realCancellations.filter(c => { const d = new Date(c.cancelledAt||0); return d >= start && d <= end; }).length;
+              churnTrend.push({ month: label, churned });
+            }
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                {/* KPI TOPBAR */}
-                <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-                  <button type="button" onClick={() => notify("Cancellation data refreshed")} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
+                {/* KPI bar */}
+                <div className="fade-up" style={{ display: "flex", alignItems: "center", borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                  <button type="button" onClick={() => { window._cancelLoaded = false; window._cancelData = null; notify("Refreshing..."); setTimeout(() => window.location.reload(), 300); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                   {[
-                    { label: "Churned This Month", value: churnedThisMonth, color: T.red },
+                    { label: "Total Cancellations", value: totalReal, color: T.textSecondary },
+                    { label: "This Month", value: churnedThisMonth, color: churnedThisMonth > 0 ? T.red : T.green },
+                    { label: "Last Month", value: churnedLastMonth, color: T.textSecondary },
                     { label: "Churn Rate", value: `${churnRate}%`, color: parseFloat(churnRate) > 5 ? T.red : T.green },
-                    { label: "At Risk", value: atRiskUsers.length, color: atRiskUsers.length > 5 ? T.orange : T.green },
-                    { label: "Total Churned", value: churned.length, color: T.textSecondary },
-                    { label: "Recovered", value: winbackCampaigns.reduce((s, c) => s + c.converted, 0), color: T.green },
-                    { label: "Recovery Revenue", value: `AED ${winbackCampaigns.reduce((s, c) => s + c.revenue, 0).toLocaleString()}`, color: T.gold },
+                    { label: "At Risk (14d)", value: atRiskUsers.length, color: atRiskUsers.length > 3 ? T.orange : T.green },
                   ].map((item, i) => (
                     <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 18px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
                       <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
@@ -22536,180 +22681,87 @@ export default function AdminPanel() {
                   ))}
                 </div>
 
-                {/* Main Grid */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                  {/* Cancellation Reasons Chart */}
-                  <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: 20 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 4 }}>Cancellation Reasons</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 20 }}>{totalCancellations} responses from exit surveys</div>
-                    
-                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                      {reasons.map((r, i) => (
-                        <div key={i}>
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                            <span style={{ fontSize: 12, color: T.white }}>{r.reason}</span>
-                            <span style={{ fontSize: 12, fontWeight: 600, color: r.color }}>{r.count} ({r.percent}%)</span>
-                          </div>
-                          <div style={{ height: 8, background: T.surfaceAlt, borderRadius: 4, overflow: "hidden" }}>
-                            <div style={{ width: `${r.percent}%`, height: "100%", background: r.color, borderRadius: 4, transition: "width 0.5s ease" }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <div style={{ marginTop: 20, padding: "12px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
-                      <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6 }}>TOP INSIGHT</div>
-                      <div style={{ fontSize: 13, color: T.white }}>🆍 <strong style={{ color: T.gold }}>28%</strong> cite pricing — consider a downgrade option or annual discount</div>
-                    </div>
+                {totalReal === 0 ? (
+                  <div style={{ padding: 48, textAlign: "center", background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: T.green, marginBottom: 8 }}>No Cancellations Yet</div>
+                    <div style={{ fontSize: 13, color: T.textMuted, lineHeight: 1.6, maxWidth: 400, margin: "0 auto" }}>When users cancel their subscription via the profile modal, their exit survey responses will appear here automatically.</div>
+                    {atRiskUsers.length > 0 && <div style={{ marginTop: 20, padding: "12px 20px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, display: "inline-block", fontSize: 12, color: T.textSecondary }}>⚠️ At-risk paid users with no login in 14+ days: <strong style={{ color: T.orange }}>{atRiskUsers.length}</strong></div>}
                   </div>
-
-                  {/* Monthly Churn Trend */}
-                  <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: 20 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 4 }}>Churn vs Recovery Trend</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 20 }}>Last 6 months</div>
-                    
-                    <div style={{ display: "flex", alignItems: "flex-end", gap: 16, height: 160 }}>
-                      {churnTrend.map((m, i) => {
-                        const maxVal = Math.max(...churnTrend.map(x => x.churned));
-                        const churnHeight = (m.churned / maxVal) * 120;
-                        const recoverHeight = (m.recovered / maxVal) * 120;
-                        return (
-                          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                            <div style={{ display: "flex", gap: 2, alignItems: "flex-end", height: 120 }}>
-                              <div style={{ width: 16, height: churnHeight, background: T.red, borderRadius: "4px 4px 0 0", opacity: 0.8 }} title={`Churned: ${m.churned}`} />
-                              <div style={{ width: 16, height: recoverHeight, background: T.green, borderRadius: "4px 4px 0 0", opacity: 0.8 }} title={`Recovered: ${m.recovered}`} />
-                            </div>
-                            <div style={{ fontSize: 10, color: T.textMuted }}>{m.month}</div>
+                ) : (<>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                    {/* Reasons */}
+                    <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: 20 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 4 }}>Exit Survey Reasons</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>{totalReal} real responses</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                        {reasons.sort((a,b) => b.count - a.count).map((r, i) => (
+                          <div key={i}>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ fontSize: 12, color: T.textSecondary }}>{r.reason}</span><span style={{ fontSize: 12, fontWeight: 700, color: r.color }}>{r.count} ({r.percent}%)</span></div>
+                            <div style={{ height: 6, borderRadius: 3, background: T.surfaceAlt }}><div style={{ height: "100%", width: `${r.percent}%`, background: r.color, borderRadius: 3 }} /></div>
                           </div>
-                        );
-                      })}
-                    </div>
-                    
-                    <div style={{ display: "flex", gap: 20, marginTop: 16 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <div style={{ width: 12, height: 12, background: T.red, borderRadius: 3 }} />
-                        <span style={{ fontSize: 11, color: T.textMuted }}>Churned</span>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <div style={{ width: 12, height: 12, background: T.green, borderRadius: 3 }} />
-                        <span style={{ fontSize: 11, color: T.textMuted }}>Recovered</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Win-back Campaigns */}
-                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-                  <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>Win-back Campaigns</div>
-                      <div style={{ fontSize: 11, color: T.textMuted }}>{winbackCampaigns.length} campaigns · {winbackCampaigns.reduce((s, c) => s + c.converted, 0)} users recovered</div>
-                    </div>
-                    <button type="button" onClick={() => notify("Campaign creation coming soon")} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>+ New Campaign</button>
-                  </div>
-                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                    <thead>
-                      <tr style={{ background: T.surfaceAlt }}>
-                        {["Campaign", "Status", "Sent", "Opened", "Converted", "Revenue", "Actions"].map(h => (
-                          <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>{h}</th>
                         ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {winbackCampaigns.map(c => (
-                        <tr key={c.id} style={{ borderBottom: `1px solid ${T.border}` }}>
-                          <td style={{ padding: "12px 14px", fontSize: 13, fontWeight: 600, color: T.white }}>{c.name}</td>
-                          <td style={{ padding: "12px 14px" }}>
-                            <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: c.status === "active" ? `${T.green}20` : `${T.orange}20`, color: c.status === "active" ? T.green : T.orange, fontWeight: 600, textTransform: "uppercase" }}>{c.status}</span>
-                          </td>
-                          <td style={{ padding: "12px 14px", fontSize: 12, color: T.textSecondary }}>{c.sent}</td>
-                          <td style={{ padding: "12px 14px", fontSize: 12, color: T.textSecondary }}>{c.opened} ({Math.round((c.opened / c.sent) * 100)}%)</td>
-                          <td style={{ padding: "12px 14px", fontSize: 12, fontWeight: 600, color: T.green }}>{c.converted}</td>
-                          <td style={{ padding: "12px 14px", fontSize: 12, fontWeight: 700, color: T.gold }}>AED {c.revenue.toLocaleString()}</td>
-                          <td style={{ padding: "12px 14px" }}>
-                            <div style={{ display: "flex", gap: 6 }}>
-                              <button type="button" onClick={() => notify(c.status === "active" ? "Campaign paused" : "Campaign resumed")} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer" }}>{c.status === "active" ? "Pause" : "Resume"}</button>
-                              <button type="button" onClick={() => notify("Edit campaign")} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer" }}>Edit</button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* At-Risk Users */}
-                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-                  <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>At-Risk Users</div>
-                      <div style={{ fontSize: 11, color: T.textMuted }}>Paid users with no login in 14+ days</div>
-                    </div>
-                    {atRiskUsers.length > 0 && (
-                      <button type="button" onClick={() => notify("Win-back email sent to all at-risk users")} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${T.orange}`, background: `${T.orange}10`, color: T.orange, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Send Win-back to All ({atRiskUsers.length})</button>
-                    )}
-                  </div>
-                  {atRiskUsers.length === 0 ? (
-                    <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                      <div style={{ fontSize: 24, marginBottom: 8 }}>🎯</div>
-                      <div style={{ fontSize: 13 }}>No at-risk users! All paid users are active.</div>
-                    </div>
-                  ) : (
-                    <div style={{ maxHeight: 300, overflowY: "auto" }}>
-                      {atRiskUsers.slice(0, 10).map(u => {
-                        const daysSince = u.lastLoginAt ? Math.floor((now.getTime() - new Date(u.lastLoginAt).getTime()) / 86400000) : 999;
-                        return (
-                          <div key={u.uid || u.id} style={{ padding: "12px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <div>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || u.email}</div>
-                              <div style={{ fontSize: 11, color: T.textMuted }}>{u.email} · {u.tier}</div>
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                              <div style={{ textAlign: "right" }}>
-                                <div style={{ fontSize: 12, fontWeight: 600, color: daysSince > 30 ? T.red : T.orange }}>{daysSince === 999 ? "Never" : `${daysSince}d ago`}</div>
-                                <div style={{ fontSize: 10, color: T.textMuted }}>Last login</div>
-                              </div>
-                              <button type="button" onClick={() => notify(`Win-back email sent to ${u.email}`)} style={{ padding: "6px 12px", borderRadius: 6, border: "none", background: T.teal, color: T.bg, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>Reach Out</button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {atRiskUsers.length > 10 && (
-                        <div style={{ padding: "12px 20px", textAlign: "center", fontSize: 11, color: T.textMuted }}>+ {atRiskUsers.length - 10} more at-risk users</div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Exit Survey Responses */}
-                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: 20 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 4 }}>Recent Exit Survey Responses</div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>What churned users said</div>
-                  
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {[
-                      { user: "ahmed@example.com", reason: "Too expensive", feedback: "Great product but AED 99/mo is too much for occasional use. Would subscribe to a AED 49 lite plan.", date: "3 days ago", tier: "Pro" },
-                      { user: "sarah@realty.ae", reason: "Found alternative", feedback: "Switched to competitor that includes CRM. Would come back if you add lead management.", date: "5 days ago", tier: "Pro" },
-                      { user: "mike@invest.com", reason: "Missing features", feedback: "Need mortgage calculator and ROI projections. Product is good otherwise.", date: "1 week ago", tier: "Enterprise" },
-                    ].map((r, i) => (
-                      <div key={i} style={{ padding: "14px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{r.user}</span>
-                            <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${T.gold}20`, color: T.gold }}>{r.tier}</span>
-                          </div>
-                          <span style={{ fontSize: 10, color: T.textMuted }}>{r.date}</span>
-                        </div>
-                        <div style={{ fontSize: 10, color: T.red, fontWeight: 600, marginBottom: 6 }}>Reason: {r.reason}</div>
-                        <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5, fontStyle: "italic" }}>"{r.feedback}"</div>
                       </div>
-                    ))}
+                    </div>
+                    {/* Trend */}
+                    <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: 20 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 4 }}>Monthly Churn</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16 }}>Last 6 months</div>
+                      <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 100 }}>
+                        {churnTrend.map((m, i) => {
+                          const maxVal = Math.max(...churnTrend.map(x => x.churned), 1);
+                          return (
+                            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>{m.churned || ""}</div>
+                              <div style={{ width: "100%", height: `${Math.max((m.churned/maxVal)*100, 4)}%`, background: m.churned > 0 ? T.red : T.surfaceAlt, borderRadius: "4px 4px 0 0", minHeight: 4 }} />
+                              <div style={{ fontSize: 9, color: T.textMuted }}>{m.month}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
-                </div>
+
+                  {/* Feed */}
+                  <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: 20 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 16 }}>Recent Cancellations</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {realCancellations.slice(0, 10).map((c, i) => (
+                        <div key={i} style={{ padding: "12px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: c.feedback ? 6 : 0 }}>
+                            <div>
+                              <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{c.userEmail || c.userId || "Anonymous"}</span>
+                              <span style={{ marginLeft: 8, fontSize: 10, padding: "2px 8px", borderRadius: 6, background: "rgba(239,68,68,0.12)", color: T.red, fontWeight: 700 }}>{reasonMap[c.reason]?.reason || c.reason || "Unknown"}</span>
+                              <span style={{ marginLeft: 6, fontSize: 10, color: T.textMuted }}>was {c.previousTier || "—"}</span>
+                            </div>
+                            <span style={{ fontSize: 11, color: T.textMuted }}>{c.cancelledAt ? new Date(c.cancelledAt).toLocaleDateString("en-AE") : "—"}</span>
+                          </div>
+                          {c.feedback && <div style={{ fontSize: 12, color: T.textSecondary, fontStyle: "italic" }}>"{c.feedback}"</div>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>)}
+
+                {/* At-risk users */}
+                {atRiskUsers.length > 0 && (
+                  <div style={{ background: T.surface, borderRadius: 14, border: "1px solid rgba(245,158,11,0.3)", padding: 20 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: T.orange, marginBottom: 4 }}>⚠️ At-Risk Users ({atRiskUsers.length})</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>Paid users with no login in 14+ days</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {atRiskUsers.slice(0, 5).map((u, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                          <div><div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.name || u.email}</div><div style={{ fontSize: 11, color: T.textMuted }}>{u.tier}</div></div>
+                          <div style={{ fontSize: 11, color: T.orange }}>{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString("en-AE") : "Never logged in"}</div>
+                        </div>
+                      ))}
+                      {atRiskUsers.length > 5 && <div style={{ fontSize: 11, color: T.textMuted, textAlign: "center" }}>+{atRiskUsers.length - 5} more</div>}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })()}
-
           {/* SUPPORT TAB */}
           {tab === "support" && <SupportTab T={T} I={I} db={db} notify={notify} adminUser={adminUser} users={users} setTab={setTab} setPendingOpenUid={setPendingOpenUid} />}
 
