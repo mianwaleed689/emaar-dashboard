@@ -3,7 +3,7 @@
 // Called by Admin Panel → runs on Vercel server → calls all APIs → no CORS
 // Deploy: this file goes in /api/ folder in your project root
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Allow Admin Panel to call this
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");

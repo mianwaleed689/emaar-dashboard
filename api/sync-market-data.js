@@ -2,7 +2,7 @@
 // Vercel Serverless Function - syncs live PPSF from Bayut for all 49 communities
 // Called by Admin Panel Live Data Sync button
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   if (req.method === "OPTIONS") return res.status(200).end();
