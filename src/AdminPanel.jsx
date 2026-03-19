@@ -16791,7 +16791,87 @@ export default function AdminPanel() {
                     <button type="button" onClick={fetchLiveData} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(212,168,67,0.4)",background:"rgba(212,168,67,0.08)",color:"#D4A843",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>{I.refresh} Refresh</button>
                   </div>
                 }>
-                  {/* Search */}
+
+                  {/* ── PROJECT LIFECYCLE MONITOR ── */}
+                  {(() => {
+                    const now = new Date();
+                    const currentYear = now.getFullYear();
+                    const currentQ = Math.ceil((now.getMonth() + 1) / 3);
+
+                    const parseHandover = (h) => {
+                      if (!h || h === "—" || h === "Delivered") return null;
+                      const m = h.match(/Q(\d)\s+(\d{4})/);
+                      if (!m) return null;
+                      return { q: parseInt(m[1]), y: parseInt(m[2]) };
+                    };
+
+                    const isOverdue = (h) => {
+                      const d = parseHandover(h);
+                      if (!d) return false;
+                      return d.y < currentYear || (d.y === currentYear && d.q < currentQ);
+                    };
+
+                    const isDueThisQuarter = (h) => {
+                      const d = parseHandover(h);
+                      if (!d) return false;
+                      return d.y === currentYear && d.q === currentQ;
+                    };
+
+                    const isDueNextQuarter = (h) => {
+                      const d = parseHandover(h);
+                      if (!d) return false;
+                      const nextQ = currentQ === 4 ? 1 : currentQ + 1;
+                      const nextY = currentQ === 4 ? currentYear + 1 : currentYear;
+                      return d.y === nextY && d.q === nextQ;
+                    };
+
+                    const allProjects = emaarProjects;
+                    const overdue = allProjects.filter(p => p.status !== "Delivered" && p.status !== "Completed" && isOverdue(p.handover));
+                    const dueThisQ = allProjects.filter(p => p.status !== "Delivered" && p.status !== "Completed" && isDueThisQuarter(p.handover));
+                    const dueNextQ = allProjects.filter(p => p.status !== "Delivered" && p.status !== "Completed" && isDueNextQuarter(p.handover));
+                    const construction100 = allProjects.filter(p => p.construction >= 100 && p.status !== "Delivered" && p.status !== "Completed");
+
+                    const total = overdue.length + dueThisQ.length + construction100.length;
+                    if (total === 0 && dueNextQ.length === 0) return null;
+
+                    return (
+                      <div style={{ background: "rgba(212,168,67,0.05)", border: `1px solid rgba(212,168,67,0.2)`, borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                          <span style={{ fontSize: 14 }}>🔔</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>Project Lifecycle Monitor</span>
+                          <span style={{ fontSize: 10, color: T.textMuted, marginLeft: "auto" }}>Auto-detected · Q{currentQ} {currentYear}</span>
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10, marginBottom: overdue.length + dueThisQ.length + construction100.length > 0 ? 14 : 0 }}>
+                          {[
+                            { label: "⚠️ Overdue — needs status update", items: overdue, color: T.red, action: "Mark as Delivered" },
+                            { label: "📅 Due this quarter", items: dueThisQ, color: T.gold, action: "Confirm handover date" },
+                            { label: "🔜 Due next quarter", items: dueNextQ, color: T.teal, action: "Prepare handover" },
+                            { label: "🏗️ Construction 100% — not marked done", items: construction100, color: "#8B5CF6", action: "Update status" },
+                          ].filter(g => g.items.length > 0).map((group, gi) => (
+                            <div key={gi} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "10px 12px", border: `1px solid ${group.color}30` }}>
+                              <div style={{ fontSize: 11, color: group.color, fontWeight: 700, marginBottom: 6 }}>{group.label}</div>
+                              {group.items.slice(0, 4).map((p, i) => (
+                                <div key={i} style={{ fontSize: 11, color: T.textSecondary, padding: "3px 0", borderBottom: i < group.items.length - 1 ? `1px solid ${T.border}` : "none", display: "flex", justifyContent: "space-between" }}>
+                                  <span>{p.name}</span>
+                                  <span style={{ color: T.textMuted }}>{p.handover}</span>
+                                </div>
+                              ))}
+                              {group.items.length > 4 && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>+{group.items.length - 4} more</div>}
+                              <div style={{ fontSize: 10, color: group.color, marginTop: 8, fontWeight: 600 }}>→ {group.action}</div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {overdue.length > 0 && (
+                          <div style={{ fontSize: 11, color: T.textMuted, padding: "8px 10px", background: "rgba(239,68,68,0.05)", borderRadius: 8, border: "1px solid rgba(239,68,68,0.15)" }}>
+                            💡 <strong style={{ color: T.red }}>Action required:</strong> {overdue.length} project{overdue.length > 1 ? "s are" : " is"} past handover date but still showing "Under Construction". Update their status to <strong>"Delivered"</strong> in the table below so users see accurate information.
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
                   <TabHelp items={[
                     { icon: "[q]", title: "Data Quality Score", desc: "Each project gets a 0-100 score based on completeness. Click the panel to see field breakdown and quick actions." },
                     { icon: "[📈]", title: "Data Intelligence", desc: "Track recent changes, find stale data, detect duplicates, and identify integrity issues. Click to expand." },
