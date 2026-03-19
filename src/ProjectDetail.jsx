@@ -142,7 +142,12 @@ export default function ProjectDetail() {
   /* ── load project from data.js + Firestore override ── */
   useEffect(() => {
     setNotFound(false);
-    const base = emaarProjects.find(p => p.id === Number(id) || p.id === id || String(p.id) === String(id));
+    setProject(null);
+
+    // Check data.js first (Emaar projects 1-48)
+    const base = emaarProjects.find(p =>
+      p.id === Number(id) || p.id === id || String(p.id) === String(id)
+    );
 
     if (base) {
       // Found in data.js — listen for Firestore override
@@ -154,24 +159,30 @@ export default function ProjectDetail() {
         setProject(base);
       });
       return () => unsub();
-    } else {
-      // Not in data.js — try Firestore projects collection (Aldar, DAMAC etc)
-      getDoc(doc(db, "projects", String(id))).then(snap => {
-        if (snap.exists()) {
-          setProject({ ...snap.data(), id: snap.id });
-        } else {
-          // Also try projectData collection
-          return getDoc(doc(db, "projectData", String(id))).then(snap2 => {
-            if (snap2.exists()) {
-              setProject({ ...snap2.data(), id: snap2.id });
-            } else {
-              setProject(null);
-              setNotFound(true);
-            }
-          });
-        }
-      }).catch(() => { setProject(null); setNotFound(true); });
     }
+
+    // Not in data.js — try Firestore (Aldar, DAMAC etc — always string IDs like "aldar_1")
+    const isFirestoreId = isNaN(Number(id)) || String(id).includes("_");
+    if (!isFirestoreId) {
+      // Numeric ID not found in data.js = truly not found
+      setNotFound(true);
+      return;
+    }
+
+    // String ID — fetch from Firestore
+    getDoc(doc(db, "projects", String(id))).then(snap => {
+      if (snap.exists()) {
+        setProject({ ...snap.data(), id: snap.id });
+      } else {
+        return getDoc(doc(db, "projectData", String(id))).then(snap2 => {
+          if (snap2.exists()) {
+            setProject({ ...snap2.data(), id: snap2.id });
+          } else {
+            setNotFound(true);
+          }
+        });
+      }
+    }).catch(() => setNotFound(true));
   }, [id]);
 
   /* ── auth listener ── */
