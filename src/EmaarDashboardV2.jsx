@@ -495,11 +495,14 @@ const ForecastCard = ({ firm, color, short, forecast, detail, bullets, sourceUrl
   );
 };
 
-const Section = ({ title, sub, children, delay = 0 }) => (
+const Section = ({ title, sub, children, delay = 0, action }) => (
   <div className={`fade-up delay-${delay}`} style={{ marginTop: 36, marginBottom: 16 }}>
-    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
-      <div style={{ width: 4, height: 28, background: `linear-gradient(180deg, ${T.gold}, transparent)`, borderRadius: 2 }} />
-      <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 700, color: T.white }}>{title}</h2>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 4 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ width: 4, height: 28, background: `linear-gradient(180deg, ${T.gold}, transparent)`, borderRadius: 2 }} />
+        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 700, color: T.white }}>{title}</h2>
+      </div>
+      {action && <div>{action}</div>}
     </div>
     {sub && <p style={{ color: T.textSecondary, fontSize: 12, marginLeft: 16, marginTop: 2 }}>{sub}</p>}
     {children}
@@ -1557,6 +1560,7 @@ export default function EmaarDashboardV2() {
   // Onboarding
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
+  const [onboardingRole, setOnboardingRole] = useState("agent");
 
   useEffect(() => {
     const handler = (e) => { setShowCheckout(e.detail); setCheckoutStep(1); };
@@ -7736,7 +7740,8 @@ export default function EmaarDashboardV2() {
         };
 
         const isStep0 = onboardingStep === 0;
-        const [selectedRole, setSelectedRole] = React.useState("agent");
+        const selectedRole = onboardingRole;
+        const setSelectedRole = setOnboardingRole;
         const steps = roleSteps[selectedRole] || roleSteps.agent;
         const isLastStep = onboardingStep === steps.length;
         const currentStep = isStep0 ? null : steps[onboardingStep - 1];
