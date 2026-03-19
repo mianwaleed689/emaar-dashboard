@@ -535,7 +535,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
     const fetchTickets = async () => {
       setTicketsLoading(true);
       try {
-        const snap = await getDocs(query(collection(db, "supportTickets"), orderBy("createdAt", "desc"), limit(100)));
+        const snap = await getDocs(query(collection(db, "supportTickets"), orderBy("createdAt", "desc"), limit(100))); // kept as manual refresh
         setTickets(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       } catch (e) {
         console.error("Fetch tickets:", e);
@@ -7280,23 +7280,21 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
     { id: "urgent",  label: "Urgent",  color: T.red    || "#EF4444" },
   ];
 
-  const fetchNotifications = React.useCallback(async () => {
-    try {
-      const snap = await getDocs(query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(200)));
+  const fetchNotifications = React.useCallback(() => {}, []);
+  const fetchTemplates = React.useCallback(() => {}, []);
+
+  // Live notifications + templates
+  React.useEffect(() => {
+    const unsub1 = onSnapshot(query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(200)), (snap) => {
       const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setSentNotifs(all.filter(n => !n.scheduledFor || new Date(n.scheduledFor) <= new Date()));
       setScheduledNotifs(all.filter(n => n.scheduledFor && new Date(n.scheduledFor) > new Date()));
-    } catch (e) { console.error(e); }
-  }, [db]);
-
-  const fetchTemplates = React.useCallback(async () => {
-    try {
-      const snap = await getDocs(collection(db, "notificationTemplates"));
+    });
+    const unsub2 = onSnapshot(collection(db, "notificationTemplates"), (snap) => {
       setTemplates(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    } catch (e) { console.error(e); }
-  }, [db]);
-
-  React.useEffect(() => { fetchNotifications(); fetchTemplates(); }, [fetchNotifications, fetchTemplates]);
+    });
+    return () => { unsub1(); unsub2(); };
+  }, []);
 
   const getTargetUsers = (tType = targetType, tTier = targetTier, tUid = targetUserId) => {
     const all = Array.isArray(users) ? users : [];
@@ -11246,14 +11244,11 @@ function FinancialsEditor({ db, T, notify, adminUser, Section }) {
   ];
 
   React.useEffect(() => {
-    getDoc(doc(db, "tabData", "financials")).then(snap => {
-      if (snap.exists() && snap.data().rows) {
-        setFinRows(snap.data().rows);
-      } else {
-        setFinRows(defaultFinancials);
-      }
-    }).catch(() => {}); // eslint-disable-line react-hooks/exhaustive-deps
-  }, [db]);
+    const unsub = onSnapshot(doc(db, "tabData", "financials"), (snap) => {
+      setFinRows(snap.exists() && snap.data().rows ? snap.data().rows : defaultFinancials);
+    });
+    return () => unsub();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const resetFinancials = async () => {
     setFinRows(defaultFinancials);
@@ -11352,10 +11347,11 @@ function RiskEditor({ db, T, notify, adminUser, Section }) {
   const [riskSaving, setRiskSaving] = React.useState(false);
 
   React.useEffect(() => {
-    getDoc(doc(db, "tabData", "riskFactors")).then(snap => {
+    const unsub = onSnapshot(doc(db, "tabData", "riskFactors"), (snap) => {
       setRiskRows(snap.exists() && snap.data().rows ? snap.data().rows : defaultRiskFactors);
-    }).catch(() => setRiskRows(defaultRiskFactors));
-  }, [db]); // eslint-disable-line react-hooks/exhaustive-deps
+    });
+    return () => unsub();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveRisk = async () => {
     setRiskSaving(true);
@@ -11441,13 +11437,11 @@ function MarketEditor({ db, T, notify, adminUser, Section }) {
   const [mktSaving, setMktSaving] = React.useState(false);
 
   React.useEffect(() => {
-    getDoc(doc(db, "tabData", "marketData")).then(snap => {
-      const rows = snap.exists() && snap.data().rows && snap.data().rows.length > 0
-        ? snap.data().rows
-        : defaultMarketData;
-      setMktRows(rows);
-    }).catch(() => setMktRows(defaultMarketData));
-  }, [db]); // eslint-disable-line react-hooks/exhaustive-deps
+    const unsub = onSnapshot(doc(db, "tabData", "marketData"), (snap) => {
+      setMktRows(snap.exists() && snap.data().rows?.length > 0 ? snap.data().rows : defaultMarketData);
+    });
+    return () => unsub();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveMarket = async () => {
     setMktSaving(true);
@@ -11551,9 +11545,10 @@ function LaunchRadar({ db, T, notify }) {
   const addLog = (msg, type = "info") => setScanLog(prev => [...prev, { msg, type, ts: new Date().toLocaleTimeString("en-AE") }]);
 
   React.useEffect(() => {
-    getDocs(collection(db, "radarLaunches")).then(snap => {
+    const unsub = onSnapshot(collection(db, "radarLaunches"), (snap) => {
       setSaved(snap.docs.map(d => d.data().projectName));
-    }).catch(() => {});
+    });
+    return () => unsub();
   }, []);
 
   const getKnownLaunches = () => {
@@ -12254,13 +12249,14 @@ function DeveloperManager({ db, T, notify, adminUser, Section }) {
   const [adding, setAdding] = React.useState(false);
 
   React.useEffect(() => {
-    getDocs(collection(db, "developers")).then(snap => {
+    const unsub = onSnapshot(collection(db, "developers"), (snap) => {
       const list = [];
       snap.forEach(d => list.push({ docId: d.id, ...d.data() }));
       list.sort((a, b) => (a.phase || 1) - (b.phase || 1) || (a.name || "").localeCompare(b.name || ""));
       setDevs(list);
-    }).catch(() => setDevs([]));
-  }, [db]);
+    });
+    return () => unsub();
+  }, []);
 
   const saveDev = async (devId, data) => {
     setSaving(devId);

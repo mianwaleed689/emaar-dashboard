@@ -9,6 +9,8 @@
    • Frictionless signup
    ─────────────────────────────────────────────────────────────────────── */
 import React, { useState, useEffect } from "react";
+import { db } from "./firebase";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 
 const T = {
   bg: "#04090F", surface: "#0A1628", surfaceAlt: "#0E1D35", card: "#0D1B30",
@@ -86,6 +88,24 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
   const [billingAnnual, setBillingAnnual] = useState(false);
   const [activeRole, setActiveRole] = useState("agent");
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [liveStats, setLiveStats] = useState({ users: 7, paid: 6, mrr: 2194, projects: 48, communities: 13 });
+
+  // Live stats from Firestore — updates in real time as users sign up
+  useEffect(() => {
+    try {
+      const unsub = onSnapshot(collection(db, "users"), (snap) => {
+        const users = snap.docs.map(d => d.data());
+        const paid = users.filter(u => u.tier === "pro" || u.tier === "enterprise").length;
+        const mrr = users.reduce((sum, u) => {
+          if (u.tier === "pro") return sum + 99;
+          if (u.tier === "enterprise") return sum + 499;
+          return sum;
+        }, 0);
+        setLiveStats(prev => ({ ...prev, users: users.length, paid, mrr }));
+      });
+      return () => unsub();
+    } catch { /* firebase not available */ }
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -630,7 +650,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             Ready to close deals<br/>
             <span style={{ color: T.gold }}>with data, not guesswork?</span>
           </h2>
-          <p style={{ fontSize: 16, color: T.textSecondary, marginBottom: 32 }}>Join Dubai's most informed agents and investors. 7-day Pro trial — free, no card needed.</p>
+          <p style={{ fontSize: 16, color: T.textSecondary, marginBottom: 32 }}>Join Dubai's most informed agents and investors. {liveStats.users > 10 ? `${liveStats.users}+ professionals already inside.` : "7-day Pro trial — free, no card needed."}</p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
             <button onClick={onSignUpClick} className="cta-primary" style={{ padding: "18px 48px", fontSize: 17 }}>Start Free Trial →</button>
             <a href="mailto:mianwaleed689@gmail.com?subject=DXB%20Analytics%20Enquiry" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "18px 32px", background: "transparent", borderRadius: 12, color: T.gold, fontSize: 15, fontWeight: 700, textDecoration: "none", border: `1.5px solid ${T.gold}`, transition: "all .2s" }}
