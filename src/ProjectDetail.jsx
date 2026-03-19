@@ -9,7 +9,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { auth, db } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, setDoc, onSnapshot, collection, getDocs } from "firebase/firestore";
 import { T, emaarProjects, communityIntel, communityROI } from "./data";
 import RoiCalculator from "./RoiCalculator";
 
@@ -140,17 +140,27 @@ export default function ProjectDetail() {
   /* ── load project from data.js + Firestore override ── */
   useEffect(() => {
     const base = emaarProjects.find(p => p.id === Number(id) || p.id === id || String(p.id) === String(id));
-    if (!base) { setProject(null); return; }
 
-    // Try Firestore override
-    const unsub = onSnapshot(doc(db, "projectData", String(base.id)), (snap) => {
-      const override = snap.exists() ? snap.data() : {};
-      setFirestoreOverride(override);
-      setProject({ ...base, ...override });
-    }, () => {
-      setProject(base);
-    });
-    return () => unsub();
+    if (base) {
+      // Found in data.js — listen for Firestore override
+      const unsub = onSnapshot(doc(db, "projectData", String(base.id)), (snap) => {
+        const override = snap.exists() ? snap.data() : {};
+        setFirestoreOverride(override);
+        setProject({ ...base, ...override });
+      }, () => {
+        setProject(base);
+      });
+      return () => unsub();
+    } else {
+      // Not in data.js — try Firestore projects collection (Aldar, DAMAC etc)
+      getDoc(doc(db, "projects", String(id))).then(snap => {
+        if (snap.exists()) {
+          setProject({ ...snap.data(), id: snap.id });
+        } else {
+          setProject(null);
+        }
+      }).catch(() => setProject(null));
+    }
   }, [id]);
 
   /* ── auth listener ── */
@@ -178,7 +188,7 @@ export default function ProjectDetail() {
   }, [project]);
 
   /* ── loading / not found ── */
-  if (project === null && emaarProjects.length > 0) {
+  if (project === null && emaarProjects.length > 0 && !String(id).includes("_")) {
     return (
       <div style={{ minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "'Outfit', sans-serif", color: T.textPrimary }}>
         <style>{css}</style>
