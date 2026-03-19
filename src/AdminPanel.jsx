@@ -11576,8 +11576,7 @@ function LiveDataSync({ db, T, notify }) {
 
   const fetchBayut = async (comm) => {
     const target = `https://unofficial-bayut-api.p.rapidapi.com/search?locationExternalIDs=${comm.locationId}&purpose=for-sale&categoryExternalID=4&lang=en&sort=price-asc&page=0&hitsPerPage=10`;
-    const url = PROXY + encodeURIComponent(target);
-    const res = await fetch(url, {
+    const res = await fetchWithProxy(target, {
       headers: {
         "x-rapidapi-key": BAYUT_KEY,
         "x-rapidapi-host": "unofficial-bayut-api.p.rapidapi.com"
@@ -11599,8 +11598,7 @@ function LiveDataSync({ db, T, notify }) {
   const fetchPropertyFinder = async (comm) => {
     try {
       const pfTarget = `https://unofficial-bayut-api.p.rapidapi.com/search?locationExternalIDs=${comm.locationId}&purpose=for-sale&categoryExternalID=4&lang=en&sort=price-asc&page=1&hitsPerPage=10`;
-      const url = PROXY + encodeURIComponent(pfTarget);
-      const res = await fetch(url, {
+      const res = await fetchWithProxy(pfTarget, {
         headers: {
           "x-rapidapi-key": BAYUT_KEY,
           "x-rapidapi-host": "unofficial-bayut-api.p.rapidapi.com"
@@ -11624,7 +11622,7 @@ function LiveDataSync({ db, T, notify }) {
       log("📊 Fetching Dubai Pulse DLD open data...", T.blue);
       // Dubai Pulse open CSV — updated monthly, no API key needed
       const dldCsvUrl = "https://www.dubaipulse.gov.ae/dataset/3b25a6f5-9077-49d7-8a1e-bc6d5dea88fd/resource/a37511b0-ea36-485d-bccd-2d6cb24507e7/download/transactions.csv";
-      const res = await fetch(PROXY + encodeURIComponent(dldCsvUrl));
+      const res = await fetchWithProxy(dldCsvUrl);
       if (!res.ok) {
         log("⚠️ Dubai Pulse CSV unavailable — skipping DLD data", T.textMuted);
         return {};
@@ -11789,6 +11787,22 @@ function LiveDataSync({ db, T, notify }) {
     return results;
   };
 
+  // Try multiple CORS proxies in order until one works
+  const fetchWithProxy = async (url, options = {}) => {
+    const proxies = [
+      (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+      (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+      (u) => `https://thingproxy.freeboard.io/fetch/${u}`,
+    ];
+    for (const proxy of proxies) {
+      try {
+        const res = await fetch(proxy(url), { ...options, signal: AbortSignal.timeout(8000) });
+        if (res.ok) return res;
+      } catch { continue; }
+    }
+    throw new Error("All proxies failed");
+  };
+
   const runSync = async () => {
     setSyncing(true);
     setSyncLog([]);
@@ -11801,11 +11815,31 @@ function LiveDataSync({ db, T, notify }) {
     // Step 1: Fetch Dubai Pulse DLD data in bulk (one request, no key needed)
     const dldData = await fetchDubaiPulse();
 
-    // Step 1b: Fetch benchmark data + Dubai REST API
+    // Step 1b: Load benchmarks (always works — no network needed)
     const dubaiRestData = await fetchDubaiREST();
 
-    // Step 2: Fetch Bayut per community
-    log("🏠 Fetching Bayut + PropertyFinder listings...", T.gold);
+    // Step 1c: Save benchmarks to Firestore immediately so dashboard gets data NOW
+    // even if Bayut fails
+    if (Object.keys(dubaiRestData).length > 0) {
+      log(`💾 Saving ${Object.keys(dubaiRestData).length} benchmark prices to Firestore...`, T.teal);
+      for (const [commName, data] of Object.entries(dubaiRestData)) {
+        try {
+          await setDoc(doc(db, "liveMarketData", commName.replace(/ /g, "_")), {
+            community: commName,
+            avgPpsf: data.avgPpsf,
+            avgPrice: 0,
+            listings: 0,
+            source: data.source,
+            bmPpsf: data.avgPpsf,
+            syncedAt: new Date().toISOString(),
+          }, { merge: true });
+        } catch { /* skip */ }
+      }
+      log(`✅ ${Object.keys(dubaiRestData).length} communities now have benchmark data live`, T.green);
+    }
+
+    // Step 2: Try Bayut — will overlay live prices on top of benchmarks
+    log("🏠 Fetching Bayut live listings (if available)...", T.gold);
 
     for (const comm of COMMUNITIES) {
       try {
@@ -11876,8 +11910,17 @@ function LiveDataSync({ db, T, notify }) {
 
     const now = new Date().toLocaleString("en-AE");
     setLastSync(now);
-    setResults(synced);
-    log(`🎉 Sync complete — ${synced.length}/${COMMUNITIES.length} communities updated`, T.gold);
+    // Show Bayut results if available, otherwise show benchmark results
+    const displayResults = synced.length > 0
+      ? synced
+      : Object.entries(dubaiRestData).map(([name, d]) => ({
+          community: name, avgPpsf: d.avgPpsf, avgPrice: 0,
+          listings: 0, source: d.source, bmPpsf: d.avgPpsf, sourcesUsed: 1
+        }));
+    setResults(displayResults);
+    const totalUpdated = synced.length > 0 ? synced.length : Object.keys(dubaiRestData).length;
+    const dataSource = synced.length > 0 ? "live Bayut data" : "Q1 2026 benchmarks";
+    log(`🎉 Sync complete — ${totalUpdated} communities updated via ${dataSource}`, T.gold);
     log(`Sources used: Bayut${Object.keys(dldData).length > 0 ? " + DLD" : ""} + ${Object.keys(dubaiRestData).length} community benchmarks`, T.textMuted);
     notify(`Live data synced — ${synced.length} communities · ${[Object.keys(dldData).length > 0 ? "DLD✓" : "", Object.keys(dubaiRestData).length > 0 ? "BM✓" : ""].filter(Boolean).join(" ")} `);
     setSyncing(false);
