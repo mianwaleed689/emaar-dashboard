@@ -11516,356 +11516,155 @@ function LaunchRadar({ db, T, notify }) {
   const [scanning, setScanning] = React.useState(false);
   const [launches, setLaunches] = React.useState([]);
   const [saved, setSaved] = React.useState([]);
-  const [log, setLog] = React.useState([]);
+  const [scanLog, setScanLog] = React.useState([]);
   const [lastScan, setLastScan] = React.useState(null);
-  const [filter, setFilter] = React.useState("All");
+  const [devFilter, setDevFilter] = React.useState("All");
+  const [tierFilter, setTierFilter] = React.useState("All");
   const [adding, setAdding] = React.useState(null);
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [selectedProject, setSelectedProject] = React.useState(null);
   const [modalForm, setModalForm] = React.useState({});
+  const [expandedProject, setExpandedProject] = React.useState(null);
+  const [scanStats, setScanStats] = React.useState(null);
 
   const ALL_DEVELOPERS = [
-    { id: "emaar",          name: "Emaar Properties",     shortName: "Emaar" },
-    { id: "damac",          name: "DAMAC Properties",     shortName: "DAMAC" },
-    { id: "sobha",          name: "Sobha Realty",         shortName: "Sobha" },
-    { id: "nakheel",        name: "Nakheel",              shortName: "Nakheel" },
-    { id: "meraas",         name: "Meraas",               shortName: "Meraas" },
-    { id: "binghatti",      name: "Binghatti Developers", shortName: "Binghatti" },
-    { id: "ellington",      name: "Ellington Properties", shortName: "Ellington" },
-    { id: "azizi",          name: "Azizi Developments",   shortName: "Azizi" },
-    { id: "danube",         name: "Danube Properties",    shortName: "Danube" },
-    { id: "mag",            name: "MAG Group",            shortName: "MAG" },
-    { id: "dubai_properties", name: "Dubai Properties",  shortName: "DP" },
-    { id: "aldar",          name: "Aldar Properties",     shortName: "Aldar" },
-    { id: "nshama",         name: "Nshama",               shortName: "Nshama" },
-    { id: "imtiaz",         name: "Imtiaz Developments",  shortName: "Imtiaz" },
-    { id: "reportage",      name: "Reportage Properties", shortName: "Reportage" },
-    { id: "object1",        name: "Object 1",             shortName: "Object1" },
-    { id: "samana",         name: "Samana Developers",    shortName: "Samana" },
-    { id: "pantheon",       name: "Pantheon Development", shortName: "Pantheon" },
-    { id: "taraf",          name: "Taraf",                shortName: "Taraf" },
-    { id: "other",          name: "Other Developer",      shortName: "Other" },
+    { id: "emaar", name: "Emaar Properties", shortName: "Emaar" },
+    { id: "damac", name: "DAMAC Properties", shortName: "DAMAC" },
+    { id: "sobha", name: "Sobha Realty", shortName: "Sobha" },
+    { id: "nakheel", name: "Nakheel", shortName: "Nakheel" },
+    { id: "meraas", name: "Meraas", shortName: "Meraas" },
+    { id: "binghatti", name: "Binghatti Developers", shortName: "Binghatti" },
+    { id: "ellington", name: "Ellington Properties", shortName: "Ellington" },
+    { id: "azizi", name: "Azizi Developments", shortName: "Azizi" },
+    { id: "danube", name: "Danube Properties", shortName: "Danube" },
+    { id: "mag", name: "MAG Group", shortName: "MAG" },
+    { id: "dubai_properties", name: "Dubai Properties", shortName: "DP" },
+    { id: "aldar", name: "Aldar Properties", shortName: "Aldar" },
+    { id: "nshama", name: "Nshama", shortName: "Nshama" },
+    { id: "imtiaz", name: "Imtiaz Developments", shortName: "Imtiaz" },
+    { id: "reportage", name: "Reportage Properties", shortName: "Reportage" },
+    { id: "samana", name: "Samana Developers", shortName: "Samana" },
+    { id: "taraf", name: "Taraf", shortName: "Taraf" },
+    { id: "other", name: "Other Developer", shortName: "Other" },
   ];
 
-  const addLog = (msg, color) => setLog(prev => [...prev, { msg, color, ts: new Date().toLocaleTimeString("en-AE") }]);
+  const addLog = (msg, type = "info") => setScanLog(prev => [...prev, { msg, type, ts: new Date().toLocaleTimeString("en-AE") }]);
 
-  // Load previously saved launches from Firestore
   React.useEffect(() => {
-    const load = async () => {
-      try {
-          const snap = await getDocs(collection(db, "radarLaunches"));
-        const existing = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        setSaved(existing.map(d => d.projectName));
-      } catch {}
-    };
-    load();
+    getDocs(collection(db, "radarLaunches")).then(snap => {
+      setSaved(snap.docs.map(d => d.data().projectName));
+    }).catch(() => {});
   }, []);
 
-  // ── SOURCE 1: Bayut New Projects (via RapidAPI) ───────────────────────────
-  const scanBayut = async () => {
-    addLog("🏠 Scanning Bayut new projects...", T.gold);
-    const results = [];
-    try {
-      const proxies = [
-        (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-        (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-      ];
-      const BAYUT_KEY = "420de140camsh35f3baf70380d11p1e0c92jsn00005ba30591";
-      const target = `https://unofficial-bayut-api.p.rapidapi.com/search?purpose=for-sale&categoryExternalID=4&lang=en&sort=date-desc&page=0&hitsPerPage=25&completionStatus=off-plan`;
-
-      let data = null;
-      for (const proxy of proxies) {
-        try {
-          const res = await fetch(proxy(target), {
-            headers: { "x-rapidapi-key": BAYUT_KEY, "x-rapidapi-host": "unofficial-bayut-api.p.rapidapi.com" },
-            signal: AbortSignal.timeout(8000)
-          });
-          if (res.ok) { data = await res.json(); break; }
-        } catch { continue; }
-      }
-
-      const hits = data?.hits || [];
-      const seenProjects = new Set();
-      hits.forEach(h => {
-        const project = h.project?.name || h.title;
-        if (!project || seenProjects.has(project)) return;
-        seenProjects.add(project);
-        const community = h.location?.[h.location.length - 2]?.name || "—";
-        const developer = h.agency?.name || h.developer?.name || "—";
-        const price = h.price || 0;
-        const date = h.date || h.addedOn;
-        results.push({
-          projectName: project,
-          developer,
-          community,
-          priceFrom: price,
-          source: "Bayut.com",
-          sourceUrl: `https://www.bayut.com${h.slug || ""}`,
-          addedDate: date ? new Date(date * 1000).toLocaleDateString("en-AE") : "Recent",
-          type: h.category?.nameSingular || "Apartment",
-          status: "Off-Plan",
-        });
-      });
-      addLog(`✅ Bayut: Found ${results.length} new off-plan listings`, T.green);
-    } catch (err) {
-      addLog(`⚠️ Bayut scan failed: ${err.message}`, T.textMuted);
-    }
-    return results;
-  };
-
-  // ── SOURCE 2: Dubai Pulse DLD Transactions — new projects (first transactions = new launch) ──
-  const scanDLD = async () => {
-    addLog("🏛️ Scanning DLD for newly registered projects...", T.blue);
-    const results = [];
-    try {
-      const csvUrl = "https://www.dubaipulse.gov.ae/dataset/3b25a6f5-9077-49d7-8a1e-bc6d5dea88fd/resource/a37511b0-ea36-485d-bccd-2d6cb24507e7/download/transactions.csv";
-      const proxies = [
-        (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-        (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-      ];
-      let text = null;
-      for (const proxy of proxies) {
-        try {
-          const res = await fetch(proxy(csvUrl), { signal: AbortSignal.timeout(10000) });
-          if (res.ok) { text = await res.text(); break; }
-        } catch { continue; }
-      }
-      if (!text) { addLog("⚠️ DLD CSV unavailable", T.textMuted); return results; }
-
-      const lines = text.split("\n").slice(1, 3000);
-      const projectCount = {};
-      const projectData = {};
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      lines.forEach(line => {
-        const cols = line.split(",");
-        if (cols.length < 12) return;
-        const transDate = (cols[0] || "").replace(/"/g, "").trim();
-        const projectName = (cols[5] || "").replace(/"/g, "").trim();
-        const area = (cols[3] || "").replace(/"/g, "").trim();
-        const price = parseFloat((cols[7] || "0").replace(/"/g, ""));
-        if (!projectName || projectName.length < 3) return;
-
-        const parsed = new Date(transDate);
-        if (isNaN(parsed) || parsed < thirtyDaysAgo) return;
-
-        if (!projectCount[projectName]) {
-          projectCount[projectName] = 0;
-          projectData[projectName] = { area, price, date: transDate };
-        }
-        projectCount[projectName]++;
-      });
-
-      // Projects with very few transactions in last 30 days = likely new launch
-      Object.entries(projectCount).forEach(([name, count]) => {
-        if (count >= 1 && count <= 15) {
-          const d = projectData[name];
-          results.push({
-            projectName: name,
-            developer: "—",
-            community: d.area,
-            priceFrom: d.price,
-            source: "Dubai Pulse / DLD",
-            sourceUrl: "https://www.dubaipulse.gov.ae",
-            addedDate: d.date,
-            type: "Mixed",
-            status: "New Launch",
-            transactionCount: count,
-          });
-        }
-      });
-      addLog(`✅ DLD: Found ${results.length} recently registered projects`, T.green);
-    } catch (err) {
-      addLog(`⚠️ DLD scan failed: ${err.message}`, T.textMuted);
-    }
-    return results;
-  };
-
-  // ── SOURCE 3: Curated static — known launches from developer websites Q1 2026 ──
   const getKnownLaunches = () => {
-    addLog("📋 Loading verified 2025-2026 project database...", T.teal);
-    // All data verified from Bayut.com, developer websites, and PropertyFinder
-    // Sources linked per project for admin verification
-    const known = [
-
-      // ══ EMAAR ══════════════════════════════════════════════════════════════
-      { projectName: "Vida Residences Hillside", developer: "Emaar Properties", developerId: "emaar", community: "Dubai Hills Estate", district: "DHE", priceFrom: 1800000, beds: "1-3", type: "Apartments", handover: "Q2 2029", payment: "80/20", construction: 15, branded: true, brand: "Vida Hotels", tier: "Premium", addedDate: "Q2 2025", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-hills-estate/", verifiedUrl: "https://properties.emaar.com/en/new-off-plan-properties-in-dubai-hills-estate/" },
-      { projectName: "Hillsedge", developer: "Emaar Properties", developerId: "emaar", community: "Dubai Hills Estate", district: "DHE", priceFrom: 1840000, beds: "1-3", type: "Apartments", handover: "Q1 2029", payment: "80/20", construction: 10, branded: false, brand: "—", tier: "Premium", addedDate: "Q2 2025", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-hills-estate/", verifiedUrl: "https://www.bayut.com/new-projects/dubai/dubai-hills-estate/" },
-      { projectName: "Parkwood", developer: "Emaar Properties", developerId: "emaar", community: "Dubai Hills Estate", district: "DHE", priceFrom: 1750000, beds: "1-3", type: "Apartments", handover: "Q1 2029", payment: "80/20", construction: 10, branded: false, brand: "—", tier: "Premium", addedDate: "Q2 2025", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-hills-estate/" },
-      { projectName: "Address Villas Hillcrest", developer: "Emaar Properties", developerId: "emaar", community: "Dubai Hills Estate", district: "DHE", priceFrom: 21700000, beds: "4-6", type: "Villas", handover: "Q2 2026", payment: "80/20", construction: 85, branded: true, brand: "Address Hotels", tier: "Ultra-Luxury", addedDate: "Q3 2024", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-hills-estate/" },
-      { projectName: "Raya", developer: "Emaar Properties", developerId: "emaar", community: "Arabian Ranches III", district: "AR3", priceFrom: 1950000, beds: "3-4", type: "Townhouses", handover: "Q2 2026", payment: "80/20", construction: 90, branded: false, brand: "—", tier: "Mid-Premium", addedDate: "Q2 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/arabian-ranches-3/" },
-      { projectName: "Anya 2", developer: "Emaar Properties", developerId: "emaar", community: "Arabian Ranches III", district: "AR3", priceFrom: 2260000, beds: "3-4", type: "Townhouses", handover: "Q4 2026", payment: "90/10", construction: 70, branded: false, brand: "—", tier: "Mid-Premium", addedDate: "Q3 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/arabian-ranches-3/" },
-      { projectName: "Farm Gardens", developer: "Emaar Properties", developerId: "emaar", community: "The Valley", district: "VAL", priceFrom: 5100000, beds: "4-5", type: "Villas", handover: "Q3 2026", payment: "80/20", construction: 75, branded: false, brand: "—", tier: "Premium", addedDate: "Q2 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/the-valley-by-emaar/" },
-      { projectName: "Velora 2", developer: "Emaar Properties", developerId: "emaar", community: "The Valley", district: "VAL", priceFrom: 2930000, beds: "3-4", type: "Townhouses", handover: "Q3 2028", payment: "80/20", construction: 20, branded: false, brand: "—", tier: "Mid-Premium", addedDate: "Q4 2024", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/the-valley-by-emaar/" },
-      { projectName: "Palace Beach Residence", developer: "Emaar Properties", developerId: "emaar", community: "Emaar Beachfront", district: "EBF", priceFrom: 2970000, beds: "1-4", type: "Apartments", handover: "Q4 2026", payment: "80/20", construction: 80, branded: true, brand: "Palace Hotels", tier: "Premium", addedDate: "Q1 2024", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-harbour/emaar-beachfront/" },
-      { projectName: "Beachgate by Address", developer: "Emaar Properties", developerId: "emaar", community: "Emaar Beachfront", district: "EBF", priceFrom: 2700000, beds: "1-4", type: "Apts & TH", handover: "Q4 2026", payment: "80/20", construction: 80, branded: true, brand: "Address Hotels", tier: "Premium", addedDate: "Q1 2024", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-harbour/emaar-beachfront/" },
-      { projectName: "Address The Bay", developer: "Emaar Properties", developerId: "emaar", community: "Emaar Beachfront", district: "EBF", priceFrom: 2950000, beds: "1-4", type: "Apartments", handover: "Q1 2028", payment: "90/10", construction: 45, branded: true, brand: "Address Hotels", tier: "Premium", addedDate: "Q3 2024", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-harbour/emaar-beachfront/" },
-      { projectName: "Golf Meadows", developer: "Emaar Properties", developerId: "emaar", community: "Dubai South", district: "DSO", priceFrom: 1100000, beds: "1-3", type: "Apts & TH", handover: "Q3 2029", payment: "80/20", construction: 5, branded: false, brand: "—", tier: "Mid-Market", addedDate: "Q3 2025", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-south/emaar-south/" },
-      { projectName: "Golf Lane", developer: "Emaar Properties", developerId: "emaar", community: "Dubai South", district: "DSO", priceFrom: 4480000, beds: "4-5", type: "Villas", handover: "Q4 2028", payment: "80/20", construction: 15, branded: false, brand: "—", tier: "Premium", addedDate: "Q2 2024", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-south/emaar-south/" },
-
-      // ══ DAMAC ══════════════════════════════════════════════════════════════
-      { projectName: "ELO 3", developer: "DAMAC Properties", developerId: "damac", community: "DAMAC Hills 2", district: "DH2", priceFrom: 580000, beds: "1-2", type: "Apartments", handover: "Q2 2027", payment: "70/30", construction: 25, branded: false, brand: "—", tier: "Mid-Market", addedDate: "Q1 2026", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/damac-properties/", verifiedUrl: "https://www.damacproperties.com" },
-      { projectName: "Utopia", developer: "DAMAC Properties", developerId: "damac", community: "DAMAC Hills", district: "DAH", priceFrom: 18100000, beds: "5-7", type: "Villas", handover: "Q4 2026", payment: "60/40", construction: 70, branded: false, brand: "—", tier: "Ultra-Luxury", addedDate: "Q4 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/damac-hills/", verifiedUrl: "https://www.damacproperties.com" },
-      { projectName: "Golf Greens", developer: "DAMAC Properties", developerId: "damac", community: "DAMAC Hills", district: "DAH", priceFrom: 963000, beds: "1-3", type: "Apts & TH", handover: "Q1 2027", payment: "80/20", construction: 50, branded: false, brand: "—", tier: "Mid-Market", addedDate: "Q4 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/damac-hills/" },
-      { projectName: "Safa One", developer: "DAMAC Properties", developerId: "damac", community: "Business Bay", district: "BB", priceFrom: 1620000, beds: "Studio-3", type: "Apartments", handover: "Q1 2026", payment: "90/10", construction: 97, branded: true, brand: "de GRISOGONO", tier: "Ultra-Luxury", addedDate: "Q1 2022", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/damac-properties/" },
-      { projectName: "Chic Tower", developer: "DAMAC Properties", developerId: "damac", community: "Business Bay", district: "BB", priceFrom: 823000, beds: "Studio-2", type: "Apartments", handover: "Q2 2026", payment: "80/20", construction: 85, branded: false, brand: "—", tier: "Mid-Market", addedDate: "Q2 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/damac-properties/" },
-      { projectName: "Canal Heights 2", developer: "DAMAC Properties", developerId: "damac", community: "Business Bay", district: "BB", priceFrom: 1230000, beds: "1-3", type: "Apartments", handover: "Q1 2027", payment: "60/40", construction: 40, branded: false, brand: "—", tier: "Mid-Premium", addedDate: "Q3 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/damac-properties/" },
-      { projectName: "DAMAC Bay by Cavalli", developer: "DAMAC Properties", developerId: "damac", community: "Dubai Harbour", district: "DH", priceFrom: 2900000, beds: "1-4", type: "Apartments", handover: "Q3 2027", payment: "60/40", construction: 35, branded: true, brand: "Roberto Cavalli", tier: "Ultra-Luxury", addedDate: "Q2 2022", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/damac-properties/" },
-      { projectName: "Harbour Lights", developer: "DAMAC Properties", developerId: "damac", community: "Dubai Maritime City", district: "DMC", priceFrom: 1540000, beds: "1-3", type: "Apartments", handover: "Q2 2027", payment: "80/20", construction: 35, branded: false, brand: "—", tier: "Mid-Premium", addedDate: "Q1 2024", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/damac-properties/" },
-
-      // ══ SOBHA ══════════════════════════════════════════════════════════════
-      { projectName: "Sobha One Tower A-E", developer: "Sobha Realty", developerId: "sobha", community: "Sobha Hartland", district: "SH", priceFrom: 1100000, beds: "1-3", type: "Apartments", handover: "Q4 2026", payment: "60/40", construction: 75, branded: false, brand: "—", tier: "Premium", addedDate: "Q2 2022", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/sobha-hartland/", verifiedUrl: "https://www.sobharealty.com" },
-      { projectName: "Sobha Elwood", developer: "Sobha Realty", developerId: "sobha", community: "Dubailand", district: "DL", priceFrom: 1600000, beds: "3-5", type: "Villas", handover: "Q4 2027", payment: "60/40", construction: 20, branded: false, brand: "—", tier: "Premium", addedDate: "Q1 2026", source: "sobharealty.com", sourceUrl: "https://www.sobharealty.com", verifiedUrl: "https://www.sobharealty.com" },
-      { projectName: "Bayside Marina Residences", developer: "Sobha Realty", developerId: "sobha", community: "Dubai Maritime City", district: "DMC", priceFrom: 1230000, beds: "1-3", type: "Apartments", handover: "Q1 2029", payment: "60/40", construction: 10, branded: false, brand: "—", tier: "Premium", addedDate: "Q3 2025", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/uae/" },
-      { projectName: "Sobha Estates Villas", developer: "Sobha Realty", developerId: "sobha", community: "Sobha Hartland 2", district: "SH2", priceFrom: 22000000, beds: "5-6", type: "Villas", handover: "Q4 2026", payment: "60/40", construction: 70, branded: false, brand: "—", tier: "Ultra-Luxury", addedDate: "Q1 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/sobha-hartland/" },
-
-      // ══ NAKHEEL ════════════════════════════════════════════════════════════
-      { projectName: "Palm Jebel Ali Villas Phase 2", developer: "Nakheel", developerId: "nakheel", community: "Palm Jebel Ali", district: "PJA", priceFrom: 8500000, beds: "4-7", type: "Villas", handover: "Q4 2027", payment: "80/20", construction: 30, branded: false, brand: "—", tier: "Ultra-Luxury", addedDate: "Q3 2025", source: "nakheel.com", sourceUrl: "https://www.nakheel.com", verifiedUrl: "https://www.nakheel.com/en/developments/palm-jebel-ali" },
-      { projectName: "Dubai Islands Tower", developer: "Nakheel", developerId: "nakheel", community: "Dubai Islands", district: "DIS", priceFrom: 1800000, beds: "1-4", type: "Apartments", handover: "Q2 2028", payment: "70/30", construction: 20, branded: false, brand: "—", tier: "Premium", addedDate: "Q4 2024", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/uae/" },
-      { projectName: "Tilal Al Ghaf Harmony", developer: "Majid Al Futtaim / Nakheel", developerId: "nakheel", community: "Tilal Al Ghaf", district: "TAG", priceFrom: 3500000, beds: "3-5", type: "Villas", handover: "Q2 2027", payment: "75/25", construction: 40, branded: false, brand: "—", tier: "Premium", addedDate: "Q4 2024", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/tilal-al-ghaf/" },
-
-      // ══ MERAAS ═════════════════════════════════════════════════════════════
-      { projectName: "W Residences Dubai Harbour", developer: "Meraas", developerId: "meraas", community: "Dubai Harbour", district: "DH", priceFrom: 3200000, beds: "1-4", type: "Apartments", handover: "Q4 2026", payment: "60/40", construction: 70, branded: true, brand: "W Hotels", tier: "Ultra-Luxury", addedDate: "Q2 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/meraas/" },
-      { projectName: "Madinat Jumeirah Living Phase 4", developer: "Meraas", developerId: "meraas", community: "Jumeirah", district: "JUM", priceFrom: 1460000, beds: "1-3", type: "Apartments", handover: "Q4 2026", payment: "70/30", construction: 65, branded: false, brand: "—", tier: "Premium", addedDate: "Q1 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/meraas/" },
-
-      // ══ BINGHATTI ══════════════════════════════════════════════════════════
-      { projectName: "Mercedes-Benz Places", developer: "Binghatti Developers", developerId: "binghatti", community: "Downtown Dubai", district: "DT", priceFrom: 8800000, beds: "1-4", type: "Apartments", handover: "Q4 2026", payment: "70/30", construction: 70, branded: true, brand: "Mercedes-Benz", tier: "Ultra-Luxury", addedDate: "Q2 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/binghatti-developers/", verifiedUrl: "https://binghatti.com" },
-      { projectName: "Burj Binghatti Jacob & Co", developer: "Binghatti Developers", developerId: "binghatti", community: "Business Bay", district: "BB", priceFrom: 8200000, beds: "1-4", type: "Apartments", handover: "Q2 2026", payment: "80/20", construction: 90, branded: true, brand: "Jacob & Co", tier: "Ultra-Luxury", addedDate: "Q1 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/binghatti-developers/" },
-      { projectName: "One by Binghatti", developer: "Binghatti Developers", developerId: "binghatti", community: "Business Bay", district: "BB", priceFrom: 1700000, beds: "1-3", type: "Apartments", handover: "Q4 2026", payment: "70/30", construction: 60, branded: false, brand: "—", tier: "Mid-Premium", addedDate: "Q3 2024", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/binghatti-developers/" },
-      { projectName: "Binghatti Hills", developer: "Binghatti Developers", developerId: "binghatti", community: "Dubai Science Park", district: "DSP", priceFrom: 778000, beds: "Studio-2", type: "Apartments", handover: "Q2 2027", payment: "70/30", construction: 30, branded: false, brand: "—", tier: "Mid-Market", addedDate: "Q4 2024", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/binghatti-developers/" },
-      { projectName: "Binghatti Elite", developer: "Binghatti Developers", developerId: "binghatti", community: "Dubai Production City", district: "IMPZ", priceFrom: 600000, beds: "Studio-2", type: "Apartments", handover: "Q2 2026", payment: "70/30", construction: 85, branded: false, brand: "—", tier: "Mid-Market", addedDate: "Q2 2025", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/binghatti-developers/" },
-      { projectName: "Binghatti Skyhall", developer: "Binghatti Developers", developerId: "binghatti", community: "Business Bay", district: "BB", priceFrom: 985000, beds: "Studio-1", type: "Apartments", handover: "Q4 2027", payment: "70/30", construction: 10, branded: false, brand: "—", tier: "Mid-Market", addedDate: "Q2 2025", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/binghatti-developers/" },
-
-      // ══ ELLINGTON ══════════════════════════════════════════════════════════
-      { projectName: "Ocean House", developer: "Ellington Properties", developerId: "ellington", community: "Palm Jumeirah", district: "PJ", priceFrom: 8370000, beds: "2-4", type: "Apartments", handover: "Q2 2026", payment: "70/30", construction: 85, branded: false, brand: "—", tier: "Ultra-Luxury", addedDate: "Q3 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/", verifiedUrl: "https://ellingtonproperties.com" },
-      { projectName: "Art Bay West", developer: "Ellington Properties", developerId: "ellington", community: "Al Jaddaf", district: "JAD", priceFrom: 1980000, beds: "1-4", type: "Apartments", handover: "Q3 2026", payment: "70/30", construction: 60, branded: false, brand: "—", tier: "Premium", addedDate: "Q4 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/" },
-      { projectName: "Highgrove by Ellington", developer: "Ellington Properties", developerId: "ellington", community: "Mohammed Bin Rashid City", district: "MBR", priceFrom: 1700000, beds: "1-4", type: "Apts & Villas", handover: "Q4 2027", payment: "70/30", construction: 20, branded: false, brand: "—", tier: "Premium", addedDate: "Q1 2025", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/" },
-      { projectName: "Lakeshore", developer: "Ellington Properties", developerId: "ellington", community: "Mohammed Bin Rashid City", district: "MBR", priceFrom: 12900000, beds: "4-6", type: "Villas", handover: "Q4 2026", payment: "70/30", construction: 55, branded: false, brand: "—", tier: "Ultra-Luxury", addedDate: "Q3 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/" },
-      { projectName: "Hillmont Residences", developer: "Ellington Properties", developerId: "ellington", community: "Jumeirah Village Circle", district: "JVC", priceFrom: 1330000, beds: "1-3", type: "Apartments", handover: "Q4 2026", payment: "70/30", construction: 60, branded: false, brand: "—", tier: "Mid-Premium", addedDate: "Q4 2024", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/" },
-      { projectName: "Arbor View", developer: "Ellington Properties", developerId: "ellington", community: "Arjan", district: "ARJ", priceFrom: 800000, beds: "Studio-2", type: "Apartments", handover: "Q1 2026", payment: "70/30", construction: 97, branded: false, brand: "—", tier: "Mid-Market", addedDate: "Q2 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/" },
-
-      // ══ AZIZI ══════════════════════════════════════════════════════════════
-      { projectName: "Azizi Venice", developer: "Azizi Developments", developerId: "azizi", community: "Dubai South", district: "DS", priceFrom: 480000, beds: "Studio-3", type: "Apartments", handover: "Q1 2026", payment: "50/50", construction: 98, branded: false, brand: "—", tier: "Mid-Market", addedDate: "Q1 2022", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-south/", verifiedUrl: "https://www.azizidevelopments.com" },
-      { projectName: "Azizi Riviera Phase 4", developer: "Azizi Developments", developerId: "azizi", community: "Meydan", district: "MYD", priceFrom: 550000, beds: "Studio-3", type: "Apartments", handover: "Q3 2026", payment: "50/50", construction: 80, branded: false, brand: "—", tier: "Mid-Market", addedDate: "Q3 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/azizi-developments/" },
-
-      // ══ DANUBE ═════════════════════════════════════════════════════════════
-      { projectName: "Oceanz by Danube", developer: "Danube Properties", developerId: "danube", community: "Dubai Maritime City", district: "DMC", priceFrom: 1100000, beds: "Studio-3", type: "Apartments", handover: "Q1 2027", payment: "64/36", construction: 50, branded: false, brand: "—", tier: "Mid-Premium", addedDate: "Q4 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/uae/", verifiedUrl: "https://www.danubeproperties.ae" },
-
-      // ══ ALDAR ══════════════════════════════════════════════════════════════
-      { projectName: "Saadiyat Lagoons", developer: "Aldar Properties", developerId: "aldar", community: "Saadiyat Island", district: "SAD", priceFrom: 6400000, beds: "4-6", type: "Villas", handover: "Q2 2026", payment: "40/60", construction: 85, branded: false, brand: "—", tier: "Ultra-Luxury", addedDate: "Q2 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/uae/", verifiedUrl: "https://www.aldar.com" },
-      { projectName: "Athlon by Aldar", developer: "Aldar Properties", developerId: "aldar", community: "Dubailand", district: "DL", priceFrom: 2800000, beds: "3-5", type: "Villas", handover: "Q3 2028", payment: "60/40", construction: 20, branded: false, brand: "—", tier: "Premium", addedDate: "Q4 2024", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/uae/" },
-      { projectName: "Manarat Living", developer: "Aldar Properties", developerId: "aldar", community: "Saadiyat Island", district: "SAD", priceFrom: 635000, beds: "Studio-2", type: "Apartments", handover: "Q1 2026", payment: "40/60", construction: 95, branded: false, brand: "—", tier: "Mid-Market", addedDate: "Q2 2023", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/uae/" },
-
-      // ══ TARAF ══════════════════════════════════════════════════════════════
-      { projectName: "Karl Lagerfeld Villas", developer: "Taraf", developerId: "taraf", community: "Meydan", district: "MYD", priceFrom: 15000000, beds: "5-7", type: "Villas", handover: "Q2 2027", payment: "60/40", construction: 25, branded: true, brand: "Karl Lagerfeld", tier: "Ultra-Luxury", addedDate: "Q3 2024", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/" },
-
-      // ══ DUBAI SOUTH / GOVT ═════════════════════════════════════════════════
-      { projectName: "South Bay 5", developer: "Dubai South", developerId: "dubai_properties", community: "Dubai South", district: "DS", priceFrom: 3200000, beds: "3-5", type: "Apts & Villas", handover: "Q4 2026", payment: "60/40", construction: 75, branded: false, brand: "—", tier: "Mid-Premium", addedDate: "Q2 2024", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-south/" },
-
+    return [
+      // ── EMAAR ──
+      { projectName: "Vida Residences Hillside", developer: "Emaar Properties", developerId: "emaar", community: "Dubai Hills Estate", district: "DHE", priceFrom: 1800000, beds: "1-3", type: "Apartments", handover: "Q2 2029", payment: "80/20", construction: 15, branded: true, brand: "Vida Hotels", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-hills-estate/", verifiedUrl: "https://properties.emaar.com" },
+      { projectName: "Hillsedge", developer: "Emaar Properties", developerId: "emaar", community: "Dubai Hills Estate", district: "DHE", priceFrom: 1840000, beds: "1-3", type: "Apartments", handover: "Q1 2029", payment: "80/20", construction: 10, branded: false, brand: "—", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-hills-estate/", verifiedUrl: "https://properties.emaar.com" },
+      { projectName: "Address Villas Hillcrest", developer: "Emaar Properties", developerId: "emaar", community: "Dubai Hills Estate", district: "DHE", priceFrom: 21700000, beds: "4-6", type: "Villas", handover: "Q2 2026", payment: "80/20", construction: 85, branded: true, brand: "Address Hotels", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-hills-estate/", verifiedUrl: "https://properties.emaar.com" },
+      { projectName: "Raya", developer: "Emaar Properties", developerId: "emaar", community: "Arabian Ranches III", district: "AR3", priceFrom: 1950000, beds: "3-4", type: "Townhouses", handover: "Q2 2026", payment: "80/20", construction: 90, branded: false, brand: "—", tier: "Mid-Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/arabian-ranches-3/", verifiedUrl: "https://properties.emaar.com" },
+      { projectName: "Farm Gardens", developer: "Emaar Properties", developerId: "emaar", community: "The Valley", district: "VAL", priceFrom: 5100000, beds: "4-5", type: "Villas", handover: "Q3 2026", payment: "80/20", construction: 75, branded: false, brand: "—", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/the-valley-by-emaar/", verifiedUrl: "https://properties.emaar.com" },
+      { projectName: "Palace Beach Residence", developer: "Emaar Properties", developerId: "emaar", community: "Emaar Beachfront", district: "EBF", priceFrom: 2970000, beds: "1-4", type: "Apartments", handover: "Q4 2026", payment: "80/20", construction: 80, branded: true, brand: "Palace Hotels", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-harbour/emaar-beachfront/", verifiedUrl: "https://properties.emaar.com" },
+      { projectName: "Beachgate by Address", developer: "Emaar Properties", developerId: "emaar", community: "Emaar Beachfront", district: "EBF", priceFrom: 2700000, beds: "1-4", type: "Apts & TH", handover: "Q4 2026", payment: "80/20", construction: 80, branded: true, brand: "Address Hotels", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-harbour/emaar-beachfront/", verifiedUrl: "https://properties.emaar.com" },
+      { projectName: "Golf Meadows", developer: "Emaar Properties", developerId: "emaar", community: "Dubai South", district: "DS", priceFrom: 1100000, beds: "1-3", type: "Apts & TH", handover: "Q3 2029", payment: "80/20", construction: 5, branded: false, brand: "—", tier: "Mid-Market", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-south/emaar-south/", verifiedUrl: "https://properties.emaar.com" },
+      // ── DAMAC ──
+      { projectName: "ELO 3", developer: "DAMAC Properties", developerId: "damac", community: "DAMAC Hills 2", district: "DH2", priceFrom: 580000, beds: "1-2", type: "Apartments", handover: "Q2 2027", payment: "70/30", construction: 25, branded: false, brand: "—", tier: "Mid-Market", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/damac-properties/", verifiedUrl: "https://www.damacproperties.com" },
+      { projectName: "Utopia", developer: "DAMAC Properties", developerId: "damac", community: "DAMAC Hills", district: "DAH", priceFrom: 18100000, beds: "5-7", type: "Villas", handover: "Q4 2026", payment: "60/40", construction: 70, branded: false, brand: "—", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/damac-hills/", verifiedUrl: "https://www.damacproperties.com" },
+      { projectName: "Safa One", developer: "DAMAC Properties", developerId: "damac", community: "Business Bay", district: "BB", priceFrom: 1620000, beds: "Studio-3", type: "Apartments", handover: "Q1 2026", payment: "90/10", construction: 97, branded: true, brand: "de GRISOGONO", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/damac-properties/", verifiedUrl: "https://www.damacproperties.com" },
+      { projectName: "Chic Tower", developer: "DAMAC Properties", developerId: "damac", community: "Business Bay", district: "BB", priceFrom: 823000, beds: "Studio-2", type: "Apartments", handover: "Q2 2026", payment: "80/20", construction: 85, branded: false, brand: "—", tier: "Mid-Market", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/damac-properties/", verifiedUrl: "https://www.damacproperties.com" },
+      { projectName: "DAMAC Bay by Cavalli", developer: "DAMAC Properties", developerId: "damac", community: "Dubai Harbour", district: "DH", priceFrom: 2900000, beds: "1-4", type: "Apartments", handover: "Q3 2027", payment: "60/40", construction: 35, branded: true, brand: "Roberto Cavalli", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/damac-properties/", verifiedUrl: "https://www.damacproperties.com" },
+      // ── SOBHA ──
+      { projectName: "Sobha One Towers", developer: "Sobha Realty", developerId: "sobha", community: "Sobha Hartland", district: "SH", priceFrom: 1100000, beds: "1-3", type: "Apartments", handover: "Q4 2026", payment: "60/40", construction: 75, branded: false, brand: "—", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/sobha-hartland/", verifiedUrl: "https://www.sobharealty.com" },
+      { projectName: "Sobha Elwood", developer: "Sobha Realty", developerId: "sobha", community: "Dubailand", district: "DL", priceFrom: 1600000, beds: "3-5", type: "Villas", handover: "Q4 2027", payment: "60/40", construction: 20, branded: false, brand: "—", tier: "Premium", source: "sobharealty.com", sourceUrl: "https://www.sobharealty.com", verifiedUrl: "https://www.sobharealty.com" },
+      { projectName: "Sobha Estates Villas", developer: "Sobha Realty", developerId: "sobha", community: "Sobha Hartland 2", district: "SH2", priceFrom: 22000000, beds: "5-6", type: "Villas", handover: "Q4 2026", payment: "60/40", construction: 70, branded: false, brand: "—", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/sobha-hartland/", verifiedUrl: "https://www.sobharealty.com" },
+      // ── NAKHEEL ──
+      { projectName: "Palm Jebel Ali Villas Phase 2", developer: "Nakheel", developerId: "nakheel", community: "Palm Jebel Ali", district: "PJA", priceFrom: 8500000, beds: "4-7", type: "Villas", handover: "Q4 2027", payment: "80/20", construction: 30, branded: false, brand: "—", tier: "Ultra-Luxury", source: "nakheel.com", sourceUrl: "https://www.nakheel.com", verifiedUrl: "https://www.nakheel.com" },
+      // ── BINGHATTI ──
+      { projectName: "Mercedes-Benz Places", developer: "Binghatti Developers", developerId: "binghatti", community: "Downtown Dubai", district: "DT", priceFrom: 8800000, beds: "1-4", type: "Apartments", handover: "Q4 2026", payment: "70/30", construction: 70, branded: true, brand: "Mercedes-Benz", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/binghatti-developers/", verifiedUrl: "https://binghatti.com" },
+      { projectName: "Burj Binghatti Jacob & Co", developer: "Binghatti Developers", developerId: "binghatti", community: "Business Bay", district: "BB", priceFrom: 8200000, beds: "1-4", type: "Apartments", handover: "Q2 2026", payment: "80/20", construction: 90, branded: true, brand: "Jacob & Co", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/binghatti-developers/", verifiedUrl: "https://binghatti.com" },
+      { projectName: "One by Binghatti", developer: "Binghatti Developers", developerId: "binghatti", community: "Business Bay", district: "BB", priceFrom: 1700000, beds: "1-3", type: "Apartments", handover: "Q4 2026", payment: "70/30", construction: 60, branded: false, brand: "—", tier: "Mid-Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/binghatti-developers/", verifiedUrl: "https://binghatti.com" },
+      { projectName: "Binghatti Elite", developer: "Binghatti Developers", developerId: "binghatti", community: "Dubai Production City", district: "IMPZ", priceFrom: 600000, beds: "Studio-2", type: "Apartments", handover: "Q2 2026", payment: "70/30", construction: 85, branded: false, brand: "—", tier: "Mid-Market", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/binghatti-developers/", verifiedUrl: "https://binghatti.com" },
+      // ── ELLINGTON ──
+      { projectName: "Ocean House", developer: "Ellington Properties", developerId: "ellington", community: "Palm Jumeirah", district: "PJ", priceFrom: 8370000, beds: "2-4", type: "Apartments", handover: "Q2 2026", payment: "70/30", construction: 85, branded: false, brand: "—", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/", verifiedUrl: "https://ellingtonproperties.com" },
+      { projectName: "Art Bay West", developer: "Ellington Properties", developerId: "ellington", community: "Al Jaddaf", district: "JAD", priceFrom: 1980000, beds: "1-4", type: "Apartments", handover: "Q3 2026", payment: "70/30", construction: 60, branded: false, brand: "—", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/", verifiedUrl: "https://ellingtonproperties.com" },
+      { projectName: "Highgrove by Ellington", developer: "Ellington Properties", developerId: "ellington", community: "Mohammed Bin Rashid City", district: "MBR", priceFrom: 1700000, beds: "1-4", type: "Apts & Villas", handover: "Q4 2027", payment: "70/30", construction: 20, branded: false, brand: "—", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/", verifiedUrl: "https://ellingtonproperties.com" },
+      { projectName: "Hillmont Residences", developer: "Ellington Properties", developerId: "ellington", community: "Jumeirah Village Circle", district: "JVC", priceFrom: 1330000, beds: "1-3", type: "Apartments", handover: "Q4 2026", payment: "70/30", construction: 60, branded: false, brand: "—", tier: "Mid-Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/developers/ellington-properties/", verifiedUrl: "https://ellingtonproperties.com" },
+      // ── AZIZI ──
+      { projectName: "Azizi Venice", developer: "Azizi Developments", developerId: "azizi", community: "Dubai South", district: "DS", priceFrom: 480000, beds: "Studio-3", type: "Apartments", handover: "Q1 2026", payment: "50/50", construction: 98, branded: false, brand: "—", tier: "Mid-Market", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/dubai-south/", verifiedUrl: "https://www.azizidevelopments.com" },
+      // ── DANUBE ──
+      { projectName: "Oceanz by Danube", developer: "Danube Properties", developerId: "danube", community: "Dubai Maritime City", district: "DMC", priceFrom: 1100000, beds: "Studio-3", type: "Apartments", handover: "Q1 2027", payment: "64/36", construction: 50, branded: false, brand: "—", tier: "Mid-Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/uae/", verifiedUrl: "https://www.danubeproperties.ae" },
+      // ── ALDAR ──
+      { projectName: "Saadiyat Lagoons", developer: "Aldar Properties", developerId: "aldar", community: "Saadiyat Island", district: "SAD", priceFrom: 6400000, beds: "4-6", type: "Villas", handover: "Q2 2026", payment: "40/60", construction: 85, branded: false, brand: "—", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/uae/", verifiedUrl: "https://www.aldar.com" },
+      { projectName: "Athlon by Aldar", developer: "Aldar Properties", developerId: "aldar", community: "Dubailand", district: "DL", priceFrom: 2800000, beds: "3-5", type: "Villas", handover: "Q3 2028", payment: "60/40", construction: 20, branded: false, brand: "—", tier: "Premium", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/uae/", verifiedUrl: "https://www.aldar.com" },
+      // ── TARAF ──
+      { projectName: "Karl Lagerfeld Villas", developer: "Taraf", developerId: "taraf", community: "Meydan", district: "MYD", priceFrom: 15000000, beds: "5-7", type: "Villas", handover: "Q2 2027", payment: "60/40", construction: 25, branded: true, brand: "Karl Lagerfeld", tier: "Ultra-Luxury", source: "Bayut.com", sourceUrl: "https://www.bayut.com/new-projects/dubai/", verifiedUrl: "" },
     ];
-    addLog(`✅ Database loaded: ${known.length} verified projects from Bayut, developer sites, PropertyFinder`, T.green);
-    return known;
   };
 
   const runScan = async () => {
     setScanning(true);
-    setLog([]);
+    setScanLog([]);
     setLaunches([]);
-    addLog("🚀 Launch Radar scanning all sources via server...", T.gold);
-    addLog("Calling Vercel API → Bayut + PropertyFinder + Dubai Pulse DLD", T.textMuted);
+    setScanStats(null);
+    addLog("Scanning all sources via server...", "info");
 
     try {
-      // Call our own Vercel serverless function — no CORS, calls all APIs server-side
-      const BASE_URL = window.location.origin; // https://emaar-dashboard.vercel.app
-      addLog(`📡 Connecting to ${BASE_URL}/api/scan-launches...`, T.teal);
-
-      const res = await fetch(`${BASE_URL}/api/scan-launches`, {
-        signal: AbortSignal.timeout(60000), // 60 second timeout for all API calls
-      });
-
-      if (!res.ok) {
-        throw new Error(`API returned ${res.status}: ${res.statusText}`);
-      }
-
+      const BASE_URL = window.location.origin;
+      addLog(`Calling ${BASE_URL}/api/scan-launches`, "info");
+      const res = await fetch(`${BASE_URL}/api/scan-launches`, { signal: AbortSignal.timeout(60000) });
+      if (!res.ok) throw new Error(`API ${res.status}`);
       const data = await res.json();
+      if (!data.success) throw new Error(data.error || "API error");
 
-      if (!data.success) {
-        throw new Error(data.error || "API returned error");
-      }
+      const stats = { bayut: data.breakdown?.bayut || 0, pf: data.breakdown?.propertyfinder || 0, dld: data.breakdown?.dubaiPulse || 0 };
+      setScanStats(stats);
+      addLog(`Bayut: ${stats.bayut} · PropertyFinder: ${stats.pf} · DLD: ${stats.dld}`, "success");
+      if (data.errors?.length) data.errors.forEach(e => addLog(e, "warn"));
 
-      // Log breakdown
-      addLog(`✅ Bayut: ${data.breakdown?.bayut || 0} projects`, T.green);
-      addLog(`✅ PropertyFinder: ${data.breakdown?.propertyfinder || 0} projects`, T.green);
-      addLog(`✅ Dubai Pulse DLD: ${data.breakdown?.dubaiPulse || 0} newly registered`, T.green);
-      if (data.errors?.length > 0) {
-        data.errors.forEach(e => addLog(`⚠️ ${e}`, T.textMuted));
-      }
-
-      // Merge with known launches database (always fresh from server)
-      const knownResults = getKnownLaunches();
-      const all = [...data.projects, ...knownResults];
+      const known = getKnownLaunches();
+      const all = [...data.projects, ...known];
       const seen = new Set();
       const deduped = all.filter(p => {
-        const key = (p.projectName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-        if (!key || seen.has(key)) return false;
-        seen.add(key);
-        return true;
+        const k = (p.projectName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (!k || seen.has(k)) return false;
+        seen.add(k); return true;
       });
-
       setLaunches(deduped);
       setLastScan(new Date().toLocaleString("en-AE"));
-      addLog(`🎉 Scan complete — ${deduped.length} projects (${data.projects.length} live + ${knownResults.length} verified database)`, T.gold);
-      notify(`Launch Radar: ${deduped.length} projects found`);
-
+      addLog(`Done — ${deduped.length} total (${data.projects.length} live + ${known.length} database)`, "success");
+      notify(`Launch Radar: ${deduped.length} projects`);
     } catch (err) {
-      // If Vercel API not deployed yet, fall back to verified database only
-      addLog(`⚠️ Live scan unavailable: ${err.message}`, T.red);
-      addLog("📋 Loading verified project database as fallback...", T.textMuted);
+      addLog(`Live scan failed: ${err.message} — loading verified database`, "warn");
       const known = getKnownLaunches();
       setLaunches(known);
-      addLog(`✅ ${known.length} verified projects loaded from database`, T.green);
-      addLog("💡 Deploy api/scan-launches.js to Vercel to enable live scanning", T.gold);
-      notify(`${known.length} verified projects loaded (deploy API for live data)`);
+      setLastScan(new Date().toLocaleString("en-AE"));
+      addLog(`${known.length} verified projects loaded. Deploy api/scan-launches.js for live data.`, "info");
+      notify(`${known.length} verified projects (deploy API for live)`);
     }
-
     setScanning(false);
   };
 
-  // Add project to DXB Analytics platform
-  // Opens the Add to Platform modal
   const openAddModal = (project) => {
     const detectedDev = ALL_DEVELOPERS.find(d =>
-      project.developer && (
-        project.developer.toLowerCase().includes(d.shortName.toLowerCase()) ||
-        d.name.toLowerCase().includes(project.developer.toLowerCase())
-      )
+      project.developer && (project.developer.toLowerCase().includes(d.shortName.toLowerCase()) || d.name.toLowerCase().includes(project.developer.toLowerCase()))
     );
     setSelectedProject(project);
     setModalForm({
       developerId: project.developerId || detectedDev?.id || "other",
       developerName: detectedDev?.name || project.developer || "",
-      projectName: project.projectName,
-      community: project.community || "",
-      district: project.district || "",
-      type: project.type || "Apartments",
-      beds: project.beds || "1-3",
-      priceFrom: project.priceFrom || 0,
-      handover: project.handover || "Q4 2027",
-      payment: project.payment || "60/40",
-      status: "Under Construction",
-      construction: project.construction || 5,
-      branded: project.branded || false,
-      brand: project.brand || "—",
-      tier: project.tier || "Mid-Market",
-      sourceUrl: project.sourceUrl || "",
+      projectName: project.projectName, community: project.community || "",
+      district: project.district || "", type: project.type || "Apartments",
+      beds: project.beds || "1-3", priceFrom: project.priceFrom || 0,
+      handover: project.handover || "Q4 2027", payment: project.payment || "60/40",
+      status: "Under Construction", construction: project.construction || 5,
+      branded: project.branded || false, brand: project.brand || "—",
+      tier: project.tier || "Mid-Market", sourceUrl: project.sourceUrl || "",
       verifiedUrl: project.verifiedUrl || "",
     });
     setShowAddModal(true);
   };
 
-  // Saves to Firestore under the correct developer
-  const confirmAddToPlatform = async () => {
+  const confirmAdd = async () => {
     if (!selectedProject || !modalForm.developerId) return;
     setAdding(selectedProject.projectName);
     setShowAddModal(false);
@@ -11873,166 +11672,249 @@ function LaunchRadar({ db, T, notify }) {
       const devObj = ALL_DEVELOPERS.find(d => d.id === modalForm.developerId);
       const ppsf = modalForm.priceFrom > 0 ? Math.round(modalForm.priceFrom / 1000) : 0;
       const docKey = `${modalForm.developerId}_${modalForm.projectName.replace(/[^a-zA-Z0-9]/g, "_")}`;
-      const newProject = {
-        name: modalForm.projectName,
-        developer: devObj?.name || modalForm.developerName,
-        developerId: modalForm.developerId,
-        community: modalForm.community || "Dubai",
+      await setDoc(doc(db, "projects", docKey), {
+        name: modalForm.projectName, developer: devObj?.name || modalForm.developerName,
+        developerId: modalForm.developerId, community: modalForm.community || "Dubai",
         district: (modalForm.community || "DXB").substring(0, 3).toUpperCase(),
-        type: modalForm.type || "Apartments",
-        beds: modalForm.beds || "1-3",
-        status: modalForm.status || "Under Construction",
-        handover: modalForm.handover || "Q4 2027",
-        price: parseInt(modalForm.priceFrom) || 0,
-        sizeFrom: 600, sizeTo: 2000,
-        ppsf,
-        payment: modalForm.payment || "60/40",
+        type: modalForm.type, beds: modalForm.beds, status: modalForm.status,
+        handover: modalForm.handover, price: parseInt(modalForm.priceFrom) || 0,
+        sizeFrom: 600, sizeTo: 2000, ppsf, payment: modalForm.payment,
         construction: parseInt(modalForm.construction) || 5,
-        branded: modalForm.branded || false, brand: modalForm.brand || "—",
-        tier: modalForm.tier || (modalForm.priceFrom > 3000000 ? "Ultra-Luxury" : modalForm.priceFrom > 1500000 ? "Premium" : "Mid-Market"),
-        source: selectedProject.source,
-        sourceUrl: selectedProject.sourceUrl || modalForm.sourceUrl || "",
-        verifiedUrl: selectedProject.verifiedUrl || modalForm.verifiedUrl || "",
-        addedViaRadar: true,
-        addedAt: new Date().toISOString(),
-      };
-
-      // Save to main projects collection
-      await setDoc(doc(db, "projects", docKey), newProject);
-      // Save to radarLaunches for tracking
-      await setDoc(doc(db, "radarLaunches", docKey), {
-        projectName: modalForm.projectName,
-        developer: devObj?.name || modalForm.developerName,
-        developerId: modalForm.developerId,
-        addedAt: new Date().toISOString(),
-        source: selectedProject.source,
+        branded: modalForm.branded, brand: modalForm.brand, tier: modalForm.tier,
+        source: selectedProject.source, sourceUrl: selectedProject.sourceUrl || modalForm.sourceUrl,
+        verifiedUrl: selectedProject.verifiedUrl || modalForm.verifiedUrl,
+        addedViaRadar: true, addedAt: new Date().toISOString(),
       });
-
+      await setDoc(doc(db, "radarLaunches", docKey), {
+        projectName: modalForm.projectName, developer: devObj?.name || modalForm.developerName,
+        developerId: modalForm.developerId, addedAt: new Date().toISOString(), source: selectedProject.source,
+      });
       setSaved(prev => [...prev, selectedProject.projectName]);
       notify(`✅ "${modalForm.projectName}" added under ${devObj?.name || modalForm.developerName}`);
     } catch (err) {
-      notify(`❌ Failed to add: ${err.message}`);
+      notify(`❌ Failed: ${err.message}`);
     }
     setAdding(null);
     setSelectedProject(null);
   };
 
-  const developers = ["All", ...new Set(launches.map(l => l.developer).filter(d => d !== "—"))];
-  const filtered = filter === "All" ? launches : launches.filter(l => l.developer === filter);
+  const TIERS = ["All", "Ultra-Luxury", "Premium", "Mid-Premium", "Mid-Market"];
+  const devOptions = ["All", ...new Set(launches.map(l => l.developer).filter(Boolean).filter(d => d !== "—"))];
+  const filtered = launches.filter(p => {
+    if (devFilter !== "All" && p.developer !== devFilter) return false;
+    if (tierFilter !== "All" && p.tier !== tierFilter) return false;
+    return true;
+  });
+
+  const tierColor = (t) => t === "Ultra-Luxury" ? "#8B5CF6" : t === "Premium" ? T.teal : t === "Mid-Premium" ? T.blue : T.textMuted;
+  const sourceBadgeColor = (s) => s?.includes("Bayut") ? T.gold : s?.includes("Dubai Pulse") ? T.green : s?.includes("PropertyFinder") ? T.blue : T.textMuted;
 
   return (
-    <div style={{ padding: "24px 0" }}>
-      {/* Header */}
-      <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px", marginBottom: 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.gold }}>🚀 Launch Radar</div>
-              {scanning && <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: "rgba(212,168,67,0.1)", color: T.gold, fontWeight: 700, animation: "pulse 1s infinite" }}>● SCANNING</span>}
-            </div>
-            <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>
-              Monitors Bayut + DLD + developer websites for new project launches · One-click add to platform
-            </div>
-            {lastScan && <div style={{ fontSize: 11, color: T.green, marginTop: 4 }}>● Last scan: {lastScan}</div>}
-          </div>
-          <button type="button" onClick={runScan} disabled={scanning}
-            style={{ padding: "12px 24px", background: scanning ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, border: "none", borderRadius: 10, color: scanning ? T.textMuted : T.bg, fontWeight: 700, fontSize: 14, cursor: scanning ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
-            {scanning ? "⏳ Scanning..." : "🔍 Scan for New Launches"}
-          </button>
-        </div>
+    <div style={{ padding: "0" }}>
 
-        {/* Sources */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10, marginTop: 16 }}>
-          {[
-            { icon: "🏠", label: "Bayut.com", sub: "Live off-plan listings", color: T.gold },
-            { icon: "🏛️", label: "Dubai Pulse / DLD", sub: "New project registrations", color: T.green },
-            { icon: "📋", label: "Known Q1 2026 Launches", sub: "13 verified projects", color: T.teal },
-            { icon: "📧", label: "Dev Newsletters (manual)", sub: "Emaar · DAMAC · Sobha", color: T.textMuted },
-          ].map((s, i) => (
-            <div key={i} style={{ padding: "10px 12px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 16 }}>{s.icon}</div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: s.color, marginTop: 4 }}>{s.label}</div>
-              <div style={{ fontSize: 10, color: T.textMuted }}>{s.sub}</div>
-            </div>
-          ))}
+      {/* ── TOP STATS BAR ─────────────────────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr auto", gap: 1, background: T.border, borderRadius: 12, overflow: "hidden", marginBottom: 20, border: `1px solid ${T.border}` }}>
+        {[
+          { label: "Total Projects", value: launches.length || "—", sub: "in radar" },
+          { label: "Live Sources", value: scanStats ? `${(scanStats.bayut||0)+(scanStats.pf||0)+(scanStats.dld||0)}` : "3", sub: "Bayut · PF · DLD" },
+          { label: "Added to Platform", value: saved.length || 0, sub: "this session" },
+          { label: "Last Scan", value: lastScan ? lastScan.split(",")[1]?.trim() || "—" : "—", sub: lastScan ? lastScan.split(",")[0] : "Never" },
+        ].map((stat, i) => (
+          <div key={i} style={{ padding: "16px 20px", background: T.surface }}>
+            <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>{stat.label}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif", lineHeight: 1 }}>{stat.value}</div>
+            <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{stat.sub}</div>
+          </div>
+        ))}
+        <div style={{ padding: "16px 20px", background: T.surface, display: "flex", alignItems: "center" }}>
+          <button type="button" onClick={runScan} disabled={scanning}
+            style={{ padding: "10px 22px", background: scanning ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold} 0%, #B8912F 100%)`, border: "none", borderRadius: 8, color: scanning ? T.textMuted : "#0A0E1A", fontWeight: 700, fontSize: 13, cursor: scanning ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 8, transition: "all 0.2s" }}>
+            {scanning ? (
+              <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Scanning…</>
+            ) : (
+              <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Scan Now</>
+            )}
+          </button>
         </div>
       </div>
 
-      {/* Results */}
-      {launches.length > 0 && (
-        <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px", marginBottom: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>
-              {filtered.length} New Launches Detected
-              <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 400, marginLeft: 8 }}>
-                {saved.length} already added to platform
-              </span>
-            </div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {developers.map(d => (
-                <button key={d} type="button" onClick={() => setFilter(d)}
-                  style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, border: `1px solid ${filter === d ? T.gold : T.border}`, background: filter === d ? "rgba(212,168,67,0.1)" : "transparent", color: filter === d ? T.gold : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
-                  {d}
-                </button>
-              ))}
+      {/* ── SOURCE STATUS BAR ─────────────────────────────────────── */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+        {[
+          { label: "Bayut.com", count: scanStats?.bayut, icon: "🏠", color: T.gold, desc: "Live listings API" },
+          { label: "PropertyFinder.ae", count: scanStats?.pf, icon: "🔍", color: T.blue, desc: "New projects API" },
+          { label: "Dubai Pulse / DLD", count: scanStats?.dld, icon: "🏛️", color: T.green, desc: "Registered transactions" },
+          { label: "Verified Database", count: getKnownLaunches().length, icon: "✓", color: T.teal, desc: "30 researched projects" },
+        ].map((src, i) => (
+          <div key={i} style={{ flex: 1, minWidth: 160, padding: "12px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, display: "flex", gap: 10, alignItems: "center" }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: `${src.color}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>{src.icon}</div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: T.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{src.label}</div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>{src.count !== undefined ? <span style={{ color: src.color, fontWeight: 700 }}>{src.count} found</span> : src.desc}</div>
             </div>
           </div>
+        ))}
+      </div>
 
-          <div style={{ display: "grid", gap: 8 }}>
+      {/* ── FILTERS + TABLE ───────────────────────────────────────── */}
+      {launches.length > 0 && (
+        <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden" }}>
+
+          {/* Filter bar */}
+          <div style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>DEVELOPER</span>
+              <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                {["All", "Emaar Properties", "DAMAC Properties", "Sobha Realty", "Binghatti Developers", "Ellington Properties", "Nakheel"].map(d => (
+                  <button key={d} type="button" onClick={() => setDevFilter(d)}
+                    style={{ fontSize: 10, padding: "4px 10px", borderRadius: 5, border: `1px solid ${devFilter === d ? T.gold : T.border}`, background: devFilter === d ? `${T.gold}15` : "transparent", color: devFilter === d ? T.gold : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, transition: "all 0.15s" }}>
+                    {d === "All" ? "All" : d.split(" ")[0]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>TIER</span>
+              <div style={{ display: "flex", gap: 4 }}>
+                {TIERS.map(t => (
+                  <button key={t} type="button" onClick={() => setTierFilter(t)}
+                    style={{ fontSize: 10, padding: "4px 10px", borderRadius: 5, border: `1px solid ${tierFilter === t ? tierColor(t) : T.border}`, background: tierFilter === t ? `${tierColor(t)}15` : "transparent", color: tierFilter === t ? tierColor(t) : T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                    {t === "All" ? "All" : t === "Ultra-Luxury" ? "Ultra" : t === "Mid-Premium" ? "Mid+" : t === "Mid-Market" ? "Mid" : t}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <span style={{ fontSize: 11, color: T.textMuted }}>{filtered.length} projects</span>
+          </div>
+
+          {/* Table header */}
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 120px", gap: 0, padding: "8px 20px", borderBottom: `1px solid ${T.border}`, background: T.surfaceAlt }}>
+            {["PROJECT", "DEVELOPER", "COMMUNITY", "TYPE", "FROM", "HANDOVER", "PAYMENT", "PROGRESS", "ACTIONS"].map((h, i) => (
+              <div key={i} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, textAlign: i >= 4 ? "center" : "left" }}>{h}</div>
+            ))}
+          </div>
+
+          {/* Table rows */}
+          <div style={{ maxHeight: 520, overflowY: "auto" }}>
             {filtered.map((p, i) => {
               const isAdded = saved.includes(p.projectName);
               const isAdding = adding === p.projectName;
+              const isExpanded = expandedProject === p.projectName;
               return (
-                <div key={i} style={{ padding: "14px 16px", background: isAdded ? "rgba(16,185,129,0.04)" : T.surfaceAlt, borderRadius: 12, border: `1px solid ${isAdded ? "rgba(16,185,129,0.2)" : T.border}` }}>
-
-                  {/* Row 1: Name + badges + actions */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: T.white }}>{p.projectName}</span>
-                      {isAdded && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "rgba(16,185,129,0.15)", color: T.green, fontWeight: 700 }}>✓ Added</span>}
-                      {p.branded && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "rgba(212,168,67,0.1)", color: T.gold, fontWeight: 700 }}>🏷️ {p.brand}</span>}
-                      <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: p.tier === "Ultra-Luxury" ? "rgba(139,92,246,0.1)" : p.tier === "Premium" ? "rgba(20,184,166,0.1)" : T.surfaceAlt, color: p.tier === "Ultra-Luxury" ? "#8B5CF6" : p.tier === "Premium" ? T.teal : T.textMuted, fontWeight: 600 }}>
-                        {p.tier || "Mid-Market"}
-                      </span>
+                <div key={i}>
+                  <div
+                    onClick={() => setExpandedProject(isExpanded ? null : p.projectName)}
+                    style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 120px", gap: 0, padding: "12px 20px", borderBottom: `1px solid ${T.border}`, background: isAdded ? "rgba(16,185,129,0.03)" : i % 2 === 0 ? "transparent" : `${T.surfaceAlt}50`, cursor: "pointer", transition: "background 0.15s" }}
+                    onMouseEnter={e => { if (!isAdded) e.currentTarget.style.background = `${T.gold}08`; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = isAdded ? "rgba(16,185,129,0.03)" : i % 2 === 0 ? "transparent" : `${T.surfaceAlt}50`; }}
+                  >
+                    {/* Project name + badges */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4, justifyContent: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: isAdded ? T.green : T.white }}>{p.projectName}</span>
+                        {isAdded && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
+                      </div>
+                      <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                        {p.branded && <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 3, background: `${T.gold}15`, color: T.gold, fontWeight: 600 }}>🏷 {p.brand}</span>}
+                        <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 3, background: `${tierColor(p.tier)}15`, color: tierColor(p.tier), fontWeight: 600 }}>{p.tier}</span>
+                        <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 3, background: `${sourceBadgeColor(p.source)}10`, color: sourceBadgeColor(p.source), fontWeight: 600 }}>{p.source?.split(".")[0]}</span>
+                      </div>
                     </div>
-                    <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                      <a href={p.sourceUrl} target="_blank" rel="noreferrer"
-                        style={{ fontSize: 10, padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
-                        📋 {p.source}
+                    {/* Developer */}
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <span style={{ fontSize: 11, color: T.textSecondary }}>{p.developer?.split(" ")[0]}</span>
+                    </div>
+                    {/* Community */}
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <span style={{ fontSize: 11, color: T.textSecondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.community}</span>
+                    </div>
+                    {/* Type */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>{p.type}</span>
+                    </div>
+                    {/* Price */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: T.gold }}>{p.priceFrom > 0 ? `${(p.priceFrom/1e6).toFixed(1)}M` : "—"}</span>
+                    </div>
+                    {/* Handover */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: 10, color: T.teal, fontWeight: 600 }}>{p.handover || "—"}</span>
+                    </div>
+                    {/* Payment */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>{p.payment || "—"}</span>
+                    </div>
+                    {/* Construction */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                      <div style={{ width: 32, height: 4, background: T.border, borderRadius: 2, overflow: "hidden" }}>
+                        <div style={{ width: `${p.construction || 0}%`, height: "100%", background: p.construction >= 80 ? T.green : p.construction >= 40 ? T.gold : T.blue, borderRadius: 2 }} />
+                      </div>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>{p.construction || 0}%</span>
+                    </div>
+                    {/* Actions */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }} onClick={e => e.stopPropagation()}>
+                      <a href={p.verifiedUrl || p.sourceUrl} target="_blank" rel="noreferrer"
+                        style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", flexShrink: 0 }}
+                        title="View source">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                       </a>
-                      {p.verifiedUrl && (
-                        <a href={p.verifiedUrl} target="_blank" rel="noreferrer"
-                          style={{ fontSize: 10, padding: "5px 10px", borderRadius: 7, border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.06)", color: T.green, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
-                          ✓ Developer Site
-                        </a>
-                      )}
-                      {!isAdded && (
-                        <button type="button" onClick={() => openAddModal(p)} disabled={isAdding}
-                          style={{ fontSize: 11, padding: "5px 14px", borderRadius: 7, border: "none", background: isAdding ? T.surfaceAlt : `linear-gradient(135deg, ${T.green}, #059669)`, color: isAdding ? T.textMuted : "#fff", cursor: isAdding ? "not-allowed" : "pointer", fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>
-                          {isAdding ? "..." : "+ Add"}
+                      {isAdded ? (
+                        <div style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                      ) : (
+                        <button type="button" onClick={() => openAddModal(p)} disabled={!!isAdding}
+                          style={{ height: 28, padding: "0 10px", borderRadius: 6, border: "none", background: isAdding ? T.surfaceAlt : T.green, color: isAdding ? T.textMuted : "#fff", fontWeight: 700, fontSize: 11, cursor: isAdding ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
+                          {isAdding ? "…" : "+ Add"}
                         </button>
                       )}
                     </div>
                   </div>
 
-                  {/* Row 2: Key details grid */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 6 }}>
-                    {[
-                      { icon: "🏢", label: "Developer", value: p.developer },
-                      { icon: "📍", label: "Community", value: p.community },
-                      { icon: "🏠", label: "Type", value: p.type },
-                      { icon: "🛏️", label: "Beds", value: p.beds || "—" },
-                      { icon: "💰", label: "From", value: p.priceFrom > 0 ? `AED ${(p.priceFrom/1e6).toFixed(2)}M` : "TBD" },
-                      { icon: "📅", label: "Handover", value: p.handover || "TBD" },
-                      { icon: "💳", label: "Payment", value: p.payment || "TBD" },
-                      { icon: "🏗️", label: "Progress", value: p.construction > 0 ? `${p.construction}%` : "—" },
-                    ].map((item, idx) => (
-                      <div key={idx} style={{ padding: "6px 8px", background: T.surface, borderRadius: 7, border: `1px solid ${T.border}` }}>
-                        <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 2 }}>{item.icon} {item.label}</div>
-                        <div style={{ fontSize: 11, fontWeight: 600, color: item.label === "From" ? T.gold : item.label === "Handover" ? T.teal : T.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.value}</div>
+                  {/* Expanded row */}
+                  {isExpanded && (
+                    <div style={{ padding: "16px 20px 20px", background: `${T.gold}06`, borderBottom: `1px solid ${T.border}` }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10 }}>
+                        {[
+                          { label: "Full Developer", value: p.developer },
+                          { label: "Community", value: p.community },
+                          { label: "District Code", value: p.district || "—" },
+                          { label: "Unit Types", value: p.type },
+                          { label: "Bedrooms", value: p.beds || "—" },
+                          { label: "Starting Price", value: p.priceFrom > 0 ? `AED ${p.priceFrom.toLocaleString()}` : "—" },
+                          { label: "Handover", value: p.handover || "—" },
+                          { label: "Payment Plan", value: p.payment || "—" },
+                          { label: "Construction", value: `${p.construction || 0}%` },
+                          { label: "Branded", value: p.branded ? `Yes — ${p.brand}` : "No" },
+                          { label: "Tier", value: p.tier || "—" },
+                          { label: "Source", value: p.source },
+                        ].map((item, idx) => (
+                          <div key={idx} style={{ padding: "8px 10px", background: T.surface, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{item.label}</div>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{item.value}</div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                        <a href={p.sourceUrl} target="_blank" rel="noreferrer"
+                          style={{ padding: "7px 14px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
+                          📋 View on {p.source?.split(".")[0]}
+                        </a>
+                        {p.verifiedUrl && (
+                          <a href={p.verifiedUrl} target="_blank" rel="noreferrer"
+                            style={{ padding: "7px 14px", borderRadius: 7, border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.06)", color: T.green, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
+                            ✓ Developer Website
+                          </a>
+                        )}
+                        {!saved.includes(p.projectName) && (
+                          <button type="button" onClick={() => openAddModal(p)}
+                            style={{ padding: "7px 16px", borderRadius: 7, border: "none", background: `linear-gradient(135deg, ${T.green}, #059669)`, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                            + Add to Platform
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -12040,166 +11922,118 @@ function LaunchRadar({ db, T, notify }) {
         </div>
       )}
 
-      {/* How to catch launches manually */}
-      <div style={{ background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}`, padding: "16px 18px" }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: T.textSecondary, marginBottom: 10 }}>📡 How to Never Miss a Launch</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
-          {[
-            { icon: "💬", title: "Join Developer WhatsApp Groups", desc: "Emaar Brokers · DAMAC Broker Circle · Sobha Realty Brokers · Nakheel Brokers. Launches announced here first — same day.", action: "Ask your broker contact for invite" },
-            { icon: "🌐", title: "Developer Broker Portals", desc: "broker.emaar.com · broker.damacproperties.com · Register as DXB Analytics to get launch alerts.", action: "Register on each portal" },
-            { icon: "📰", title: "Subscribe to Developer Newsletters", desc: "Emaar, DAMAC, Sobha, Nakheel all send email alerts for new launches. Free to subscribe.", action: "Subscribe at developer websites" },
-            { icon: "🏛️", title: "DLD Oqood Monitor (this tab)", desc: "Every project must register with DLD before selling. We check weekly. First transactions = new launch.", action: "Run scan weekly" },
-            { icon: "🤝", title: "Your Users Report It", desc: "Agents and investors who use your platform will tell you about new launches via Support.", action: "Check support tickets" },
-          ].map((item, i) => (
-            <div key={i} style={{ padding: "12px 14px", background: T.surface, borderRadius: 10, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 18, marginBottom: 6 }}>{item.icon}</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 4 }}>{item.title}</div>
-              <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, lineHeight: 1.5 }}>{item.desc}</div>
-              <div style={{ fontSize: 10, color: T.gold, fontWeight: 600 }}>→ {item.action}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Scan log */}
-      {log.length > 0 && (
-        <div style={{ background: "#020609", borderRadius: 12, border: `1px solid ${T.border}`, padding: "14px 16px", marginTop: 16, fontFamily: "monospace", fontSize: 11 }}>
-          <div style={{ color: T.textMuted, marginBottom: 8, fontSize: 10, fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>SCAN LOG</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 3, maxHeight: 200, overflowY: "auto" }}>
-            {log.map((entry, i) => (
-              <div key={i} style={{ display: "flex", gap: 10 }}>
+      {/* ── SCAN LOG ──────────────────────────────────────────────── */}
+      {scanLog.length > 0 && (
+        <div style={{ marginTop: 16, background: "#060A0F", border: `1px solid ${T.border}`, borderRadius: 10, padding: "12px 16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>Scan Log</span>
+            <button type="button" onClick={() => setScanLog([])} style={{ fontSize: 10, color: T.textMuted, background: "none", border: "none", cursor: "pointer" }}>Clear</button>
+          </div>
+          <div style={{ maxHeight: 160, overflowY: "auto", display: "flex", flexDirection: "column", gap: 3 }}>
+            {scanLog.map((entry, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, fontFamily: "monospace", fontSize: 11 }}>
                 <span style={{ color: T.textMuted, flexShrink: 0 }}>{entry.ts}</span>
-                <span style={{ color: entry.color || T.textSecondary }}>{entry.msg}</span>
+                <span style={{ color: entry.type === "success" ? T.green : entry.type === "warn" ? T.gold : T.textSecondary }}>{entry.msg}</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* ── ADD TO PLATFORM MODAL ── */}
+      {/* ── ADD TO PLATFORM MODAL ─────────────────────────────────── */}
       {showAddModal && selectedProject && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
           onClick={() => setShowAddModal(false)}>
-          <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 20, width: "100%", maxWidth: 560, padding: "28px 28px", maxHeight: "90vh", overflowY: "auto" }}
+          <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, width: "100%", maxWidth: 580, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(0,0,0,0.6)" }}
             onClick={e => e.stopPropagation()}>
 
-            {/* Modal Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+            {/* Modal header */}
+            <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: T.gold }}>+ Add to Platform</div>
-                <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Confirm details before adding to dashboard</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>Add to Platform</div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Confirm project details before publishing</div>
               </div>
               <button type="button" onClick={() => setShowAddModal(false)}
-                style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, cursor: "pointer", padding: "6px 10px", fontSize: 14 }}>✕</button>
+                style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>✕</button>
             </div>
 
-            {/* Source badge */}
-            <div style={{ padding: "8px 12px", background: "rgba(212,168,67,0.06)", borderRadius: 8, border: `1px solid rgba(212,168,67,0.15)`, marginBottom: 20, fontSize: 11, color: T.textMuted }}>
-              📡 Source: <strong style={{ color: T.gold }}>{selectedProject.source}</strong> · {selectedProject.addedDate}
-            </div>
+            <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
 
-            {/* Form fields */}
-            <div style={{ display: "grid", gap: 14 }}>
+              {/* Source info */}
+              <div style={{ padding: "10px 14px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, display: "flex", gap: 10, alignItems: "center" }}>
+                <span style={{ fontSize: 18 }}>📡</span>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: T.white }}>{selectedProject.source}</div>
+                  <div style={{ fontSize: 10, color: T.textMuted }}>{selectedProject.sourceUrl}</div>
+                </div>
+                {selectedProject.verifiedUrl && (
+                  <a href={selectedProject.verifiedUrl} target="_blank" rel="noreferrer"
+                    style={{ marginLeft: "auto", fontSize: 10, padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.06)", color: T.green, textDecoration: "none", fontWeight: 600, whiteSpace: "nowrap" }}>
+                    ✓ Verify on Developer Site
+                  </a>
+                )}
+              </div>
 
-              {/* Developer — most important */}
+              {/* Developer — most critical */}
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Developer *</label>
+                <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>Developer *</label>
                 <select value={modalForm.developerId}
-                  onChange={e => {
-                    const dev = ALL_DEVELOPERS.find(d => d.id === e.target.value);
-                    setModalForm(f => ({ ...f, developerId: e.target.value, developerName: dev?.name || "" }));
-                  }}
-                  style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.gold}60`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", fontWeight: 600, cursor: "pointer" }}>
-                  {ALL_DEVELOPERS.map(d => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
-                  ))}
+                  onChange={e => { const d = ALL_DEVELOPERS.find(x => x.id === e.target.value); setModalForm(f => ({ ...f, developerId: e.target.value, developerName: d?.name || "" })); }}
+                  style={{ width: "100%", padding: "10px 14px", background: T.surfaceAlt, border: `2px solid ${T.gold}60`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", fontWeight: 600, cursor: "pointer" }}>
+                  {ALL_DEVELOPERS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>
                 <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>
-                  ✓ This project will appear when users select <strong>{ALL_DEVELOPERS.find(d => d.id === modalForm.developerId)?.name}</strong> in the sidebar
+                  → Appears in dashboard when user selects <strong>{ALL_DEVELOPERS.find(d => d.id === modalForm.developerId)?.name}</strong>
                 </div>
               </div>
 
-              {/* Project Name */}
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Project Name *</label>
-                <input value={modalForm.projectName} onChange={e => setModalForm(f => ({ ...f, projectName: e.target.value }))}
-                  style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-              </div>
-
-              {/* Community */}
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Community / Location *</label>
-                <input value={modalForm.community} onChange={e => setModalForm(f => ({ ...f, community: e.target.value }))}
-                  placeholder="e.g. DAMAC Hills, Business Bay, JVC..."
-                  style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-              </div>
-
-              {/* Price + Type row */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              {/* 2-column fields */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {[
+                  { label: "Project Name *", key: "projectName" },
+                  { label: "Community *", key: "community" },
+                  { label: "Starting Price (AED)", key: "priceFrom", type: "number" },
+                  { label: "Handover", key: "handover", placeholder: "Q4 2027" },
+                  { label: "Payment Plan", key: "payment", placeholder: "60/40" },
+                  { label: "Bedrooms", key: "beds", placeholder: "1-3" },
+                  { label: "Construction %", key: "construction", type: "number" },
+                ].map(({ label, key, type = "text", placeholder }) => (
+                  <div key={key}>
+                    <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</label>
+                    <input type={type} value={modalForm[key] || ""} placeholder={placeholder}
+                      onChange={e => setModalForm(f => ({ ...f, [key]: type === "number" ? parseInt(e.target.value) || 0 : e.target.value }))}
+                      style={{ width: "100%", padding: "9px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                  </div>
+                ))}
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Starting Price (AED)</label>
-                  <input type="number" value={modalForm.priceFrom} onChange={e => setModalForm(f => ({ ...f, priceFrom: parseInt(e.target.value) || 0 }))}
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Type</label>
-                  <select value={modalForm.type} onChange={e => setModalForm(f => ({ ...f, type: e.target.value }))}
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>Type</label>
+                  <select value={modalForm.type || "Apartments"} onChange={e => setModalForm(f => ({ ...f, type: e.target.value }))}
+                    style={{ width: "100%", padding: "9px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
                     {["Apartments","Villas","Townhouses","Apts & TH","Mixed"].map(t => <option key={t}>{t}</option>)}
                   </select>
                 </div>
               </div>
 
-              {/* Handover + Payment row */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Handover</label>
-                  <input value={modalForm.handover} onChange={e => setModalForm(f => ({ ...f, handover: e.target.value }))}
-                    placeholder="Q4 2027"
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Payment Plan</label>
-                  <input value={modalForm.payment} onChange={e => setModalForm(f => ({ ...f, payment: e.target.value }))}
-                    placeholder="60/40"
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                </div>
-              </div>
-
-              {/* Beds + Construction row */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Bedrooms</label>
-                  <input value={modalForm.beds} onChange={e => setModalForm(f => ({ ...f, beds: e.target.value }))}
-                    placeholder="1-3"
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Construction %</label>
-                  <input type="number" min="0" max="100" value={modalForm.construction} onChange={e => setModalForm(f => ({ ...f, construction: parseInt(e.target.value) || 0 }))}
-                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+              {/* Where it appears */}
+              <div style={{ padding: "12px 14px", background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: T.green, marginBottom: 6 }}>Where it will appear</div>
+                <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.7 }}>
+                  • <strong style={{ color: T.white }}>Projects tab</strong> when user selects <strong style={{ color: T.gold }}>{ALL_DEVELOPERS.find(d => d.id === modalForm.developerId)?.name}</strong><br/>
+                  • <strong style={{ color: T.white }}>Map tab</strong> — auto-plotted on Dubai map<br/>
+                  • <strong style={{ color: T.white }}>Launch Calendar</strong> — listed under {ALL_DEVELOPERS.find(d => d.id === modalForm.developerId)?.name}
                 </div>
               </div>
             </div>
 
-            {/* Where it will appear info */}
-            <div style={{ margin: "18px 0", padding: "12px 14px", background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, fontSize: 11, color: T.textMuted, lineHeight: 1.7 }}>
-              <strong style={{ color: T.green }}>✓ Where it will appear:</strong><br/>
-              • <strong style={{ color: T.white }}>Projects tab</strong> — when user selects <strong style={{ color: T.gold }}>{ALL_DEVELOPERS.find(d => d.id === modalForm.developerId)?.name}</strong> in sidebar<br/>
-              • <strong style={{ color: T.white }}>Map tab</strong> — plotted on Dubai map automatically<br/>
-              • <strong style={{ color: T.white }}>Launch Calendar</strong> — listed under {ALL_DEVELOPERS.find(d => d.id === modalForm.developerId)?.name}<br/>
-              • <strong style={{ color: T.white }}>Live PPSF badge</strong> — once market sync runs for {modalForm.community || "this community"}
-            </div>
-
-            {/* Action buttons */}
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+            {/* Modal footer */}
+            <div style={{ padding: "16px 24px", borderTop: `1px solid ${T.border}`, display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button type="button" onClick={() => setShowAddModal(false)}
-                style={{ padding: "10px 20px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                style={{ padding: "10px 20px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 9, color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, fontSize: 13 }}>
                 Cancel
               </button>
-              <button type="button" onClick={confirmAddToPlatform}
-                style={{ padding: "10px 24px", background: `linear-gradient(135deg, ${T.green}, #059669)`, border: "none", borderRadius: 10, color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                ✅ Add to Platform
+              <button type="button" onClick={confirmAdd}
+                style={{ padding: "10px 24px", background: `linear-gradient(135deg, ${T.green}, #059669)`, border: "none", borderRadius: 9, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                Publish to Platform
               </button>
             </div>
           </div>
@@ -12215,244 +12049,12 @@ function LiveDataSync({ db, T, notify }) {
   const [syncLog, setSyncLog] = React.useState([]);
   const [lastSync, setLastSync] = React.useState(null);
   const [results, setResults] = React.useState(null);
+  const [liveCount, setLiveCount] = React.useState(0);
+  const [benchmarkCount, setBenchmarkCount] = React.useState(0);
 
-  const BAYUT_KEY = "420de140camsh35f3baf70380d11p1e0c92jsn00005ba30591";
+  const log = (msg, type = "info") => setSyncLog(prev => [...prev, { msg, type, ts: new Date().toLocaleTimeString("en-AE") }]);
 
-  // Must be defined first — all other fetch functions depend on this
-  const fetchWithProxy = async (url, options = {}) => {
-    const proxies = [
-      (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-      (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-      (u) => `https://thingproxy.freeboard.io/fetch/${u}`,
-    ];
-    for (const proxy of proxies) {
-      try {
-        const res = await fetch(proxy(url), { ...options, signal: AbortSignal.timeout(8000) });
-        if (res.ok) return res;
-      } catch { continue; }
-    }
-    throw new Error("All proxies failed");
-  };
-
-  const COMMUNITIES = [
-    // ── EMAAR ─────────────────────────────────────────
-    { name: "Downtown Dubai",          locationId: "5269" },
-    { name: "Dubai Marina",            locationId: "5247" },
-    { name: "Dubai Hills Estate",      locationId: "7982" },
-    { name: "Dubai Creek Harbour",     locationId: "7183" },
-    { name: "Emaar Beachfront",        locationId: "7978" },
-    { name: "Arabian Ranches III",     locationId: "7110" },
-    { name: "The Valley",              locationId: "7957" },
-    { name: "The Oasis",               locationId: "8012" },
-    // ── DAMAC ─────────────────────────────────────────
-    { name: "DAMAC Hills",             locationId: "7185" },
-    { name: "DAMAC Hills 2",           locationId: "7198" },
-    { name: "DAMAC Lagoons",           locationId: "7975" },
-    // ── SOBHA ─────────────────────────────────────────
-    { name: "Sobha Hartland",          locationId: "7112" },
-    { name: "Sobha Hartland 2",        locationId: "8019" },
-    // ── NAKHEEL ───────────────────────────────────────
-    { name: "Palm Jumeirah",           locationId: "5460" },
-    { name: "Palm Jebel Ali",          locationId: "8009" },
-    { name: "Dubai Islands",           locationId: "8005" },
-    { name: "Tilal Al Ghaf",           locationId: "7188" },
-    // ── MERAAS ────────────────────────────────────────
-    { name: "City Walk",               locationId: "7190" },
-    { name: "Bluewaters Island",       locationId: "7179" },
-    { name: "Port de La Mer",          locationId: "7180" },
-    { name: "Dubai Harbour",           locationId: "7968" },
-    // ── BINGHATTI ─────────────────────────────────────
-    { name: "Business Bay",            locationId: "5251" },
-    { name: "Jumeirah Village Circle", locationId: "7164" },
-    { name: "Jumeirah Village Triangle", locationId: "7176" },
-    // ── MBR CITY / MEYDAN ────────────────────────────
-    { name: "Mohammed Bin Rashid City", locationId: "7166" },
-    { name: "Meydan",                  locationId: "7173" },
-    { name: "District One",            locationId: "7174" },
-    // ── ELLINGTON / BOUTIQUE ──────────────────────────
-    { name: "Jumeirah Lake Towers",    locationId: "5252" },
-    { name: "Arjan",                   locationId: "7131" },
-    { name: "Motor City",              locationId: "7140" },
-    // ── ALDAR (ABU DHABI) ────────────────────────────
-    { name: "Yas Island",              locationId: "6020" },
-    { name: "Saadiyat Island",         locationId: "6019" },
-    // ── HIGH DEMAND GENERAL ───────────────────────────
-    { name: "JBR",                     locationId: "5256" },
-    { name: "Al Furjan",               locationId: "7120" },
-    { name: "Dubai South",             locationId: "7205" },
-    // ── ADDITIONAL TOP 10 ────────────────────────────
-    { name: "Arabian Ranches",         locationId: "5471" },
-    { name: "Arabian Ranches 2",       locationId: "7108" },
-    { name: "The Springs",             locationId: "5462" },
-    { name: "The Lakes",               locationId: "5464" },
-    { name: "Dubai Silicon Oasis",     locationId: "7161" },
-    { name: "International City",      locationId: "7154" },
-    { name: "Town Square",             locationId: "7196" },
-    { name: "Mudon",                   locationId: "7186" },
-    { name: "Barsha Heights",          locationId: "7155" },
-    { name: "Nad Al Sheba",            locationId: "7172" },
-    // ── ADDITIONAL ────────────────────────────────────
-    { name: "Jumeirah",                locationId: "5253" },
-    { name: "Al Barsha",               locationId: "5397" },
-    { name: "Dubai Sports City",       locationId: "7162" },
-    { name: "Dubailand",               locationId: "7197" },
-  ];
-
-  const log = (msg, color) => setSyncLog(prev => [...prev, { msg, color, ts: new Date().toLocaleTimeString("en-AE") }]);
-
-  // ── SOURCE 1: Bayut RapidAPI ──────────────────────────────────────────────
-  const fetchBayut = async (comm) => {
-    const target = `https://unofficial-bayut-api.p.rapidapi.com/search?locationExternalIDs=${comm.locationId}&purpose=for-sale&categoryExternalID=4&lang=en&sort=price-asc&page=0&hitsPerPage=10`;
-    const res = await fetchWithProxy(target, {
-      headers: {
-        "x-rapidapi-key": BAYUT_KEY,
-        "x-rapidapi-host": "unofficial-bayut-api.p.rapidapi.com"
-      }
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const hits = data?.hits || [];
-    if (hits.length === 0) return null;
-    const prices = hits.map(h => h.price).filter(Boolean);
-    const areas = hits.map(h => h.area).filter(Boolean);
-    const avgPrice = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
-    const avgArea = Math.round(areas.reduce((a, b) => a + b, 0) / areas.length);
-    return { avgPrice, avgArea, avgPpsf: avgArea > 0 ? Math.round(avgPrice / avgArea) : 0, count: hits.length, source: "Bayut.com" };
-  };
-
-  // ── SOURCE 2: Property Finder via RapidAPI UAE Real Estate ───────────────
-  // Uses the free UAE Real Estate API on RapidAPI (same key works)
-  const fetchPropertyFinder = async (comm) => {
-    try {
-      const pfTarget = `https://unofficial-bayut-api.p.rapidapi.com/search?locationExternalIDs=${comm.locationId}&purpose=for-sale&categoryExternalID=4&lang=en&sort=price-asc&page=1&hitsPerPage=10`;
-      const res = await fetchWithProxy(pfTarget, {
-        headers: {
-          "x-rapidapi-key": BAYUT_KEY,
-          "x-rapidapi-host": "unofficial-bayut-api.p.rapidapi.com"
-        }
-      });
-      if (!res.ok) return null;
-      const data = await res.json();
-      const hits = data?.hits || [];
-      if (hits.length === 0) return null;
-      const prices = hits.map(h => h.price).filter(Boolean);
-      const areas = hits.map(h => h.area).filter(Boolean);
-      const avgPrice = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
-      const avgArea = Math.round(areas.reduce((a, b) => a + b, 0) / areas.length);
-      return { avgPrice, avgArea, avgPpsf: avgArea > 0 ? Math.round(avgPrice / avgArea) : 0, count: hits.length, source: "PropertyFinder.ae (p2)" };
-    } catch { return null; }
-  };
-
-  // ── SOURCE 3: Dubai Pulse Open Data (no auth needed for CSV download) ─────
-  const fetchDubaiPulse = async () => {
-    try {
-      log("📊 Fetching Dubai Pulse DLD open data...", T.blue);
-      // Dubai Pulse open CSV — updated monthly, no API key needed
-      const dldCsvUrl = "https://www.dubaipulse.gov.ae/dataset/3b25a6f5-9077-49d7-8a1e-bc6d5dea88fd/resource/a37511b0-ea36-485d-bccd-2d6cb24507e7/download/transactions.csv";
-      const res = await fetchWithProxy(dldCsvUrl);
-      if (!res.ok) {
-        log("⚠️ Dubai Pulse CSV unavailable — skipping DLD data", T.textMuted);
-        return {};
-      }
-      const text = await res.text();
-      const lines = text.split("\n").slice(1, 5001); // First 5000 transactions
-      const communityMap = {};
-
-      lines.forEach(line => {
-        const cols = line.split(",");
-        if (cols.length < 10) return;
-        const area = (cols[3] || "").replace(/"/g, "").trim();
-        const price = parseFloat((cols[7] || "0").replace(/"/g, ""));
-        const size = parseFloat((cols[9] || "0").replace(/"/g, ""));
-        if (!area || price <= 0 || size <= 0) return;
-
-        // Map DLD area names to our community names
-        const communityMap2 = {
-          // Emaar
-          "DOWNTOWN DUBAI": "Downtown Dubai",
-          "DUBAI MARINA": "Dubai Marina",
-          "BUSINESS BAY": "Business Bay",
-          "DUBAI HILLS ESTATE": "Dubai Hills Estate",
-          "DUBAI CREEK HARBOUR AT THE LAGOONS": "Dubai Creek Harbour",
-          "DUBAI CREEK HARBOUR": "Dubai Creek Harbour",
-          "ARABIAN RANCHES 3": "Arabian Ranches III",
-          "ARABIAN RANCHES": "Arabian Ranches III",
-          "THE VALLEY": "The Valley",
-          "EMAAR BEACHFRONT": "Emaar Beachfront",
-          // DAMAC
-          "DAMAC HILLS": "DAMAC Hills",
-          "DAMAC HILLS 2": "DAMAC Hills 2",
-          "AKOYA BY DAMAC": "DAMAC Hills 2",
-          "DAMAC LAGOONS": "DAMAC Lagoons",
-          // Sobha
-          "SOBHA HARTLAND": "Sobha Hartland",
-          "SOBHA HARTLAND 2": "Sobha Hartland 2",
-          "MOHAMMED BIN RASHID CITY": "Mohammed Bin Rashid City",
-          // Nakheel
-          "PALM JUMEIRAH": "Palm Jumeirah",
-          "PALM JEBEL ALI": "Palm Jebel Ali",
-          "DUBAI ISLANDS": "Dubai Islands",
-          "TILAL AL GHAF": "Tilal Al Ghaf",
-          // Meraas
-          "CITY WALK": "City Walk",
-          "BLUEWATERS ISLAND": "Bluewaters Island",
-          "PORT DE LA MER": "Port de La Mer",
-          "DUBAI HARBOUR": "Dubai Harbour",
-          // General
-          "JUMEIRAH VILLAGE CIRCLE": "Jumeirah Village Circle",
-          "JUMEIRAH VILLAGE TRIANGLE": "Jumeirah Village Triangle",
-          "JUMEIRAH LAKE TOWERS": "Jumeirah Lake Towers",
-          "JUMEIRAH BEACH RESIDENCE": "JBR",
-          "AL FURJAN": "Al Furjan",
-          "MEYDAN": "Meydan",
-          "DISTRICT ONE": "District One",
-          "ARJAN": "Arjan",
-          "MOTOR CITY": "Motor City",
-          "DUBAI SOUTH": "Dubai South",
-          "YAS ISLAND": "Yas Island",
-          "SAADIYAT ISLAND": "Saadiyat Island",
-          // New 10
-          "ARABIAN RANCHES": "Arabian Ranches",
-          "ARABIAN RANCHES 2": "Arabian Ranches 2",
-          "THE SPRINGS": "The Springs",
-          "THE LAKES": "The Lakes",
-          "DUBAI SILICON OASIS": "Dubai Silicon Oasis",
-          "INTERNATIONAL CITY": "International City",
-          "TOWN SQUARE": "Town Square",
-          "MUDON": "Mudon",
-          "BARSHA HEIGHTS": "Barsha Heights",
-          "NAD AL SHEBA": "Nad Al Sheba",
-        };
-
-        const mapped = communityMap2[area.toUpperCase()];
-        if (!mapped) return;
-
-        if (!communityMap[mapped]) communityMap[mapped] = { prices: [], sizes: [] };
-        communityMap[mapped].prices.push(price);
-        communityMap[mapped].sizes.push(size);
-      });
-
-      const result = {};
-      Object.entries(communityMap).forEach(([comm, d]) => {
-        if (d.prices.length < 3) return;
-        const avgPrice = Math.round(d.prices.reduce((a, b) => a + b, 0) / d.prices.length);
-        const avgSize = Math.round(d.sizes.reduce((a, b) => a + b, 0) / d.sizes.length);
-        result[comm] = { avgPrice, avgArea: avgSize, avgPpsf: avgSize > 0 ? Math.round(avgPrice / avgSize) : 0, count: d.prices.length, source: "Dubai Pulse / DLD" };
-      });
-
-      log(`✅ Dubai Pulse: Got data for ${Object.keys(result).length} communities`, T.green);
-      return result;
-    } catch (err) {
-      log(`⚠️ Dubai Pulse failed: ${err.message}`, T.textMuted);
-      return {};
-    }
-  };
-
-  // ── SOURCE 4: Dubai REST API (free, no key, community price data) ──────────
   const fetchDubaiREST = async () => {
-    const results = {};
-    // Verified Q1 2026 prices — DXBInteract + Property Monitor + ValuStrat
-    // All 45 communities across Dubai covered
     const fallbackPpsf = {
       "Downtown Dubai": 3150, "Dubai Marina": 1940, "Business Bay": 1720,
       "Dubai Hills Estate": 2050, "Jumeirah Village Circle": 1200, "Palm Jumeirah": 4400,
@@ -12466,220 +12068,179 @@ function LiveDataSync({ db, T, notify }) {
       "Jumeirah Lake Towers": 1350, "Arjan": 1050, "Motor City": 950,
       "Dubai South": 1000, "Jumeirah Village Triangle": 1100,
       "Yas Island": 1300, "Saadiyat Island": 2400,
-      // ── NEW 10 ───────────────────────────────────────
       "Arabian Ranches": 1650, "Arabian Ranches 2": 1580,
       "The Springs": 1420, "The Lakes": 1550,
       "Dubai Silicon Oasis": 880, "International City": 620,
       "Town Square": 1050, "Mudon": 1280,
       "Barsha Heights": 1100, "Nad Al Sheba": 1750,
-      // ── ADDITIONAL ───────────────────────────────────
       "Jumeirah": 2200, "Al Barsha": 1050,
       "Dubai Sports City": 900, "Dubailand": 950,
     };
-
-    // Pure static — no network, no CORS issues, always works instantly
+    const results = {};
     Object.entries(fallbackPpsf).forEach(([name, ppsf]) => {
-      results[name] = { avgPpsf: ppsf, source: "Q1 2026 Benchmark", live: false };
+      results[name] = { avgPpsf: ppsf, source: "Q1 2026 Benchmark" };
     });
-    log(`✅ Benchmarks ready: ${Object.keys(results).length} communities loaded`, T.green);
     return results;
   };
 
-  // Try multiple CORS proxies in order until one works
   const runSync = async () => {
     setSyncing(true);
     setSyncLog([]);
     setResults(null);
+    setLiveCount(0);
+    setBenchmarkCount(0);
     const synced = [];
 
-    log("🚀 Starting live market data sync...", T.gold);
+    log("Starting market data sync...", "info");
 
-    // Step 1: Try Vercel API for live Bayut prices (server-side, no CORS)
+    // Try Vercel API for live Bayut prices
     const BASE_URL = window.location.origin;
     let liveApiWorked = false;
 
     try {
-      log(`📡 Fetching live prices via ${BASE_URL}/api/sync-market-data...`, T.teal);
-      const apiRes = await fetch(`${BASE_URL}/api/sync-market-data`, {
-        signal: AbortSignal.timeout(90000),
-      });
-
+      log(`Calling ${BASE_URL}/api/sync-market-data`, "info");
+      const apiRes = await fetch(`${BASE_URL}/api/sync-market-data`, { signal: AbortSignal.timeout(90000) });
       if (apiRes.ok) {
         const apiData = await apiRes.json();
         if (apiData.success && apiData.data?.length > 0) {
-          log(`✅ Live API: Got ${apiData.data.length} communities from Bayut`, T.green);
-          if (apiData.errors?.length > 0) {
-            log(`⚠️ ${apiData.errors.length} communities failed: ${apiData.errorList?.slice(0,3).join(", ")}`, T.textMuted);
-          }
-
-          // Save live data to Firestore
-          log(`💾 Saving ${apiData.data.length} live prices to Firestore...`, T.teal);
+          log(`Live Bayut: ${apiData.data.length} communities`, "success");
+          if (apiData.errors?.length > 0) log(`${apiData.errors.length} failed`, "warn");
           for (const comm of apiData.data) {
             try {
-              await setDoc(doc(db, "liveMarketData", comm.community.replace(/ /g, "_")), {
-                ...comm,
-                source: "Bayut.com (live via Vercel API)",
-              }, { merge: true });
+              await setDoc(doc(db, "liveMarketData", comm.community.replace(/ /g, "_")), { ...comm, source: "Bayut.com (live)" }, { merge: true });
               synced.push(comm);
-            } catch { /* skip */ }
+            } catch {}
           }
-          log(`✅ ${synced.length} live prices saved — dashboard updated`, T.green);
+          log(`Saved ${synced.length} live prices`, "success");
+          setLiveCount(synced.length);
           liveApiWorked = true;
         }
       }
     } catch (err) {
-      log(`⚠️ Vercel API not available yet: ${err.message}`, T.textMuted);
-      log("💡 Deploy api/sync-market-data.js to enable live Bayut prices", T.gold);
+      log(`Vercel API not deployed — using benchmarks (${err.message.slice(0, 50)})`, "warn");
     }
 
-    // Step 2: Always also save benchmarks for communities not covered by live API
+    // Fill remaining with benchmarks
     const dubaiRestData = await fetchDubaiREST();
-    let benchmarkCount = 0;
-
+    let bCount = 0;
     for (const [commName, data] of Object.entries(dubaiRestData)) {
-      // Only save benchmark if we don't have live data for this community
-      const hasLive = synced.find(s => s.community === commName);
-      if (!hasLive) {
+      if (!synced.find(s => s.community === commName)) {
         try {
           await setDoc(doc(db, "liveMarketData", commName.replace(/ /g, "_")), {
-            community: commName,
-            avgPpsf: data.avgPpsf,
-            avgPrice: 0,
-            listings: 0,
-            source: data.source,
-            bmPpsf: data.avgPpsf,
+            community: commName, avgPpsf: data.avgPpsf, avgPrice: 0,
+            listings: 0, source: data.source, bmPpsf: data.avgPpsf,
             syncedAt: new Date().toISOString(),
           }, { merge: true });
-          benchmarkCount++;
-        } catch { /* skip */ }
+          bCount++;
+        } catch {}
       }
     }
+    setBenchmarkCount(bCount);
+    if (bCount > 0) log(`${bCount} benchmark prices applied`, "info");
 
-    if (benchmarkCount > 0) {
-      log(`📊 ${benchmarkCount} communities filled with Q1 2026 benchmarks`, T.textMuted);
-    }
-
-    // Save summary
-    try {
-      await setDoc(doc(db, "liveMarketData", "_summary"), {
-        communities: synced,
-        lastSyncedAt: new Date().toISOString(),
-        totalCommunities: synced.length,
-        sources: ["Bayut.com", "Dubai Pulse / DLD", "Q1 2026 Benchmark"],
-        source: "Multi-source sync — Admin panel",
-      }, { merge: true });
-    } catch(e) {}
-
-    const now = new Date().toLocaleString("en-AE");
-    setLastSync(now);
-    // Show live results if available, otherwise show benchmarks
-    const displayResults = synced.length > 0
-      ? synced
-      : Object.entries(dubaiRestData).map(([name, d]) => ({
-          community: name, avgPpsf: d.avgPpsf, avgPrice: 0,
-          listings: 0, source: d.source, bmPpsf: d.avgPpsf, sourcesUsed: 1
-        }));
+    const displayResults = synced.length > 0 ? synced
+      : Object.entries(dubaiRestData).map(([n, d]) => ({ community: n, avgPpsf: d.avgPpsf, avgPrice: 0, listings: 0, source: d.source }));
     setResults(displayResults);
-    const totalUpdated = synced.length + benchmarkCount;
-    log(`🎉 Sync complete — ${totalUpdated} communities updated (${synced.length} live${synced.length > 0 ? " from Bayut" : ""}, ${benchmarkCount} benchmarks)`, T.gold);
-    if (!liveApiWorked) {
-      log("💡 Deploy api/sync-market-data.js to Vercel for live Bayut prices instead of benchmarks", T.gold);
-    }
-    notify(`Live data synced — ${totalUpdated} communities ${liveApiWorked ? "✅ LIVE from Bayut" : "(benchmarks)"}`);
+    setLastSync(new Date().toLocaleString("en-AE"));
+    log(`Done — ${synced.length + bCount} communities updated`, "success");
+    if (!liveApiWorked) log("Deploy api/sync-market-data.js to Vercel for live prices", "info");
+    notify(`Sync complete — ${synced.length + bCount} communities ${liveApiWorked ? "(LIVE)" : "(benchmarks)"}`);
     setSyncing(false);
   };
 
   return (
-    <div style={{ padding: "24px 0" }}>
-      {/* Header */}
-      <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px", marginBottom: 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
-          <div>
-            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Live Data Sync</div>
-            <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>
-              Fetches live listing prices from Bayut + Dubai Pulse DLD for 45 communities covering all 228 developers · Free · No Cloud Function needed
-            </div>
-            {lastSync && <div style={{ fontSize: 11, color: T.green, marginTop: 6 }}>● Last synced: {lastSync}</div>}
+    <div style={{ padding: "0" }}>
+
+      {/* ── STATS ROW ────────────────────────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 1, background: T.border, borderRadius: 12, overflow: "hidden", marginBottom: 20, border: `1px solid ${T.border}` }}>
+        {[
+          { label: "Communities", value: 49, sub: "Dubai + Abu Dhabi" },
+          { label: "Live Prices", value: liveCount || "—", sub: "from Bayut (API)" },
+          { label: "Benchmarks", value: benchmarkCount || (liveCount === 0 ? 49 : 49 - liveCount), sub: "Q1 2026 fallback" },
+        ].map((s, i) => (
+          <div key={i} style={{ padding: "16px 20px", background: T.surface }}>
+            <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>{s.label}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif", lineHeight: 1 }}>{s.value}</div>
+            <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{s.sub}</div>
           </div>
+        ))}
+        <div style={{ padding: "16px 20px", background: T.surface, display: "flex", alignItems: "center" }}>
           <button type="button" onClick={runSync} disabled={syncing}
-            style={{ padding: "12px 24px", background: syncing ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, border: "none", borderRadius: 10, color: syncing ? T.textMuted : T.bg, fontWeight: 700, fontSize: 14, cursor: syncing ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 8 }}>
+            style={{ padding: "10px 22px", background: syncing ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, border: "none", borderRadius: 8, color: syncing ? T.textMuted : "#0A0E1A", fontWeight: 700, fontSize: 13, cursor: syncing ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 8 }}>
             {syncing ? (
-              <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Syncing...</>
-            ) : "🔄 Sync Live Data Now"}
+              <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Syncing…</>
+            ) : (
+              <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Sync Now</>
+            )}
           </button>
         </div>
+      </div>
 
-        {/* Info boxes */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginTop: 16 }}>
-          {[
-            { icon: "📊", label: "Source 1", value: "Q1 2026 Benchmarks", sub: "DXBInteract + Property Monitor" },
-            { icon: "🏛️", label: "Source 2", value: "Dubai Pulse DLD", sub: "Official transactions (when online)" },
-            { icon: "🏛️", label: "Source 3", value: "Dubai Pulse DLD", sub: "Gov transaction data (free)" },
-            { icon: "📊", label: "Source 4", value: "Q1 2026 Benchmarks", sub: "ValuStrat + Property Monitor" },
-            { icon: "🌍", label: "Communities", value: "45", sub: "All Dubai + Abu Dhabi" },
-            { icon: "⚡", label: "Speed", value: "~10 sec", sub: "Instant benchmark sync" },
-          ].map((item, i) => (
-            <div key={i} style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 18, marginBottom: 4 }}>{item.icon}</div>
-              <div style={{ fontSize: 10, color: T.textMuted }}>{item.label}</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: T.white }}>{item.value}</div>
-              <div style={{ fontSize: 10, color: T.textMuted }}>{item.sub}</div>
+      {/* ── DATA SOURCES ─────────────────────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10, marginBottom: 20 }}>
+        {[
+          { icon: "🏠", label: "Bayut.com", sub: "Live PPSF per community", status: liveCount > 0 ? "live" : "pending", note: "via Vercel API" },
+          { icon: "🏛️", label: "Dubai Pulse / DLD", sub: "Official transaction data", status: "available", note: "Free CSV" },
+          { icon: "📊", label: "Q1 2026 Benchmarks", sub: "DXBInteract + ValuStrat", status: "active", note: "Always available" },
+          { icon: "⚡", label: "Vercel API Route", sub: "api/sync-market-data.js", status: "deploy", note: "Enables live Bayut" },
+        ].map((src, i) => {
+          const statusColors = { live: T.green, available: T.teal, active: T.gold, pending: T.textMuted, deploy: "#8B5CF6" };
+          const statusLabels = { live: "● Live", available: "● Available", active: "● Active", pending: "○ Pending", deploy: "Deploy" };
+          return (
+            <div key={i} style={{ padding: "14px 16px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                <span style={{ fontSize: 20 }}>{src.icon}</span>
+                <span style={{ fontSize: 9, fontWeight: 700, color: statusColors[src.status], padding: "2px 6px", borderRadius: 4, background: `${statusColors[src.status]}15` }}>
+                  {statusLabels[src.status]}
+                </span>
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 2 }}>{src.label}</div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>{src.sub}</div>
+              <div style={{ fontSize: 9, color: T.textMuted, marginTop: 4, fontStyle: "italic" }}>{src.note}</div>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
-      {/* Results table */}
+      {/* ── RESULTS TABLE ────────────────────────────────────────── */}
       {results && results.length > 0 && (
-        <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px", marginBottom: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: T.gold, marginBottom: 12 }}>Synced Data — {results.length} Communities</div>
-          <div style={{ display: "grid", gap: 6 }}>
+        <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden", marginBottom: 16 }}>
+          <div style={{ padding: "12px 20px", borderBottom: `1px solid ${T.border}`, display: "grid", gridTemplateColumns: "1fr 0.8fr 0.8fr 0.5fr 1fr", background: T.surfaceAlt }}>
+            {["COMMUNITY", "AVG PPSF", "AVG PRICE", "LISTINGS", "SOURCE"].map(h => (
+              <div key={h} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8 }}>{h}</div>
+            ))}
+          </div>
+          <div style={{ maxHeight: 400, overflowY: "auto" }}>
             {results.map((r, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", background: T.surfaceAlt, borderRadius: 8, fontSize: 12 }}>
-                <span style={{ color: T.white, fontWeight: 600 }}>{r.community}</span>
-                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                  <span style={{ color: T.gold, fontWeight: 700 }}>Avg: AED {r.avgPpsf?.toLocaleString()}/sqft</span>
-                  {r.bayutPpsf > 0 && <span style={{ color: T.textMuted, fontSize: 10 }}>Bayut: {r.bayutPpsf?.toLocaleString()}</span>}
-                  {r.pfPpsf > 0 && <span style={{ color: T.textMuted, fontSize: 10 }}>PF: {r.pfPpsf?.toLocaleString()}</span>}
-                  {r.dldPpsf > 0 && <span style={{ color: T.green, fontSize: 10 }}>DLD✓: {r.dldPpsf?.toLocaleString()}</span>}
-                  {r.bmPpsf > 0 && <span style={{ color: T.blue, fontSize: 10 }}>BM: {r.bmPpsf?.toLocaleString()}</span>}
-                  <span style={{ color: T.teal, fontSize: 10 }}>{r.listings} listings · {r.sourcesUsed || 1} sources</span>
-                </div>
+              <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 0.8fr 0.8fr 0.5fr 1fr", padding: "10px 20px", borderBottom: i < results.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : `${T.surfaceAlt}40`, alignItems: "center" }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: T.white }}>{r.community}</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>AED {r.avgPpsf?.toLocaleString()}</span>
+                <span style={{ fontSize: 11, color: T.textSecondary }}>{r.avgPrice > 0 ? `AED ${(r.avgPrice/1e6).toFixed(1)}M` : "—"}</span>
+                <span style={{ fontSize: 11, color: T.textMuted }}>{r.listings || "—"}</span>
+                <span style={{ fontSize: 10, color: r.source?.includes("live") ? T.green : T.textMuted }}>{r.source}</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Log output */}
+      {/* ── LOG ──────────────────────────────────────────────────── */}
       {syncLog.length > 0 && (
-        <div style={{ background: "#020609", borderRadius: 12, border: `1px solid ${T.border}`, padding: "14px 16px", fontFamily: "monospace", fontSize: 11 }}>
-          <div style={{ color: T.textMuted, marginBottom: 8, fontSize: 10, fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>SYNC LOG</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 240, overflowY: "auto" }}>
+        <div style={{ background: "#060A0F", border: `1px solid ${T.border}`, borderRadius: 10, padding: "12px 16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>Sync Log</span>
+            <button type="button" onClick={() => setSyncLog([])} style={{ fontSize: 10, color: T.textMuted, background: "none", border: "none", cursor: "pointer" }}>Clear</button>
+          </div>
+          <div style={{ maxHeight: 140, overflowY: "auto", display: "flex", flexDirection: "column", gap: 3 }}>
             {syncLog.map((entry, i) => (
-              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <div key={i} style={{ display: "flex", gap: 10, fontFamily: "monospace", fontSize: 11 }}>
                 <span style={{ color: T.textMuted, flexShrink: 0 }}>{entry.ts}</span>
-                <span style={{ color: entry.color || T.textSecondary }}>{entry.msg}</span>
+                <span style={{ color: entry.type === "success" ? T.green : entry.type === "warn" ? T.gold : T.textSecondary }}>{entry.msg}</span>
               </div>
             ))}
           </div>
         </div>
       )}
-
-      {/* Instructions */}
-      <div style={{ background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}`, padding: "14px 16px", marginTop: 16 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: T.textSecondary, marginBottom: 8 }}>ℹ️ How It Works</div>
-        <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.7 }}>
-          1. Click <strong style={{ color: T.gold }}>"Sync Live Data Now"</strong> — completes in ~10 seconds<br/>
-          2. <strong style={{ color: T.green }}>48 verified benchmark prices</strong> (DXBInteract + Property Monitor Q1 2026) saved to Firestore<br/>
-          3. Dashboard immediately shows <strong style={{ color: T.gold }}>● Live Data</strong> badge in topbar<br/>
-          4. All 6 dashboard tabs update — project cards, investment scores, yields, price history, DLD volumes, neighbourhoods<br/>
-          5. Works for all <strong style={{ color: T.white }}>15 developers</strong> and <strong style={{ color: T.white }}>228 projects</strong> automatically<br/>
-          <br/>
-          <strong style={{ color: T.gold }}>Benchmarks are updated quarterly</strong> (Jan, Apr, Jul, Oct) — sync once per quarter or after major market moves.<br/>
-          <strong style={{ color: T.teal }}>Want live prices?</strong> Apply for Dubai Pulse API key at dubaipulse.gov.ae → free, 14-day approval.
-        </div>
-      </div>
     </div>
   );
 }
@@ -17445,45 +17006,51 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* Sub-tab navigation - Enhanced */}
-              <div style={{ display: "flex", gap: 4, background: T.surfaceAlt, padding: 4, borderRadius: 10, marginBottom: 24 }}>
-                {[
-                  { id: "projects", label: "Projects", count: emaarProjects.length, icon: I.projects },
-                  { id: "yields", label: "Yields", count: emaarYields.length, icon: I.yields },
-                  { id: "communities", label: "Communities", count: Object.keys(defaultCommunityROI).length, icon: I.chart },
-                  { id: "pricehistory", label: "Price History", count: Object.values(priceHistory).reduce((sum, arr) => sum + (arr?.length || 0), 0), icon: I.chart },
-                  { id: "financials", label: "Financials", count: 6, icon: I.revenue },
-                  { id: "risk", label: "Risk", count: 9, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> },
-                  { id: "market", label: "Market", count: null, icon: I.chart },
-                  { id: "developers", label: "Developers", count: null, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg> },
-                  { id: "livedata", label: "🔴 Live Data", count: null, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
-                  { id: "launchradar", label: "🚀 Launch Radar", count: null, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg> },
-                ].map(st => (
-                  <button type="button" key={st.id} onClick={() => { 
-                    if (dataSubTab === st.id) return; // Don't reset if same tab
-                    setDataSubTab(st.id); 
-                    setEditingProject(null); 
-                    setEditingCommunity(null); 
-                    setEditingYield(null); 
-                    setEditingCommunityIntel(null); 
-                    setBulkSelected([]); 
-                  }}
-                    style={{ 
-                      padding: "10px 20px", borderRadius: 8, border: "none",
-                      background: dataSubTab === st.id ? T.surface : "transparent",
-                      color: dataSubTab === st.id ? T.white : T.textMuted,
-                      fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif",
-                      transition: "all 0.2s", display: "flex", alignItems: "center", gap: 8
-                    }}>
-                    <span style={{ opacity: dataSubTab === st.id ? 1 : 0.6 }}>{st.icon}</span>
-                    {st.label}
-                    <span style={{ 
-                      background: dataSubTab === st.id ? T.gold : T.border,
-                      color: dataSubTab === st.id ? T.surface : T.textMuted,
-                      padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 700
-                    }}>{st.count}</span>
-                  </button>
-                ))}
+
+              {/* Sub-tab navigation — two groups */}
+              <div style={{ marginBottom: 24 }}>
+                {/* Group 1: Data tabs */}
+                <div style={{ display: "flex", gap: 2, marginBottom: 2, flexWrap: "wrap" }}>
+                  {[
+                    { id: "projects",    label: "Projects",      count: emaarProjects.length },
+                    { id: "yields",      label: "Yields",        count: emaarYields.length },
+                    { id: "communities", label: "Communities",   count: Object.keys(defaultCommunityROI).length },
+                    { id: "pricehistory",label: "Price History", count: Object.values(priceHistory).reduce((s, a) => s + (a?.length || 0), 0) },
+                    { id: "financials",  label: "Financials",    count: 6 },
+                    { id: "risk",        label: "Risk",          count: 9 },
+                    { id: "market",      label: "Market",        count: null },
+                    { id: "developers",  label: "Developers",    count: null },
+                  ].map(st => {
+                    const active = dataSubTab === st.id;
+                    return (
+                      <button type="button" key={st.id} onClick={() => { if (dataSubTab === st.id) return; setDataSubTab(st.id); setEditingProject(null); setEditingCommunity(null); setEditingYield(null); setEditingCommunityIntel(null); setBulkSelected([]); }}
+                        style={{ padding: "8px 14px", borderRadius: "8px 8px 0 0", border: `1px solid ${active ? T.border : "transparent"}`, borderBottom: active ? `1px solid ${T.surface}` : `1px solid ${T.border}`, background: active ? T.surface : T.surfaceAlt, color: active ? T.white : T.textMuted, fontSize: 12, fontWeight: active ? 700 : 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 6, transition: "all 0.15s", marginBottom: -1 }}>
+                        {st.label}
+                        {st.count !== null && <span style={{ fontSize: 10, padding: "1px 5px", borderRadius: 4, background: active ? `${T.gold}20` : T.border, color: active ? T.gold : T.textMuted, fontWeight: 700 }}>{st.count}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Group 2: Tool tabs */}
+                <div style={{ display: "flex", gap: 2, padding: "6px 8px", background: T.surfaceAlt, borderRadius: "0 8px 8px 8px", border: `1px solid ${T.border}`, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    {[
+                      { id: "livedata",    label: "Live Data",     dot: "●", dotColor: "#EF4444" },
+                      { id: "launchradar", label: "Launch Radar",  dot: "🚀", dotColor: T.gold },
+                    ].map(st => {
+                      const active = dataSubTab === st.id;
+                      return (
+                        <button type="button" key={st.id} onClick={() => { if (dataSubTab === st.id) return; setDataSubTab(st.id); setEditingProject(null); setBulkSelected([]); }}
+                          style={{ padding: "6px 14px", borderRadius: 7, border: `1px solid ${active ? T.gold : T.border}`, background: active ? `${T.gold}10` : "transparent", color: active ? T.gold : T.textMuted, fontSize: 12, fontWeight: active ? 700 : 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", gap: 6, transition: "all 0.15s" }}>
+                          <span style={{ fontSize: st.id === "launchradar" ? 12 : 10, color: st.dotColor }}>{st.dot}</span>
+                          {st.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <span style={{ fontSize: 10, color: T.textMuted, paddingRight: 4 }}>Intelligence Tools</span>
+                </div>
               </div>
 
               {/* ─── PROJECTS EDITOR ─── */}
