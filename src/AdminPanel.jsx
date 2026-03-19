@@ -16944,8 +16944,11 @@ export default function AdminPanel() {
                 <div className="kpi-card fade-up" style={{ position: "relative", overflow: "hidden" }}>
                   <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.7 }} />
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>Total Projects</div>
-                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.white }}>{emaarProjects.length}</div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>Emaar projects</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.white }}>{emaarProjects.length + firestoreProjects.filter(p => p.addedViaRadar).length}</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>
+                    {emaarProjects.length} base
+                    {firestoreProjects.filter(p => p.addedViaRadar).length > 0 && <span style={{ color: T.gold, marginLeft: 6 }}>+{firestoreProjects.filter(p => p.addedViaRadar).length} radar</span>}
+                  </div>
                 </div>
                 <div className="kpi-card fade-up" style={{ position: "relative", overflow: "hidden", animationDelay: "0.05s" }}>
                   <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.7 }} />
@@ -18735,6 +18738,7 @@ export default function AdminPanel() {
                       const baseEmaar = emaarProjects.filter(p => { if (_seen.has(String(p.id))) return false; _seen.add(String(p.id)); return true; });
                       // Add Firestore projects that aren't already in emaarProjects (e.g. Aldar, DAMAC imports)
                       const extraFS = firestoreProjects.filter(p => { const key = String(p.id); if (_seen.has(key)) return false; _seen.add(key); return true; });
+                      const radarProjects = extraFS.filter(p => p.addedViaRadar);
                       const allProjects = [...baseEmaar, ...extraFS];
                       const now = new Date();
                       const filtered = allProjects
@@ -18830,6 +18834,36 @@ export default function AdminPanel() {
                                 </span>
                               ))}
                             </div>
+
+                            {/* Radar-Added Projects Banner */}
+                            {radarProjects.length > 0 && (
+                              <div style={{ margin: "0 0 0 0", padding: "12px 20px", background: `${T.gold}08`, borderBottom: `1px solid ${T.gold}30`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                  <span style={{ fontSize: 14 }}>🚀</span>
+                                  <div>
+                                    <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>
+                                      {radarProjects.length} project{radarProjects.length > 1 ? "s" : ""} added via Launch Radar
+                                    </span>
+                                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>
+                                      {radarProjects.map(p => p.name || p.projectName).join(" · ")}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div style={{ display: "flex", gap: 6 }}>
+                                  <button type="button" onClick={async () => {
+                                    if (!window.confirm(`Delete all ${radarProjects.length} radar-added projects from Firestore?`)) return;
+                                    for (const p of radarProjects) {
+                                      await deleteDoc(doc(db, "projects", String(p.id)));
+                                    }
+                                    notify(`Removed ${radarProjects.length} radar projects`);
+                                    fetchLiveData();
+                                  }} style={{ fontSize: 11, padding: "5px 12px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: "#EF4444", cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                                    🗑 Remove All
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
                             {/* Results Bar */}
                             <div style={{ padding: "6px 20px", fontSize: 11, color: T.textMuted, borderBottom: `1px solid ${T.border}`, background: T.bg, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                               <div>
@@ -18869,10 +18903,11 @@ export default function AdminPanel() {
                         const merged = getMergedProject(p);
                         const hasOverride = !!liveProjects[p.id];
                         const pQuality = calculateProjectQuality(p);
+                        const isRadar = !!p.addedViaRadar;
                         return (
-                          <div key={p.id} className="fade-up" style={{ display: "grid", gridTemplateColumns: gridCols, gap: 8, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, alignItems: "center", animationDelay: `${Math.min(i * 0.02, 0.5)}s`, cursor: "pointer", transition: "background .15s", background: editingProject === p.id ? T.goldGlow : "transparent" }}
+                          <div key={p.id} className="fade-up" style={{ display: "grid", gridTemplateColumns: gridCols, gap: 8, padding: "10px 20px", borderBottom: `1px solid ${T.border}`, borderLeft: isRadar ? `3px solid ${T.gold}` : "3px solid transparent", alignItems: "center", animationDelay: `${Math.min(i * 0.02, 0.5)}s`, cursor: "pointer", transition: "background .15s", background: editingProject === p.id ? T.goldGlow : isRadar ? `${T.gold}05` : "transparent" }}
                             onMouseEnter={e => { if (editingProject !== p.id) e.currentTarget.style.background = T.surfaceAlt; }}
-                            onMouseLeave={e => { if (editingProject !== p.id) e.currentTarget.style.background = "transparent"; }}
+                            onMouseLeave={e => { if (editingProject !== p.id) e.currentTarget.style.background = isRadar ? `${T.gold}05` : "transparent"; }}
                             onClick={() => { setEditingProject(p.id); setProjectForm(liveProjects[p.id] || {}); }}>
                             <input type="checkbox" checked={bulkSelected.includes(String(p.id))} onChange={e => setBulkSelected(prev => e.target.checked ? [...prev, String(p.id)] : prev.filter(x => x !== String(p.id)))}
                                onClick={e => e.stopPropagation()} style={{ cursor: "pointer", accentColor: T.gold }} />
