@@ -11520,6 +11520,32 @@ function LaunchRadar({ db, T, notify }) {
   const [lastScan, setLastScan] = React.useState(null);
   const [filter, setFilter] = React.useState("All");
   const [adding, setAdding] = React.useState(null);
+  const [showAddModal, setShowAddModal] = React.useState(false);
+  const [selectedProject, setSelectedProject] = React.useState(null);
+  const [modalForm, setModalForm] = React.useState({});
+
+  const ALL_DEVELOPERS = [
+    { id: "emaar",          name: "Emaar Properties",     shortName: "Emaar" },
+    { id: "damac",          name: "DAMAC Properties",     shortName: "DAMAC" },
+    { id: "sobha",          name: "Sobha Realty",         shortName: "Sobha" },
+    { id: "nakheel",        name: "Nakheel",              shortName: "Nakheel" },
+    { id: "meraas",         name: "Meraas",               shortName: "Meraas" },
+    { id: "binghatti",      name: "Binghatti Developers", shortName: "Binghatti" },
+    { id: "ellington",      name: "Ellington Properties", shortName: "Ellington" },
+    { id: "azizi",          name: "Azizi Developments",   shortName: "Azizi" },
+    { id: "danube",         name: "Danube Properties",    shortName: "Danube" },
+    { id: "mag",            name: "MAG Group",            shortName: "MAG" },
+    { id: "dubai_properties", name: "Dubai Properties",  shortName: "DP" },
+    { id: "aldar",          name: "Aldar Properties",     shortName: "Aldar" },
+    { id: "nshama",         name: "Nshama",               shortName: "Nshama" },
+    { id: "imtiaz",         name: "Imtiaz Developments",  shortName: "Imtiaz" },
+    { id: "reportage",      name: "Reportage Properties", shortName: "Reportage" },
+    { id: "object1",        name: "Object 1",             shortName: "Object1" },
+    { id: "samana",         name: "Samana Developers",    shortName: "Samana" },
+    { id: "pantheon",       name: "Pantheon Development", shortName: "Pantheon" },
+    { id: "taraf",          name: "Taraf",                shortName: "Taraf" },
+    { id: "other",          name: "Other Developer",      shortName: "Other" },
+  ];
 
   const addLog = (msg, color) => setLog(prev => [...prev, { msg, color, ts: new Date().toLocaleTimeString("en-AE") }]);
 
@@ -11720,48 +11746,81 @@ function LaunchRadar({ db, T, notify }) {
   };
 
   // Add project to DXB Analytics platform
-  const addToPlatform = async (project) => {
-    setAdding(project.projectName);
+  // Opens the Add to Platform modal
+  const openAddModal = (project) => {
+    const detectedDev = ALL_DEVELOPERS.find(d =>
+      project.developer && (
+        project.developer.toLowerCase().includes(d.shortName.toLowerCase()) ||
+        d.name.toLowerCase().includes(project.developer.toLowerCase())
+      )
+    );
+    setSelectedProject(project);
+    setModalForm({
+      developerId: detectedDev?.id || "other",
+      developerName: detectedDev?.name || project.developer || "",
+      projectName: project.projectName,
+      community: project.community || "",
+      type: project.type || "Apartments",
+      beds: "1-3",
+      priceFrom: project.priceFrom || 0,
+      handover: "Q4 2027",
+      payment: "60/40",
+      status: "Under Construction",
+      construction: 5,
+    });
+    setShowAddModal(true);
+  };
+
+  // Saves to Firestore under the correct developer
+  const confirmAddToPlatform = async () => {
+    if (!selectedProject || !modalForm.developerId) return;
+    setAdding(selectedProject.projectName);
+    setShowAddModal(false);
     try {
-      const communityName = project.community || "Dubai";
-      const ppsf = Math.round((project.priceFrom || 1000000) / 1000);
+      const devObj = ALL_DEVELOPERS.find(d => d.id === modalForm.developerId);
+      const ppsf = modalForm.priceFrom > 0 ? Math.round(modalForm.priceFrom / 1000) : 0;
+      const docKey = `${modalForm.developerId}_${modalForm.projectName.replace(/[^a-zA-Z0-9]/g, "_")}`;
       const newProject = {
-        name: project.projectName,
-        developer: project.developer,
-        community: communityName,
-        district: communityName.substring(0, 3).toUpperCase(),
-        type: project.type || "Apartments",
-        beds: "1-3",
-        status: "Under Construction",
-        handover: "Q4 2027",
-        price: project.priceFrom || 0,
-        sizeFrom: 600,
-        sizeTo: 2000,
+        name: modalForm.projectName,
+        developer: devObj?.name || modalForm.developerName,
+        developerId: modalForm.developerId,
+        community: modalForm.community || "Dubai",
+        district: (modalForm.community || "DXB").substring(0, 3).toUpperCase(),
+        type: modalForm.type || "Apartments",
+        beds: modalForm.beds || "1-3",
+        status: modalForm.status || "Under Construction",
+        handover: modalForm.handover || "Q4 2027",
+        price: parseInt(modalForm.priceFrom) || 0,
+        sizeFrom: 600, sizeTo: 2000,
         ppsf,
-        payment: "60/40",
-        construction: 5,
-        branded: false,
-        brand: "—",
-        tier: project.priceFrom > 3000000 ? "Ultra-Luxury" : project.priceFrom > 1500000 ? "Premium" : "Mid-Market",
-        source: project.source,
-        sourceUrl: project.sourceUrl,
+        payment: modalForm.payment || "60/40",
+        construction: parseInt(modalForm.construction) || 5,
+        branded: false, brand: "—",
+        tier: modalForm.priceFrom > 3000000 ? "Ultra-Luxury" : modalForm.priceFrom > 1500000 ? "Premium" : "Mid-Market",
+        source: selectedProject.source,
+        sourceUrl: selectedProject.sourceUrl,
         addedViaRadar: true,
         addedAt: new Date().toISOString(),
       };
 
-      await setDoc(doc(db, "projects", project.projectName.replace(/[^a-zA-Z0-9]/g, "_")), newProject);
-      await setDoc(doc(db, "radarLaunches", project.projectName.replace(/[^a-zA-Z0-9]/g, "_")), {
-        projectName: project.projectName,
+      // Save to main projects collection
+      await setDoc(doc(db, "projects", docKey), newProject);
+      // Save to radarLaunches for tracking
+      await setDoc(doc(db, "radarLaunches", docKey), {
+        projectName: modalForm.projectName,
+        developer: devObj?.name || modalForm.developerName,
+        developerId: modalForm.developerId,
         addedAt: new Date().toISOString(),
-        source: project.source,
+        source: selectedProject.source,
       });
 
-      setSaved(prev => [...prev, project.projectName]);
-      notify(`✅ "${project.projectName}" added to platform`);
+      setSaved(prev => [...prev, selectedProject.projectName]);
+      notify(`✅ "${modalForm.projectName}" added under ${devObj?.name || modalForm.developerName}`);
     } catch (err) {
       notify(`❌ Failed to add: ${err.message}`);
     }
     setAdding(null);
+    setSelectedProject(null);
   };
 
   const developers = ["All", ...new Set(launches.map(l => l.developer).filter(d => d !== "—"))];
@@ -11851,7 +11910,7 @@ function LaunchRadar({ db, T, notify }) {
                       View →
                     </a>
                     {!isAdded && (
-                      <button type="button" onClick={() => addToPlatform(p)} disabled={isAdding}
+                      <button type="button" onClick={() => openAddModal(p)} disabled={isAdding}
                         style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "none", background: isAdding ? T.surfaceAlt : `linear-gradient(135deg, ${T.green}, #059669)`, color: isAdding ? T.textMuted : "#fff", cursor: isAdding ? "not-allowed" : "pointer", fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>
                         {isAdding ? "Adding..." : "+ Add to Platform"}
                       </button>
@@ -11896,6 +11955,136 @@ function LaunchRadar({ db, T, notify }) {
                 <span style={{ color: entry.color || T.textSecondary }}>{entry.msg}</span>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── ADD TO PLATFORM MODAL ── */}
+      {showAddModal && selectedProject && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+          onClick={() => setShowAddModal(false)}>
+          <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 20, width: "100%", maxWidth: 560, padding: "28px 28px", maxHeight: "90vh", overflowY: "auto" }}
+            onClick={e => e.stopPropagation()}>
+
+            {/* Modal Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+              <div>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: T.gold }}>+ Add to Platform</div>
+                <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Confirm details before adding to dashboard</div>
+              </div>
+              <button type="button" onClick={() => setShowAddModal(false)}
+                style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, cursor: "pointer", padding: "6px 10px", fontSize: 14 }}>✕</button>
+            </div>
+
+            {/* Source badge */}
+            <div style={{ padding: "8px 12px", background: "rgba(212,168,67,0.06)", borderRadius: 8, border: `1px solid rgba(212,168,67,0.15)`, marginBottom: 20, fontSize: 11, color: T.textMuted }}>
+              📡 Source: <strong style={{ color: T.gold }}>{selectedProject.source}</strong> · {selectedProject.addedDate}
+            </div>
+
+            {/* Form fields */}
+            <div style={{ display: "grid", gap: 14 }}>
+
+              {/* Developer — most important */}
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Developer *</label>
+                <select value={modalForm.developerId}
+                  onChange={e => {
+                    const dev = ALL_DEVELOPERS.find(d => d.id === e.target.value);
+                    setModalForm(f => ({ ...f, developerId: e.target.value, developerName: dev?.name || "" }));
+                  }}
+                  style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.gold}60`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", fontWeight: 600, cursor: "pointer" }}>
+                  {ALL_DEVELOPERS.map(d => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+                <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>
+                  ✓ This project will appear when users select <strong>{ALL_DEVELOPERS.find(d => d.id === modalForm.developerId)?.name}</strong> in the sidebar
+                </div>
+              </div>
+
+              {/* Project Name */}
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Project Name *</label>
+                <input value={modalForm.projectName} onChange={e => setModalForm(f => ({ ...f, projectName: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+              </div>
+
+              {/* Community */}
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Community / Location *</label>
+                <input value={modalForm.community} onChange={e => setModalForm(f => ({ ...f, community: e.target.value }))}
+                  placeholder="e.g. DAMAC Hills, Business Bay, JVC..."
+                  style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+              </div>
+
+              {/* Price + Type row */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Starting Price (AED)</label>
+                  <input type="number" value={modalForm.priceFrom} onChange={e => setModalForm(f => ({ ...f, priceFrom: parseInt(e.target.value) || 0 }))}
+                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Type</label>
+                  <select value={modalForm.type} onChange={e => setModalForm(f => ({ ...f, type: e.target.value }))}
+                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                    {["Apartments","Villas","Townhouses","Apts & TH","Mixed"].map(t => <option key={t}>{t}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {/* Handover + Payment row */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Handover</label>
+                  <input value={modalForm.handover} onChange={e => setModalForm(f => ({ ...f, handover: e.target.value }))}
+                    placeholder="Q4 2027"
+                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Payment Plan</label>
+                  <input value={modalForm.payment} onChange={e => setModalForm(f => ({ ...f, payment: e.target.value }))}
+                    placeholder="60/40"
+                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                </div>
+              </div>
+
+              {/* Beds + Construction row */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Bedrooms</label>
+                  <input value={modalForm.beds} onChange={e => setModalForm(f => ({ ...f, beds: e.target.value }))}
+                    placeholder="1-3"
+                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, display: "block", marginBottom: 6 }}>Construction %</label>
+                  <input type="number" min="0" max="100" value={modalForm.construction} onChange={e => setModalForm(f => ({ ...f, construction: parseInt(e.target.value) || 0 }))}
+                    style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Where it will appear info */}
+            <div style={{ margin: "18px 0", padding: "12px 14px", background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, fontSize: 11, color: T.textMuted, lineHeight: 1.7 }}>
+              <strong style={{ color: T.green }}>✓ Where it will appear:</strong><br/>
+              • <strong style={{ color: T.white }}>Projects tab</strong> — when user selects <strong style={{ color: T.gold }}>{ALL_DEVELOPERS.find(d => d.id === modalForm.developerId)?.name}</strong> in sidebar<br/>
+              • <strong style={{ color: T.white }}>Map tab</strong> — plotted on Dubai map automatically<br/>
+              • <strong style={{ color: T.white }}>Launch Calendar</strong> — listed under {ALL_DEVELOPERS.find(d => d.id === modalForm.developerId)?.name}<br/>
+              • <strong style={{ color: T.white }}>Live PPSF badge</strong> — once market sync runs for {modalForm.community || "this community"}
+            </div>
+
+            {/* Action buttons */}
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button type="button" onClick={() => setShowAddModal(false)}
+                style={{ padding: "10px 20px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                Cancel
+              </button>
+              <button type="button" onClick={confirmAddToPlatform}
+                style={{ padding: "10px 24px", background: `linear-gradient(135deg, ${T.green}, #059669)`, border: "none", borderRadius: 10, color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                ✅ Add to Platform
+              </button>
+            </div>
           </div>
         </div>
       )}

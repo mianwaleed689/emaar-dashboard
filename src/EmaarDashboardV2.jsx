@@ -550,26 +550,58 @@ const Section = ({ title, sub, children, delay = 0, action }) => (
   </div>
 );
 
-const DeveloperComingSoon = ({ devName, tabName }) => (
-  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 40px", textAlign: "center" }}>
-    <div style={{ fontSize: 56, marginBottom: 20 }}>🏗️</div>
-    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: T.white, marginBottom: 10 }}>
-      {devName} — Coming Soon
+const DeveloperComingSoon = ({ devName, tabName, projects = [], devId = "" }) => {
+  const hasProjects = projects.length > 0;
+  const communities = [...new Set(projects.map(p => p.community).filter(Boolean))];
+  const avgPpsf = projects.length > 0 ? Math.round(projects.reduce((sum, p) => sum + (p.ppsf || 0), 0) / projects.length) : 0;
+  const emoji = devId === "damac" ? "🏰" : devId === "sobha" ? "🌿" : devId === "nakheel" ? "🌴" : devId === "meraas" ? "🌊" : devId === "binghatti" ? "🔷" : devId === "ellington" ? "🎨" : devId === "azizi" ? "⚡" : devId === "danube" ? "💧" : "🏗️";
+  return (
+    <div style={{ padding: "32px 0" }}>
+      <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>{emoji}</div>
+        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 8 }}>{devName}</div>
+        <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 16 }}>
+          <strong style={{ color: T.gold }}>{tabName}</strong> — Full module coming Q3 2026
+        </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
+          {["Projects ✅","Map ✅","Yields ✅","DLD Volumes ✅","STR ✅","Neighbourhoods ✅","Price History ✅","Investment Score ✅","Financials 🔜","Risk 🔜","Overview 🔜"].map((item, i) => (
+            <span key={i} style={{ fontSize: 10, padding: "3px 8px", borderRadius: 20, background: item.includes("✅") ? "rgba(16,185,129,0.08)" : "rgba(212,168,67,0.08)", border: `1px solid ${item.includes("✅") ? "rgba(16,185,129,0.25)" : "rgba(212,168,67,0.25)"}`, color: item.includes("✅") ? T.green : T.gold, fontWeight: 600 }}>{item}</span>
+          ))}
+        </div>
+      </div>
+      {hasProjects && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 12, paddingBottom: 8, borderBottom: `1px solid ${T.border}` }}>
+            {projects.length} {devName} Projects on Platform
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 8, marginBottom: 14 }}>
+            {[{ label: "Projects", value: projects.length },{ label: "Avg PPSF", value: avgPpsf > 0 ? `AED ${avgPpsf.toLocaleString()}` : "—" },{ label: "Communities", value: communities.length },].map((kpi, i) => (
+              <div key={i} style={{ padding: "10px 12px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>{kpi.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: T.gold }}>{kpi.value}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "grid", gap: 6 }}>
+            {projects.slice(0, 6).map((p, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 12px", background: T.surfaceAlt, borderRadius: 8, fontSize: 12 }}>
+                <span style={{ color: T.white, fontWeight: 600 }}>{p.name}</span>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <span style={{ color: T.textMuted }}>{p.community}</span>
+                  {p.price > 0 && <span style={{ color: T.gold, fontWeight: 600 }}>AED {(p.price/1e6).toFixed(1)}M</span>}
+                </div>
+              </div>
+            ))}
+            {projects.length > 6 && <div style={{ textAlign: "center", fontSize: 11, color: T.textMuted, padding: 6 }}>+{projects.length - 6} more — see Projects tab</div>}
+          </div>
+        </div>
+      )}
+      <div style={{ marginTop: 16, padding: "12px 16px", background: T.goldMuted, border: `1px solid ${T.border}`, borderRadius: 10, fontSize: 12, color: T.textSecondary, textAlign: "center" }}>
+        💡 Full <strong style={{ color: T.gold }}>{devName}</strong> module launches Q3 2026 — use <strong style={{ color: T.gold }}>Projects tab</strong> to explore available data now
+      </div>
     </div>
-    <div style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, maxWidth: 480, marginBottom: 24 }}>
-      <strong style={{ color: T.gold }}>{tabName}</strong> data for <strong style={{ color: T.gold }}>{devName}</strong> is being compiled and verified.
-      It will appear here automatically once added to the platform.
-    </div>
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginBottom: 24 }}>
-      {["Projects ✅", "Map ✅", "Yields — Coming", "Financials — Coming", "Risk — Coming", "Price History — Coming"].map((item, i) => (
-        <span key={i} style={{ fontSize: 11, padding: "5px 12px", borderRadius: 20, background: item.includes("✅") ? "rgba(16,185,129,0.1)" : T.surfaceAlt, border: `1px solid ${item.includes("✅") ? "rgba(16,185,129,0.3)" : T.border}`, color: item.includes("✅") ? T.green : T.textMuted, fontWeight: 600 }}>{item}</span>
-      ))}
-    </div>
-    <div style={{ padding: "12px 20px", background: T.goldMuted, border: `1px solid ${T.border}`, borderRadius: 10, fontSize: 12, color: T.textSecondary }}>
-      💡 Meanwhile, use the <strong style={{ color: T.gold }}>Projects</strong> and <strong style={{ color: T.gold }}>Map</strong> tabs to explore {devName} projects
-    </div>
-  </div>
-);
+  );
+};
 
 const Chart = ({ title, children, style: extraStyle }) => (
   <div className="chart-box" style={extraStyle}>
@@ -1662,7 +1694,26 @@ export default function EmaarDashboardV2() {
   const [projectPriceMax, setProjectPriceMax] = useState(20);
   const [liveProjects, setLiveProjects] = useState({});
   const [extraProjects, setExtraProjects] = useState([]);
-  const [allDevelopers, setAllDevelopers] = useState([{ id: "emaar", name: "Emaar Properties", shortName: "Emaar", active: true, phase: 1 }]);
+  const [allDevelopers, setAllDevelopers] = useState([
+    // Phase 1 — Live
+    { id: "emaar", name: "Emaar Properties", shortName: "Emaar", active: true, phase: 1, listed: true, exchange: "DFM", logo: "🏙️" },
+    // Phase 2 — Data ready, module launching Q3 2026
+    { id: "damac", name: "DAMAC Properties", shortName: "DAMAC", active: true, phase: 2, listed: false, exchange: "Private", logo: "🏰" },
+    { id: "sobha", name: "Sobha Realty", shortName: "Sobha", active: true, phase: 2, listed: false, exchange: "Private", logo: "🌿" },
+    { id: "nakheel", name: "Nakheel", shortName: "Nakheel", active: true, phase: 2, listed: false, exchange: "Govt", logo: "🌴" },
+    { id: "meraas", name: "Meraas", shortName: "Meraas", active: true, phase: 2, listed: false, exchange: "Govt", logo: "🌊" },
+    // Phase 3
+    { id: "binghatti", name: "Binghatti Developers", shortName: "Binghatti", active: true, phase: 3, listed: false, exchange: "Private", logo: "🔷" },
+    { id: "ellington", name: "Ellington Properties", shortName: "Ellington", active: true, phase: 3, listed: false, exchange: "Private", logo: "🎨" },
+    { id: "azizi", name: "Azizi Developments", shortName: "Azizi", active: true, phase: 3, listed: false, exchange: "Private", logo: "⚡" },
+    { id: "danube", name: "Danube Properties", shortName: "Danube", active: true, phase: 3, listed: false, exchange: "Private", logo: "💧" },
+    { id: "mag", name: "MAG Group", shortName: "MAG", active: true, phase: 3, listed: false, exchange: "Private", logo: "🏗️" },
+    { id: "dubai_properties", name: "Dubai Properties", shortName: "DP", active: true, phase: 3, listed: false, exchange: "Govt", logo: "🌆" },
+    { id: "aldar", name: "Aldar Properties", shortName: "Aldar", active: true, phase: 3, listed: true, exchange: "ADX", logo: "🏛️" },
+    { id: "nshama", name: "Nshama", shortName: "Nshama", active: true, phase: 3, listed: false, exchange: "Private", logo: "🏘️" },
+    { id: "imtiaz", name: "Imtiaz Developments", shortName: "Imtiaz", active: true, phase: 3, listed: false, exchange: "Private", logo: "💎" },
+    { id: "reportage", name: "Reportage Properties", shortName: "Reportage", active: true, phase: 3, listed: false, exchange: "Private", logo: "📐" },
+  ]);
   const [selectedDeveloper, setSelectedDeveloper] = useState("emaar");
   const [liveYields, setLiveYields] = useState([]);
   // ── Price Alerts ──
@@ -2443,12 +2494,35 @@ export default function EmaarDashboardV2() {
           <div style={{ padding: "0 12px 12px", flexShrink: 0 }}>
             <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Developer</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              {allDevelopers.filter(d => d.active).map(dev => (
-                <button key={dev.id} type="button" onClick={() => setSelectedDeveloper(dev.id)}
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: `1px solid ${selectedDeveloper === dev.id ? T.gold : T.border}`, background: selectedDeveloper === dev.id ? "rgba(212,168,67,0.1)" : "transparent", color: selectedDeveloper === dev.id ? T.gold : T.textSecondary, fontSize: 12, fontWeight: selectedDeveloper === dev.id ? 700 : 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all 0.15s" }}>
-                  {dev.shortName || dev.name}
-                </button>
-              ))}
+              {allDevelopers.filter(d => d.active).map(dev => {
+                const devProjects = extraProjects.filter(p =>
+                  (p.developer || "").toLowerCase().includes(dev.shortName.toLowerCase()) ||
+                  (p.developerId || "") === dev.id
+                );
+                const projectCount = dev.id === "emaar" ? emaarProjects.length : devProjects.length;
+                const isSelected = selectedDeveloper === dev.id;
+                return (
+                  <button key={dev.id} type="button" onClick={() => setSelectedDeveloper(dev.id)}
+                    style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: `1px solid ${isSelected ? T.gold : T.border}`, background: isSelected ? "rgba(212,168,67,0.1)" : "transparent", color: isSelected ? T.gold : T.textSecondary, fontSize: 12, fontWeight: isSelected ? 700 : 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span>{dev.logo || "🏢"}</span>
+                      <span>{dev.shortName || dev.name}</span>
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      {projectCount > 0 && (
+                        <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 4, background: isSelected ? "rgba(212,168,67,0.2)" : T.surfaceAlt, color: isSelected ? T.gold : T.textMuted, fontWeight: 700 }}>
+                          {projectCount}
+                        </span>
+                      )}
+                      {dev.phase > 1 && (
+                        <span style={{ fontSize: 8, padding: "1px 4px", borderRadius: 3, background: dev.phase === 2 ? "rgba(20,184,166,0.1)" : "rgba(139,92,246,0.1)", color: dev.phase === 2 ? T.teal : "#8B5CF6", fontWeight: 700 }}>
+                          P{dev.phase}
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
               {allDevelopers.filter(d => !d.active).length > 0 && (
                 <div style={{ padding: "6px 10px", fontSize: 10, color: T.textMuted, fontStyle: "italic" }}>
                   +{allDevelopers.filter(d => !d.active).length} more coming Q3 2026
@@ -2638,7 +2712,7 @@ export default function EmaarDashboardV2() {
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: `0 24px ${compareList.length > 0 && tab === "Projects" ? "120px" : "60px"}` }}>
 
           {/* ─── OVERVIEW TAB ─── */}
-          {tab === "Overview" && !isEmaar && <DeveloperComingSoon devName={currentDev.name} tabName="Overview & Financials" />}
+          {tab === "Overview" && !isEmaar && <DeveloperComingSoon devName={currentDev.name} tabName="Overview & Financials" projects={activeProjects} devId={currentDev.id} />}
           {tab === "Overview" && isEmaar && <>
             {/* ─── VERIFIED BAR ─── */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 4, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
@@ -2911,7 +2985,7 @@ export default function EmaarDashboardV2() {
           </>}
 
           {/* ─── FINANCIALS TAB ─── */}
-          {tab === "Financials" && !isEmaar && <DeveloperComingSoon devName={currentDev.name} tabName="Financials" />}
+          {tab === "Financials" && !isEmaar && <DeveloperComingSoon devName={currentDev.name} tabName="Financials" projects={activeProjects} devId={currentDev.id} />}
           {tab === "Financials" && isEmaar && <>
             <Section title="Financial Performance" sub="6-year trend · 2020–2025 · All figures in AED Billions">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
@@ -5332,7 +5406,7 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── RISK TAB ─── */}
-          {tab === "Risk" && !isEmaar && <DeveloperComingSoon devName={currentDev.name} tabName="Risk Assessment" />}
+          {tab === "Risk" && !isEmaar && <DeveloperComingSoon devName={currentDev.name} tabName="Risk Assessment" projects={activeProjects} devId={currentDev.id} />}
           {tab === "Risk" && isEmaar && <>
             <Section title="9-Factor Risk Assessment" sub="Overall: LOW-MODERATE · Investment Grade · BBB+/Baa1/BBB">
               <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 16 }}>
