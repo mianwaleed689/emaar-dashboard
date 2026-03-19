@@ -1849,15 +1849,15 @@ export default function EmaarDashboardV2() {
 
   // Use merged Firestore+static data if available, otherwise pure static fallback
   const activeProjects = [...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }), ...extraProjects]
-
-  // Always generates the correct project URL regardless of ID type
-  // Emaar: /project/1  |  Firestore: /project/aldar_1
-  const projectUrl = (p) => `/project/${p.docId || p.id}`;
     .filter(p => {
       if (selectedDeveloper === "emaar") return (p.developer || "Emaar Properties") === "Emaar Properties";
       return (p.developer || "").toLowerCase().includes(selectedDeveloper.toLowerCase()) ||
              (p.developerId || "") === selectedDeveloper;
     });
+
+  // Always generates the correct project URL regardless of ID type
+  // Emaar: /project/1  |  Firestore: /project/aldar_1
+  const projectUrl = (p) => `/project/${p.docId || p.id}`;
 
   // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
   const getUnitEntries = (units) => {
