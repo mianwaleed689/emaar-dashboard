@@ -33,3 +33,5 @@ checkextra.js
 .vercel
 
 functions/node_modules
+
+serviceAccount.json
