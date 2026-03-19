@@ -12783,14 +12783,6 @@ export default function AdminPanel() {
       projSnap.forEach(d => { projMap[d.id] = plainify(d.data()); });
       setLiveProjects(projMap);
 
-      // Fetch ALL projects from Firestore projects collection (includes imported Aldar, DAMAC etc)
-      try {
-        const fsSnap = await getDocs(collection(db, "projects"));
-        const fsList = [];
-        fsSnap.forEach(d => fsList.push({ id: d.id, ...plainify(d.data()) }));
-        setFirestoreProjects(fsList);
-      } catch(e) {}
-
       // Fetch community ROI overrides
       const roiSnap = await getDocs(collection(db, "communityROI"));
       const roiMap = {};
@@ -12844,6 +12836,12 @@ export default function AdminPanel() {
         const projMap = {};
         snap.forEach(d => { projMap[d.id] = plainify(d.data()); });
         setLiveProjects(projMap);
+      }));
+      // Firestore projects collection — live sync (radar adds, DAMAC, Aldar etc)
+      unsubs.push(onSnapshot(collection(db, "projects"), (snap) => {
+        const fsList = [];
+        snap.forEach(d => fsList.push({ id: d.id, ...plainify(d.data()) }));
+        setFirestoreProjects(fsList);
       }));
       // Community ROI listener
       unsubs.push(onSnapshot(collection(db, "communityROI"), (snap) => {

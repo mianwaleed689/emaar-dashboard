@@ -2016,6 +2016,32 @@ export default function EmaarDashboardV2() {
   };
 
   // Listen to Firebase auth state + fetch user profile
+  // ── LIVE PROJECTS SYNC — real-time listener for Firestore projects collection ──
+  useEffect(() => {
+    const baseIds = new Set(emaarProjects.map(p => String(p.id)));
+    const baseNames = new Set(emaarProjects.map(p => p.name?.toLowerCase().trim()).filter(Boolean));
+    const unsub = onSnapshot(collection(db, "projects"), (snap) => {
+      const firestoreProjects = [];
+      snap.forEach(d => {
+        const data = { ...d.data(), id: d.id };
+        if (data.developerId === "emaar" && baseIds.has(String(data.id?.toString().replace("emaar_", "")))) return;
+        if (data.developerId === "emaar" && baseNames.has((data.name || "").toLowerCase().trim())) return;
+        if (!baseIds.has(String(data.id))) firestoreProjects.push(data);
+      });
+      setExtraProjects(prev => {
+        // Keep overrides-based extras, replace firestore-based ones
+        const overridesOnly = prev.filter(p => !p.fromFirestore);
+        const seen = new Set(overridesOnly.map(p => String(p.id)));
+        const combined = [
+          ...overridesOnly,
+          ...firestoreProjects.filter(p => !seen.has(String(p.id))).map(p => ({ ...p, fromFirestore: true }))
+        ];
+        return combined;
+      });
+    });
+    return () => unsub();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
