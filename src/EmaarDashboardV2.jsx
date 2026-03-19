@@ -7,6 +7,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, R
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot } from "firebase/firestore";
+import { useI18n, LANGUAGES } from "./i18n";
 
 import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
 import LandingPage from "./LandingPage";
@@ -1512,6 +1513,8 @@ function EiborAdminPanel({ db, T }) {
 }
 
 export default function EmaarDashboardV2() {
+  const { lang, setLang, dir, langInfo } = useI18n();
+  const [showLangPicker, setShowLangPicker] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState("");
   const [userName, setUserName] = useState("");
@@ -2336,7 +2339,7 @@ export default function EmaarDashboardV2() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit', sans-serif" }}>
+    <div dir={dir} style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit', sans-serif" }}>
       <style>{css}</style>
 
       {/* Skip to content - accessibility */}
@@ -2485,7 +2488,7 @@ export default function EmaarDashboardV2() {
             {sidebarOpen ? Icons.close : Icons.menu}
           </button>
           <div>
-            <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>Emaar Properties <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>PJSC</span></h1>
+            <h1 style={{ fontSize: 16, fontWeight: 700, color: T.white }}>{currentDev.name} <span style={{ color: T.textMuted, fontWeight: 400, fontSize: 13 }}>{currentDev.listed ? currentDev.exchange : "Private"}</span></h1>
           </div>
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -2500,6 +2503,25 @@ export default function EmaarDashboardV2() {
             {Icons.bell}
             {unreadCount > 0 && <span style={{ position: "absolute", top: 4, right: 4, width: 8, height: 8, borderRadius: "50%", background: T.red, border: `2px solid ${T.bg}` }} />}
           </button>
+          {/* Language Picker */}
+          <div style={{ position: "relative" }}>
+            <button type="button" onClick={() => setShowLangPicker(v => !v)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: "6px 10px", cursor: "pointer", color: T.textSecondary, display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: "'Outfit',sans-serif", fontWeight: 600, transition: "all 0.2s" }} title="Change language">
+              <span style={{ fontSize: 14 }}>{langInfo.flag}</span>
+              <span>{langInfo.code?.toUpperCase()}</span>
+            </button>
+            {showLangPicker && (
+              <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: 8, zIndex: 200, minWidth: 180, maxHeight: 320, overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+                {LANGUAGES.map(l => (
+                  <button key={l.code} type="button" onClick={() => { setLang(l.code); setShowLangPicker(false); }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, border: "none", background: lang === l.code ? T.goldGlow : "transparent", color: lang === l.code ? T.gold : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", textAlign: "left", fontWeight: lang === l.code ? 700 : 400 }}>
+                    <span style={{ fontSize: 16 }}>{l.flag}</span>
+                    <span>{l.name}</span>
+                    {lang === l.code && <span style={{ marginLeft: "auto", color: T.gold }}>✓</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -3111,6 +3133,14 @@ export default function EmaarDashboardV2() {
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                       Full Details
                     </a>
+                    {/* WhatsApp Share */}
+                    <button type="button" onClick={(e) => {
+                      e.stopPropagation();
+                      const msg = `🏗️ *${p.name}* — ${p.community}\n💰 From AED ${p.price ? (p.price/1000000).toFixed(1)+"M" : "TBD"} | ${p.ppsf ? "AED "+p.ppsf.toLocaleString()+"/sqft" : ""}\n📅 Handover: ${p.handover} | Plan: ${p.payment}\n📊 Full details: ${window.location.origin}${projectUrl(p)}\n\n_via DXB Analytics_`;
+                      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+                    }} style={{ padding: "8px 10px", background: "rgba(37,211,102,0.08)", border: "1px solid rgba(37,211,102,0.25)", borderRadius: 8, color: "#25D366", fontSize: 14, cursor: "pointer" }} title="Share on WhatsApp">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    </button>
                     <button type="button" onClick={(e) => { e.stopPropagation(); toggleWatchlist(p); }} style={{ padding: "8px 10px", background: watchlist.find(w => w.id === p.id) ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${watchlist.find(w => w.id === p.id) ? T.gold : T.border}`, borderRadius: 8, color: watchlist.find(w => w.id === p.id) ? T.gold : T.textMuted, fontSize: 14, cursor: "pointer" }} title={watchlist.find(w => w.id === p.id) ? "Remove from watchlist" : "Add to watchlist"}>
                       {watchlist.find(w => w.id === p.id) ? "★" : "☆"}
                     </button>
@@ -6825,6 +6855,15 @@ export default function EmaarDashboardV2() {
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                   View Full Report
                 </a>
+                {/* WhatsApp Share */}
+                <button type="button" onClick={() => {
+                  const p = selectedProject_;
+                  const msg = `🏗️ *${p.name}* — ${p.community}\n💰 From AED ${p.price ? (p.price/1000000).toFixed(1)+"M" : "TBD"} | ${p.ppsf ? "AED "+p.ppsf.toLocaleString()+"/sqft" : ""}\n📅 Handover: ${p.handover} | Plan: ${p.payment}\n📊 Full details: ${window.location.origin}${projectUrl(p)}\n\n_via DXB Analytics — Dubai's Professional Real Estate Platform_`;
+                  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+                }} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "13px 14px", background: "rgba(37,211,102,0.08)", border: "1px solid rgba(37,211,102,0.3)", borderRadius: 12, color: "#25D366", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }} title="Share on WhatsApp">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                  Share
+                </button>
                 <button type="button" onClick={() => { const p = selectedProject_; const txt = `${p.name} | ${p.community} | AED ${p.price ? (p.price/1000000).toFixed(2)+"M" : "TBD"} | ${p.ppsf ? p.ppsf.toLocaleString()+" PPSF" : ""} | Handover: ${p.handover} | Payment: ${p.payment} | Status: ${p.status}`; navigator.clipboard?.writeText(txt).then(() => alert("✅ Project data copied to clipboard")).catch(() => alert(txt)); }}
                   style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "13px 16px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}
                   title="Copy project data">
@@ -7338,7 +7377,7 @@ export default function EmaarDashboardV2() {
       </div>}
 
       {/* ── MOBILE BOTTOM NAV BAR ── */}
-      <nav style={{ display: "none" }} className="mobile-bottom-nav" aria-label="Quick navigation">
+      <nav className="mobile-bottom-nav" aria-label="Quick navigation">
         {[
           { key: "Overview", icon: "◈", label: "Overview" },
           { key: "Projects", icon: "⊞", label: "Projects" },
