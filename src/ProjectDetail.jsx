@@ -5,6 +5,7 @@
    ─────────────────────────────────────────────────────────────────────────── */
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { auth, db } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -48,6 +49,7 @@ const getHandoverCountdown = (handover) => {
 /* ─── helpers ─── */
 const fmtM = (v) => v ? `AED ${(v / 1_000_000).toFixed(2)}M` : "—";
 const fmtNum = (v) => v ? `AED ${Number(v).toLocaleString()}` : "—";
+
 
 
 const getUnitEntries = (units) => {
@@ -107,6 +109,7 @@ const css = `
   .pd-card { background: #0A1628; border: 1px solid rgba(212,168,67,0.12); border-radius: 14px; padding: 22px; margin-bottom: 16px; animation: fadeUp 0.4s ease-out both; }
   .pd-back { display: inline-flex; align-items: center; gap: 6px; color: #94A3B8; font-size: 13px; text-decoration: none; transition: color 0.2s; font-family: 'Outfit', sans-serif; }
   .pd-back:hover { color: #D4A843; }
+  .pd-cta-row { display: flex; flex-direction: column; gap: 10px; }
   .pd-share { display: flex; align-items: center; gap: 6px; padding: "8px 16px"; background: transparent; border: 1px solid rgba(212,168,67,0.25); border-radius: 8px; color: #94A3B8; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif; transition: all 0.2s; }
   .pd-share:hover { color: #D4A843; border-color: rgba(212,168,67,0.5); }
   .amenity-card { background: #0E1D35; border-radius: 10px; padding: 12px; border-left: 3px solid; }
@@ -115,6 +118,7 @@ const css = `
     .pd-grid-2 { grid-template-columns: 1fr !important; }
     .pd-main { grid-template-columns: 1fr !important; }
     .pd-hero-row { flex-direction: column !important; align-items: flex-start !important; }
+    .pd-cta-row { flex-direction: column !important; }
   }
 `;
 
@@ -131,7 +135,6 @@ export default function ProjectDetail() {
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
   const [copied, setCopied] = useState(false);
-
   const isPro = ["pro", "pro_trial", "enterprise", "admin"].includes(userTier);
 
   /* ── load project from data.js + Firestore override ── */
@@ -210,6 +213,7 @@ export default function ProjectDetail() {
       setTimeout(() => setCopied(false), 2000);
     });
   };
+
 
 
   return (
@@ -513,6 +517,21 @@ export default function ProjectDetail() {
               </div>
             </div>
 
+            {/* Share / Actions box */}
+            <div className="pd-card" style={{ animationDelay: "0.1s", background: "linear-gradient(135deg, rgba(212,168,67,0.08), rgba(4,9,15,0))", border: `1px solid ${T.border}` }}>
+              <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: 17, fontWeight: 800, color: T.white, marginBottom: 4 }}>Share {project.name}</h3>
+              <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 16, lineHeight: 1.5 }}>Share this project with clients or copy the link for your records.</p>
+              <div className="pd-cta-row" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <button onClick={() => { navigator.clipboard.writeText(window.location.href); }} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px", borderRadius: 10, background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, border: "none", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  Copy Link
+                </button>
+                <a href={`mailto:?subject=${encodeURIComponent(project.name + ' — DXB Analytics')}&body=${encodeURIComponent('Check out this project: ' + window.location.href)}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px", borderRadius: 10, background: "transparent", color: T.gold, border: `1px solid ${T.gold}`, fontWeight: 600, fontSize: 13, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  Share via Email
+                </a>
+              </div>
+            </div>
 
             {/* Location summary */}
             {ci && isPro && (

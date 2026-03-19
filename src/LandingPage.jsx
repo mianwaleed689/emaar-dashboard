@@ -138,7 +138,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
     { q: "What data sources do you use?", a: "Emaar official IR reports, Dubai Land Department (DLD), DXBinteract, BetterHomes, Bayut, Engel & Völkers, ValuStrat, Knight Frank, and Yahoo Finance for stock data." },
     { q: "How often is data updated?", a: "Financial data is updated within 24 hours of official Emaar releases. Project prices and handover dates are manually verified monthly. Stock data refreshes every 15 minutes." },
     { q: "Can I use this for client presentations?", a: "Absolutely — that's the core Pro use case. Use the Compare Tool to create side-by-side project comparisons, then export as a PDF directly from the dashboard." },
-    { q: "What's included in the Enterprise plan?", a: "Everything in Pro plus multi-user team accounts, PDF report generation, API access (coming Q3 2026), custom branded reports, and a dedicated account manager. Contact us via WhatsApp to discuss." },
+    { q: "What's included in the Enterprise plan?", a: "Everything in Pro plus multi-user team accounts, PDF report generation, API access (coming Q3 2026), custom branded reports, and a dedicated account manager. Contact us at mianwaleed689@gmail.com to discuss." },
     { q: "Which developers are covered?", a: "Phase 1 (live now) covers all 48 active Emaar projects across 11 communities. DAMAC, Sobha, Nakheel, ALDAR, and 6 more developers are coming in Q3 2026." },
     { q: "Can I cancel anytime?", a: "Yes. No contracts, no cancellation fees. Cancel anytime from your account settings and you retain access until the end of your billing period." },
   ];
@@ -378,7 +378,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                 "Competitor intelligence",
                 "3-project comparison + PDF export",
                 "Location & community deep-dives",
-                "Priority WhatsApp support",
+                "Priority email support",
               ].map((f, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", fontSize: 13, color: T.textSecondary }}>
                   <span style={{ color: T.green }}>✓</span>{f}
@@ -413,8 +413,8 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                   <span style={{ color: T.green }}>✓</span>{f}
                 </div>
               ))}
-              <a href="https://wa.me/971542410599?text=Hi%2C%20I'm%20interested%20in%20DXB%20Analytics%20Enterprise%20plan" target="_blank" rel="noopener noreferrer" className="cta-btn-outline" style={{ width: "100%", justifyContent: "center", padding: "12px 0", marginTop: 24, display: "flex", textDecoration: "none" }}>
-                Contact on WhatsApp →
+              <a href="mailto:mianwaleed689@gmail.com?subject=Enterprise%20Plan%20Enquiry" className="cta-btn-outline" style={{ width: "100%", justifyContent: "center", padding: "12px 0", marginTop: 24, display: "flex", textDecoration: "none" }}>
+                Contact Us →
               </a>
               <p style={{ fontSize: 10, color: T.textMuted, marginTop: 12, textAlign: "center" }}>⏳ = Launching Q3 2026</p>
             </div>
@@ -591,9 +591,9 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             <button onClick={onSignUpClick} className="cta-btn" style={{ padding: "18px 48px", fontSize: 17 }}>
               Start Free Trial →
             </button>
-            <a href="https://wa.me/971542410599?text=Hi%2C%20I'd%20like%20to%20know%20more%20about%20DXB%20Analytics" target="_blank" rel="noopener noreferrer"
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "18px 32px", background: "#25D366", borderRadius: 12, color: "#fff", fontSize: 15, fontWeight: 700, textDecoration: "none", transition: "all 0.2s" }}>
-              💬 WhatsApp Us
+            <a href="mailto:mianwaleed689@gmail.com?subject=DXB%20Analytics%20Enquiry"
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "18px 32px", background: "transparent", borderRadius: 12, color: T.gold, fontSize: 15, fontWeight: 700, textDecoration: "none", border: `1px solid ${T.gold}`, transition: "all 0.2s" }}>
+              ✉️ Contact Us
             </a>
           </div>
         </div>

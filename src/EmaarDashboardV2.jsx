@@ -13,7 +13,7 @@ import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
 
 /* ─── DATA ALIASES (for backward compat) ─── */
-const financials = emaarFinancials;
+const financials = emaarFinancials; // default — overridden below with liveFinancials if available
 const segments = emaarSegments;
 const risks = emaarRisks.map(r => ({ factor: r.factor, score: r.score, max: 150, color: r.color }));
 const yields = emaarYields.map(y => ({ label: y.unit, community: y.community, rent: y.rent/1000, price: y.price/1000, gross: y.gross, net: y.net, demand: y.demand === "Very High" ? "V.High" : y.demand === "Moderate-High" ? "High" : y.demand, visa: y.visa }));
@@ -1499,6 +1499,10 @@ export default function EmaarDashboardV2() {
   const [showLogin, setShowLogin] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showCancelSurvey, setShowCancelSurvey] = useState(false);
+  const [cancelSurveyReason, setCancelSurveyReason] = useState("");
+  const [cancelSurveyFeedback, setCancelSurveyFeedback] = useState("");
+  const [cancelSurveySubmitting, setCancelSurveySubmitting] = useState(false);
   const [profileEdit, setProfileEdit] = useState({ name: "" });
   const [showCheckout, setShowCheckout] = useState(null);
   const [checkoutStep, setCheckoutStep] = useState(1);
@@ -1610,6 +1614,8 @@ export default function EmaarDashboardV2() {
   const [liveMortgageRates, setLiveMortgageRates] = useState([]);
   const [liveNeighbourhoods, setLiveNeighbourhoods] = useState([]);
   const [liveMarketData, setLiveMarketData] = useState([]);
+  const [liveFinancials, setLiveFinancials] = useState([]);
+  const [liveRiskFactors, setLiveRiskFactors] = useState([]);
   const [emaarStockPrice, setEmaarStockPrice] = useState(null);
   const [tabSettings, setTabSettings] = useState({});
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
@@ -1730,6 +1736,8 @@ export default function EmaarDashboardV2() {
           { key: "mortgageRates",   setter: setLiveMortgageRates },
           { key: "neighbourhoodScores", setter: setLiveNeighbourhoods },
           { key: "marketData",      setter: setLiveMarketData },
+          { key: "financials",      setter: setLiveFinancials },
+          { key: "riskFactors",     setter: setLiveRiskFactors },
         ];
         await Promise.all(tabCollections.map(async ({ key, setter }) => {
           try {
@@ -1819,7 +1827,7 @@ export default function EmaarDashboardV2() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Use merged Firestore+static data if available, otherwise pure static fallback
-  const activeProjects = [...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }), ...extraProjects.filter(p => p.name && p.community && p.price)];
+  const activeProjects = [...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }), ...extraProjects];
 
   // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
   const getUnitEntries = (units) => {
@@ -2729,7 +2737,10 @@ export default function EmaarDashboardV2() {
           </>}
 
           {/* ─── FINANCIALS TAB ─── */}
-          {tab === "Financials" && <>
+          {tab === "Financials" && (() => {
+            const finData = liveFinancials.length > 0 ? liveFinancials : emaarFinancials;
+            const financials = finData;
+            return <>
             <Section title="Financial Performance" sub="6-year trend · 2020–2025 · All figures in AED Billions">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Revenue CAGR" value="27.2%" sub="2020-2025 · 5-year" delay={1} onClick={() => setSelectedKPI({ label: "Revenue CAGR", value: "27.2%", color: T.gold, description: "Compound Annual Growth Rate of revenue from AED 14.6B in 2020 to AED 49.6B in 2025 — one of the highest CAGRs among global real estate developers.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Revenue", value: "AED 14.6B", note: "Base year" }, { label: "2025 Revenue", value: "AED 49.6B", note: "+240% total growth" }, { label: "CAGR", value: "27.2%", note: "5-year compounded" }, { label: "vs GCC Average", value: "~8–10%", note: "Sector benchmark" }, { label: "YoY 2025", value: "+40%", note: "Strongest single year" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: 49.6 }] })} />
@@ -2891,7 +2902,8 @@ export default function EmaarDashboardV2() {
           <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "Emaar Q4 2025 Earnings Release", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM Filing", url: "https://www.dfm.ae" }, { label: "GuruFocus", url: "https://www.gurufocus.com/term/overview/EMAAR.DU" }, { label: "Zawya", url: "https://www.zawya.com/en/company/financials/EMAAR-EMAAR" }]} />
             </Section>
             </ProGate>
-          </>}
+          </>;
+          })()}
 
           {/* ─── PROJECTS TAB (48 Projects from Excel) ─── */}
           {tab === "Projects" && <>
@@ -4997,7 +5009,11 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── RISK TAB ─── */}
-          {tab === "Risk" && <>
+          {tab === "Risk" && (() => {
+            const riskData = liveRiskFactors.length > 0
+              ? liveRiskFactors.map(r => ({ factor: r.factor, score: r.score * 14, max: 140, color: r.score >= 8 ? T.green : r.score >= 6 ? T.gold : r.score >= 4 ? T.orange : T.red, trend: r.trend, desc: r.desc }))
+              : risks;
+            return <>
             <Section title="9-Factor Risk Assessment" sub="Overall: LOW-MODERATE · Investment Grade · BBB+/Baa1/BBB">
               <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 16 }}>
                 <KPI label="Avg Risk Score" value="38.3" sub="LOW-MODERATE overall" delay={1} onClick={() => setSelectedKPI({ label: "Avg Risk Score", value: "38.3 / 140", color: T.teal, description: "Composite risk score across 9 factors. Score of 38.3 out of 140 max = LOW-MODERATE risk. Rated Investment Grade by S&P (BBB+), Moody's (Baa1), and Fitch (BBB).", source: "DXB Analytics · Fitch · S&P · Moody's", sourceUrl: "https://www.fitchratings.com", items: [{ label: "Overall Score", value: "38.3/140", note: "LOW-MODERATE" }, { label: "S&P Rating", value: "BBB+", note: "Stable outlook" }, { label: "Moody's", value: "Baa1", note: "Stable outlook" }, { label: "Fitch", value: "BBB", note: "Stable outlook" }, { label: "Risk Category", value: "Investment Grade", note: "3 agency consensus" }], trend: null })} />
@@ -5008,13 +5024,13 @@ export default function EmaarDashboardV2() {
             <ProGate isPro={isPro} message="Unlock Full Risk Analysis" onUpgrade={() => setShowUpgrade(true)}>
               <Chart title="Risk Score by Factor (Higher = More Risk)" style={{ marginTop: 20 }}>
                 <ResponsiveContainer width="100%" height={380}>
-                  <BarChart data={risks} layout="vertical">
+                  <BarChart data={riskData} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                     <XAxis type="number" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 140]} />
                     <YAxis type="category" dataKey="factor" tick={{ fill: T.textSecondary, fontSize: 11 }} width={120} axisLine={false} tickLine={false} />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar dataKey="score" name="Risk Score" radius={[0, 8, 8, 0]} barSize={22}>
-                      {risks.map((r, i) => <Cell key={i} fill={r.color} />)}
+                      {riskData.map((r, i) => <Cell key={i} fill={r.color} />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -5037,7 +5053,8 @@ export default function EmaarDashboardV2() {
             </Section>
             </ProGate>
           <TabSources sources={[{ label: "Fitch Ratings UAE Developers", url: "https://www.fitchratings.com" }, { label: "Knight Frank Dubai 2025", url: "https://www.knightfrank.com/research" }, { label: "IMF World Economic Outlook", url: "https://www.imf.org" }, { label: "DLD Transaction Data", url: "https://dubailand.gov.ae" }, { label: "CW Core Dubai Market Report", url: "https://cwcore.com" }]} />
-          </>}
+          </>;
+          })()}
 
           {/* --- CURRENCY TAB --- */}
           {tab === "Currency" && (() => {
@@ -7328,7 +7345,8 @@ export default function EmaarDashboardV2() {
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Status</div><div style={{ fontSize: 14, fontWeight: 700, color: userTier === "free" ? T.blue : T.green }}>{userTier === "free" ? "Limited" : "Active"}</div></div>
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Access</div><div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{userTier === "free" ? "5 projects" : "All 48"}</div></div>
               </div>
-              {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "\u2B50 Upgrade to Pro \u2014 AED 99/mo"}</button>}
+              {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "Outfit, sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "2B50 Upgrade to Pro 2014 AED 99/mo"}</button>}
+              {(userTier === "pro" || userTier === "enterprise") && (<button type="button" onClick={() => { setShowProfile(false); setShowCancelSurvey(true); }} style={{ marginTop: 12, width: "100%", padding: "9px 0", background: "transparent", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, color: "#EF4444", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "Outfit, sans-serif" }}>Cancel Subscription</button>)}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <button type="button" onClick={() => { setShowProfile(false); handleTabChange("Portfolio"); }} style={{ padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>📊 Portfolio</button>
@@ -7407,6 +7425,80 @@ export default function EmaarDashboardV2() {
               <button type="button" onClick={submitKYC} disabled={kycSubmitting} style={{ width: "100%", padding: "13px 0", background: kycSubmitting ? T.surfaceAlt : "linear-gradient(135deg, #00BFA5, #00897B)", border: "none", borderRadius: 10, color: kycSubmitting ? T.textMuted : "#fff", fontWeight: 800, fontSize: 14, cursor: kycSubmitting ? "not-allowed" : "pointer", fontFamily: "'Outfit', sans-serif" }}>
                 {kycSubmitting ? "Submitting..." : "Submit for Verification →"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── CANCELLATION EXIT SURVEY MODAL ─── */}
+      {showCancelSurvey && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)", padding: 16 }} onClick={() => setShowCancelSurvey(false)}>
+          <div style={{ background: T.surface, borderRadius: 20, border: "1px solid rgba(239,68,68,0.2)", width: "95%", maxWidth: 500, overflow: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: "24px 28px 20px", background: "linear-gradient(135deg, rgba(239,68,68,0.06), rgba(14,29,53,0.6))", borderBottom: `1px solid ${T.border}` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>Before You Go</div>
+                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Help us improve — takes 30 seconds</div>
+                </div>
+                <button type="button" onClick={() => setShowCancelSurvey(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              </div>
+            </div>
+            <div style={{ padding: "24px 28px 28px" }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 12 }}>Why are you cancelling?</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                {[
+                  { value: "too_expensive", label: "💸 Too expensive" },
+                  { value: "missing_features", label: "🔧 Missing features I need" },
+                  { value: "found_alternative", label: "🔄 Found a better alternative" },
+                  { value: "not_using", label: "😴 Not using it enough" },
+                  { value: "technical_issues", label: "⚠️ Technical issues" },
+                  { value: "other", label: "💬 Other reason" },
+                ].map(opt => (
+                  <div key={opt.value} onClick={() => setCancelSurveyReason(opt.value)}
+                    style={{ padding: "12px 16px", borderRadius: 10, border: `1px solid ${cancelSurveyReason === opt.value ? T.gold : T.border}`, background: cancelSurveyReason === opt.value ? "rgba(212,168,67,0.08)" : T.surfaceAlt, cursor: "pointer", fontSize: 13, color: cancelSurveyReason === opt.value ? T.gold : T.textSecondary, fontWeight: cancelSurveyReason === opt.value ? 600 : 400, transition: "all 0.15s" }}>
+                    {opt.label}
+                  </div>
+                ))}
+              </div>
+              <textarea
+                value={cancelSurveyFeedback}
+                onChange={e => setCancelSurveyFeedback(e.target.value)}
+                placeholder="Any additional feedback? (optional)"
+                rows={3}
+                style={{ width: "100%", padding: "12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", resize: "vertical", boxSizing: "border-box", marginBottom: 16 }}
+              />
+              <div style={{ display: "flex", gap: 10 }}>
+                <button type="button" onClick={() => setShowCancelSurvey(false)}
+                  style={{ flex: 1, padding: "11px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textSecondary, fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                  Keep My Plan
+                </button>
+                <button type="button" disabled={!cancelSurveyReason || cancelSurveySubmitting}
+                  onClick={async () => {
+                    if (!cancelSurveyReason) return;
+                    setCancelSurveySubmitting(true);
+                    try {
+                      const { addDoc, collection, serverTimestamp } = await import("firebase/firestore");
+                      await addDoc(collection(db, "cancellations"), {
+                        userId: auth.currentUser?.uid,
+                        userEmail: user,
+                        reason: cancelSurveyReason,
+                        feedback: cancelSurveyFeedback,
+                        previousTier: userTier,
+                        cancelledAt: new Date().toISOString(),
+                      });
+                      await setDoc(doc(db, "users", auth.currentUser?.uid), { tier: "free" }, { merge: true });
+                      setUserTier("free");
+                      setShowCancelSurvey(false);
+                      setCancelSurveyReason("");
+                      setCancelSurveyFeedback("");
+                    } catch(e) { console.error(e); }
+                    setCancelSurveySubmitting(false);
+                  }}
+                  style={{ flex: 1, padding: "11px 0", background: cancelSurveyReason ? "rgba(239,68,68,0.15)" : T.surfaceAlt, border: `1px solid ${cancelSurveyReason ? "rgba(239,68,68,0.4)" : T.border}`, borderRadius: 10, color: cancelSurveyReason ? "#EF4444" : T.textMuted, fontWeight: 700, fontSize: 13, cursor: cancelSurveyReason ? "pointer" : "not-allowed", fontFamily: "'Outfit', sans-serif", opacity: cancelSurveySubmitting ? 0.6 : 1 }}>
+                  {cancelSurveySubmitting ? "Processing..." : "Confirm Cancellation"}
+                </button>
+              </div>
+              <p style={{ fontSize: 11, color: T.textMuted, textAlign: "center", marginTop: 12 }}>Your access continues until the end of your current billing period.</p>
             </div>
           </div>
         </div>
