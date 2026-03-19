@@ -512,13 +512,16 @@ const DeveloperComingSoon = ({ devName, tabName }) => (
       {devName} — Coming Soon
     </div>
     <div style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, maxWidth: 480, marginBottom: 24 }}>
-      {tabName} data for <strong style={{ color: T.gold }}>{devName}</strong> is being compiled and verified. 
+      <strong style={{ color: T.gold }}>{tabName}</strong> data for <strong style={{ color: T.gold }}>{devName}</strong> is being compiled and verified.
       It will appear here automatically once added to the platform.
     </div>
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
-      {["Projects ✅", "Map ✅", "Yields — Coming", "Financials — Coming", "Risk — Coming"].map((item, i) => (
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginBottom: 24 }}>
+      {["Projects ✅", "Map ✅", "Yields — Coming", "Financials — Coming", "Risk — Coming", "Price History — Coming"].map((item, i) => (
         <span key={i} style={{ fontSize: 11, padding: "5px 12px", borderRadius: 20, background: item.includes("✅") ? "rgba(16,185,129,0.1)" : T.surfaceAlt, border: `1px solid ${item.includes("✅") ? "rgba(16,185,129,0.3)" : T.border}`, color: item.includes("✅") ? T.green : T.textMuted, fontWeight: 600 }}>{item}</span>
       ))}
+    </div>
+    <div style={{ padding: "12px 20px", background: T.goldMuted, border: `1px solid ${T.border}`, borderRadius: 10, fontSize: 12, color: T.textSecondary }}>
+      💡 Meanwhile, use the <strong style={{ color: T.gold }}>Projects</strong> and <strong style={{ color: T.gold }}>Map</strong> tabs to explore {devName} projects
     </div>
   </div>
 );
@@ -953,12 +956,12 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
   const tabBenefits = {
     "DXB Estimate":     ["Automated property valuations", "AVM price estimates per unit", "Bayut live listings", "±15% accuracy model"],
     "Portfolio":        ["Track your Dubai investments", "ROI calculations", "Portfolio performance chart", "Yield tracking"],
-    "Yields":           ["Gross & net yield by community", "STR vs LTR comparison", "Top yielding Emaar areas", "Historical yield trends"],
+    "Yields":           ["Gross & net yield by community", "STR vs LTR comparison", "Top yielding Dubai communities", "Historical yield trends"],
     "Mortgage":         ["Live EIBOR rates", "UAE bank comparison", "Monthly payment calculator", "Affordability analysis"],
     "DLD Volumes":      ["Real transaction volumes", "Community deal counts", "YoY growth by area", "Quarterly breakdown"],
     "STR vs LTR":       ["Airbnb vs long-term yields", "Occupancy rates", "Nightly rate benchmarks", "Best STR communities"],
     "Developer Health": ["Developer financial scores", "Delivery track records", "Risk ratings", "Off-plan safety analysis"],
-    "Competitors":      ["Emaar vs DAMAC vs Nakheel", "Market share data", "Price per sqft comparison", "Analyst ratings"],
+    "Competitors":      ["Developer vs market comparison", "Market share data", "Price per sqft comparison", "Analyst ratings"],
     "Service Charges":  ["RERA approved rates", "Community-by-community breakdown", "Annual charge estimates", "Hidden cost analysis"],
     "Flip":             ["Buy-renovate-sell calculator", "Flip ROI estimator", "DLD fee breakdown", "Best flip communities"],
     "Investment Score": ["AI-powered property scoring", "Risk vs return matrix", "Top picks by budget", "Score breakdown"],
@@ -995,7 +998,7 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
 const UpgradeModal = ({ show, onClose }) => {
   if (!show) return null;
   const plans = [
-    { name: "Pro", price: "99", period: "month", features: ["48 Emaar projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →" },
+    { name: "Pro", price: "99", period: "month", features: ["48+ projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →" },
     { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation ⏳", "API data access ⏳", "Custom dashboards ⏳", "Multi-user team accounts ⏳", "Developer-level raw data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Launching Q3 2026", cta: "Contact Sales →" },
   ];
   return (
@@ -1010,7 +1013,7 @@ const UpgradeModal = ({ show, onClose }) => {
             <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>500+ investors already using Pro</span>
           </div>
           <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 900, color: T.white, marginBottom: 6 }}>Unlock the Full Platform</h2>
-          <p style={{ color: T.textSecondary, fontSize: 13 }}>The most comprehensive Emaar & Dubai real estate intelligence platform</p>
+          <p style={{ color: T.textSecondary, fontSize: 13 }}>Dubai Real Estate Intelligence Platform — All Developers</p>
         </div>
 
         {/* ROI bar */}
@@ -1859,6 +1862,10 @@ export default function EmaarDashboardV2() {
   // Emaar: /project/1  |  Firestore: /project/aldar_1
   const projectUrl = (p) => `/project/${p.docId || p.id}`;
 
+  // Current developer object for display
+  const currentDev = allDevelopers.find(d => d.id === selectedDeveloper) || { id: "emaar", name: "Emaar Properties", shortName: "Emaar" };
+  const isEmaar = selectedDeveloper === "emaar";
+
   // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
   const getUnitEntries = (units) => {
     if (!units) return [];
@@ -2537,7 +2544,8 @@ export default function EmaarDashboardV2() {
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: `0 24px ${compareList.length > 0 && tab === "Projects" ? "120px" : "60px"}` }}>
 
           {/* ─── OVERVIEW TAB ─── */}
-          {tab === "Overview" && <>
+          {tab === "Overview" && !isEmaar && <DeveloperComingSoon devName={currentDev.name} tabName="Overview & Financials" />}
+          {tab === "Overview" && isEmaar && <>
             {/* ─── VERIFIED BAR ─── */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 4, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -2748,7 +2756,7 @@ export default function EmaarDashboardV2() {
                       <PolarGrid stroke="rgba(255,255,255,0.06)" />
                       <PolarAngleAxis dataKey="metric" tick={{ fill: T.textSecondary, fontSize: 10 }} />
                       <PolarRadiusAxis tick={false} axisLine={false} />
-                      <Radar name="Emaar" dataKey="value" stroke={T.gold} fill={T.gold} fillOpacity={0.15} strokeWidth={2} />
+                      <Radar name={currentDev.shortName || "Developer"} dataKey="value" stroke={T.gold} fill={T.gold} fillOpacity={0.15} strokeWidth={2} />
                       <Tooltip content={<CustomTooltip />} />
                     </RadarChart>
                   </ResponsiveContainer>
@@ -2770,7 +2778,8 @@ export default function EmaarDashboardV2() {
           </>}
 
           {/* ─── FINANCIALS TAB ─── */}
-          {tab === "Financials" && <>
+          {tab === "Financials" && !isEmaar && <DeveloperComingSoon devName={currentDev.name} tabName="Financials" />}
+          {tab === "Financials" && isEmaar && <>
             <Section title="Financial Performance" sub="6-year trend · 2020–2025 · All figures in AED Billions">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Revenue CAGR" value="27.2%" sub="2020-2025 · 5-year" delay={1} onClick={() => setSelectedKPI({ label: "Revenue CAGR", value: "27.2%", color: T.gold, description: "Compound Annual Growth Rate of revenue from AED 14.6B in 2020 to AED 49.6B in 2025 — one of the highest CAGRs among global real estate developers.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Revenue", value: "AED 14.6B", note: "Base year" }, { label: "2025 Revenue", value: "AED 49.6B", note: "+240% total growth" }, { label: "CAGR", value: "27.2%", note: "5-year compounded" }, { label: "vs GCC Average", value: "~8–10%", note: "Sector benchmark" }, { label: "YoY 2025", value: "+40%", note: "Strongest single year" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: 49.6 }] })} />
@@ -2936,12 +2945,24 @@ export default function EmaarDashboardV2() {
 
           {/* ─── PROJECTS TAB (48 Projects from Excel) ─── */}
           {tab === "Projects" && <>
-            <Section title={`${activeProjects.length} Active Projects`} sub="Complete off-plan portfolio · 2026–2030 · Search & filter">
+            <Section title={`${activeProjects.length} Active Projects`} sub={`${currentDev.name} off-plan portfolio · 2026–2030 · Search & filter`}
+              action={
+                <button type="button" onClick={() => {
+                  const headers = ["Name","Community","Type","Beds","Status","Handover","Price (AED)","PPSF","Payment Plan","Construction %","Tier","Developer"];
+                  const rows = activeProjects.map(p => [p.name,p.community,p.type,p.beds,p.status,p.handover,p.price,p.ppsf,p.payment,p.construction,p.tier,p.developer||"Emaar Properties"]);
+                  const csv = [headers,...rows].map(r => r.map(v => `"${v||""}"`).join(",")).join("\n");
+                  const blob = new Blob([csv], { type: "text/csv" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a"); a.href = url; a.download = `DXB-Analytics-${currentDev.shortName||"Projects"}-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+                }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 16px", background: "rgba(0,191,165,0.08)", border: `1px solid ${T.teal}`, borderRadius: 8, color: T.teal, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                  ⬇ Export CSV
+                </button>
+              }>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE.", source: "DXB Analytics", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "10", note: "Address, Vida, Palace" }], trend: null })} />
-                <KPI label="Communities" value="11" sub="DHE · DCH · EBF · GPC + 7 more" delay={2} />
-                <KPI label="Branded" value={`${activeProjects.filter(p=>p.branded).length}`} sub="Address · Vida · Palace · Bristol" delay={3} />
-                <KPI label="Avg Construction" value={`${Math.round(activeProjects.reduce((a,p)=>a+(p.construction||0),0)/activeProjects.length)}%`} sub="Weighted average progress" delay={4} />
+                <KPI label="Total Projects" value={activeProjects.length} sub={`${activeProjects.filter(p=>p.status==="Under Construction").length} under construction · ${activeProjects.filter(p=>p.status==="Off-Plan").length} off-plan`} delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: String(activeProjects.length), color: T.gold, description: `${activeProjects.length} active projects across ${[...new Set(activeProjects.map(p=>p.community))].length} communities.`, source: "DXB Analytics", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Under Construction", value: String(activeProjects.filter(p=>p.status==="Under Construction").length), note: "Active building" }, { label: "Off-Plan", value: String(activeProjects.filter(p=>p.status==="Off-Plan").length), note: "Pre-launch / launched" }, { label: "Communities", value: String([...new Set(activeProjects.map(p=>p.community))].length), note: "Master-planned" }, { label: "Branded", value: String(activeProjects.filter(p=>p.branded).length), note: "Branded residences" }], trend: null })} />
+                <KPI label="Communities" value={[...new Set(activeProjects.map(p=>p.community))].length} sub="Master-planned communities" delay={2} />
+                <KPI label="Branded" value={activeProjects.filter(p=>p.branded).length} sub="Branded residences" delay={3} />
+                <KPI label="Avg Construction" value={`${Math.round(activeProjects.reduce((a,p)=>a+(p.construction||0),0)/Math.max(activeProjects.length,1))}%`} sub="Weighted average progress" delay={4} />
               </div>
             </Section>
 
@@ -3804,7 +3825,7 @@ export default function EmaarDashboardV2() {
                       </div>
                     )}
                     <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 8, background: T.surfaceAlt, fontSize: 11, color: T.textMuted, lineHeight: 1.7 }}>
-                      ⚠️ DXB Estimate is an automated model using DLD transaction data, Emaar price lists, and rental index. Estimates may vary ±15% from actual market prices. Always verify with a registered valuer before transacting.
+                      ⚠️ DXB Estimate is an automated model using DLD transaction data, developer price lists, and rental index. Estimates may vary ±15% from actual market prices. Always verify with a registered valuer before transacting.
                     </div>
                   </div>
                 </div>
@@ -5038,7 +5059,8 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── RISK TAB ─── */}
-          {tab === "Risk" && <>
+          {tab === "Risk" && !isEmaar && <DeveloperComingSoon devName={currentDev.name} tabName="Risk Assessment" />}
+          {tab === "Risk" && isEmaar && <>
             <Section title="9-Factor Risk Assessment" sub="Overall: LOW-MODERATE · Investment Grade · BBB+/Baa1/BBB">
               <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 16 }}>
                 <KPI label="Avg Risk Score" value="38.3" sub="LOW-MODERATE overall" delay={1} onClick={() => setSelectedKPI({ label: "Avg Risk Score", value: "38.3 / 140", color: T.teal, description: "Composite risk score across 9 factors. Score of 38.3 out of 140 max = LOW-MODERATE risk. Rated Investment Grade by S&P (BBB+), Moody's (Baa1), and Fitch (BBB).", source: "DXB Analytics · Fitch · S&P · Moody's", sourceUrl: "https://www.fitchratings.com", items: [{ label: "Overall Score", value: "38.3/140", note: "LOW-MODERATE" }, { label: "S&P Rating", value: "BBB+", note: "Stable outlook" }, { label: "Moody's", value: "Baa1", note: "Stable outlook" }, { label: "Fitch", value: "BBB", note: "Stable outlook" }, { label: "Risk Category", value: "Investment Grade", note: "3 agency consensus" }], trend: null })} />
@@ -6914,7 +6936,7 @@ export default function EmaarDashboardV2() {
                     <div class="section-title">Investment Summary</div>
                     <div class="highlight">
                       <h3>DXB Analytics Assessment</h3>
-                      <p>${p.name} by Emaar Properties is a ${p.status === "Completed" ? "completed" : "under-development"} project in ${p.community}, Dubai. ${p.branded ? `As a branded residence (${p.brand}), it commands premium pricing and exceptional rental premiums typically 20-35% above comparable non-branded units. ` : ""}With Dubai's real estate market growing consistently, ${p.community} has delivered strong investor returns. The project's ${p.handover ? `expected handover in ${p.handover}` : "upcoming handover"} aligns with Dubai's infrastructure growth cycle.</p>
+                      <p>${p.name} by ${p.developer || "Emaar Properties"} is a ${p.status === "Completed" ? "completed" : "under-development"} project in ${p.community}, Dubai. ${p.branded ? `As a branded residence (${p.brand}), it commands premium pricing and exceptional rental premiums typically 20-35% above comparable non-branded units. ` : ""}With Dubai's real estate market growing consistently, ${p.community} has delivered strong investor returns. The project's ${p.handover ? `expected handover in ${p.handover}` : "upcoming handover"} aligns with Dubai's infrastructure growth cycle.</p>
                     </div>
                   </div>
 
@@ -7632,7 +7654,7 @@ export default function EmaarDashboardV2() {
           },
           {
             icon: "🔍",
-            title: "Browse 48+ Emaar Projects",
+            title: "Browse 48+ Projects",
             body: "Go to the Projects tab to explore every active development. Filter by community, tier, handover year, or price range. Click any card for full details, documents, and ROI analysis.",
             cta: "Next →"
           },
