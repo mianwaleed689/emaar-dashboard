@@ -192,6 +192,7 @@ const TABS = [
   { key: "Competitors", icon: Icons.competitors },
   { key: "Yields", icon: Icons.yields },
   { key: "Mortgage", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
+  { key: "ROI Calculator", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/></svg> },
   { key: "Map", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg> },
   { key: "Risk", icon: Icons.risk },
   { key: "Market", icon: Icons.market },
@@ -2627,7 +2628,6 @@ export default function EmaarDashboardV2() {
                 <button type="button" onClick={async () => {
                   const now = new Date().toLocaleDateString("en-AE", { day: "numeric", month: "long", year: "numeric" });
                   const tabLabel = tab || "Overview";
-                  // Dynamic load jsPDF from CDN
                   if (!window.jspdf) {
                     await new Promise((resolve, reject) => {
                       const s = document.createElement("script");
@@ -2638,77 +2638,115 @@ export default function EmaarDashboardV2() {
                   }
                   const { jsPDF } = window.jspdf;
                   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-                  const W = 210, M = 18;
-                  // Dark background
-                  pdf.setFillColor(4, 9, 15);
-                  pdf.rect(0, 0, W, 297, "F");
-                  // Gold header bar
-                  pdf.setFillColor(212, 168, 67);
-                  pdf.rect(0, 0, W, 2, "F");
-                  // Logo / Title
-                  pdf.setFont("helvetica", "bold");
-                  pdf.setFontSize(22); pdf.setTextColor(212, 168, 67);
-                  pdf.text("DXB Analytics", M, 22);
-                  pdf.setFontSize(10); pdf.setTextColor(180, 180, 180);
-                  pdf.text("The Bloomberg of Dubai Real Estate", M, 29);
+                  const W = 210, M = 16;
+                  const gold = [212, 168, 67], dark = [4, 9, 15], surface = [10, 22, 40], white = [255,255,255], muted = [100,120,140];
+
+                  // ── PAGE 1: COVER ──
+                  pdf.setFillColor(...dark); pdf.rect(0, 0, W, 297, "F");
+                  // Gold sidebar accent
+                  pdf.setFillColor(...gold); pdf.rect(0, 0, 4, 297, "F");
+                  // Top bar
+                  pdf.setFillColor(14, 29, 53); pdf.rect(4, 0, W-4, 60, "F");
+                  // Logo text
+                  pdf.setFont("helvetica", "bold"); pdf.setFontSize(28); pdf.setTextColor(...gold);
+                  pdf.text("DXB Analytics", M + 4, 28);
+                  pdf.setFontSize(10); pdf.setTextColor(...muted);
+                  pdf.text("The Professional Data Layer for Dubai Real Estate", M + 4, 37);
+                  // Divider line
+                  pdf.setDrawColor(...gold); pdf.setLineWidth(0.5);
+                  pdf.line(M + 4, 42, W - M, 42);
                   // Report title
-                  pdf.setFontSize(14); pdf.setTextColor(255, 255, 255); pdf.setFont("helvetica", "bold");
-                  pdf.text(`${tabLabel} Report`, M, 42);
-                  pdf.setFontSize(9); pdf.setTextColor(140, 140, 140); pdf.setFont("helvetica", "normal");
-                  pdf.text(`Generated ${now} · ${user || "DXB Analytics"}`, M, 49);
-                  // Divider
-                  pdf.setDrawColor(212, 168, 67, 0.3); pdf.setLineWidth(0.3);
-                  pdf.line(M, 54, W - M, 54);
-                  // Data sections based on tab
-                  let y = 62;
-                  const addSection = (title, rows) => {
-                    pdf.setFont("helvetica", "bold"); pdf.setFontSize(10); pdf.setTextColor(212, 168, 67);
-                    pdf.text(title.toUpperCase(), M, y); y += 7;
-                    rows.forEach(([label, value, note]) => {
-                      pdf.setFillColor(20, 35, 60); pdf.rect(M, y - 4, W - M * 2, 10, "F");
-                      pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor(160, 160, 160);
-                      pdf.text(label, M + 3, y + 2);
-                      pdf.setFont("helvetica", "bold"); pdf.setFontSize(9); pdf.setTextColor(255, 255, 255);
-                      pdf.text(value, M + 70, y + 2);
-                      if (note) { pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(120, 140, 160); pdf.text(note, M + 130, y + 2); }
-                      y += 12;
-                    });
-                    y += 4;
-                  };
-                  const sections = {
-                    "Overview": [
-                      ["KEY METRICS", [["Property Sales FY2025","AED 80.4B","+16% YoY · All-time record"],["Revenue FY2025","AED 49.6B","+40% YoY · USD 13.5B"],["Net Profit FY2025","AED 25.7B","+36% YoY · USD 7.0B"],["Backlog","AED 155B","3–4yr revenue visibility"],["Units Delivered","125,600+","Since 2002 · #1 GCC"]]],
-                      ["FINANCIALS", [["Market Cap","AED 128.2B","~USD 34.9B"],["P/E Ratio","7.83×","Industry avg 15.5×"],["Dividend Yield","7.04%","AED 1.00/share"],["Debt/Equity","0.11×","Very low leverage"],["Credit Rating","BBB+ / Baa1","S&P / Moody's stable"]]]
-                    ],
-                    "Yields": [
-                      ["RENTAL YIELD SUMMARY", [["City Average Gross Yield","6.9%","Dubai 2025"],["JVC — Highest Yield","8–9%","Best community for yield"],["Downtown Dubai","4–5%","Premium pricing, lower yield"],["Palm Jumeirah","4.5–5.5%","Ultra-luxury, lower yield"],["Dubai Hills Estate","5.5–6.5%","Family community premium"]]]
-                    ],
-                    "Market": [
-                      ["DUBAI MARKET 2025", [["Total Transactions","214,912","Record — 5th consecutive year"],["Total Market Value","AED 682.5B","All-time high"],["Avg Price/sqft","AED 1,689","2025 Dubai average"],["Off-Plan Share","60%+","Dominant market segment"],["YoY Growth","~22%","Transaction volume growth"]]]
-                    ]
-                  };
-                  const tabSections = sections[tabLabel] || sections["Overview"];
-                  tabSections.forEach(([title, rows]) => addSection(title, rows));
-                  // AI Insights in PDF
-                  if (aiInsights.length > 0 && y < 220) {
-                    pdf.setFont("helvetica", "bold"); pdf.setFontSize(10); pdf.setTextColor(212, 168, 67);
-                    pdf.text("AI MARKET INSIGHTS", M, y); y += 7;
-                    aiInsights.slice(0, 3).forEach(ins => {
-                      if (y > 260) return;
-                      pdf.setFillColor(14, 25, 45); pdf.rect(M, y - 4, W - M * 2, 14, "F");
-                      pdf.setFont("helvetica", "bold"); pdf.setFontSize(8); pdf.setTextColor(200, 200, 200);
-                      pdf.text(ins.title, M + 3, y + 1);
-                      pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(140, 140, 140);
-                      const insText = ins.insight.length > 90 ? ins.insight.slice(0, 90) + "…" : ins.insight;
-                      pdf.text(insText, M + 3, y + 7);
-                      y += 16;
-                    });
-                  }
+                  pdf.setFontSize(18); pdf.setTextColor(...white); pdf.setFont("helvetica", "bold");
+                  pdf.text(`${currentDev.name} — ${tabLabel}`, M + 4, 78);
+                  pdf.setFontSize(10); pdf.setTextColor(...muted); pdf.setFont("helvetica", "normal");
+                  pdf.text(`Intelligence Report · Generated ${now}`, M + 4, 88);
+                  pdf.text(`Prepared for: ${user || "DXB Analytics User"}`, M + 4, 96);
+                  // KPI summary boxes
+                  const kpis = [
+                    { l: "Property Sales", v: "AED 80.4B", s: "+16% YoY" },
+                    { l: "Net Profit", v: "AED 25.7B", s: "+36% YoY" },
+                    { l: "Revenue Backlog", v: "AED 155B", s: "3-4yr visibility" },
+                    { l: "Projects Tracked", v: String(activeProjects.length), s: "Active off-plan" },
+                  ];
+                  kpis.forEach((k, i) => {
+                    const x = M + 4 + (i % 2) * 87, y = 112 + Math.floor(i / 2) * 30;
+                    pdf.setFillColor(...surface); pdf.roundedRect(x, y, 82, 24, 2, 2, "F");
+                    pdf.setDrawColor(...gold); pdf.setLineWidth(0.3); pdf.roundedRect(x, y, 82, 24, 2, 2, "S");
+                    pdf.setFontSize(7); pdf.setTextColor(...muted); pdf.setFont("helvetica", "normal");
+                    pdf.text(k.l.toUpperCase(), x + 4, y + 7);
+                    pdf.setFontSize(13); pdf.setTextColor(...gold); pdf.setFont("helvetica", "bold");
+                    pdf.text(k.v, x + 4, y + 16);
+                    pdf.setFontSize(7); pdf.setTextColor(...muted); pdf.setFont("helvetica", "normal");
+                    pdf.text(k.s, x + 4, y + 21);
+                  });
+                  // Data sources
+                  pdf.setFontSize(8); pdf.setTextColor(...muted); pdf.setFont("helvetica", "bold");
+                  pdf.text("DATA SOURCES", M + 4, 178);
+                  pdf.setFont("helvetica", "normal"); pdf.setFontSize(7);
+                  ["Dubai Land Department (DLD) · Official FY2025 Annual Transactions",
+                   `${currentDev.name} Investor Relations · Official Annual Report 2025`,
+                   "REIDIN Property Index · ValuStrat Q4 2025 · Knight Frank Dubai"].forEach((s, i) => {
+                    pdf.text(`• ${s}`, M + 4, 185 + i * 6);
+                  });
+                  // Disclaimer
+                  pdf.setFillColor(...surface); pdf.rect(M, 260, W - M*2, 24, "F");
+                  pdf.setFontSize(7); pdf.setTextColor(...muted);
+                  const disc = "This report is for informational purposes only and does not constitute financial or investment advice. All data sourced from official reports. Verify before transacting.";
+                  pdf.text(disc, M + 3, 268, { maxWidth: W - M*2 - 6 });
                   // Footer
-                  pdf.setFillColor(212, 168, 67); pdf.rect(0, 293, W, 4, "F");
-                  pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(100, 100, 100);
-                  pdf.text(`DXB Analytics · dxbanalytics.com · ${now} · For informational purposes only`, M, 289);
-                  pdf.save(`DXB-Analytics-${tabLabel.replace(/ /g,"-")}-${new Date().toISOString().slice(0,10)}.pdf`);
+                  pdf.setFillColor(...gold); pdf.rect(0, 291, W, 6, "F");
+                  pdf.setFontSize(7); pdf.setTextColor(...dark); pdf.setFont("helvetica", "bold");
+                  pdf.text(`DXB Analytics · dxbanalytics.com · ${now}`, M, 295.5);
+                  pdf.text("CONFIDENTIAL — FOR PROFESSIONAL USE ONLY", W - M, 295.5, { align: "right" });
+
+                  // ── PAGE 2: PROJECTS TABLE ──
+                  pdf.addPage();
+                  pdf.setFillColor(...dark); pdf.rect(0, 0, W, 297, "F");
+                  pdf.setFillColor(...gold); pdf.rect(0, 0, 4, 297, "F");
+                  // Page header
+                  pdf.setFillColor(...surface); pdf.rect(4, 0, W-4, 18, "F");
+                  pdf.setFont("helvetica", "bold"); pdf.setFontSize(10); pdf.setTextColor(...gold);
+                  pdf.text("ACTIVE PROJECTS", M + 4, 12);
+                  pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(...muted);
+                  pdf.text(`${activeProjects.length} projects · Page 2 of 2`, W - M, 12, { align: "right" });
+                  // Table header
+                  let y = 26;
+                  pdf.setFillColor(20, 40, 70); pdf.rect(M, y, W - M*2, 8, "F");
+                  const cols = [["PROJECT NAME", 0, 58], ["COMMUNITY", 58, 38], ["PRICE", 96, 26], ["PPSF", 122, 20], ["HANDOVER", 142, 22], ["PLAN", 164, 18], ["SCORE", 182, 10]];
+                  pdf.setFont("helvetica", "bold"); pdf.setFontSize(6.5); pdf.setTextColor(...gold);
+                  cols.forEach(([label, offset]) => pdf.text(label, M + offset + 2, y + 5.5));
+                  y += 10;
+                  // Table rows
+                  activeProjects.slice(0, 28).forEach((p, i) => {
+                    if (y > 280) return;
+                    pdf.setFillColor(i % 2 === 0 ? 10 : 14, i % 2 === 0 ? 22 : 28, i % 2 === 0 ? 40 : 50);
+                    pdf.rect(M, y, W - M*2, 8, "F");
+                    pdf.setFont("helvetica", i % 2 === 0 ? "normal" : "bold"); pdf.setFontSize(7); pdf.setTextColor(...white);
+                    const name = p.name?.length > 28 ? p.name.slice(0, 27) + "…" : (p.name || "—");
+                    pdf.text(name, M + 2, y + 5.5);
+                    pdf.setFont("helvetica", "normal"); pdf.setTextColor(...muted);
+                    pdf.text(p.community?.slice(0, 18) || "—", M + 60, y + 5.5);
+                    pdf.setTextColor(...white);
+                    pdf.text(p.price ? `AED ${(p.price/1e6).toFixed(1)}M` : "TBD", M + 98, y + 5.5);
+                    pdf.text(p.ppsf ? p.ppsf.toLocaleString() : "—", M + 124, y + 5.5);
+                    pdf.setTextColor(p.handover && getHandoverCountdown(p.handover)?.passed ? 100 : 220, p.handover && getHandoverCountdown(p.handover)?.passed ? 200 : 200, p.handover && getHandoverCountdown(p.handover)?.passed ? 130 : 100);
+                    pdf.text(p.handover || "TBD", M + 144, y + 5.5);
+                    pdf.setTextColor(...muted);
+                    pdf.text(p.payment || "TBD", M + 166, y + 5.5);
+                    const sc = getInvestmentScore(p);
+                    pdf.setTextColor(sc.score >= 8 ? 16 : sc.score >= 6 ? 212 : 200, sc.score >= 8 ? 185 : sc.score >= 6 ? 168 : 150, sc.score >= 8 ? 129 : sc.score >= 6 ? 67 : 50);
+                    pdf.text(`${sc.score.toFixed(1)}`, M + 185, y + 5.5);
+                    y += 8.5;
+                  });
+                  if (activeProjects.length > 28) {
+                    pdf.setFontSize(7); pdf.setTextColor(...muted);
+                    pdf.text(`+ ${activeProjects.length - 28} more projects — view full list at dxbanalytics.com`, M, y + 5);
+                  }
+                  // Footer page 2
+                  pdf.setFillColor(...gold); pdf.rect(0, 291, W, 6, "F");
+                  pdf.setFontSize(7); pdf.setTextColor(...dark); pdf.setFont("helvetica", "bold");
+                  pdf.text(`DXB Analytics · dxbanalytics.com · ${now}`, M, 295.5);
+                  pdf.save(`DXB-Analytics-${currentDev.shortName || "Report"}-${new Date().toISOString().slice(0,10)}.pdf`);
                 }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}
                 onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.2)"}
                 onMouseLeave={e => e.currentTarget.style.background = "rgba(212,168,67,0.1)"}>
@@ -2716,6 +2754,8 @@ export default function EmaarDashboardV2() {
                 </button>
               </div>
             </div>
+
+
 
             {/* ── AI Market Insights Feed ── */}
             {(aiInsights.length > 0 || insightsLoading) && (
@@ -4602,6 +4642,21 @@ export default function EmaarDashboardV2() {
           <TabSources sources={[{ label: "REIDIN Dec 2025", url: "https://reidin.com" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "Engel & Völkers Dubai 2025", url: "https://www.engelvoelkers.com/en-ae/dubai/" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "Bayut Rental Report 2025", url: "https://www.bayut.com" }, { label: "Property Finder", url: "https://www.propertyfinder.ae" }]} />
           </>}
 
+          {/* ─── ROI CALCULATOR TAB ─── */}
+          {tab === "ROI Calculator" && !isPro && <ProGateFullPage tabName="ROI Calculator" onUpgrade={() => setShowUpgrade(true)} />}
+          {tab === "ROI Calculator" && isPro && (
+            <div style={{ maxWidth: 900, margin: "0 auto" }}>
+              <Section title="ROI Calculator" sub="3 investment strategies · Long-term hold · Airbnb (STR) · Flip — all UAE costs included">
+                <RoiCalculator projects={activeProjects} />
+              </Section>
+              <TabSources sources={[
+                { label: "DLD Rental Index 2025", url: "https://dubailand.gov.ae" },
+                { label: "DTCM STR Data 2025", url: "https://www.dtcm.gov.ae" },
+                { label: "RERA Fee Calculator", url: "https://dubailand.gov.ae" },
+              ]} />
+            </div>
+          )}
+
           {/* ─── MORTGAGE CALCULATOR TAB ─── */}
           {tab === "Mortgage" && !isPro && <ProGateFullPage tabName="Mortgage" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Mortgage" && isPro && (() => {
@@ -4873,9 +4928,10 @@ export default function EmaarDashboardV2() {
               { name: "Binghatti Skyrise", community: "Business Bay", date: "Q2 2026", status: "upcoming", expectedPrice: 1200000, developer: "Binghatti", type: "Apartment", beds: "Studio–2 BR", paymentPlan: "70/30", goldenVisa: false, notes: "High-density mid-market tower. Strong investor demand from off-plan flippers." },
             ];
             // Filter by selected developer
+            const devFirstWord = (currentDev.name || "").split(" ")[0].toLowerCase();
             const launches = isEmaar
               ? allLaunches.filter(l => l.developer === "Emaar")
-              : allLaunches.filter(l => l.developer.toLowerCase() === (currentDev.name || "").split(" ")[0].toLowerCase() || allLaunches); // show all if no match
+              : allLaunches.filter(l => l.developer.toLowerCase().includes(devFirstWord));
             const displayLaunches = launches.length > 0 ? launches : allLaunches;
             const statusColors = { launched: "#10B981", upcoming: T.gold, rumoured: "#8B5CF6", pipeline: T.textMuted };
             const statusLabels = { launched: "🟢 Launched", upcoming: "🟡 Upcoming", rumoured: "🟣 Rumoured", pipeline: "⚪ Pipeline" };
@@ -5932,7 +5988,7 @@ export default function EmaarDashboardV2() {
 
           {/* ─── MARKET TAB ─── */}
           {tab === "Market" && <>
-            <Section title="Dubai Real Estate — 2025" sub="Official DLD Data · 5th Consecutive Record Year">
+            <Section title="Dubai Real Estate — FY2025" sub="Official DLD Data · FY2025 · 5th Consecutive Record Year · Source: Dubai Land Department">
               <div style={{ marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <DataBadge source="Dubai Land Department FY2025" date="Dec 2025" type="dld" />
                 <DataBadge source="REIDIN Price Index Dec 2025" date="Dec 2025" type="reidin" />
