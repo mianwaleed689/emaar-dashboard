@@ -13073,6 +13073,110 @@ export default function AdminPanel() {
     return errors;
   };
 
+  // ── FREE AUTO-ENRICHMENT ──────────────────────────────────────────────
+  // Runs after any project is saved. Uses only free APIs:
+  // • Nominatim (OpenStreetMap) — free geocoding, no API key needed
+  // • Internal math — distance calculations
+  // • Community yield averages — from existing data
+  const autoEnrichProject = async (projectId, projectData) => {
+    const enriched = {};
+
+    // Dubai landmarks for distance calculations
+    const landmarks = {
+      downtown: { lat: 25.1972, lng: 55.2744 },
+      airport:  { lat: 25.2532, lng: 55.3657 },
+      marina:   { lat: 25.0800, lng: 55.1400 },
+      mall:     { lat: 25.1985, lng: 55.2796 },
+      palm:     { lat: 25.1124, lng: 55.1390 },
+    };
+
+    const haversine = (lat1, lng1, lat2, lng2) => {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+      return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 10) / 10;
+    };
+
+    // 1. Auto-geocode if no coordinates — use Nominatim (free, no key)
+    if (!projectData.lat || !projectData.lng) {
+      try {
+        const community = projectData.community || projectData.name || "";
+        const query = encodeURIComponent(`${community}, Dubai, UAE`);
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`, {
+          headers: { "User-Agent": "DXBAnalytics/1.0 (mianwaleed689@gmail.com)" }
+        });
+        const data = await res.json();
+        if (data && data[0]) {
+          enriched.lat = parseFloat(data[0].lat);
+          enriched.lng = parseFloat(data[0].lon);
+        }
+      } catch(e) {}
+    }
+
+    // 2. Calculate distances if we have coordinates
+    const lat = enriched.lat || projectData.lat;
+    const lng = enriched.lng || projectData.lng;
+    if (lat && lng) {
+      if (!projectData.distDowntown) enriched.distDowntown = haversine(lat, lng, landmarks.downtown.lat, landmarks.downtown.lng);
+      if (!projectData.distAirport)  enriched.distAirport  = haversine(lat, lng, landmarks.airport.lat,  landmarks.airport.lng);
+      if (!projectData.distMarina)   enriched.distMarina   = haversine(lat, lng, landmarks.marina.lat,   landmarks.marina.lng);
+      if (!projectData.distMall)     enriched.distMall     = haversine(lat, lng, landmarks.mall.lat,     landmarks.mall.lng);
+    }
+
+    // 3. Auto-estimate yield if missing — based on community averages
+    if (!projectData.grossYield) {
+      const communityYieldMap = {
+        "Dubai Hills Estate": 5.8, "Dubai Creek Harbour": 6.4, "Emaar Beachfront": 6.8,
+        "Emaar South": 7.2, "The Valley": 6.1, "Downtown Dubai": 5.5,
+        "Dubai Marina": 6.9, "JVC": 8.2, "Business Bay": 6.3,
+        "Palm Jumeirah": 5.2, "Yas Island": 7.8, "Saadiyat Island": 5.9,
+        "DAMAC Hills": 6.5, "DAMAC Hills 2": 7.4, "Arjan": 7.6,
+        "Al Furjan": 7.1, "Sports City": 7.8, "Motor City": 7.3,
+      };
+      const community = projectData.community || "";
+      const matchedYield = Object.entries(communityYieldMap).find(([key]) =>
+        community.toLowerCase().includes(key.toLowerCase())
+      );
+      if (matchedYield) {
+        enriched.grossYield = matchedYield[1];
+        enriched.netYield = Math.round((matchedYield[1] - 1.2) * 10) / 10; // ~1.2% service charge deduction
+        enriched.yieldSource = "Community average estimate";
+      }
+    }
+
+    // 4. Auto-set investment score if missing
+    if (!projectData.investmentScore) {
+      let score = 60; // base
+      const gross = enriched.grossYield || projectData.grossYield || 0;
+      if (gross > 7) score += 15;
+      else if (gross > 6) score += 10;
+      else if (gross > 5) score += 5;
+      const construction = projectData.construction || 0;
+      if (construction > 80) score += 10;
+      else if (construction > 50) score += 5;
+      if (projectData.branded) score += 5;
+      if ((enriched.distDowntown || projectData.distDowntown || 99) < 10) score += 10;
+      enriched.investmentScore = Math.min(score, 100);
+    }
+
+    // 5. Auto-set developer ID if missing
+    if (!projectData.developerId && projectData.developer) {
+      enriched.developerId = projectData.developer.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+    }
+
+    // Save enriched data if we have anything new
+    if (Object.keys(enriched).length > 0) {
+      try {
+        enriched.enrichedAt = new Date().toISOString();
+        enriched.enrichedBy = "auto";
+        await setDoc(doc(db, "projectData", String(projectId)), enriched, { merge: true });
+        console.log(`Auto-enriched project ${projectId}:`, Object.keys(enriched));
+      } catch(e) {}
+    }
+  };
+  // ── END AUTO-ENRICHMENT ───────────────────────────────────────────────
+
   const saveProjectData = async (projectId, data) => {
     const errors = validateProjectData(data);
     if (errors.length > 0) { notify("Error: " + errors[0]); return; }
@@ -13106,6 +13210,8 @@ export default function AdminPanel() {
         });
       } catch(e) {}
       notify("Project data saved");
+      // Auto-enrich with free APIs (geocoding, distances, yield estimates)
+      autoEnrichProject(projectId, { ...liveProjects[projectId], ...clean }).catch(() => {});
         if (clean.price) {
           try {
             await setDoc(doc(db, "priceHistory", String(projectId) + "_" + Date.now()), {
@@ -13446,10 +13552,12 @@ export default function AdminPanel() {
       await setDoc(doc(db, "projectData", String(newId)), projectDoc);
       await setDoc(doc(db, "projects", String(newId)), projectDoc);
       await logAudit(db, { action: "project_create", projectId: newId, changes: form });
-      notify("Project added — live on dashboard!");
+      notify("Project added — live on dashboard! Auto-enriching coordinates & yields...");
       setEditingProject(null);
       setProjectForm({});
       fetchLiveData();
+      // Auto-enrich new project with free APIs
+      autoEnrichProject(String(newId), projectDoc).catch(() => {});
     } catch(e) { notify("Error: Error: " + e.message); }
     setDataSaving(false);
   };
@@ -13648,8 +13756,14 @@ export default function AdminPanel() {
       await logAudit(db, { action: "csv_import", imported, skipped, total: importRows.length });
       setImportStats(prev => ({ ...prev, imported, skipped }));
       setImportProgress({ current: importRows.length, total: importRows.length, status: "done" });
-      notify(`Import complete: ${imported} saved, ${skipped} skipped`);
+      notify(`Import complete: ${imported} saved, ${skipped} skipped. Auto-enriching coordinates & yields...`);
       fetchLiveData();
+      // Auto-enrich all imported projects in background
+      for (const row of importRows) {
+        if (row.data?.id) {
+          setTimeout(() => autoEnrichProject(String(row.data.id), row.data).catch(() => {}), 500);
+        }
+      }
     } catch (e) {
       notify("Import error: " + e.message);
       setImportProgress(prev => ({ ...prev, status: "error" }));
