@@ -1681,6 +1681,9 @@ export default function EmaarDashboardV2() {
   const [liveMortgageRates, setLiveMortgageRates] = useState([]);
   const [liveNeighbourhoods, setLiveNeighbourhoods] = useState([]);
   const [liveMarketData, setLiveMarketData] = useState([]);
+  const [liveBayutData, setLiveBayutData] = useState({}); // community → {avgPpsf, listings, lastUpdated}
+  const [liveDLDData, setLiveDLDData] = useState({}); // community → {avgPpsf, transactionCount, totalValue}
+  const [lastDataSync, setLastDataSync] = useState(null);
 
   const [tabSettings, setTabSettings] = useState({});
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
@@ -1836,6 +1839,23 @@ export default function EmaarDashboardV2() {
         }));
       } catch (e) { console.log("Firestore not available, using static data"); }
       setProjectsLoading(false);
+
+      // ── Load live Bayut + DLD market data synced by Cloud Function ──
+      try {
+        const summarySnap = await getDoc(doc(db, "liveMarketData", "_summary"));
+        if (summarySnap.exists()) {
+          const summary = summarySnap.data();
+          const bayutMap = {};
+          (summary.communities || []).forEach(c => { bayutMap[c.community] = c; });
+          setLiveBayutData(bayutMap);
+          setLastDataSync(summary.lastSyncedAt?.toDate?.() || null);
+        }
+        // Load DLD live data
+        const dldSnap = await getDocs(collection(db, "dldLiveData"));
+        const dldMap = {};
+        dldSnap.forEach(d => { dldMap[d.data().community] = d.data(); });
+        setLiveDLDData(dldMap);
+      } catch(e) { /* live data not available yet — use static */ }
     };
     loadProjects(); // Load for everyone — no isLoggedIn gate
 
@@ -2544,6 +2564,13 @@ export default function EmaarDashboardV2() {
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: isRefreshing ? "spin 1s linear infinite" : "none" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
             {isRefreshing ? "Refreshing..." : "Refresh"}
           </button>
+          {/* Live Data Sync Status */}
+          {lastDataSync && (
+            <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 10px", background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, fontSize: 10, color: T.green, fontWeight: 600, fontFamily: "'Outfit',sans-serif" }} title={`Live market data synced from Bayut + DLD on ${lastDataSync.toLocaleString("en-AE")}`}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />
+              Live Data
+            </div>
+          )}
           <button type="button" onClick={() => setShowNotifications(v => !v)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: 8, cursor: "pointer", color: T.textSecondary, position: "relative" }} title="Notifications">
             {Icons.bell}
             {unreadCount > 0 && <span style={{ position: "absolute", top: 4, right: 4, width: 8, height: 8, borderRadius: "50%", background: T.red, border: `2px solid ${T.bg}` }} />}
@@ -3188,7 +3215,15 @@ export default function EmaarDashboardV2() {
                         </span>
                       ) : null; })()}
                     </div>
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PRICE/SQFT</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "TBD"}</span></div>
+                    <div>
+                      <span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PRICE/SQFT</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "TBD"}</span>
+                      {liveBayutData[p.community]?.avgPpsf > 0 && (
+                        <span style={{ display: "block", fontSize: 9, color: T.green, marginTop: 2 }} title="Live market avg from Bayut">
+                          Market: AED {liveBayutData[p.community].avgPpsf.toLocaleString()} ●
+                        </span>
+                      )}
+                    </div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>SIZE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.sizeFrom?.toLocaleString()} - {p.sizeTo?.toLocaleString()} sqft</span></div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TYPE</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.type} · {p.beds} BR</span></div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PAYMENT</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.payment}</span></div>
@@ -4322,6 +4357,7 @@ export default function EmaarDashboardV2() {
               { community: "Arabian Ranches III", q1: 240, q2: 310, q3: 280, q4: 370, total: 1200, avgPrice: 2540000, yoy: +18, type: "Townhouses", topDev: "Emaar" },
               { community: "The Valley", q1: 190, q2: 250, q3: 220, q4: 310, total: 970, avgPrice: 1720000, yoy: +41, type: "Townhouses", topDev: "Emaar" },
             ];
+            // Merge: Admin tabData > Cloud Function liveData > Static fallback
             const dldData = liveDLDVolumes.length > 0
               ? liveDLDVolumes.map(d => ({
                   community: d.community,
@@ -4332,7 +4368,14 @@ export default function EmaarDashboardV2() {
                   q3: Math.round((parseInt(d.deals)||0)*0.25), q4: Math.round((parseInt(d.deals)||0)*0.27),
                   type: "Mixed", topDev: "Various"
                 }))
-              : dldDataStatic;
+              : dldDataStatic.map(d => {
+                  // Overlay live DLD Cloud Function data if available
+                  const live = liveDLDData[d.community];
+                  if (live?.transactionCount > 0) {
+                    return { ...d, total: live.transactionCount * 12, avgPrice: live.avgPrice, avgPpsf: live.avgPpsf, liveData: true };
+                  }
+                  return d;
+                });
             const filtered = dldCommunity === "All" ? dldData : dldData.filter(d => d.community === dldCommunity);
             const sorted = [...filtered].sort((a, b) => b.total - a.total);
             const maxTotal = Math.max(...dldData.map(d => d.total));
@@ -4344,8 +4387,16 @@ export default function EmaarDashboardV2() {
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                     <div>
-                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>DLD Transaction Volumes</div>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Dubai Land Department · FY2025 · 214,912 total transactions · AED 682.5B</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>DLD Transaction Volumes</div>
+                        {Object.keys(liveDLDData).length > 0 && (
+                          <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", color: T.green, fontWeight: 700 }}>● Live</span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>
+                        Dubai Land Department · FY2025 · 214,912 total transactions · AED 682.5B
+                        {Object.keys(liveDLDData).length > 0 && <span style={{ color: T.green }}> · Live data from Dubai Pulse</span>}
+                      </div>
                     </div>
                     <select value={dldCommunity} onChange={e => setDldCommunity(e.target.value)} style={{ padding: "8px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
                       <option value="All">All Communities</option>
@@ -4557,14 +4608,31 @@ export default function EmaarDashboardV2() {
           {tab === "Yields" && !isPro && <ProGateFullPage tabName="Yields" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Yields" && isPro && <>
             <ProGate isPro={isPro} message="Unlock Rental Yield Analysis" onUpgrade={() => setShowUpgrade(true)}>
-            <Section title="Rental Yield Analysis" sub="REIDIN Dec 2025 · DLD Rental Index · Engel & Völkers — All 25 Dubai Communities">
+            <Section title="Rental Yield Analysis" sub={`REIDIN Dec 2025 · DLD Rental Index · Engel & Völkers — 30 Dubai Communities${Object.keys(liveBayutData).length > 0 ? " · PPSF live from Bayut" : ""}`}>
               <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <DataBadge source="REIDIN Dec 2025" date="Dec 2025" type="reidin" />
                 <DataBadge source="Dubai Land Department Rental Index" date="2025" type="dld" />
+                {Object.keys(liveBayutData).length > 0 && <DataBadge source="Bayut Live Listings" date="Live" type="manual" />}
               </div>
               <Chart title="Gross Yield by Community & Unit Type (%)" style={{ marginTop: 16 }}>
                 <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={liveYields.length > 0 ? liveYields : allDubaiYields}>
+                  {/* Merge live Bayut PPSF into yield calculations */}
+                  {(() => {
+                    const enrichedYields = (liveYields.length > 0 ? liveYields : allDubaiYields).map(y => {
+                      const live = liveBayutData[y.community];
+                      if (live?.listings?.length > 0) {
+                        const bedMatch = live.listings.find(l => l.beds === y.label.replace(/^.* /, ""));
+                        if (bedMatch?.avgPpsf > 0 && y.rent > 0) {
+                          // Recalculate gross yield using live price
+                          const livePriceK = (bedMatch.avgArea * bedMatch.avgPpsf) / 1000;
+                          const liveGross = livePriceK > 0 ? parseFloat((y.rent / livePriceK * 100).toFixed(1)) : y.gross;
+                          return { ...y, price: Math.round(livePriceK), gross: liveGross, net: parseFloat((liveGross * 0.82).toFixed(1)), liveData: true };
+                        }
+                      }
+                      return y;
+                    });
+                    return (
+                  <BarChart data={enrichedYields}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                     <XAxis dataKey="label" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} angle={-30} textAnchor="end" height={50} />
                     <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 7]} />
@@ -4583,6 +4651,8 @@ export default function EmaarDashboardV2() {
                       {(liveYields.length > 0 ? liveYields : allDubaiYields).map((y, i) => <Cell key={i} fill={y.demand === "V.High" ? T.gold : y.demand === "High" ? T.teal : T.blue} />)}
                     </Bar>
                   </BarChart>
+                    );
+                  })()}
                 </ResponsiveContainer>
               </Chart>
             </Section>
@@ -5031,7 +5101,7 @@ export default function EmaarDashboardV2() {
               { name: "Dubai South", maturity: 40, rentalDemand: 62, strPotential: 42, infrastructure: 65, schools: 55, transport: 70, retail: 52, appreciation: 88, serviceCharge: 10, visa: false, type: "Airport mega-district", tagline: "Long-term play — Al Maktoum catalyst", color: "#8B5CF6" },
               { name: "Sobha Hartland", maturity: 72, rentalDemand: 80, strPotential: 70, infrastructure: 80, schools: 78, transport: 65, retail: 68, appreciation: 80, serviceCharge: 18, visa: true, type: "Premium waterfront", tagline: "Sobha quality finish, Meydan proximity", color: "#D4A843" },
             ];
-            const neighbourhoods = liveNeighbourhoods.length > 0
+            const neighbourhoods = (liveNeighbourhoods.length > 0
               ? liveNeighbourhoods.map(d => ({
                   name: d.community,
                   maturity: 70,
@@ -5046,7 +5116,15 @@ export default function EmaarDashboardV2() {
                   tagline: d.recommended || "",
                   color: T.gold
                 }))
-              : neighbourhoodsStatic;
+              : neighbourhoodsStatic
+            ).map(n => {
+              // Merge live Bayut PPSF data
+              const live = liveBayutData[n.name] || liveDLDData[n.name];
+              if (live?.avgPpsf > 0) {
+                return { ...n, livePpsf: live.avgPpsf, liveData: true };
+              }
+              return n;
+            });
             const scoreBar = (val, color) => (
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.surfaceAlt, overflow: "hidden" }}>
@@ -5083,6 +5161,7 @@ export default function EmaarDashboardV2() {
                             {n.visa && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 5, background: "rgba(212,168,67,0.12)", color: T.gold, fontWeight: 600 }}>🏅 Golden Visa</span>}
                             <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 5, background: T.surfaceAlt, color: T.textMuted, fontWeight: 600 }}>AED {n.serviceCharge}/sqft SC</span>
                             <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 5, background: "rgba(16,185,129,0.1)", color: "#10B981", fontWeight: 600 }}>STR {n.strPotential}%</span>
+                            {n.livePpsf > 0 && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 5, background: "rgba(16,185,129,0.08)", color: T.green, fontWeight: 600, border: "1px solid rgba(16,185,129,0.2)" }}>● AED {n.livePpsf.toLocaleString()}/sqft live</span>}
                           </div>
                         </div>
                         {isOpen && (
@@ -6043,7 +6122,8 @@ export default function EmaarDashboardV2() {
           {/* ─── INVESTMENT SCORE TAB ─── */}
           {tab === "Investment Score" && !isPro && <ProGateFullPage tabName="Investment Score" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Investment Score" && isPro && (() => {
-            const COMMUNITIES = [
+            // Merge live Bayut PPSF data into static community data
+            const COMMUNITIES_STATIC = [
               // Source: DLD 2025, Property Monitor, ValuStrat Q4 2025, DXBInteract
               { name: "Jumeirah Village Circle", short: "JVC", yield: 8.5, supplyRisk: 3, momentum: 7, demand: 9, goldenVisa: false, strPotential: 6, devQuality: 8, avgPriceSqft: 1180, note: "Highest LTR yields in Dubai. Watch supply pipeline — oversupply risk medium." },
               { name: "Dubai Marina", short: "Marina", yield: 6.9, supplyRisk: 6, momentum: 8, demand: 9, goldenVisa: true, strPotential: 10, devQuality: 9, avgPriceSqft: 1890, note: "Best STR market in Dubai. Tram + JBR walkability. Mature market with strong liquidity." },
@@ -6104,6 +6184,15 @@ export default function EmaarDashboardV2() {
               const color = total >= 75 ? T.green : total >= 55 ? T.gold : T.red;
               return { ...c, total, pct, signal, signalColor, color, factors };
             };
+
+            // Merge live Bayut PPSF into community data
+            const COMMUNITIES = COMMUNITIES_STATIC.map(c => {
+              const live = liveBayutData[c.name] || liveDLDData[c.name];
+              if (live?.avgPpsf > 0) {
+                return { ...c, avgPriceSqft: live.avgPpsf, livePpsf: true };
+              }
+              return c;
+            });
 
             const scored = COMMUNITIES.map(scoreComm).sort((a, b) => b.total - a.total);
             const [isScoreFilter, setIsScoreFilter] = [investScoreFilter, setInvestScoreFilter];
@@ -6363,11 +6452,27 @@ export default function EmaarDashboardV2() {
             const COLORS = { "Dubai Average": T.gold, "Downtown Dubai": "#8B5CF6", "Palm Jumeirah": "#3B82F6", "Dubai Hills Estate": "#10B981", "JVC": "#F59E0B", "Business Bay": "#EC4899", "Dubai Marina": "#06B6D4" };
             const ALL_COMMUNITIES = Object.keys(HISTORY);
 
-            const years = ["2008","2009","2010","2011","2012","2013","2014","2015","2016","2017","2018","2019","2020","2021","2022","2023","2024","2025"];
+            // Inject live 2026 data from Bayut sync if available
+            const HISTORY_WITH_LIVE = { ...HISTORY };
+            Object.entries(liveBayutData).forEach(([community, data]) => {
+              if (data.avgPpsf > 0 && HISTORY_WITH_LIVE[community]) {
+                const last = HISTORY_WITH_LIVE[community];
+                // Only add if not already there
+                if (!last.find(p => p.y === "2026")) {
+                  HISTORY_WITH_LIVE[community] = [...last, { y: "2026", v: data.avgPpsf, live: true }];
+                }
+              }
+            });
+            // Add Dubai Average 2026 from DXBInteract data (AED 1,770/sqft as of Mar 2026)
+            if (!HISTORY_WITH_LIVE["Dubai Average"].find(p => p.y === "2026")) {
+              HISTORY_WITH_LIVE["Dubai Average"] = [...HISTORY_WITH_LIVE["Dubai Average"], { y: "2026", v: 1770, live: true }];
+            }
+
+            const years = ["2008","2009","2010","2011","2012","2013","2014","2015","2016","2017","2018","2019","2020","2021","2022","2023","2024","2025","2026"];
             const chartData = years.map(y => {
               const row = { year: y };
               ALL_COMMUNITIES.forEach(c => {
-                const pt = HISTORY[c].find(p => p.y === y);
+                const pt = (HISTORY_WITH_LIVE[c] || HISTORY[c]).find(p => p.y === y);
                 if (pt && pt.v) row[c] = pt.v;
               });
               return row;
@@ -6375,7 +6480,7 @@ export default function EmaarDashboardV2() {
 
             // Calculate stats for selected communities
             const calcStats = (comm) => {
-              const pts = HISTORY[comm].filter(p => p.v);
+              const pts = (HISTORY_WITH_LIVE[comm] || HISTORY[comm] || []).filter(p => p.v);
               const first = pts[0]?.v;
               const last = pts[pts.length - 1]?.v;
               const peak = Math.max(...pts.map(p => p.v));
@@ -6387,7 +6492,7 @@ export default function EmaarDashboardV2() {
 
             return (
               <>
-                <Section title="Dubai Property Price History 2008–2025" sub="Price per sqft (AED) · Full market cycle including 2008 crash, 2014 correction, COVID dip, and current bull run">
+                <Section title={`Dubai Property Price History 2008–${Object.keys(liveBayutData).length > 0 ? "2026" : "2025"}`} sub={`Price per sqft (AED) · Full market cycle including 2008 crash, 2014 correction, COVID dip, and current bull run${Object.keys(liveBayutData).length > 0 ? " · 2026 data live from Bayut" : ""}`}>
                   {/* Cycle Events Timeline */}
                   <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 24, scrollbarWidth: "none" }}>
                     {CYCLES.map((c, i) => (
@@ -6400,7 +6505,7 @@ export default function EmaarDashboardV2() {
                   </div>
 
                   {/* Main Price Chart */}
-                  <Chart title="Price Per Sqft (AED) — All Communities 2008–2025">
+                  <Chart title={`Price Per Sqft (AED) — All Communities 2008–${Object.keys(liveBayutData).length > 0 ? "2026" : "2025"}`}>
                     <ResponsiveContainer width="100%" height={320}>
                       <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
