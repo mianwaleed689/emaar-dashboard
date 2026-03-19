@@ -505,6 +505,24 @@ const Section = ({ title, sub, children, delay = 0 }) => (
   </div>
 );
 
+const DeveloperComingSoon = ({ devName, tabName }) => (
+  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 40px", textAlign: "center" }}>
+    <div style={{ fontSize: 56, marginBottom: 20 }}>🏗️</div>
+    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 800, color: T.white, marginBottom: 10 }}>
+      {devName} — Coming Soon
+    </div>
+    <div style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, maxWidth: 480, marginBottom: 24 }}>
+      {tabName} data for <strong style={{ color: T.gold }}>{devName}</strong> is being compiled and verified. 
+      It will appear here automatically once added to the platform.
+    </div>
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+      {["Projects ✅", "Map ✅", "Yields — Coming", "Financials — Coming", "Risk — Coming"].map((item, i) => (
+        <span key={i} style={{ fontSize: 11, padding: "5px 12px", borderRadius: 20, background: item.includes("✅") ? "rgba(16,185,129,0.1)" : T.surfaceAlt, border: `1px solid ${item.includes("✅") ? "rgba(16,185,129,0.3)" : T.border}`, color: item.includes("✅") ? T.green : T.textMuted, fontWeight: 600 }}>{item}</span>
+      ))}
+    </div>
+  </div>
+);
+
 const Chart = ({ title, children, style: extraStyle }) => (
   <div className="chart-box" style={extraStyle}>
     {title && <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>{title}</h3>}
@@ -1830,7 +1848,16 @@ export default function EmaarDashboardV2() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Use merged Firestore+static data if available, otherwise pure static fallback
-  const activeProjects = [...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }), ...extraProjects];
+  const activeProjects = [...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }), ...extraProjects]
+
+  // Always generates the correct project URL regardless of ID type
+  // Emaar: /project/1  |  Firestore: /project/aldar_1
+  const projectUrl = (p) => `/project/${p.docId || p.id}`;
+    .filter(p => {
+      if (selectedDeveloper === "emaar") return (p.developer || "Emaar Properties") === "Emaar Properties";
+      return (p.developer || "").toLowerCase().includes(selectedDeveloper.toLowerCase()) ||
+             (p.developerId || "") === selectedDeveloper;
+    });
 
   // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
   const getUnitEntries = (units) => {
@@ -3059,7 +3086,7 @@ export default function EmaarDashboardV2() {
                   </div>
                   {/* Action Buttons */}
                   <div style={{ display: "flex", gap: 6, marginTop: 10 }} onClick={e => e.stopPropagation()}>
-                    <a href={`/project/${p.id}`} style={{ flex: 1, padding: "8px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.08))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                    <a href={projectUrl(p)} style={{ flex: 1, padding: "8px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.08))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                       Full Details
                     </a>
@@ -6481,7 +6508,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h2>
                     {selectedProject_.emaarUrl && <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(212,168,67,0.08)", whiteSpace: "nowrap" }} title={`Official listing on ${getLinkDomain(selectedProject_.emaarUrl)}`}>SOURCE ↗</a>}
-                    <Link to={`/project/${selectedProject_.id}`} style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(0,191,165,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(0,191,165,0.08)", whiteSpace: "nowrap" }} title="Open full page">FULL PAGE ↗</Link>
+                    <Link to={projectUrl(selectedProject_)} style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(0,191,165,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(0,191,165,0.08)", whiteSpace: "nowrap" }} title="Open full page">FULL PAGE ↗</Link>
                   </div>
                   <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject_.community} · {selectedProject_.district} · {selectedProject_.type}</p>
                   {(selectedProject_.tagline || (ci && ci.tagline)) && <p style={{ color: T.teal, fontSize: 11, marginTop: 2, fontStyle: "italic" }}>{selectedProject_.tagline || ci.tagline}</p>}
@@ -6978,7 +7005,7 @@ export default function EmaarDashboardV2() {
             {/* View Full Report for all compared projects */}
             <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
               {compareList.map(p => (
-                <a key={p.id} href={`/project/${p.id}`}
+                <a key={p.id} href={projectUrl(p)}
                   style={{ flex: 1, padding: "10px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.07))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 10, color: T.gold, fontSize: 12, fontWeight: 700, textAlign: "center", textDecoration: "none" }}>
                   📄 {p.name.split(" ").slice(0,2).join(" ")}
                 </a>
