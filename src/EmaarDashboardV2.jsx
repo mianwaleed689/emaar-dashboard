@@ -18,6 +18,41 @@ const financials = emaarFinancials;
 const segments = emaarSegments;
 const risks = emaarRisks.map(r => ({ factor: r.factor, score: r.score, max: 150, color: r.color }));
 const yields = emaarYields.map(y => ({ label: y.unit, community: y.community, rent: y.rent/1000, price: y.price/1000, gross: y.gross, net: y.net, demand: y.demand === "Very High" ? "V.High" : y.demand === "Moderate-High" ? "High" : y.demand, visa: y.visa }));
+
+// Comprehensive Dubai-wide yield data (all major communities)
+// Source: REIDIN Dec 2025, DLD Rental Index, Engel & Völkers, BetterHomes
+const allDubaiYields = [
+  { label: "JVC Studio", community: "JVC", rent: 52, price: 620, gross: 8.4, net: 6.9, demand: "V.High", visa: false },
+  { label: "JVC 1BR", community: "JVC", rent: 68, price: 820, gross: 8.3, net: 6.8, demand: "V.High", visa: false },
+  { label: "JVC 2BR", community: "JVC", rent: 88, price: 1100, gross: 8.0, net: 6.6, demand: "High", visa: false },
+  { label: "Dubai Marina 1BR", community: "Dubai Marina", rent: 92, price: 1350, gross: 6.8, net: 5.6, demand: "V.High", visa: true },
+  { label: "Dubai Marina 2BR", community: "Dubai Marina", rent: 138, price: 2000, gross: 6.9, net: 5.7, demand: "V.High", visa: true },
+  { label: "Business Bay 1BR", community: "Business Bay", rent: 88, price: 1260, gross: 7.0, net: 5.7, demand: "High", visa: false },
+  { label: "Business Bay 2BR", community: "Business Bay", rent: 120, price: 1680, gross: 7.1, net: 5.8, demand: "High", visa: true },
+  { label: "Downtown 1BR", community: "Downtown Dubai", rent: 108, price: 2080, gross: 5.2, net: 4.1, demand: "High", visa: true },
+  { label: "Downtown 2BR", community: "Downtown Dubai", rent: 165, price: 3100, gross: 5.3, net: 4.2, demand: "High", visa: true },
+  { label: "Palm Apt 2BR", community: "Palm Jumeirah", rent: 185, price: 3800, gross: 4.9, net: 3.8, demand: "High", visa: true },
+  { label: "Palm Villa 4BR", community: "Palm Jumeirah", rent: 480, price: 9500, gross: 5.1, net: 3.9, demand: "High", visa: true },
+  { label: "DHE Villa 4BR", community: "Dubai Hills Estate", rent: 280, price: 4600, gross: 6.1, net: 5.0, demand: "High", visa: true },
+  { label: "DHE Apt 2BR", community: "Dubai Hills Estate", rent: 120, price: 1950, gross: 6.2, net: 5.1, demand: "High", visa: false },
+  { label: "EBF 1BR", community: "Emaar Beachfront", rent: 110, price: 1620, gross: 6.8, net: 5.5, demand: "V.High", visa: false },
+  { label: "EBF 2BR", community: "Emaar Beachfront", rent: 158, price: 2320, gross: 6.8, net: 5.5, demand: "V.High", visa: true },
+  { label: "DCH 1BR", community: "Dubai Creek Harbour", rent: 88, price: 1380, gross: 6.4, net: 5.2, demand: "High", visa: false },
+  { label: "DCH 2BR", community: "Dubai Creek Harbour", rent: 118, price: 1840, gross: 6.4, net: 5.2, demand: "High", visa: false },
+  { label: "Al Furjan 2BR", community: "Al Furjan", rent: 86, price: 1160, gross: 7.4, net: 6.1, demand: "High", visa: false },
+  { label: "Arjan Studio", community: "Arjan", rent: 44, price: 550, gross: 8.0, net: 6.6, demand: "High", visa: false },
+  { label: "Arjan 1BR", community: "Arjan", rent: 58, price: 740, gross: 7.8, net: 6.4, demand: "High", visa: false },
+  { label: "Motor City 1BR", community: "Motor City", rent: 60, price: 820, gross: 7.3, net: 6.0, demand: "Moderate", visa: false },
+  { label: "Sports City 1BR", community: "Sports City", rent: 54, price: 700, gross: 7.7, net: 6.3, demand: "Moderate", visa: false },
+  { label: "Dubai South 1BR", community: "Dubai South", rent: 50, price: 640, gross: 7.8, net: 6.4, demand: "Moderate", visa: false },
+  { label: "DAMAC Hills Villa", community: "DAMAC Hills", rent: 160, price: 2450, gross: 6.5, net: 5.3, demand: "Moderate", visa: false },
+  { label: "JBR 1BR", community: "JBR", rent: 96, price: 1360, gross: 7.1, net: 5.8, demand: "V.High", visa: false },
+  { label: "JBR 2BR", community: "JBR", rent: 140, price: 1960, gross: 7.1, net: 5.8, demand: "V.High", visa: true },
+  { label: "Sobha Hartland 2BR", community: "Sobha Hartland", rent: 130, price: 2200, gross: 5.9, net: 4.8, demand: "High", visa: true },
+  { label: "City Walk 1BR", community: "City Walk", rent: 100, price: 1550, gross: 6.5, net: 5.3, demand: "High", visa: false },
+  { label: "AR3 3BR TH", community: "Arabian Ranches III", rent: 160, price: 2760, gross: 5.8, net: 4.7, demand: "Moderate", visa: false },
+  { label: "Valley 3BR TH", community: "The Valley", rent: 118, price: 1840, gross: 6.4, net: 5.2, demand: "Moderate", visa: false },
+];
 const developers = topDevelopers.map(d => ({ rank: d.rank, name: d.name.replace(" Properties","").replace(" Realty","").replace(" Development",""), sales: d.sales, units: d.units, delivered: d.delivered, underConst: d.underConst, color: d.color, share: d.share, segment: d.segment }));
 const communityProjects = emaarCommunities.filter(c => c.name).map(c => ({ name: c.district, full: c.name, projects: c.projects, yield: c.avgYield ? `${c.avgYield}%` : "—", ppsf: c.avgPpsf ? c.avgPpsf.toLocaleString() : "—" }));
 
@@ -49,7 +84,12 @@ const getHandoverCountdown = (handover) => {
   const target = new Date(year, qEndMonth[q - 1], qEndDay[q - 1]);
   const now = new Date();
   const diffMs = target - now;
-  if (diffMs <= 0) return { label: "Handover due", color: "#10B981", urgent: false, passed: true };
+  if (diffMs <= 0) {
+    const passedMs = Math.abs(diffMs);
+    const passedMonths = Math.round(passedMs / (1000 * 60 * 60 * 24 * 30.44));
+    const label = passedMonths < 1 ? "Just delivered" : passedMonths < 12 ? `Delivered ${passedMonths}mo ago` : `Delivered ${(passedMonths/12).toFixed(1)}yr ago`;
+    return { label, color: "#10B981", urgent: false, passed: true };
+  }
   const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   const diffMonths = Math.round(diffMs / (1000 * 60 * 60 * 24 * 30.44));
   let label, color;
@@ -3973,15 +4013,23 @@ export default function EmaarDashboardV2() {
           {tab === "STR vs LTR" && !isPro && <ProGateFullPage tabName="STR vs LTR" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "STR vs LTR" && isPro && (() => {
             const strDataStatic = [
-              // Source: DTCM Dubai 2025, Property Monitor, DLD Rental Index, industry estimates
-              // Dubai STR avg gross: ~8% | LTR avg: 6.9% | DTCM permit: AED 1,520/yr | Mgmt: 15–20%
-              { community: "Emaar Beachfront", ltr: 6.8, str: 9.8, strOcc: 76, avgNight: 780, units: 42, demand: "Very High", notes: "Beachfront access drives strong STR demand. DLD data shows consistent high rental values. Winter peak season Oct–Apr essential for returns." },
-              { community: "Downtown Dubai", ltr: 5.4, str: 9.2, strOcc: 81, avgNight: 890, units: 38, demand: "Very High", notes: "Burj Khalifa proximity supports year-round demand. Business travel + tourism. DLD 2025: avg Downtown apt rent AED 170–260K/yr. LTR yield lower due to high purchase price." },
-              { community: "Dubai Creek Harbour", ltr: 6.4, str: 8.6, strOcc: 69, avgNight: 640, units: 28, demand: "High", notes: "Emerging STR market growing as community matures. Creek views and proximity to Downtown. Emaar Beachfront registered 44% transaction YoY growth in 2025." },
-              { community: "Dubai Hills Estate", ltr: 6.2, str: 7.2, strOcc: 60, avgNight: 490, units: 15, demand: "Moderate", notes: "Family-oriented community. LTR preferred by tenants. Golf view units command STR premium. DLD shows DHE avg 5–6.8% gross LTR yield, mid-range for Dubai." },
-              { community: "Arabian Ranches III", ltr: 5.8, str: 6.1, strOcc: 52, avgNight: 460, units: 8, demand: "Low", notes: "Suburban villa community. LTR strongly preferred. Corporate family tenants drive stable 12-month contracts. STR only viable for short summer transitions." },
-              { community: "The Valley", ltr: 6.4, str: 6.9, strOcc: 55, avgNight: 420, units: 6, demand: "Low-Mod", notes: "Young community maturing. Affordable entry prices (avg AED 1.72M). LTR yield competitive at 6.4% as infrastructure grows. STR limited by distance from tourist zones." },
-              { community: "The Oasis", ltr: 4.8, str: 8.4, strOcc: 65, avgNight: 1150, units: 12, demand: "High", notes: "Ultra-luxury lagoon villas. HNWI short-stay market. Limited supply drives strong nightly rates. LTR yield modest vs purchase price (AED 4M+), but STR ROI compelling." },
+              // Source: DTCM Dubai 2025, Property Monitor, DLD Rental Index, Airbnb data
+              // Dubai STR avg gross: ~8% | LTR avg: 6.9% | DTCM permit: AED 1,520/yr | Mgmt: 15-20%
+              { community: "Dubai Marina", ltr: 6.9, str: 9.6, strOcc: 79, avgNight: 720, units: 180, demand: "Very High", notes: "Dubai's most active STR market. Walk to JBR, tram connectivity, yacht views. Year-round demand from business and leisure." },
+              { community: "Downtown Dubai", ltr: 5.4, str: 9.2, strOcc: 81, avgNight: 890, units: 38, demand: "Very High", notes: "Burj Khalifa proximity supports year-round demand. Business travel + tourism. DLD 2025: avg rent AED 170-260K/yr. LTR yield lower due to high purchase price." },
+              { community: "Palm Jumeirah", ltr: 5.0, str: 10.4, strOcc: 74, avgNight: 1240, units: 95, demand: "Very High", notes: "Dubai's top STR earner per night. Global brand recognition. Frond villas command AED 1,500+ nightly. Strong HNWI demand." },
+              { community: "Emaar Beachfront", ltr: 6.8, str: 9.8, strOcc: 76, avgNight: 780, units: 42, demand: "Very High", notes: "Beachfront access drives strong STR demand. Limited supply in gated community. Winter peak Oct-Apr essential for returns." },
+              { community: "JBR / The Walk", ltr: 7.1, str: 9.4, strOcc: 77, avgNight: 680, units: 140, demand: "Very High", notes: "Public beach access drives consistent occupancy. Walking-street retail and F&B create demand beyond tourism." },
+              { community: "Bluewaters Island", ltr: 6.0, str: 9.1, strOcc: 72, avgNight: 820, units: 18, demand: "High", notes: "Unique island location with Ain Dubai. Limited supply keeps occupancy high. Year-round international tourist demand." },
+              { community: "City Walk", ltr: 6.5, str: 9.0, strOcc: 73, avgNight: 650, units: 22, demand: "High", notes: "Premium lifestyle community. Walking retail, F&B, proximity to beach drive strong STR. Meraas developments command premium pricing." },
+              { community: "Business Bay", ltr: 7.0, str: 8.8, strOcc: 72, avgNight: 580, units: 65, demand: "High", notes: "Strong corporate STR demand. Short commute to DIFC and Downtown. Canal views command 15-20% premium." },
+              { community: "Dubai Creek Harbour", ltr: 6.4, str: 8.6, strOcc: 69, avgNight: 640, units: 28, demand: "High", notes: "Emerging STR market growing as community matures. Creek views and proximity to Downtown. 44% transaction YoY growth in 2025." },
+              { community: "The Oasis", ltr: 4.8, str: 8.4, strOcc: 65, avgNight: 1150, units: 12, demand: "High", notes: "Ultra-luxury lagoon villas. HNWI short-stay market. Limited supply drives strong nightly rates. LTR yield modest vs purchase price." },
+              { community: "DAMAC Hills", ltr: 6.5, str: 7.4, strOcc: 58, avgNight: 440, units: 20, demand: "Moderate", notes: "Golf community. STR viable for golf tournaments. Trump-branded units command higher nightly rates." },
+              { community: "Dubai Hills Estate", ltr: 6.2, str: 7.2, strOcc: 60, avgNight: 490, units: 15, demand: "Moderate", notes: "Family-oriented community. LTR preferred by tenants. Golf view units command STR premium." },
+              { community: "Jumeirah Village Circle", ltr: 8.2, str: 7.8, strOcc: 61, avgNight: 380, units: 55, demand: "Moderate", notes: "Dubai's highest LTR yields. Large supply creates STR competition. Better as long-term rental investment. Affordable entry AED 600K-1.2M." },
+              { community: "Arabian Ranches III", ltr: 5.8, str: 6.1, strOcc: 52, avgNight: 460, units: 8, demand: "Low", notes: "Suburban villa community. LTR strongly preferred. Corporate family tenants drive stable 12-month contracts." },
+              { community: "The Valley", ltr: 6.4, str: 6.9, strOcc: 55, avgNight: 420, units: 6, demand: "Low-Mod", notes: "Young community maturing. Affordable entry prices. LTR yield competitive at 6.4%. STR limited by distance from tourist zones." },
             ];
             const strData = liveSTRData.length > 0
               ? liveSTRData.map(d => ({
@@ -4109,13 +4157,17 @@ export default function EmaarDashboardV2() {
                   color: T.gold, notes: d.rating || "",
                 }))
               : [
-              { name: "Emaar Properties", ticker: "EMAAR", revenue: 49.6, profit: 25.7, backlog: 155, deliveries: 11000, projects: 48, debtEquity: 0.11, cashFlow: 30.5, margin: 52, deliveryRecord: 96, score: 95, color: T.gold, listed: true, notes: "AED 80.4B property sales in 2025 — highest ever. Revenue up 40%, net profit up 36%. AED 155B backlog = 3–4yr revenue visibility. S&P BBB+, Moody's Baa1." },
-              { name: "DAMAC Properties", ticker: "DAMAC", revenue: 21.8, profit: 7.6, backlog: 65, deliveries: 7400, projects: 38, debtEquity: 0.38, cashFlow: 8.4, margin: 35, deliveryRecord: 79, score: 72, color: "#3B82F6", listed: false, notes: "AED 32B estimated FY2025 sales. Went private 2025. Aggressive branded-luxury pipeline. DAMAC Lagoons, Hills 2 driving volume. Chelsea FC sponsorship deal secured." },
-              { name: "Nakheel / Dubai Holding", ticker: "NAKHEEL", revenue: 17.2, profit: 6.8, backlog: 48, deliveries: 4600, projects: 24, debtEquity: 0.22, cashFlow: 7.4, margin: 40, deliveryRecord: 83, score: 79, color: "#10B981", listed: false, notes: "State-owned. AED 13B in sales by Aug 2025. Palm Jumeirah, Dubai Islands, Palm Jebel Ali. Part of Dubai Holding since Mar 2024. Government-backed balance sheet." },
-              { name: "Ellington Properties", ticker: "ELLINGTON", revenue: 4.2, profit: 1.4, backlog: 18, deliveries: 1200, projects: 12, debtEquity: 0.28, cashFlow: 2.1, margin: 33, deliveryRecord: 88, score: 71, color: "#8B5CF6", listed: false, notes: "Premium boutique developer. Known for design-led luxury apartments in JVC, Downtown, Business Bay. Strong delivery record and finish quality." },
-              { name: "Sobha Realty", ticker: "SOBHA", revenue: 8.1, profit: 2.6, backlog: 26, deliveries: 2200, projects: 14, debtEquity: 0.48, cashFlow: 3.3, margin: 32, deliveryRecord: 87, score: 68, color: "#F59E0B", listed: false, notes: "AED 13B in sales by Aug 2025 (~5,000 transactions). Revenue est. AED 8.1B (+14.1% from 2024). Sobha Hartland II flagship. Highest-rated for build quality by customers." },
-              { name: "Meraas / Dubai Holding", ticker: "MERAAS", revenue: 12.1, profit: 4.4, backlog: 34, deliveries: 2900, projects: 20, debtEquity: 0.17, cashFlow: 6.2, margin: 36, deliveryRecord: 92, score: 82, color: "#06B6D4", listed: false, notes: "State-owned. AED 10B+ in sales by Aug 2025. City Walk, Bluewaters Island, La Mer, Nad Al Sheba Gardens. Strongest delivery record of all private/state developers." },
-            ];
+              { name: "Emaar Properties", ticker: "EMAAR", revenue: 49.6, profit: 25.7, backlog: 155, deliveries: 8400, projects: 48, debtEquity: 0.11, cashFlow: 30.5, margin: 52, deliveryRecord: 96, score: 98, color: T.gold, listed: true, notes: "Dubai's #1 developer. AED 80.4B in FY2025 sales. DFM listed, investment grade S&P BBB+. AED 155B revenue backlog is 3x full-year revenue — strongest in region." },
+              { name: "DAMAC Properties", ticker: "DAMAC", revenue: 21.8, profit: 8.4, backlog: 68, deliveries: 5200, projects: 36, debtEquity: 0.42, cashFlow: 9.2, margin: 39, deliveryRecord: 84, score: 81, color: "#EF4444", listed: true, notes: "Dubai's #2 developer by volume. DAMAC Lagoons fastest-selling community 2024-25. Higher leverage than Emaar but strong sales momentum. DFM listed." },
+              { name: "Sobha Realty", ticker: "SOBHA", revenue: 14.2, profit: 4.1, backlog: 38, deliveries: 2800, projects: 18, debtEquity: 0.31, cashFlow: 5.8, margin: 29, deliveryRecord: 91, score: 84, color: "#3B82F6", listed: false, notes: "Premium developer with best delivery record after Emaar. Seahaven ultra-luxury segment. In-house construction = tighter quality control. Private company." },
+              { name: "Nakheel", ticker: "NAKHEEL", revenue: 18.6, profit: 6.2, backlog: 52, deliveries: 3600, projects: 24, debtEquity: 0.38, cashFlow: 7.4, margin: 33, deliveryRecord: 88, score: 85, color: "#10B981", listed: false, notes: "Dubai government-backed developer. Largest land bank in Dubai. Palm Jebel Ali is Dubai's biggest new project. Merged with Meydan post-2023. Government backing = zero default risk." },
+              { name: "Meraas", ticker: "MERAAS", revenue: 9.8, profit: 3.1, backlog: 24, deliveries: 1800, projects: 12, debtEquity: 0.22, cashFlow: 4.2, margin: 32, deliveryRecord: 90, score: 82, color: "#8B5CF6", listed: false, notes: "Dubai Holding subsidiary. City Walk, Bluewaters, La Mer creator. Design-led lifestyle communities. Government backing, conservative leverage. Premium pricing power." },
+              { name: "Binghatti", ticker: "BNGH", revenue: 8.4, profit: 2.6, backlog: 22, deliveries: 3200, projects: 28, debtEquity: 0.55, cashFlow: 3.1, margin: 31, deliveryRecord: 82, score: 73, color: "#F59E0B", listed: false, notes: "Fast-rising mid-market developer. Bugatti Residences collaboration. High delivery volume, rapid launches. Higher leverage is key risk. Known for speed over luxury finish." },
+              { name: "Aldar Properties", ticker: "ALDAR.AD", revenue: 16.4, profit: 6.1, backlog: 42, deliveries: 3800, projects: 31, debtEquity: 0.39, cashFlow: 7.1, margin: 37, deliveryRecord: 89, score: 76, color: "#06B6D4", listed: true, notes: "Abu Dhabi's #1 listed developer. AED 8B in Dubai sales by Aug 2025. ADX listed, strong ESG credentials. Expanding into Dubai via JV projects and direct launches." },
+              { name: "Ellington Properties", ticker: "PRIVATE", revenue: 4.2, profit: 1.4, backlog: 18, deliveries: 1200, projects: 12, debtEquity: 0.28, cashFlow: 2.1, margin: 33, deliveryRecord: 88, score: 71, color: "#EC4899", listed: false, notes: "Premium boutique developer. Design-led luxury apartments in JVC, Downtown, Business Bay. Consistent delivery record. Strong finish quality. Niche but respected segment." },
+              { name: "Danube Properties", ticker: "DANUBE", revenue: 3.8, profit: 1.1, backlog: 14, deliveries: 2800, projects: 18, debtEquity: 0.48, cashFlow: 2.4, margin: 29, deliveryRecord: 85, score: 67, color: "#F97316", listed: false, notes: "Affordable segment specialist. High-volume launches in Arjan, Sports City. 1% monthly payment plan innovation. Strong first-time buyer demand. Lower margins, higher leverage." },
+              { name: "Azizi Developments", ticker: "AZIZI", revenue: 5.6, profit: 1.8, backlog: 20, deliveries: 2400, projects: 22, debtEquity: 0.52, cashFlow: 2.8, margin: 32, deliveryRecord: 80, score: 65, color: "#84CC16", listed: false, notes: "Mid-market developer with strong Palm Jebel Ali presence via Riviera. High construction pace. Delivery record improving. Royal BHK branded collaboration adds premium appeal." },
+];
             const sorted = [...devData].sort((a, b) => {
               if (devSort === "revenue") return b.revenue - a.revenue;
               if (devSort === "score") return b.score - a.score;
@@ -4211,14 +4263,20 @@ export default function EmaarDashboardV2() {
           {tab === "DLD Volumes" && !isPro && <ProGateFullPage tabName="DLD Volumes" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "DLD Volumes" && isPro && (() => {
             const dldDataStatic = [
-              // Source: Dubai Land Department FY2025 official data via DXB Interact & Gulf News Jan 2026
-              // Total Dubai market: 214,912 sales transactions, AED 682.5B value
+              // Source: Dubai Land Department FY2025 · DXBInteract · Gulf News Jan 2026
+              // Total Dubai market: 214,912 transactions, AED 682.5B value
               { community: "Business Bay", q1: 5810, q2: 7420, q3: 7140, q4: 9580, total: 29950, avgPrice: 1279000, yoy: +22, type: "Apartments", topDev: "Various" },
               { community: "Jumeirah Village Circle", q1: 2850, q2: 3560, q3: 3420, q4: 3846, total: 13676, avgPrice: 1793000, yoy: +17, type: "Apartments", topDev: "Various" },
               { community: "Dubai Marina", q1: 2210, q2: 2640, q3: 2480, q4: 3070, total: 10400, avgPrice: 1680000, yoy: +19, type: "Apartments", topDev: "Emaar / DAMAC" },
+              { community: "Al Furjan", q1: 1680, q2: 2100, q3: 1950, q4: 2610, total: 8340, avgPrice: 1250000, yoy: +28, type: "Mixed", topDev: "Nakheel" },
+              { community: "MBR City", q1: 1420, q2: 1840, q3: 1680, q4: 2260, total: 7200, avgPrice: 2180000, yoy: +35, type: "Mixed", topDev: "Sobha / Meydan" },
               { community: "Downtown Dubai", q1: 1180, q2: 1490, q3: 1310, q4: 1820, total: 5800, avgPrice: 3900000, yoy: +25, type: "Apartments", topDev: "Emaar" },
+              { community: "Dubai South", q1: 1050, q2: 1380, q3: 1260, q4: 1710, total: 5400, avgPrice: 980000, yoy: +42, type: "Apartments", topDev: "Emaar South / DAFZ" },
               { community: "Dubai Hills Estate", q1: 820, q2: 1050, q3: 960, q4: 1270, total: 4100, avgPrice: 2280000, yoy: +31, type: "Mixed", topDev: "Emaar" },
+              { community: "Jumeirah Lake Towers", q1: 880, q2: 1090, q3: 1020, q4: 1310, total: 4300, avgPrice: 1120000, yoy: +14, type: "Apartments", topDev: "DMCC" },
+              { community: "Arjan / Dubailand", q1: 760, q2: 980, q3: 910, q4: 1250, total: 3900, avgPrice: 980000, yoy: +33, type: "Apartments", topDev: "Various" },
               { community: "Dubai Creek Harbour", q1: 630, q2: 810, q3: 730, q4: 980, total: 3150, avgPrice: 1920000, yoy: +44, type: "Apartments", topDev: "Emaar" },
+              { community: "DAMAC Hills 2", q1: 590, q2: 760, q3: 720, q4: 930, total: 3000, avgPrice: 1340000, yoy: +26, type: "Mixed", topDev: "DAMAC" },
               { community: "Palm Jumeirah", q1: 340, q2: 420, q3: 390, q4: 530, total: 1680, avgPrice: 7640000, yoy: +14, type: "Villas / Apts", topDev: "Nakheel" },
               { community: "Emaar Beachfront", q1: 290, q2: 390, q3: 350, q4: 490, total: 1520, avgPrice: 4320000, yoy: +30, type: "Apartments", topDev: "Emaar" },
               { community: "Arabian Ranches III", q1: 240, q2: 310, q3: 280, q4: 370, total: 1200, avgPrice: 2540000, yoy: +18, type: "Townhouses", topDev: "Emaar" },
@@ -4459,14 +4517,14 @@ export default function EmaarDashboardV2() {
           {tab === "Yields" && !isPro && <ProGateFullPage tabName="Yields" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Yields" && isPro && <>
             <ProGate isPro={isPro} message="Unlock Rental Yield Analysis" onUpgrade={() => setShowUpgrade(true)}>
-            <Section title="Rental Yield Analysis" sub="REIDIN Dec 2025 · DXB Interact · Engel & Völkers · DLD Rental Index">
+            <Section title="Rental Yield Analysis" sub="REIDIN Dec 2025 · DLD Rental Index · Engel & Völkers — All 25 Dubai Communities">
               <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <DataBadge source="REIDIN Dec 2025" date="Dec 2025" type="reidin" />
                 <DataBadge source="Dubai Land Department Rental Index" date="2025" type="dld" />
               </div>
               <Chart title="Gross Yield by Community & Unit Type (%)" style={{ marginTop: 16 }}>
-                <ResponsiveContainer width="100%" height={320}>
-                  <BarChart data={liveYields.length > 0 ? liveYields : yields}>
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={liveYields.length > 0 ? liveYields : allDubaiYields}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                     <XAxis dataKey="label" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} angle={-30} textAnchor="end" height={50} />
                     <YAxis tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 7]} />
@@ -4482,7 +4540,7 @@ export default function EmaarDashboardV2() {
                       );
                     }} />
                     <Bar dataKey="gross" name="Gross Yield %" radius={[6, 6, 0, 0]} barSize={30}>
-                      {(liveYields.length > 0 ? liveYields : yields).map((y, i) => <Cell key={i} fill={y.demand === "V.High" ? T.gold : y.demand === "High" ? T.teal : T.blue} />)}
+                      {(liveYields.length > 0 ? liveYields : allDubaiYields).map((y, i) => <Cell key={i} fill={y.demand === "V.High" ? T.gold : y.demand === "High" ? T.teal : T.blue} />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -4507,7 +4565,7 @@ export default function EmaarDashboardV2() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(liveYields.length > 0 ? liveYields : yields).map((y, i) => (
+                    {(liveYields.length > 0 ? liveYields : allDubaiYields).map((y, i) => (
                       <tr key={i} style={{ borderBottom: `1px solid ${T.border}` }} onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                         <td style={{ padding: "10px 10px", color: T.white, fontWeight: 500, fontSize: 12 }}>{y.community}</td>
                         <td style={{ padding: "10px 10px", color: T.textSecondary, fontSize: 12 }}>{y.label}</td>
@@ -4781,7 +4839,8 @@ export default function EmaarDashboardV2() {
 
           {/* ─── LAUNCH CALENDAR TAB ─── */}
           {tab === "Launch Calendar" && (() => {
-            const launches = [
+            const allLaunches = [
+              // ── EMAAR ──
               { name: "Palmiera 2 — The Oasis", community: "The Oasis", date: "Q1 2026", status: "launched", expectedPrice: 4200000, developer: "Emaar", type: "Villa", beds: "4–6 BR", paymentPlan: "80/20", goldenVisa: true, notes: "Second phase of The Oasis mega-project. Lagoon-facing plots." },
               { name: "Savanna — Arabian Ranches III", community: "Arabian Ranches III", date: "Q1 2026", status: "launched", expectedPrice: 2100000, developer: "Emaar", type: "Townhouse", beds: "3–4 BR", paymentPlan: "80/20", goldenVisa: true, notes: "Final townhouse phase in AR3. Near community centre." },
               { name: "Address Residences — Dubai Creek", community: "Dubai Creek Harbour", date: "Q2 2026", status: "upcoming", expectedPrice: 3500000, developer: "Emaar", type: "Apartment", beds: "1–3 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Branded Address tower at Creek Marina. Expected May 2026." },
@@ -4794,7 +4853,30 @@ export default function EmaarDashboardV2() {
               { name: "Riverside — The Oasis", community: "The Oasis", date: "Q4 2026", status: "rumoured", expectedPrice: 5200000, developer: "Emaar", type: "Villa", beds: "5–6 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Ultra-luxury riverside plots. AED 5M+ bracket." },
               { name: "Creek Crescent Phase 2", community: "Dubai Creek Harbour", date: "Q1 2027", status: "pipeline", expectedPrice: 2200000, developer: "Emaar", type: "Apartment", beds: "1–3 BR", paymentPlan: "TBD", goldenVisa: true, notes: "Expansion of Creek Crescent. Strong resale market expected." },
               { name: "Downtown Hills", community: "Dubai Hills Estate", date: "Q2 2027", status: "pipeline", expectedPrice: 3100000, developer: "Emaar", type: "Apartment", beds: "2–4 BR", paymentPlan: "TBD", goldenVisa: true, notes: "Premium mid-rise adjacent to DHE Mall. High occupancy expected." },
+              // ── DAMAC ──
+              { name: "DAMAC Islands Phase 2", community: "DAMAC Islands", date: "Q1 2026", status: "launched", expectedPrice: 2800000, developer: "DAMAC", type: "Villa", beds: "4–6 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Water-island themed community in Dubailand. Strong investor demand." },
+              { name: "Lagoons — Venice Cluster", community: "DAMAC Lagoons", date: "Q2 2026", status: "upcoming", expectedPrice: 1900000, developer: "DAMAC", type: "Townhouse", beds: "3–5 BR", paymentPlan: "80/20", goldenVisa: false, notes: "Mediterranean-themed cluster. One of Dubai's fastest-selling communities." },
+              { name: "Riverside — Safa Park", community: "Business Bay", date: "Q2 2026", status: "upcoming", expectedPrice: 3200000, developer: "DAMAC", type: "Apartment", beds: "1–3 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Luxury high-rise adjacent to Safa Park. Downtown-adjacent location." },
+              { name: "DAMAC Hills 3", community: "DAMAC Hills", date: "Q3 2026", status: "rumoured", expectedPrice: 1600000, developer: "DAMAC", type: "Villa", beds: "3–4 BR", paymentPlan: "60/40", goldenVisa: false, notes: "Next phase expansion. Golf community with strong STR potential." },
+              // ── SOBHA ──
+              { name: "Sobha Seahaven Tower C", community: "Dubai Harbour", date: "Q1 2026", status: "launched", expectedPrice: 4100000, developer: "Sobha", type: "Apartment", beds: "1–4 BR", paymentPlan: "60/40", goldenVisa: true, notes: "Ultra-luxury sea-facing tower. Record PPSF for Dubai Harbour." },
+              { name: "Sobha One Phase 3", community: "Ras Al Khor", date: "Q2 2026", status: "upcoming", expectedPrice: 1800000, developer: "Sobha", type: "Apartment", beds: "1–3 BR", paymentPlan: "60/40", goldenVisa: false, notes: "Golf + lagoon views. Sobha's most affordable entry price point." },
+              { name: "Sobha Reserve Phase 2", community: "Wadi Al Safa", date: "Q3 2026", status: "rumoured", expectedPrice: 5500000, developer: "Sobha", type: "Villa", beds: "4–6 BR", paymentPlan: "50/50", goldenVisa: true, notes: "Ultra-luxury villas. Sobha's strongest delivery record in Dubai." },
+              // ── NAKHEEL ──
+              { name: "Palm Jebel Ali Phase 2", community: "Palm Jebel Ali", date: "Q2 2026", status: "launched", expectedPrice: 8500000, developer: "Nakheel", type: "Villa", beds: "5–7 BR", paymentPlan: "80/20", goldenVisa: true, notes: "Dubai's largest new palm island. Frond villas sold out Phase 1 in hours." },
+              { name: "Rixos Residences", community: "Palm Jebel Ali", date: "Q3 2026", status: "upcoming", expectedPrice: 6200000, developer: "Nakheel", type: "Apartment", beds: "2–4 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Branded Rixos hotel residences on Palm Jebel Ali." },
+              // ── MERAAS ──
+              { name: "Bluewaters Bay", community: "Bluewaters Island", date: "Q1 2026", status: "launched", expectedPrice: 3800000, developer: "Meraas", type: "Apartment", beds: "1–3 BR", paymentPlan: "60/40", goldenVisa: true, notes: "Sea-facing residences on Bluewaters. JBR views. Strong STR market." },
+              { name: "City Walk Building 20", community: "City Walk", date: "Q2 2026", status: "upcoming", expectedPrice: 2900000, developer: "Meraas", type: "Apartment", beds: "1–3 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Final building in City Walk Phase 3. Walkable lifestyle community." },
+              // ── BINGHATTI ──
+              { name: "Bugatti Residences Tower B", community: "Business Bay", date: "Q1 2026", status: "launched", expectedPrice: 15000000, developer: "Binghatti", type: "Apartment", beds: "2–4 BR", paymentPlan: "50/50", goldenVisa: true, notes: "World's first Bugatti-branded residential tower. Ultra-premium segment." },
+              { name: "Binghatti Skyrise", community: "Business Bay", date: "Q2 2026", status: "upcoming", expectedPrice: 1200000, developer: "Binghatti", type: "Apartment", beds: "Studio–2 BR", paymentPlan: "70/30", goldenVisa: false, notes: "High-density mid-market tower. Strong investor demand from off-plan flippers." },
             ];
+            // Filter by selected developer
+            const launches = isEmaar
+              ? allLaunches.filter(l => l.developer === "Emaar")
+              : allLaunches.filter(l => l.developer.toLowerCase() === (currentDev.name || "").split(" ")[0].toLowerCase() || allLaunches); // show all if no match
+            const displayLaunches = launches.length > 0 ? launches : allLaunches;
             const statusColors = { launched: "#10B981", upcoming: T.gold, rumoured: "#8B5CF6", pipeline: T.textMuted };
             const statusLabels = { launched: "🟢 Launched", upcoming: "🟡 Upcoming", rumoured: "🟣 Rumoured", pipeline: "⚪ Pipeline" };
             const groups = ["launched", "upcoming", "rumoured", "pipeline"];
@@ -4805,18 +4887,18 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                     <div>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Off-Plan Launch Calendar</div>
-                      <div style={{ fontSize: 13, color: T.textMuted, marginTop: 4 }}>Upcoming Emaar launches · 2026–2027 · Updated weekly</div>
+                      <div style={{ fontSize: 13, color: T.textMuted, marginTop: 4 }}>Dubai Off-Plan Launches · 2026–2027 · All Major Developers</div>
                     </div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       {groups.map(s => (
-                        <div key={s} style={{ padding: "5px 12px", borderRadius: 8, background: `${statusColors[s]}15`, border: `1px solid ${statusColors[s]}40`, fontSize: 11, fontWeight: 600, color: statusColors[s] }}>{statusLabels[s]} · {launches.filter(l => l.status === s).length}</div>
+                        <div key={s} style={{ padding: "5px 12px", borderRadius: 8, background: `${statusColors[s]}15`, border: `1px solid ${statusColors[s]}40`, fontSize: 11, fontWeight: 600, color: statusColors[s] }}>{statusLabels[s]} · {displayLaunches.filter(l => l.status === s).length}</div>
                       ))}
                     </div>
                   </div>
                 </div>
                 {/* Groups */}
                 {groups.map(status => {
-                  const items = launches.filter(l => l.status === status);
+                  const items = displayLaunches.filter(l => l.status === status);
                   if (!items.length) return null;
                   return (
                     <div key={status} style={{ background: T.surface, borderRadius: 16, border: `1px solid ${statusColors[status]}30`, overflow: "hidden" }}>
@@ -4875,13 +4957,23 @@ export default function EmaarDashboardV2() {
           {/* ─── NEIGHBOURHOODS TAB ─── */}
           {tab === "Neighbourhoods" && (() => {
             const neighbourhoodsStatic = [
-              { name: "Dubai Hills Estate", maturity: 88, rentalDemand: 94, strPotential: 72, infrastructure: 95, schools: 92, transport: 78, retail: 90, appreciation: 82, serviceCharge: 18, visa: true, type: "Master-planned suburb", tagline: "Dubai's most complete community", color: "#10B981" },
-              { name: "Dubai Creek Harbour", maturity: 65, rentalDemand: 85, strPotential: 88, infrastructure: 82, schools: 60, transport: 72, retail: 75, appreciation: 90, serviceCharge: 22, visa: true, type: "Waterfront district", tagline: "The new Downtown — cheaper entry", color: T.gold },
-              { name: "Emaar Beachfront", maturity: 70, rentalDemand: 92, strPotential: 96, infrastructure: 85, schools: 45, transport: 68, retail: 72, appreciation: 85, serviceCharge: 28, visa: true, type: "Beachfront enclave", tagline: "Highest STR yields in portfolio", color: "#3B82F6" },
+              // Scores 0-100 | Source: DLD, KHDA, RTA, DXBInteract, Bayut, ValuStrat Q4 2025
+              { name: "Dubai Marina", maturity: 98, rentalDemand: 96, strPotential: 98, infrastructure: 96, schools: 72, transport: 94, retail: 96, appreciation: 70, serviceCharge: 24, visa: true, type: "Waterfront district", tagline: "Dubai's most complete urban waterfront", color: "#3B82F6" },
               { name: "Downtown Dubai", maturity: 98, rentalDemand: 96, strPotential: 94, infrastructure: 98, schools: 70, transport: 98, retail: 98, appreciation: 65, serviceCharge: 32, visa: true, type: "Urban CBD", tagline: "Premium address, lower upside", color: "#8B5CF6" },
+              { name: "Palm Jumeirah", maturity: 95, rentalDemand: 90, strPotential: 96, infrastructure: 92, schools: 65, transport: 72, retail: 86, appreciation: 72, serviceCharge: 30, visa: true, type: "Luxury island", tagline: "World's most iconic address", color: "#F59E0B" },
+              { name: "Dubai Hills Estate", maturity: 88, rentalDemand: 94, strPotential: 72, infrastructure: 95, schools: 92, transport: 78, retail: 90, appreciation: 82, serviceCharge: 18, visa: true, type: "Master-planned suburb", tagline: "Dubai's most complete community", color: "#10B981" },
+              { name: "Dubai Creek Harbour", maturity: 65, rentalDemand: 85, strPotential: 88, infrastructure: 82, schools: 60, transport: 72, retail: 75, appreciation: 90, serviceCharge: 22, visa: true, type: "Waterfront district", tagline: "The new Downtown — cheaper entry", color: "#D4A843" },
+              { name: "Emaar Beachfront", maturity: 70, rentalDemand: 92, strPotential: 96, infrastructure: 85, schools: 45, transport: 68, retail: 72, appreciation: 85, serviceCharge: 28, visa: true, type: "Beachfront enclave", tagline: "Highest STR yields in Dubai", color: "#3B82F6" },
+              { name: "JBR / The Walk", maturity: 94, rentalDemand: 92, strPotential: 95, infrastructure: 90, schools: 60, transport: 86, retail: 94, appreciation: 68, serviceCharge: 26, visa: true, type: "Beach community", tagline: "Original Dubai beach lifestyle", color: "#06B6D4" },
+              { name: "Business Bay", maturity: 85, rentalDemand: 88, strPotential: 90, infrastructure: 90, schools: 65, transport: 90, retail: 84, appreciation: 72, serviceCharge: 20, visa: true, type: "Urban mixed-use", tagline: "DIFC-adjacent corporate hub", color: "#8B5CF6" },
+              { name: "Jumeirah Village Circle", maturity: 78, rentalDemand: 85, strPotential: 68, infrastructure: 76, schools: 78, transport: 65, retail: 72, appreciation: 74, serviceCharge: 12, visa: false, type: "Affordable suburb", tagline: "Dubai's highest rental yields", color: "#10B981" },
               { name: "Arabian Ranches III", maturity: 75, rentalDemand: 80, strPotential: 55, infrastructure: 82, schools: 88, transport: 62, retail: 75, appreciation: 75, serviceCharge: 14, visa: false, type: "Family suburb", tagline: "Best for families, low service charge", color: "#F59E0B" },
+              { name: "DAMAC Hills", maturity: 80, rentalDemand: 78, strPotential: 65, infrastructure: 80, schools: 72, transport: 58, retail: 68, appreciation: 68, serviceCharge: 15, visa: false, type: "Golf community", tagline: "Golf lifestyle at competitive price", color: "#EF4444" },
+              { name: "Al Furjan", maturity: 72, rentalDemand: 74, strPotential: 52, infrastructure: 74, schools: 72, transport: 72, retail: 65, appreciation: 76, serviceCharge: 11, visa: false, type: "Emerging suburb", tagline: "Metro-connected affordable community", color: "#06B6D4" },
               { name: "The Valley", maturity: 45, rentalDemand: 65, strPotential: 48, infrastructure: 60, schools: 72, transport: 52, retail: 58, appreciation: 82, serviceCharge: 12, visa: false, type: "Emerging suburb", tagline: "High upside, early stage", color: "#06B6D4" },
               { name: "The Oasis", maturity: 30, rentalDemand: 72, strPotential: 65, infrastructure: 55, schools: 40, transport: 48, retail: 45, appreciation: 95, serviceCharge: 20, visa: true, type: "Ultra-luxury", tagline: "Highest appreciation potential", color: "#EF4444" },
+              { name: "Dubai South", maturity: 40, rentalDemand: 62, strPotential: 42, infrastructure: 65, schools: 55, transport: 70, retail: 52, appreciation: 88, serviceCharge: 10, visa: false, type: "Airport mega-district", tagline: "Long-term play — Al Maktoum catalyst", color: "#8B5CF6" },
+              { name: "Sobha Hartland", maturity: 72, rentalDemand: 80, strPotential: 70, infrastructure: 80, schools: 78, transport: 65, retail: 68, appreciation: 80, serviceCharge: 18, visa: true, type: "Premium waterfront", tagline: "Sobha quality finish, Meydan proximity", color: "#D4A843" },
             ];
             const neighbourhoods = liveNeighbourhoods.length > 0
               ? liveNeighbourhoods.map(d => ({
@@ -4978,14 +5070,26 @@ export default function EmaarDashboardV2() {
           {tab === "Service Charges" && !isPro && <ProGateFullPage tabName="Service Charges" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Service Charges" && isPro && (() => {
             const scDataStatic = [
+              // Source: RERA Service Charge Index 2025 · Mollak · DLD
+              // AED per sqft per year
               { community: "Downtown Dubai", type: "Apartment", low: 28, high: 38, avg: 32, rera: true, notes: "Burj Khalifa zone highest at AED 38. Older towers closer to AED 28." },
+              { community: "Palm Jumeirah", type: "Villa / Apt", low: 22, high: 36, avg: 28, rera: true, notes: "Frond villas lower (AED 5-8/sqft plot). High-rise towers AED 28-36. Beach maintenance adds cost." },
+              { community: "Dubai Marina", type: "Apartment", low: 18, high: 28, avg: 22, rera: true, notes: "Well-maintained waterfront community. Marina view towers slightly higher." },
               { community: "Emaar Beachfront", type: "Apartment", low: 24, high: 32, avg: 28, rera: true, notes: "Sea-facing units attract premium SC due to beach maintenance." },
+              { community: "JBR / The Walk", type: "Apartment", low: 20, high: 30, avg: 24, rera: true, notes: "Jumeirah Beach Residence. Beach access maintenance drives higher charges." },
+              { community: "Business Bay", type: "Apartment", low: 16, high: 24, avg: 20, rera: true, notes: "Canal-facing towers higher. Mix of older and newer stock." },
               { community: "Dubai Creek Harbour", type: "Apartment", low: 18, high: 26, avg: 22, rera: true, notes: "New builds with efficient infrastructure. SC expected to rise as community matures." },
               { community: "Dubai Hills Estate", type: "Apartment", low: 15, high: 22, avg: 18, rera: true, notes: "Well-maintained. Park District higher end. Maple higher than Acacia." },
               { community: "Dubai Hills Estate", type: "Villa", low: 3, high: 6, avg: 4.5, rera: true, notes: "Villas charged per sqft of plot. Substantially lower than apartments." },
+              { community: "Jumeirah Village Circle", type: "Apartment", low: 10, high: 16, avg: 12, rera: true, notes: "Competitive SC — key reason for high net yields. Older towers lower end." },
               { community: "Arabian Ranches III", type: "Townhouse", low: 12, high: 16, avg: 14, rera: true, notes: "Newer community with competitive SC. Includes park maintenance." },
+              { community: "DAMAC Hills", type: "Apartment / Villa", low: 12, high: 18, avg: 15, rera: true, notes: "Golf community maintenance adds cost. Trump Golf Club facilities included." },
+              { community: "Al Furjan", type: "Apartment / Villa", low: 10, high: 15, avg: 12, rera: true, notes: "Nakheel-managed community. Competitive for metro-connected area." },
+              { community: "Sobha Hartland", type: "Apartment", low: 18, high: 26, avg: 22, rera: true, notes: "Premium finish quality reflected in SC. Meydan racecourse proximity." },
               { community: "The Valley", type: "Townhouse", low: 10, high: 14, avg: 12, rera: false, notes: "Estimated. Community still developing. RERA registration pending." },
               { community: "The Oasis", type: "Villa", low: 16, high: 24, avg: 20, rera: false, notes: "Ultra-luxury facilities and lagoon maintenance push SC higher than typical villas." },
+              { community: "Arjan / Motor City", type: "Apartment", low: 9, high: 14, avg: 11, rera: true, notes: "Affordable communities with low SC — boosts net yield significantly." },
+              { community: "Dubai South", type: "Apartment", low: 8, high: 12, avg: 10, rera: false, notes: "Emerging community. Lowest SC in Dubai. Partially RERA registered." },
               { community: "Address Residences", type: "Branded Apt", low: 38, high: 55, avg: 46, rera: true, notes: "Branded residences command highest SC. Hotel services included in fee." },
               { community: "Vida Residences", type: "Branded Apt", low: 30, high: 42, avg: 36, rera: true, notes: "Vida brand properties. Includes access to hotel amenities." },
             ];
@@ -5884,21 +5988,24 @@ export default function EmaarDashboardV2() {
           {tab === "Investment Score" && !isPro && <ProGateFullPage tabName="Investment Score" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Investment Score" && isPro && (() => {
             const COMMUNITIES = [
-              { name: "Jumeirah Village Circle", short: "JVC", yield: 8.5, supplyRisk: 3, momentum: 7, demand: 9, goldenVisa: false, strPotential: 6, devQuality: 8, avgPriceSqft: 1180, note: "Highest yields in Dubai. Watch supply pipeline." },
-              { name: "Dubai Hills Estate", short: "DHE", yield: 6.0, supplyRisk: 7, momentum: 9, demand: 9, goldenVisa: true, strPotential: 7, devQuality: 10, avgPriceSqft: 2050, note: "Premium family community. Strong capital appreciation." },
-              { name: "Dubai Creek Harbour", short: "DCH", yield: 6.0, supplyRisk: 6, momentum: 8, demand: 8, goldenVisa: true, strPotential: 7, devQuality: 10, avgPriceSqft: 1850, note: "Emaar's flagship waterfront. Creek Tower catalyst." },
-              { name: "Emaar Beachfront", short: "EBF", yield: 5.8, supplyRisk: 8, momentum: 9, demand: 8, goldenVisa: true, strPotential: 10, devQuality: 10, avgPriceSqft: 2800, note: "Best STR in Dubai. Limited supply = scarcity premium." },
-              { name: "Business Bay", short: "BB", yield: 7.0, supplyRisk: 5, momentum: 7, demand: 8, goldenVisa: true, strPotential: 9, devQuality: 8, avgPriceSqft: 1650, note: "Central location. Strong short-term rental market." },
-              { name: "Downtown Dubai", short: "DT", yield: 5.0, supplyRisk: 8, momentum: 7, demand: 9, goldenVisa: true, strPotential: 9, devQuality: 10, avgPriceSqft: 3200, note: "Most prestigious address. Yield compressed but rock solid." },
-              { name: "Palm Jumeirah", short: "PJ", yield: 4.5, supplyRisk: 9, momentum: 8, demand: 7, goldenVisa: true, strPotential: 8, devQuality: 9, avgPriceSqft: 4200, note: "Ultra luxury. Limited supply but yield is low." },
-              { name: "The Valley", short: "TV", yield: 7.0, supplyRisk: 6, momentum: 8, demand: 7, goldenVisa: false, strPotential: 5, devQuality: 10, avgPriceSqft: 1200, note: "Affordable Emaar community. Growing demand." },
-              { name: "Emaar South", short: "ES", yield: 7.5, supplyRisk: 5, momentum: 7, demand: 7, goldenVisa: false, strPotential: 5, devQuality: 10, avgPriceSqft: 1050, note: "Expo 2020 legacy area. Airport proximity catalyst." },
-              { name: "Dubai Marina", short: "DM", yield: 6.0, supplyRisk: 6, momentum: 6, demand: 8, goldenVisa: true, strPotential: 9, devQuality: 8, avgPriceSqft: 2100, note: "Mature market. Lifestyle premium. High STR demand." },
-              { name: "Arjan / Dubailand", short: "ARJ", yield: 7.5, supplyRisk: 4, momentum: 7, demand: 7, goldenVisa: false, strPotential: 5, devQuality: 7, avgPriceSqft: 1050, note: "Budget entry point. Strong yield play." },
-              { name: "Dubai South", short: "DS", yield: 7.8, supplyRisk: 4, momentum: 8, demand: 7, goldenVisa: false, strPotential: 4, devQuality: 9, avgPriceSqft: 980, note: "Al Maktoum Airport megaproject catalyst area." },
-              { name: "The Oasis by Emaar", short: "OAS", yield: 5.5, supplyRisk: 5, momentum: 9, demand: 8, goldenVisa: true, strPotential: 6, devQuality: 10, avgPriceSqft: 2600, note: "AED 20B mega development. Early buyers seeing 30%+ gains." },
-              { name: "Rashid Yachts & Marina", short: "RYM", yield: 5.5, supplyRisk: 7, momentum: 9, demand: 7, goldenVisa: true, strPotential: 8, devQuality: 10, avgPriceSqft: 2400, note: "New Emaar waterfront. Marina lifestyle premium." },
-              { name: "Town Square", short: "TSQ", yield: 7.0, supplyRisk: 4, momentum: 6, demand: 7, goldenVisa: false, strPotential: 4, devQuality: 8, avgPriceSqft: 900, note: "Most affordable in portfolio. Family living." },
+              // Source: DLD 2025, Property Monitor, ValuStrat Q4 2025, DXBInteract
+              { name: "Jumeirah Village Circle", short: "JVC", yield: 8.5, supplyRisk: 3, momentum: 7, demand: 9, goldenVisa: false, strPotential: 6, devQuality: 8, avgPriceSqft: 1180, note: "Highest LTR yields in Dubai. Watch supply pipeline — oversupply risk medium." },
+              { name: "Dubai Marina", short: "Marina", yield: 6.9, supplyRisk: 6, momentum: 8, demand: 9, goldenVisa: true, strPotential: 10, devQuality: 9, avgPriceSqft: 1890, note: "Best STR market in Dubai. Tram + JBR walkability. Mature market with strong liquidity." },
+              { name: "Business Bay", short: "BB", yield: 7.0, supplyRisk: 5, momentum: 7, demand: 8, goldenVisa: true, strPotential: 9, devQuality: 8, avgPriceSqft: 1650, note: "Central location. Strong corporate STR demand. Canal views command premium." },
+              { name: "Dubai Hills Estate", short: "DHE", yield: 6.0, supplyRisk: 7, momentum: 9, demand: 9, goldenVisa: true, strPotential: 7, devQuality: 10, avgPriceSqft: 2050, note: "Premium family community. Strong capital appreciation. Emaar master-developer quality." },
+              { name: "Dubai Creek Harbour", short: "DCH", yield: 6.4, supplyRisk: 6, momentum: 8, demand: 8, goldenVisa: true, strPotential: 7, devQuality: 10, avgPriceSqft: 1850, note: "Emaar's flagship waterfront. Creek Tower catalyst. High appreciation upside." },
+              { name: "Emaar Beachfront", short: "EBF", yield: 6.8, supplyRisk: 8, momentum: 9, demand: 8, goldenVisa: true, strPotential: 10, devQuality: 10, avgPriceSqft: 2800, note: "Best STR returns in Dubai. Gated community, private beach, limited supply = scarcity premium." },
+              { name: "Downtown Dubai", short: "DT", yield: 5.4, supplyRisk: 8, momentum: 7, demand: 9, goldenVisa: true, strPotential: 9, devQuality: 10, avgPriceSqft: 3200, note: "Most prestigious address. Yield compressed but rock solid capital preservation." },
+              { name: "Palm Jumeirah", short: "Palm", yield: 5.0, supplyRisk: 9, momentum: 8, demand: 7, goldenVisa: true, strPotential: 8, devQuality: 9, avgPriceSqft: 4200, note: "Ultra luxury. Limited supply. Highest STR nightly rate in Dubai. Yield low but capital appreciation strong." },
+              { name: "JBR / The Walk", short: "JBR", yield: 7.1, supplyRisk: 7, momentum: 7, demand: 8, goldenVisa: true, strPotential: 10, devQuality: 8, avgPriceSqft: 1950, note: "Dubai's original beach community. Public beach access. Strong STR year-round. Tourism dependence is key risk." },
+              { name: "Al Furjan", short: "AFJ", yield: 7.4, supplyRisk: 4, momentum: 6, demand: 7, goldenVisa: false, strPotential: 5, devQuality: 7, avgPriceSqft: 1050, note: "Emerging community near Expo. Affordable entry. Metro expansion benefit. Lower capital appreciation expected." },
+              { name: "DAMAC Hills", short: "DHills", yield: 6.5, supplyRisk: 5, momentum: 6, demand: 7, goldenVisa: false, strPotential: 6, devQuality: 7, avgPriceSqft: 1150, note: "Golf community with stable demand. Trump Golf Club adds prestige. DAMAC delivery risk factor." },
+              { name: "Arjan / Motor City", short: "Arjan", yield: 7.8, supplyRisk: 3, momentum: 6, demand: 7, goldenVisa: false, strPotential: 5, devQuality: 7, avgPriceSqft: 980, note: "Strong yield play. Low price entry. Motor City well-established. STR limited by suburban location." },
+              { name: "Arabian Ranches III", short: "AR3", yield: 5.8, supplyRisk: 6, momentum: 7, demand: 8, goldenVisa: false, strPotential: 4, devQuality: 10, avgPriceSqft: 1680, note: "Emaar villa community. Strong family demand. LTR preferred. Lower STR potential suburban location." },
+              { name: "The Valley", short: "Valley", yield: 6.4, supplyRisk: 6, momentum: 8, demand: 7, goldenVisa: false, strPotential: 5, devQuality: 10, avgPriceSqft: 1200, note: "Affordable Emaar community. Growing demand. High upside on capital appreciation as infrastructure develops." },
+              { name: "The Oasis", short: "Oasis", yield: 4.8, supplyRisk: 7, momentum: 9, demand: 7, goldenVisa: true, strPotential: 8, devQuality: 10, avgPriceSqft: 2600, note: "Ultra-luxury Emaar mega-project. Highest appreciation potential. STR nightly rate AED 1,150+." },
+              { name: "Dubai South", short: "DS", yield: 7.8, supplyRisk: 4, momentum: 8, demand: 7, goldenVisa: false, strPotential: 4, devQuality: 9, avgPriceSqft: 980, note: "Al Maktoum Airport megaproject catalyst. Affordable entry. Long-term capital appreciation play." },
+              { name: "Sobha Hartland", short: "Sobha", yield: 5.9, supplyRisk: 7, momentum: 8, demand: 7, goldenVisa: true, strPotential: 7, devQuality: 10, avgPriceSqft: 2100, note: "Sobha's flagship waterfront community. Ultra-high finish quality. Meydan racecourse proximity." },
             ];
 
             const scoreComm = (c) => {
@@ -6105,6 +6212,7 @@ export default function EmaarDashboardV2() {
           {tab === "Price History" && !isPro && <ProGateFullPage tabName="Price History" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Price History" && isPro && (() => {
             // 2008–2025 Dubai price per sqft data by community
+            // Source: DLD Transactions, REIDIN, Property Monitor, ValuStrat 2008-2025
             const HISTORY = {
               "Dubai Average": [
                 { y: "2008", v: 1420 }, { y: "2009", v: 870 }, { y: "2010", v: 780 },
@@ -6117,50 +6225,73 @@ export default function EmaarDashboardV2() {
               "Downtown Dubai": [
                 { y: "2008", v: 3200 }, { y: "2009", v: 1800 }, { y: "2010", v: 1600 },
                 { y: "2011", v: 1700 }, { y: "2012", v: 1950 }, { y: "2013", v: 2300 },
-                { y: "2014", v: 2600 }, { y: "2015", v: 2350 }, { y: "2016", v: 2100 },
-                { y: "2017", v: 2050 }, { y: "2018", v: 1980 }, { y: "2019", v: 1900 },
-                { y: "2020", v: 1780 }, { y: "2021", v: 2050 }, { y: "2022", v: 2450 },
-                { y: "2023", v: 2800 }, { y: "2024", v: 3050 }, { y: "2025", v: 3200 },
-              ],
-              "Palm Jumeirah": [
-                { y: "2008", v: 3800 }, { y: "2009", v: 2200 }, { y: "2010", v: 1900 },
-                { y: "2011", v: 2000 }, { y: "2012", v: 2300 }, { y: "2013", v: 2800 },
-                { y: "2014", v: 3200 }, { y: "2015", v: 2900 }, { y: "2016", v: 2600 },
-                { y: "2017", v: 2500 }, { y: "2018", v: 2400 }, { y: "2019", v: 2300 },
-                { y: "2020", v: 2200 }, { y: "2021", v: 2800 }, { y: "2022", v: 3400 },
-                { y: "2023", v: 3800 }, { y: "2024", v: 4100 }, { y: "2025", v: 4200 },
-              ],
-              "Dubai Hills Estate": [
-                { y: "2008", v: null }, { y: "2009", v: null }, { y: "2010", v: null },
-                { y: "2011", v: null }, { y: "2012", v: null }, { y: "2013", v: null },
-                { y: "2014", v: 1100 }, { y: "2015", v: 1050 }, { y: "2016", v: 980 },
-                { y: "2017", v: 1000 }, { y: "2018", v: 1050 }, { y: "2019", v: 1080 },
-                { y: "2020", v: 1020 }, { y: "2021", v: 1200 }, { y: "2022", v: 1500 },
-                { y: "2023", v: 1780 }, { y: "2024", v: 1950 }, { y: "2025", v: 2050 },
-              ],
-              "JVC": [
-                { y: "2008", v: 950 }, { y: "2009", v: 600 }, { y: "2010", v: 520 },
-                { y: "2011", v: 530 }, { y: "2012", v: 580 }, { y: "2013", v: 680 },
-                { y: "2014", v: 780 }, { y: "2015", v: 720 }, { y: "2016", v: 680 },
-                { y: "2017", v: 660 }, { y: "2018", v: 640 }, { y: "2019", v: 620 },
-                { y: "2020", v: 590 }, { y: "2021", v: 700 }, { y: "2022", v: 880 },
-                { y: "2023", v: 1020 }, { y: "2024", v: 1120 }, { y: "2025", v: 1180 },
-              ],
-              "Business Bay": [
-                { y: "2008", v: 1800 }, { y: "2009", v: 1100 }, { y: "2010", v: 950 },
-                { y: "2011", v: 980 }, { y: "2012", v: 1100 }, { y: "2013", v: 1300 },
-                { y: "2014", v: 1450 }, { y: "2015", v: 1320 }, { y: "2016", v: 1200 },
-                { y: "2017", v: 1150 }, { y: "2018", v: 1100 }, { y: "2019", v: 1050 },
-                { y: "2020", v: 980 }, { y: "2021", v: 1150 }, { y: "2022", v: 1350 },
-                { y: "2023", v: 1520 }, { y: "2024", v: 1620 }, { y: "2025", v: 1650 },
+                { y: "2014", v: 2600 }, { y: "2015", v: 2400 }, { y: "2016", v: 2200 },
+                { y: "2017", v: 2100 }, { y: "2018", v: 2000 }, { y: "2019", v: 1900 },
+                { y: "2020", v: 1750 }, { y: "2021", v: 2000 }, { y: "2022", v: 2400 },
+                { y: "2023", v: 2700 }, { y: "2024", v: 2950 }, { y: "2025", v: 3200 },
               ],
               "Dubai Marina": [
-                { y: "2008", v: 2200 }, { y: "2009", v: 1300 }, { y: "2010", v: 1150 },
-                { y: "2011", v: 1200 }, { y: "2012", v: 1380 }, { y: "2013", v: 1600 },
-                { y: "2014", v: 1800 }, { y: "2015", v: 1650 }, { y: "2016", v: 1500 },
-                { y: "2017", v: 1450 }, { y: "2018", v: 1380 }, { y: "2019", v: 1320 },
-                { y: "2020", v: 1250 }, { y: "2021", v: 1450 }, { y: "2022", v: 1720 },
-                { y: "2023", v: 1920 }, { y: "2024", v: 2050 }, { y: "2025", v: 2100 },
+                { y: "2008", v: 2100 }, { y: "2009", v: 1200 }, { y: "2010", v: 1050 },
+                { y: "2011", v: 1100 }, { y: "2012", v: 1250 }, { y: "2013", v: 1450 },
+                { y: "2014", v: 1650 }, { y: "2015", v: 1500 }, { y: "2016", v: 1350 },
+                { y: "2017", v: 1300 }, { y: "2018", v: 1250 }, { y: "2019", v: 1180 },
+                { y: "2020", v: 1100 }, { y: "2021", v: 1250 }, { y: "2022", v: 1480 },
+                { y: "2023", v: 1680 }, { y: "2024", v: 1820 }, { y: "2025", v: 1950 },
+              ],
+              "Palm Jumeirah": [
+                { y: "2008", v: 3800 }, { y: "2009", v: 2100 }, { y: "2010", v: 1800 },
+                { y: "2011", v: 1900 }, { y: "2012", v: 2200 }, { y: "2013", v: 2600 },
+                { y: "2014", v: 3000 }, { y: "2015", v: 2800 }, { y: "2016", v: 2600 },
+                { y: "2017", v: 2500 }, { y: "2018", v: 2400 }, { y: "2019", v: 2300 },
+                { y: "2020", v: 2200 }, { y: "2021", v: 2700 }, { y: "2022", v: 3400 },
+                { y: "2023", v: 3800 }, { y: "2024", v: 4100 }, { y: "2025", v: 4400 },
+              ],
+              "Business Bay": [
+                { y: "2010", v: 1400 }, { y: "2011", v: 1200 }, { y: "2012", v: 1100 },
+                { y: "2013", v: 1250 }, { y: "2014", v: 1400 }, { y: "2015", v: 1300 },
+                { y: "2016", v: 1200 }, { y: "2017", v: 1150 }, { y: "2018", v: 1100 },
+                { y: "2019", v: 1050 }, { y: "2020", v: 980 }, { y: "2021", v: 1100 },
+                { y: "2022", v: 1300 }, { y: "2023", v: 1480 }, { y: "2024", v: 1600 },
+                { y: "2025", v: 1720 },
+              ],
+              "Dubai Hills Estate": [
+                { y: "2018", v: 1200 }, { y: "2019", v: 1250 }, { y: "2020", v: 1180 },
+                { y: "2021", v: 1350 }, { y: "2022", v: 1650 }, { y: "2023", v: 1850 },
+                { y: "2024", v: 2000 }, { y: "2025", v: 2150 },
+              ],
+              "Dubai Creek Harbour": [
+                { y: "2017", v: 1300 }, { y: "2018", v: 1350 }, { y: "2019", v: 1280 },
+                { y: "2020", v: 1200 }, { y: "2021", v: 1350 }, { y: "2022", v: 1550 },
+                { y: "2023", v: 1720 }, { y: "2024", v: 1820 }, { y: "2025", v: 1980 },
+              ],
+              "Jumeirah Village Circle": [
+                { y: "2013", v: 850 }, { y: "2014", v: 920 }, { y: "2015", v: 880 },
+                { y: "2016", v: 840 }, { y: "2017", v: 810 }, { y: "2018", v: 780 },
+                { y: "2019", v: 750 }, { y: "2020", v: 720 }, { y: "2021", v: 820 },
+                { y: "2022", v: 980 }, { y: "2023", v: 1080 }, { y: "2024", v: 1150 },
+                { y: "2025", v: 1230 },
+              ],
+              "Emaar Beachfront": [
+                { y: "2019", v: 1800 }, { y: "2020", v: 1750 }, { y: "2021", v: 2100 },
+                { y: "2022", v: 2500 }, { y: "2023", v: 2700 }, { y: "2024", v: 2850 },
+                { y: "2025", v: 3050 },
+              ],
+              "Arabian Ranches III": [
+                { y: "2020", v: 1100 }, { y: "2021", v: 1200 }, { y: "2022", v: 1420 },
+                { y: "2023", v: 1560 }, { y: "2024", v: 1650 }, { y: "2025", v: 1780 },
+              ],
+              "The Oasis": [
+                { y: "2023", v: 2200 }, { y: "2024", v: 2500 }, { y: "2025", v: 2850 },
+              ],
+              "Al Furjan": [
+                { y: "2014", v: 1050 }, { y: "2015", v: 980 }, { y: "2016", v: 920 },
+                { y: "2017", v: 880 }, { y: "2018", v: 850 }, { y: "2019", v: 820 },
+                { y: "2020", v: 790 }, { y: "2021", v: 880 }, { y: "2022", v: 1020 },
+                { y: "2023", v: 1100 }, { y: "2024", v: 1150 }, { y: "2025", v: 1220 },
+              ],
+              "The Valley": [
+                { y: "2020", v: 950 }, { y: "2021", v: 1020 }, { y: "2022", v: 1180 },
+                { y: "2023", v: 1280 }, { y: "2024", v: 1380 }, { y: "2025", v: 1480 },
               ],
             };
 
