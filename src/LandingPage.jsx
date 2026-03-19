@@ -123,7 +123,6 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
     { icon: "📊", title: "Real-Time Financials", desc: "6 years of verified Emaar data — revenue, EBITDA, backlog, EPS, dividends — sourced from official IR reports." },
     { icon: "🏗️", title: "Project Intelligence", desc: "48+ projects with construction %, unit availability, payment plans, price/sqft, and handover timelines." },
     { icon: "📍", title: "Location Intelligence", desc: "Distance to Burj Khalifa, schools, hospitals, malls — drive times for every community across Dubai." },
-    { icon: "📈", title: "Stock Market Tracker", desc: "30 RE stocks across DFM, ADX, Tadawul & LSE — live prices, P/E, TradingView charts." },
     { icon: "⚖️", title: "3-Project Comparison", desc: "Side-by-side on price, yield, handover, payment plan, ROI — with PDF export for client presentations." },
     { icon: "💰", title: "Yield & ROI Calculator", desc: "Gross/net yields per community. Interactive ROI calculator with 3 strategies: long-term, Airbnb, flip." },
     { icon: "🏆", title: "Competitor Analysis", desc: "Top 10 developers ranked by sales, units, market share — with pricing trend analysis." },
@@ -135,8 +134,8 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
 
   const faqs = [
     { q: "Is there a free trial?", a: "Yes — every new account gets a 7-day Pro trial automatically. No credit card needed to start." },
-    { q: "What data sources do you use?", a: "Emaar official IR reports, Dubai Land Department (DLD), DXBinteract, BetterHomes, Bayut, Engel & Völkers, ValuStrat, Knight Frank, and Yahoo Finance for stock data." },
-    { q: "How often is data updated?", a: "Financial data is updated within 24 hours of official Emaar releases. Project prices and handover dates are manually verified monthly. Stock data refreshes every 15 minutes." },
+    { q: "What data sources do you use?", a: "Emaar official IR reports, Dubai Land Department (DLD), DXBinteract, BetterHomes, Bayut, Engel & Völkers, ValuStrat, and Knight Frank." },
+    { q: "How often is data updated?", a: "Financial data is updated within 24 hours of official Emaar releases. Project prices and handover dates are manually verified monthly." },
     { q: "Can I use this for client presentations?", a: "Absolutely — that's the core Pro use case. Use the Compare Tool to create side-by-side project comparisons, then export as a PDF directly from the dashboard." },
     { q: "What's included in the Enterprise plan?", a: "Everything in Pro plus multi-user team accounts, PDF report generation, API access (coming Q3 2026), custom branded reports, and a dedicated account manager. Contact us at mianwaleed689@gmail.com to discuss." },
     { q: "Which developers are covered?", a: "Phase 1 (live now) covers all 48 active Emaar projects across 11 communities. DAMAC, Sobha, Nakheel, ALDAR, and 6 more developers are coming in Q3 2026." },
@@ -231,7 +230,6 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
               { n: "48+", l: "Projects" },
               { n: "AED 682B", l: "Market Data" },
               { n: "11", l: "Communities" },
-              { n: "30", l: "RE Stocks" },
             ].map((s, i) => (
               <div key={i} style={{ textAlign: "center" }}>
                 <div className="stat-number" style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900 }}>{s.n}</div>
@@ -247,7 +245,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         <div className="ticker-track">
           {[...Array(2)].map((_, rep) => (
             <React.Fragment key={rep}>
-              {["AED 80.4B Property Sales 2025", "125,600+ Units Delivered", "AED 155B Order Backlog", "48 Active Projects", "11 Communities Profiled", "6 Years Financial Data", "30 RE Stocks Tracked", "AED 25.7B Net Profit 2025", "DLD · Emaar IR · Knight Frank · ValuStrat"].map((item, i) => (
+              {["AED 80.4B Property Sales 2025", "125,600+ Units Delivered", "AED 155B Order Backlog", "48 Active Projects", "11 Communities Profiled", "6 Years Financial Data", "AED 25.7B Net Profit 2025", "DLD · Emaar IR · Knight Frank · ValuStrat"].map((item, i) => (
                 <span key={`${rep}-${i}`} style={{ fontSize: 12, color: T.textMuted, display: "inline-flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
                   <span style={{ width: 4, height: 4, borderRadius: "50%", background: T.gold, opacity: 0.6, display: "inline-block" }} />
                   {item}
@@ -374,7 +372,6 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                 "All 48+ active projects",
                 "Full 6-year financials & ratios",
                 "Rental yields & ROI calculator",
-                "30 RE stocks tracker",
                 "Competitor intelligence",
                 "3-project comparison + PDF export",
                 "Location & community deep-dives",
@@ -439,7 +436,6 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                   { feature: "ROI calculator", vals: ["—", "✓", "✓"] },
                   { feature: "Project comparison", vals: ["—", "3 projects", "Unlimited"] },
                   { feature: "PDF export", vals: ["—", "✓", "✓"] },
-                  { feature: "Stock tracker", vals: ["—", "✓", "✓"] },
                   { feature: "Team accounts", vals: ["1 user", "1 user", "Unlimited"] },
                   { feature: "API access", vals: ["—", "—", "Q3 2026"] },
                 ].map((row, i) => (
@@ -514,7 +510,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
           <p style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, letterSpacing: 2, textTransform: "uppercase", marginBottom: 20 }}>Verified Data From</p>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 12 }}>
-            {["Dubai Land Department", "Emaar IR Reports", "DXBinteract", "Knight Frank", "ValuStrat", "Engel & Völkers", "BetterHomes", "Bayut", "Yahoo Finance", "TradingView"].map((src, i) => (
+            {["Dubai Land Department", "Emaar IR Reports", "DXBinteract", "Knight Frank", "ValuStrat", "Engel & Völkers", "BetterHomes", "Bayut"].map((src, i) => (
               <span key={i} style={{ fontSize: 12, color: T.textSecondary, padding: "7px 14px", borderRadius: 8, background: T.surface, border: `1px solid ${T.border}` }}>{src}</span>
             ))}
           </div>
@@ -531,7 +527,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           </div>
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
             {[
-              { phase: "Phase 1", status: "LIVE NOW", color: T.green, title: "Emaar Properties", desc: "48 projects, full financials, yields, risk, competitors, stocks — complete intelligence module.", bg: "rgba(16,185,129,0.05)" },
+              { phase: "Phase 1", status: "LIVE NOW", color: T.green, title: "Emaar Properties", desc: "48 projects, full financials, yields, risk, competitors — complete intelligence module.", bg: "rgba(16,185,129,0.05)" },
               { phase: "Phase 2", status: "Q3 2026", color: T.gold, title: "Top 10 Developers", desc: "DAMAC, Sobha, Meraas, ALDAR, Binghatti, Nakheel, Azizi, Tiger, Danube — all in one place.", bg: T.goldMuted },
               { phase: "Phase 3", status: "2027", color: T.blue, title: "Full Dubai Market", desc: "All 228+ developers, every community, every transaction type, live DLD data feeds.", bg: "rgba(59,130,246,0.05)" },
             ].map((item, i) => (
@@ -601,22 +597,44 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
 
       {/* ─── FOOTER ─── */}
       <footer style={{ padding: "40px", borderTop: `1px solid ${T.border}`, background: T.surface }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <svg width="24" height="24" viewBox="0 0 40 40">
-              <rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" />
-              <path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} />
-            </svg>
-            <span style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.gold }}>DXB Analytics</span>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <svg width="24" height="24" viewBox="0 0 40 40">
+                <rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" />
+                <path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} />
+              </svg>
+              <span style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.gold }}>DXB Analytics</span>
+            </div>
+            {/* Social links */}
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <a href="https://www.linkedin.com/company/dxb-analytics" target="_blank" rel="noopener noreferrer"
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface, color: T.textMuted, textDecoration: "none", transition: "all 0.2s" }}
+                title="LinkedIn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+              </a>
+              <a href="https://twitter.com/dxbanalytics" target="_blank" rel="noopener noreferrer"
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface, color: T.textMuted, textDecoration: "none", transition: "all 0.2s" }}
+                title="X / Twitter">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              </a>
+              <a href="https://www.instagram.com/dxbanalytics" target="_blank" rel="noopener noreferrer"
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface, color: T.textMuted, textDecoration: "none", transition: "all 0.2s" }}
+                title="Instagram">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+              </a>
+            </div>
+            <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+              <a href="#features" className="nav-link" style={{ fontSize: 12 }}>Features</a>
+              <a href="#pricing" className="nav-link" style={{ fontSize: 12 }}>Pricing</a>
+              <a href="#faq" className="nav-link" style={{ fontSize: 12 }}>FAQ</a>
+              <a href="/terms" className="nav-link" style={{ fontSize: 12 }}>Terms</a>
+              <a href="/privacy" className="nav-link" style={{ fontSize: 12 }}>Privacy</a>
+              <a href="mailto:mianwaleed689@gmail.com" className="nav-link" style={{ fontSize: 12 }}>Contact</a>
+            </div>
           </div>
-          <p style={{ fontSize: 11, color: T.textMuted }}>© 2026 DXB Analytics · Dubai, UAE · Not financial advice</p>
-          <div style={{ display: "flex", gap: 24 }}>
-            <a href="#features" className="nav-link" style={{ fontSize: 12 }}>Features</a>
-            <a href="#pricing" className="nav-link" style={{ fontSize: 12 }}>Pricing</a>
-            <a href="#faq" className="nav-link" style={{ fontSize: 12 }}>FAQ</a>
-            <a href="/terms" className="nav-link" style={{ fontSize: 12 }}>Terms</a>
-            <a href="/privacy" className="nav-link" style={{ fontSize: 12 }}>Privacy</a>
-            <a href="mailto:mianwaleed689@gmail.com" className="nav-link" style={{ fontSize: 12 }}>Contact</a>
+          <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 16, textAlign: "center" }}>
+            <p style={{ fontSize: 11, color: T.textMuted }}>© 2026 DXB Analytics · Dubai, UAE · Not financial advice · Data sourced from Emaar IR, DLD, Knight Frank, ValuStrat</p>
           </div>
         </div>
       </footer>

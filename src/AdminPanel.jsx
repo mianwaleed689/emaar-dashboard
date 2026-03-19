@@ -11199,22 +11199,32 @@ function FinancialsEditor({ db, T, notify, adminUser, Section }) {
   const [finRows, setFinRows] = React.useState(null);
   const [finSaving, setFinSaving] = React.useState(false);
 
+  const defaultFinancials = [
+    { year:"2020", revenue:14.9, grossProfit:4.8, ebitda:6.2, netProfit:2.7, propertySales:14, backlog:28, recurringRev:5.3, intlSales:0.6, mallRev:3.2, hotelRev:2.1, dividend:0.15, eps:0.24, gm:32.2, em:41.6, nm:14.1 },
+    { year:"2021", revenue:27.9, grossProfit:11.6, ebitda:8.5, netProfit:6.6, propertySales:23.9, backlog:32, recurringRev:5.8, intlSales:0.8, mallRev:3.5, hotelRev:2.3, dividend:0.25, eps:0.60, gm:41.6, em:30.5, nm:19.0 },
+    { year:"2022", revenue:24.9, grossProfit:12.6, ebitda:9.8, netProfit:8.1, propertySales:30.7, backlog:41.5, recurringRev:7.5, intlSales:1.2, mallRev:4.2, hotelRev:3.3, dividend:0.35, eps:0.77, gm:50.6, em:39.4, nm:27.3 },
+    { year:"2023", revenue:26.7, grossProfit:16.9, ebitda:16.0, netProfit:15.1, propertySales:40.3, backlog:71.8, recurringRev:8.6, intlSales:2.9, mallRev:5.8, hotelRev:2.8, dividend:0.50, eps:1.32, gm:63.3, em:59.9, nm:43.4 },
+    { year:"2024", revenue:35.5, grossProfit:20.4, ebitda:19.3, netProfit:18.9, propertySales:69.5, backlog:111.5, recurringRev:9.3, intlSales:4.1, mallRev:5.6, hotelRev:3.7, dividend:1.00, eps:1.53, gm:57.5, em:54.4, nm:38.0 },
+    { year:"2025", revenue:49.6, grossProfit:28.5, ebitda:25.6, netProfit:25.7, propertySales:80.4, backlog:155, recurringRev:10.5, intlSales:9.3, mallRev:6.3, hotelRev:4.2, dividend:1.00, eps:2.00, gm:57.5, em:51.6, nm:35.5 },
+  ];
+
   React.useEffect(() => {
     getDoc(doc(db, "tabData", "financials")).then(snap => {
       if (snap.exists() && snap.data().rows) {
         setFinRows(snap.data().rows);
       } else {
-        setFinRows([
-          { year:"2020", revenue:14.9, grossProfit:4.8, ebitda:6.2, netProfit:2.7, propertySales:14, backlog:28, recurringRev:5.3, intlSales:0.6, mallRev:3.2, hotelRev:2.1, dividend:0.15, eps:0.24, gm:32.2, em:41.6, nm:14.1 },
-          { year:"2021", revenue:27.9, grossProfit:11.6, ebitda:8.5, netProfit:6.6, propertySales:23.9, backlog:32, recurringRev:5.8, intlSales:0.8, mallRev:3.5, hotelRev:2.3, dividend:0.25, eps:0.60, gm:41.6, em:30.5, nm:19.0 },
-          { year:"2022", revenue:24.9, grossProfit:12.6, ebitda:9.8, netProfit:8.1, propertySales:30.7, backlog:41.5, recurringRev:7.5, intlSales:1.2, mallRev:4.2, hotelRev:3.3, dividend:0.35, eps:0.77, gm:50.6, em:39.4, nm:27.3 },
-          { year:"2023", revenue:26.7, grossProfit:16.9, ebitda:16.0, netProfit:15.1, propertySales:40.3, backlog:71.8, recurringRev:8.6, intlSales:2.9, mallRev:5.8, hotelRev:2.8, dividend:0.50, eps:1.32, gm:63.3, em:59.9, nm:43.4 },
-          { year:"2024", revenue:35.5, grossProfit:20.4, ebitda:19.3, netProfit:18.9, propertySales:69.5, backlog:111.5, recurringRev:9.3, intlSales:4.1, mallRev:5.6, hotelRev:3.7, dividend:1.00, eps:1.53, gm:57.5, em:54.4, nm:38.0 },
-          { year:"2025", revenue:49.6, grossProfit:28.5, ebitda:25.6, netProfit:25.7, propertySales:80.4, backlog:155, recurringRev:10.5, intlSales:9.3, mallRev:6.3, hotelRev:4.2, dividend:1.00, eps:2.00, gm:57.5, em:51.6, nm:35.5 },
-        ]);
+        setFinRows(defaultFinancials);
       }
-    }).catch(() => {});
+    }).catch(() => {}); // eslint-disable-line react-hooks/exhaustive-deps
   }, [db]);
+
+  const resetFinancials = async () => {
+    setFinRows(defaultFinancials);
+    try {
+      await setDoc(doc(db, "tabData", "financials"), { rows: defaultFinancials, updatedAt: new Date().toISOString(), updatedBy: adminUser?.email });
+      notify("✅ Reset to default financial data!");
+    } catch(e) { notify("Reset failed"); }
+  };
 
   const finFields = [
     { key: "revenue", label: "Revenue (AED B)" },
@@ -11277,6 +11287,8 @@ function FinancialsEditor({ db, T, notify, adminUser, Section }) {
         </table>
       </div>
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16, gap: 10 }}>
+        <button type="button" onClick={resetFinancials}
+          style={{ padding: "10px 20px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>↺ Reset to Defaults</button>
         <button type="button" onClick={saveFinancials} disabled={finSaving}
           style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: finSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: finSaving ? 0.7 : 1 }}>
           {finSaving ? "Saving..." : "Save Financials to Firestore"}
@@ -11315,6 +11327,14 @@ function RiskEditor({ db, T, notify, adminUser, Section }) {
       notify("Risk data saved! Dashboard will update on next load.");
     } catch(e) { notify("Save failed"); }
     setRiskSaving(false);
+  };
+
+  const resetRisk = async () => {
+    setRiskRows(defaultRiskFactors);
+    try {
+      await setDoc(doc(db, "tabData", "riskFactors"), { rows: defaultRiskFactors, updatedAt: new Date().toISOString(), updatedBy: adminUser?.email });
+      notify("✅ Reset to default risk factors!");
+    } catch(e) { notify("Reset failed"); }
   };
 
   if (!riskRows) return <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>Loading...</div>;
@@ -11356,7 +11376,9 @@ function RiskEditor({ db, T, notify, adminUser, Section }) {
           </div>
         ))}
       </div>
-      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16, gap: 10 }}>
+        <button type="button" onClick={resetRisk}
+          style={{ padding: "10px 20px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>↺ Reset to Defaults</button>
         <button type="button" onClick={saveRisk} disabled={riskSaving}
           style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: riskSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: riskSaving ? 0.7 : 1 }}>
           {riskSaving ? "Saving..." : "Save Risk Data to Firestore"}

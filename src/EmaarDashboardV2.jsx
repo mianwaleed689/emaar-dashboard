@@ -13,7 +13,7 @@ import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
 
 /* ─── DATA ALIASES (for backward compat) ─── */
-const financials = emaarFinancials; // default — overridden below with liveFinancials if available
+const financials = emaarFinancials;
 const segments = emaarSegments;
 const risks = emaarRisks.map(r => ({ factor: r.factor, score: r.score, max: 150, color: r.color }));
 const yields = emaarYields.map(y => ({ label: y.unit, community: y.community, rent: y.rent/1000, price: y.price/1000, gross: y.gross, net: y.net, demand: y.demand === "Very High" ? "V.High" : y.demand === "Moderate-High" ? "High" : y.demand, visa: y.visa }));
@@ -1499,10 +1499,6 @@ export default function EmaarDashboardV2() {
   const [showLogin, setShowLogin] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [showCancelSurvey, setShowCancelSurvey] = useState(false);
-  const [cancelSurveyReason, setCancelSurveyReason] = useState("");
-  const [cancelSurveyFeedback, setCancelSurveyFeedback] = useState("");
-  const [cancelSurveySubmitting, setCancelSurveySubmitting] = useState(false);
   const [profileEdit, setProfileEdit] = useState({ name: "" });
   const [showCheckout, setShowCheckout] = useState(null);
   const [checkoutStep, setCheckoutStep] = useState(1);
@@ -1614,9 +1610,7 @@ export default function EmaarDashboardV2() {
   const [liveMortgageRates, setLiveMortgageRates] = useState([]);
   const [liveNeighbourhoods, setLiveNeighbourhoods] = useState([]);
   const [liveMarketData, setLiveMarketData] = useState([]);
-  const [liveFinancials, setLiveFinancials] = useState([]);
-  const [liveRiskFactors, setLiveRiskFactors] = useState([]);
-  const [emaarStockPrice, setEmaarStockPrice] = useState(null);
+
   const [tabSettings, setTabSettings] = useState({});
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
@@ -1736,8 +1730,6 @@ export default function EmaarDashboardV2() {
           { key: "mortgageRates",   setter: setLiveMortgageRates },
           { key: "neighbourhoodScores", setter: setLiveNeighbourhoods },
           { key: "marketData",      setter: setLiveMarketData },
-          { key: "financials",      setter: setLiveFinancials },
-          { key: "riskFactors",     setter: setLiveRiskFactors },
         ];
         await Promise.all(tabCollections.map(async ({ key, setter }) => {
           try {
@@ -1750,21 +1742,6 @@ export default function EmaarDashboardV2() {
       } catch (e) { console.log("Firestore not available, using static data"); }
       setProjectsLoading(false);
     };
-    // ── Live EMAAR stock price via Yahoo Finance (free, no key) ──
-    const fetchEmaarStock = async () => {
-      try {
-        const res = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/EMAAR.DU?interval=1d&range=1d");
-        const data = await res.json();
-        const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-        const prev  = data?.chart?.result?.[0]?.meta?.chartPreviousClose;
-        if (price && prev) {
-          const chg = ((price - prev) / prev * 100).toFixed(2);
-          setEmaarStockPrice({ price: price.toFixed(2), change: chg, up: price >= prev });
-        }
-      } catch(e) { /* silent */ }
-    };
-    fetchEmaarStock();
-    const stockInterval = setInterval(fetchEmaarStock, 300000);
     loadProjects(); // Load for everyone — no isLoggedIn gate
 
     // ── Load Price Alerts for logged-in user ──
@@ -1823,7 +1800,7 @@ export default function EmaarDashboardV2() {
       document.head.appendChild(script);
     }
 
-    return () => clearInterval(stockInterval);
+    return () => {};
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Use merged Firestore+static data if available, otherwise pure static fallback
@@ -2632,18 +2609,6 @@ export default function EmaarDashboardV2() {
 
             <Section title="Key Performance" sub="FY 2025 — All-Time Records Across Every Metric · Source: Emaar Annual Report 2025">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                {emaarStockPrice && (
-                  <div style={{ background: T.surface, border: `1px solid ${emaarStockPrice.up ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`, borderRadius: 14, padding: "14px 16px", cursor: "default", position: "relative", overflow: "hidden" }}
-                    onClick={() => setSelectedKPI({ label: "EMAAR.DU Live Price", value: `AED ${emaarStockPrice.price}`, color: emaarStockPrice.up ? T.green : "#EF4444", description: "Live Emaar Properties (EMAAR.DU) share price from Dubai Financial Market. Auto-refreshes every 5 minutes.", source: "Yahoo Finance · DFM Live", sourceUrl: "https://finance.yahoo.com/quote/EMAAR.DU", items: [{ label: "Current Price", value: `AED ${emaarStockPrice.price}`, note: "DFM live" }, { label: "Day Change", value: `${emaarStockPrice.up ? "+" : ""}${emaarStockPrice.change}%`, note: "vs prev close" }, { label: "Market Cap", value: "AED 128.2B", note: "~USD 34.9B" }, { label: "Analyst Target", value: "AED 19.94", note: "12/12 Strong Buy" }, { label: "Dividend Yield", value: "~7%", note: "AED 1.00/share" }], trend: null })}>
-                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: emaarStockPrice.up ? "#10B981" : "#EF4444" }} />
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10B981", display: "inline-block", animation: "pulse 2s infinite" }} />
-                      <span style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>EMAAR.DU · Live</span>
-                    </div>
-                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: emaarStockPrice.up ? T.green : "#EF4444", lineHeight: 1 }}>AED {emaarStockPrice.price}</div>
-                    <div style={{ fontSize: 11, color: emaarStockPrice.up ? T.green : "#EF4444", marginTop: 4 }}>{emaarStockPrice.up ? "▲" : "▼"} {Math.abs(emaarStockPrice.change)}% today · DFM</div>
-                  </div>
-                )}
                 <KPI label="Property Sales" value="AED 80.4B" sub="+16% YoY · USD 21.9B" delay={1} onClick={() => setSelectedKPI({ label: "Property Sales", value: "AED 80.4B", color: T.gold, description: "Total off-plan and ready property sales contracted in FY2025. Includes UAE and international markets.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "FY2025 Sales", value: "AED 80.4B", note: "All-time record" }, { label: "FY2024 Sales", value: "AED 69.3B", note: "+16% YoY" }, { label: "FY2023 Sales", value: "AED 52.7B", note: "+31% YoY" }, { label: "Int'l Sales", value: "AED 9.3B", note: "+124% YoY" }, { label: "UAE Market Share", value: "~30%", note: "Largest by value" }, { label: "Units Booked", value: "12,000+", note: "FY2025 estimate" }], trend: [{ y: "2020", v: 21.5 }, { y: "2021", v: 26.2 }, { y: "2022", v: 33.5 }, { y: "2023", v: 52.7 }, { y: "2024", v: 69.3 }, { y: "2025", v: 80.4 }] })} />
                 <KPI label="Revenue" value="AED 49.6B" sub="+40% YoY · USD 13.5B" delay={2} onClick={() => setSelectedKPI({ label: "Revenue", value: "AED 49.6B", color: T.teal, description: "Total recognized revenue across property development, malls, hospitality, and international operations.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "UAE Dev Revenue", value: "AED 36.4B", note: "73% of total" }, { label: "Malls & Retail", value: "AED 6.3B", note: "+13% YoY" }, { label: "Hospitality", value: "AED 4.2B", note: "+12% YoY" }, { label: "International", value: "AED 2.6B", note: "+124% YoY" }, { label: "Revenue CAGR", value: "27.2%", note: "5-year 2020–2025" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: 49.6 }] })} />
                 <KPI label="Net Profit" value="AED 25.7B" sub="+36% YoY · USD 7.0B" delay={3} onClick={() => setSelectedKPI({ label: "Net Profit", value: "AED 25.7B", color: T.green, description: "Net profit before minority interest. Includes recurring revenue from Emaar Malls and hospitality.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Net Margin", value: "51.8%", note: "Industry-leading" }, { label: "EPS FY2025", value: "AED 2.00", note: "+31% YoY" }, { label: "Q4 2025 Profit", value: "AED 7.3B", note: "Strongest quarter" }, { label: "5yr Profit CAGR", value: "57.1%", note: "2020–2025" }, { label: "Tax Rate", value: "~9%", note: "UAE Corporate Tax" }], trend: [{ y: "2020", v: 2.6 }, { y: "2021", v: 4.1 }, { y: "2022", v: 6.2 }, { y: "2023", v: 12.6 }, { y: "2024", v: 18.9 }, { y: "2025", v: 25.7 }] })} />
@@ -2723,24 +2688,20 @@ export default function EmaarDashboardV2() {
                   {[
                     { label: "Founded", value: "1997", sub: "27+ years track record", kpi: { color: T.gold, description: "Emaar Properties founded in 1997 by Mohamed Alabbar. Listed on DFM in 2000.", source: "Emaar Corporate", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Founded", value: "1997", note: "Dubai, UAE" }, { label: "IPO", value: "2000", note: "Dubai Financial Market" }, { label: "Chairman", value: "M. Alabbar", note: "Founder & visionary" }, { label: "Employees", value: "9,000+", note: "Global workforce" }], trend: null } },
                     { label: "Developer Rank", value: "#1", sub: "Dubai's largest by value", kpi: { color: T.teal, description: "Consistently ranked #1 developer in Dubai by property sales value with ~30% market share.", source: "DLD & Zawya 2025", sourceUrl: "https://zawya.com", items: [{ label: "UAE Rank", value: "#1", note: "By sales value" }, { label: "Market Share", value: "~30%", note: "Dubai off-plan" }, { label: "GCC Rank", value: "#1", note: "By units delivered" }, { label: "FY2025 Sales", value: "AED 80.4B", note: "vs #2 ~AED 20B" }], trend: null } },
-                    { label: "Active Projects", value: String(activeProjects.length), sub: "Across 10+ communities", kpi: { color: T.blue, description: "48 active projects across Dubai Hills, Creek Harbour, Downtown, Beachfront and more.", source: "DXB Analytics Database", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "12+", note: "Address · Vida · Palace" }], trend: null } },
+                    { label: "Active Projects", value: String(activeProjects.length), sub: "Across 10+ communities", kpi: { color: T.blue, description: "48 active projects across Dubai Hills, Creek Harbour, Downtown, Beachfront and more.", source: "DXB Analytics Database", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "12+", note: "Address · Vida · Palace" }], trend: null } },
                     { label: "International", value: "AED 9.3B", sub: "+124% growth YoY", kpi: { color: T.green, description: "International operations across Egypt, India, Saudi Arabia, Pakistan and Turkey.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Int'l Sales", value: "AED 9.3B", note: "+124% YoY" }, { label: "Egypt", value: "Largest market", note: "Marassi, Uptown Cairo" }, { label: "India", value: "Growing", note: "Emaar India" }, { label: "Saudi Arabia", value: "Expanding", note: "New projects" }], trend: [{ y: "2022", v: 1.8 }, { y: "2023", v: 2.9 }, { y: "2024", v: 4.1 }, { y: "2025", v: 9.3 }] } },
-                    { label: "Dividend/Share", value: "AED 1.00", sub: "2× increase from 2023", kpi: { color: T.gold, description: "AED 1.00 DPS for FY2025 — 100% of share capital, 2× increase from AED 0.50 in 2023.", source: "Emaar IR 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "DPS FY2025", value: "AED 1.00", note: "100% of share capital" }, { label: "DPS FY2024", value: "AED 0.70", note: "+43% YoY" }, { label: "DPS FY2023", value: "AED 0.50", note: "Base year" }, { label: "Total Payout", value: "AED 8.8B", note: "Total dividend pool" }, { label: "Yield (15.40)", value: "6.5%", note: "Attractive vs peers" }], trend: [{ y: "2021", v: 0.25 }, { y: "2022", v: 0.40 }, { y: "2023", v: 0.50 }, { y: "2024", v: 0.70 }, { y: "2025", v: 1.00 }] } },
-                    { label: "Target Upside", value: "+21.8%", sub: "AED 20.77 consensus", kpi: { color: T.green, description: "12 analyst consensus target of AED 20.77 vs current AED 15.40 — all 12 rate Strong Buy.", source: "TradingView · Investing.com", sourceUrl: "https://www.tradingview.com/symbols/DFM-EMAAR/", items: [{ label: "Consensus Target", value: "AED 20.77", note: "12 analyst average" }, { label: "Current Price", value: "AED 15.40", note: "Mar 2026" }, { label: "High Target", value: "AED 30.00", note: "Bull case" }, { label: "Low Target", value: "AED 15.80", note: "Bear case" }, { label: "Rating", value: "Strong Buy", note: "12 of 12 analysts" }], trend: null } },
+                    { label: "Dividend/Share", value: "AED 1.00", sub: "2× increase from 2023", kpi: { color: T.gold, description: "AED 1.00 DPS for FY2025 — 100% of share capital, 2× increase from AED 0.50 in 2023.", source: "Emaar IR 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "DPS FY2025", value: "AED 1.00", note: "100% of share capital" }, { label: "DPS FY2024", value: "AED 0.70", note: "+43% YoY" }, { label: "DPS FY2023", value: "AED 0.50", note: "Base year" }, { label: "Total Payout", value: "AED 8.8B", note: "Total dividend pool" }], trend: [{ y: "2021", v: 0.25 }, { y: "2022", v: 0.40 }, { y: "2023", v: 0.50 }, { y: "2024", v: 0.70 }, { y: "2025", v: 1.00 }] } },
                   ].map(({ label, value, sub, kpi }, i) => (
                     <KPI key={i} label={label} value={value} sub={sub} delay={Math.min(i + 1, 8)} onClick={() => setSelectedKPI({ label, value, ...kpi })} />
                   ))}
                 </div>
               </div>
-          <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM: EMAAR.DU", url: "https://www.dfm.ae" }, { label: "TradingView", url: "https://www.tradingview.com/symbols/DFM-EMAAR/" }, { label: "Yahoo Finance", url: "https://finance.yahoo.com/quote/EMAAR.DU" }, { label: "S&P · Moody's · Fitch Ratings" }]} />
+          <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DLD Transaction Data", url: "https://dubailand.gov.ae" }, { label: "S&P · Moody's · Fitch Ratings" }]} />
             </Section>
           </>}
 
           {/* ─── FINANCIALS TAB ─── */}
-          {tab === "Financials" && (() => {
-            const finData = liveFinancials.length > 0 ? liveFinancials : emaarFinancials;
-            const financials = finData;
-            return <>
+          {tab === "Financials" && <>
             <Section title="Financial Performance" sub="6-year trend · 2020–2025 · All figures in AED Billions">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Revenue CAGR" value="27.2%" sub="2020-2025 · 5-year" delay={1} onClick={() => setSelectedKPI({ label: "Revenue CAGR", value: "27.2%", color: T.gold, description: "Compound Annual Growth Rate of revenue from AED 14.6B in 2020 to AED 49.6B in 2025 — one of the highest CAGRs among global real estate developers.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Revenue", value: "AED 14.6B", note: "Base year" }, { label: "2025 Revenue", value: "AED 49.6B", note: "+240% total growth" }, { label: "CAGR", value: "27.2%", note: "5-year compounded" }, { label: "vs GCC Average", value: "~8–10%", note: "Sector benchmark" }, { label: "YoY 2025", value: "+40%", note: "Strongest single year" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: 49.6 }] })} />
@@ -2899,17 +2860,16 @@ export default function EmaarDashboardV2() {
                   </tbody>
                 </table>
               </div>
-          <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "Emaar Q4 2025 Earnings Release", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM Filing", url: "https://www.dfm.ae" }, { label: "GuruFocus", url: "https://www.gurufocus.com/term/overview/EMAAR.DU" }, { label: "Zawya", url: "https://www.zawya.com/en/company/financials/EMAAR-EMAAR" }]} />
+          <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "Emaar Q4 2025 Earnings Release", url: "https://www.emaar.com/en/investor-relations/" }, { label: "Zawya", url: "https://www.zawya.com/en/company/financials/EMAAR-EMAAR" }]} />
             </Section>
             </ProGate>
-          </>;
-          })()}
+          </>}
 
           {/* ─── PROJECTS TAB (48 Projects from Excel) ─── */}
           {tab === "Projects" && <>
             <Section title={`${activeProjects.length} Active Projects`} sub="Complete Emaar off-plan portfolio · 2026–2030 · Search & filter">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE.", source: "DXB Analytics", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "10", note: "Address, Vida, Palace" }], trend: null })} />
+                <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE.", source: "DXB Analytics", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "10", note: "Address, Vida, Palace" }], trend: null })} />
                 <KPI label="Communities" value="11" sub="DHE · DCH · EBF · GPC + 7 more" delay={2} />
                 <KPI label="Branded" value={`${activeProjects.filter(p=>p.branded).length}`} sub="Address · Vida · Palace · Bristol" delay={3} />
                 <KPI label="Avg Construction" value={`${Math.round(activeProjects.reduce((a,p)=>a+(p.construction||0),0)/activeProjects.length)}%`} sub="Weighted average progress" delay={4} />
@@ -3560,7 +3520,7 @@ export default function EmaarDashboardV2() {
 
             <Section title="Project Portfolio" sub="48 active projects · 10+ master communities · 2026–2030">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE — 18 under active construction and 30 in the off-plan/pre-launch phase across 10+ master communities.", source: "DXB Analytics Project Database", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned areas" }, { label: "Handover 2026", value: "7 projects", note: "Nearest deliveries" }, { label: "Handover 2029+", value: "26 projects", note: "Longest pipeline" }], trend: null })} />
+                <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE — 18 under active construction and 30 in the off-plan/pre-launch phase across 10+ master communities.", source: "DXB Analytics Project Database", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned areas" }, { label: "Handover 2026", value: "7 projects", note: "Nearest deliveries" }, { label: "Handover 2029+", value: "26 projects", note: "Longest pipeline" }], trend: null })} />
                 <KPI label="Branded Projects" value="10" sub="Address · Vida · Palace" delay={2} onClick={() => setSelectedKPI({ label: "Branded Projects", value: "10", color: T.teal, description: "10 branded residences under Emaar's luxury hospitality labels — Address, Vida, and Palace. Branded units command 25–40% price premium over standard Emaar projects.", source: "Emaar Properties Portfolio 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Address Brand", value: "5 projects", note: "Ultra-luxury tier" }, { label: "Vida Brand", value: "3 projects", note: "Lifestyle tier" }, { label: "Palace Brand", value: "2 projects", note: "Heritage luxury" }, { label: "Price Premium", value: "25–40%", note: "vs standard Emaar" }, { label: "Resale Premium", value: "Strong", note: "Brand demand maintained" }], trend: null })} />
                 <KPI label="Avg Starting Price" value="AED 2.76M" sub="Range: 1.2M – 13.8M" delay={3} onClick={() => setSelectedKPI({ label: "Avg Starting Price", value: "AED 2.76M", color: T.blue, description: "Average entry price across the active Emaar project portfolio. Range spans from AED 1.2M (Emaar South 1BR) to AED 13.8M (The Oasis ultra-luxury villas).", source: "DXB Analytics · Emaar Price List 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Avg Starting Price", value: "AED 2.76M", note: "Portfolio average" }, { label: "Min Price", value: "AED 1.2M", note: "Emaar South 1BR" }, { label: "Max Price", value: "AED 13.8M", note: "The Oasis villas" }, { label: "Studio Entry", value: "AED 900K+", note: "Select communities" }, { label: "Villa Entry", value: "AED 3.5M+", note: "Dubai Hills / Valley" }], trend: [{ y: "2021", v: 1.8 }, { y: "2022", v: 2.1 }, { y: "2023", v: 2.3 }, { y: "2024", v: 2.55 }, { y: "2025", v: 2.76 }] })} />
                 <KPI label="Avg Price/sqft" value="AED 2,570" sub="Across all tiers" delay={4} onClick={() => setSelectedKPI({ label: "Avg Price/sqft", value: "AED 2,570", color: T.purple, description: "Average price per square foot across all active Emaar launches. Premium branded projects push the average higher vs affordable communities.", source: "DXB Analytics · DLD 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Portfolio Avg", value: "AED 2,570/sqft", note: "All projects" }, { label: "Branded Avg", value: "AED 3,500+/sqft", note: "Address / Palace" }, { label: "Standard Avg", value: "AED 1,900/sqft", note: "Emaar South / Valley" }, { label: "Downtown", value: "AED 2,800+/sqft", note: "Prime location premium" }, { label: "Creek Harbour", value: "AED 2,400/sqft", note: "Waterfront" }], trend: [{ y: "2021", v: 1450 }, { y: "2022", v: 1750 }, { y: "2023", v: 2100 }, { y: "2024", v: 2350 }, { y: "2025", v: 2570 }] })} />
@@ -5009,28 +4969,24 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── RISK TAB ─── */}
-          {tab === "Risk" && (() => {
-            const riskData = liveRiskFactors.length > 0
-              ? liveRiskFactors.map(r => ({ factor: r.factor, score: r.score * 14, max: 140, color: r.score >= 8 ? T.green : r.score >= 6 ? T.gold : r.score >= 4 ? T.orange : T.red, trend: r.trend, desc: r.desc }))
-              : risks;
-            return <>
+          {tab === "Risk" && <>
             <Section title="9-Factor Risk Assessment" sub="Overall: LOW-MODERATE · Investment Grade · BBB+/Baa1/BBB">
               <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 16 }}>
                 <KPI label="Avg Risk Score" value="38.3" sub="LOW-MODERATE overall" delay={1} onClick={() => setSelectedKPI({ label: "Avg Risk Score", value: "38.3 / 140", color: T.teal, description: "Composite risk score across 9 factors. Score of 38.3 out of 140 max = LOW-MODERATE risk. Rated Investment Grade by S&P (BBB+), Moody's (Baa1), and Fitch (BBB).", source: "DXB Analytics · Fitch · S&P · Moody's", sourceUrl: "https://www.fitchratings.com", items: [{ label: "Overall Score", value: "38.3/140", note: "LOW-MODERATE" }, { label: "S&P Rating", value: "BBB+", note: "Stable outlook" }, { label: "Moody's", value: "Baa1", note: "Stable outlook" }, { label: "Fitch", value: "BBB", note: "Stable outlook" }, { label: "Risk Category", value: "Investment Grade", note: "3 agency consensus" }], trend: null })} />
-                <KPI label="Highest Risk" value="125" sub="Premium Pricing" delay={2} onClick={() => setSelectedKPI({ label: "Highest Risk Factor", value: "Premium Pricing", color: T.red, description: "Premium pricing (score 125/140) is Emaar's highest risk factor. At 20–40% above competitors, a market downturn could compress sales volumes faster than peers.", source: "DXB Analytics Risk Model", sourceUrl: "#", items: [{ label: "Risk Score", value: "125/140", note: "Highest risk factor" }, { label: "Price Premium", value: "20–40%", note: "vs comparable developments" }, { label: "Mitigation", value: "80/20 plans", note: "Reduces buyer barrier" }, { label: "Branded Premium", value: "Justified", note: "Address · Vida · Palace" }, { label: "Demand Buffer", value: "AED 155B backlog", note: "Pre-sold revenue" }], trend: null })} />
+                <KPI label="Highest Risk" value="125" sub="Premium Pricing" delay={2} onClick={() => setSelectedKPI({ label: "Highest Risk Factor", value: "Premium Pricing", color: T.red, description: "Premium pricing (score 125/140) is Emaar's highest risk factor. At 20–40% above competitors, a market downturn could compress sales volumes faster than peers.", source: "DXB Analytics Risk Model", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Risk Score", value: "125/140", note: "Highest risk factor" }, { label: "Price Premium", value: "20–40%", note: "vs comparable developments" }, { label: "Mitigation", value: "80/20 plans", note: "Reduces buyer barrier" }, { label: "Branded Premium", value: "Justified", note: "Address · Vida · Palace" }, { label: "Demand Buffer", value: "AED 155B backlog", note: "Pre-sold revenue" }], trend: null })} />
                 <KPI label="Lowest Risk" value="1" sub="Liquidity / Exit" delay={3} onClick={() => setSelectedKPI({ label: "Lowest Risk Factor", value: "Liquidity / Exit", color: T.green, description: "Emaar has the lowest liquidity risk (score 1/140) of any Dubai developer. DFM-listed, investment-grade rated, with AED 30.5B free cash flow and a globally recognized brand.", source: "DXB Analytics Risk Model · DFM", sourceUrl: "https://www.dfm.ae", items: [{ label: "Risk Score", value: "1/140", note: "Lowest risk factor" }, { label: "Free Cash Flow", value: "AED 30.5B", note: "FY2025" }, { label: "Net Cash", value: "AED 7.5B", note: "Cash vs debt" }, { label: "DFM Listed", value: "Yes", note: "High liquidity stock" }, { label: "Debt/Equity", value: "0.11×", note: "Very low leverage" }], trend: null })} />
               </div>
             </Section>
             <ProGate isPro={isPro} message="Unlock Full Risk Analysis" onUpgrade={() => setShowUpgrade(true)}>
               <Chart title="Risk Score by Factor (Higher = More Risk)" style={{ marginTop: 20 }}>
                 <ResponsiveContainer width="100%" height={380}>
-                  <BarChart data={riskData} layout="vertical">
+                  <BarChart data={risks} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                     <XAxis type="number" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 140]} />
                     <YAxis type="category" dataKey="factor" tick={{ fill: T.textSecondary, fontSize: 11 }} width={120} axisLine={false} tickLine={false} />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar dataKey="score" name="Risk Score" radius={[0, 8, 8, 0]} barSize={22}>
-                      {riskData.map((r, i) => <Cell key={i} fill={r.color} />)}
+                      {risks.map((r, i) => <Cell key={i} fill={r.color} />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -5053,8 +5009,7 @@ export default function EmaarDashboardV2() {
             </Section>
             </ProGate>
           <TabSources sources={[{ label: "Fitch Ratings UAE Developers", url: "https://www.fitchratings.com" }, { label: "Knight Frank Dubai 2025", url: "https://www.knightfrank.com/research" }, { label: "IMF World Economic Outlook", url: "https://www.imf.org" }, { label: "DLD Transaction Data", url: "https://dubailand.gov.ae" }, { label: "CW Core Dubai Market Report", url: "https://cwcore.com" }]} />
-          </>;
-          })()}
+          </>}
 
           {/* --- CURRENCY TAB --- */}
           {tab === "Currency" && (() => {
@@ -7241,8 +7196,8 @@ export default function EmaarDashboardV2() {
                         }
                       });
                     } else {
-                      // Fallback to WhatsApp until Paddle is configured
-                      window.open(`https://wa.me/971542410599?text=${encodeURIComponent(`Hi, I want DXB Analytics ${showCheckout.name} Plan (AED ${showCheckout.price}/mo). Email: ${user}`)}`, "_blank");
+                      // Fallback to email until Paddle is configured
+                      window.open(`mailto:mianwaleed689@gmail.com?subject=${encodeURIComponent(`DXB Analytics ${showCheckout.name} Plan Enquiry`)}&body=${encodeURIComponent(`Hi, I want to subscribe to the DXB Analytics ${showCheckout.name} Plan (AED ${showCheckout.price}/mo). My email: ${user}`)}`, "_blank");
                       setCheckoutStep(3);
                     }
                   };
@@ -7260,14 +7215,14 @@ export default function EmaarDashboardV2() {
                   );
                 })()}
 
-                {/* WhatsApp */}
-                <div onClick={() => { window.open(`https://wa.me/971542410599?text=${encodeURIComponent(`Hi Mian Waleed, I want to subscribe to DXB Analytics ${showCheckout.name} Plan (AED ${showCheckout.price}/mo). My email: ${user}`)}`, "_blank"); setCheckoutStep(3); }} style={{ padding: "16px", borderRadius: 12, background: "rgba(37,211,102,0.06)", border: "1px solid rgba(37,211,102,0.25)", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", transition: "all 0.2s", marginBottom: 8 }} onMouseEnter={e => e.currentTarget.style.borderColor = "#25D366"} onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(37,211,102,0.25)"}>
-                  <div style={{ fontSize: 24 }}>💬</div>
+                {/* Email / Manual */}
+                <div onClick={() => { window.open(`mailto:mianwaleed689@gmail.com?subject=${encodeURIComponent(`DXB Analytics ${showCheckout.name} Plan Subscription`)}&body=${encodeURIComponent(`Hi, I would like to subscribe to the DXB Analytics ${showCheckout.name} Plan (AED ${showCheckout.price}/mo). My account email: ${user}`)}`, "_blank"); setCheckoutStep(3); }} style={{ padding: "16px", borderRadius: 12, background: `rgba(212,168,67,0.06)`, border: `1px solid rgba(212,168,67,0.25)`, display: "flex", alignItems: "center", gap: 12, cursor: "pointer", transition: "all 0.2s", marginBottom: 8 }} onMouseEnter={e => e.currentTarget.style.borderColor = T.gold} onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(212,168,67,0.25)"}>
+                  <div style={{ fontSize: 24 }}>✉️</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>WhatsApp + Bank Transfer</div>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>Manual — activated within 5 minutes of payment</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Email + Bank Transfer</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>Manual — activated within 5 minutes of payment confirmation</div>
                   </div>
-                  <span style={{ color: "#25D366", fontSize: 16 }}>→</span>
+                  <span style={{ color: T.gold, fontSize: 16 }}>→</span>
                 </div>
 
                 <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.04)", border: "1px solid rgba(212,168,67,0.1)", fontSize: 11, color: T.textMuted, lineHeight: 1.5, marginBottom: 12 }}>🔒 All payments secure · 7-day money-back guarantee</div>
@@ -7345,8 +7300,7 @@ export default function EmaarDashboardV2() {
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Status</div><div style={{ fontSize: 14, fontWeight: 700, color: userTier === "free" ? T.blue : T.green }}>{userTier === "free" ? "Limited" : "Active"}</div></div>
                 <div><div style={{ fontSize: 10, color: T.textMuted }}>Access</div><div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{userTier === "free" ? "5 projects" : "All 48"}</div></div>
               </div>
-              {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "Outfit, sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "2B50 Upgrade to Pro 2014 AED 99/mo"}</button>}
-              {(userTier === "pro" || userTier === "enterprise") && (<button type="button" onClick={() => { setShowProfile(false); setShowCancelSurvey(true); }} style={{ marginTop: 12, width: "100%", padding: "9px 0", background: "transparent", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 8, color: "#EF4444", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "Outfit, sans-serif" }}>Cancel Subscription</button>)}
+              {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "\u2B50 Upgrade to Pro \u2014 AED 99/mo"}</button>}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <button type="button" onClick={() => { setShowProfile(false); handleTabChange("Portfolio"); }} style={{ padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>📊 Portfolio</button>
@@ -7425,80 +7379,6 @@ export default function EmaarDashboardV2() {
               <button type="button" onClick={submitKYC} disabled={kycSubmitting} style={{ width: "100%", padding: "13px 0", background: kycSubmitting ? T.surfaceAlt : "linear-gradient(135deg, #00BFA5, #00897B)", border: "none", borderRadius: 10, color: kycSubmitting ? T.textMuted : "#fff", fontWeight: 800, fontSize: 14, cursor: kycSubmitting ? "not-allowed" : "pointer", fontFamily: "'Outfit', sans-serif" }}>
                 {kycSubmitting ? "Submitting..." : "Submit for Verification →"}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── CANCELLATION EXIT SURVEY MODAL ─── */}
-      {showCancelSurvey && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)", padding: 16 }} onClick={() => setShowCancelSurvey(false)}>
-          <div style={{ background: T.surface, borderRadius: 20, border: "1px solid rgba(239,68,68,0.2)", width: "95%", maxWidth: 500, overflow: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
-            <div style={{ padding: "24px 28px 20px", background: "linear-gradient(135deg, rgba(239,68,68,0.06), rgba(14,29,53,0.6))", borderBottom: `1px solid ${T.border}` }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>Before You Go</div>
-                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Help us improve — takes 30 seconds</div>
-                </div>
-                <button type="button" onClick={() => setShowCancelSurvey(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-              </div>
-            </div>
-            <div style={{ padding: "24px 28px 28px" }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 12 }}>Why are you cancelling?</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
-                {[
-                  { value: "too_expensive", label: "💸 Too expensive" },
-                  { value: "missing_features", label: "🔧 Missing features I need" },
-                  { value: "found_alternative", label: "🔄 Found a better alternative" },
-                  { value: "not_using", label: "😴 Not using it enough" },
-                  { value: "technical_issues", label: "⚠️ Technical issues" },
-                  { value: "other", label: "💬 Other reason" },
-                ].map(opt => (
-                  <div key={opt.value} onClick={() => setCancelSurveyReason(opt.value)}
-                    style={{ padding: "12px 16px", borderRadius: 10, border: `1px solid ${cancelSurveyReason === opt.value ? T.gold : T.border}`, background: cancelSurveyReason === opt.value ? "rgba(212,168,67,0.08)" : T.surfaceAlt, cursor: "pointer", fontSize: 13, color: cancelSurveyReason === opt.value ? T.gold : T.textSecondary, fontWeight: cancelSurveyReason === opt.value ? 600 : 400, transition: "all 0.15s" }}>
-                    {opt.label}
-                  </div>
-                ))}
-              </div>
-              <textarea
-                value={cancelSurveyFeedback}
-                onChange={e => setCancelSurveyFeedback(e.target.value)}
-                placeholder="Any additional feedback? (optional)"
-                rows={3}
-                style={{ width: "100%", padding: "12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit', sans-serif", outline: "none", resize: "vertical", boxSizing: "border-box", marginBottom: 16 }}
-              />
-              <div style={{ display: "flex", gap: 10 }}>
-                <button type="button" onClick={() => setShowCancelSurvey(false)}
-                  style={{ flex: 1, padding: "11px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.textSecondary, fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                  Keep My Plan
-                </button>
-                <button type="button" disabled={!cancelSurveyReason || cancelSurveySubmitting}
-                  onClick={async () => {
-                    if (!cancelSurveyReason) return;
-                    setCancelSurveySubmitting(true);
-                    try {
-                      const { addDoc, collection, serverTimestamp } = await import("firebase/firestore");
-                      await addDoc(collection(db, "cancellations"), {
-                        userId: auth.currentUser?.uid,
-                        userEmail: user,
-                        reason: cancelSurveyReason,
-                        feedback: cancelSurveyFeedback,
-                        previousTier: userTier,
-                        cancelledAt: new Date().toISOString(),
-                      });
-                      await setDoc(doc(db, "users", auth.currentUser?.uid), { tier: "free" }, { merge: true });
-                      setUserTier("free");
-                      setShowCancelSurvey(false);
-                      setCancelSurveyReason("");
-                      setCancelSurveyFeedback("");
-                    } catch(e) { console.error(e); }
-                    setCancelSurveySubmitting(false);
-                  }}
-                  style={{ flex: 1, padding: "11px 0", background: cancelSurveyReason ? "rgba(239,68,68,0.15)" : T.surfaceAlt, border: `1px solid ${cancelSurveyReason ? "rgba(239,68,68,0.4)" : T.border}`, borderRadius: 10, color: cancelSurveyReason ? "#EF4444" : T.textMuted, fontWeight: 700, fontSize: 13, cursor: cancelSurveyReason ? "pointer" : "not-allowed", fontFamily: "'Outfit', sans-serif", opacity: cancelSurveySubmitting ? 0.6 : 1 }}>
-                  {cancelSurveySubmitting ? "Processing..." : "Confirm Cancellation"}
-                </button>
-              </div>
-              <p style={{ fontSize: 11, color: T.textMuted, textAlign: "center", marginTop: 12 }}>Your access continues until the end of your current billing period.</p>
             </div>
           </div>
         </div>
