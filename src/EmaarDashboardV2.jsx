@@ -1895,15 +1895,28 @@ export default function EmaarDashboardV2() {
       } catch (e) { console.log("Firestore not available, using static data"); }
       setProjectsLoading(false);
 
-      // ── Load live Bayut + DLD market data synced by Cloud Function ──
+      // ── Load live market data written by cron every 6 hours ──
       try {
-        const summarySnap = await getDoc(doc(db, "liveMarketData", "_summary"));
-        if (summarySnap.exists()) {
-          const summary = summarySnap.data();
+        const latestSnap = await getDoc(doc(db, "liveMarketData", "latest"));
+        if (latestSnap.exists()) {
+          const latest = latestSnap.data();
           const bayutMap = {};
-          (summary.communities || []).forEach(c => { bayutMap[c.community] = c; });
+          Object.values(latest.communities || {}).forEach(c => {
+            bayutMap[c.community] = c;
+            bayutMap[c.district] = c;
+          });
           setLiveBayutData(bayutMap);
-          setLastDataSync(summary.lastSyncedAt?.toDate?.() || null);
+          setLastDataSync(latest.syncedAt ? new Date(latest.syncedAt) : null);
+        } else {
+          // Fallback: try old _summary doc
+          const summarySnap = await getDoc(doc(db, "liveMarketData", "_summary"));
+          if (summarySnap.exists()) {
+            const summary = summarySnap.data();
+            const bayutMap = {};
+            (summary.communities || []).forEach(c => { bayutMap[c.community] = c; });
+            setLiveBayutData(bayutMap);
+            setLastDataSync(summary.lastSyncedAt?.toDate?.() || null);
+          }
         }
         // Load DLD live data
         const dldSnap = await getDocs(collection(db, "dldLiveData"));
