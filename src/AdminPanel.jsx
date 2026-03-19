@@ -11383,7 +11383,10 @@ function MarketEditor({ db, T, notify, adminUser, Section }) {
 
   React.useEffect(() => {
     getDoc(doc(db, "tabData", "marketData")).then(snap => {
-      setMktRows(snap.exists() && snap.data().rows ? snap.data().rows : defaultMarketData);
+      const rows = snap.exists() && snap.data().rows && snap.data().rows.length > 0
+        ? snap.data().rows
+        : defaultMarketData;
+      setMktRows(rows);
     }).catch(() => setMktRows(defaultMarketData));
   }, [db]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -11394,6 +11397,14 @@ function MarketEditor({ db, T, notify, adminUser, Section }) {
       notify("Market data saved! Dashboard will update on next load.");
     } catch(e) { notify("Save failed"); }
     setMktSaving(false);
+  };
+
+  const resetToDefaults = async () => {
+    setMktRows(defaultMarketData);
+    try {
+      await setDoc(doc(db, "tabData", "marketData"), { rows: defaultMarketData, updatedAt: new Date().toISOString(), updatedBy: adminUser?.email });
+      notify("✅ Reset to default market data!");
+    } catch(e) { notify("Reset failed"); }
   };
 
   if (!mktRows) return <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>Loading...</div>;
@@ -11409,6 +11420,11 @@ function MarketEditor({ db, T, notify, adminUser, Section }) {
             <div key={h} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{h}</div>
           ))}
         </div>
+        {mktRows.length === 0 && (
+          <div style={{ padding: "24px", textAlign: "center", color: T.textMuted, fontSize: 13, background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+            No rows yet. Click "+ Add Row" or "Reset to Defaults" below.
+          </div>
+        )}
         {mktRows.map((row, i) => (
           <div key={i} style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr 1fr 40px", gap: 8, padding: "8px 10px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, alignItems: "center" }}>
             {["metric", "value", "period", "source", "change", "category"].map(key => (
@@ -11420,9 +11436,13 @@ function MarketEditor({ db, T, notify, adminUser, Section }) {
           </div>
         ))}
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 14 }}>
-        <button type="button" onClick={() => setMktRows(prev => [...prev, { metric: "", value: "", period: "", source: "", change: "", category: "" }])}
-          style={{ padding: "9px 18px", borderRadius: 8, border: `1px solid ${T.teal}`, background: "rgba(0,191,165,0.08)", color: T.teal, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>+ Add Row</button>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 14, flexWrap: "wrap", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button type="button" onClick={() => setMktRows(prev => [...prev, { metric: "", value: "", period: "", source: "", change: "", category: "" }])}
+            style={{ padding: "9px 18px", borderRadius: 8, border: `1px solid ${T.teal}`, background: "rgba(0,191,165,0.08)", color: T.teal, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>+ Add Row</button>
+          <button type="button" onClick={resetToDefaults}
+            style={{ padding: "9px 18px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>↺ Reset to Defaults</button>
+        </div>
         <button type="button" onClick={saveMarket} disabled={mktSaving}
           style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: mktSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: mktSaving ? 0.7 : 1 }}>
           {mktSaving ? "Saving..." : "Save Market Data to Firestore"}
