@@ -11232,8 +11232,6 @@ export default function AdminPanel() {
   const [toast, setToast] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [cleaningProjects, setCleaningProjects] = useState(false);
-  const [cleanResult, setCleanResult] = useState(null);
 
   /* ─── DATA MANAGER STATE ─── */
   const [dataSubTab, setDataSubTab] = useState(() => {
@@ -15661,54 +15659,6 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* 🧹 Firestore Cleanup Panel */}
-              {(() => {
-                const handleCleanFirestore = async () => {
-                  if (!window.confirm("This will delete ALL documents from the Firestore 'projects' collection. Your 48 real projects in data.js are safe. Continue?")) return;
-                  setCleaningProjects(true);
-                  setCleanResult(null);
-                  try {
-                    const { collection, getDocs, deleteDoc, doc } = await import("firebase/firestore");
-                    let deleted = 0;
-                    // Clean projects collection
-                    const snap1 = await getDocs(collection(db, "projects"));
-                    for (const d of snap1.docs) {
-                      await deleteDoc(doc(db, "projects", d.id));
-                      deleted++;
-                    }
-                    // Clean projectData collection (overrides)
-                    const snap2 = await getDocs(collection(db, "projectData"));
-                    for (const d of snap2.docs) {
-                      await deleteDoc(doc(db, "projectData", d.id));
-                      deleted++;
-                    }
-                    setCleanResult({ ok: true, count: deleted });
-                  } catch(e) {
-                    setCleanResult({ ok: false, msg: e.message });
-                  }
-                  setCleaningProjects(false);
-                };
-                return (
-                  <div style={{ background: T.surface, border: `1px solid ${T.red}40`, borderRadius: 14, padding: "16px 20px", marginBottom: 20 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: T.red }}>🧹 Clean Fake Projects from Firestore</div>
-                        <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Removes all documents from the Firestore <code style={{ background: T.surfaceAlt, padding: "1px 6px", borderRadius: 4 }}>projects</code> collection. Your 48 real projects in data.js are unaffected.</div>
-                      </div>
-                      <button type="button" onClick={handleCleanFirestore} disabled={cleaningProjects}
-                        style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: cleaningProjects ? T.surfaceAlt : `${T.red}20`, color: cleaningProjects ? T.textMuted : T.red, fontSize: 12, fontWeight: 700, cursor: cleaningProjects ? "not-allowed" : "pointer", whiteSpace: "nowrap", fontFamily: "'Outfit',sans-serif" }}>
-                        {cleaningProjects ? "Cleaning..." : "Delete Fake Projects"}
-                      </button>
-                    </div>
-                    {cleanResult && (
-                      <div style={{ marginTop: 12, padding: "8px 14px", borderRadius: 8, background: cleanResult.ok ? `${T.green}15` : `${T.red}15`, color: cleanResult.ok ? T.green : T.red, fontSize: 12, fontWeight: 600 }}>
-                        {cleanResult.ok ? `✅ Done! Deleted ${cleanResult.count} fake projects. Refresh the dashboard to see 48.` : `❌ Error: ${cleanResult.msg}`}
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
               {/* Sub-tab navigation - Enhanced */}
               <div style={{ display: "flex", gap: 4, background: T.surfaceAlt, padding: 4, borderRadius: 10, marginBottom: 24 }}>
                 {[
@@ -16589,74 +16539,214 @@ export default function AdminPanel() {
                   {editingProject && (() => {
                     if (editingProject === "new") return (
                       <div className="chart-box fade-up" style={{ padding: 24, marginBottom: 20, border: "1px solid rgba(16,185,129,0.3)" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.green }}>+ Add New Project</h3>
+                        {/* Header */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                          <div>
+                            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.green, margin: 0 }}>+ Add New Project</h3>
+                            <p style={{ fontSize: 11, color: T.textMuted, margin: "4px 0 0" }}>Fill in all relevant fields — everything here appears on the dashboard and project detail page.</p>
+                          </div>
                           <button type="button" onClick={() => setEditingProject(null)} style={{ fontSize: 11, padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(100,116,139,0.3)", background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
                         </div>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-                          {[
-                            { key: "name", label: "Project Name", placeholder: "e.g. Golf Heights" },
-                            { key: "community", label: "Community", placeholder: "e.g. Dubai Hills Estate" },
-                            { key: "price", label: "Price (AED)", placeholder: "e.g. 2500000" },
-                            { key: "ppsf", label: "Price/sqft", placeholder: "e.g. 2200" },
-                            { key: "handover", label: "Handover", placeholder: "e.g. Q4 2027" },
-                            { key: "beds", label: "Bedrooms", placeholder: "e.g. 1-3 BR" },
-                            { key: "paymentPlan", label: "Payment Plan", placeholder: "e.g. 80/20" },
-                            { key: "type", label: "Type", placeholder: "e.g. Apartments" },
-                            { key: "status", label: "Status", placeholder: "e.g. Off-Plan" },
-                            { key: "tier", label: "Tier", placeholder: "e.g. Mid-Premium" },
-                            { key: "construction", label: "Construction %", placeholder: "e.g. 0" },
-                            { key: "emaarUrl", label: "Source URL", placeholder: "e.g. https://propertyfinder.ae/..." },
-                          ].map(f => (
-                            <div key={f.key}>
-                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
-                              <input type="text" placeholder={f.placeholder} value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+
+                        {/* ── SECTION: Basic Info ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>📋 Basic Information</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                            {[
+                              { key: "name", label: "Project Name *", placeholder: "e.g. Golf Heights", type: "text" },
+                              { key: "community", label: "Community *", placeholder: "e.g. Dubai Hills Estate", type: "text" },
+                              { key: "district", label: "District Code", placeholder: "e.g. DHE", type: "text" },
+                              { key: "type", label: "Type", placeholder: "", type: "select", options: ["", "Apartments", "Apts & TH", "Apts & Villas", "Apts & PH", "Townhouses", "Villas", "Branded Res."] },
+                              { key: "status", label: "Status", placeholder: "", type: "select", options: ["", "Off-Plan", "Under Construction", "Completed", "Selling", "Upcoming", "Sold Out", "Ready"] },
+                              { key: "tier", label: "Tier", placeholder: "", type: "select", options: ["", "Affordable", "Mid-Market", "Mid-Premium", "Premium", "Luxury", "Ultra-Luxury", "Luxury Branded", "Ultra-Lux Branded"] },
+                              { key: "brand", label: "Brand", placeholder: "", type: "select", options: ["", "—", "Address", "Vida", "Palace", "Bristol"] },
+                              { key: "availability", label: "Availability", placeholder: "", type: "select", options: ["", "Available", "Limited Units", "Sold Out", "Coming Soon"] },
+                              { key: "tagline", label: "Project Tagline", placeholder: "e.g. Golf-Side Family Living", type: "text" },
+                            ].map(f => (
+                              <div key={f.key}>
+                                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                                {f.type === "select" ? (
+                                  <select value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                    style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                                    {f.options.map(o => <option key={o} value={o}>{o || "— Select —"}</option>)}
+                                  </select>
+                                ) : (
+                                  <input type="text" placeholder={f.placeholder} value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                    style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* ── SECTION: Pricing & Size ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>💰 Pricing & Size</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                            {[
+                              { key: "price", label: "Price (AED) *", placeholder: "e.g. 2500000" },
+                              { key: "ppsf", label: "Price / sqft (AED)", placeholder: "e.g. 2200" },
+                              { key: "dldPpsf", label: "DLD PPSF (AED)", placeholder: "e.g. 2100" },
+                              { key: "sizeFrom", label: "Size From (sqft)", placeholder: "e.g. 750" },
+                              { key: "sizeTo", label: "Size To (sqft)", placeholder: "e.g. 2200" },
+                              { key: "beds", label: "Bedrooms", placeholder: "e.g. 1-3 BR" },
+                              { key: "unitsTotal", label: "Total Units", placeholder: "e.g. 200" },
+                              { key: "unitsAvail", label: "Units Available", placeholder: "e.g. 45" },
+                              { key: "ratingOverride", label: "Rating Override (/10)", placeholder: "Leave blank = auto" },
+                            ].map(f => (
+                              <div key={f.key}>
+                                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                                <input type="text" placeholder={f.placeholder} value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* ── SECTION: Timeline & Payment ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>📅 Timeline & Payment</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                            {[
+                              { key: "handover", label: "Handover", placeholder: "e.g. Q4 2027" },
+                              { key: "construction", label: "Construction %", placeholder: "e.g. 45" },
+                              { key: "paymentPlan", label: "Payment Plan", placeholder: "e.g. 80/20" },
+                              { key: "downPayment", label: "Down Payment %", placeholder: "e.g. 20" },
+                              { key: "duringConstruction", label: "During Construction %", placeholder: "e.g. 40" },
+                              { key: "onHandover", label: "On Handover %", placeholder: "e.g. 40" },
+                            ].map(f => (
+                              <div key={f.key}>
+                                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                                <input type="text" placeholder={f.placeholder} value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* ── SECTION: Yields & ROI ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>📈 Yields & ROI</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                            {[
+                              { key: "grossYield", label: "Gross Yield %", placeholder: "e.g. 7.2" },
+                              { key: "netYield", label: "Net Yield %", placeholder: "e.g. 5.8" },
+                              { key: "estimatedRent", label: "Est. Annual Rent (AED)", placeholder: "e.g. 120000" },
+                              { key: "serviceCharge", label: "Service Charge (AED/sqft)", placeholder: "e.g. 18" },
+                              { key: "appreciation", label: "Appreciation % (5yr)", placeholder: "e.g. 35" },
+                            ].map(f => (
+                              <div key={f.key}>
+                                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                                <input type="text" placeholder={f.placeholder} value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* ── SECTION: Location ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.teal, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid rgba(20,184,166,0.2)` }}>📍 Location & Distances</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Latitude</label>
+                              <input type="number" step="0.000001" placeholder="e.g. 25.197525" value={projectForm.lat || ""} onChange={e => setProjectForm(prev => ({ ...prev, lat: e.target.value }))}
+                                style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(20,184,166,0.15)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Longitude</label>
+                              <input type="number" step="0.000001" placeholder="e.g. 55.274288" value={projectForm.lng || ""} onChange={e => setProjectForm(prev => ({ ...prev, lng: e.target.value }))}
+                                style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(20,184,166,0.15)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                            </div>
+                            {[
+                              { key: "distDowntown", label: "Dist. to Downtown (km)", placeholder: "e.g. 12" },
+                              { key: "distAirport", label: "Dist. to Airport (km)", placeholder: "e.g. 25" },
+                              { key: "distMarina", label: "Dist. to Marina (km)", placeholder: "e.g. 8" },
+                              { key: "distMall", label: "Dist. to Mall of Emirates (km)", placeholder: "e.g. 6" },
+                            ].map(f => (
+                              <div key={f.key}>
+                                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                                <input type="text" placeholder={f.placeholder} value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(20,184,166,0.15)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>💡 Right-click on Google Maps → "What's here?" to get coordinates</div>
+                        </div>
+
+                        {/* ── SECTION: Media ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>🖼️ Media & Documents</div>
+                          {/* Image upload */}
+                          <div style={{ padding: 14, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt, marginBottom: 12 }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Project Image</div>
+                            {projectForm.imageUrl && <img src={projectForm.imageUrl} alt="Preview" style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 8, marginBottom: 8 }} onError={e => e.target.style.display="none"} />}
+                            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, padding: "9px 14px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.2)", background: T.bg, color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                              {projectForm.imageUploading ? "Uploading..." : projectForm.imageUrl ? "Image Uploaded ✔ [change]" : "Upload Project Image"}
+                              <input type="file" accept="image/*" style={{ display: "none" }} onChange={async e => {
+                                const file = e.target.files[0]; if (!file) return;
+                                setProjectForm(prev => ({ ...prev, imageUploading: true }));
+                                const fd = new FormData(); fd.append("file", file); fd.append("upload_preset", "dxb-analytics"); fd.append("cloud_name", "dh9dd5ld0");
+                                const res = await fetch("https://api.cloudinary.com/v1_1/dh9dd5ld0/auto/upload", { method: "POST", body: fd });
+                                const data = await res.json();
+                                setProjectForm(prev => ({ ...prev, imageUrl: data.secure_url, imageUploading: false }));
+                                notify("Image uploaded!");
+                              }} />
+                            </label>
+                          </div>
+                          {/* URL fields for video + PDFs */}
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+                            {[
+                              { key: "videoUrl", label: "Video URL", placeholder: "e.g. https://..." },
+                              { key: "pdfBrochure", label: "Brochure PDF URL", placeholder: "e.g. https://..." },
+                              { key: "pdfFloorPlan", label: "Floor Plan PDF URL", placeholder: "e.g. https://..." },
+                              { key: "pdfPaymentPlan", label: "Payment Plan PDF URL", placeholder: "e.g. https://..." },
+                              { key: "pdfFactSheet", label: "Fact Sheet PDF URL", placeholder: "e.g. https://..." },
+                              { key: "emaarUrl", label: "Source / Listing URL", placeholder: "e.g. https://propertyfinder.ae/..." },
+                            ].map(f => (
+                              <div key={f.key}>
+                                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                                <input type="text" placeholder={f.placeholder} value={projectForm[f.key] || ""} onChange={e => setProjectForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                  style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* ── SECTION: Data Quality ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>🗂️ Data Quality & Admin</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Data Source</label>
+                              <select value={projectForm.dataSource || ""} onChange={e => setProjectForm(prev => ({ ...prev, dataSource: e.target.value }))}
+                                style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                                {["", "Emaar IR Report", "DLD Portal", "DXBinteract", "Manual Entry", "Agent Verified", "Market Research"].map(o => <option key={o} value={o}>{o || "— Select —"}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Last Verified</label>
+                              <input type="text" placeholder="e.g. Mar 2026" value={projectForm.lastVerified || ""} onChange={e => setProjectForm(prev => ({ ...prev, lastVerified: e.target.value }))}
                                 style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
                             </div>
-                          ))}
-                        </div>
-                        {/* Image upload for new project */}
-                        <div style={{ marginTop: 14, padding: 14, borderRadius: 10, border: "1px solid rgba(212,168,67,0.12)", background: T.surfaceAlt }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Project Image (optional)</div>
-                          {projectForm.imageUrl && <img src={projectForm.imageUrl} alt="Preview" style={{ width: "100%", height: 100, objectFit: "cover", borderRadius: 8, marginBottom: 8 }} onError={e => e.target.style.display="none"} />}
-                          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, padding: "9px 14px", borderRadius: 8, border: "1px solid rgba(212,168,67,0.2)", background: T.bg, color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                            {projectForm.imageUploading ? "Uploading..." : projectForm.imageUrl ? "Image Uploaded [change]" : "Upload Image"}
-                            <input type="file" accept="image/*" style={{ display: "none" }} onChange={async e => {
-                              const file = e.target.files[0]; if (!file) return;
-                              setProjectForm(prev => ({ ...prev, imageUploading: true }));
-                              const fd = new FormData(); fd.append("file", file); fd.append("upload_preset", "dxb-analytics"); fd.append("cloud_name", "dh9dd5ld0");
-                              const res = await fetch("https://api.cloudinary.com/v1_1/dh9dd5ld0/auto/upload", { method: "POST", body: fd });
-                              const data = await res.json();
-                              setProjectForm(prev => ({ ...prev, imageUrl: data.secure_url, imageUploading: false }));
-                              notify("Image uploaded!");
-                            }} />
-                          </label>
-                        </div>
-                        {/* Coordinates for new project */}
-                        <div style={{ marginTop: 14, padding: 14, borderRadius: 10, border: "1px solid rgba(20,184,166,0.2)", background: "rgba(20,184,166,0.04)" }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: T.teal, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Map Coordinates (optional)</div>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                             <div>
-                              <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Latitude</label>
-                              <input type="number" step="0.000001" placeholder="e.g. 25.197525" value={projectForm.lat || ""} onChange={e => setProjectForm(prev => ({ ...prev, lat: e.target.value }))}
-                                style={{ width: "100%", padding: "8px 10px", background: T.bg, border: "1px solid rgba(20,184,166,0.15)", borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                            </div>
-                            <div>
-                              <label style={{ fontSize: 10, color: T.textMuted, marginBottom: 4, display: "block" }}>Longitude</label>
-                              <input type="number" step="0.000001" placeholder="e.g. 55.274288" value={projectForm.lng || ""} onChange={e => setProjectForm(prev => ({ ...prev, lng: e.target.value }))}
-                                style={{ width: "100%", padding: "8px 10px", background: T.bg, border: "1px solid rgba(20,184,166,0.15)", borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Admin Notes</label>
+                              <input type="text" placeholder="Internal notes (not shown to users)" value={projectForm.notes || ""} onChange={e => setProjectForm(prev => ({ ...prev, notes: e.target.value }))}
+                                style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
                             </div>
                           </div>
-                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>Right-click on Google Maps to copy coordinates</div>
                         </div>
+
                         {/* Duplicate name warning */}
                         {projectForm.name && emaarProjects.some(p => p.name?.toLowerCase() === projectForm.name?.toLowerCase()) && (
-                          <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 8, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", fontSize: 11, color: "#EF4444" }}>
-                            Warning: A project named "{projectForm.name}" already exists in data.js. This will create a duplicate entry.
+                          <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", fontSize: 11, color: "#EF4444" }}>
+                            ⚠️ A project named "{projectForm.name}" already exists in data.js. This will create a duplicate entry.
                           </div>
                         )}
+
                         <button type="button" disabled={dataSaving} onClick={() => saveNewProject(projectForm)}
-                          style={{ marginTop: 16, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #10B981, #059669)", color: "#FFFFFF", fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
+                          style={{ marginTop: 4, width: "100%", padding: "14px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #10B981, #059669)", color: "#FFFFFF", fontSize: 14, fontWeight: 700, cursor: dataSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: dataSaving ? 0.6 : 1 }}>
                           {dataSaving ? "Saving..." : "+ Add Project to Firestore"}
                         </button>
                       </div>
