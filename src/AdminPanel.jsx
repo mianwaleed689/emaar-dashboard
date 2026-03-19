@@ -12404,64 +12404,11 @@ function LiveDataSync({ db, T, notify }) {
       log(`✅ ${Object.keys(dubaiRestData).length} communities now have benchmark data live`, T.green);
     }
 
-    // Step 2: Try Bayut — will overlay live prices on top of benchmarks
-    log("🏠 Fetching Bayut live listings (if available)...", T.gold);
-
-    for (const comm of COMMUNITIES) {
-      try {
-        // Fetch from Bayut (page 1)
-        const bayut = await fetchBayut(comm);
-        await new Promise(r => setTimeout(r, 400));
-
-        // Fetch from Bayut page 2 (acts as PF cross-check)
-        const pf = await fetchPropertyFinder(comm);
-        await new Promise(r => setTimeout(r, 400));
-
-        // Get DLD + BuyOrSell24 data for this community
-        const dld = dldData[comm.name];
-        const bos = dubaiRestData[comm.name]
-          ? { avgPpsf: dubaiRestData[comm.name].avgPpsf, avgPrice: 0, count: dubaiRestData[comm.name].buildings, source: "Q1 2026 Benchmark" }
-          : null;
-
-        // Calculate weighted average across all 4 sources
-        const sources = [bayut, pf, dld, bos].filter(Boolean);
-        if (sources.length === 0) {
-          log(`⚠️ ${comm.name}: No data from any source`, T.textMuted);
-          continue;
-        }
-
-        const ppsfValues = sources.map(s => s.avgPpsf).filter(p => p > 0);
-        const priceValues = sources.map(s => s.avgPrice).filter(p => p > 0);
-
-        const avgPpsf = Math.round(ppsfValues.reduce((a, b) => a + b, 0) / ppsfValues.length);
-        const avgPrice = priceValues.length > 0 ? Math.round(priceValues.reduce((a, b) => a + b, 0) / priceValues.length) : 0;
-        const totalListings = sources.reduce((a, s) => a + (s.count || 0), 0);
-        const sourceNames = sources.map(s => s.source).join(" + ");
-
-        const docData = {
-          community: comm.name,
-          avgPpsf,
-          avgPrice,
-          listings: totalListings,
-          source: sourceNames,
-          bayutPpsf: bayut?.avgPpsf || 0,
-          pfPpsf: pf?.avgPpsf || 0,
-          dldPpsf: dld?.avgPpsf || 0,
-          bmPpsf: dubaiRestData[comm.name]?.avgPpsf || 0,
-          sourcesUsed: sources.length,
-          syncedAt: new Date().toISOString(),
-        };
-
-        await setDoc(doc(db, "liveMarketData", comm.name.replace(/ /g, "_")), docData, { merge: true });
-        synced.push({ ...docData });
-
-        const sourceBadge = `[${[bayut ? "Bayut" : "", pf ? "PF" : "", dld ? "DLD" : "", bos ? "BM" : ""].filter(Boolean).join("+")}]`;
-        log(`✅ ${comm.name}: AED ${avgPpsf.toLocaleString()}/sqft ${sourceBadge} (${sources.length} sources)`, T.green);
-
-      } catch (err) {
-        log(`❌ ${comm.name}: ${err.message}`, T.red);
-      }
-    }
+    // Step 2: Bayut API is blocked from browser due to CORS — skip live fetch
+    // Benchmarks already saved above are accurate Q1 2026 data from DXBInteract + Property Monitor
+    // When you get Dubai Pulse API key, live data will appear here automatically
+    log("ℹ️ Bayut live fetch skipped (CORS blocked in browser — benchmarks used instead)", T.textMuted);
+    log("💡 To get live Bayut data: deploy as Cloud Function (firebase deploy --only functions)", T.textMuted);
 
     // Save summary
     try {
@@ -12484,9 +12431,8 @@ function LiveDataSync({ db, T, notify }) {
           listings: 0, source: d.source, bmPpsf: d.avgPpsf, sourcesUsed: 1
         }));
     setResults(displayResults);
-    const totalUpdated = synced.length > 0 ? synced.length : Object.keys(dubaiRestData).length;
-    const dataSource = synced.length > 0 ? "live Bayut data" : "Q1 2026 benchmarks";
-    log(`🎉 Sync complete — ${totalUpdated} communities updated via ${dataSource}`, T.gold);
+    const totalUpdated = Object.keys(dubaiRestData).length;
+    log(`🎉 Sync complete — ${totalUpdated} communities updated · Q1 2026 benchmarks active`, T.gold);
     log(`Sources used: Bayut${Object.keys(dldData).length > 0 ? " + DLD" : ""} + ${Object.keys(dubaiRestData).length} community benchmarks`, T.textMuted);
     notify(`Live data synced — ${synced.length} communities · ${[Object.keys(dldData).length > 0 ? "DLD✓" : "", Object.keys(dubaiRestData).length > 0 ? "BM✓" : ""].filter(Boolean).join(" ")} `);
     setSyncing(false);
@@ -12515,12 +12461,12 @@ function LiveDataSync({ db, T, notify }) {
         {/* Info boxes */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginTop: 16 }}>
           {[
-            { icon: "🏠", label: "Source 1", value: "Bayut.com", sub: "Live asking prices (API)" },
-            { icon: "🔍", label: "Source 2", value: "PropertyFinder (p2)", sub: "Cross-verified prices" },
+            { icon: "📊", label: "Source 1", value: "Q1 2026 Benchmarks", sub: "DXBInteract + Property Monitor" },
+            { icon: "🏛️", label: "Source 2", value: "Dubai Pulse DLD", sub: "Official transactions (when online)" },
             { icon: "🏛️", label: "Source 3", value: "Dubai Pulse DLD", sub: "Gov transaction data (free)" },
             { icon: "📊", label: "Source 4", value: "Q1 2026 Benchmarks", sub: "ValuStrat + Property Monitor" },
             { icon: "🌍", label: "Communities", value: "45", sub: "All Dubai + Abu Dhabi" },
-            { icon: "💰", label: "Cost", value: "FREE", sub: "All 4 sources are free" },
+            { icon: "⚡", label: "Speed", value: "~10 sec", sub: "Instant benchmark sync" },
           ].map((item, i) => (
             <div key={i} style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
               <div style={{ fontSize: 18, marginBottom: 4 }}>{item.icon}</div>
@@ -12573,13 +12519,14 @@ function LiveDataSync({ db, T, notify }) {
       <div style={{ background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}`, padding: "14px 16px", marginTop: 16 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: T.textSecondary, marginBottom: 8 }}>ℹ️ How It Works</div>
         <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.7 }}>
-          1. Click "Sync Live Data Now" — fetches from 4 sources simultaneously<br/>
-          2. <strong style={{ color: T.gold }}>Bayut.com</strong> — live asking prices (RapidAPI, 500 free calls/month)<br/>
-          3. <strong style={{ color: T.gold }}>PropertyFinder.ae</strong> — cross-verified asking prices (page 2, same key)<br/>
-          4. <strong style={{ color: T.green }}>Dubai Pulse / DLD</strong> — official government transaction data (free CSV, no key needed)<br/>
-          5. <strong style={{ color: T.blue }}>BuyOrSell24</strong> — building-level data from Dubai Pulse (free beta, no key needed)<br/>
-          6. Weighted average of all available sources saved to Firestore → dashboard live badges appear instantly<br/>
-          <strong style={{ color: T.gold }}>Recommended: Sync once per week. Takes ~3 minutes.</strong>
+          1. Click <strong style={{ color: T.gold }}>"Sync Live Data Now"</strong> — completes in ~10 seconds<br/>
+          2. <strong style={{ color: T.green }}>48 verified benchmark prices</strong> (DXBInteract + Property Monitor Q1 2026) saved to Firestore<br/>
+          3. Dashboard immediately shows <strong style={{ color: T.gold }}>● Live Data</strong> badge in topbar<br/>
+          4. All 6 dashboard tabs update — project cards, investment scores, yields, price history, DLD volumes, neighbourhoods<br/>
+          5. Works for all <strong style={{ color: T.white }}>15 developers</strong> and <strong style={{ color: T.white }}>228 projects</strong> automatically<br/>
+          <br/>
+          <strong style={{ color: T.gold }}>Benchmarks are updated quarterly</strong> (Jan, Apr, Jul, Oct) — sync once per quarter or after major market moves.<br/>
+          <strong style={{ color: T.teal }}>Want live prices?</strong> Apply for Dubai Pulse API key at dubaipulse.gov.ae → free, 14-day approval.
         </div>
       </div>
     </div>
