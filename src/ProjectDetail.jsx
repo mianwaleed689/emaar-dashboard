@@ -137,8 +137,11 @@ export default function ProjectDetail() {
   const [copied, setCopied] = useState(false);
   const isPro = ["pro", "pro_trial", "enterprise", "admin"].includes(userTier);
 
+  const [notFound, setNotFound] = useState(false);
+
   /* ── load project from data.js + Firestore override ── */
   useEffect(() => {
+    setNotFound(false);
     const base = emaarProjects.find(p => p.id === Number(id) || p.id === id || String(p.id) === String(id));
 
     if (base) {
@@ -157,9 +160,17 @@ export default function ProjectDetail() {
         if (snap.exists()) {
           setProject({ ...snap.data(), id: snap.id });
         } else {
-          setProject(null);
+          // Also try projectData collection
+          return getDoc(doc(db, "projectData", String(id))).then(snap2 => {
+            if (snap2.exists()) {
+              setProject({ ...snap2.data(), id: snap2.id });
+            } else {
+              setProject(null);
+              setNotFound(true);
+            }
+          });
         }
-      }).catch(() => setProject(null));
+      }).catch(() => { setProject(null); setNotFound(true); });
     }
   }, [id]);
 
@@ -188,7 +199,7 @@ export default function ProjectDetail() {
   }, [project]);
 
   /* ── loading / not found ── */
-  if (project === null && emaarProjects.length > 0 && !String(id).includes("_")) {
+  if (notFound || (project === null && emaarProjects.length > 0 && !String(id).includes("_"))) {
     return (
       <div style={{ minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "'Outfit', sans-serif", color: T.textPrimary }}>
         <style>{css}</style>
