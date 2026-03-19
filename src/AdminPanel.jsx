@@ -11716,6 +11716,7 @@ export default function AdminPanel() {
   });
   const [editingYield, setEditingYield] = useState(null);
   const [liveProjects, setLiveProjects] = useState({});
+  const [firestoreProjects, setFirestoreProjects] = useState([]);
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [projectVersions, setProjectVersions] = useState({}); // projectId -> [versions]
   const [viewingVersions, setViewingVersions] = useState(null); // projectId
@@ -12010,6 +12011,14 @@ export default function AdminPanel() {
       const projMap = {};
       projSnap.forEach(d => { projMap[d.id] = plainify(d.data()); });
       setLiveProjects(projMap);
+
+      // Fetch ALL projects from Firestore projects collection (includes imported Aldar, DAMAC etc)
+      try {
+        const fsSnap = await getDocs(collection(db, "projects"));
+        const fsList = [];
+        fsSnap.forEach(d => fsList.push({ id: d.id, ...plainify(d.data()) }));
+        setFirestoreProjects(fsList);
+      } catch(e) {}
 
       // Fetch community ROI overrides
       const roiSnap = await getDocs(collection(db, "communityROI"));
@@ -16281,7 +16290,10 @@ export default function AdminPanel() {
                     <select value={projectDeveloperFilter} onChange={e => { setProjectDeveloperFilter(e.target.value); setActiveFilterViewId(null); }}
                       style={{ padding: "8px 10px", background: projectDeveloperFilter !== "All" ? `${T.gold}15` : T.surface, border: `1px solid ${projectDeveloperFilter !== "All" ? T.gold : T.border}`, borderRadius: 8, color: projectDeveloperFilter !== "All" ? T.gold : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: projectDeveloperFilter !== "All" ? 700 : 400 }}>
                       <option value="All">All Developers</option>
-                      {[...new Set(emaarProjects.map(p => p.developer || "Emaar Properties"))].sort().map(d => <option key={d} value={d}>{d}</option>)}
+                      {[...new Set([
+                        ...emaarProjects.map(p => p.developer || "Emaar Properties"),
+                        ...firestoreProjects.map(p => p.developer).filter(Boolean)
+                      ])].sort().map(d => <option key={d} value={d}>{d}</option>)}
                     </select>
 
                     {/* Community Filter */}
@@ -17728,7 +17740,10 @@ export default function AdminPanel() {
                       
                       // Deduplicate by id — safety net in case data.js has duplicates
                       const _seen = new Set();
-                      const allProjects = emaarProjects.filter(p => { if (_seen.has(p.id)) return false; _seen.add(p.id); return true; });
+                      const baseEmaar = emaarProjects.filter(p => { if (_seen.has(String(p.id))) return false; _seen.add(String(p.id)); return true; });
+                      // Add Firestore projects that aren't already in emaarProjects (e.g. Aldar, DAMAC imports)
+                      const extraFS = firestoreProjects.filter(p => { const key = String(p.id); if (_seen.has(key)) return false; _seen.add(key); return true; });
+                      const allProjects = [...baseEmaar, ...extraFS];
                       const now = new Date();
                       const filtered = allProjects
                           .filter(p => {
@@ -17740,7 +17755,7 @@ export default function AdminPanel() {
                             const matchSearch = !dataSearch || (p.name||"").toLowerCase().includes(dataSearch.toLowerCase()) || (p.community||"").toLowerCase().includes(dataSearch.toLowerCase());
                             const matchCommunity = projectCommunityFilter === "All" || p.community === projectCommunityFilter;
                             const matchStatus = projectStatusFilter === "All" || (merged.status||"") === projectStatusFilter;
-                            const matchDeveloper = projectDeveloperFilter === "All" || (merged.developer||p.developer||"Emaar Properties") === projectDeveloperFilter;
+                            const matchDeveloper = projectDeveloperFilter === "All" || (merged.developer || p.developer || "Emaar Properties") === projectDeveloperFilter;
                             
                             // Advanced filters
                             const price = merged.price || 0;
