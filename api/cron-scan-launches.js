@@ -167,10 +167,24 @@ module.exports = async function handler(req, res) {
       if (key) existingKeys.add(key);
     });
 
-    // ── SAVE only new projects ─────────────────────────────────────────────
-    // Skip developers that already have full curated data — cron is for discovery only
-    const SKIP_DEVELOPERS = ["emaar"]; // Add more as modules are built
+    // ── LOAD curated project names from data (to detect true new projects) ──────
+    // These are the known project names per developer — new ones get added, duplicates skipped
+    const CURATED_NAMES = {
+      emaar: new Set([
+        "the golf residence","hills park","golf grand","parkside views","greenside residence",
+        "club drive","golf hillside","park lane","palace residences hillside","greencrest",
+        "vida residences hillside","parkwood","hillsedge","club place","rosehill","parkland",
+        "the cove ii","creek waters","creek waters 2","oria","albero","montiva by vida","silva",
+        "creek bay","creek haven","lyvia by palace","altan","address the bay","beachgate by address",
+        "seapoint","bayview","bristol luxury residences","golf verge","golf meadow","terra gardens",
+        "farm gardens","elora","selvara","equestra","equiterra","chevalia estate 2","selvara 3",
+        "selvara 4","aurea","baystar by vida","mareva 2","avarra by palace","greencrest heights",
+        "raya","palace beach residence","address villas hillcrest","golf meadows"
+      ]),
+      // Add curated names for other developers as their modules are built
+    };
 
+    // ── SAVE only genuinely new projects ──────────────────────────────────────
     const batch = db.batch();
     let batchCount = 0;
 
@@ -179,8 +193,11 @@ module.exports = async function handler(req, res) {
         results.skipped++;
         continue;
       }
-      // Skip fully-curated developers
-      if (SKIP_DEVELOPERS.includes(project.developerId)) {
+
+      // Smart duplicate check — skip if name matches a curated project for this developer
+      const curatedSet = CURATED_NAMES[project.developerId];
+      const projectNameKey = (project.name || "").toLowerCase().trim();
+      if (curatedSet && curatedSet.has(projectNameKey)) {
         results.skipped++;
         continue;
       }
@@ -206,6 +223,19 @@ module.exports = async function handler(req, res) {
       errors: results.errors,
       runAt: new Date().toISOString(),
     });
+
+    // ── NOTIFY admin if new projects found ─────────────────────────────────
+    if (results.newProjects > 0) {
+      await db.collection("notifications").add({
+        title: `🚀 ${results.newProjects} New Project${results.newProjects > 1 ? "s" : ""} Detected`,
+        body: `Launch Radar auto-scan found ${results.newProjects} new project${results.newProjects > 1 ? "s" : ""} on Bayut. Check Admin → Data Manager → Launch Radar to review.`,
+        type: "launch_radar",
+        targetType: "admin",
+        createdAt: new Date().toISOString(),
+        read: false,
+        autoScan: true,
+      });
+    }
 
     return res.status(200).json({
       success: true,

@@ -1731,13 +1731,23 @@ export default function EmaarDashboardV2() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Use merged Firestore+static data if available, otherwise pure static fallback
-  // activeProjects: for Emaar, use ONLY the curated 48 from data.js (+ admin overrides)
-  // For other developers, include Firestore extras filtered by developerId
+  // activeProjects: curated 48 from data.js + any genuinely NEW projects added via radar
+  // For Emaar: base 48 + any radar-added projects NOT already in the 48 (new launches)
+  // For other developers: only Firestore projects matching that developer
+  const emaarBaseNames = new Set(emaarProjects.map(p => (p.name || "").toLowerCase().trim()));
   const activeProjects = selectedDeveloper === "emaar"
-    ? emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; })
-    : [...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }),
-       ...extraProjects.filter(p => (p.developerId || "") === selectedDeveloper || (p.developer || "").toLowerCase().includes(selectedDeveloper.toLowerCase()))
-      ];
+    ? [
+        ...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }),
+        // New Emaar launches added via radar that aren't in the curated 48
+        ...extraProjects.filter(p =>
+          (p.developerId === "emaar" || (p.developer || "").toLowerCase().includes("emaar")) &&
+          !emaarBaseNames.has((p.name || "").toLowerCase().trim())
+        )
+      ]
+    : extraProjects.filter(p =>
+        (p.developerId || "") === selectedDeveloper ||
+        (p.developer || "").toLowerCase().includes(selectedDeveloper.toLowerCase())
+      );
 
   // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
   const getUnitEntries = (units) => {
