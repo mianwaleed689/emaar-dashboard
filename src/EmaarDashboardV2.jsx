@@ -1593,6 +1593,8 @@ export default function EmaarDashboardV2() {
   const [projectPriceMax, setProjectPriceMax] = useState(20);
   const [liveProjects, setLiveProjects] = useState({});
   const [extraProjects, setExtraProjects] = useState([]);
+  const [allDevelopers, setAllDevelopers] = useState([{ id: "emaar", name: "Emaar Properties", shortName: "Emaar", active: true, phase: 1 }]);
+  const [selectedDeveloper, setSelectedDeveloper] = useState("emaar");
   const [liveYields, setLiveYields] = useState([]);
   // ── Price Alerts ──
   const [showAlerts, setShowAlerts] = useState(false);
@@ -1649,7 +1651,18 @@ export default function EmaarDashboardV2() {
     const loadProjects = async () => {
       setProjectsLoading(true);
       try {
-        // Read from "projectData" (edits to existing) AND "projects" (new projects from admin)
+        // Load developers list from Firestore
+        try {
+          const devSnap = await getDocs(collection(db, "developers"));
+          if (devSnap.size > 0) {
+            const devs = [];
+            devSnap.forEach(d => devs.push({ id: d.id, ...d.data() }));
+            devs.sort((a, b) => (a.phase || 1) - (b.phase || 1));
+            setAllDevelopers(devs);
+          }
+        } catch(e) {}
+
+        // Read from Firestore: projectData (overrides), projects (admin-added + migrated), yieldData, communityROI
         const [pdSnap, npSnap, yieldSnap, roiSnap] = await Promise.all([
           getDocs(collection(db, "projectData")),
           getDocs(collection(db, "projects")),
@@ -1662,18 +1675,31 @@ export default function EmaarDashboardV2() {
           overrides[numId] = d.data();
         });
         setLiveProjects(overrides);
+
+        // Base IDs from data.js
         const baseIds = new Set(emaarProjects.map(p => String(p.id)));
-        // Extra projects from projectData overrides that aren't base projects
-        const extraFromOverrides = Object.entries(overrides).filter(([id]) => !baseIds.has(id)).map(([id, data]) => ({ id, ...data }));
-        // Brand new projects added via admin "Add Project" button (saved to "projects" collection)
-        const extraFromNew = [];
+
+        // Projects from Firestore 'projects' collection (migrated emaar_1..48 + admin-added)
+        const firestoreProjects = [];
         npSnap.forEach(d => {
           const data = { ...d.data(), id: d.id };
-          if (!baseIds.has(String(d.id))) extraFromNew.push(data);
+          // Skip migrated Emaar projects (already in data.js as base) unless they have extra fields
+          if (data.developerId === "emaar" && baseIds.has(String(data.id?.toString().replace("emaar_", "")))) return;
+          // Include non-Emaar developers and admin-added projects
+          if (!baseIds.has(String(data.id))) firestoreProjects.push(data);
         });
-        // Merge, deduplicate by id
+
+        // Extra projects from projectData overrides not in base
+        const extraFromOverrides = Object.entries(overrides)
+          .filter(([id]) => !baseIds.has(id))
+          .map(([id, data]) => ({ id, ...data }));
+
+        // Merge all extras, deduplicate by id
         const seen = new Set(extraFromOverrides.map(p => String(p.id)));
-        const combined = [...extraFromOverrides, ...extraFromNew.filter(p => !seen.has(String(p.id)))];
+        const combined = [
+          ...extraFromOverrides,
+          ...firestoreProjects.filter(p => !seen.has(String(p.id)))
+        ];
         setExtraProjects(combined);
 
         // Load live yield data — check tabData first (admin editor), then yieldData collection
@@ -2311,7 +2337,23 @@ export default function EmaarDashboardV2() {
 
         {/* Navigation */}
         <nav role="navigation" aria-label="Main navigation" style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 3, overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px", flexShrink: 0 }}>Emaar Properties</div>
+          {/* Developer Selector */}
+          <div style={{ padding: "0 12px 12px", flexShrink: 0 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Developer</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              {allDevelopers.filter(d => d.active).map(dev => (
+                <button key={dev.id} type="button" onClick={() => setSelectedDeveloper(dev.id)}
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: `1px solid ${selectedDeveloper === dev.id ? T.gold : T.border}`, background: selectedDeveloper === dev.id ? "rgba(212,168,67,0.1)" : "transparent", color: selectedDeveloper === dev.id ? T.gold : T.textSecondary, fontSize: 12, fontWeight: selectedDeveloper === dev.id ? 700 : 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", transition: "all 0.15s" }}>
+                  {dev.shortName || dev.name}
+                </button>
+              ))}
+              {allDevelopers.filter(d => !d.active).length > 0 && (
+                <div style={{ padding: "6px 10px", fontSize: 10, color: T.textMuted, fontStyle: "italic" }}>
+                  +{allDevelopers.filter(d => !d.active).length} more coming Q3 2026
+                </div>
+              )}
+            </div>
+          </div>
           <div role="tablist" aria-label="Dashboard sections" style={{ display: "contents" }}>
           {TABS.filter(t => {
             const s = tabSettings[t.key];
