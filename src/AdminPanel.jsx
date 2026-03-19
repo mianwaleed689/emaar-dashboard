@@ -11521,22 +11521,51 @@ function LiveDataSync({ db, T, notify }) {
   const BAYUT_KEY = "420de140camsh35f3baf70380d11p1e0c92jsn00005ba30591";
 
   const COMMUNITIES = [
-    { name: "Downtown Dubai",      locationId: "5269" },
-    { name: "Dubai Marina",        locationId: "5247" },
-    { name: "Dubai Hills Estate",  locationId: "7982" },
-    { name: "Dubai Creek Harbour", locationId: "7183" },
-    { name: "Emaar Beachfront",    locationId: "7978" },
+    // ── EMAAR ─────────────────────────────────────────
+    { name: "Downtown Dubai",          locationId: "5269" },
+    { name: "Dubai Marina",            locationId: "5247" },
+    { name: "Dubai Hills Estate",      locationId: "7982" },
+    { name: "Dubai Creek Harbour",     locationId: "7183" },
+    { name: "Emaar Beachfront",        locationId: "7978" },
+    { name: "Arabian Ranches III",     locationId: "7110" },
+    { name: "The Valley",              locationId: "7957" },
+    { name: "The Oasis",               locationId: "8012" },
+    // ── DAMAC ─────────────────────────────────────────
+    { name: "DAMAC Hills",             locationId: "7185" },
+    { name: "DAMAC Hills 2",           locationId: "7198" },
+    { name: "DAMAC Lagoons",           locationId: "7975" },
+    // ── SOBHA ─────────────────────────────────────────
+    { name: "Sobha Hartland",          locationId: "7112" },
+    { name: "Sobha Hartland 2",        locationId: "8019" },
+    // ── NAKHEEL ───────────────────────────────────────
+    { name: "Palm Jumeirah",           locationId: "5460" },
+    { name: "Palm Jebel Ali",          locationId: "8009" },
+    { name: "Dubai Islands",           locationId: "8005" },
+    { name: "Tilal Al Ghaf",           locationId: "7188" },
+    // ── MERAAS ────────────────────────────────────────
+    { name: "City Walk",               locationId: "7190" },
+    { name: "Bluewaters Island",       locationId: "7179" },
+    { name: "Port de La Mer",          locationId: "7180" },
+    { name: "Dubai Harbour",           locationId: "7968" },
+    // ── BINGHATTI ─────────────────────────────────────
+    { name: "Business Bay",            locationId: "5251" },
     { name: "Jumeirah Village Circle", locationId: "7164" },
-    { name: "Business Bay",        locationId: "5251" },
-    { name: "Palm Jumeirah",       locationId: "5460" },
-    { name: "Arabian Ranches III", locationId: "7110" },
-    { name: "The Valley",          locationId: "7957" },
-    { name: "Al Furjan",           locationId: "7120" },
-    { name: "DAMAC Hills",         locationId: "7185" },
-    { name: "Arjan",               locationId: "7131" },
-    { name: "JBR",                 locationId: "5256" },
-    { name: "The Oasis",           locationId: "8012" },
-    { name: "Dubai South",         locationId: "7205" },
+    { name: "Jumeirah Village Triangle", locationId: "7176" },
+    // ── MBR CITY / MEYDAN ────────────────────────────
+    { name: "Mohammed Bin Rashid City", locationId: "7166" },
+    { name: "Meydan",                  locationId: "7173" },
+    { name: "District One",            locationId: "7174" },
+    // ── ELLINGTON / BOUTIQUE ──────────────────────────
+    { name: "Jumeirah Lake Towers",    locationId: "5252" },
+    { name: "Arjan",                   locationId: "7131" },
+    { name: "Motor City",              locationId: "7140" },
+    // ── ALDAR (ABU DHABI) ────────────────────────────
+    { name: "Yas Island",              locationId: "6020" },
+    { name: "Saadiyat Island",         locationId: "6019" },
+    // ── HIGH DEMAND GENERAL ───────────────────────────
+    { name: "JBR",                     locationId: "5256" },
+    { name: "Al Furjan",               locationId: "7120" },
+    { name: "Dubai South",             locationId: "7205" },
   ];
 
   const log = (msg, color) => setSyncLog(prev => [...prev, { msg, color, ts: new Date().toLocaleTimeString("en-AE") }]);
@@ -11608,15 +11637,49 @@ function LiveDataSync({ db, T, notify }) {
 
         // Map DLD area names to our community names
         const communityMap2 = {
+          // Emaar
           "DOWNTOWN DUBAI": "Downtown Dubai",
           "DUBAI MARINA": "Dubai Marina",
           "BUSINESS BAY": "Business Bay",
-          "JUMEIRAH VILLAGE CIRCLE": "Jumeirah Village Circle",
           "DUBAI HILLS ESTATE": "Dubai Hills Estate",
-          "PALM JUMEIRAH": "Palm Jumeirah",
+          "DUBAI CREEK HARBOUR AT THE LAGOONS": "Dubai Creek Harbour",
           "DUBAI CREEK HARBOUR": "Dubai Creek Harbour",
+          "ARABIAN RANCHES 3": "Arabian Ranches III",
           "ARABIAN RANCHES": "Arabian Ranches III",
+          "THE VALLEY": "The Valley",
+          "EMAAR BEACHFRONT": "Emaar Beachfront",
+          // DAMAC
+          "DAMAC HILLS": "DAMAC Hills",
+          "DAMAC HILLS 2": "DAMAC Hills 2",
+          "AKOYA BY DAMAC": "DAMAC Hills 2",
+          "DAMAC LAGOONS": "DAMAC Lagoons",
+          // Sobha
+          "SOBHA HARTLAND": "Sobha Hartland",
+          "SOBHA HARTLAND 2": "Sobha Hartland 2",
+          "MOHAMMED BIN RASHID CITY": "Mohammed Bin Rashid City",
+          // Nakheel
+          "PALM JUMEIRAH": "Palm Jumeirah",
+          "PALM JEBEL ALI": "Palm Jebel Ali",
+          "DUBAI ISLANDS": "Dubai Islands",
+          "TILAL AL GHAF": "Tilal Al Ghaf",
+          // Meraas
+          "CITY WALK": "City Walk",
+          "BLUEWATERS ISLAND": "Bluewaters Island",
+          "PORT DE LA MER": "Port de La Mer",
+          "DUBAI HARBOUR": "Dubai Harbour",
+          // General
+          "JUMEIRAH VILLAGE CIRCLE": "Jumeirah Village Circle",
+          "JUMEIRAH VILLAGE TRIANGLE": "Jumeirah Village Triangle",
+          "JUMEIRAH LAKE TOWERS": "Jumeirah Lake Towers",
+          "JUMEIRAH BEACH RESIDENCE": "JBR",
           "AL FURJAN": "Al Furjan",
+          "MEYDAN": "Meydan",
+          "DISTRICT ONE": "District One",
+          "ARJAN": "Arjan",
+          "MOTOR CITY": "Motor City",
+          "DUBAI SOUTH": "Dubai South",
+          "YAS ISLAND": "Yas Island",
+          "SAADIYAT ISLAND": "Saadiyat Island",
         };
 
         const mapped = communityMap2[area.toUpperCase()];
@@ -11647,12 +11710,20 @@ function LiveDataSync({ db, T, notify }) {
   const fetchBuyOrSell24 = async () => {
     const results = {};
     const communityAreas = [
-      { name: "Downtown Dubai", areaId: "downtown-dubai" },
-      { name: "Dubai Marina", areaId: "dubai-marina" },
-      { name: "Business Bay", areaId: "business-bay" },
-      { name: "Dubai Hills Estate", areaId: "dubai-hills-estate" },
-      { name: "Jumeirah Village Circle", areaId: "jumeirah-village-circle" },
-      { name: "Palm Jumeirah", areaId: "palm-jumeirah" },
+      { name: "Downtown Dubai",           areaId: "downtown-dubai" },
+      { name: "Dubai Marina",             areaId: "dubai-marina" },
+      { name: "Business Bay",             areaId: "business-bay" },
+      { name: "Dubai Hills Estate",       areaId: "dubai-hills-estate" },
+      { name: "Jumeirah Village Circle",  areaId: "jumeirah-village-circle" },
+      { name: "Palm Jumeirah",            areaId: "palm-jumeirah" },
+      { name: "Dubai Creek Harbour",      areaId: "dubai-creek-harbour" },
+      { name: "Sobha Hartland",           areaId: "sobha-hartland" },
+      { name: "DAMAC Hills",              areaId: "damac-hills" },
+      { name: "Mohammed Bin Rashid City", areaId: "mohammed-bin-rashid-city" },
+      { name: "Dubai Harbour",            areaId: "dubai-harbour" },
+      { name: "City Walk",                areaId: "city-walk" },
+      { name: "Meydan",                   areaId: "meydan" },
+      { name: "Al Furjan",                areaId: "al-furjan" },
     ];
 
     try {
@@ -11784,7 +11855,7 @@ function LiveDataSync({ db, T, notify }) {
           <div>
             <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Live Data Sync</div>
             <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>
-              Fetches live listing prices from Bayut + PropertyFinder + Dubai Pulse DLD for 16 communities · Free · No Cloud Function needed
+              Fetches live listing prices from Bayut + Dubai Pulse DLD for 35 communities covering all 228 developers · Free · No Cloud Function needed
             </div>
             {lastSync && <div style={{ fontSize: 11, color: T.green, marginTop: 6 }}>● Last synced: {lastSync}</div>}
           </div>
@@ -11803,7 +11874,7 @@ function LiveDataSync({ db, T, notify }) {
             { icon: "🔍", label: "Source 2", value: "PropertyFinder (p2)", sub: "Cross-verified prices" },
             { icon: "🏛️", label: "Source 3", value: "Dubai Pulse DLD", sub: "Gov transaction data (free)" },
             { icon: "🏗️", label: "Source 4", value: "BuyOrSell24", sub: "Building-level data (free)" },
-            { icon: "🌍", label: "Communities", value: "16", sub: "All major Dubai areas" },
+            { icon: "🌍", label: "Communities", value: "35", sub: "All Dubai + Abu Dhabi" },
             { icon: "💰", label: "Cost", value: "FREE", sub: "All 4 sources are free" },
           ].map((item, i) => (
             <div key={i} style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
