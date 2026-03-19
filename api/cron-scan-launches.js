@@ -168,11 +168,19 @@ module.exports = async function handler(req, res) {
     });
 
     // ── SAVE only new projects ─────────────────────────────────────────────
+    // Skip developers that already have full curated data — cron is for discovery only
+    const SKIP_DEVELOPERS = ["emaar"]; // Add more as modules are built
+
     const batch = db.batch();
     let batchCount = 0;
 
     for (const [key, project] of Object.entries(projectMap)) {
       if (existingKeys.has(key)) {
+        results.skipped++;
+        continue;
+      }
+      // Skip fully-curated developers
+      if (SKIP_DEVELOPERS.includes(project.developerId)) {
         results.skipped++;
         continue;
       }

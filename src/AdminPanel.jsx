@@ -16938,10 +16938,12 @@ export default function AdminPanel() {
                 <div className="kpi-card fade-up" style={{ position: "relative", overflow: "hidden" }}>
                   <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: T.gold, opacity: 0.7 }} />
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 10 }}>Total Projects</div>
-                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.white }}>{emaarProjects.length + firestoreProjects.filter(p => p.addedViaRadar).length}</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.white }}>{emaarProjects.length}</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>
-                    {emaarProjects.length} base
-                    {firestoreProjects.filter(p => p.addedViaRadar).length > 0 && <span style={{ color: T.gold, marginLeft: 6 }}>+{firestoreProjects.filter(p => p.addedViaRadar).length} radar</span>}
+                    Emaar curated
+                    {firestoreProjects.filter(p => p.addedViaRadar && p.developerId !== "emaar").length > 0 &&
+                      <span style={{ color: T.gold, marginLeft: 6 }}>+{firestoreProjects.filter(p => p.addedViaRadar && p.developerId !== "emaar").length} other devs via radar</span>
+                    }
                   </div>
                 </div>
                 <div className="kpi-card fade-up" style={{ position: "relative", overflow: "hidden", animationDelay: "0.05s" }}>
@@ -17063,19 +17065,17 @@ export default function AdminPanel() {
                     <button type="button" onClick={fetchLiveData} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(212,168,67,0.4)",background:"rgba(212,168,67,0.08)",color:"#D4A843",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>{I.refresh} Refresh</button>
                     <button type="button" onClick={async () => {
                       // Remove all addedViaRadar projects that duplicate existing Emaar data.js projects
-                      const emaarNames = new Set(emaarProjects.map(p => p.name?.toLowerCase().trim()));
                       const snap = await getDocs(collection(db, "projects"));
                       let removed = 0;
                       for (const d of snap.docs) {
                         const data = d.data();
+                        // Remove ALL radar-added Emaar projects — Emaar has full curated data
                         if (data.addedViaRadar && (data.developerId === "emaar" || (data.developer||"").toLowerCase().includes("emaar"))) {
-                          if (emaarNames.has((data.name||"").toLowerCase().trim())) {
-                            await deleteDoc(doc(db, "projects", d.id));
-                            removed++;
-                          }
+                          await deleteDoc(doc(db, "projects", d.id));
+                          removed++;
                         }
                       }
-                      notify(`Removed ${removed} duplicate Radar/Emaar projects`);
+                      notify(`Removed ${removed} Emaar radar projects — Emaar uses curated data only`);
                       fetchLiveData();
                     }} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"7px 14px",borderRadius:8,border:"1px solid rgba(239,68,68,0.3)",background:"rgba(239,68,68,0.06)",color:"#EF4444",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>
                       🧹 Remove Radar Duplicates
