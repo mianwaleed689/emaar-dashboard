@@ -161,15 +161,8 @@ export default function ProjectDetail() {
       return () => unsub();
     }
 
-    // Not in data.js — try Firestore (Aldar, DAMAC etc — always string IDs like "aldar_1")
-    const isFirestoreId = isNaN(Number(id)) || String(id).includes("_");
-    if (!isFirestoreId) {
-      // Numeric ID not found in data.js = truly not found
-      setNotFound(true);
-      return;
-    }
-
-    // String ID — fetch from Firestore
+    // Not in data.js — fetch from Firestore (handles all string IDs like aldar_1, damac_5)
+    // Also handles numeric IDs that may have been added via admin
     getDoc(doc(db, "projects", String(id))).then(snap => {
       if (snap.exists()) {
         setProject({ ...snap.data(), id: snap.id });
@@ -210,7 +203,7 @@ export default function ProjectDetail() {
   }, [project]);
 
   /* ── loading / not found ── */
-  if (notFound || (project === null && emaarProjects.length > 0 && !String(id).includes("_"))) {
+  if (notFound) {
     return (
       <div style={{ minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "'Outfit', sans-serif", color: T.textPrimary }}>
         <style>{css}</style>
