@@ -8072,7 +8072,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
             to_email: user.email,
             to_name: user.name || user.email.split("@")[0],
             subject: digestTemplate.subject,
-            message: `${digestTemplate.greeting.replace("{{name}}", user.name || user.email.split("@")[0])}\n\n${digestTemplate.intro}\n\nView your personalized insights at https://emaar-dashboard.vercel.app\n\n${digestTemplate.cta}\n\n---\n${digestTemplate.footer}`,
+            message: `${digestTemplate.greeting.replace("{{name}}", user.name || user.email.split("@")[0])}\n\n${digestTemplate.intro}\n\nView your personalized insights at https://dxbanalytics.com\n\n${digestTemplate.cta}\n\n---\n${digestTemplate.footer}`,
             project_name: "DXB Analytics",
           }, "USkwUhp0csGCVDkdQ");
           sent++;
@@ -8098,6 +8098,36 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
       setLastResult({ success: false, error: e.message });
       notify("Send failed: " + e.message);
     }
+    setSending(false);
+  };
+
+  // Re-engagement: send to users inactive 7+ days
+  const sendReengagement = async () => {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const inactiveUsers = users.filter(u => {
+      if (!u.email) return false;
+      if (!u.lastLoginAt) return true;
+      return new Date(u.lastLoginAt) < sevenDaysAgo;
+    });
+    if (inactiveUsers.length === 0) { notify("No inactive users found"); return; }
+    if (!window.confirm(`Send re-engagement email to ${inactiveUsers.length} users inactive 7+ days?`)) return;
+    setSending(true);
+    let sent = 0, failed = 0;
+    for (const u of inactiveUsers) {
+      try {
+        const name = u.name || u.email.split("@")[0];
+        await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+          to_email: u.email,
+          to_name: name,
+          subject: "Dubai RE market moved this week — your data is waiting",
+          message: `Hi ${name},\n\nWe noticed you haven't logged in to DXB Analytics in a while.\n\nHere's what happened in Dubai real estate this week:\n• Dubai off-plan market up 44% YoY in Creek Harbour\n• EIBOR holding at 3.47% — mortgage rates stable\n• 3 new project launches this month\n\nYour dashboard is waiting with the latest data.\n\nhttps://dxbanalytics.com\n\n— DXB Analytics Team\n\nUnsubscribe: mailto:mianwaleed689@gmail.com?subject=Unsubscribe`,
+          project_name: "DXB Analytics",
+        }, "USkwUhp0csGCVDkdQ");
+        sent++;
+      } catch { failed++; }
+    }
+    await addDoc(collection(db, "digestLog"), { sentAt: new Date().toISOString(), sentBy: adminUser?.email || "admin", segment: "reengagement_7d", total: inactiveUsers.length, sent, failed, subject: "Re-engagement" });
+    notify(`Re-engagement sent to ${sent} users`);
     setSending(false);
   };
 
@@ -8241,10 +8271,17 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
             </div>
 
             {/* Send Button */}
-            <button type="button" onClick={sendDigest} disabled={sending || segmentUsers.length === 0}
-              style={{ padding: "16px 28px", background: sending ? T.surfaceAlt : `linear-gradient(135deg,${T.gold},#B8912F)`, border: "none", borderRadius: 12, color: sending ? T.textMuted : T.bg, fontWeight: 800, fontSize: 16, cursor: sending || segmentUsers.length === 0 ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-              {sending ? "Sending..." : `Send Digest Now → ${segmentUsers.length} users`}
-            </button>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button type="button" onClick={sendDigest} disabled={sending || segmentUsers.length === 0}
+                style={{ flex: 1, padding: "16px 28px", background: sending ? T.surfaceAlt : `linear-gradient(135deg,${T.gold},#B8912F)`, border: "none", borderRadius: 12, color: sending ? T.textMuted : T.bg, fontWeight: 800, fontSize: 16, cursor: sending || segmentUsers.length === 0 ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                {sending ? "Sending..." : `Send Digest → ${segmentUsers.length} users`}
+              </button>
+              <button type="button" onClick={sendReengagement} disabled={sending}
+                style={{ padding: "16px 20px", background: "rgba(59,130,246,.1)", border: "1px solid rgba(59,130,246,.3)", borderRadius: 12, color: T.blue, fontWeight: 700, fontSize: 13, cursor: sending ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}
+                title="Send to users inactive 7+ days">
+                🔁 Re-engage (7d)
+              </button>
+            </div>
 
             {lastResult && (
               <div style={{ padding: "14px 18px", borderRadius: 10, background: lastResult.success ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)", border: `1px solid ${lastResult.success ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}` }}>

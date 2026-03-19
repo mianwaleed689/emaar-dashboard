@@ -7424,13 +7424,46 @@ export default function EmaarDashboardV2() {
               <button type="button" onClick={async () => { if (auth.currentUser && profileEdit.name.trim()) { try { await setDoc(doc(db, "users", auth.currentUser.uid), { name: profileEdit.name.trim() }, { merge: true }); setUserName(profileEdit.name.trim()); setToast("\u2705 Profile updated!"); setTimeout(() => setToast(""), 3000); } catch(e) { setToast("\u274C Update failed"); setTimeout(() => setToast(""), 3000); } } }} style={{ marginTop: 10, padding: "8px 20px", background: T.gold, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Save Changes</button>
             </div>
             <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Subscription</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-                <div><div style={{ fontSize: 10, color: T.textMuted }}>Plan</div><div style={{ fontSize: 14, fontWeight: 700, color: T.gold, fontFamily: "'Fraunces', serif" }}>{userTier === "admin" ? "Admin" : userTier === "pro" ? "Pro" : userTier === "pro_trial" ? "Pro Trial" : userTier === "enterprise" ? "Enterprise" : "Free"}</div></div>
-                <div><div style={{ fontSize: 10, color: T.textMuted }}>Status</div><div style={{ fontSize: 14, fontWeight: 700, color: userTier === "free" ? T.blue : T.green }}>{userTier === "free" ? "Limited" : "Active"}</div></div>
-                <div><div style={{ fontSize: 10, color: T.textMuted }}>Access</div><div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{userTier === "free" ? "5 projects" : "All 48"}</div></div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>My Subscription</div>
+              {/* Plan badge */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: T.card, borderRadius: 10, border: `1px solid ${userTier === "pro" || userTier === "enterprise" ? T.gold : T.border}`, marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 22 }}>{userTier === "enterprise" ? "🏢" : userTier === "pro" || userTier === "pro_trial" ? "⭐" : "🔓"}</span>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{userTier === "admin" ? "Admin" : userTier === "pro" ? "Pro Plan" : userTier === "pro_trial" ? `Pro Trial · ${trialDaysLeft} days left` : userTier === "enterprise" ? "Enterprise" : "Free Plan"}</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>{userTier === "pro" ? "AED 99/month · All features unlocked" : userTier === "enterprise" ? "AED 499/month · Team access" : userTier === "pro_trial" ? "Full Pro access during trial" : "5 project previews only"}</div>
+                  </div>
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6, background: userTier === "free" ? "rgba(59,130,246,.15)" : "rgba(16,185,129,.15)", color: userTier === "free" ? T.blue : T.green, border: `1px solid ${userTier === "free" ? "rgba(59,130,246,.3)" : "rgba(16,185,129,.3)"}` }}>
+                  {userTier === "free" ? "FREE" : "ACTIVE"}
+                </span>
               </div>
-              {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "\u2B50 Upgrade to Pro \u2014 AED 99/mo"}</button>}
+              {/* What's included */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                {[
+                  { label: "Projects", value: userTier === "free" ? "5 previews" : "All 48+" },
+                  { label: "Tools", value: userTier === "free" ? "5 tabs" : "All 23" },
+                  { label: "ROI Calculators", value: userTier === "free" ? "Locked 🔒" : "All 3 ✓" },
+                  { label: "Compare", value: userTier === "free" ? "Locked 🔒" : "3 projects ✓" },
+                ].map((item, i) => (
+                  <div key={i} style={{ padding: "8px 10px", background: T.bg, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 600 }}>{item.label}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: item.value.includes("🔒") ? T.textMuted : T.white, marginTop: 2 }}>{item.value}</div>
+                  </div>
+                ))}
+              </div>
+              {/* CTA */}
+              {(userTier === "free" || userTier === "pro_trial") && (
+                <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ width: "100%", padding: "11px 0", background: `linear-gradient(135deg,${T.gold},#B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                  {userTier === "pro_trial" ? `⚡ Subscribe Before Trial Ends (${trialDaysLeft} days left)` : "⭐ Upgrade to Pro — AED 99/month"}
+                </button>
+              )}
+              {(userTier === "pro" || userTier === "enterprise") && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <a href="mailto:mianwaleed689@gmail.com?subject=Billing%20Enquiry%20-%20DXB%20Analytics" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px 0", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontWeight: 600, textDecoration: "none", fontFamily: "'Outfit',sans-serif" }}>📧 Billing Help</a>
+                  <button type="button" onClick={() => { if(window.confirm("Cancel your subscription? You'll keep access until your billing period ends.")) { window.location.href = "mailto:mianwaleed689@gmail.com?subject=Cancel%20Subscription%20-%20DXB%20Analytics"; }}} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px 0", background: "rgba(239,68,68,.06)", border: "1px solid rgba(239,68,68,.15)", borderRadius: 8, color: T.red, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel Plan</button>
+                </div>
+              )}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <button type="button" onClick={() => { setShowProfile(false); handleTabChange("Portfolio"); }} style={{ padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>📊 Portfolio</button>
@@ -7684,65 +7717,124 @@ export default function EmaarDashboardV2() {
 
       {/* ─── ONBOARDING MODAL ─── */}
       {showOnboarding && (() => {
-        const steps = [
-          {
-            icon: "🏙️",
-            title: `Welcome to DXB Analytics, ${userName || "Investor"}!`,
-            body: "You now have access to Dubai's most comprehensive real estate intelligence platform. Let us show you around in 30 seconds.",
-            cta: "Let's Go →"
-          },
-          {
-            icon: "🔍",
-            title: "Browse 48+ Projects",
-            body: "Go to the Projects tab to explore every active development. Filter by community, tier, handover year, or price range. Click any card for full details, documents, and ROI analysis.",
-            cta: "Next →"
-          },
-          {
-            icon: "⭐",
-            title: "Build Your Watchlist",
-            body: "See the ☆ star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
-            cta: "Next →"
-          },
-          {
-            icon: "📊",
-            title: "Yields, ROI & Mortgage",
-            body: "Use the Yields tab for rental returns by community. The Mortgage tab calculates your monthly payment + all UAE transaction costs instantly.",
-            cta: "Next →"
-          },
-          {
-            icon: "🚀",
-            title: "You're All Set!",
-            body: userTier === "free" ? "You're on the Free plan. Upgrade to Pro for compare mode, full project details, PDF reports, and portfolio tracking — from AED 99/month." : "You have full Pro access. Explore everything — compare projects, track your portfolio, and download reports.",
-            cta: userTier === "free" ? "Explore Free Features" : "Start Exploring"
-          },
-        ];
-        const step = steps[onboardingStep];
+        const roleSteps = {
+          agent: [
+            { icon: "🤝", title: "Built for Dubai Agents", body: "Every project card has a WhatsApp share button. Send verified project data to clients in one tap — price, handover, payment plan, yield.", cta: "Next →", highlight: "Projects tab → click any project → Share on WhatsApp" },
+            { icon: "⚖️", title: "Compare 3 Projects", body: "Hit the ⊕ button on any project card to add it to comparison. Compare up to 3 projects side-by-side on price, yield, handover, and ROI.", cta: "Next →", highlight: "Projects tab → click ⊕ on 2-3 projects → Compare" },
+            { icon: "📊", title: "Show Clients Real Data", body: "Open any project → click View Full Report for a complete breakdown. Every data point shows its DLD or official source.", cta: "Next →", highlight: "Click any project → View Full Report" },
+          ],
+          investor: [
+            { icon: "💰", title: "Verify Before You Invest", body: "The Yields tab shows gross and net rental yields per community — sourced from DLD data, not agent estimates. Filter by community.", cta: "Next →", highlight: "Yields tab → filter by community" },
+            { icon: "📐", title: "Calculate Your ROI", body: "The ROI Calculator supports 3 strategies: long-term hold, Airbnb (STR), and flip. Input your budget and see expected returns.", cta: "Next →", highlight: "ROI Calculator tab → enter your numbers" },
+            { icon: "🛡️", title: "Assess the Risk", body: "Every project has a 9-factor risk score. The Risk tab shows market, regulatory, liquidity, construction, and interest rate risks.", cta: "Next →", highlight: "Risk tab → review 9-factor matrix" },
+          ],
+          brokerage: [
+            { icon: "🏢", title: "Team Intelligence Platform", body: "Your whole team gets the same verified data. No more agents sharing outdated brochures or wrong prices.", cta: "Next →", highlight: "Share your login link with your team" },
+            { icon: "📈", title: "Track the Market Daily", body: "The Market tab shows DLD transaction volumes, price trends, and absorption rates — updated monthly from official sources.", cta: "Next →", highlight: "Market tab → DLD Volumes tab" },
+            { icon: "🏆", title: "Competitor Intelligence", body: "The Competitors tab ranks the top developers by sales, units, delivery record, and market share. Know the landscape.", cta: "Next →", highlight: "Competitors tab → developer scorecards" },
+          ],
+        };
+
+        const isStep0 = onboardingStep === 0;
+        const [selectedRole, setSelectedRole] = React.useState("agent");
+        const steps = roleSteps[selectedRole] || roleSteps.agent;
+        const isLastStep = onboardingStep === steps.length;
+        const currentStep = isStep0 ? null : steps[onboardingStep - 1];
+
         return (
-          <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(16px)" }}>
-            <div style={{ background: T.surface, borderRadius: 24, border: `1px solid rgba(212,168,67,0.3)`, width: "min(480px,94vw)", padding: "40px 36px", textAlign: "center", position: "relative", boxShadow: "0 40px 100px rgba(0,0,0,0.7)" }}>
-              {/* Progress dots */}
-              <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28 }}>
-                {steps.map((_, i) => (
-                  <div key={i} style={{ width: i === onboardingStep ? 20 : 8, height: 8, borderRadius: 4, background: i === onboardingStep ? T.gold : T.border, transition: "all 0.3s" }} />
+          <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.93)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(16px)", padding: 16 }}>
+            <div style={{ background: T.surface, borderRadius: 24, border: `1px solid rgba(212,168,67,0.3)`, width: "min(520px,96vw)", maxHeight: "90vh", overflow: "auto", padding: "36px 32px", position: "relative", boxShadow: "0 40px 100px rgba(0,0,0,.7)" }}>
+
+              {/* Progress */}
+              <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 28 }}>
+                {[0, ...steps.map((_, i) => i + 1), steps.length + 1].map((s, idx) => (
+                  <div key={idx} style={{ width: s === onboardingStep ? 24 : 8, height: 8, borderRadius: 4, background: s <= onboardingStep ? T.gold : T.border, transition: "all .3s" }} />
                 ))}
               </div>
-              <div style={{ fontSize: 52, marginBottom: 16 }}>{step.icon}</div>
-              <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 14, lineHeight: 1.3 }}>{step.title}</h2>
-              <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, marginBottom: 32 }}>{step.body}</p>
-              <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-                {onboardingStep > 0 && (
-                  <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "12px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>← Back</button>
-                )}
-                <button type="button" onClick={() => { if (onboardingStep < steps.length - 1) { setOnboardingStep(s => s + 1); } else { completeOnboarding(); } }} style={{ padding: "12px 28px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                  {step.cta}
-                </button>
-              </div>
-              <button type="button" onClick={completeOnboarding} style={{ marginTop: 16, background: "none", border: "none", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Skip tour</button>
+
+              {isStep0 ? (
+                /* Step 0: Role selection */
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 52, marginBottom: 16 }}>🏙️</div>
+                  <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 8 }}>
+                    Welcome{userName ? `, ${userName}` : ""}!
+                  </h2>
+                  <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.6, marginBottom: 28 }}>
+                    You now have access to Dubai's professional real estate intelligence platform. Tell us how you'll use it:
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
+                    {[
+                      { key: "agent", icon: "🤝", label: "Real Estate Agent", desc: "I help clients buy/sell Dubai properties" },
+                      { key: "investor", icon: "📐", label: "Property Investor", desc: "I'm investing in Dubai real estate" },
+                      { key: "brokerage", icon: "🏢", label: "Brokerage / Agency", desc: "I manage a team of agents" },
+                    ].map(r => (
+                      <button key={r.key} type="button" onClick={() => setSelectedRole(r.key)}
+                        style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 12, border: `1.5px solid ${selectedRole === r.key ? T.gold : T.border}`, background: selectedRole === r.key ? "rgba(212,168,67,.08)" : T.surfaceAlt, cursor: "pointer", textAlign: "left", transition: "all .2s", fontFamily: "'Outfit',sans-serif" }}>
+                        <span style={{ fontSize: 24 }}>{r.icon}</span>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: selectedRole === r.key ? T.gold : T.white }}>{r.label}</div>
+                          <div style={{ fontSize: 11, color: T.textMuted }}>{r.desc}</div>
+                        </div>
+                        {selectedRole === r.key && <span style={{ marginLeft: "auto", color: T.gold, fontSize: 16 }}>✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                  <button type="button" onClick={() => setOnboardingStep(1)} style={{ width: "100%", padding: "13px 0", borderRadius: 10, border: "none", background: `linear-gradient(135deg,${T.gold},${T.goldLight})`, color: T.bg, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                    Show Me Around →
+                  </button>
+                </div>
+              ) : isLastStep ? (
+                /* Final step: checklist */
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 52, marginBottom: 16 }}>🚀</div>
+                  <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 12 }}>You're Ready!</h2>
+                  <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.6, marginBottom: 24 }}>
+                    {userTier === "free" ? "You're on Free. Upgrade to Pro to unlock all 23 tools, full project data, and ROI calculators from AED 99/month." : "You have full Pro access. Here's your quick-start checklist:"}
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, textAlign: "left" }}>
+                    {["Browse projects in the Projects tab", "Star ☆ your favourite projects to watchlist", "Try the ROI Calculator or Mortgage tool", "Share a project via WhatsApp to a client"].map((t, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                        <div style={{ width: 20, height: 20, borderRadius: 6, border: `1.5px solid ${T.border}`, flexShrink: 0 }} />
+                        <span style={{ fontSize: 13, color: T.textSecondary }}>{t}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    {userTier === "free" && (
+                      <button type="button" onClick={() => { completeOnboarding(); setShowUpgrade(true); }} style={{ flex: 1, padding: "12px 0", borderRadius: 10, border: "none", background: `linear-gradient(135deg,${T.gold},${T.goldLight})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        Upgrade to Pro →
+                      </button>
+                    )}
+                    <button type="button" onClick={completeOnboarding} style={{ flex: 1, padding: "12px 0", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      {userTier === "free" ? "Explore Free First" : "Start Exploring →"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Feature steps */
+                <div>
+                  <div style={{ textAlign: "center", marginBottom: 24 }}>
+                    <div style={{ fontSize: 48, marginBottom: 12 }}>{currentStep.icon}</div>
+                    <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.white, marginBottom: 10 }}>{currentStep.title}</h2>
+                    <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7 }}>{currentStep.body}</p>
+                  </div>
+                  {currentStep.highlight && (
+                    <div style={{ padding: "10px 14px", background: T.goldGlow, borderRadius: 10, border: `1px solid ${T.border}`, marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 14 }}>💡</span>
+                      <span style={{ fontSize: 12, color: T.gold, fontWeight: 600 }}>{currentStep.highlight}</span>
+                    </div>
+                  )}
+                  <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                    <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "11px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>← Back</button>
+                    <button type="button" onClick={() => setOnboardingStep(s => s + 1)} style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "none", background: `linear-gradient(135deg,${T.gold},${T.goldLight})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>{currentStep.cta}</button>
+                  </div>
+                  <button type="button" onClick={completeOnboarding} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Skip tour</button>
+                </div>
+              )}
             </div>
           </div>
         );
       })()}
-
       {/* Upgrade Modal */}
       <UpgradeModal show={showUpgrade} onClose={() => setShowUpgrade(false)} />
     </div>
