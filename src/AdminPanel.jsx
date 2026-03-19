@@ -11194,6 +11194,244 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
   );
 }
 
+/* ─── FINANCIALS EDITOR SUB-COMPONENT ─── */
+function FinancialsEditor({ db, T, notify, adminUser, Section }) {
+  const [finRows, setFinRows] = React.useState(null);
+  const [finSaving, setFinSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    getDoc(doc(db, "tabData", "financials")).then(snap => {
+      if (snap.exists() && snap.data().rows) {
+        setFinRows(snap.data().rows);
+      } else {
+        setFinRows([
+          { year:"2020", revenue:14.9, grossProfit:4.8, ebitda:6.2, netProfit:2.7, propertySales:14, backlog:28, recurringRev:5.3, intlSales:0.6, mallRev:3.2, hotelRev:2.1, dividend:0.15, eps:0.24, gm:32.2, em:41.6, nm:14.1 },
+          { year:"2021", revenue:27.9, grossProfit:11.6, ebitda:8.5, netProfit:6.6, propertySales:23.9, backlog:32, recurringRev:5.8, intlSales:0.8, mallRev:3.5, hotelRev:2.3, dividend:0.25, eps:0.60, gm:41.6, em:30.5, nm:19.0 },
+          { year:"2022", revenue:24.9, grossProfit:12.6, ebitda:9.8, netProfit:8.1, propertySales:30.7, backlog:41.5, recurringRev:7.5, intlSales:1.2, mallRev:4.2, hotelRev:3.3, dividend:0.35, eps:0.77, gm:50.6, em:39.4, nm:27.3 },
+          { year:"2023", revenue:26.7, grossProfit:16.9, ebitda:16.0, netProfit:15.1, propertySales:40.3, backlog:71.8, recurringRev:8.6, intlSales:2.9, mallRev:5.8, hotelRev:2.8, dividend:0.50, eps:1.32, gm:63.3, em:59.9, nm:43.4 },
+          { year:"2024", revenue:35.5, grossProfit:20.4, ebitda:19.3, netProfit:18.9, propertySales:69.5, backlog:111.5, recurringRev:9.3, intlSales:4.1, mallRev:5.6, hotelRev:3.7, dividend:1.00, eps:1.53, gm:57.5, em:54.4, nm:38.0 },
+          { year:"2025", revenue:49.6, grossProfit:28.5, ebitda:25.6, netProfit:25.7, propertySales:80.4, backlog:155, recurringRev:10.5, intlSales:9.3, mallRev:6.3, hotelRev:4.2, dividend:1.00, eps:2.00, gm:57.5, em:51.6, nm:35.5 },
+        ]);
+      }
+    }).catch(() => {});
+  }, [db]);
+
+  const finFields = [
+    { key: "revenue", label: "Revenue (AED B)" },
+    { key: "grossProfit", label: "Gross Profit (AED B)" },
+    { key: "ebitda", label: "EBITDA (AED B)" },
+    { key: "netProfit", label: "Net Profit (AED B)" },
+    { key: "propertySales", label: "Property Sales (AED B)" },
+    { key: "backlog", label: "Revenue Backlog (AED B)" },
+    { key: "recurringRev", label: "Recurring Rev (AED B)" },
+    { key: "intlSales", label: "Intl Sales (AED B)" },
+    { key: "mallRev", label: "Mall Revenue (AED B)" },
+    { key: "hotelRev", label: "Hotel Revenue (AED B)" },
+    { key: "dividend", label: "Dividend/Share (AED)" },
+    { key: "eps", label: "EPS (AED)" },
+    { key: "gm", label: "Gross Margin %" },
+    { key: "em", label: "EBITDA Margin %" },
+    { key: "nm", label: "Net Margin %" },
+  ];
+
+  const saveFinancials = async () => {
+    setFinSaving(true);
+    try {
+      await setDoc(doc(db, "tabData", "financials"), { rows: finRows, updatedAt: new Date().toISOString(), updatedBy: adminUser?.email });
+      notify("Financials saved! Dashboard will update on next load.");
+    } catch(e) { notify("Save failed"); }
+    setFinSaving(false);
+  };
+
+  if (!finRows) return <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>Loading financials...</div>;
+
+  return (
+    <Section title="Financials Editor" sub="Update Emaar financial data — changes go live on dashboard immediately">
+      <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
+        💡 Edit figures below when Emaar releases new quarterly or annual results. All values in AED Billions unless noted.
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
+          <thead>
+            <tr style={{ borderBottom: `2px solid ${T.border}` }}>
+              <th style={{ padding: "10px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Metric</th>
+              {finRows.map(r => (
+                <th key={r.year} style={{ padding: "10px 12px", textAlign: "center", fontSize: 13, fontWeight: 700, color: r.year === "2025" ? T.gold : T.white }}>{r.year}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {finFields.map((field, fi) => (
+              <tr key={field.key} style={{ borderBottom: `1px solid ${T.border}`, background: fi % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)" }}>
+                <td style={{ padding: "8px 12px", fontSize: 12, color: T.textSecondary, fontWeight: 500, whiteSpace: "nowrap" }}>{field.label}</td>
+                {finRows.map((row, ri) => (
+                  <td key={ri} style={{ padding: "6px 8px", textAlign: "center" }}>
+                    <input type="number" step="0.01" value={row[field.key] ?? ""}
+                      onChange={e => { const updated = [...finRows]; updated[ri] = { ...updated[ri], [field.key]: parseFloat(e.target.value) || 0 }; setFinRows(updated); }}
+                      style={{ width: 80, padding: "6px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: ri === finRows.length - 1 ? T.gold : T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "center", outline: "none" }} />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16, gap: 10 }}>
+        <button type="button" onClick={saveFinancials} disabled={finSaving}
+          style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: finSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: finSaving ? 0.7 : 1 }}>
+          {finSaving ? "Saving..." : "Save Financials to Firestore"}
+        </button>
+      </div>
+    </Section>
+  );
+}
+
+/* ─── RISK EDITOR SUB-COMPONENT ─── */
+function RiskEditor({ db, T, notify, adminUser, Section }) {
+  const defaultRiskFactors = [
+    { factor: "Market Risk", score: 6, trend: "stable", desc: "Dubai RE market cyclicality and price correction risk", weight: 15 },
+    { factor: "Regulatory Risk", score: 8, trend: "improving", desc: "RERA oversight, DLD regulations, freehold laws", weight: 10 },
+    { factor: "Liquidity Risk", score: 5, trend: "stable", desc: "Ability to exit — time to sell, buyer depth", weight: 15 },
+    { factor: "Construction Risk", score: 7, trend: "stable", desc: "Developer delivery record, construction delays", weight: 15 },
+    { factor: "Interest Rate Risk", score: 5, trend: "improving", desc: "EIBOR sensitivity, mortgage affordability impact", weight: 10 },
+    { factor: "Currency Risk", score: 8, trend: "stable", desc: "AED-USD peg stability, forex exposure for expats", weight: 10 },
+    { factor: "Geopolitical Risk", score: 7, trend: "stable", desc: "Regional stability, GCC political environment", weight: 10 },
+    { factor: "Oversupply Risk", score: 5, trend: "worsening", desc: "Pipeline supply vs demand absorption capacity", weight: 10 },
+    { factor: "Legal/Title Risk", score: 9, trend: "stable", desc: "Title deed security, escrow protection, RERA escrow", weight: 5 },
+  ];
+  const [riskRows, setRiskRows] = React.useState(null);
+  const [riskSaving, setRiskSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    getDoc(doc(db, "tabData", "riskFactors")).then(snap => {
+      setRiskRows(snap.exists() && snap.data().rows ? snap.data().rows : defaultRiskFactors);
+    }).catch(() => setRiskRows(defaultRiskFactors));
+  }, [db]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const saveRisk = async () => {
+    setRiskSaving(true);
+    try {
+      await setDoc(doc(db, "tabData", "riskFactors"), { rows: riskRows, updatedAt: new Date().toISOString(), updatedBy: adminUser?.email });
+      notify("Risk data saved! Dashboard will update on next load.");
+    } catch(e) { notify("Save failed"); }
+    setRiskSaving(false);
+  };
+
+  if (!riskRows) return <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>Loading...</div>;
+
+  return (
+    <Section title="Risk Factor Editor" sub="Update the 9-factor risk matrix shown on the Risk tab">
+      <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.15)", marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
+        💡 Score is out of 10 (10 = lowest risk). Trend: improving / stable / worsening. Changes save to Firestore and update the Risk tab live.
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {riskRows.map((row, i) => (
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "1.5fr 80px 120px 80px 2fr", gap: 10, padding: "12px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, alignItems: "center" }}>
+            <input value={row.factor} onChange={e => { const u = [...riskRows]; u[i] = { ...u[i], factor: e.target.value }; setRiskRows(u); }}
+              style={{ width: "100%", background: "transparent", border: "none", color: T.white, fontSize: 13, fontWeight: 600, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+            <div style={{ textAlign: "center" }}>
+              <label style={{ fontSize: 9, color: T.textMuted, display: "block", marginBottom: 2, textTransform: "uppercase" }}>Score /10</label>
+              <input type="number" min="1" max="10" value={row.score} onChange={e => { const u = [...riskRows]; u[i] = { ...u[i], score: parseInt(e.target.value) || 0 }; setRiskRows(u); }}
+                style={{ width: "100%", padding: "6px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.gold, fontSize: 14, fontWeight: 700, textAlign: "center", fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 9, color: T.textMuted, display: "block", marginBottom: 2, textTransform: "uppercase" }}>Trend</label>
+              <select value={row.trend} onChange={e => { const u = [...riskRows]; u[i] = { ...u[i], trend: e.target.value }; setRiskRows(u); }}
+                style={{ width: "100%", padding: "6px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: row.trend === "improving" ? T.green : row.trend === "worsening" ? T.red : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
+                <option value="improving">↑ Improving</option>
+                <option value="stable">→ Stable</option>
+                <option value="worsening">↓ Worsening</option>
+              </select>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <label style={{ fontSize: 9, color: T.textMuted, display: "block", marginBottom: 2, textTransform: "uppercase" }}>Weight %</label>
+              <input type="number" min="1" max="100" value={row.weight} onChange={e => { const u = [...riskRows]; u[i] = { ...u[i], weight: parseInt(e.target.value) || 0 }; setRiskRows(u); }}
+                style={{ width: "100%", padding: "6px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 12, textAlign: "center", fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 9, color: T.textMuted, display: "block", marginBottom: 2, textTransform: "uppercase" }}>Description</label>
+              <input value={row.desc} onChange={e => { const u = [...riskRows]; u[i] = { ...u[i], desc: e.target.value }; setRiskRows(u); }}
+                style={{ width: "100%", padding: "6px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+        <button type="button" onClick={saveRisk} disabled={riskSaving}
+          style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: riskSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: riskSaving ? 0.7 : 1 }}>
+          {riskSaving ? "Saving..." : "Save Risk Data to Firestore"}
+        </button>
+      </div>
+    </Section>
+  );
+}
+
+/* ─── MARKET EDITOR SUB-COMPONENT ─── */
+function MarketEditor({ db, T, notify, adminUser, Section }) {
+  const defaultMarketData = [
+    { metric: "Avg Price/sqft", value: "AED 1,689", period: "Dec 2025", source: "REIDIN", change: "+12.88%", category: "Pricing" },
+    { metric: "Total Transactions", value: "226,000+", period: "FY 2025", source: "DLD", change: "+36%", category: "Volume" },
+    { metric: "Transaction Value", value: "AED 761B", period: "FY 2025", source: "DLD", change: "+27%", category: "Volume" },
+    { metric: "Off-Plan Share", value: "67%", period: "Q4 2025", source: "DXBinteract", change: "+8pp", category: "Market Mix" },
+    { metric: "Rental Yield (avg)", value: "6.2%", period: "Q4 2025", source: "Knight Frank", change: "+0.3pp", category: "Yields" },
+    { metric: "New Supply (units)", value: "45,000", period: "FY 2025", source: "ValuStrat", change: "+18%", category: "Supply" },
+    { metric: "Foreign Buyer Share", value: "48%", period: "FY 2025", source: "DLD", change: "+5pp", category: "Demand" },
+    { metric: "Mortgage LTV (max)", value: "80%", period: "Current", source: "UAE Central Bank", change: "Unchanged", category: "Finance" },
+  ];
+  const [mktRows, setMktRows] = React.useState(null);
+  const [mktSaving, setMktSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    getDoc(doc(db, "tabData", "marketData")).then(snap => {
+      setMktRows(snap.exists() && snap.data().rows ? snap.data().rows : defaultMarketData);
+    }).catch(() => setMktRows(defaultMarketData));
+  }, [db]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const saveMarket = async () => {
+    setMktSaving(true);
+    try {
+      await setDoc(doc(db, "tabData", "marketData"), { rows: mktRows, updatedAt: new Date().toISOString(), updatedBy: adminUser?.email });
+      notify("Market data saved! Dashboard will update on next load.");
+    } catch(e) { notify("Save failed"); }
+    setMktSaving(false);
+  };
+
+  if (!mktRows) return <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>Loading...</div>;
+
+  return (
+    <Section title="Market Data Editor" sub="Update market stats shown on the Market tab — saves to Firestore">
+      <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(59,130,246,0.05)", border: "1px solid rgba(59,130,246,0.15)", marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
+        💡 Update these figures when new DLD, REIDIN, or Knight Frank reports are released.
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr 1fr 40px", gap: 8, padding: "6px 10px" }}>
+          {["Metric", "Value", "Period", "Source", "Change %", "Category", ""].map(h => (
+            <div key={h} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{h}</div>
+          ))}
+        </div>
+        {mktRows.map((row, i) => (
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr 1fr 40px", gap: 8, padding: "8px 10px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, alignItems: "center" }}>
+            {["metric", "value", "period", "source", "change", "category"].map(key => (
+              <input key={key} value={row[key] || ""} onChange={e => { const u = [...mktRows]; u[i] = { ...u[i], [key]: e.target.value }; setMktRows(u); }}
+                style={{ width: "100%", padding: "7px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+            ))}
+            <button type="button" onClick={() => setMktRows(prev => prev.filter((_, j) => j !== i))}
+              style={{ width: 32, height: 32, borderRadius: 6, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: T.red, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 14 }}>
+        <button type="button" onClick={() => setMktRows(prev => [...prev, { metric: "", value: "", period: "", source: "", change: "", category: "" }])}
+          style={{ padding: "9px 18px", borderRadius: 8, border: `1px solid ${T.teal}`, background: "rgba(0,191,165,0.08)", color: T.teal, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>+ Add Row</button>
+        <button type="button" onClick={saveMarket} disabled={mktSaving}
+          style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: mktSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: mktSaving ? 0.7 : 1 }}>
+          {mktSaving ? "Saving..." : "Save Market Data to Firestore"}
+        </button>
+      </div>
+    </Section>
+  );
+}
+
 
 export default function AdminPanel() {
   const { lang, setLang, t: i18t, dir, langInfo } = useI18n();
@@ -18307,266 +18545,13 @@ export default function AdminPanel() {
               </div>}
 
               {/* ─── FINANCIALS EDITOR ─── */}
-              {dataSubTab === "financials" && (() => {
-                const [finRows, setFinRows] = React.useState(null);
-                const [finSaving, setFinSaving] = React.useState(false);
-                const [finLoaded, setFinLoaded] = React.useState(false);
-
-                React.useEffect(() => {
-                  if (finLoaded) return;
-                  setFinLoaded(true);
-                  getDoc(doc(db, "tabData", "financials")).then(snap => {
-                    if (snap.exists() && snap.data().rows) {
-                      setFinRows(snap.data().rows);
-                    } else {
-                      // Default from data.js structure
-                      setFinRows([
-                        { year:"2020", revenue:14.9, grossProfit:4.8, ebitda:6.2, netProfit:2.7, propertySales:14, backlog:28, recurringRev:5.3, intlSales:0.6, mallRev:3.2, hotelRev:2.1, dividend:0.15, eps:0.24, gm:32.2, em:41.6, nm:14.1 },
-                        { year:"2021", revenue:27.9, grossProfit:11.6, ebitda:8.5, netProfit:6.6, propertySales:23.9, backlog:32, recurringRev:5.8, intlSales:0.8, mallRev:3.5, hotelRev:2.3, dividend:0.25, eps:0.60, gm:41.6, em:30.5, nm:19.0 },
-                        { year:"2022", revenue:24.9, grossProfit:12.6, ebitda:9.8, netProfit:8.1, propertySales:30.7, backlog:41.5, recurringRev:7.5, intlSales:1.2, mallRev:4.2, hotelRev:3.3, dividend:0.35, eps:0.77, gm:50.6, em:39.4, nm:27.3 },
-                        { year:"2023", revenue:26.7, grossProfit:16.9, ebitda:16.0, netProfit:15.1, propertySales:40.3, backlog:71.8, recurringRev:8.6, intlSales:2.9, mallRev:5.8, hotelRev:2.8, dividend:0.50, eps:1.32, gm:63.3, em:59.9, nm:43.4 },
-                        { year:"2024", revenue:35.5, grossProfit:20.4, ebitda:19.3, netProfit:18.9, propertySales:69.5, backlog:111.5, recurringRev:9.3, intlSales:4.1, mallRev:5.6, hotelRev:3.7, dividend:1.00, eps:1.53, gm:57.5, em:54.4, nm:38.0 },
-                        { year:"2025", revenue:49.6, grossProfit:28.5, ebitda:25.6, netProfit:25.7, propertySales:80.4, backlog:155, recurringRev:10.5, intlSales:9.3, mallRev:6.3, hotelRev:4.2, dividend:1.00, eps:2.00, gm:57.5, em:51.6, nm:35.5 },
-                      ]);
-                    }
-                  }).catch(() => {});
-                }, [finLoaded]);
-
-                const finFields = [
-                  { key: "year", label: "Year", readOnly: true },
-                  { key: "revenue", label: "Revenue (AED B)" },
-                  { key: "grossProfit", label: "Gross Profit (AED B)" },
-                  { key: "ebitda", label: "EBITDA (AED B)" },
-                  { key: "netProfit", label: "Net Profit (AED B)" },
-                  { key: "propertySales", label: "Property Sales (AED B)" },
-                  { key: "backlog", label: "Revenue Backlog (AED B)" },
-                  { key: "recurringRev", label: "Recurring Rev (AED B)" },
-                  { key: "intlSales", label: "Intl Sales (AED B)" },
-                  { key: "mallRev", label: "Mall Revenue (AED B)" },
-                  { key: "hotelRev", label: "Hotel Revenue (AED B)" },
-                  { key: "dividend", label: "Dividend/Share (AED)" },
-                  { key: "eps", label: "EPS (AED)" },
-                  { key: "gm", label: "Gross Margin %" },
-                  { key: "em", label: "EBITDA Margin %" },
-                  { key: "nm", label: "Net Margin %" },
-                ];
-
-                const saveFinancials = async () => {
-                  setFinSaving(true);
-                  try {
-                    await setDoc(doc(db, "tabData", "financials"), { rows: finRows, updatedAt: new Date().toISOString(), updatedBy: adminUser?.email });
-                    notify("Financials saved! Dashboard will update on next load.");
-                  } catch(e) { notify("Save failed"); }
-                  setFinSaving(false);
-                };
-
-                if (!finRows) return <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>Loading financials...</div>;
-
-                return (
-                  <Section title="Financials Editor" sub="Update Emaar financial data — changes go live on dashboard immediately">
-                    <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
-                      💡 Edit figures below when Emaar releases new quarterly or annual results. All values in AED Billions unless noted. The Financials tab on the dashboard reads from Firestore first — save here to update it live.
-                    </div>
-                    <div style={{ overflowX: "auto" }}>
-                      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
-                        <thead>
-                          <tr style={{ borderBottom: `2px solid ${T.border}` }}>
-                            <th style={{ padding: "10px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Metric</th>
-                            {finRows.map(r => (
-                              <th key={r.year} style={{ padding: "10px 12px", textAlign: "center", fontSize: 13, fontWeight: 700, color: r.year === "2025" ? T.gold : T.white }}>{r.year}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {finFields.filter(f => f.key !== "year").map((field, fi) => (
-                            <tr key={field.key} style={{ borderBottom: `1px solid ${T.border}`, background: fi % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)" }}>
-                              <td style={{ padding: "8px 12px", fontSize: 12, color: T.textSecondary, fontWeight: 500, whiteSpace: "nowrap" }}>{field.label}</td>
-                              {finRows.map((row, ri) => (
-                                <td key={ri} style={{ padding: "6px 8px", textAlign: "center" }}>
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    value={row[field.key] ?? ""}
-                                    onChange={e => {
-                                      const updated = [...finRows];
-                                      updated[ri] = { ...updated[ri], [field.key]: parseFloat(e.target.value) || 0 };
-                                      setFinRows(updated);
-                                    }}
-                                    style={{ width: 80, padding: "6px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: ri === finRows.length - 1 ? T.gold : T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "center", outline: "none" }}
-                                  />
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16, gap: 10 }}>
-                      <button type="button" onClick={() => { setFinLoaded(false); }} style={{ padding: "10px 20px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Reset</button>
-                      <button type="button" onClick={saveFinancials} disabled={finSaving}
-                        style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: finSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: finSaving ? 0.7 : 1 }}>
-                        {finSaving ? "Saving..." : "Save Financials to Firestore"}
-                      </button>
-                    </div>
-                  </Section>
-                );
-              })()}
+              {dataSubTab === "financials" && <FinancialsEditor db={db} T={T} notify={notify} adminUser={adminUser} Section={Section} />}
 
               {/* ─── RISK EDITOR ─── */}
-              {dataSubTab === "risk" && (() => {
-                const defaultRiskFactors = [
-                  { factor: "Market Risk", score: 6, trend: "stable", desc: "Dubai RE market cyclicality and price correction risk", weight: 15 },
-                  { factor: "Regulatory Risk", score: 8, trend: "improving", desc: "RERA oversight, DLD regulations, freehold laws", weight: 10 },
-                  { factor: "Liquidity Risk", score: 5, trend: "stable", desc: "Ability to exit — time to sell, buyer depth", weight: 15 },
-                  { factor: "Construction Risk", score: 7, trend: "stable", desc: "Developer delivery record, construction delays", weight: 15 },
-                  { factor: "Interest Rate Risk", score: 5, trend: "improving", desc: "EIBOR sensitivity, mortgage affordability impact", weight: 10 },
-                  { factor: "Currency Risk", score: 8, trend: "stable", desc: "AED-USD peg stability, forex exposure for expats", weight: 10 },
-                  { factor: "Geopolitical Risk", score: 7, trend: "stable", desc: "Regional stability, GCC political environment", weight: 10 },
-                  { factor: "Oversupply Risk", score: 5, trend: "worsening", desc: "Pipeline supply vs demand absorption capacity", weight: 10 },
-                  { factor: "Legal/Title Risk", score: 9, trend: "stable", desc: "Title deed security, escrow protection, RERA escrow", weight: 5 },
-                ];
-                const [riskRows, setRiskRows] = React.useState(null);
-                const [riskSaving, setRiskSaving] = React.useState(false);
-                const [riskLoaded, setRiskLoaded] = React.useState(false);
-
-                React.useEffect(() => {
-                  if (riskLoaded) return;
-                  setRiskLoaded(true);
-                  getDoc(doc(db, "tabData", "riskFactors")).then(snap => {
-                    setRiskRows(snap.exists() && snap.data().rows ? snap.data().rows : defaultRiskFactors);
-                  }).catch(() => setRiskRows(defaultRiskFactors));
-                }, [riskLoaded]);
-
-                const saveRisk = async () => {
-                  setRiskSaving(true);
-                  try {
-                    await setDoc(doc(db, "tabData", "riskFactors"), { rows: riskRows, updatedAt: new Date().toISOString(), updatedBy: adminUser?.email });
-                    notify("Risk data saved! Dashboard will update on next load.");
-                  } catch(e) { notify("Save failed"); }
-                  setRiskSaving(false);
-                };
-
-                if (!riskRows) return <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>Loading...</div>;
-
-                return (
-                  <Section title="Risk Factor Editor" sub="Update the 9-factor risk matrix shown on the Risk tab">
-                    <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.15)", marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
-                      💡 Score is out of 10 (10 = lowest risk). Trend: improving / stable / worsening. Changes save to Firestore and update the Risk tab live.
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                      {riskRows.map((row, i) => (
-                        <div key={i} style={{ display: "grid", gridTemplateColumns: "1.5fr 80px 120px 80px 2fr", gap: 10, padding: "12px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, alignItems: "center" }}>
-                          <div>
-                            <input value={row.factor} onChange={e => { const u = [...riskRows]; u[i] = { ...u[i], factor: e.target.value }; setRiskRows(u); }}
-                              style={{ width: "100%", background: "transparent", border: "none", color: T.white, fontSize: 13, fontWeight: 600, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                          </div>
-                          <div style={{ textAlign: "center" }}>
-                            <label style={{ fontSize: 9, color: T.textMuted, display: "block", marginBottom: 2, textTransform: "uppercase" }}>Score /10</label>
-                            <input type="number" min="1" max="10" value={row.score} onChange={e => { const u = [...riskRows]; u[i] = { ...u[i], score: parseInt(e.target.value) || 0 }; setRiskRows(u); }}
-                              style={{ width: "100%", padding: "6px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.gold, fontSize: 14, fontWeight: 700, textAlign: "center", fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                          </div>
-                          <div>
-                            <label style={{ fontSize: 9, color: T.textMuted, display: "block", marginBottom: 2, textTransform: "uppercase" }}>Trend</label>
-                            <select value={row.trend} onChange={e => { const u = [...riskRows]; u[i] = { ...u[i], trend: e.target.value }; setRiskRows(u); }}
-                              style={{ width: "100%", padding: "6px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: row.trend === "improving" ? T.green : row.trend === "worsening" ? T.red : T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
-                              <option value="improving">↑ Improving</option>
-                              <option value="stable">→ Stable</option>
-                              <option value="worsening">↓ Worsening</option>
-                            </select>
-                          </div>
-                          <div style={{ textAlign: "center" }}>
-                            <label style={{ fontSize: 9, color: T.textMuted, display: "block", marginBottom: 2, textTransform: "uppercase" }}>Weight %</label>
-                            <input type="number" min="1" max="100" value={row.weight} onChange={e => { const u = [...riskRows]; u[i] = { ...u[i], weight: parseInt(e.target.value) || 0 }; setRiskRows(u); }}
-                              style={{ width: "100%", padding: "6px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 12, textAlign: "center", fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                          </div>
-                          <div>
-                            <label style={{ fontSize: 9, color: T.textMuted, display: "block", marginBottom: 2, textTransform: "uppercase" }}>Description</label>
-                            <input value={row.desc} onChange={e => { const u = [...riskRows]; u[i] = { ...u[i], desc: e.target.value }; setRiskRows(u); }}
-                              style={{ width: "100%", padding: "6px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
-                      <button type="button" onClick={saveRisk} disabled={riskSaving}
-                        style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: riskSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: riskSaving ? 0.7 : 1 }}>
-                        {riskSaving ? "Saving..." : "Save Risk Data to Firestore"}
-                      </button>
-                    </div>
-                  </Section>
-                );
-              })()}
+              {dataSubTab === "risk" && <RiskEditor db={db} T={T} notify={notify} adminUser={adminUser} Section={Section} />}
 
               {/* ─── MARKET EDITOR ─── */}
-              {dataSubTab === "market" && (() => {
-                const defaultMarketData = [
-                  { metric: "Avg Price/sqft", value: "AED 1,689", period: "Dec 2025", source: "REIDIN", change: "+12.88%", category: "Pricing" },
-                  { metric: "Total Transactions", value: "226,000+", period: "FY 2025", source: "DLD", change: "+36%", category: "Volume" },
-                  { metric: "Transaction Value", value: "AED 761B", period: "FY 2025", source: "DLD", change: "+27%", category: "Volume" },
-                  { metric: "Off-Plan Share", value: "67%", period: "Q4 2025", source: "DXBinteract", change: "+8pp", category: "Market Mix" },
-                  { metric: "Rental Yield (avg)", value: "6.2%", period: "Q4 2025", source: "Knight Frank", change: "+0.3pp", category: "Yields" },
-                  { metric: "New Supply (units)", value: "45,000", period: "FY 2025", source: "ValuStrat", change: "+18%", category: "Supply" },
-                  { metric: "Foreign Buyer Share", value: "48%", period: "FY 2025", source: "DLD", change: "+5pp", category: "Demand" },
-                  { metric: "Mortgage LTV (max)", value: "80%", period: "Current", source: "UAE Central Bank", change: "Unchanged", category: "Finance" },
-                ];
-                const [mktRows, setMktRows] = React.useState(null);
-                const [mktSaving, setMktSaving] = React.useState(false);
-                const [mktLoaded, setMktLoaded] = React.useState(false);
-
-                React.useEffect(() => {
-                  if (mktLoaded) return;
-                  setMktLoaded(true);
-                  getDoc(doc(db, "tabData", "marketData")).then(snap => {
-                    setMktRows(snap.exists() && snap.data().rows ? snap.data().rows : defaultMarketData);
-                  }).catch(() => setMktRows(defaultMarketData));
-                }, [mktLoaded]);
-
-                const saveMarket = async () => {
-                  setMktSaving(true);
-                  try {
-                    await setDoc(doc(db, "tabData", "marketData"), { rows: mktRows, updatedAt: new Date().toISOString(), updatedBy: adminUser?.email });
-                    notify("Market data saved! Dashboard will update on next load.");
-                  } catch(e) { notify("Save failed"); }
-                  setMktSaving(false);
-                };
-
-                const addRow = () => setMktRows(prev => [...prev, { metric: "", value: "", period: "", source: "", change: "", category: "" }]);
-
-                if (!mktRows) return <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>Loading...</div>;
-
-                return (
-                  <Section title="Market Data Editor" sub="Update market stats shown on the Market tab — saves to Firestore">
-                    <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(59,130,246,0.05)", border: "1px solid rgba(59,130,246,0.15)", marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
-                      💡 Update these figures when new DLD, REIDIN, or Knight Frank reports are released. Each row becomes a stat card on the Market tab.
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr 1fr 40px", gap: 8, padding: "6px 10px" }}>
-                        {["Metric", "Value", "Period", "Source", "Change %", "Category", ""].map(h => (
-                          <div key={h} style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{h}</div>
-                        ))}
-                      </div>
-                      {mktRows.map((row, i) => (
-                        <div key={i} style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr 1fr 40px", gap: 8, padding: "8px 10px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, alignItems: "center" }}>
-                          {["metric", "value", "period", "source", "change", "category"].map(key => (
-                            <input key={key} value={row[key] || ""} onChange={e => { const u = [...mktRows]; u[i] = { ...u[i], [key]: e.target.value }; setMktRows(u); }}
-                              style={{ width: "100%", padding: "7px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                          ))}
-                          <button type="button" onClick={() => setMktRows(prev => prev.filter((_, j) => j !== i))}
-                            style={{ width: 32, height: 32, borderRadius: 6, border: `1px solid rgba(239,68,68,0.3)`, background: "rgba(239,68,68,0.08)", color: T.red, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 14 }}>
-                      <button type="button" onClick={addRow}
-                        style={{ padding: "9px 18px", borderRadius: 8, border: `1px solid ${T.teal}`, background: "rgba(0,191,165,0.08)", color: T.teal, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>+ Add Row</button>
-                      <button type="button" onClick={saveMarket} disabled={mktSaving}
-                        style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: mktSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: mktSaving ? 0.7 : 1 }}>
-                        {mktSaving ? "Saving..." : "Save Market Data to Firestore"}
-                      </button>
-                    </div>
-                  </Section>
-                );
-              })()}
+              {dataSubTab === "market" && <MarketEditor db={db} T={T} notify={notify} adminUser={adminUser} Section={Section} />}
 
             </>
           )}
