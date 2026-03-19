@@ -1801,6 +1801,8 @@ export default function EmaarDashboardV2() {
 
         // Base IDs from data.js
         const baseIds = new Set(emaarProjects.map(p => String(p.id)));
+        // Also deduplicate by name to prevent Launch Radar adds duplicating existing projects
+        const baseNames = new Set(emaarProjects.map(p => p.name?.toLowerCase().trim()).filter(Boolean));
 
         // Projects from Firestore 'projects' collection (migrated emaar_1..48 + admin-added)
         const firestoreProjects = [];
@@ -1808,6 +1810,8 @@ export default function EmaarDashboardV2() {
           const data = { ...d.data(), id: d.id };
           // Skip migrated Emaar projects (already in data.js as base) unless they have extra fields
           if (data.developerId === "emaar" && baseIds.has(String(data.id?.toString().replace("emaar_", "")))) return;
+          // Skip if same name as existing data.js project (prevents Launch Radar duplicates)
+          if (data.developerId === "emaar" && baseNames.has((data.name || "").toLowerCase().trim())) return;
           // Include non-Emaar developers and admin-added projects
           if (!baseIds.has(String(data.id))) firestoreProjects.push(data);
         });
@@ -1972,7 +1976,7 @@ export default function EmaarDashboardV2() {
   // Use merged Firestore+static data if available, otherwise pure static fallback
   const activeProjects = [...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }), ...extraProjects]
     .filter(p => {
-      if (selectedDeveloper === "emaar") return (p.developer || "Emaar Properties") === "Emaar Properties";
+      if (selectedDeveloper === "emaar") return (p.developer || "Emaar Properties") === "Emaar Properties" || p.developerId === "emaar";
       return (p.developer || "").toLowerCase().includes(selectedDeveloper.toLowerCase()) ||
              (p.developerId || "") === selectedDeveloper;
     });
