@@ -6796,7 +6796,7 @@ export default function EmaarDashboardV2() {
 
               {/* Project Tools */}
               <div style={{ display: "flex", gap: 8 }}>
-                <a href={`/project/${selectedProject_.id}`}
+                <a href={projectUrl(selectedProject_)}
                   style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.18), rgba(212,168,67,0.08))", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 12, color: T.gold, fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.2 }}
                   onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,168,67,0.28), rgba(212,168,67,0.15))"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(212,168,67,0.2)"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,168,67,0.18), rgba(212,168,67,0.08))"; e.currentTarget.style.boxShadow = "none"; }}>

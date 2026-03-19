@@ -579,7 +579,7 @@ export default function ProjectDetail() {
                   .filter(p => p.community === project.community && p.id !== project.id)
                   .slice(0, 5)
                   .map(p => (
-                    <Link key={p.id} to={`/project/${p.id}`}
+                    <Link key={p.id} to={`/project/${p.docId || p.id}`}
                       style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 8px", borderRadius: 8, textDecoration: "none", transition: "background 0.15s" }}
                       onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
