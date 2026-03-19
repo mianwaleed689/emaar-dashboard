@@ -152,7 +152,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
     { q: "Is there a free trial?", a: "Yes — every new account gets a 7-day Pro trial automatically. No credit card needed to start." },
     { q: "What data sources do you use?", a: "Dubai Land Department (DLD), developer annual reports, DXBinteract, BetterHomes, Bayut, Engel & Völkers, ValuStrat, and Knight Frank." },
     { q: "How often is data updated?", a: "Financial data is updated within 24 hours of official developer releases. Project prices and handover dates are manually verified monthly." },
-    { q: "Which developers are currently covered?", a: "Phase 1 (live now) covers 48 active projects across 11 Dubai communities. DAMAC, Sobha, Nakheel, ALDAR, and more are coming in Q3 2026." },
+    { q: "Which developers are currently covered?", a: "Phase 1 (live now) covers 48 active projects across 11 Dubai communities. DAMAC, Sobha, Nakheel, Binghatti, and more are coming in Q3 2026." },
     { q: "What's included in the Enterprise plan?", a: "Everything in Pro plus multi-user team accounts, PDF report generation (coming Q3 2026), API access (coming Q3 2026), custom branded reports, and a dedicated account manager. Contact us to discuss." },
     { q: "Can I cancel anytime?", a: "Yes. No contracts, no cancellation fees. Cancel anytime from your account settings and you retain access until the end of your billing period." },
     { q: "Is the data accurate?", a: "All data is sourced from official reports and cross-referenced across multiple sources. We display the source for every data point. This is informational data — always verify before transacting." },
@@ -548,7 +548,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
             {[
               { phase: "Phase 1", status: "LIVE NOW", color: T.green, title: "Dubai — First Developer", desc: "48 projects across 11 communities — full financials, yields, risk, competitor analysis, and 23 professional tools.", bg: "rgba(16,185,129,0.05)" },
-              { phase: "Phase 2", status: "Q3 2026", color: T.gold, title: "Dubai — Top 10 Developers", desc: "DAMAC, Sobha, Meraas, ALDAR, Binghatti, Nakheel, Azizi, Tiger, Danube — all in one place.", bg: T.goldMuted },
+              { phase: "Phase 2", status: "Q3 2026", color: T.gold, title: "Dubai — Top 10 Developers", desc: "DAMAC, Sobha, Meraas, Nakheel, Binghatti, Azizi, Tiger, Danube — all in one place.", bg: T.goldMuted },
               { phase: "Phase 3", status: "2027", color: T.blue, title: "Full GCC Market", desc: "All 228+ Dubai developers, Abu Dhabi, Saudi Arabia — every community, every transaction, live DLD data feeds.", bg: "rgba(59,130,246,0.05)" },
             ].map((item, i) => (
               <div key={i} style={{ background: item.bg, borderRadius: 16, padding: 28, border: `1px solid rgba(212,168,67,0.1)` }}>
