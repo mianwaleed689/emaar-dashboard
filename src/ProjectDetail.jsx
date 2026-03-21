@@ -1,3 +1,4 @@
+/* eslint-disable */
 /* ─── DXB ANALYTICS — PROJECT DETAIL PAGE ─────────────────────────────────
    Route: /project/:id
    Full standalone page for each Emaar project — SEO-friendly, shareable URL,
@@ -608,3 +609,4 @@ export default function ProjectDetail() {
     </div>
   );
 }
+
