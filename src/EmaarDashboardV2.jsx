@@ -1741,19 +1741,13 @@ export default function EmaarDashboardV2() {
   // For Emaar: base 48 + any radar-added projects NOT already in the 48 (new launches)
   // For other developers: only Firestore projects matching that developer
   const emaarBaseNames = new Set(emaarProjects.map(p => (p.name || "").toLowerCase().trim()));
-  const activeProjects = selectedDeveloper === "emaar"
-    ? [
-        ...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }),
-        // New Emaar launches added via radar that aren't in the curated 48
-        ...extraProjects.filter(p =>
-          (p.developerId === "emaar" || (p.developer || "").toLowerCase().includes("emaar")) &&
-          !emaarBaseNames.has((p.name || "").toLowerCase().trim())
-        )
-      ]
-    : extraProjects.filter(p =>
-        (p.developerId || "") === selectedDeveloper ||
-        (p.developer || "").toLowerCase().includes(selectedDeveloper.toLowerCase())
-      );
+  const activeProjects = [
+    // Always include all 48 curated Emaar projects with any live overrides
+    ...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }),
+    // Include ALL extra projects from Firestore (radar + other developers)
+    // Skip any that duplicate the 48 Emaar base projects by name
+    ...extraProjects.filter(p => !emaarBaseNames.has((p.name || "").toLowerCase().trim()))
+  ];
 
   // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
   const getUnitEntries = (units) => {
