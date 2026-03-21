@@ -1610,6 +1610,12 @@ export default function EmaarDashboardV2() {
   const [liveMortgageRates, setLiveMortgageRates] = useState([]);
   const [liveNeighbourhoods, setLiveNeighbourhoods] = useState([]);
   const [liveMarketData, setLiveMarketData] = useState([]);
+  const [liveFinancials, setLiveFinancials] = useState([]);
+  const [liveRisk, setLiveRisk] = useState([]);
+  const [liveBayutData, setLiveBayutData] = useState({});
+  const [lastDataSync, setLastDataSync] = useState(null);
+  const [allDevelopers, setAllDevelopers] = useState([]);
+  const [selectedDeveloper, setSelectedDeveloper] = useState("emaar");
   const [emaarStockPrice, setEmaarStockPrice] = useState(null);
   const [tabSettings, setTabSettings] = useState({});
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
