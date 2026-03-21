@@ -10,7 +10,8 @@
     },
     {
       "path": "/api/cron-sync-market",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 6 * * *"
     }
   ]
 }
+
