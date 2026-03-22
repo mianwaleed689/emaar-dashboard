@@ -20083,6 +20083,26 @@ export default function AdminPanel() {
 
             const sources = [...new Set(leads.map(l => l.source).filter(Boolean))];
 
+            // ── Dubai nationalities ──────────────────────────────────────
+            const DUBAI_NATIONALITIES = [
+              "Indian", "Pakistani", "British", "Russian", "Chinese",
+              "Filipino", "Bangladeshi", "Egyptian", "Emirati", "Saudi Arabian",
+              "German", "French", "Italian", "Canadian", "Australian",
+              "American", "Lebanese", "Jordanian", "Iranian", "Ukrainian",
+              "Kazakhstani", "Nigerian", "South African", "Turkish", "Dutch",
+              "Swedish", "Swiss", "Spanish", "Brazilian", "Colombian",
+              "Other"
+            ];
+
+            // ── Duplicate detection ───────────────────────────────────────
+            const getDuplicates = (lead) => {
+              if (!lead.email && !lead.phone) return [];
+              return leads.filter(l => l.id !== lead.id && (
+                (lead.email && l.email && l.email.toLowerCase() === lead.email.toLowerCase()) ||
+                (lead.phone && l.phone && l.phone.replace(/\D/g,"") === lead.phone.replace(/\D/g,"") && lead.phone.length > 5)
+              ));
+            };
+
             // ── Add lead ──────────────────────────────────────────────────
             const addLead = async () => {
               if (!addLeadForm.name && !addLeadForm.email) { notify("Name or email required"); return; }
@@ -20530,7 +20550,6 @@ export default function AdminPanel() {
                           { key: "name", label: "Full Name *", placeholder: "John Smith", full: true },
                           { key: "email", label: "Email", placeholder: "john@example.com", type: "email" },
                           { key: "phone", label: "Phone / WhatsApp", placeholder: "+971 50 123 4567" },
-                          { key: "nationality", label: "Nationality", placeholder: "e.g. British, Indian, Russian" },
                           { key: "budget", label: "Budget (AED)", placeholder: "e.g. 2000000", type: "number" },
                           { key: "project", label: "Interested Project", placeholder: "e.g. The Valley" },
                         ].map(f => (
@@ -20540,6 +20559,25 @@ export default function AdminPanel() {
                               style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
                           </div>
                         ))}
+                        {/* Nationality dropdown */}
+                        <div>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Nationality</label>
+                          <select value={addLeadForm.nationality || ""} onChange={e => setAddLeadForm(prev => ({ ...prev, nationality: e.target.value }))}
+                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: addLeadForm.nationality ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                            <option value="">Select nationality...</option>
+                            {DUBAI_NATIONALITIES.map(n => <option key={n} value={n}>{n}</option>)}
+                          </select>
+                        </div>
+                        {/* Duplicate email warning */}
+                        {addLeadForm.email && leads.some(l => l.email && l.email.toLowerCase() === addLeadForm.email.toLowerCase()) && (
+                          <div style={{ gridColumn: "1/-1", padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontSize: 14 }}>⚠️</span>
+                            <div>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B" }}>Duplicate Email Detected</div>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>A lead with this email already exists. Check for duplicates before saving.</div>
+                            </div>
+                          </div>
+                        )}
                         <div>
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Source</label>
                           <select value={addLeadForm.source} onChange={e => setAddLeadForm(prev => ({ ...prev, source: e.target.value }))} style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
@@ -20690,6 +20728,58 @@ export default function AdminPanel() {
                                 </div>
                               ))}
                             </div>
+                            {/* Nationality select in drawer */}
+                            <div style={{ marginBottom: 12 }}>
+                              <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Nationality</label>
+                              <select value={leadDrawer.nationality || ""}
+                                onChange={e => setLeadDrawer(prev => ({ ...prev, nationality: e.target.value }))}
+                                onBlur={async e => {
+                                  try {
+                                    const activity = [...(leadDrawer.activity || []), { type: "edit", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Nationality updated" }];
+                                    await setDoc(doc(db, "leads", leadDrawer.id), { nationality: e.target.value, activity, updatedAt: new Date().toISOString() }, { merge: true });
+                                    notify("Nationality saved");
+                                    fetchLeads();
+                                  } catch { notify("Error saving"); }
+                                }}
+                                style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: leadDrawer.nationality ? T.white : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
+                                <option value="">Select nationality...</option>
+                                {DUBAI_NATIONALITIES.map(n => <option key={n} value={n}>{n}</option>)}
+                              </select>
+                            </div>
+
+                            {/* Duplicate warning in drawer */}
+                            {(() => {
+                              const dupes = getDuplicates(leadDrawer);
+                              if (dupes.length === 0) return null;
+                              return (
+                                <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)" }}>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B", marginBottom: 4 }}>⚠️ {dupes.length} Duplicate{dupes.length > 1 ? "s" : ""} Found</div>
+                                  <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6 }}>Same email or phone exists in other leads:</div>
+                                  {dupes.slice(0, 3).map((d, i) => (
+                                    <div key={i} style={{ fontSize: 10, color: T.textSecondary, marginBottom: 2 }}>
+                                      • {d.name || d.email} — {d.status || "New"} — {d.project || "No project"} — Created {d.createdAt ? new Date(d.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short" }) : "—"}
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            })()}
+
+                            {/* Quick complete prompt */}
+                            {(() => {
+                              const missing = [];
+                              if (!leadDrawer.phone) missing.push("Phone");
+                              if (!leadDrawer.nationality) missing.push("Nationality");
+                              if (!leadDrawer.budget) missing.push("Budget");
+                              if (!leadDrawer.followUpDate) missing.push("Follow-up date");
+                              if (missing.length === 0) return null;
+                              return (
+                                <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)" }}>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: T.blue, marginBottom: 4 }}>📋 Complete This Lead</div>
+                                  <div style={{ fontSize: 10, color: T.textMuted }}>Missing: {missing.join(", ")} — filling these increases the lead score.</div>
+                                </div>
+                              );
+                            })()}
+
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
                               {[
                                 { label: "Created", value: leadDrawer.createdAt ? new Date(leadDrawer.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", year: "numeric" }) : "-" },
