@@ -16868,6 +16868,103 @@ export default function AdminPanel() {
                       );
                     })()}
 
+                    {/* ══ SECTION 11 — COHORT RETENTION HEATMAP (ChartMogul-level) ══ */}
+                    {(() => {
+                      // Build cohort retention from real user data
+                      // Each cohort = users who signed up in that month
+                      // Retention = % still active (paid) in subsequent months
+                      const months = [];
+                      for (let m = 5; m >= 0; m--) {
+                        const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+                        const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+                        const label = d.toLocaleDateString("en-AE", { month: "short", year: "2-digit" });
+                        // Users who signed up this month
+                        const cohortUsers = users.filter(u => {
+                          const created = new Date(u.createdAt || 0);
+                          return created >= d && created <= end;
+                        });
+                        // For each subsequent month, check how many are still paid
+                        const retention = [100]; // Month 0 = 100%
+                        for (let r = 1; r <= m; r++) {
+                          const checkDate = new Date(d.getFullYear(), d.getMonth() + r, 1);
+                          const stillActive = cohortUsers.filter(u =>
+                            ["pro", "pro_trial", "enterprise"].includes(u.tier) ||
+                            (u.createdAt && new Date(u.createdAt) <= checkDate)
+                          ).length;
+                          const pct = cohortUsers.length > 0 ? Math.round((stillActive / cohortUsers.length) * 100) : 0;
+                          retention.push(pct);
+                        }
+                        months.push({ label, size: cohortUsers.length, retention });
+                      }
+
+                      const getRetColor = (pct) => {
+                        if (pct === null) return T.surfaceAlt;
+                        if (pct >= 80) return "rgba(16,185,129,0.7)";
+                        if (pct >= 60) return "rgba(16,185,129,0.4)";
+                        if (pct >= 40) return "rgba(212,168,67,0.5)";
+                        if (pct >= 20) return "rgba(212,168,67,0.25)";
+                        return "rgba(239,68,68,0.2)";
+                      };
+
+                      return (
+                        <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px", marginBottom: 20 }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Cohort Retention Heatmap</div>
+                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Monthly cohorts — % of users still active each month after signup</div>
+                            </div>
+                            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                              {[["80%+", "rgba(16,185,129,0.7)"], ["60%+", "rgba(16,185,129,0.4)"], ["40%+", "rgba(212,168,67,0.5)"], ["20%+", "rgba(212,168,67,0.25)"], ["<20%", "rgba(239,68,68,0.2)"]].map(([label, color]) => (
+                                <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                  <div style={{ width: 12, height: 12, borderRadius: 3, background: color }} />
+                                  <span style={{ fontSize: 9, color: T.textMuted }}>{label}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Heatmap grid */}
+                          <div style={{ overflowX: "auto" }}>
+                            <table style={{ borderCollapse: "collapse", width: "100%" }}>
+                              <thead>
+                                <tr>
+                                  <th style={{ padding: "6px 12px", textAlign: "left", fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", whiteSpace: "nowrap" }}>Cohort</th>
+                                  <th style={{ padding: "6px 8px", textAlign: "center", fontSize: 10, color: T.textMuted, fontWeight: 600, whiteSpace: "nowrap" }}>Users</th>
+                                  {["Month 0", "Month 1", "Month 2", "Month 3", "Month 4", "Month 5"].map((m, i) => (
+                                    <th key={i} style={{ padding: "6px 8px", textAlign: "center", fontSize: 10, color: T.textMuted, fontWeight: 600, whiteSpace: "nowrap" }}>{m}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {months.map((cohort, ci) => (
+                                  <tr key={ci}>
+                                    <td style={{ padding: "6px 12px", fontSize: 11, color: T.textSecondary, fontWeight: 600, whiteSpace: "nowrap" }}>{cohort.label}</td>
+                                    <td style={{ padding: "6px 8px", textAlign: "center", fontSize: 11, color: T.textMuted }}>{cohort.size}</td>
+                                    {[...Array(6)].map((_, mi) => {
+                                      const pct = cohort.retention[mi] ?? null;
+                                      return (
+                                        <td key={mi} style={{ padding: "4px" }}>
+                                          <div style={{ width: "100%", minWidth: 52, height: 32, borderRadius: 6, background: pct !== null ? getRetColor(pct) : T.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", cursor: pct !== null ? "pointer" : "default" }}
+                                            onClick={() => pct !== null && setCohortDrilldown({ cohortLabel: cohort.label, weekNum: mi, users: users.filter(u => { const d2 = new Date(now.getFullYear(), now.getMonth() - (5-ci), 1); const end2 = new Date(d2.getFullYear(), d2.getMonth()+1, 0, 23, 59, 59); return new Date(u.createdAt||0) >= d2 && new Date(u.createdAt||0) <= end2; }) })}>
+                                            <span style={{ fontSize: 11, fontWeight: 700, color: pct !== null ? T.white : T.border }}>
+                                              {pct !== null ? pct + "%" : "—"}
+                                            </span>
+                                          </div>
+                                        </td>
+                                      );
+                                    })}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                          <div style={{ marginTop: 12, fontSize: 10, color: T.textMuted }}>
+                            Click any cell to see which users were retained in that cohort period. Benchmark: world-class SaaS targets 40%+ Month 3 retention.
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                   </>
                 );
               })()}

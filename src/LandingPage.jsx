@@ -263,46 +263,90 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                 <div style={{ flex: 1 }} />
                 <div style={{ fontSize: 10, color: T.textMuted }}>emaar-dashboard.vercel.app</div>
               </div>
-              {/* Mockup content */}
-              <div style={{ display: "flex", height: 380, background: T.bg }}>
+              {/* Mockup content — real dashboard preview */}
+              <div style={{ display: "flex", height: 420, background: T.bg }}>
                 {/* Sidebar */}
-                <div className="mockup-sidebar">
-                  <div style={{ padding: "8px 16px 12px", fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1 }}>DEVELOPER</div>
-                  <div style={{ padding: "6px 12px 12px" }}>
-                    <div style={{ padding: "7px 10px", background: "rgba(212,168,67,.1)", borderRadius: 8, fontSize: 11, fontWeight: 700, color: T.gold }}>Emaar Properties</div>
+                <div className="mockup-sidebar" style={{ width: 160 }}>
+                  <div style={{ padding: "10px 12px 6px", fontSize: 8, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>Developer</div>
+                  <div style={{ padding: "4px 8px 10px" }}>
+                    <div style={{ padding: "6px 8px", background: "rgba(212,168,67,.12)", borderRadius: 6, fontSize: 10, fontWeight: 700, color: T.gold, display: "flex", alignItems: "center", gap: 5 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, display: "inline-block" }} />
+                      Emaar Properties
+                    </div>
                   </div>
-                  <div style={{ padding: "0 0 4px", fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1, padding: "4px 16px 8px" }}>TABS</div>
-                  {["Overview", "Financials", "Projects", "Yields", "Risk", "Map"].map((t, i) => (
-                    <div key={t} className={`mockup-tab${i === 0 ? " active" : ""}`}>{t}</div>
+                  <div style={{ padding: "4px 12px 6px", fontSize: 8, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>Intelligence</div>
+                  {[
+                    { t: "Overview", active: true },
+                    { t: "Financials", active: false },
+                    { t: "Projects", active: false },
+                    { t: "Yields", active: false },
+                    { t: "Risk", active: false },
+                    { t: "Map", active: false },
+                    { t: "Portfolio", active: false },
+                    { t: "Mortgage", active: false },
+                  ].map(({ t, active }, i) => (
+                    <div key={t} style={{ padding: "7px 12px", fontSize: 10, color: active ? T.gold : T.textMuted, background: active ? "rgba(212,168,67,.08)" : "transparent", borderRight: active ? `2px solid ${T.gold}` : "none", display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 4, height: 4, borderRadius: "50%", background: active ? T.gold : "transparent", display: "inline-block" }} />
+                      {t}
+                    </div>
                   ))}
                 </div>
                 {/* Main content */}
-                <div style={{ flex: 1, padding: 16, overflowY: "hidden" }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, marginBottom: 12, textTransform: "uppercase" }}>Key Performance · FY 2025</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+                <div style={{ flex: 1, padding: "12px 14px", overflowY: "hidden" }}>
+                  {/* Top bar */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, paddingBottom: 8, borderBottom: "1px solid rgba(212,168,67,0.1)" }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 0.8, textTransform: "uppercase" }}>Overview · FY 2025</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, display: "inline-block" }} />
+                      <span style={{ fontSize: 9, color: T.green, fontWeight: 600 }}>LIVE</span>
+                      <span style={{ fontSize: 9, color: T.textMuted, marginLeft: 6 }}>EMAAR.DU AED 15.40 ▲0.8%</span>
+                    </div>
+                  </div>
+                  {/* KPI grid */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 10 }}>
                     {[
-                      { l: "Property Sales", v: "AED 80.4B", c: T.gold },
-                      { l: "Net Profit", v: "AED 25.7B", c: T.green },
-                      { l: "Revenue Backlog", v: "AED 155B", c: T.teal },
-                      { l: "Active Projects", v: "48", c: T.blue },
+                      { l: "Property Sales", v: "AED 80.4B", c: T.gold, trend: "+16%" },
+                      { l: "Net Profit", v: "AED 25.7B", c: T.green, trend: "+36%" },
+                      { l: "Revenue Backlog", v: "AED 155B", c: T.teal, trend: "+39%" },
+                      { l: "Active Projects", v: "48", c: T.blue, trend: "11 communities" },
+                      { l: "Gross Margin", v: "57.5%", c: T.purple, trend: "Industry leading" },
+                      { l: "Dividend Yield", v: "7.04%", c: T.orange, trend: "AED 1.00/share" },
                     ].map((k, i) => (
-                      <div key={i} className="mockup-kpi">
-                        <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4 }}>{k.l}</div>
-                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 900, color: k.c }}>{k.v}</div>
+                      <div key={i} style={{ background: "#0E1D35", borderRadius: 6, padding: "8px 10px", border: "1px solid rgba(212,168,67,.08)" }}>
+                        <div style={{ fontSize: 8, color: T.textMuted, marginBottom: 3 }}>{k.l}</div>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 13, fontWeight: 900, color: k.c, lineHeight: 1 }}>{k.v}</div>
+                        <div style={{ fontSize: 7, color: k.c, opacity: 0.7, marginTop: 2 }}>{k.trend}</div>
                       </div>
                     ))}
                   </div>
                   {/* Mini chart */}
-                  <div style={{ background: "#0E1D35", borderRadius: 10, border: "1px solid rgba(212,168,67,.1)", padding: 12 }}>
-                    <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 8 }}>Revenue Growth (AED B)</div>
-                    <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 60 }}>
-                      {[14.9, 27.9, 24.9, 26.7, 35.5, 49.6].map((v, i) => (
-                        <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-                          <div style={{ width: "100%", height: `${(v/49.6)*56}px`, background: i === 5 ? T.gold : `rgba(212,168,67,${0.2 + i*0.1})`, borderRadius: "3px 3px 0 0", minHeight: 6 }} />
-                          <div style={{ fontSize: 7, color: T.textMuted }}>{2020+i}</div>
+                  <div style={{ background: "#0A1628", borderRadius: 8, border: "1px solid rgba(212,168,67,.1)", padding: "8px 10px", marginBottom: 8 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                      <div style={{ fontSize: 8, color: T.textMuted }}>Revenue Growth (AED B)</div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        {[["Revenue", T.gold], ["Net Profit", T.teal]].map(([l, c]) => (
+                          <span key={l} style={{ fontSize: 7, color: T.textMuted, display: "flex", alignItems: "center", gap: 3 }}>
+                            <span style={{ width: 10, height: 2, background: c, display: "inline-block", borderRadius: 1 }} />{l}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "flex-end", gap: 5, height: 50 }}>
+                      {[[14.6,2.6],[17.0,4.1],[24.5,6.2],[30.6,12.6],[35.4,18.9],[49.6,25.7]].map(([rev, profit], i) => (
+                        <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                          <div style={{ width: "100%", position: "relative", height: `${(rev/49.6)*46}px`, minHeight: 4 }}>
+                            <div style={{ position: "absolute", bottom: 0, width: "100%", height: "100%", background: i === 5 ? T.gold : `rgba(212,168,67,${0.15 + i*0.08})`, borderRadius: "2px 2px 0 0" }} />
+                            <div style={{ position: "absolute", bottom: 0, width: "50%", left: "25%", height: `${(profit/49.6)*46}px`, background: T.teal, opacity: 0.8, borderRadius: "2px 2px 0 0" }} />
+                          </div>
+                          <div style={{ fontSize: 6, color: T.textMuted }}>{2020+i}</div>
                         </div>
                       ))}
                     </div>
+                  </div>
+                  {/* AI Insight preview */}
+                  <div style={{ background: "rgba(212,168,67,0.06)", borderRadius: 6, border: "1px solid rgba(212,168,67,0.15)", padding: "6px 10px", display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 10 }}>✦</span>
+                    <span style={{ fontSize: 8, color: T.textSecondary }}>AI Insight: Emaar backlog at AED 155B provides 3-4yr revenue visibility — strongest coverage ratio in GCC</span>
                   </div>
                 </div>
               </div>
