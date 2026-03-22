@@ -4672,6 +4672,148 @@ export default function EmaarDashboardV2() {
               <KPI label="Avg 2BR Annual Rent" value="AED 91K" sub="Dubai citywide avg Q3 2025" delay={4} onClick={() => setSelectedKPI({ label: "Avg 2BR Annual Rent", value: "AED 91K", color: T.teal, description: "Average annual rent for a 2-bedroom apartment in Dubai is AED 91,052 (Q3 2025), per Property Monitor data compiled by Engel & Völkers. Rents grew 8.5–9% YoY in 2025.", source: "Property Monitor · Engel & Völkers Q3 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "2BR Avg Rent", value: "AED 91,052", note: "Q3 2025 citywide" }, { label: "Rent Growth YoY", value: "+8.5–9%", note: "Apartments 2025" }, { label: "Villa Rent Growth", value: "+5.7%", note: "2025 YoY" }, { label: "EIBOR Rate", value: "3.47%", note: "Dec 2025 reference" }, { label: "900K+ contracts", value: "+8% YoY", note: "Ejari registrations 2024" }], trend: null })} />
             </div>
 
+            {/* ── 5-YEAR YIELD HISTORY + GLOBAL BENCHMARKS ── */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }} className="chart-grid-2">
+
+              {/* 5-Year Dubai Yield Trend */}
+              <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                  <span style={{ fontSize: 14 }}>📈</span>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Dubai Yield Trend — 5 Years</div>
+                  <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>Gross % · Citywide avg</span>
+                </div>
+                {(() => {
+                  const yieldHistory = [
+                    { year: "2021", gross: 5.8, net: 4.2, premium: 4.1, affordable: 7.2 },
+                    { year: "2022", gross: 6.1, net: 4.5, premium: 4.4, affordable: 7.5 },
+                    { year: "2023", gross: 6.4, net: 4.8, premium: 4.6, affordable: 7.8 },
+                    { year: "2024", gross: 6.7, net: 5.0, premium: 4.8, affordable: 8.1 },
+                    { year: "2025", gross: 6.9, net: 5.2, premium: 5.0, affordable: 8.4 },
+                  ];
+                  const maxY = 10;
+                  return (
+                    <div>
+                      {/* Mini line chart */}
+                      <ResponsiveContainer width="100%" height={180}>
+                        <AreaChart data={yieldHistory}>
+                          <defs>
+                            <linearGradient id="gGross" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor={T.gold} stopOpacity={0.3} />
+                              <stop offset="100%" stopColor={T.gold} stopOpacity={0} />
+                            </linearGradient>
+                            <linearGradient id="gAffordable" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor={T.green} stopOpacity={0.2} />
+                              <stop offset="100%" stopColor={T.green} stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                          <XAxis dataKey="year" tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fill: T.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} domain={[3, 10]} tickFormatter={v => v + "%"} />
+                          <Tooltip content={({ active, payload, label }) => {
+                            if (!active || !payload?.length) return null;
+                            return (
+                              <div style={{ background: T.surface, border: `1px solid ${T.gold}`, borderRadius: 8, padding: "10px 14px" }}>
+                                <div style={{ color: T.gold, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>{label}</div>
+                                {payload.map((p, i) => (
+                                  <div key={i} style={{ fontSize: 11, color: p.color, marginBottom: 2 }}>{p.name}: {p.value}%</div>
+                                ))}
+                              </div>
+                            );
+                          }} />
+                          <Area type="monotone" dataKey="gross" stroke={T.gold} fill="url(#gGross)" strokeWidth={2.5} name="City Avg Gross" dot={{ fill: T.gold, r: 3 }} />
+                          <Line type="monotone" dataKey="net" stroke={T.teal} strokeWidth={2} dot={{ fill: T.teal, r: 3 }} name="City Avg Net" />
+                          <Area type="monotone" dataKey="affordable" stroke={T.green} fill="url(#gAffordable)" strokeWidth={2} name="Affordable Areas" dot={{ fill: T.green, r: 3 }} strokeDasharray="4 4" />
+                          <Line type="monotone" dataKey="premium" stroke={T.blue} strokeWidth={2} dot={{ fill: T.blue, r: 3 }} name="Premium Areas" strokeDasharray="4 4" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                      <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 8, flexWrap: "wrap" }}>
+                        {[[T.gold, "City Avg Gross"], [T.teal, "City Avg Net"], [T.green, "Affordable"], [T.blue, "Premium"]].map(([color, label]) => (
+                          <span key={label} style={{ fontSize: 10, color: T.textSecondary, display: "flex", alignItems: "center", gap: 4 }}>
+                            <span style={{ width: 16, height: 2, background: color, display: "inline-block", borderRadius: 1 }} />{label}
+                          </span>
+                        ))}
+                      </div>
+                      <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.15)", fontSize: 10, color: T.textMuted }}>
+                        Dubai gross yields grew from 5.8% (2021) to 6.9% (2025) — a 5-year expansion of +110bps driven by strong rental demand and controlled supply.
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Global City Benchmark */}
+              <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                  <span style={{ fontSize: 14 }}>🌍</span>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Global Yield Benchmark</div>
+                  <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>Gross % · 2025</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {[
+                    { city: "Dubai (JVC)", yield: 8.5, flag: "🇦🇪", note: "Best affordable", color: T.green },
+                    { city: "Dubai (Avg)", yield: 6.9, flag: "🇦🇪", note: "City average", color: T.gold },
+                    { city: "Istanbul", yield: 6.1, flag: "🇹🇷", note: "Growing market", color: T.teal },
+                    { city: "Bangkok", yield: 5.8, flag: "🇹🇭", note: "SE Asia hub", color: T.blue },
+                    { city: "Kuala Lumpur", yield: 5.5, flag: "🇲🇾", note: "Regional", color: T.blue },
+                    { city: "New York", yield: 4.2, flag: "🇺🇸", note: "Global benchmark", color: T.textSecondary },
+                    { city: "Paris", yield: 3.8, flag: "🇫🇷", note: "Regulated market", color: T.textSecondary },
+                    { city: "Singapore", yield: 3.5, flag: "🇸🇬", note: "Cooling measures", color: T.textSecondary },
+                    { city: "London", yield: 3.2, flag: "🇬🇧", note: "High entry costs", color: T.textSecondary },
+                    { city: "Hong Kong", yield: 2.8, flag: "🇭🇰", note: "Luxury segment", color: T.red },
+                  ].map((c, i) => {
+                    const isDubai = c.city.includes("Dubai");
+                    return (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{ fontSize: 14, flexShrink: 0 }}>{c.flag}</span>
+                        <div style={{ width: 110, fontSize: 11, color: isDubai ? T.gold : T.textSecondary, fontWeight: isDubai ? 700 : 400, flexShrink: 0 }}>{c.city}</div>
+                        <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.border, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${(c.yield / 9) * 100}%`, background: c.color, borderRadius: 3, transition: "width 0.8s" }} />
+                        </div>
+                        <div style={{ width: 36, textAlign: "right", fontSize: 12, fontWeight: 700, color: c.color, flexShrink: 0 }}>{c.yield}%</div>
+                        <div style={{ width: 70, fontSize: 9, color: T.textMuted, textAlign: "right", flexShrink: 0 }}>{c.note}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, fontSize: 10, color: T.textMuted }}>
+                  Dubai delivers <strong style={{ color: T.gold }}>2–3× higher yields</strong> than London, Paris and Singapore — with zero income tax and 10-year Golden Visa eligibility above AED 2M.
+                </div>
+              </div>
+            </div>
+
+            {/* ── YIELD BY UNIT TYPE BREAKDOWN ── */}
+            <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                <span style={{ fontSize: 14 }}>🏠</span>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Yield by Unit Type — Dubai 2025</div>
+                <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>Source: DLD Rental Index · REIDIN</span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
+                {[
+                  { type: "Studio", gross: 7.8, net: 6.1, avgRent: 52000, avgPrice: 670000, color: T.green, icon: "🏢" },
+                  { type: "1 Bedroom", gross: 7.1, net: 5.5, avgRent: 78000, avgPrice: 1100000, color: T.teal, icon: "🛏️" },
+                  { type: "2 Bedroom", gross: 6.4, net: 4.9, avgRent: 112000, avgPrice: 1750000, color: T.gold, icon: "🛏️🛏️" },
+                  { type: "3 Bedroom", gross: 5.8, net: 4.4, avgRent: 155000, avgPrice: 2670000, color: T.blue, icon: "🏠" },
+                  { type: "Villa / TH", gross: 5.0, net: 3.8, avgRent: 210000, avgPrice: 4200000, color: T.purple, icon: "🏡" },
+                ].map((u, i) => (
+                  <div key={i} style={{ padding: "16px", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}`, textAlign: "center" }}>
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>{u.icon}</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, marginBottom: 10 }}>{u.type}</div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: u.color, marginBottom: 4 }}>{u.gross}%</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 8 }}>Gross yield</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: T.textMuted, borderTop: `1px solid ${T.border}`, paddingTop: 8, marginTop: 4 }}>
+                      <span>Net: <span style={{ color: u.color, fontWeight: 600 }}>{u.net}%</span></span>
+                      <span>Rent: AED {(u.avgRent/1000).toFixed(0)}K</span>
+                    </div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>Avg price: AED {(u.avgPrice/1e6).toFixed(1)}M</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.15)", fontSize: 10, color: T.textMuted }}>
+                Studios deliver the highest gross yield (7.8%) due to lower entry prices. Villas offer the lowest yield (5.0%) but highest capital appreciation potential. Source: DLD Rental Index · REIDIN Dec 2025
+              </div>
+            </div>
+
             <Section title="Detailed Yield Data" sub="All Emaar communities · Annual rents · Launch prices · Demand levels">
               <div className="table-scroll" style={{ overflowX: "auto", marginTop: 12 }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 750 }}>
