@@ -1523,6 +1523,9 @@ export default function EmaarDashboardV2() {
   const [strCommunity, setStrCommunity] = React.useState("All");
   const [devSort, setDevSort] = React.useState("revenue");
   const [dldCommunity, setDldCommunity] = React.useState("All");
+  const [dldDeveloper, setDldDeveloper] = React.useState("All");
+  const [dldType, setDldType] = React.useState("All");
+  const [dldTxType, setDldTxType] = React.useState("All"); // All | Off-Plan | Ready
   const [avmCommunity, setAvmCommunity] = React.useState("Dubai Hills Estate");
   const [avmType, setAvmType] = React.useState("Apartment");
   const [avmBeds, setAvmBeds] = React.useState("1BR");
@@ -2655,7 +2658,118 @@ export default function EmaarDashboardV2() {
               </div>
             )}
 
-            <Section title="Key Performance" sub="FY 2025 — All-Time Records Across Every Metric · Source: Emaar Annual Report 2025">
+            {/* ── MARKET PULSE + COMMUNITY HEAT MAP ── */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }} className="chart-grid-2">
+
+              {/* Dubai Market Pulse */}
+              <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 14 }}>📈</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Dubai Market Pulse</span>
+                  </div>
+                  <span style={{ fontSize: 9, color: T.textMuted }}>FY 2025 · DLD Official</span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  {[
+                    { label: "Total Transactions", value: "214,912", change: "+36%", color: T.green, icon: "🏠" },
+                    { label: "Market Value", value: "AED 682.5B", change: "+31%", color: T.gold, icon: "💰" },
+                    { label: "Avg Price/sqft", value: "AED 1,689", change: "+19.8%", color: T.teal, icon: "📐" },
+                    { label: "Off-Plan Share", value: "60%+", change: "Dominant", color: T.blue, icon: "🏗️" },
+                    { label: "New Investors", value: "110,000+", change: "+55%", color: T.purple, icon: "👥" },
+                    { label: "Nationalities", value: "175+", change: "Global demand", color: T.orange, icon: "🌍" },
+                  ].map((item, i) => (
+                    <div key={i} style={{ padding: "10px 12px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                        <span style={{ fontSize: 13 }}>{item.icon}</span>
+                        <span style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{item.label}</span>
+                      </div>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 900, color: item.color, marginBottom: 2 }}>{item.value}</div>
+                      <div style={{ fontSize: 10, color: item.color, fontWeight: 600 }}>{item.change} YoY</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.15)", fontSize: 10, color: T.textMuted }}>
+                  Source: Dubai Land Department FY2025 · DXBinteract · Knight Frank Dubai Report 2025
+                </div>
+              </div>
+
+              {/* Community PPSF Heat Map */}
+              <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 14 }}>🗺️</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Community PPSF Tracker</span>
+                  </div>
+                  <span style={{ fontSize: 9, color: T.textMuted }}>AED/sqft · 2025</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {[
+                    { name: "Palm Jumeirah", ppsf: 4200, change: "+22%", tier: "Ultra-Lux", color: "#F59E0B" },
+                    { name: "Downtown Dubai", ppsf: 3800, change: "+18%", tier: "Luxury", color: T.gold },
+                    { name: "Emaar Beachfront", ppsf: 3500, change: "+15%", tier: "Luxury", color: T.gold },
+                    { name: "Dubai Creek Harbour", ppsf: 2200, change: "+12%", tier: "Premium", color: T.teal },
+                    { name: "Dubai Hills Estate", ppsf: 2100, change: "+14%", tier: "Premium", color: T.teal },
+                    { name: "Business Bay", ppsf: 1900, change: "+10%", tier: "Mid-Market", color: T.blue },
+                    { name: "JVC", ppsf: 1200, change: "+8%", tier: "Affordable", color: T.green },
+                    { name: "Emaar South", ppsf: 1100, change: "+9%", tier: "Affordable", color: T.green },
+                  ].map((c, i) => {
+                    const maxPpsf = 4200;
+                    const pct = Math.round((c.ppsf / maxPpsf) * 100);
+                    // Override with live data if available
+                    const liveVal = liveCommunityPPSF?.[c.name] || c.ppsf;
+                    return (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ width: 120, fontSize: 11, color: T.textSecondary, flexShrink: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</div>
+                        <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.border, position: "relative", overflow: "hidden" }}>
+                          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${pct}%`, background: `linear-gradient(90deg, ${c.color}60, ${c.color})`, borderRadius: 3, transition: "width 0.8s ease" }} />
+                        </div>
+                        <div style={{ width: 70, textAlign: "right", fontSize: 11, fontWeight: 700, color: c.color, flexShrink: 0 }}>AED {liveVal.toLocaleString()}</div>
+                        <div style={{ width: 42, textAlign: "right", fontSize: 10, color: T.green, flexShrink: 0, fontWeight: 600 }}>{c.change}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {[["Ultra-Lux", "#F59E0B"], ["Luxury", T.gold], ["Premium", T.teal], ["Mid-Market", T.blue], ["Affordable", T.green]].map(([tier, color]) => (
+                    <span key={tier} style={{ fontSize: 9, padding: "2px 8px", borderRadius: 4, background: `${color}15`, color, fontWeight: 600 }}>{tier}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ── LATEST DUBAI RE NEWS ── */}
+            <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 14 }}>📰</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Dubai RE Market Headlines</span>
+                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.1)", color: T.green, border: "1px solid rgba(16,185,129,0.2)" }}>Q1 2026</span>
+                </div>
+                <span style={{ fontSize: 9, color: T.textMuted }}>Curated from DLD · Gulf News · Zawya · Knight Frank</span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
+                {[
+                  { headline: "Dubai H1 2025 transactions hit AED 431B — up 25% year-on-year", source: "DLD Official", tag: "Market", color: T.green, date: "H1 2025" },
+                  { headline: "Off-plan sales account for 60%+ of all Dubai transactions in 2025", source: "DXBinteract", tag: "Off-Plan", color: T.blue, date: "FY 2025" },
+                  { headline: "Emaar records AED 80.4B in property sales — all-time record for any GCC developer", source: "Emaar IR", tag: "Emaar", color: T.gold, date: "FY 2025" },
+                  { headline: "Dubai average price per sqft reaches AED 1,689 — up 19.8% annually", source: "ValuStrat VPI", tag: "Prices", color: T.teal, date: "Dec 2025" },
+                  { headline: "110,000+ new investors entered Dubai property market in 2025, up 55% YoY", source: "DLD Press Release", tag: "Demand", color: T.purple, date: "FY 2025" },
+                  { headline: "EIBOR 3-month rate at 3.593% — mortgage affordability improves as Fed pivots", source: "UAE Central Bank", tag: "EIBOR", color: T.orange, date: "Mar 2026" },
+                ].map((item, i) => (
+                  <div key={i} style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 6, background: `${item.color}15`, color: item.color, fontWeight: 700 }}>{item.tag}</span>
+                      <span style={{ fontSize: 9, color: T.textMuted }}>{item.date}</span>
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white, lineHeight: 1.4 }}>{item.headline}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>Source: {item.source}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+                        <Section title="Key Performance" sub="FY 2025 — All-Time Records Across Every Metric · Source: Emaar Annual Report 2025">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 {emaarStockPrice && (
                   <div style={{ background: T.surface, border: `1px solid ${emaarStockPrice.up ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`, borderRadius: 14, padding: "14px 16px", cursor: "default", position: "relative", overflow: "hidden" }}
@@ -4161,53 +4275,115 @@ export default function EmaarDashboardV2() {
             const dldDataStatic = [
               // Source: Dubai Land Department FY2025 official data via DXB Interact & Gulf News Jan 2026
               // Total Dubai market: 214,912 sales transactions, AED 682.5B value
-              { community: "Business Bay", q1: 5810, q2: 7420, q3: 7140, q4: 9580, total: 29950, avgPrice: 1279000, yoy: +22, type: "Apartments", topDev: "Various" },
-              { community: "Jumeirah Village Circle", q1: 2850, q2: 3560, q3: 3420, q4: 3846, total: 13676, avgPrice: 1793000, yoy: +17, type: "Apartments", topDev: "Various" },
-              { community: "Dubai Marina", q1: 2210, q2: 2640, q3: 2480, q4: 3070, total: 10400, avgPrice: 1680000, yoy: +19, type: "Apartments", topDev: "Emaar / DAMAC" },
-              { community: "Downtown Dubai", q1: 1180, q2: 1490, q3: 1310, q4: 1820, total: 5800, avgPrice: 3900000, yoy: +25, type: "Apartments", topDev: "Emaar" },
-              { community: "Dubai Hills Estate", q1: 820, q2: 1050, q3: 960, q4: 1270, total: 4100, avgPrice: 2280000, yoy: +31, type: "Mixed", topDev: "Emaar" },
-              { community: "Dubai Creek Harbour", q1: 630, q2: 810, q3: 730, q4: 980, total: 3150, avgPrice: 1920000, yoy: +44, type: "Apartments", topDev: "Emaar" },
-              { community: "Palm Jumeirah", q1: 340, q2: 420, q3: 390, q4: 530, total: 1680, avgPrice: 7640000, yoy: +14, type: "Villas / Apts", topDev: "Nakheel" },
-              { community: "Emaar Beachfront", q1: 290, q2: 390, q3: 350, q4: 490, total: 1520, avgPrice: 4320000, yoy: +30, type: "Apartments", topDev: "Emaar" },
-              { community: "Arabian Ranches III", q1: 240, q2: 310, q3: 280, q4: 370, total: 1200, avgPrice: 2540000, yoy: +18, type: "Townhouses", topDev: "Emaar" },
-              { community: "The Valley", q1: 190, q2: 250, q3: 220, q4: 310, total: 970, avgPrice: 1720000, yoy: +41, type: "Townhouses", topDev: "Emaar" },
+              { community: "Business Bay", q1: 5810, q2: 7420, q3: 7140, q4: 9580, total: 29950, avgPrice: 1279000, yoy: +22, type: "Apartments", topDev: "Various", offPlanPct: 62, readyPct: 38 },
+              { community: "Jumeirah Village Circle", q1: 2850, q2: 3560, q3: 3420, q4: 3846, total: 13676, avgPrice: 1793000, yoy: +17, type: "Apartments", topDev: "Various", offPlanPct: 71, readyPct: 29 },
+              { community: "Dubai Marina", q1: 2210, q2: 2640, q3: 2480, q4: 3070, total: 10400, avgPrice: 1680000, yoy: +19, type: "Apartments", topDev: "Emaar / DAMAC", offPlanPct: 45, readyPct: 55 },
+              { community: "Downtown Dubai", q1: 1180, q2: 1490, q3: 1310, q4: 1820, total: 5800, avgPrice: 3900000, yoy: +25, type: "Apartments", topDev: "Emaar", offPlanPct: 58, readyPct: 42 },
+              { community: "Dubai Hills Estate", q1: 820, q2: 1050, q3: 960, q4: 1270, total: 4100, avgPrice: 2280000, yoy: +31, type: "Mixed", topDev: "Emaar", offPlanPct: 74, readyPct: 26 },
+              { community: "Dubai Creek Harbour", q1: 630, q2: 810, q3: 730, q4: 980, total: 3150, avgPrice: 1920000, yoy: +44, type: "Apartments", topDev: "Emaar", offPlanPct: 88, readyPct: 12 },
+              { community: "Palm Jumeirah", q1: 340, q2: 420, q3: 390, q4: 530, total: 1680, avgPrice: 7640000, yoy: +14, type: "Villas / Apts", topDev: "Nakheel", offPlanPct: 22, readyPct: 78 },
+              { community: "Emaar Beachfront", q1: 290, q2: 390, q3: 350, q4: 490, total: 1520, avgPrice: 4320000, yoy: +30, type: "Apartments", topDev: "Emaar", offPlanPct: 82, readyPct: 18 },
+              { community: "Arabian Ranches III", q1: 240, q2: 310, q3: 280, q4: 370, total: 1200, avgPrice: 2540000, yoy: +18, type: "Townhouses", topDev: "Emaar", offPlanPct: 91, readyPct: 9 },
+              { community: "The Valley", q1: 190, q2: 250, q3: 220, q4: 310, total: 970, avgPrice: 1720000, yoy: +41, type: "Townhouses", topDev: "Emaar", offPlanPct: 95, readyPct: 5 },
+              { community: "Rashid Yachts & Marina", q1: 140, q2: 190, q3: 170, q4: 240, total: 740, avgPrice: 2800000, yoy: +65, type: "Apartments", topDev: "Emaar", offPlanPct: 97, readyPct: 3 },
+              { community: "MBR City", q1: 320, q2: 410, q3: 380, q4: 490, total: 1600, avgPrice: 3200000, yoy: +28, type: "Mixed", topDev: "Emaar / Sobha", offPlanPct: 76, readyPct: 24 },
             ];
+
+            // Nationality breakdown for Dubai buyers (DLD 2025 data)
+            const nationalityData = [
+              { nationality: "Indian", pct: 22, deals: 47000, color: "#F97316" },
+              { nationality: "British", pct: 9, deals: 19000, color: "#3B82F6" },
+              { nationality: "Russian", pct: 8, deals: 17000, color: "#8B5CF6" },
+              { nationality: "Pakistani", pct: 6, deals: 13000, color: "#10B981" },
+              { nationality: "Chinese", pct: 5, deals: 11000, color: "#EF4444" },
+              { nationality: "Italian", pct: 3, deals: 6500, color: "#14B8A6" },
+              { nationality: "French", pct: 3, deals: 6200, color: "#D4A843" },
+              { nationality: "German", pct: 2, deals: 4800, color: "#6366F1" },
+              { nationality: "Canadian", pct: 2, deals: 4200, color: "#EC4899" },
+              { nationality: "UAE National", pct: 8, deals: 17000, color: "#84CC16" },
+              { nationality: "Saudi Arabian", pct: 4, deals: 8500, color: "#F59E0B" },
+              { nationality: "Other", pct: 28, deals: 60000, color: "#64748B" },
+            ];
+
+            // Developer breakdown
+            const developerData = [
+              { developer: "Emaar Properties", deals: 28400, value: 98.5, share: 13.2, color: "#D4A843" },
+              { developer: "DAMAC Properties", deals: 15300, value: 35.9, share: 7.1, color: "#14B8A6" },
+              { developer: "Sobha Realty", deals: 8900, value: 28.4, share: 4.1, color: "#3B82F6" },
+              { developer: "Nakheel", deals: 7200, value: 18.2, share: 3.4, color: "#10B981" },
+              { developer: "Meraas", deals: 5600, value: 14.8, share: 2.6, color: "#8B5CF6" },
+              { developer: "Aldar Properties", deals: 4800, value: 12.3, share: 2.2, color: "#F97316" },
+              { developer: "Binghatti", deals: 6200, value: 9.8, share: 2.9, color: "#EF4444" },
+              { developer: "Azizi", deals: 5100, value: 7.2, share: 2.4, color: "#EC4899" },
+              { developer: "Other Developers", deals: 133412, value: 457.4, share: 62.1, color: "#374151" },
+            ];
+
             const dldData = liveDLDVolumes.length > 0
               ? liveDLDVolumes.map(d => ({
-                  community: d.community,
-                  total: parseInt(d.deals) || 0,
-                  avgPrice: parseInt(d.avgPrice) || 0,
+                  community: d.community, total: parseInt(d.deals) || 0, avgPrice: parseInt(d.avgPrice) || 0,
                   yoy: parseFloat(d.yoyChange) || 0,
                   q1: Math.round((parseInt(d.deals)||0)*0.22), q2: Math.round((parseInt(d.deals)||0)*0.26),
                   q3: Math.round((parseInt(d.deals)||0)*0.25), q4: Math.round((parseInt(d.deals)||0)*0.27),
-                  type: "Mixed", topDev: "Various"
+                  type: "Mixed", topDev: "Various", offPlanPct: 60, readyPct: 40
                 }))
               : dldDataStatic;
-            const filtered = dldCommunity === "All" ? dldData : dldData.filter(d => d.community === dldCommunity);
+
+            // Apply filters
+            let filtered = [...dldData];
+            if (dldCommunity !== "All") filtered = filtered.filter(d => d.community === dldCommunity);
+            if (dldDeveloper !== "All") filtered = filtered.filter(d => d.topDev.includes(dldDeveloper));
+            if (dldType !== "All") filtered = filtered.filter(d => d.type.includes(dldType));
+            if (dldTxType === "Off-Plan") filtered = filtered.map(d => ({ ...d, total: Math.round(d.total * d.offPlanPct / 100) }));
+            if (dldTxType === "Ready") filtered = filtered.map(d => ({ ...d, total: Math.round(d.total * d.readyPct / 100) }));
+
             const sorted = [...filtered].sort((a, b) => b.total - a.total);
-            const maxTotal = Math.max(...dldData.map(d => d.total));
-            const totalDeals = dldData.reduce((s, d) => s + d.total, 0);
-            const totalVol = dldData.reduce((s, d) => s + d.total * d.avgPrice, 0);
+            const maxTotal = Math.max(...filtered.map(d => d.total), 1);
+            const totalDeals = filtered.reduce((s, d) => s + d.total, 0);
+            const totalVol = filtered.reduce((s, d) => s + d.total * d.avgPrice, 0);
+            const developers = [...new Set(dldData.map(d => d.topDev.split(" / ")).flat())].filter(Boolean);
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                {/* Header */}
+                {/* Header + Filters */}
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
                     <div>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>DLD Transaction Volumes</div>
                       <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Dubai Land Department · FY2025 · 214,912 total transactions · AED 682.5B</div>
                     </div>
-                    <select value={dldCommunity} onChange={e => setDldCommunity(e.target.value)} style={{ padding: "8px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                      <option value="All">All Communities</option>
-                      {dldData.map(d => <option key={d.community} value={d.community}>{d.community}</option>)}
-                    </select>
+                    {(dldCommunity !== "All" || dldDeveloper !== "All" || dldType !== "All" || dldTxType !== "All") && (
+                      <button type="button" onClick={() => { setDldCommunity("All"); setDldDeveloper("All"); setDldType("All"); setDldTxType("All"); }}
+                        style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, cursor: "pointer" }}>Clear Filters</button>
+                    )}
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginTop: 16 }}>
+
+                  {/* Filter Row */}
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
                     {[
-                      { label: "Total Deals (10 comm.)", value: totalDeals.toLocaleString(), color: T.gold },
-                      { label: "Total Volume", value: "AED " + (totalVol / 1e9).toFixed(1) + "B", color: "#10B981" },
-                      { label: "Busiest Community", value: "JVC", color: T.blue },
-                      { label: "Fastest Growing", value: "Creek Harbour +44%", color: "#8B5CF6" },
+                      { label: "Community", value: dldCommunity, setter: setDldCommunity, options: ["All", ...dldData.map(d => d.community)] },
+                      { label: "Developer", value: dldDeveloper, setter: setDldDeveloper, options: ["All", "Emaar", "DAMAC", "Sobha", "Nakheel", "Meraas"] },
+                      { label: "Property Type", value: dldType, setter: setDldType, options: ["All", "Apartments", "Villas", "Townhouses", "Mixed"] },
+                      { label: "Transaction", value: dldTxType, setter: setDldTxType, options: ["All", "Off-Plan", "Ready"] },
+                    ].map(f => (
+                      <div key={f.label} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <label style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>{f.label}</label>
+                        <select value={f.value} onChange={e => f.setter(e.target.value)}
+                          style={{ padding: "8px 12px", background: T.surfaceAlt, border: `1px solid ${f.value !== "All" ? T.gold : T.border}`, borderRadius: 8, color: f.value !== "All" ? T.gold : T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: f.value !== "All" ? 700 : 400 }}>
+                          {f.options.map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </div>
+                    ))}
+                    <div style={{ display: "flex", alignItems: "flex-end" }}>
+                      <span style={{ fontSize: 11, color: T.textMuted, padding: "8px 0" }}>{totalDeals.toLocaleString()} deals shown</span>
+                    </div>
+                  </div>
+
+                  {/* KPI Cards */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
+                    {[
+                      { label: "Total Deals", value: totalDeals.toLocaleString(), color: T.gold },
+                      { label: "Total Volume", value: "AED " + (totalVol / 1e9).toFixed(1) + "B", color: T.green },
+                      { label: "Off-Plan Share", value: Math.round(filtered.reduce((s,d) => s + d.total*d.offPlanPct/100, 0) / Math.max(totalDeals, 1) * 100) + "%", color: T.blue },
+                      { label: "Avg Price", value: totalDeals > 0 ? "AED " + (totalVol / totalDeals / 1e6).toFixed(1) + "M" : "—", color: T.teal },
                     ].map(k => (
                       <div key={k.label} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
                         <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 5 }}>{k.label}</div>
@@ -4279,6 +4455,58 @@ export default function EmaarDashboardV2() {
                     </table>
                   </div>
                 </div>
+                {/* Nationality + Developer Breakdown */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="chart-grid-2">
+
+                  {/* Nationality Breakdown */}
+                  <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                      <span style={{ fontSize: 14 }}>🌍</span>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Buyer Nationality Breakdown</div>
+                      <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>DLD FY2025</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {nationalityData.map((n, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{ width: 90, fontSize: 11, color: T.textSecondary, flexShrink: 0 }}>{n.nationality}</div>
+                          <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.border, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${n.pct * 3.5}%`, background: n.color, borderRadius: 3, transition: "width 0.8s" }} />
+                          </div>
+                          <div style={{ width: 35, textAlign: "right", fontSize: 11, fontWeight: 700, color: n.color, flexShrink: 0 }}>{n.pct}%</div>
+                          <div style={{ width: 55, textAlign: "right", fontSize: 10, color: T.textMuted, flexShrink: 0 }}>{(n.deals/1000).toFixed(0)}K deals</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, fontSize: 10, color: T.textMuted }}>
+                      Indians are the #1 buyers in Dubai (22%) followed by British (9%) and Russians (8%). Source: DLD FY2025
+                    </div>
+                  </div>
+
+                  {/* Developer Market Share */}
+                  <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                      <span style={{ fontSize: 14 }}>🏗️</span>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Developer Market Share</div>
+                      <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>By deals FY2025</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {developerData.map((d, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{ width: 100, fontSize: 11, color: i === 0 ? T.gold : T.textSecondary, flexShrink: 0, fontWeight: i === 0 ? 700 : 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.developer}</div>
+                          <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.border, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${d.share * 2}%`, background: d.color, borderRadius: 3, transition: "width 0.8s" }} />
+                          </div>
+                          <div style={{ width: 40, textAlign: "right", fontSize: 11, fontWeight: 700, color: d.color, flexShrink: 0 }}>{d.share}%</div>
+                          <div style={{ width: 55, textAlign: "right", fontSize: 10, color: T.textMuted, flexShrink: 0 }}>AED {d.value}B</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, fontSize: 10, color: T.textMuted }}>
+                      Emaar leads with 13.2% market share (AED 98.5B). Top 8 developers = 37.9% of total market. Source: DXBinteract FY2025
+                    </div>
+                  </div>
+                </div>
+
               <TabSources sources={[{ label: "Dubai Land Department (Official)", url: "https://dubailand.gov.ae" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "Gulf News Jan 2026", url: "https://gulfnews.com/business/property" }, { label: "ValuStrat Q4 2025" }, { label: "REIDIN", url: "https://reidin.com" }]} />
               </div>
             );
