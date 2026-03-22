@@ -12571,13 +12571,26 @@ export default function AdminPanel() {
   const [leadSearch, setLeadSearch] = useState("");
   const [leadDateRange, setLeadDateRange] = useState("all"); // all | today | week | month
   const [showAddLead, setShowAddLead] = useState(false);
-  const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "" });
+  const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
   const [addLeadLoading, setAddLeadLoading] = useState(false);
   const [leadNote, setLeadNote] = useState("");
   const [leadNoteSaving, setLeadNoteSaving] = useState(false);
   const [showLossReason, setShowLossReason] = useState(null); // lead id
   const [lossReason, setLossReason] = useState("");
   const [convertingLead, setConvertingLead] = useState(false);
+
+  /* ─── LEADS CRM PRO STATE ─── */
+  const [leadSelectedIds, setLeadSelectedIds] = useState([]); // bulk selection
+  const [leadBulkAction, setLeadBulkAction] = useState(""); // bulk action value
+  const [showFollowUpModal, setShowFollowUpModal] = useState(null); // lead object
+  const [followUpDate, setFollowUpDate] = useState("");
+  const [followUpNote, setFollowUpNote] = useState("");
+  const [leadAnalyticsView, setLeadAnalyticsView] = useState(false);
+  const [leadDrawerTab, setLeadDrawerTab] = useState("details"); // details | activity | email
+  const [emailTemplate, setEmailTemplate] = useState("followup");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const [verifyFilter, setVerifyFilter] = useState(() => {
     try { return localStorage.getItem("admin_verifyFilter") || "all"; } catch { return "all"; }
@@ -16709,6 +16722,152 @@ export default function AdminPanel() {
                       );
                     })()}
 
+                    {/* ══ SECTION 10 — NRR + WATERFALL + LTV:CAC (ChartMogul-level) ══ */}
+                    {(() => {
+                      // ── NRR Calculation ──
+                      // NRR = (Starting MRR + Expansion - Contraction - Churn) / Starting MRR × 100
+                      const startMRR = mrr - netMRR;
+                      const nrr = startMRR > 0 ? Math.round(((mrr) / startMRR) * 100) : 100;
+                      const nrrColor = nrr >= 100 ? T.green : nrr >= 85 ? T.gold : T.red;
+                      const nrrLabel = nrr >= 110 ? "World-class" : nrr >= 100 ? "Healthy" : nrr >= 90 ? "Needs attention" : "At risk";
+
+                      // ── CAC & LTV:CAC ──
+                      // Estimated CAC = marketing spend / new customers (using AED 0 since no spend yet)
+                      const estimatedCAC = 0; // Update when paid marketing starts
+                      const ltvcacRatio = estimatedCAC > 0 ? (blendedLTV / estimatedCAC).toFixed(1) : null;
+                      const cacPaybackMonths = estimatedCAC > 0 && arpu > 0 ? Math.ceil(estimatedCAC / arpu) : null;
+
+                      // ── MRR Waterfall data ──
+                      const waterfallData = [
+                        { label: "Start MRR", value: startMRR, type: "base", color: T.textSecondary },
+                        { label: "New MRR", value: newMRRThisMonth, type: "positive", color: T.green },
+                        { label: "Expansion", value: 0, type: "positive", color: T.teal },
+                        { label: "Contraction", value: 0, type: "negative", color: T.orange },
+                        { label: "Churn", value: -churnedMRR, type: "negative", color: T.red },
+                        { label: "Net MRR", value: mrr, type: "result", color: netMRR >= 0 ? T.green : T.red },
+                      ];
+                      const maxWaterfall = Math.max(...waterfallData.map(d => Math.abs(d.value)), 1);
+
+                      // ── Revenue Quality Score ──
+                      const revenueQuality = (() => {
+                        let score = 0;
+                        if (nrr >= 100) score += 30;
+                        else if (nrr >= 90) score += 15;
+                        if (churnRate === 0) score += 25;
+                        else if (churnRate < 3) score += 15;
+                        else if (churnRate < 6) score += 5;
+                        if (stats.enterprise > 0) score += 20;
+                        if (stats.annual > 0) score += 15;
+                        if (mrr > 5000) score += 10;
+                        return Math.min(score, 100);
+                      })();
+                      const rqColor = revenueQuality >= 70 ? T.green : revenueQuality >= 40 ? T.gold : T.red;
+
+                      return (
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Advanced Revenue Intelligence</div>
+
+                          {/* NRR + Revenue Quality Row */}
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14, marginBottom: 16 }}>
+                            {/* NRR */}
+                            <div className="chart-box fade-up" style={{ padding: 20 }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Net Revenue Retention</div>
+                              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 36, fontWeight: 900, color: nrrColor, marginBottom: 4 }}>{nrr}%</div>
+                              <div style={{ fontSize: 11, color: nrrColor, fontWeight: 600, marginBottom: 12 }}>{nrrLabel}</div>
+                              <div style={{ height: 4, borderRadius: 2, background: T.border, marginBottom: 8 }}>
+                                <div style={{ height: "100%", borderRadius: 2, background: nrrColor, width: `${Math.min(nrr, 120)}%`, transition: "width 0.8s" }} />
+                              </div>
+                              <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.6 }}>
+                                <div>100%+ = growing without new users</div>
+                                <div>Benchmark: World-class SaaS = 120%+</div>
+                              </div>
+                            </div>
+
+                            {/* Revenue Quality Score */}
+                            <div className="chart-box fade-up" style={{ padding: 20 }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Revenue Quality Score</div>
+                              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 36, fontWeight: 900, color: rqColor, marginBottom: 4 }}>{revenueQuality}/100</div>
+                              <div style={{ height: 4, borderRadius: 2, background: T.border, marginBottom: 12 }}>
+                                <div style={{ height: "100%", borderRadius: 2, background: rqColor, width: `${revenueQuality}%`, transition: "width 0.8s" }} />
+                              </div>
+                              <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.7 }}>
+                                {[
+                                  { label: "NRR 100%+", done: nrr >= 100 },
+                                  { label: "Churn < 3%", done: churnRate < 3 },
+                                  { label: "Enterprise users", done: stats.enterprise > 0 },
+                                  { label: "Annual subscribers", done: (stats.annual || 0) > 0 },
+                                ].map((item, i) => (
+                                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                                    <span style={{ fontSize: 10, color: item.done ? T.green : T.border }}>{item.done ? "✓" : "○"}</span>
+                                    <span style={{ color: item.done ? T.textSecondary : T.textMuted }}>{item.label}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* LTV:CAC */}
+                            <div className="chart-box fade-up" style={{ padding: 20 }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>LTV : CAC Ratio</div>
+                              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 36, fontWeight: 900, color: ltvcacRatio ? (parseFloat(ltvcacRatio) >= 3 ? T.green : T.gold) : T.textMuted, marginBottom: 4 }}>
+                                {ltvcacRatio ? `${ltvcacRatio}:1` : "N/A"}
+                              </div>
+                              <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 12 }}>
+                                {estimatedCAC === 0 ? "No paid marketing yet — organic" : `CAC payback: ${cacPaybackMonths} months`}
+                              </div>
+                              <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.7 }}>
+                                <div>Blended LTV: AED {blendedLTV.toLocaleString()}</div>
+                                <div>Pro LTV: AED {proLTV.toLocaleString()}</div>
+                                <div>Enterprise LTV: AED {entLTV.toLocaleString()}</div>
+                                <div style={{ marginTop: 4, color: T.gold }}>Target: 3:1 minimum</div>
+                              </div>
+                            </div>
+
+                            {/* Revenue Velocity */}
+                            <div className="chart-box fade-up" style={{ padding: 20 }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Revenue Velocity</div>
+                              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: T.purple, marginBottom: 8 }}>
+                                AED {mrr > 0 ? Math.round(mrr / 30).toLocaleString() : "0"}/day
+                              </div>
+                              <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 12 }}>Daily recurring revenue</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.7 }}>
+                                <div>AED {Math.round(mrr / 24).toLocaleString()} per hour</div>
+                                <div style={{ marginTop: 4 }}>To hit AED 10K MRR:</div>
+                                <div style={{ color: T.gold }}>Need {Math.max(0, Math.ceil((10000 - mrr) / (arpu || 99)))} more users</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* MRR Waterfall Chart */}
+                          <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 0 }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>MRR Waterfall — This Month</div>
+                            <div style={{ display: "flex", gap: 8, alignItems: "flex-end", height: 120 }}>
+                              {waterfallData.map((item, i) => {
+                                const barH = maxWaterfall > 0 ? Math.max(4, Math.round((Math.abs(item.value) / maxWaterfall) * 100)) : 4;
+                                return (
+                                  <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                                    <div style={{ fontSize: 11, fontWeight: 700, color: item.color, fontFamily: "'Fraunces',serif" }}>
+                                      {item.value >= 0 ? "" : "-"}AED {Math.abs(item.value).toLocaleString()}
+                                    </div>
+                                    <div style={{ width: "100%", height: barH, borderRadius: "4px 4px 0 0", background: item.type === "base" ? T.surfaceAlt : item.color, border: `1px solid ${item.color}40`, position: "relative", minHeight: 8 }}>
+                                      {item.type === "result" && <div style={{ position: "absolute", inset: 0, background: `${item.color}20`, borderRadius: "4px 4px 0 0" }} />}
+                                    </div>
+                                    <div style={{ fontSize: 9, color: T.textMuted, textAlign: "center", lineHeight: 1.3 }}>{item.label}</div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}`, fontSize: 11, color: T.textMuted, lineHeight: 1.7 }}>
+                              <span style={{ color: T.white, fontWeight: 600 }}>Interpretation: </span>
+                              {netMRR >= 0
+                                ? `Revenue grew by AED ${Math.abs(netMRR).toLocaleString()} this month. ${churnedMRR > 0 ? `Lost AED ${churnedMRR.toLocaleString()} from ${churnThisMonth.length} churn${churnThisMonth.length > 1 ? "s" : ""}.` : "Zero churn this month — excellent."}`
+                                : `Revenue declined by AED ${Math.abs(netMRR).toLocaleString()} this month. Churn exceeded new business by AED ${Math.abs(netMRR).toLocaleString()}.`}
+                              {" "}Benchmark: healthy SaaS targets NRR 100%+ and monthly churn below 3%.
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                   </>
                 );
               })()}
@@ -19826,13 +19985,45 @@ export default function AdminPanel() {
              LEADS TAB
              ═══════════════════════════════════════ */}
           {tab === "leads" && (() => {
-            /* ─── LEADS CRM ─── */
+            /* ─── LEADS CRM — WORLD CLASS (Session 1) ─── */
             const now = new Date();
             const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
             const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            const tomorrowEnd = new Date(todayStart.getTime() + 2 * 24 * 60 * 60 * 1000);
 
-            // Stats
+            // ── Lead Scoring (0-100) ──────────────────────────────────────
+            const scoreLead = (lead) => {
+              let score = 0;
+              if (lead.email) score += 20;
+              if (lead.phone) score += 20;
+              if (lead.budget) score += 15;
+              if (lead.nationality) score += 10;
+              if (lead.project) score += 15;
+              const daysSinceCreated = (now - new Date(lead.createdAt || now)) / (1000 * 60 * 60 * 24);
+              if (daysSinceCreated < 1) score += 20;
+              else if (daysSinceCreated < 7) score += 10;
+              if ((lead.notes || []).length > 0) score += 10;
+              if (lead.status === "Qualified") score = Math.max(score, 60);
+              if (lead.status === "Converted") score = 100;
+              if (lead.status === "Lost") score = 0;
+              return Math.min(score, 100);
+            };
+            const getScoreColor = (score) => score >= 70 ? T.green : score >= 40 ? T.gold : T.red;
+            const getScoreLabel = (score) => score >= 70 ? "Hot" : score >= 40 ? "Warm" : "Cold";
+
+            // ── Follow-up status ──────────────────────────────────────────
+            const isOverdue = (lead) => {
+              if (!lead.followUpDate) return false;
+              return new Date(lead.followUpDate) < now;
+            };
+            const isDueToday = (lead) => {
+              if (!lead.followUpDate) return false;
+              const d = new Date(lead.followUpDate);
+              return d >= todayStart && d < tomorrowEnd;
+            };
+
+            // ── Stats ─────────────────────────────────────────────────────
             const stats = {
               total: leads.length,
               new: leads.filter(l => (l.status || "New") === "New").length,
@@ -19842,6 +20033,9 @@ export default function AdminPanel() {
               lost: leads.filter(l => l.status === "Lost").length,
               today: leads.filter(l => new Date(l.createdAt) >= todayStart).length,
               thisWeek: leads.filter(l => new Date(l.createdAt) >= weekAgo).length,
+              overdue: leads.filter(l => isOverdue(l) && l.status !== "Converted" && l.status !== "Lost").length,
+              dueToday: leads.filter(l => isDueToday(l) && l.status !== "Converted" && l.status !== "Lost").length,
+              hot: leads.filter(l => scoreLead(l) >= 70).length,
             };
             const conversionRate = stats.total > 0 ? Math.round((stats.converted / stats.total) * 100) : 0;
             const avgResponseHrs = (() => {
@@ -19851,23 +20045,45 @@ export default function AdminPanel() {
               return Math.round(total / responded.length / 1000 / 60 / 60);
             })();
 
-            // Filters
+            // ── Pipeline analytics ────────────────────────────────────────
+            const winRate = stats.converted + stats.lost > 0 ? Math.round((stats.converted / (stats.converted + stats.lost)) * 100) : 0;
+            const sourceBreakdown = leads.reduce((acc, l) => {
+              const s = l.source || "Manual";
+              if (!acc[s]) acc[s] = { total: 0, converted: 0 };
+              acc[s].total++;
+              if (l.status === "Converted") acc[s].converted++;
+              return acc;
+            }, {});
+            const avgDaysToClose = (() => {
+              const closed = leads.filter(l => l.status === "Converted" && l.createdAt && l.convertedAt);
+              if (closed.length === 0) return null;
+              const total = closed.reduce((sum, l) => sum + (new Date(l.convertedAt) - new Date(l.createdAt)), 0);
+              return Math.round(total / closed.length / (1000 * 60 * 60 * 24));
+            })();
+
+            // ── Filters ───────────────────────────────────────────────────
             const filtered = leads.filter(l => {
               if (leadFilter !== "all" && (l.status || "New").toLowerCase() !== leadFilter) return false;
               if (leadSourceFilter !== "all" && l.source !== leadSourceFilter) return false;
               if (leadDateRange === "today" && new Date(l.createdAt) < todayStart) return false;
               if (leadDateRange === "week" && new Date(l.createdAt) < weekAgo) return false;
               if (leadDateRange === "month" && new Date(l.createdAt) < monthAgo) return false;
+              if (leadDateRange === "overdue") { if (!isOverdue(l) || l.status === "Converted" || l.status === "Lost") return false; }
+              if (leadDateRange === "today_followup") { if (!isDueToday(l)) return false; }
               if (leadSearch) {
                 const s = leadSearch.toLowerCase();
-                if (!((l.name || "").toLowerCase().includes(s) || (l.email || "").toLowerCase().includes(s) || (l.phone || "").includes(s) || (l.project || "").toLowerCase().includes(s))) return false;
+                if (!((l.name || "").toLowerCase().includes(s) || (l.email || "").toLowerCase().includes(s) || (l.phone || "").includes(s) || (l.project || "").toLowerCase().includes(s) || (l.nationality || "").toLowerCase().includes(s))) return false;
               }
               return true;
-            }).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            }).sort((a, b) => {
+              if (isOverdue(a) && !isOverdue(b)) return -1;
+              if (!isOverdue(a) && isOverdue(b)) return 1;
+              return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+            });
 
             const sources = [...new Set(leads.map(l => l.source).filter(Boolean))];
 
-            // Add lead function
+            // ── Add lead ──────────────────────────────────────────────────
             const addLead = async () => {
               if (!addLeadForm.name && !addLeadForm.email) { notify("Name or email required"); return; }
               setAddLeadLoading(true);
@@ -19877,74 +20093,86 @@ export default function AdminPanel() {
                   ...addLeadForm,
                   status: "New",
                   createdAt: new Date().toISOString(),
+                  activity: [{ type: "created", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Lead created" }],
                   notes: addLeadForm.notes ? [{ text: addLeadForm.notes, by: adminUser?.email || "admin", at: new Date().toISOString() }] : [],
                 });
                 await logAudit(db, { action: "lead_created", leadId: id });
                 notify("Lead added!");
                 setShowAddLead(false);
-                setAddLeadForm({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "" });
+                setAddLeadForm({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
                 fetchLeads();
               } catch (e) { notify("Error: " + e.message); }
               setAddLeadLoading(false);
             };
 
-            // Update lead status
+            // ── Update status ─────────────────────────────────────────────
             const updateLeadStatus = async (leadId, newStatus, reason) => {
               try {
+                const lead = leads.find(l => l.id === leadId);
                 const update = { status: newStatus, updatedAt: new Date().toISOString() };
-                if (newStatus === "Contacted" && !leads.find(l => l.id === leadId)?.respondedAt) {
-                  update.respondedAt = new Date().toISOString();
-                }
-                if (newStatus === "Lost" && reason) {
-                  update.lossReason = reason;
-                }
+                if (newStatus === "Contacted" && !lead?.respondedAt) update.respondedAt = new Date().toISOString();
+                if (newStatus === "Lost" && reason) update.lossReason = reason;
+                if (newStatus === "Converted") update.convertedAt = new Date().toISOString();
+                const activity = [...(lead?.activity || []), { type: "status_change", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Status changed to ${newStatus}${reason ? ` — ${reason}` : ""}` }];
+                update.activity = activity;
                 await setDoc(doc(db, "leads", leadId), update, { merge: true });
                 await logAudit(db, { action: "lead_status_change", leadId, to: newStatus });
-                notify(`Status → ${newStatus}`);
+                notify(`Status ${newStatus}`);
                 fetchLeads();
                 if (leadDrawer?.id === leadId) setLeadDrawer(prev => ({ ...prev, status: newStatus, ...update }));
               } catch (e) { notify("Error: " + e.message); }
             };
 
-            // Add note to lead
+            // ── Bulk update ───────────────────────────────────────────────
+            const bulkUpdateStatus = async (newStatus) => {
+              if (leadSelectedIds.length === 0) { notify("Select leads first"); return; }
+              try {
+                await Promise.all(leadSelectedIds.map(id => setDoc(doc(db, "leads", id), { status: newStatus, updatedAt: new Date().toISOString() }, { merge: true })));
+                notify(`${leadSelectedIds.length} leads -> ${newStatus}`);
+                setLeadSelectedIds([]);
+                fetchLeads();
+              } catch (e) { notify("Error: " + e.message); }
+            };
+
+            // ── Schedule follow-up ────────────────────────────────────────
+            const scheduleFollowUp = async () => {
+              if (!showFollowUpModal || !followUpDate) { notify("Select a date"); return; }
+              try {
+                const activity = [...(showFollowUpModal.activity || []), { type: "followup_scheduled", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Follow-up scheduled for ${new Date(followUpDate).toLocaleDateString("en-AE", { day: "2-digit", month: "short", year: "numeric" })}${followUpNote ? ` - ${followUpNote}` : ""}` }];
+                await setDoc(doc(db, "leads", showFollowUpModal.id), { followUpDate, followUpNote, activity, updatedAt: new Date().toISOString() }, { merge: true });
+                notify("Follow-up scheduled!");
+                setShowFollowUpModal(null);
+                setFollowUpDate("");
+                setFollowUpNote("");
+                fetchLeads();
+                if (leadDrawer?.id === showFollowUpModal.id) setLeadDrawer(prev => ({ ...prev, followUpDate, followUpNote, activity }));
+              } catch (e) { notify("Error: " + e.message); }
+            };
+
+            // ── Add note ──────────────────────────────────────────────────
             const addNote = async () => {
               if (!leadNote.trim() || !leadDrawer) return;
               setLeadNoteSaving(true);
               try {
-                const notes = leadDrawer.notes || [];
-                notes.push({ text: leadNote, by: adminUser?.email || "admin", at: new Date().toISOString() });
-                await setDoc(doc(db, "leads", leadDrawer.id), { notes, updatedAt: new Date().toISOString() }, { merge: true });
-                setLeadDrawer(prev => ({ ...prev, notes }));
+                const notes = [...(leadDrawer.notes || []), { text: leadNote, by: adminUser?.email || "admin", at: new Date().toISOString() }];
+                const activity = [...(leadDrawer.activity || []), { type: "note", by: adminUser?.email || "admin", at: new Date().toISOString(), note: leadNote }];
+                await setDoc(doc(db, "leads", leadDrawer.id), { notes, activity, updatedAt: new Date().toISOString() }, { merge: true });
+                setLeadDrawer(prev => ({ ...prev, notes, activity }));
                 setLeadNote("");
                 notify("Note added");
+                fetchLeads();
               } catch (e) { notify("Error: " + e.message); }
               setLeadNoteSaving(false);
             };
 
-            // Convert lead to user
+            // ── Convert to user ───────────────────────────────────────────
             const convertToUser = async () => {
               if (!leadDrawer) return;
               setConvertingLead(true);
               try {
-                // Create user in Firestore
                 const userId = `user_${Date.now()}`;
-                await setDoc(doc(db, "users", userId), {
-                  name: leadDrawer.name || "",
-                  email: leadDrawer.email || "",
-                  phone: leadDrawer.phone || "",
-                  tier: "free",
-                  role: "user",
-                  createdAt: new Date().toISOString(),
-                  source: "lead_conversion",
-                  leadId: leadDrawer.id,
-                });
-                // Update lead as converted
-                await setDoc(doc(db, "leads", leadDrawer.id), { 
-                  status: "Converted", 
-                  userId, 
-                  convertedAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString()
-                }, { merge: true });
+                await setDoc(doc(db, "users", userId), { name: leadDrawer.name || "", email: leadDrawer.email || "", phone: leadDrawer.phone || "", tier: "free", role: "user", createdAt: new Date().toISOString(), source: "lead_conversion", leadId: leadDrawer.id });
+                await setDoc(doc(db, "leads", leadDrawer.id), { status: "Converted", userId, convertedAt: new Date().toISOString(), updatedAt: new Date().toISOString() }, { merge: true });
                 await logAudit(db, { action: "lead_converted", leadId: leadDrawer.id, userId });
                 notify("Lead converted to user!");
                 fetchLeads();
@@ -19954,31 +20182,25 @@ export default function AdminPanel() {
               setConvertingLead(false);
             };
 
-            // Send email to lead
+            // ── Send email ────────────────────────────────────────────────
             const sendLeadEmail = async (lead, subject, body) => {
+              setSendingEmail(true);
               try {
-                await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-                  to_email: lead.email,
-                  to_name: lead.name || "there",
-                  subject: subject || `Following up on ${lead.project || "your inquiry"}`,
-                  message: body || `Hi ${lead.name || "there"},\n\nThank you for your interest in ${lead.project || "our properties"}. I'd be happy to provide more information.\n\nBest regards,\nDXB Analytics`,
-                  project_name: lead.project || "DXB Analytics",
-                }, "USkwUhp0csGCVDkdQ");
-                await setDoc(doc(db, "leads", lead.id), { respondedAt: new Date().toISOString(), updatedAt: new Date().toISOString() }, { merge: true });
+                await emailjs.send("service_da7nshv", "template_gl1xqhy", { to_email: lead.email, to_name: lead.name || "there", subject: subject || `Following up on ${lead.project || "your inquiry"}`, message: body || `Hi ${lead.name || "there"},\n\nThank you for your interest in ${lead.project || "our properties"}.\n\nBest regards,\nDXB Analytics`, project_name: lead.project || "DXB Analytics" }, "USkwUhp0csGCVDkdQ");
+                const activity = [...(lead.activity || []), { type: "email_sent", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Email sent: ${subject || "Follow-up email"}` }];
+                await setDoc(doc(db, "leads", lead.id), { respondedAt: new Date().toISOString(), updatedAt: new Date().toISOString(), activity }, { merge: true });
                 await logAudit(db, { action: "lead_email_sent", leadId: lead.id });
                 notify("Email sent!");
                 fetchLeads();
+                if (leadDrawer?.id === lead.id) setLeadDrawer(prev => ({ ...prev, activity }));
               } catch (e) { notify("Email failed: " + e.message); }
+              setSendingEmail(false);
             };
 
-            // Export CSV
+            // ── Export CSV ────────────────────────────────────────────────
             const exportLeadsCSV = () => {
-              const headers = ["Name", "Email", "Phone", "Project", "Community", "Source", "Status", "Created", "Notes"];
-              const rows = filtered.map(l => [
-                l.name || "", l.email || "", l.phone || "", l.project || "", l.community || "",
-                l.source || "", l.status || "New", l.createdAt || "",
-                (l.notes || []).map(n => n.text).join(" | ")
-              ]);
+              const headers = ["Name", "Email", "Phone", "Nationality", "Budget", "Project", "Community", "Source", "Status", "Score", "Follow-Up Date", "Created", "Notes"];
+              const rows = filtered.map(l => [l.name || "", l.email || "", l.phone || "", l.nationality || "", l.budget || "", l.project || "", l.community || "", l.source || "", l.status || "New", scoreLead(l), l.followUpDate || "", l.createdAt || "", (l.notes || []).map(n => n.text).join(" | ")]);
               const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
               const blob = new Blob([csv], { type: "text/csv" });
               const url = URL.createObjectURL(blob);
@@ -19993,86 +20215,158 @@ export default function AdminPanel() {
               Converted: { bg: "rgba(16,185,129,0.12)", color: T.green, border: "rgba(16,185,129,0.3)" },
               Lost: { bg: "rgba(239,68,68,0.12)", color: T.red, border: "rgba(239,68,68,0.3)" },
             };
+            const activityIcons = { created: "plus", status_change: "->", note: "N", email_sent: "@", followup_scheduled: "clock", call_logged: "tel" };
+            const emailTemplates = {
+              followup: { subject: `Following up on ${leadDrawer?.project || "your inquiry"}`, body: `Hi ${leadDrawer?.name || "there"},\n\nI wanted to follow up on your interest in ${leadDrawer?.project || "one of our properties"}. Have you had a chance to review the details?\n\nI would love to arrange a viewing at your convenience.\n\nBest regards,\nDXB Analytics Team` },
+              info: { subject: `Project Information - ${leadDrawer?.project || "DXB Analytics"}`, body: `Hi ${leadDrawer?.name || "there"},\n\nThank you for your inquiry about ${leadDrawer?.project || "our property"}.\n\nKey details:\n- Starting Price: [price]\n- Handover: [date]\n- Payment Plan: [plan]\n- Expected Yield: [yield]%\n\nWould you like to schedule a call?\n\nBest regards,\nDXB Analytics Team` },
+              viewing: { subject: `Schedule a Viewing - ${leadDrawer?.project || "Property"}`, body: `Hi ${leadDrawer?.name || "there"},\n\nI would love to arrange a viewing for you at ${leadDrawer?.project || "this property"}.\n\nPlease let me know your preferred date and time.\n\nBest regards,\nDXB Analytics Team` },
+              golden_visa: { subject: `Golden Visa Eligibility - ${leadDrawer?.project || "Property"}`, body: `Hi ${leadDrawer?.name || "there"},\n\nGreat news! ${leadDrawer?.project || "This property"} qualifies for the UAE Golden Visa.\n\nKey benefits:\n- 10-year renewable residency\n- Sponsor family members\n- No requirement to stay in UAE\n- Property must be AED 2M+\n\nBest regards,\nDXB Analytics Team` },
+            };
 
             return (
               <>
-                {/* ═══ KPI TOPBAR ═══ */}
-                <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, overflow: "hidden" }}>
+                {/* OVERDUE ALERT */}
+                {stats.overdue > 0 && (
+                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(239,68,68,0.08)", border: `1px solid rgba(239,68,68,0.3)`, marginBottom: 16 }}>
+                    <span style={{ fontSize: 14 }}>!</span>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: T.red }}>{stats.overdue} overdue follow-up{stats.overdue > 1 ? "s" : ""}</span>
+                      <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 8 }}>These leads need your attention today.</span>
+                    </div>
+                    <button type="button" onClick={() => setLeadDateRange("overdue")} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.red}`, background: "transparent", color: T.red, cursor: "pointer", fontWeight: 600 }}>View Overdue</button>
+                  </div>
+                )}
+                {stats.dueToday > 0 && stats.overdue === 0 && (
+                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(212,168,67,0.08)", border: `1px solid rgba(212,168,67,0.3)`, marginBottom: 16 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{stats.dueToday} follow-up{stats.dueToday > 1 ? "s" : ""} due today</span>
+                    <button type="button" onClick={() => setLeadDateRange("today_followup")} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontWeight: 600, marginLeft: "auto" }}>View</button>
+                  </div>
+                )}
+
+                {/* KPI BAR */}
+                <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, overflow: "hidden", flexWrap: "wrap" }}>
                   <button type="button" onClick={() => { fetchLeads(); notify("Leads refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                   {[
                     { label: "Total", value: stats.total, color: T.gold },
                     { label: "New", value: stats.new, color: "#3B82F6" },
+                    { label: "Hot", value: stats.hot, color: T.red },
                     { label: "This Week", value: stats.thisWeek, color: T.teal },
-                    { label: "Conversion", value: `${conversionRate}%`, color: T.green },
-                    { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "—", color: T.purple },
+                    { label: "Win Rate", value: `${winRate}%`, color: T.green },
+                    { label: "Conversion", value: `${conversionRate}%`, color: T.purple },
+                    { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "-", color: T.orange },
+                    { label: "Days to Close", value: avgDaysToClose !== null ? `${avgDaysToClose}d` : "-", color: T.teal },
                   ].map((item, i) => (
-                    <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 20px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
+                    <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 16px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
                       <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
-                      <span style={{ fontSize: 18, fontWeight: 900, color: item.color, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>{item.value}</span>
+                      <span style={{ fontSize: 17, fontWeight: 900, color: item.color, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>{item.value}</span>
                     </div>
                   ))}
-                  <div style={{ marginLeft: "auto", padding: "10px 16px", display: "flex", gap: 8 }}>
+                  <div style={{ marginLeft: "auto", padding: "10px 16px", display: "flex", gap: 8, flexShrink: 0 }}>
                     <div style={{ display: "flex", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-                      <button type="button" onClick={() => setLeadsViewMode("table")} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: leadsViewMode === "table" ? T.gold + "20" : "transparent", color: leadsViewMode === "table" ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}> Table</button>
-                      <button type="button" onClick={() => setLeadsViewMode("kanban")} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: leadsViewMode === "kanban" ? T.gold + "20" : "transparent", color: leadsViewMode === "kanban" ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}> Kanban</button>
+                      <button type="button" onClick={() => { setLeadsViewMode("table"); setLeadAnalyticsView(false); }} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: leadsViewMode === "table" && !leadAnalyticsView ? T.gold + "20" : "transparent", color: leadsViewMode === "table" && !leadAnalyticsView ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}>Table</button>
+                      <button type="button" onClick={() => { setLeadsViewMode("kanban"); setLeadAnalyticsView(false); }} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: leadsViewMode === "kanban" && !leadAnalyticsView ? T.gold + "20" : "transparent", color: leadsViewMode === "kanban" && !leadAnalyticsView ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}>Kanban</button>
+                      <button type="button" onClick={() => setLeadAnalyticsView(v => !v)} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: leadAnalyticsView ? T.gold + "20" : "transparent", color: leadAnalyticsView ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}>Analytics</button>
                     </div>
                     <button type="button" onClick={() => setShowAddLead(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.08)", color: T.green, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>+ Add Lead</button>
                     <button type="button" onClick={exportLeadsCSV} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} Export</button>
                   </div>
                 </div>
 
-                {/* ═══ PIPELINE CARDS ═══ */}
+                {/* PIPELINE CARDS */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 20 }}>
                   {[
-                    { id: "new", label: "New", count: stats.new, color: "#3B82F6", icon: "+" },
-                    { id: "contacted", label: "Contacted", count: stats.contacted, color: T.gold, icon: "!" },
-                    { id: "qualified", label: "Qualified", count: stats.qualified, color: "#8B5CF6", icon: "?" },
-                    { id: "converted", label: "Converted", count: stats.converted, color: T.green, icon: "V" },
-                    { id: "lost", label: "Lost", count: stats.lost, color: T.red, icon: "X" },
+                    { id: "new", label: "New", count: stats.new, color: "#3B82F6" },
+                    { id: "contacted", label: "Contacted", count: stats.contacted, color: T.gold },
+                    { id: "qualified", label: "Qualified", count: stats.qualified, color: "#8B5CF6" },
+                    { id: "converted", label: "Converted", count: stats.converted, color: T.green },
+                    { id: "lost", label: "Lost", count: stats.lost, color: T.red },
                   ].map(s => (
-                    <div key={s.id} onClick={() => setLeadFilter(leadFilter === s.id ? "all" : s.id)}
-                      className="fade-up" style={{ 
-                        padding: "16px 18px", borderRadius: 12, cursor: "pointer",
-                        background: leadFilter === s.id ? `${s.color}15` : T.surface,
-                        border: `1px solid ${leadFilter === s.id ? s.color : T.border}`,
-                        transition: "all 0.15s"
-                      }}>
+                    <div key={s.id} onClick={() => setLeadFilter(leadFilter === s.id ? "all" : s.id)} className="fade-up" style={{ padding: "16px 18px", borderRadius: 12, cursor: "pointer", background: leadFilter === s.id ? `${s.color}15` : T.surface, border: `1px solid ${leadFilter === s.id ? s.color : T.border}`, transition: "all 0.15s" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                         <span style={{ fontSize: 11, fontWeight: 700, color: s.color, textTransform: "uppercase", letterSpacing: 1 }}>{s.label}</span>
-                        <span style={{ width: 24, height: 24, borderRadius: 6, background: `${s.color}20`, color: s.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>{s.icon}</span>
                       </div>
                       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: s.color }}>{s.count}</div>
-                      <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{leadFilter === s.id ? "Click to clear" : "Click to filter"}</div>
+                      <div style={{ marginTop: 8, height: 3, borderRadius: 2, background: T.border }}>
+                        <div style={{ height: "100%", borderRadius: 2, background: s.color, width: `${stats.total > 0 ? (s.count / stats.total) * 100 : 0}%`, transition: "width 0.5s" }} />
+                      </div>
                     </div>
                   ))}
                 </div>
 
-                {/* ═══ FILTERS ═══ */}
-                <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
-                  <input type="text" placeholder="Search name, email, phone, project..." value={leadSearch} onChange={e => setLeadSearch(e.target.value)}
-                    style={{ flex: 1, minWidth: 200, padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                  <select value={leadSourceFilter} onChange={e => setLeadSourceFilter(e.target.value)}
-                    style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                {/* PIPELINE ANALYTICS */}
+                {leadAnalyticsView && (
+                  <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: 24, marginBottom: 20 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 20 }}>Pipeline Analytics</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+                      {[
+                        { label: "Win Rate", value: `${winRate}%`, sub: `${stats.converted} won of ${stats.converted + stats.lost} closed`, color: T.green },
+                        { label: "Avg Days to Close", value: avgDaysToClose !== null ? `${avgDaysToClose} days` : "-", sub: "From lead to conversion", color: T.blue },
+                        { label: "Hot Leads", value: stats.hot, sub: "Score 70+ (ready to close)", color: T.red },
+                        { label: "Pipeline Value", value: "AED " + leads.filter(l => l.budget).reduce((sum, l) => sum + (parseFloat(l.budget) || 0), 0).toLocaleString(), sub: "Total budget across active leads", color: T.gold },
+                      ].map((item, i) => (
+                        <div key={i} style={{ padding: "16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                          <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>{item.label}</div>
+                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: item.color, marginBottom: 4 }}>{item.value}</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>{item.sub}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, marginBottom: 12 }}>Win Rate by Source</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
+                      {Object.entries(sourceBreakdown).map(([source, data]) => {
+                        const wr = data.total > 0 ? Math.round((data.converted / data.total) * 100) : 0;
+                        return (
+                          <div key={source} style={{ padding: "12px 14px", background: T.bg, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, marginBottom: 8 }}>{source}</div>
+                            <div style={{ fontSize: 18, fontWeight: 900, color: wr >= 50 ? T.green : wr >= 25 ? T.gold : T.red, fontFamily: "'Fraunces',serif" }}>{wr}%</div>
+                            <div style={{ fontSize: 10, color: T.textMuted }}>{data.converted}/{data.total} converted</div>
+                            <div style={{ marginTop: 6, height: 3, borderRadius: 2, background: T.border }}>
+                              <div style={{ height: "100%", background: wr >= 50 ? T.green : wr >= 25 ? T.gold : T.red, width: `${wr}%`, borderRadius: 2 }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {Object.keys(sourceBreakdown).length === 0 && <div style={{ fontSize: 11, color: T.textMuted, gridColumn: "1/-1" }}>No source data yet.</div>}
+                    </div>
+                  </div>
+                )}
+
+                {/* BULK ACTIONS */}
+                {leadSelectedIds.length > 0 && (
+                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: `rgba(59,130,246,0.08)`, border: `1px solid rgba(59,130,246,0.3)`, marginBottom: 16 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: T.blue }}>{leadSelectedIds.length} selected</span>
+                    <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
+                      {["Contacted", "Qualified", "Lost"].map(status => (
+                        <button key={status} type="button" onClick={() => bulkUpdateStatus(status)} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${statusColors[status]?.border}`, background: statusColors[status]?.bg, color: statusColors[status]?.color, cursor: "pointer", fontWeight: 600 }}>Set {status}</button>
+                      ))}
+                      <button type="button" onClick={() => setLeadSelectedIds([])} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer" }}>Clear</button>
+                    </div>
+                  </div>
+                )}
+
+                {/* FILTERS */}
+                <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
+                  <input type="text" placeholder="Search name, email, phone, nationality, project..." value={leadSearch} onChange={e => setLeadSearch(e.target.value)} style={{ flex: 1, minWidth: 200, padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                  <select value={leadSourceFilter} onChange={e => setLeadSourceFilter(e.target.value)} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
                     <option value="all">All Sources</option>
                     {sources.map(s => <option key={s} value={s}>{s}</option>)}
-                    <option value="Manual">Manual</option>
                   </select>
-                  <select value={leadDateRange} onChange={e => setLeadDateRange(e.target.value)}
-                    style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                  <select value={leadDateRange} onChange={e => setLeadDateRange(e.target.value)} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
                     <option value="all">All Time</option>
                     <option value="today">Today</option>
                     <option value="week">This Week</option>
                     <option value="month">This Month</option>
+                    <option value="overdue">Overdue Follow-ups</option>
+                    <option value="today_followup">Due Today</option>
                   </select>
                   {(leadFilter !== "all" || leadSourceFilter !== "all" || leadDateRange !== "all" || leadSearch) && (
-                    <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); }}
-                      style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid ${T.red}40`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear Filters</button>
+                    <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); }} style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
                   )}
-                  <span style={{ fontSize: 11, color: T.textMuted }}>{filtered.length} of {leads.length} leads</span>
+                  <span style={{ fontSize: 11, color: T.textMuted }}>{filtered.length} of {leads.length}</span>
                 </div>
 
-                {/* ═══ KANBAN VIEW ═══ */}
-                {leadsViewMode === "kanban" && (
+                {/* KANBAN VIEW */}
+                {leadsViewMode === "kanban" && !leadAnalyticsView && (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 20 }}>
                     {[
                       { id: "New", label: "New", color: "#3B82F6" },
@@ -20081,32 +20375,51 @@ export default function AdminPanel() {
                       { id: "Converted", label: "Converted", color: T.green },
                       { id: "Lost", label: "Lost", color: T.red },
                     ].map(stage => {
-                      const stageLeads = leads.filter(l => (l.status || "New") === stage.id).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                      const stageLeads = leads.filter(l => (l.status || "New") === stage.id).sort((a, b) => {
+                        if (isOverdue(a) && !isOverdue(b)) return -1;
+                        if (!isOverdue(a) && isOverdue(b)) return 1;
+                        return scoreLead(b) - scoreLead(a);
+                      });
+                      const stageValue = stageLeads.filter(l => l.budget).reduce((sum, l) => sum + (parseFloat(l.budget) || 0), 0);
                       return (
-                        <div key={stage.id} style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-                          <div style={{ padding: "12px 14px", borderBottom: `2px solid ${stage.color}`, background: `${stage.color}08` }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div key={stage.id} style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                          <div style={{ padding: "12px 14px", borderBottom: `2px solid ${stage.color}`, background: `${stage.color}08`, flexShrink: 0 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                               <span style={{ fontSize: 12, fontWeight: 700, color: stage.color }}>{stage.label}</span>
                               <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: `${stage.color}20`, color: stage.color }}>{stageLeads.length}</span>
                             </div>
+                            {stageValue > 0 && <div style={{ fontSize: 10, color: T.textMuted }}>AED {(stageValue/1000000).toFixed(1)}M pipeline</div>}
                           </div>
-                          <div style={{ padding: "8px", maxHeight: 400, overflowY: "auto" }}>
+                          <div style={{ padding: "8px", overflowY: "auto", flex: 1, maxHeight: 420 }}>
                             {stageLeads.length === 0 ? (
-                              <div style={{ padding: "20px 10px", textAlign: "center", color: T.textMuted, fontSize: 11 }}>No leads</div>
-                            ) : (
-                              stageLeads.map(lead => (
-                                <div key={lead.id} onClick={() => setLeadDrawer(lead)} style={{ padding: "10px 12px", background: T.surfaceAlt, borderRadius: 8, marginBottom: 6, cursor: "pointer", border: `1px solid ${T.border}`, transition: "all 0.15s" }}
-                                  onMouseEnter={e => { e.currentTarget.style.borderColor = stage.color + "50"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                                  onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "none"; }}>
-                                  <div style={{ fontSize: 12, fontWeight: 600, color: T.white, marginBottom: 4 }}>{lead.name || "Unknown"}</div>
-                                  <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>{lead.project || "No project"}</div>
-                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <span style={{ fontSize: 9, color: T.textMuted }}>{lead.createdAt ? timeSince(new Date(lead.createdAt)) : "—"}</span>
-                                    {lead.notes?.length > 0 && <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 4, background: `${T.teal}20`, color: T.teal }}>{lead.notes.length} notes</span>}
+                              <div style={{ padding: "24px 10px", textAlign: "center", color: T.textMuted, fontSize: 11 }}>No leads</div>
+                            ) : stageLeads.map(lead => {
+                              const score = scoreLead(lead);
+                              const overdue = isOverdue(lead);
+                              const dueToday = isDueToday(lead);
+                              return (
+                                <div key={lead.id} onClick={() => setLeadDrawer(lead)} style={{ padding: "10px 12px", background: overdue ? "rgba(239,68,68,0.06)" : T.surfaceAlt, borderRadius: 8, marginBottom: 6, cursor: "pointer", border: `1px solid ${overdue ? "rgba(239,68,68,0.4)" : T.border}`, transition: "all 0.15s" }}
+                                  onMouseEnter={e => { e.currentTarget.style.borderColor = stage.color + "60"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                                  onMouseLeave={e => { e.currentTarget.style.borderColor = overdue ? "rgba(239,68,68,0.4)" : T.border; e.currentTarget.style.transform = "none"; }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white, lineHeight: 1.3 }}>{lead.name || "Unknown"}</div>
+                                    <div style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${getScoreColor(score)}20`, color: getScoreColor(score), fontWeight: 700, flexShrink: 0, marginLeft: 4 }}>{getScoreLabel(score)}</div>
+                                  </div>
+                                  {lead.project && <div style={{ fontSize: 10, color: T.gold, marginBottom: 2, fontWeight: 500 }}>{lead.project}</div>}
+                                  {lead.budget && <div style={{ fontSize: 10, color: T.green }}>AED {parseFloat(lead.budget).toLocaleString()}</div>}
+                                  {lead.nationality && <div style={{ fontSize: 10, color: T.textMuted }}>({lead.nationality})</div>}
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+                                    <span style={{ fontSize: 9, color: overdue ? T.red : dueToday ? T.gold : T.textMuted, fontWeight: overdue || dueToday ? 700 : 400 }}>
+                                      {overdue ? "OVERDUE" : dueToday ? "Due today" : lead.createdAt ? timeSince(new Date(lead.createdAt)) : "-"}
+                                    </span>
+                                    <div style={{ display: "flex", gap: 4 }}>
+                                      {(lead.notes || []).length > 0 && <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 4, background: `rgba(20,184,166,0.2)`, color: T.teal }}>{lead.notes.length}</span>}
+                                      {lead.phone && <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 4, background: "rgba(16,185,129,0.15)", color: T.green }}>WA</span>}
+                                    </div>
                                   </div>
                                 </div>
-                              ))
-                            )}
+                              );
+                            })}
                           </div>
                         </div>
                       );
@@ -20114,293 +20427,366 @@ export default function AdminPanel() {
                   </div>
                 )}
 
-                {/* ═══ LEADS TABLE ═══ */}
-                {leadsViewMode === "table" && (
-                <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-                  {filtered.length === 0 ? (
-                    <div style={{ textAlign: "center", padding: 60, color: T.textMuted }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary, marginBottom: 8 }}>{leads.length === 0 ? "No leads yet" : "No leads match filters"}</div>
-                      <div style={{ fontSize: 12, color: T.textMuted }}>{leads.length === 0 ? "Leads are captured when users click WhatsApp or Email on projects, or add manually." : "Try adjusting your filters."}</div>
-                    </div>
-                  ) : (
-                    <div style={{ overflowX: "auto" }}>
-                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                        <thead>
-                          <tr style={{ borderBottom: `2px solid ${T.border}` }}>
-                            {["Name", "Contact", "Project", "Source", "Status", "Created", "Actions"].map(h => (
-                              <th key={h} style={{ padding: "12px 14px", textAlign: "left", color: T.gold, fontWeight: 600, fontSize: 10, letterSpacing: 0.5, textTransform: "uppercase", background: T.surfaceAlt }}>{h}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filtered.map((lead, i) => {
-                            const sc = statusColors[lead.status || "New"] || statusColors.New;
-                            return (
-                              <tr key={lead.id} style={{ borderBottom: `1px solid ${T.border}`, cursor: "pointer" }}
-                                onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
-                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                                onClick={() => setLeadDrawer(lead)}>
-                                <td style={{ padding: "12px 14px" }}>
-                                  <div style={{ fontWeight: 600, color: T.white }}>{lead.name || "—"}</div>
-                                  {lead.notes?.length > 0 && <span style={{ fontSize: 9, color: T.textMuted }}>{lead.notes.length} note{lead.notes.length > 1 ? "s" : ""}</span>}
-                                </td>
-                                <td style={{ padding: "12px 14px" }}>
-                                  <div style={{ fontSize: 11, color: T.textSecondary }}>{lead.email || "—"}</div>
-                                  {lead.phone && <div style={{ fontSize: 10, color: T.textMuted }}>{lead.phone}</div>}
-                                </td>
-                                <td style={{ padding: "12px 14px" }}>
-                                  <div style={{ color: T.gold, fontWeight: 600 }}>{lead.project || "—"}</div>
-                                  {lead.community && <div style={{ fontSize: 10, color: T.textMuted }}>{lead.community}</div>}
-                                </td>
-                                <td style={{ padding: "12px 14px" }}>
-                                  <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: lead.source === "WhatsApp" ? "rgba(37,211,102,0.15)" : lead.source === "Email Inquiry" ? "rgba(59,130,246,0.12)" : "rgba(148,163,184,0.1)", color: lead.source === "WhatsApp" ? T.green : lead.source === "Email Inquiry" ? T.blue : T.textSecondary }}>{lead.source || "—"}</span>
-                                </td>
-                                <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
-                                  <select value={lead.status || "New"} onChange={e => {
-                                    if (e.target.value === "Lost") setShowLossReason(lead.id);
-                                    else updateLeadStatus(lead.id, e.target.value);
-                                  }} style={{ padding: "4px 8px", borderRadius: 6, border: `1px solid ${sc.border}`, background: sc.bg, color: sc.color, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                                    <option value="New">New</option>
-                                    <option value="Contacted">Contacted</option>
-                                    <option value="Qualified">Qualified</option>
-                                    <option value="Converted">Converted</option>
-                                    <option value="Lost">Lost</option>
-                                  </select>
-                                </td>
-                                <td style={{ padding: "12px 14px", fontSize: 11, color: T.textMuted }}>
-                                  {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
-                                </td>
-                                <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
-                                  <div style={{ display: "flex", gap: 6 }}>
-                                    {lead.phone && (
-                                      <a href={`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${lead.name || ""}, following up on your interest in ${lead.project || "the property"}.`)}`} target="_blank" rel="noreferrer"
-                                        style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>WA</a>
+                {/* TABLE VIEW */}
+                {leadsViewMode === "table" && !leadAnalyticsView && (
+                  <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                    {filtered.length === 0 ? (
+                      <div style={{ textAlign: "center", padding: 60, color: T.textMuted }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: T.textSecondary, marginBottom: 8 }}>{leads.length === 0 ? "No leads yet" : "No leads match filters"}</div>
+                        <div style={{ fontSize: 12, color: T.textMuted }}>{leads.length === 0 ? "Add your first lead using the + Add Lead button." : "Try adjusting your filters."}</div>
+                      </div>
+                    ) : (
+                      <div style={{ overflowX: "auto" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                          <thead>
+                            <tr style={{ borderBottom: `2px solid ${T.border}` }}>
+                              <th style={{ padding: "12px 14px", textAlign: "left", background: T.surfaceAlt, width: 36 }}>
+                                <input type="checkbox" checked={leadSelectedIds.length === filtered.length && filtered.length > 0} onChange={e => setLeadSelectedIds(e.target.checked ? filtered.map(l => l.id) : [])} style={{ cursor: "pointer", accentColor: T.gold }} />
+                              </th>
+                              {["Name / Score", "Contact", "Project / Budget", "Source", "Follow-Up", "Status", "Actions"].map(h => (
+                                <th key={h} style={{ padding: "12px 14px", textAlign: "left", color: T.gold, fontWeight: 600, fontSize: 10, letterSpacing: 0.5, textTransform: "uppercase", background: T.surfaceAlt }}>{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filtered.map((lead) => {
+                              const sc = statusColors[lead.status || "New"] || statusColors.New;
+                              const score = scoreLead(lead);
+                              const overdue = isOverdue(lead);
+                              const dueToday = isDueToday(lead);
+                              const selected = leadSelectedIds.includes(lead.id);
+                              return (
+                                <tr key={lead.id} style={{ borderBottom: `1px solid ${T.border}`, background: selected ? "rgba(59,130,246,0.08)" : overdue ? "rgba(239,68,68,0.04)" : "transparent", cursor: "pointer" }}
+                                  onMouseEnter={e => { if (!selected && !overdue) e.currentTarget.style.background = T.surfaceAlt; }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = selected ? "rgba(59,130,246,0.08)" : overdue ? "rgba(239,68,68,0.04)" : "transparent"; }}>
+                                  <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
+                                    <input type="checkbox" checked={selected} onChange={e => setLeadSelectedIds(prev => e.target.checked ? [...prev, lead.id] : prev.filter(id => id !== lead.id))} style={{ cursor: "pointer", accentColor: T.blue }} />
+                                  </td>
+                                  <td style={{ padding: "12px 14px" }} onClick={() => setLeadDrawer(lead)}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                      <div style={{ width: 28, height: 28, borderRadius: 8, background: `${getScoreColor(score)}20`, color: getScoreColor(score), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{score}</div>
+                                      <div>
+                                        <div style={{ fontWeight: 600, color: T.white }}>{lead.name || "-"}</div>
+                                        <div style={{ fontSize: 10, color: getScoreColor(score), fontWeight: 600 }}>{getScoreLabel(score)}{lead.nationality ? ` - ${lead.nationality}` : ""}</div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td style={{ padding: "12px 14px" }} onClick={() => setLeadDrawer(lead)}>
+                                    <div style={{ fontSize: 11, color: T.textSecondary }}>{lead.email || "-"}</div>
+                                    {lead.phone && <div style={{ fontSize: 10, color: T.textMuted }}>{lead.phone}</div>}
+                                  </td>
+                                  <td style={{ padding: "12px 14px" }} onClick={() => setLeadDrawer(lead)}>
+                                    <div style={{ color: T.gold, fontWeight: 600 }}>{lead.project || "-"}</div>
+                                    {lead.budget && <div style={{ fontSize: 10, color: T.green }}>AED {parseFloat(lead.budget).toLocaleString()}</div>}
+                                    {lead.community && <div style={{ fontSize: 10, color: T.textMuted }}>{lead.community}</div>}
+                                  </td>
+                                  <td style={{ padding: "12px 14px" }}>
+                                    <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: lead.source === "WhatsApp" ? "rgba(37,211,102,0.15)" : "rgba(148,163,184,0.1)", color: lead.source === "WhatsApp" ? T.green : T.textSecondary }}>{lead.source || "-"}</span>
+                                  </td>
+                                  <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
+                                    {lead.followUpDate ? (
+                                      <div>
+                                        <div style={{ fontSize: 11, color: overdue ? T.red : dueToday ? T.gold : T.textSecondary, fontWeight: overdue || dueToday ? 700 : 400 }}>
+                                          {overdue ? "OVERDUE " : dueToday ? "Today " : ""}{new Date(lead.followUpDate).toLocaleDateString("en-AE", { day: "2-digit", month: "short" })}
+                                        </div>
+                                        {lead.followUpNote && <div style={{ fontSize: 10, color: T.textMuted }}>{String(lead.followUpNote).slice(0, 20)}...</div>}
+                                      </div>
+                                    ) : (
+                                      <button type="button" onClick={() => setShowFollowUpModal(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer" }}>+ Set</button>
                                     )}
-                                    {lead.email && (
-                                      <button type="button" onClick={() => sendLeadEmail(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: "none", background: "rgba(59,130,246,0.12)", color: T.blue, cursor: "pointer", fontWeight: 600 }}>Email</button>
-                                    )}
-                                    <button type="button" onClick={() => setLeadDrawer(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.08)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>Edit</button>
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
+                                  </td>
+                                  <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
+                                    <select value={lead.status || "New"} onChange={e => { if (e.target.value === "Lost") setShowLossReason(lead.id); else updateLeadStatus(lead.id, e.target.value); }} style={{ padding: "4px 8px", borderRadius: 6, border: `1px solid ${sc.border}`, background: sc.bg, color: sc.color, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                                      <option value="New">New</option><option value="Contacted">Contacted</option><option value="Qualified">Qualified</option><option value="Converted">Converted</option><option value="Lost">Lost</option>
+                                    </select>
+                                  </td>
+                                  <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
+                                    <div style={{ display: "flex", gap: 5 }}>
+                                      {lead.phone && <a href={`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${lead.name || ""}, following up on your interest in ${lead.project || "the property"}.`)}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>WA</a>}
+                                      <button type="button" onClick={() => setShowFollowUpModal(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: "none", background: "rgba(212,168,67,0.12)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>+Followup</button>
+                                      <button type="button" onClick={() => setLeadDrawer(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.08)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>Open</button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
                 )}
 
-                {/* ═══ ADD LEAD MODAL ═══ */}
+                {/* ADD LEAD MODAL */}
                 {showAddLead && (
                   <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowAddLead(false)}>
-                    <div style={{ background: T.surface, border: `1px solid ${T.green}40`, borderRadius: 16, width: "95%", maxWidth: 500, padding: 24 }} onClick={e => e.stopPropagation()}>
+                    <div style={{ background: T.surface, border: `1px solid rgba(16,185,129,0.4)`, borderRadius: 16, width: "95%", maxWidth: 560, padding: 28, maxHeight: "90vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                         <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.green }}>+ Add New Lead</h3>
                         <button type="button" onClick={() => setShowAddLead(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>x</button>
                       </div>
-                      <div style={{ display: "grid", gap: 12 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                         {[
-                          { key: "name", label: "Name", placeholder: "John Smith" },
+                          { key: "name", label: "Full Name *", placeholder: "John Smith", full: true },
                           { key: "email", label: "Email", placeholder: "john@example.com", type: "email" },
-                          { key: "phone", label: "Phone", placeholder: "+971 50 123 4567" },
+                          { key: "phone", label: "Phone / WhatsApp", placeholder: "+971 50 123 4567" },
+                          { key: "nationality", label: "Nationality", placeholder: "e.g. British, Indian, Russian" },
+                          { key: "budget", label: "Budget (AED)", placeholder: "e.g. 2000000", type: "number" },
                           { key: "project", label: "Interested Project", placeholder: "e.g. The Valley" },
                         ].map(f => (
-                          <div key={f.key}>
+                          <div key={f.key} style={{ gridColumn: f.full ? "1/-1" : "auto" }}>
                             <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
-                            <input type={f.type || "text"} placeholder={f.placeholder} value={addLeadForm[f.key]} onChange={e => setAddLeadForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                            <input type={f.type || "text"} placeholder={f.placeholder} value={addLeadForm[f.key] || ""} onChange={e => setAddLeadForm(prev => ({ ...prev, [f.key]: e.target.value }))}
                               style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
                           </div>
                         ))}
                         <div>
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Source</label>
-                          <select value={addLeadForm.source} onChange={e => setAddLeadForm(prev => ({ ...prev, source: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option>Manual</option>
-                            <option>WhatsApp</option>
-                            <option>Email Inquiry</option>
-                            <option>Phone Call</option>
-                            <option>Walk-in</option>
-                            <option>Referral</option>
-                            <option>Website</option>
+                          <select value={addLeadForm.source} onChange={e => setAddLeadForm(prev => ({ ...prev, source: e.target.value }))} style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                            <option>Manual</option><option>WhatsApp</option><option>Email Inquiry</option><option>Phone Call</option><option>Walk-in</option><option>Referral</option><option>Website</option><option>Bayut</option><option>PropertyFinder</option><option>Dubizzle</option><option>Instagram</option><option>LinkedIn</option>
                           </select>
                         </div>
                         <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Notes</label>
-                          <textarea placeholder="Initial notes..." value={addLeadForm.notes} onChange={e => setAddLeadForm(prev => ({ ...prev, notes: e.target.value }))} rows={3}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Follow-Up Date</label>
+                          <input type="date" value={addLeadForm.followUpDate || ""} onChange={e => setAddLeadForm(prev => ({ ...prev, followUpDate: e.target.value }))} min={new Date().toISOString().slice(0,10)} style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
+                        </div>
+                        <div style={{ gridColumn: "1/-1" }}>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Initial Notes</label>
+                          <textarea placeholder="Initial notes about this lead..." value={addLeadForm.notes} onChange={e => setAddLeadForm(prev => ({ ...prev, notes: e.target.value }))} rows={3} style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
                         </div>
                       </div>
-                      <button type="button" disabled={addLeadLoading} onClick={addLead}
-                        style={{ marginTop: 16, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.green}, #059669)`, color: "#FFFFFF", fontSize: 14, fontWeight: 700, cursor: addLeadLoading ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: addLeadLoading ? 0.6 : 1 }}>
+                      <button type="button" disabled={addLeadLoading} onClick={addLead} style={{ marginTop: 16, width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.green}, #059669)`, color: "#FFFFFF", fontSize: 14, fontWeight: 700, cursor: addLeadLoading ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: addLeadLoading ? 0.6 : 1 }}>
                         {addLeadLoading ? "Adding..." : "+ Add Lead"}
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* ═══ LOSS REASON MODAL ═══ */}
-                {showLossReason && (
-                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowLossReason(null)}>
-                    <div style={{ background: T.surface, border: `1px solid ${T.red}40`, borderRadius: 16, width: "95%", maxWidth: 400, padding: 24 }} onClick={e => e.stopPropagation()}>
-                      <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.red, marginBottom: 16 }}>Mark as Lost</h3>
-                      <div style={{ marginBottom: 16 }}>
-                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Reason</label>
-                        <select value={lossReason} onChange={e => setLossReason(e.target.value)}
-                          style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                          <option value="">Select reason...</option>
-                          <option value="price">Too Expensive</option>
-                          <option value="competitor">Chose Competitor</option>
-                          <option value="timing">Not Ready Now</option>
-                          <option value="no_response">No Response</option>
-                          <option value="wrong_fit">Wrong Fit</option>
-                          <option value="other">Other</option>
-                        </select>
+                {/* FOLLOW-UP MODAL */}
+                {showFollowUpModal && (
+                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowFollowUpModal(null)}>
+                    <div style={{ background: T.surface, border: `1px solid rgba(212,168,67,0.4)`, borderRadius: 16, width: "95%", maxWidth: 420, padding: 28 }} onClick={e => e.stopPropagation()}>
+                      <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold, marginBottom: 6 }}>Schedule Follow-Up</h3>
+                      <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 20 }}>For: <strong style={{ color: T.white }}>{showFollowUpModal.name || showFollowUpModal.email}</strong></p>
+                      <div style={{ marginBottom: 14 }}>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Follow-Up Date</label>
+                        <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)} min={new Date().toISOString().slice(0,10)} style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                      </div>
+                      <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+                        {[{ label: "Tomorrow", days: 1 }, { label: "In 3 days", days: 3 }, { label: "Next week", days: 7 }, { label: "In 2 weeks", days: 14 }].map(({ label, days }) => {
+                          const d = new Date(); d.setDate(d.getDate() + days);
+                          return <button key={label} type="button" onClick={() => setFollowUpDate(d.toISOString().slice(0,10))} style={{ fontSize: 11, padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer" }}>{label}</button>;
+                        })}
+                      </div>
+                      <div style={{ marginBottom: 20 }}>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Reminder Note</label>
+                        <input type="text" placeholder="e.g. Call to confirm viewing" value={followUpNote} onChange={e => setFollowUpNote(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
                       </div>
                       <div style={{ display: "flex", gap: 10 }}>
-                        <button type="button" onClick={() => setShowLossReason(null)} style={{ flex: 1, padding: "10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
-                        <button type="button" onClick={() => { updateLeadStatus(showLossReason, "Lost", lossReason); setShowLossReason(null); setLossReason(""); }}
-                          style={{ flex: 1, padding: "10px", borderRadius: 8, border: "none", background: T.red, color: "#FFFFFF", cursor: "pointer", fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>Mark Lost</button>
+                        <button type="button" onClick={() => { setShowFollowUpModal(null); setFollowUpDate(""); setFollowUpNote(""); }} style={{ flex: 1, padding: "11px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                        <button type="button" onClick={scheduleFollowUp} style={{ flex: 2, padding: "11px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8860B)`, color: T.bg, cursor: "pointer", fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>Schedule Follow-Up</button>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* ═══ LEAD DRAWER ═══ */}
+                {/* LOSS REASON MODAL */}
+                {showLossReason && (
+                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowLossReason(null)}>
+                    <div style={{ background: T.surface, border: `1px solid rgba(239,68,68,0.4)`, borderRadius: 16, width: "95%", maxWidth: 400, padding: 28 }} onClick={e => e.stopPropagation()}>
+                      <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.red, marginBottom: 16 }}>Mark as Lost</h3>
+                      <div style={{ marginBottom: 20 }}>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, display: "block" }}>Loss Reason</label>
+                        <select value={lossReason} onChange={e => setLossReason(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                          <option value="">Select reason...</option>
+                          <option value="price">Too Expensive</option>
+                          <option value="competitor">Chose Competitor</option>
+                          <option value="timing">Not Ready Now</option>
+                          <option value="no_response">No Response / Ghosted</option>
+                          <option value="wrong_fit">Wrong Fit</option>
+                          <option value="budget">Budget Reduced</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                      <div style={{ display: "flex", gap: 10 }}>
+                        <button type="button" onClick={() => setShowLossReason(null)} style={{ flex: 1, padding: "10px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                        <button type="button" onClick={() => { updateLeadStatus(showLossReason, "Lost", lossReason); setShowLossReason(null); setLossReason(""); }} style={{ flex: 1, padding: "10px", borderRadius: 8, border: "none", background: T.red, color: "#FFFFFF", cursor: "pointer", fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>Mark Lost</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* LEAD DRAWER */}
                 {leadDrawer && (
                   <div style={{ position: "fixed", inset: 0, zIndex: 8000, background: "rgba(4,9,15,0.85)", backdropFilter: "blur(4px)" }} onClick={() => setLeadDrawer(null)}>
-                    <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "100%", maxWidth: 480, background: T.surface, borderLeft: `1px solid ${T.gold}30`, display: "flex", flexDirection: "column", animation: "slideIn 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
+                    <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "100%", maxWidth: 520, background: T.surface, borderLeft: `1px solid rgba(212,168,67,0.3)`, display: "flex", flexDirection: "column", animation: "slideIn 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
+
                       {/* Header */}
-                      <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                        <div>
-                          <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>Edit Lead</div>
-                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.white }}>{leadDrawer.name || "Unknown Lead"}</div>
-                          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>{leadDrawer.email || "No email"}</div>
-                          {leadDrawer.phone && <div style={{ fontSize: 12, color: T.textMuted }}>{leadDrawer.phone}</div>}
-                        </div>
-                        <button type="button" onClick={() => setLeadDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1 }}>×</button>
-                      </div>
-
-                      {/* Status + Actions */}
-                      <div style={{ padding: "16px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                        <select value={leadDrawer.status || "New"} onChange={e => {
-                          if (e.target.value === "Lost") setShowLossReason(leadDrawer.id);
-                          else updateLeadStatus(leadDrawer.id, e.target.value);
-                        }} style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${(statusColors[leadDrawer.status || "New"] || statusColors.New).border}`, background: (statusColors[leadDrawer.status || "New"] || statusColors.New).bg, color: (statusColors[leadDrawer.status || "New"] || statusColors.New).color, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                          <option value="New">New</option>
-                          <option value="Contacted">Contacted</option>
-                          <option value="Qualified">Qualified</option>
-                          <option value="Converted">Converted</option>
-                          <option value="Lost">Lost</option>
-                        </select>
-                        {leadDrawer.phone && (
-                          <a href={`https://wa.me/${leadDrawer.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${leadDrawer.name || ""}, following up on your interest in ${leadDrawer.project || "the property"}.`)}`} target="_blank" rel="noreferrer"
-                            style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>WhatsApp</a>
-                        )}
-                        {leadDrawer.email && (
-                          <button type="button" onClick={() => sendLeadEmail(leadDrawer)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: "none", background: "rgba(59,130,246,0.12)", color: T.blue, cursor: "pointer", fontWeight: 600 }}>Send Email</button>
-                        )}
-                        {leadDrawer.status !== "Converted" && (
-                          <button type="button" disabled={convertingLead} onClick={convertToUser}
-                            style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.08)", color: T.green, cursor: convertingLead ? "wait" : "pointer", fontWeight: 600, marginLeft: "auto" }}>
-                            {convertingLead ? "Converting..." : "Convert to User"}
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Editable Fields */}
-                      <div style={{ padding: "16px 24px", borderBottom: `1px solid ${T.border}` }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Edit Details</div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                          {[
-                            { key: "name", label: "Name" },
-                            { key: "email", label: "Email" },
-                            { key: "phone", label: "Phone" },
-                            { key: "project", label: "Project" },
-                            { key: "community", label: "Community" },
-                            { key: "source", label: "Source" },
-                          ].map(field => (
-                            <div key={field.key}>
-                              <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 4 }}>{field.label}</label>
-                              <input 
-                                value={leadDrawer[field.key] || ""} 
-                                onChange={e => setLeadDrawer(prev => ({ ...prev, [field.key]: e.target.value }))}
-                                onBlur={async e => {
-                                  try {
-                                    await setDoc(doc(db, "leads", leadDrawer.id), { [field.key]: e.target.value, updatedAt: new Date().toISOString() }, { merge: true });
-                                    notify(`${field.label} updated`);
-                                    fetchLeads();
-                                  } catch (err) { notify("Error saving"); }
-                                }}
-                                style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }}
-                              />
+                      <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}` }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.white }}>{leadDrawer.name || "Unknown Lead"}</div>
+                              {(() => { const score = scoreLead(leadDrawer); return <div style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, background: `${getScoreColor(score)}20`, color: getScoreColor(score), fontWeight: 700 }}>{score} - {getScoreLabel(score)}</div>; })()}
                             </div>
-                          ))}
+                            <div style={{ fontSize: 12, color: T.textMuted }}>{leadDrawer.email || "No email"}</div>
+                            {leadDrawer.phone && <div style={{ fontSize: 12, color: T.textMuted }}>{leadDrawer.phone}</div>}
+                            {leadDrawer.nationality && <div style={{ fontSize: 11, color: T.blue, marginTop: 2 }}>({leadDrawer.nationality})</div>}
+                          </div>
+                          <button type="button" onClick={() => setLeadDrawer(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 24, lineHeight: 1, flexShrink: 0 }}>x</button>
                         </div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
-                          <div>
-                            <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 2 }}>Created</div>
-                            <div style={{ fontSize: 12, color: T.textSecondary }}>{leadDrawer.createdAt ? new Date(leadDrawer.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</div>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 2 }}>Updated</div>
-                            <div style={{ fontSize: 12, color: T.textSecondary }}>{leadDrawer.updatedAt ? new Date(leadDrawer.updatedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short" }) : "—"}</div>
-                          </div>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                          <select value={leadDrawer.status || "New"} onChange={e => { if (e.target.value === "Lost") setShowLossReason(leadDrawer.id); else updateLeadStatus(leadDrawer.id, e.target.value); }} style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${(statusColors[leadDrawer.status || "New"] || statusColors.New).border}`, background: (statusColors[leadDrawer.status || "New"] || statusColors.New).bg, color: (statusColors[leadDrawer.status || "New"] || statusColors.New).color, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                            <option value="New">New</option><option value="Contacted">Contacted</option><option value="Qualified">Qualified</option><option value="Converted">Converted</option><option value="Lost">Lost</option>
+                          </select>
+                          {leadDrawer.phone && <a href={`https://wa.me/${leadDrawer.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${leadDrawer.name || ""}, following up on your interest in ${leadDrawer.project || "the property"}.`)}`} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 12px", borderRadius: 8, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>WhatsApp</a>}
+                          <button type="button" onClick={() => setShowFollowUpModal(leadDrawer)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 12px", borderRadius: 8, border: `1px solid rgba(212,168,67,0.4)`, background: "rgba(212,168,67,0.08)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>Follow-Up</button>
+                          {leadDrawer.status !== "Converted" && <button type="button" disabled={convertingLead} onClick={convertToUser} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 12px", borderRadius: 8, border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.08)", color: T.green, cursor: convertingLead ? "wait" : "pointer", fontWeight: 600, marginLeft: "auto" }}>{convertingLead ? "Converting..." : "Convert to User"}</button>}
                         </div>
-                        {leadDrawer.lossReason && (
-                          <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(239,68,68,0.08)", border: `1px solid ${T.red}30` }}>
-                            <div style={{ fontSize: 10, color: T.red, fontWeight: 600 }}>Loss Reason: {leadDrawer.lossReason}</div>
-                          </div>
-                        )}
-                        {leadDrawer.userId && (
-                          <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(16,185,129,0.08)", border: `1px solid ${T.green}30` }}>
-                            <div style={{ fontSize: 10, color: T.green, fontWeight: 600 }}>Converted to User: {leadDrawer.userId}</div>
-                            <button type="button" onClick={() => { setTab("users"); setPendingOpenUid(leadDrawer.userId); setLeadDrawer(null); }}
-                              style={{ marginTop: 6, fontSize: 10, padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.green}`, background: "transparent", color: T.green, cursor: "pointer" }}>View User</button>
+                        {leadDrawer.followUpDate && (
+                          <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 8, background: isOverdue(leadDrawer) ? "rgba(239,68,68,0.08)" : isDueToday(leadDrawer) ? "rgba(212,168,67,0.08)" : "rgba(20,184,166,0.08)", border: `1px solid ${isOverdue(leadDrawer) ? T.red : isDueToday(leadDrawer) ? T.gold : T.teal}30`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ fontSize: 11, color: isOverdue(leadDrawer) ? T.red : isDueToday(leadDrawer) ? T.gold : T.teal, fontWeight: 600 }}>
+                              {isOverdue(leadDrawer) ? "OVERDUE: " : isDueToday(leadDrawer) ? "DUE TODAY: " : "Follow-up: "}
+                              {new Date(leadDrawer.followUpDate).toLocaleDateString("en-AE", { day: "2-digit", month: "short", year: "numeric" })}
+                            </span>
+                            {leadDrawer.followUpNote && <span style={{ fontSize: 10, color: T.textMuted }}>{leadDrawer.followUpNote}</span>}
                           </div>
                         )}
                       </div>
 
-                      {/* Notes */}
-                      <div style={{ flex: 1, padding: "16px 24px", overflowY: "auto" }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Notes ({(leadDrawer.notes || []).length})</div>
-                        {(leadDrawer.notes || []).length === 0 ? (
-                          <div style={{ fontSize: 12, color: T.textMuted, textAlign: "center", padding: 20 }}>No notes yet</div>
-                        ) : (
-                          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {/* Drawer tabs */}
+                      <div style={{ display: "flex", borderBottom: `1px solid ${T.border}`, background: T.surfaceAlt }}>
+                        {[["details", "Details"], ["activity", "Activity"], ["email", "Send Email"]].map(([id, label]) => (
+                          <button key={id} type="button" onClick={() => setLeadDrawerTab(id)} style={{ flex: 1, padding: "12px 8px", fontSize: 11, fontWeight: 600, color: leadDrawerTab === id ? T.gold : T.textMuted, background: "transparent", border: "none", cursor: "pointer", borderBottom: `2px solid ${leadDrawerTab === id ? T.gold : "transparent"}`, fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}>{label}</button>
+                        ))}
+                      </div>
+
+                      <div style={{ flex: 1, overflowY: "auto" }}>
+
+                        {/* DETAILS TAB */}
+                        {leadDrawerTab === "details" && (
+                          <div style={{ padding: "20px 24px" }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+                              {[
+                                { key: "name", label: "Name" }, { key: "email", label: "Email" },
+                                { key: "phone", label: "Phone" }, { key: "nationality", label: "Nationality" },
+                                { key: "budget", label: "Budget (AED)", type: "number" }, { key: "project", label: "Project" },
+                                { key: "community", label: "Community" }, { key: "source", label: "Source" },
+                              ].map(field => (
+                                <div key={field.key}>
+                                  <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{field.label}</label>
+                                  <input type={field.type || "text"} value={leadDrawer[field.key] || ""}
+                                    onChange={e => setLeadDrawer(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                    onBlur={async e => {
+                                      try {
+                                        const activity = [...(leadDrawer.activity || []), { type: "edit", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `${field.label} updated` }];
+                                        await setDoc(doc(db, "leads", leadDrawer.id), { [field.key]: e.target.value, activity, updatedAt: new Date().toISOString() }, { merge: true });
+                                        notify(`${field.label} saved`);
+                                        fetchLeads();
+                                      } catch { notify("Error saving"); }
+                                    }}
+                                    style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+                              {[
+                                { label: "Created", value: leadDrawer.createdAt ? new Date(leadDrawer.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", year: "numeric" }) : "-" },
+                                { label: "Last Updated", value: leadDrawer.updatedAt ? new Date(leadDrawer.updatedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short" }) : "-" },
+                                { label: "Lead Score", value: `${scoreLead(leadDrawer)}/100` },
+                                { label: "Responded", value: leadDrawer.respondedAt ? new Date(leadDrawer.respondedAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short" }) : "Not yet" },
+                              ].map((item, i) => (
+                                <div key={i} style={{ padding: "10px 12px", background: T.bg, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                                  <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 2 }}>{item.label}</div>
+                                  <div style={{ fontSize: 12, color: T.textSecondary, fontWeight: 500 }}>{item.value}</div>
+                                </div>
+                              ))}
+                            </div>
+                            {leadDrawer.lossReason && <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 8, background: "rgba(239,68,68,0.08)", border: `1px solid rgba(239,68,68,0.3)` }}><div style={{ fontSize: 10, color: T.red, fontWeight: 600 }}>Loss Reason: {leadDrawer.lossReason}</div></div>}
+                            {leadDrawer.userId && <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 8, background: "rgba(16,185,129,0.08)", border: `1px solid rgba(16,185,129,0.3)` }}><div style={{ fontSize: 10, color: T.green, fontWeight: 600 }}>Converted to User</div><button type="button" onClick={() => { setTab("users"); setPendingOpenUid(leadDrawer.userId); setLeadDrawer(null); }} style={{ marginTop: 6, fontSize: 10, padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.green}`, background: "transparent", color: T.green, cursor: "pointer" }}>View User</button></div>}
+                            <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Notes ({(leadDrawer.notes || []).length})</div>
                             {(leadDrawer.notes || []).slice().reverse().map((note, i) => (
-                              <div key={i} style={{ padding: "10px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                              <div key={i} style={{ padding: "10px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, marginBottom: 8 }}>
                                 <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>{note.text}</div>
-                                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{note.by} · {note.at ? new Date(note.at).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}</div>
+                                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{note.by} - {note.at ? new Date(note.at).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}</div>
                               </div>
                             ))}
                           </div>
                         )}
+
+                        {/* ACTIVITY TIMELINE TAB */}
+                        {leadDrawerTab === "activity" && (
+                          <div style={{ padding: "20px 24px" }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>Activity Timeline</div>
+                            {(leadDrawer.activity || []).length === 0 ? (
+                              <div style={{ textAlign: "center", padding: 40, color: T.textMuted, fontSize: 12 }}>No activity recorded yet.</div>
+                            ) : (
+                              <div style={{ position: "relative" }}>
+                                <div style={{ position: "absolute", left: 14, top: 0, bottom: 0, width: 2, background: T.border }} />
+                                {(leadDrawer.activity || []).slice().reverse().map((act, i) => (
+                                  <div key={i} style={{ display: "flex", gap: 16, marginBottom: 16, position: "relative" }}>
+                                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: act.type === "email_sent" ? "rgba(59,130,246,0.2)" : act.type === "status_change" ? "rgba(212,168,67,0.2)" : act.type === "followup_scheduled" ? "rgba(20,184,166,0.2)" : "rgba(139,92,246,0.2)", color: act.type === "email_sent" ? T.blue : act.type === "status_change" ? T.gold : act.type === "followup_scheduled" ? T.teal : T.purple, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, flexShrink: 0, zIndex: 1, border: `2px solid ${T.surface}` }}>{act.type === "email_sent" ? "@" : act.type === "status_change" ? ">" : act.type === "followup_scheduled" ? "t" : act.type === "note" ? "n" : "+"}</div>
+                                    <div style={{ flex: 1, paddingTop: 4 }}>
+                                      <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>{act.note}</div>
+                                      <div style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>{act.by} - {act.at ? new Date(act.at).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}</div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* EMAIL TAB */}
+                        {leadDrawerTab === "email" && leadDrawer.email && (
+                          <div style={{ padding: "20px 24px" }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>Send Email to {leadDrawer.name || leadDrawer.email}</div>
+                            <div style={{ marginBottom: 14 }}>
+                              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>Template</label>
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                                {Object.entries(emailTemplates).map(([key, tmpl]) => (
+                                  <button key={key} type="button" onClick={() => { setEmailTemplate(key); setEmailSubject(tmpl.subject); setEmailBody(tmpl.body); }} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${emailTemplate === key ? T.gold : T.border}`, background: emailTemplate === key ? `rgba(212,168,67,0.1)` : "transparent", color: emailTemplate === key ? T.gold : T.textSecondary, fontSize: 11, cursor: "pointer", fontWeight: emailTemplate === key ? 700 : 400, textAlign: "left" }}>
+                                    {key === "followup" ? "Follow-up" : key === "info" ? "Project Info" : key === "viewing" ? "Schedule Viewing" : "Golden Visa"}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <div style={{ marginBottom: 12 }}>
+                              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>Subject</label>
+                              <input type="text" value={emailSubject || emailTemplates[emailTemplate]?.subject || ""} onChange={e => setEmailSubject(e.target.value)} style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                            </div>
+                            <div style={{ marginBottom: 16 }}>
+                              <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>Message</label>
+                              <textarea value={emailBody || emailTemplates[emailTemplate]?.body || ""} onChange={e => setEmailBody(e.target.value)} rows={10} style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
+                            </div>
+                            <button type="button" disabled={sendingEmail} onClick={() => sendLeadEmail(leadDrawer, emailSubject || emailTemplates[emailTemplate]?.subject, emailBody || emailTemplates[emailTemplate]?.body)} style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.blue}, #2563EB)`, color: "#FFFFFF", fontSize: 14, fontWeight: 700, cursor: sendingEmail ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: sendingEmail ? 0.6 : 1 }}>
+                              {sendingEmail ? "Sending..." : "Send Email"}
+                            </button>
+                          </div>
+                        )}
+                        {leadDrawerTab === "email" && !leadDrawer.email && (
+                          <div style={{ padding: 40, textAlign: "center", color: T.textMuted, fontSize: 12 }}>No email address for this lead. Add one in the Details tab.</div>
+                        )}
                       </div>
 
-                      {/* Add Note + Delete */}
-                      <div style={{ padding: "16px 24px", borderTop: `1px solid ${T.border}`, background: T.surfaceAlt }}>
-                        <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-                          <input type="text" placeholder="Add a note..." value={leadNote} onChange={e => setLeadNote(e.target.value)} onKeyDown={e => { if (e.key === "Enter") addNote(); }}
-                            style={{ flex: 1, padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                          <button type="button" disabled={leadNoteSaving || !leadNote.trim()} onClick={addNote}
-                            style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 600, cursor: leadNoteSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: leadNoteSaving || !leadNote.trim() ? 0.5 : 1 }}>
-                            {leadNoteSaving ? "..." : "Add"}
+                      {/* Footer */}
+                      {leadDrawerTab === "details" && (
+                        <div style={{ padding: "16px 24px", borderTop: `1px solid ${T.border}`, background: T.surfaceAlt }}>
+                          <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+                            <input type="text" placeholder="Add a note... (Enter to save)" value={leadNote} onChange={e => setLeadNote(e.target.value)} onKeyDown={e => { if (e.key === "Enter") addNote(); }} style={{ flex: 1, padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                            <button type="button" disabled={leadNoteSaving || !leadNote.trim()} onClick={addNote} style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 600, cursor: leadNoteSaving ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: leadNoteSaving || !leadNote.trim() ? 0.5 : 1 }}>
+                              {leadNoteSaving ? "..." : "Add"}
+                            </button>
+                          </div>
+                          <button type="button" onClick={async () => {
+                            if (!window.confirm(`Delete lead "${leadDrawer.name || leadDrawer.email}"?`)) return;
+                            try { await deleteDoc(doc(db, "leads", leadDrawer.id)); notify("Lead deleted"); setLeadDrawer(null); fetchLeads(); } catch (e) { notify("Error: " + e.message); }
+                          }} style={{ width: "100%", padding: "10px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.3)`, background: "rgba(239,68,68,0.08)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                            Delete Lead
                           </button>
                         </div>
-                        <button type="button" onClick={async () => {
-                          if (!window.confirm(`Delete lead "${leadDrawer.name || leadDrawer.email}"? This cannot be undone.`)) return;
-                          try {
-                            await deleteDoc(doc(db, "leads", leadDrawer.id));
-                            notify("Lead deleted");
-                            setLeadDrawer(null);
-                            fetchLeads();
-                          } catch (e) { notify("Error: " + e.message); }
-                        }} style={{ width: "100%", padding: "10px", borderRadius: 8, border: `1px solid ${T.red}30`, background: "rgba(239,68,68,0.08)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                          Delete Lead
-                        </button>
-                      </div>
+                      )}
                     </div>
                   </div>
                 )}
