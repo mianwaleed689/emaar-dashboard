@@ -13,6 +13,9 @@ import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
 
 /* ─── DATA ALIASES (for backward compat) ─── */
+const liveCommunityPPSF = 1850; 
+const liveMarketROI = 7.4;      
+const liveTotalTransactions = 34500; 
 const financials = emaarFinancials;
 const segments = emaarSegments;
 const risks = emaarRisks.map(r => ({ factor: r.factor, score: r.score, max: 150, color: r.color }));
