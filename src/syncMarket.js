@@ -9,11 +9,10 @@ export const getDubaiPulseData = async () => {
     await setDoc(doc(db, "market_pulse", "latest_stats"), {
       total_value_aed: data?.base_amount || 0, 
       area: data?.area_name_en || "Dubai",
-      last_sync: new Date().toLocaleString(),
-      status: "Live 24/7"
+      last_sync: new Date().toLocaleString()
     });
-    console.log("? Success! Dubai Pulse is now inside your Firebase.");
+    alert("? Success! Dubai Pulse is now inside your Firebase.");
   } catch (error) {
-    console.error("? Sync Failed: Check your firebaseConfig.js file.");
+    alert("? Sync Failed: Check your firebaseConfig.js file.");
   }
 };
