@@ -3,15 +3,19 @@ import { getDubaiPulseData } from "../../syncMarket";
 
 export default function TestSync() {
   return (
-    <div style={{ backgroundColor: "#04090F", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", textAlign: "center" }}>
-      <h1 style={{ color: "#D4A843", marginBottom: "20px" }}>DXB Analytics: Live Sync Engine</h1>
+    <div style={{ backgroundColor: "#04090F", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", textAlign: "center", padding: "20px" }}>
+      <div style={{ marginBottom: "30px" }}>
+        <img src="https://emaar-dashboard.vercel.app" alt="DXB Analytics" style={{ width: "80px" }} />
+      </div>
+      <h1 style={{ color: "#D4A843", fontSize: "28px", marginBottom: "10px" }}>Live Sync Terminal</h1>
+      <p style={{ color: "#94A3B8", marginBottom: "30px" }}>Pulling 2026 Dubai Pulse Data into Firebase</p>
+      
       <button 
         onClick={() => getDubaiPulseData()}
-        style={{ backgroundColor: "#D4A843", color: "black", padding: "15px 30px", border: "none", borderRadius: "8px", fontWeight: "bold", cursor: "pointer", fontSize: "18px" }}
+        style={{ backgroundColor: "#D4A843", color: "black", padding: "18px 40px", border: "none", borderRadius: "12px", fontWeight: "bold", cursor: "pointer", fontSize: "20px", boxShadow: "0 4px 20px rgba(212,168,67,0.3)" }}
       >
         START LIVE PULSE SYNC
       </button>
-      <p style={{ marginTop: "20px", color: "#94A3B8" }}>Click to pull free 2026 data to your Firebase.</p>
     </div>
   );
 }
