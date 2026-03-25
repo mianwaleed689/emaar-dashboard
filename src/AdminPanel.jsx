@@ -12572,6 +12572,14 @@ export default function AdminPanel() {
   const [leadNationalityFilter, setLeadNationalityFilter] = useState("all");
   const [leadCommunities, setLeadCommunities] = useState([]);
   const [leadNationalities, setLeadNationalities] = useState([]);
+  const [leadBudgetFilter, setLeadBudgetFilter] = useState("all");
+  const [leadScoreFilter, setLeadScoreFilter] = useState("all");
+  const [leadGoldenVisa, setLeadGoldenVisa] = useState(false);
+  const [leadHasWhatsApp, setLeadHasWhatsApp] = useState(false);
+  const [leadHasEmail, setLeadHasEmail] = useState(false);
+  const [leadPropertyType, setLeadPropertyType] = useState("all");
+  const [leadLanguage, setLeadLanguage] = useState("all");
+  const [leadAgeFilter, setLeadAgeFilter] = useState("all");
   const [leadSearch, setLeadSearch] = useState("");
   const [leadDateRange, setLeadDateRange] = useState("all"); // all | today | week | month
   const [showAddLead, setShowAddLead] = useState(false);
@@ -20248,6 +20256,54 @@ export default function AdminPanel() {
               if (leadDateRange === "month" && new Date(l.createdAt) < monthAgo) return false;
               if (leadDateRange === "overdue") { if (!isOverdue(l) || l.status === "Converted" || l.status === "Lost") return false; }
               if (leadDateRange === "today_followup") { if (!isDueToday(l)) return false; }
+              // Budget range filter
+              if (leadBudgetFilter !== "all") {
+                const b = parseFloat(l.budget) || 0;
+                if (leadBudgetFilter === "under1m" && b >= 1000000) return false;
+                if (leadBudgetFilter === "1m2m" && (b < 1000000 || b >= 2000000)) return false;
+                if (leadBudgetFilter === "2m5m" && (b < 2000000 || b >= 5000000)) return false;
+                if (leadBudgetFilter === "5m10m" && (b < 5000000 || b >= 10000000)) return false;
+                if (leadBudgetFilter === "10m+" && b < 10000000) return false;
+              }
+              // Lead score filter
+              if (leadScoreFilter !== "all") {
+                const sc = scoreLead(l);
+                if (leadScoreFilter === "hot" && sc < 80) return false;
+                if (leadScoreFilter === "warm" && (sc < 50 || sc >= 80)) return false;
+                if (leadScoreFilter === "cold" && sc >= 50) return false;
+              }
+              // Golden Visa eligible (budget >= AED 2M)
+              if (leadGoldenVisa && (parseFloat(l.budget) || 0) < 2000000) return false;
+              // Has WhatsApp (has phone number)
+              if (leadHasWhatsApp && !l.phone) return false;
+              // Has Email
+              if (leadHasEmail && !l.email) return false;
+              // Property type
+              if (leadPropertyType !== "all") {
+                const proj = (l.project || "").toLowerCase();
+                const comm = (l.community || "").toLowerCase();
+                if (leadPropertyType === "villa" && !proj.includes("villa") && !proj.includes("estate") && !comm.includes("villa") && !proj.includes("townhouse") && !proj.includes("ranches") && !comm.includes("ranches") && !proj.includes("hills") && !proj.includes("park") && !proj.includes("meadow") && !proj.includes("spring") && !proj.includes("lake")) return false;
+                if (leadPropertyType === "apartment" && (proj.includes("villa") || proj.includes("estate") || proj.includes("townhouse"))) return false;
+              }
+              // Language preference
+              if (leadLanguage !== "all") {
+                const nat = (l.nationality || "").toLowerCase();
+                if (leadLanguage === "arabic" && !["egyptian","lebanese","jordanian","syrian","iraqi","yemeni","moroccan","sudanese","algerian","tunisian","libyan","saudi arabian","emirati","kuwaiti","qatari","bahraini","omani","palestinian"].some(n => nat.includes(n))) return false;
+                if (leadLanguage === "russian" && !["russian","ukrainian","kazakhstani","uzbekistani","azerbaijani","armenian","georgian"].some(n => nat.includes(n))) return false;
+                if (leadLanguage === "chinese" && !nat.includes("chinese")) return false;
+                if (leadLanguage === "hindi" && !["indian","nepali","sri lankan"].some(n => nat.includes(n))) return false;
+                if (leadLanguage === "french" && !["french","algerian","moroccan","tunisian","congolese","ivorian","senegalese","cameroonian"].some(n => nat.includes(n))) return false;
+              }
+              // Lead age filter
+              if (leadAgeFilter !== "all") {
+                const created = new Date(l.createdAt).getTime();
+                const now = Date.now();
+                const days = (now - created) / (1000 * 60 * 60 * 24);
+                if (leadAgeFilter === "fresh" && days > 7) return false;
+                if (leadAgeFilter === "recent" && (days <= 7 || days > 30)) return false;
+                if (leadAgeFilter === "old" && (days <= 30 || days > 90)) return false;
+                if (leadAgeFilter === "stale" && days <= 90) return false;
+              }
               if (leadSearch) {
                 const s = leadSearch.toLowerCase();
                 if (!((l.name || "").toLowerCase().includes(s) || (l.email || "").toLowerCase().includes(s) || (l.phone || "").includes(s) || (l.project || "").toLowerCase().includes(s) || (l.nationality || "").toLowerCase().includes(s) || (l.community || "").toLowerCase().includes(s))) return false;
@@ -20672,8 +20728,8 @@ export default function AdminPanel() {
                       }} style={{ width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid ${leadSearch ? T.blue : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
                       {leadsSearching && <div style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: T.blue, fontWeight: 600 }}>Searching...</div>}
                     </div>
-                    {(leadFilter !== "all" || leadSourceFilter !== "all" || leadDateRange !== "all" || leadSearch || leadCommunityFilter !== "all" || leadNationalityFilter !== "all") && (
-                      <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); setLeadCommunityFilter("all"); setLeadNationalityFilter("all"); setLeadsPage(1); fetchLeads(500); }}
+                    {(leadFilter !== "all" || leadSourceFilter !== "all" || leadDateRange !== "all" || leadSearch || leadCommunityFilter !== "all" || leadNationalityFilter !== "all" || leadBudgetFilter !== "all" || leadScoreFilter !== "all" || leadGoldenVisa || leadHasWhatsApp || leadHasEmail || leadPropertyType !== "all" || leadLanguage !== "all" || leadAgeFilter !== "all") && (
+                      <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); setLeadCommunityFilter("all"); setLeadNationalityFilter("all"); setLeadBudgetFilter("all"); setLeadScoreFilter("all"); setLeadGoldenVisa(false); setLeadHasWhatsApp(false); setLeadHasEmail(false); setLeadPropertyType("all"); setLeadLanguage("all"); setLeadAgeFilter("all"); setLeadsPage(1); fetchLeads(500); }}
                         style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>✕ Clear All</button>
                     )}
                     <span style={{ fontSize: 11, color: T.textMuted, whiteSpace: "nowrap" }}>{leadsSearching ? "Searching..." : `${filtered.length.toLocaleString()} leads${leadsHasMore ? " (filtered from 500 loaded)" : ""}`}</span>
@@ -20713,7 +20769,7 @@ export default function AdminPanel() {
                     </select>
 
                     {/* Date filter */}
-                    <select value={leadDateRange} onChange={e => setLeadDateRange(e.target.value)}
+                    <select value={leadDateRange} onChange={e => { setLeadDateRange(e.target.value); setLeadsPage(1); }}
                       style={{ padding: "8px 12px", background: leadDateRange !== "all" ? "rgba(139,92,246,0.12)" : T.bg, border: `1px solid ${leadDateRange !== "all" ? T.purple : T.border}`, borderRadius: 8, color: leadDateRange !== "all" ? T.purple : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadDateRange !== "all" ? 700 : 400 }}>
                       <option value="all">📅 All Time</option>
                       <option value="today">Today</option>
@@ -20722,6 +20778,75 @@ export default function AdminPanel() {
                       <option value="overdue">⚠️ Overdue Follow-ups</option>
                       <option value="today_followup">🔔 Due Today</option>
                     </select>
+                  </div>
+
+                  {/* Row 3 — Tier 2 filters */}
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", paddingTop: 10, borderTop: `1px solid ${T.border}` }}>
+
+                    {/* Budget Range */}
+                    <select value={leadBudgetFilter} onChange={e => { setLeadBudgetFilter(e.target.value); setLeadsPage(1); }}
+                      style={{ padding: "7px 10px", background: leadBudgetFilter !== "all" ? "rgba(16,185,129,0.12)" : T.bg, border: `1px solid ${leadBudgetFilter !== "all" ? T.green : T.border}`, borderRadius: 7, color: leadBudgetFilter !== "all" ? T.green : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadBudgetFilter !== "all" ? 700 : 400 }}>
+                      <option value="all">💰 All Budgets</option>
+                      <option value="under1m">Under AED 1M</option>
+                      <option value="1m2m">AED 1M – 2M</option>
+                      <option value="2m5m">AED 2M – 5M</option>
+                      <option value="5m10m">AED 5M – 10M</option>
+                      <option value="10m+">AED 10M+</option>
+                    </select>
+
+                    {/* Lead Score */}
+                    <select value={leadScoreFilter} onChange={e => { setLeadScoreFilter(e.target.value); setLeadsPage(1); }}
+                      style={{ padding: "7px 10px", background: leadScoreFilter !== "all" ? "rgba(239,68,68,0.12)" : T.bg, border: `1px solid ${leadScoreFilter !== "all" ? T.red : T.border}`, borderRadius: 7, color: leadScoreFilter !== "all" ? T.red : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadScoreFilter !== "all" ? 700 : 400 }}>
+                      <option value="all">⭐ All Scores</option>
+                      <option value="hot">🔥 Hot (80-100)</option>
+                      <option value="warm">🌡 Warm (50-79)</option>
+                      <option value="cold">❄️ Cold (0-49)</option>
+                    </select>
+
+                    {/* Property Type */}
+                    <select value={leadPropertyType} onChange={e => { setLeadPropertyType(e.target.value); setLeadsPage(1); }}
+                      style={{ padding: "7px 10px", background: leadPropertyType !== "all" ? "rgba(212,168,67,0.12)" : T.bg, border: `1px solid ${leadPropertyType !== "all" ? T.gold : T.border}`, borderRadius: 7, color: leadPropertyType !== "all" ? T.gold : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadPropertyType !== "all" ? 700 : 400 }}>
+                      <option value="all">🏠 All Property Types</option>
+                      <option value="villa">🏡 Villa / Townhouse</option>
+                      <option value="apartment">🏢 Apartment</option>
+                    </select>
+
+                    {/* Language */}
+                    <select value={leadLanguage} onChange={e => { setLeadLanguage(e.target.value); setLeadsPage(1); }}
+                      style={{ padding: "7px 10px", background: leadLanguage !== "all" ? "rgba(59,130,246,0.12)" : T.bg, border: `1px solid ${leadLanguage !== "all" ? T.blue : T.border}`, borderRadius: 7, color: leadLanguage !== "all" ? T.blue : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadLanguage !== "all" ? 700 : 400 }}>
+                      <option value="all">🗣 All Languages</option>
+                      <option value="arabic">🌙 Arabic</option>
+                      <option value="russian">🇷🇺 Russian</option>
+                      <option value="chinese">🇨🇳 Chinese</option>
+                      <option value="hindi">🇮🇳 Hindi</option>
+                      <option value="french">🇫🇷 French</option>
+                    </select>
+
+                    {/* Lead Age */}
+                    <select value={leadAgeFilter} onChange={e => { setLeadAgeFilter(e.target.value); setLeadsPage(1); }}
+                      style={{ padding: "7px 10px", background: leadAgeFilter !== "all" ? "rgba(139,92,246,0.12)" : T.bg, border: `1px solid ${leadAgeFilter !== "all" ? T.purple : T.border}`, borderRadius: 7, color: leadAgeFilter !== "all" ? T.purple : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadAgeFilter !== "all" ? 700 : 400 }}>
+                      <option value="all">🕐 All Ages</option>
+                      <option value="fresh">🟢 Fresh (0-7 days)</option>
+                      <option value="recent">🟡 Recent (7-30 days)</option>
+                      <option value="old">🟠 Old (30-90 days)</option>
+                      <option value="stale">🔴 Stale (90+ days)</option>
+                    </select>
+
+                    {/* Toggle filters */}
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <button type="button" onClick={() => { setLeadGoldenVisa(!leadGoldenVisa); setLeadsPage(1); }}
+                        style={{ padding: "7px 12px", borderRadius: 7, border: `1px solid ${leadGoldenVisa ? T.gold : T.border}`, background: leadGoldenVisa ? "rgba(212,168,67,0.15)" : T.bg, color: leadGoldenVisa ? T.gold : T.textSecondary, fontSize: 11, fontWeight: leadGoldenVisa ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        🏆 Golden Visa {leadGoldenVisa ? "✓" : ""}
+                      </button>
+                      <button type="button" onClick={() => { setLeadHasWhatsApp(!leadHasWhatsApp); setLeadsPage(1); }}
+                        style={{ padding: "7px 12px", borderRadius: 7, border: `1px solid ${leadHasWhatsApp ? "#25D366" : T.border}`, background: leadHasWhatsApp ? "rgba(37,211,102,0.12)" : T.bg, color: leadHasWhatsApp ? "#25D366" : T.textSecondary, fontSize: 11, fontWeight: leadHasWhatsApp ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        💬 Has WhatsApp {leadHasWhatsApp ? "✓" : ""}
+                      </button>
+                      <button type="button" onClick={() => { setLeadHasEmail(!leadHasEmail); setLeadsPage(1); }}
+                        style={{ padding: "7px 12px", borderRadius: 7, border: `1px solid ${leadHasEmail ? T.blue : T.border}`, background: leadHasEmail ? "rgba(59,130,246,0.12)" : T.bg, color: leadHasEmail ? T.blue : T.textSecondary, fontSize: 11, fontWeight: leadHasEmail ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        📧 Has Email {leadHasEmail ? "✓" : ""}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
