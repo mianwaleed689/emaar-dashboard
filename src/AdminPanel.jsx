@@ -12580,6 +12580,14 @@ export default function AdminPanel() {
   const [leadPropertyType, setLeadPropertyType] = useState("all");
   const [leadLanguage, setLeadLanguage] = useState("all");
   const [leadAgeFilter, setLeadAgeFilter] = useState("all");
+  const [leadBedroomFilter, setLeadBedroomFilter] = useState("all");
+  const [leadPropertyPlan, setLeadPropertyPlan] = useState("all");
+  const [leadDeveloper, setLeadDeveloper] = useState("all");
+  const [leadPaymentPlan, setLeadPaymentPlan] = useState("all");
+  const [leadVisaEligible, setLeadVisaEligible] = useState("all");
+  const [leadTagFilter, setLeadTagFilter] = useState("all");
+  const [leadNeverContacted, setLeadNeverContacted] = useState(false);
+  const [leadHasFollowUp, setLeadHasFollowUp] = useState(false);
   const [leadSearch, setLeadSearch] = useState("");
   const [leadDateRange, setLeadDateRange] = useState("all"); // all | today | week | month
   const [showAddLead, setShowAddLead] = useState(false);
@@ -20294,8 +20302,62 @@ export default function AdminPanel() {
                 if (leadLanguage === "hindi" && !["indian","nepali","sri lankan"].some(n => nat.includes(n))) return false;
                 if (leadLanguage === "french" && !["french","algerian","moroccan","tunisian","congolese","ivorian","senegalese","cameroonian"].some(n => nat.includes(n))) return false;
               }
-              // Lead age filter
-              if (leadAgeFilter !== "all") {
+              // Bedroom preference
+              if (leadBedroomFilter !== "all") {
+                const proj = (l.project || "").toLowerCase();
+                const notes = (l.notes || []).map(n => (n.text || "").toLowerCase()).join(" ");
+                if (leadBedroomFilter === "studio" && !proj.includes("studio") && !notes.includes("studio")) return false;
+                if (leadBedroomFilter === "1br" && !proj.includes("1 bed") && !proj.includes("1br") && !notes.includes("1 bed") && !notes.includes("1br")) return false;
+                if (leadBedroomFilter === "2br" && !proj.includes("2 bed") && !proj.includes("2br") && !notes.includes("2 bed") && !notes.includes("2br")) return false;
+                if (leadBedroomFilter === "3br" && !proj.includes("3 bed") && !proj.includes("3br") && !notes.includes("3 bed") && !notes.includes("3br")) return false;
+                if (leadBedroomFilter === "4br+" && !proj.includes("4 bed") && !proj.includes("4br") && !proj.includes("5 bed") && !proj.includes("villa") && !notes.includes("4 bed") && !notes.includes("4br") && !notes.includes("5 bed")) return false;
+              }
+              // Off-plan vs Ready
+              if (leadPropertyPlan !== "all") {
+                const proj = (l.project || "").toLowerCase();
+                const notes = (l.notes || []).map(n => (n.text || "").toLowerCase()).join(" ");
+                const isOffPlan = proj.includes("off-plan") || proj.includes("off plan") || notes.includes("off-plan") || notes.includes("off plan") || notes.includes("offplan");
+                if (leadPropertyPlan === "offplan" && !isOffPlan) return false;
+                if (leadPropertyPlan === "ready" && isOffPlan) return false;
+              }
+              // Developer preference
+              if (leadDeveloper !== "all") {
+                const proj = (l.project || "").toLowerCase();
+                const comm = (l.community || "").toLowerCase();
+                const notes = (l.notes || []).map(n => (n.text || "").toLowerCase()).join(" ");
+                const combined = proj + " " + comm + " " + notes;
+                if (leadDeveloper === "emaar" && !combined.includes("emaar") && !combined.includes("dubai hills") && !combined.includes("creek harbour") && !combined.includes("arabian ranches") && !combined.includes("the valley") && !combined.includes("emaar south") && !combined.includes("grand polo")) return false;
+                if (leadDeveloper === "damac" && !combined.includes("damac") && !combined.includes("akoya") && !combined.includes("trump")) return false;
+                if (leadDeveloper === "sobha" && !combined.includes("sobha")) return false;
+                if (leadDeveloper === "nakheel" && !combined.includes("nakheel") && !combined.includes("palm") && !combined.includes("jumeirah park") && !combined.includes("al furjan")) return false;
+                if (leadDeveloper === "meraas" && !combined.includes("meraas") && !combined.includes("city walk") && !combined.includes("bluewaters")) return false;
+                if (leadDeveloper === "aldar" && !combined.includes("aldar")) return false;
+              }
+              // Payment plan interest
+              if (leadPaymentPlan !== "all") {
+                const notes = (l.notes || []).map(n => (n.text || "").toLowerCase()).join(" ");
+                if (leadPaymentPlan === "yes" && !notes.includes("payment plan") && !notes.includes("installment") && !notes.includes("post-handover")) return false;
+                if (leadPaymentPlan === "cash" && !notes.includes("cash") && !notes.includes("full payment") && !notes.includes("no mortgage")) return false;
+              }
+              // Visa eligibility
+              if (leadVisaEligible !== "all") {
+                const b = parseFloat(l.budget) || 0;
+                if (leadVisaEligible === "2yr" && b < 750000) return false;
+                if (leadVisaEligible === "golden" && b < 2000000) return false;
+              }
+              // Tags
+              if (leadTagFilter !== "all") {
+                const tags = (l.tags || []);
+                if (!tags.includes(leadTagFilter)) return false;
+              }
+              // Never contacted
+              if (leadNeverContacted) {
+                const activity = l.activity || [];
+                const hasContact = activity.some(a => ["contacted","called","whatsapp","email_sent","meeting"].includes(a.type));
+                if (hasContact) return false;
+              }
+              // Has follow-up set
+              if (leadHasFollowUp && !l.followUpDate) return false;
                 const created = new Date(l.createdAt).getTime();
                 const now = Date.now();
                 const days = (now - created) / (1000 * 60 * 60 * 24);
@@ -20728,8 +20790,8 @@ export default function AdminPanel() {
                       }} style={{ width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid ${leadSearch ? T.blue : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
                       {leadsSearching && <div style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: T.blue, fontWeight: 600 }}>Searching...</div>}
                     </div>
-                    {(leadFilter !== "all" || leadSourceFilter !== "all" || leadDateRange !== "all" || leadSearch || leadCommunityFilter !== "all" || leadNationalityFilter !== "all" || leadBudgetFilter !== "all" || leadScoreFilter !== "all" || leadGoldenVisa || leadHasWhatsApp || leadHasEmail || leadPropertyType !== "all" || leadLanguage !== "all" || leadAgeFilter !== "all") && (
-                      <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); setLeadCommunityFilter("all"); setLeadNationalityFilter("all"); setLeadBudgetFilter("all"); setLeadScoreFilter("all"); setLeadGoldenVisa(false); setLeadHasWhatsApp(false); setLeadHasEmail(false); setLeadPropertyType("all"); setLeadLanguage("all"); setLeadAgeFilter("all"); setLeadsPage(1); fetchLeads(500); }}
+                    {(leadFilter !== "all" || leadSourceFilter !== "all" || leadDateRange !== "all" || leadSearch || leadCommunityFilter !== "all" || leadNationalityFilter !== "all" || leadBudgetFilter !== "all" || leadScoreFilter !== "all" || leadGoldenVisa || leadHasWhatsApp || leadHasEmail || leadPropertyType !== "all" || leadLanguage !== "all" || leadAgeFilter !== "all" || leadBedroomFilter !== "all" || leadPropertyPlan !== "all" || leadDeveloper !== "all" || leadPaymentPlan !== "all" || leadVisaEligible !== "all" || leadTagFilter !== "all" || leadNeverContacted || leadHasFollowUp) && (
+                      <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); setLeadCommunityFilter("all"); setLeadNationalityFilter("all"); setLeadBudgetFilter("all"); setLeadScoreFilter("all"); setLeadGoldenVisa(false); setLeadHasWhatsApp(false); setLeadHasEmail(false); setLeadPropertyType("all"); setLeadLanguage("all"); setLeadAgeFilter("all"); setLeadBedroomFilter("all"); setLeadPropertyPlan("all"); setLeadDeveloper("all"); setLeadPaymentPlan("all"); setLeadVisaEligible("all"); setLeadTagFilter("all"); setLeadNeverContacted(false); setLeadHasFollowUp(false); setLeadsPage(1); fetchLeads(500); }}
                         style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>✕ Clear All</button>
                     )}
                     <span style={{ fontSize: 11, color: T.textMuted, whiteSpace: "nowrap" }}>{leadsSearching ? "Searching..." : `${filtered.length.toLocaleString()} leads${leadsHasMore ? " (filtered from 500 loaded)" : ""}`}</span>
@@ -20845,6 +20907,80 @@ export default function AdminPanel() {
                       <button type="button" onClick={() => { setLeadHasEmail(!leadHasEmail); setLeadsPage(1); }}
                         style={{ padding: "7px 12px", borderRadius: 7, border: `1px solid ${leadHasEmail ? T.blue : T.border}`, background: leadHasEmail ? "rgba(59,130,246,0.12)" : T.bg, color: leadHasEmail ? T.blue : T.textSecondary, fontSize: 11, fontWeight: leadHasEmail ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                         📧 Has Email {leadHasEmail ? "✓" : ""}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Row 4 — Advanced Dubai RE filters */}
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", paddingTop: 10, borderTop: `1px solid ${T.border}` }}>
+
+                    {/* Bedroom Preference */}
+                    <select value={leadBedroomFilter} onChange={e => { setLeadBedroomFilter(e.target.value); setLeadsPage(1); }}
+                      style={{ padding: "7px 10px", background: leadBedroomFilter !== "all" ? "rgba(212,168,67,0.12)" : T.bg, border: `1px solid ${leadBedroomFilter !== "all" ? T.gold : T.border}`, borderRadius: 7, color: leadBedroomFilter !== "all" ? T.gold : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadBedroomFilter !== "all" ? 700 : 400 }}>
+                      <option value="all">🛏 All Bedrooms</option>
+                      <option value="studio">Studio</option>
+                      <option value="1br">1 Bedroom</option>
+                      <option value="2br">2 Bedrooms</option>
+                      <option value="3br">3 Bedrooms</option>
+                      <option value="4br+">4+ Bedrooms / Villa</option>
+                    </select>
+
+                    {/* Off-Plan vs Ready */}
+                    <select value={leadPropertyPlan} onChange={e => { setLeadPropertyPlan(e.target.value); setLeadsPage(1); }}
+                      style={{ padding: "7px 10px", background: leadPropertyPlan !== "all" ? "rgba(139,92,246,0.12)" : T.bg, border: `1px solid ${leadPropertyPlan !== "all" ? T.purple : T.border}`, borderRadius: 7, color: leadPropertyPlan !== "all" ? T.purple : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadPropertyPlan !== "all" ? 700 : 400 }}>
+                      <option value="all">🏗 Off-Plan / Ready</option>
+                      <option value="offplan">🏗 Off-Plan Interest</option>
+                      <option value="ready">🏠 Ready Property</option>
+                    </select>
+
+                    {/* Developer Preference */}
+                    <select value={leadDeveloper} onChange={e => { setLeadDeveloper(e.target.value); setLeadsPage(1); }}
+                      style={{ padding: "7px 10px", background: leadDeveloper !== "all" ? "rgba(16,185,129,0.12)" : T.bg, border: `1px solid ${leadDeveloper !== "all" ? T.green : T.border}`, borderRadius: 7, color: leadDeveloper !== "all" ? T.green : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadDeveloper !== "all" ? 700 : 400 }}>
+                      <option value="all">🏢 All Developers</option>
+                      <option value="emaar">Emaar</option>
+                      <option value="damac">DAMAC</option>
+                      <option value="sobha">Sobha</option>
+                      <option value="nakheel">Nakheel</option>
+                      <option value="meraas">Meraas</option>
+                      <option value="aldar">Aldar</option>
+                    </select>
+
+                    {/* Payment Plan */}
+                    <select value={leadPaymentPlan} onChange={e => { setLeadPaymentPlan(e.target.value); setLeadsPage(1); }}
+                      style={{ padding: "7px 10px", background: leadPaymentPlan !== "all" ? "rgba(59,130,246,0.12)" : T.bg, border: `1px solid ${leadPaymentPlan !== "all" ? T.blue : T.border}`, borderRadius: 7, color: leadPaymentPlan !== "all" ? T.blue : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadPaymentPlan !== "all" ? 700 : 400 }}>
+                      <option value="all">💳 Payment Type</option>
+                      <option value="yes">📅 Payment Plan</option>
+                      <option value="cash">💵 Cash Buyer</option>
+                    </select>
+
+                    {/* Visa Eligibility */}
+                    <select value={leadVisaEligible} onChange={e => { setLeadVisaEligible(e.target.value); setLeadsPage(1); }}
+                      style={{ padding: "7px 10px", background: leadVisaEligible !== "all" ? "rgba(212,168,67,0.12)" : T.bg, border: `1px solid ${leadVisaEligible !== "all" ? T.gold : T.border}`, borderRadius: 7, color: leadVisaEligible !== "all" ? T.gold : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadVisaEligible !== "all" ? 700 : 400 }}>
+                      <option value="all">🛂 Visa Eligibility</option>
+                      <option value="2yr">2-Year Visa (750K+)</option>
+                      <option value="golden">🏆 Golden Visa (2M+)</option>
+                    </select>
+
+                    {/* Tags */}
+                    <select value={leadTagFilter} onChange={e => { setLeadTagFilter(e.target.value); setLeadsPage(1); }}
+                      style={{ padding: "7px 10px", background: leadTagFilter !== "all" ? "rgba(239,68,68,0.12)" : T.bg, border: `1px solid ${leadTagFilter !== "all" ? T.red : T.border}`, borderRadius: 7, color: leadTagFilter !== "all" ? T.red : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadTagFilter !== "all" ? 700 : 400 }}>
+                      <option value="all">🏷 All Tags</option>
+                      <option value="VIP">⭐ VIP</option>
+                      <option value="Investor">💼 Investor</option>
+                      <option value="End-User">🏠 End-User</option>
+                      <option value="Flipper">🔄 Flipper</option>
+                      <option value="Referral">👥 Referral</option>
+                    </select>
+
+                    {/* Toggle buttons */}
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button type="button" onClick={() => { setLeadNeverContacted(!leadNeverContacted); setLeadsPage(1); }}
+                        style={{ padding: "7px 12px", borderRadius: 7, border: `1px solid ${leadNeverContacted ? T.orange : T.border}`, background: leadNeverContacted ? "rgba(245,158,11,0.12)" : T.bg, color: leadNeverContacted ? T.orange : T.textSecondary, fontSize: 11, fontWeight: leadNeverContacted ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        👻 Never Contacted {leadNeverContacted ? "✓" : ""}
+                      </button>
+                      <button type="button" onClick={() => { setLeadHasFollowUp(!leadHasFollowUp); setLeadsPage(1); }}
+                        style={{ padding: "7px 12px", borderRadius: 7, border: `1px solid ${leadHasFollowUp ? T.purple : T.border}`, background: leadHasFollowUp ? "rgba(139,92,246,0.12)" : T.bg, color: leadHasFollowUp ? T.purple : T.textSecondary, fontSize: 11, fontWeight: leadHasFollowUp ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                        🔔 Has Follow-up {leadHasFollowUp ? "✓" : ""}
                       </button>
                     </div>
                   </div>
