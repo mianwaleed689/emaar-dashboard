@@ -21351,11 +21351,11 @@ export default function AdminPanel() {
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, marginTop: 12, flexWrap: "wrap", gap: 10 }}>
                     {/* Info */}
                     <div style={{ fontSize: 11, color: T.textMuted }}>
-                      Showing <span style={{ color: T.white, fontWeight: 600 }}>{((safePage-1)*LEADS_PER_PAGE)+1}–{Math.min(safePage*LEADS_PER_PAGE, filtered.length)}</span> of <span style={{ color: T.gold, fontWeight: 700 }}>{filtered.length.toLocaleString()}</span> leads
-                      {leadsHasMore && <span style={{ color: T.textMuted }}> · <span style={{ color: T.blue }}>Search or filter above to access all 19,600+ leads</span></span>}
+                      Showing <span style={{ color: T.white, fontWeight: 600 }}>{((safePage-1)*LEADS_PER_PAGE)+1}–{Math.min(safePage*LEADS_PER_PAGE, filtered.length)}</span> of <span style={{ color: T.gold, fontWeight: 700 }}>{filtered.length.toLocaleString()}</span> loaded
+                      {leadsHasMore && <span style={{ color: T.textMuted }}> · <span style={{ color: T.gold, fontWeight: 600 }}>{leadsTotal.toLocaleString()} total in database</span></span>}
                     </div>
                     {/* Page controls */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                       {/* Prev */}
                       <button type="button" disabled={safePage === 1} onClick={() => setLeadsPage(p => Math.max(1, p-1))}
                         style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: safePage === 1 ? "transparent" : T.surfaceAlt, color: safePage === 1 ? T.textMuted : T.white, cursor: safePage === 1 ? "not-allowed" : "pointer", fontSize: 12, fontWeight: 600 }}>←</button>
@@ -21391,12 +21391,24 @@ export default function AdminPanel() {
                         style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: safePage === totalPages ? "transparent" : T.surfaceAlt, color: safePage === totalPages ? T.textMuted : T.white, cursor: safePage === totalPages ? "not-allowed" : "pointer", fontSize: 12, fontWeight: 600 }}>→</button>
 
                       {/* Jump to page */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: 4 }}>
                         <span style={{ fontSize: 11, color: T.textMuted }}>Go to</span>
                         <input type="number" min="1" max={totalPages} placeholder={safePage}
                           onKeyDown={e => { if (e.key === "Enter") { const p = parseInt(e.target.value); if (p >= 1 && p <= totalPages) { setLeadsPage(p); e.target.value = ""; } } }}
                           style={{ width: 52, padding: "6px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", textAlign: "center" }} />
                       </div>
+
+                      {/* Load Next 500 — only shows on last page when more exist */}
+                      {leadsHasMore && safePage === totalPages && (
+                        <button type="button" onClick={() => {
+                          const newLim = leads.length + 500;
+                          setLeadsLimit(newLim);
+                          fetchLeads(newLim);
+                          setLeadsPage(totalPages + 1);
+                        }} style={{ padding: "6px 14px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.1)", color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", marginLeft: 4 }}>
+                          ↓ Load Next 500
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
