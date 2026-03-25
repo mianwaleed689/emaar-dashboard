@@ -62,6 +62,7 @@ const css = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { font-size: 14px; }
+:root { --bg: ${T.bg}; --surface: ${T.surface}; --surfaceAlt: ${T.surfaceAlt}; --border: ${T.border}; --white: ${T.white}; --textMuted: ${T.textMuted}; --textSecondary: ${T.textSecondary}; --gold: ${T.gold}; }
 body { background: ${T.bg}; color: ${T.textPrimary}; font-family: 'Outfit', sans-serif; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -313,6 +314,67 @@ const TabHelp = ({ items }) => {
    PHASE 1B: Collision Detection, Attachments, @Mentions
    PHASE 2: Merge Tickets, Link Related, Custom Fields
 ═══════════════════════════════════════════════════════════════════ */
+// ── Searchable dropdown component ─────────────────────────────────────────────
+function SearchableSelect({ value, onChange, options, placeholder = "Search...", style = {} }) {
+  const [open, setOpen] = React.useState(false);
+  const [query, setQuery] = React.useState("");
+  const ref = React.useRef(null);
+
+  // Close on outside click
+  React.useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const filtered = query
+    ? options.filter(o => (o.label || o).toLowerCase().includes(query.toLowerCase()))
+    : options;
+
+  const selectedLabel = value
+    ? (options.find(o => (o.value || o) === value) ? (options.find(o => (o.value || o) === value).label || value) : value)
+    : null;
+
+  return (
+    <div ref={ref} style={{ position: "relative", ...style }}>
+      <div onClick={() => { setOpen(o => !o); setQuery(""); }}
+        style={{ padding: "9px 12px", background: style.background || "var(--bg)", border: `1px solid ${open ? "#D4A843" : "var(--border)"}`, borderRadius: 8, color: selectedLabel ? "var(--white)" : "var(--textMuted)", fontSize: style.fontSize || 13, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "'Outfit',sans-serif", userSelect: "none" }}>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedLabel || placeholder}</span>
+        <span style={{ fontSize: 10, marginLeft: 6, flexShrink: 0, opacity: 0.5 }}>{open ? "▲" : "▼"}</span>
+      </div>
+      {open && (
+        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 9999, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.6)", overflow: "hidden" }}>
+          <div style={{ padding: "8px 10px", borderBottom: "1px solid var(--border)" }}>
+            <input autoFocus type="text" value={query} onChange={e => setQuery(e.target.value)}
+              placeholder="Type to search..."
+              style={{ width: "100%", padding: "7px 10px", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 6, color: "var(--white)", fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+          </div>
+          <div style={{ maxHeight: 220, overflowY: "auto" }}>
+            {value && (
+              <div onClick={() => { onChange(""); setOpen(false); setQuery(""); }}
+                style={{ padding: "9px 14px", fontSize: 12, color: "var(--textMuted)", cursor: "pointer", borderBottom: "1px solid var(--border)" }}>
+                ✕ Clear selection
+              </div>
+            )}
+            {filtered.length === 0 && <div style={{ padding: "12px 14px", fontSize: 12, color: "var(--textMuted)" }}>No results</div>}
+            {filtered.map((o, i) => {
+              const val = o.value || o;
+              const label = o.label || o;
+              const active = val === value;
+              return (
+                <div key={i} onClick={() => { onChange(val); setOpen(false); setQuery(""); }}
+                  style={{ padding: "9px 14px", fontSize: 12, color: active ? "#D4A843" : "var(--textSecondary)", background: active ? "rgba(212,168,67,0.08)" : "transparent", cursor: "pointer", fontWeight: active ? 700 : 400, borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+                  {label}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpenUid }) {
   // State
   const [supportSubTab, setSupportSubTab] = useState("open");
@@ -12570,7 +12632,16 @@ export default function AdminPanel() {
   const [leadSourceFilter, setLeadSourceFilter] = useState("all");
   const [leadCommunityFilter, setLeadCommunityFilter] = useState("all");
   const [leadNationalityFilter, setLeadNationalityFilter] = useState("all");
-  const [leadCommunities, setLeadCommunities] = useState([]);
+  // ALL 24 communities from DLD data — guaranteed fallback, always shown even before meta scan
+  const ALL_DLD_COMMUNITIES = [
+    "Al Satwa","Arabian Ranches","Arabian Ranches II","Arabian Ranches III",
+    "Business Bay","Dubai Creek Harbour","Dubai Hills Estate","Dubai Marina",
+    "Dubai Sports City","Emaar South","Grand Polo Club","JBR - Elan",
+    "JBR - Jumeirah Gate","Jumeirah Park","Meadows / Lakes / Springs",
+    "Meydan","Motor City / Sports City","Palm Jumeirah","Remraam",
+    "The Valley","Town Square","Umm Suqeim","Victory Heights","Villanova"
+  ].sort();
+  const [leadCommunities, setLeadCommunities] = useState(ALL_DLD_COMMUNITIES);
   const [leadNationalities, setLeadNationalities] = useState([]);
   const [leadBudgetFilter, setLeadBudgetFilter] = useState("all");
   const [leadScoreFilter, setLeadScoreFilter] = useState("all");
@@ -13044,7 +13115,8 @@ export default function AdminPanel() {
         const { communities, nationalities, cachedAt } = JSON.parse(cached);
         const ageHours = (Date.now() - cachedAt) / (1000 * 60 * 60);
         if (ageHours < 24 && communities.length > 0) {
-          setLeadCommunities(communities);
+          const merged = [...new Set([...ALL_DLD_COMMUNITIES, ...communities])].sort();
+          setLeadCommunities(merged);
           setLeadNationalities(nationalities);
           return;
         }
@@ -13067,10 +13139,12 @@ export default function AdminPanel() {
         if (snap.docs.length < 1000) { keepGoing = false; }
         else { lastDoc = snap.docs[snap.docs.length - 1]; }
       }
-      const sorted = { communities: [...communities].sort(), nationalities: [...nationalities].sort(), cachedAt: Date.now() };
+      const merged = [...new Set([...ALL_DLD_COMMUNITIES, ...communities])].sort();
+      const mergedNat = [...new Set([...nationalities])].sort();
+      const sorted = { communities: merged, nationalities: mergedNat, cachedAt: Date.now() };
       try { localStorage.setItem(cacheKey, JSON.stringify(sorted)); } catch {}
-      setLeadCommunities(sorted.communities);
-      setLeadNationalities(sorted.nationalities);
+      setLeadCommunities(merged);
+      setLeadNationalities(mergedNat);
     } catch (e) { console.error("fetchLeadMeta:", e); }
   }, []);
 
@@ -20988,20 +21062,24 @@ export default function AdminPanel() {
                   </div>
                   {/* Row 2: Dropdown filters */}
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                    {/* Community filter — dynamic from Firestore */}
-                    <select value={leadCommunityFilter} onChange={e => { setLeadCommunityFilter(e.target.value); setLeadsPage(1); searchAllLeads(leadSearch, leadFilter, leadSourceFilter, e.target.value, leadNationalityFilter); }}
-                      style={{ padding: "8px 12px", background: leadCommunityFilter !== "all" ? "rgba(212,168,67,0.12)" : T.bg, border: `1px solid ${leadCommunityFilter !== "all" ? T.gold : T.border}`, borderRadius: 8, color: leadCommunityFilter !== "all" ? T.gold : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadCommunityFilter !== "all" ? 700 : 400 }}>
-                      <option value="all">🏘 All Communities ({leadCommunities.length})</option>
-                      {leadCommunities.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                    <button type="button" title="Refresh community & nationality lists" onClick={() => fetchLeadMeta(true)} style={{ padding: "8px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: T.bg, color: T.textMuted, fontSize: 11, cursor: "pointer" }}>↺</button>
+                    {/* Community filter — searchable */}
+                    <SearchableSelect
+                      value={leadCommunityFilter === "all" ? "" : leadCommunityFilter}
+                      onChange={v => { const val = v || "all"; setLeadCommunityFilter(val); setLeadsPage(1); searchAllLeads(leadSearch, leadFilter, leadSourceFilter, val, leadNationalityFilter); }}
+                      options={[{ value: "all", label: `🏘 All Communities (${leadCommunities.length})` }, ...leadCommunities.map(c => ({ value: c, label: c }))]}
+                      placeholder={`🏘 All Communities (${leadCommunities.length})`}
+                      style={{ minWidth: 200, background: leadCommunityFilter !== "all" ? "rgba(212,168,67,0.12)" : T.bg, fontSize: 11 }}
+                    />
+                    <button type="button" title="Refresh community & nationality lists" onClick={() => { localStorage.removeItem("dxb_lead_meta"); fetchLeadMeta(true); notify("Refreshing lists..."); }} style={{ padding: "8px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: T.bg, color: T.textMuted, fontSize: 11, cursor: "pointer" }}>↺</button>
 
-                    {/* Nationality filter — dynamic from Firestore */}
-                    <select value={leadNationalityFilter} onChange={e => { setLeadNationalityFilter(e.target.value); setLeadsPage(1); searchAllLeads(leadSearch, leadFilter, leadSourceFilter, leadCommunityFilter, e.target.value); }}
-                      style={{ padding: "8px 12px", background: leadNationalityFilter !== "all" ? "rgba(59,130,246,0.12)" : T.bg, border: `1px solid ${leadNationalityFilter !== "all" ? T.blue : T.border}`, borderRadius: 8, color: leadNationalityFilter !== "all" ? T.blue : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadNationalityFilter !== "all" ? 700 : 400 }}>
-                      <option value="all">🌍 All Nationalities ({leadNationalities.length})</option>
-                      {leadNationalities.map(n => <option key={n} value={n}>{n}</option>)}
-                    </select>
+                    {/* Nationality filter — searchable */}
+                    <SearchableSelect
+                      value={leadNationalityFilter === "all" ? "" : leadNationalityFilter}
+                      onChange={v => { const val = v || "all"; setLeadNationalityFilter(val); setLeadsPage(1); searchAllLeads(leadSearch, leadFilter, leadSourceFilter, leadCommunityFilter, val); }}
+                      options={[{ value: "all", label: `🌍 All Nationalities (${leadNationalities.length})` }, ...leadNationalities.map(n => ({ value: n, label: n }))]}
+                      placeholder={`🌍 All Nationalities (${leadNationalities.length})`}
+                      style={{ minWidth: 200, background: leadNationalityFilter !== "all" ? "rgba(59,130,246,0.12)" : T.bg, fontSize: 11 }}
+                    />
 
                     {/* Source filter */}
                     <select value={leadSourceFilter} onChange={e => { setLeadSourceFilter(e.target.value); setLeadsPage(1); searchAllLeads(leadSearch, leadFilter, e.target.value, leadCommunityFilter, leadNationalityFilter); }}
@@ -21434,17 +21512,16 @@ export default function AdminPanel() {
                               style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
                           </div>
                         ))}
-                        {/* Community dropdown */}
+                        {/* Community searchable */}
                         <div>
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Community</label>
-                          <select value={addLeadForm.community || ""} onChange={e => setAddLeadForm(prev => ({ ...prev, community: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: addLeadForm.community ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="">Select community...</option>
-                            {leadCommunities.length > 0
-                              ? leadCommunities.map(c => <option key={c} value={c}>{c}</option>)
-                              : ["JBR - Elan","JBR - Jumeirah Gate","Arabian Ranches","Arabian Ranches III","Business Bay","Dubai Hills Estate","Dubai Creek Harbour","Emaar South","The Valley","Grand Polo Club"].map(c => <option key={c} value={c}>{c}</option>)
-                            }
-                          </select>
+                          <SearchableSelect
+                            value={addLeadForm.community || ""}
+                            onChange={v => setAddLeadForm(prev => ({ ...prev, community: v }))}
+                            options={leadCommunities.map(c => ({ value: c, label: c }))}
+                            placeholder="Select community..."
+                            style={{ background: T.bg, fontSize: 13 }}
+                          />
                         </div>
                         {/* Tag */}
                         <div>
@@ -21464,181 +21541,47 @@ export default function AdminPanel() {
                         <div style={{ gridColumn: "1/-1" }}>
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone / WhatsApp</label>
                           <div style={{ display: "flex", gap: 8 }}>
-                            <select value={addLeadForm.phoneCode || "+971"} onChange={e => setAddLeadForm(prev => ({ ...prev, phoneCode: e.target.value }))}
-                              style={{ width: 130, padding: "10px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
-                              {[
-                                ["+93","Afghanistan"],
-                                ["+355","Albania"],
-                                ["+213","Algeria"],
-                                ["+376","Andorra"],
-                                ["+244","Angola"],
-                                ["+54","Argentina"],
-                                ["+374","Armenia"],
-                                ["+61","Australia"],
-                                ["+43","Austria"],
-                                ["+994","Azerbaijan"],
-                                ["+973","Bahrain"],
-                                ["+880","Bangladesh"],
-                                ["+375","Belarus"],
-                                ["+32","Belgium"],
-                                ["+501","Belize"],
-                                ["+229","Benin"],
-                                ["+975","Bhutan"],
-                                ["+591","Bolivia"],
-                                ["+387","Bosnia"],
-                                ["+267","Botswana"],
-                                ["+55","Brazil"],
-                                ["+673","Brunei"],
-                                ["+359","Bulgaria"],
-                                ["+226","Burkina Faso"],
-                                ["+257","Burundi"],
-                                ["+855","Cambodia"],
-                                ["+237","Cameroon"],
-                                ["+1","Canada"],
-                                ["+238","Cape Verde"],
-                                ["+236","Central African Rep."],
-                                ["+235","Chad"],
-                                ["+56","Chile"],
-                                ["+86","China"],
-                                ["+57","Colombia"],
-                                ["+269","Comoros"],
-                                ["+242","Congo"],
-                                ["+506","Costa Rica"],
-                                ["+385","Croatia"],
-                                ["+53","Cuba"],
-                                ["+357","Cyprus"],
-                                ["+420","Czech Republic"],
-                                ["+45","Denmark"],
-                                ["+253","Djibouti"],
-                                ["+1","Dominican Republic"],
-                                ["+593","Ecuador"],
-                                ["+20","Egypt"],
-                                ["+503","El Salvador"],
-                                ["+240","Equatorial Guinea"],
-                                ["+291","Eritrea"],
-                                ["+372","Estonia"],
-                                ["+251","Ethiopia"],
-                                ["+679","Fiji"],
-                                ["+358","Finland"],
-                                ["+33","France"],
-                                ["+241","Gabon"],
-                                ["+220","Gambia"],
-                                ["+995","Georgia"],
-                                ["+49","Germany"],
-                                ["+233","Ghana"],
-                                ["+30","Greece"],
-                                ["+502","Guatemala"],
-                                ["+224","Guinea"],
-                                ["+592","Guyana"],
-                                ["+509","Haiti"],
-                                ["+504","Honduras"],
-                                ["+36","Hungary"],
-                                ["+354","Iceland"],
-                                ["+91","India"],
-                                ["+62","Indonesia"],
-                                ["+98","Iran"],
-                                ["+964","Iraq"],
-                                ["+353","Ireland"],
-                                ["+972","Israel"],
-                                ["+39","Italy"],
-                                ["+225","Ivory Coast"],
-                                ["+1","Jamaica"],
-                                ["+81","Japan"],
-                                ["+962","Jordan"],
-                                ["+7","Kazakhstan"],
-                                ["+254","Kenya"],
-                                ["+850","North Korea"],
-                                ["+82","South Korea"],
-                                ["+965","Kuwait"],
-                                ["+996","Kyrgyzstan"],
-                                ["+856","Laos"],
-                                ["+371","Latvia"],
-                                ["+961","Lebanon"],
-                                ["+266","Lesotho"],
-                                ["+231","Liberia"],
-                                ["+218","Libya"],
-                                ["+423","Liechtenstein"],
-                                ["+370","Lithuania"],
-                                ["+352","Luxembourg"],
-                                ["+389","Macedonia"],
-                                ["+261","Madagascar"],
-                                ["+265","Malawi"],
-                                ["+60","Malaysia"],
-                                ["+960","Maldives"],
-                                ["+223","Mali"],
-                                ["+356","Malta"],
-                                ["+222","Mauritania"],
-                                ["+230","Mauritius"],
-                                ["+52","Mexico"],
-                                ["+373","Moldova"],
-                                ["+976","Mongolia"],
-                                ["+382","Montenegro"],
-                                ["+212","Morocco"],
-                                ["+258","Mozambique"],
-                                ["+264","Namibia"],
-                                ["+977","Nepal"],
-                                ["+31","Netherlands"],
-                                ["+64","New Zealand"],
-                                ["+505","Nicaragua"],
-                                ["+227","Niger"],
-                                ["+234","Nigeria"],
-                                ["+47","Norway"],
-                                ["+968","Oman"],
-                                ["+92","Pakistan"],
-                                ["+970","Palestine"],
-                                ["+507","Panama"],
-                                ["+675","Papua New Guinea"],
-                                ["+595","Paraguay"],
-                                ["+51","Peru"],
-                                ["+63","Philippines"],
-                                ["+48","Poland"],
-                                ["+351","Portugal"],
-                                ["+974","Qatar"],
-                                ["+40","Romania"],
-                                ["+7","Russia"],
-                                ["+250","Rwanda"],
-                                ["+966","Saudi Arabia"],
-                                ["+221","Senegal"],
-                                ["+381","Serbia"],
-                                ["+65","Singapore"],
-                                ["+421","Slovakia"],
-                                ["+386","Slovenia"],
-                                ["+252","Somalia"],
-                                ["+27","South Africa"],
-                                ["+211","South Sudan"],
-                                ["+34","Spain"],
-                                ["+94","Sri Lanka"],
-                                ["+249","Sudan"],
-                                ["+597","Suriname"],
-                                ["+268","Swaziland"],
-                                ["+46","Sweden"],
-                                ["+41","Switzerland"],
-                                ["+963","Syria"],
-                                ["+886","Taiwan"],
-                                ["+992","Tajikistan"],
-                                ["+255","Tanzania"],
-                                ["+66","Thailand"],
-                                ["+228","Togo"],
-                                ["+1","Trinidad & Tobago"],
-                                ["+216","Tunisia"],
-                                ["+90","Turkey"],
-                                ["+993","Turkmenistan"],
-                                ["+256","Uganda"],
-                                ["+380","Ukraine"],
-                                ["+971","UAE"],
-                                ["+44","United Kingdom"],
-                                ["+1","United States"],
-                                ["+598","Uruguay"],
-                                ["+998","Uzbekistan"],
-                                ["+58","Venezuela"],
-                                ["+84","Vietnam"],
-                                ["+967","Yemen"],
-                                ["+260","Zambia"],
-                                ["+263","Zimbabwe"],
-                              ].sort((a,b) => a[1].localeCompare(b[1])).map(([code, name]) => (
-                                <option key={code+name} value={code}>{name} ({code})</option>
-                              ))}
-                            </select>
+                            <SearchableSelect
+                              value={addLeadForm.phoneCode || "+971"}
+                              onChange={v => setAddLeadForm(prev => ({ ...prev, phoneCode: v || "+971", phone: (v || "+971") + (prev.phoneNum || "").replace(/\s/g,"") }))}
+                              options={[
+                                ["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+376","🇦🇩 Andorra"],["+244","🇦🇴 Angola"],
+                                ["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],
+                                ["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],
+                                ["+229","🇧🇯 Benin"],["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+267","🇧🇼 Botswana"],
+                                ["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],
+                                ["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+238","🇨🇻 Cape Verde"],["+236","🇨🇫 Central African Rep"],
+                                ["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+269","🇰🇲 Comoros"],
+                                ["+242","🇨🇬 Congo"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],
+                                ["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],["+1","🇩🇴 Dominican Republic"],["+593","🇪🇨 Ecuador"],
+                                ["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+372","🇪🇪 Estonia"],["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],
+                                ["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],
+                                ["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],
+                                ["+245","🇬🇼 Guinea-Bissau"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],["+36","🇭🇺 Hungary"],
+                                ["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],
+                                ["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],["+81","🇯🇵 Japan"],
+                                ["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea (South)"],["+965","🇰🇼 Kuwait"],
+                                ["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+266","🇱🇸 Lesotho"],
+                                ["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],
+                                ["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],
+                                ["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],
+                                ["+382","🇲🇪 Montenegro"],["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+977","🇳🇵 Nepal"],
+                                ["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+227","🇳🇪 Niger"],["+234","🇳🇬 Nigeria"],
+                                ["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],
+                                ["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],
+                                ["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],
+                                ["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+232","🇸🇱 Sierra Leone"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],
+                                ["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],
+                                ["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+597","🇸🇷 Suriname"],["+268","🇸🇿 Swaziland"],["+46","🇸🇪 Sweden"],
+                                ["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],
+                                ["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+1","🇹🇹 Trinidad & Tobago"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],
+                                ["+993","🇹🇲 Turkmenistan"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],
+                                ["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],
+                                ["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"],
+                              ].sort((a,b) => a[1].localeCompare(b[1])).map(([code, name]) => ({ value: code, label: `${name} (${code})` }))}
+                              placeholder="🇦🇪 UAE (+971)"
+                              style={{ width: 190, background: T.bg, fontSize: 11, flexShrink: 0 }}
+                            />
                             <input type="tel" placeholder="50 123 4567" value={addLeadForm.phoneNum || ""}
                               onChange={e => { const num = e.target.value.replace(/[^\d\s]/g,""); setAddLeadForm(prev => ({ ...prev, phoneNum: num, phone: (prev.phoneCode || "+971") + num.replace(/\s/g,"") })); }}
                               style={{ flex: 1, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
@@ -21647,11 +21590,13 @@ export default function AdminPanel() {
                         {/* Nationality dropdown */}
                         <div>
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Nationality</label>
-                          <select value={addLeadForm.nationality || ""} onChange={e => setAddLeadForm(prev => ({ ...prev, nationality: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: addLeadForm.nationality ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="">Select nationality...</option>
-                            {DUBAI_NATIONALITIES.map(n => <option key={n} value={n}>{n}</option>)}
-                          </select>
+                          <SearchableSelect
+                            value={addLeadForm.nationality || ""}
+                            onChange={v => setAddLeadForm(prev => ({ ...prev, nationality: v }))}
+                            options={DUBAI_NATIONALITIES.map(n => ({ value: n, label: n }))}
+                            placeholder="Select nationality..."
+                            style={{ background: T.bg, fontSize: 13 }}
+                          />
                         </div>
                         {/* Duplicate email warning */}
                         {addLeadForm.email && leads.some(l => l.email && l.email.toLowerCase() === addLeadForm.email.toLowerCase()) && (
@@ -22307,7 +22252,7 @@ export default function AdminPanel() {
                               { key: "name", label: "Name" }, { key: "email", label: "Email" },
                                 { key: "phone", label: "Phone" }, { key: "nationality", label: "Nationality" },
                                 { key: "budget", label: "Budget (AED)", type: "number" }, { key: "project", label: "Project" },
-                                { key: "community", label: "Community" }, { key: "source", label: "Source" },
+                                { key: "source", label: "Source" },
                               ].map(field => (
                                 <div key={field.key}>
                                   <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{field.label}</label>
@@ -22325,24 +22270,44 @@ export default function AdminPanel() {
                                   />
                                 </div>
                               ))}
+                              {/* Community — searchable dropdown */}
+                              <div>
+                                <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Community</label>
+                                <SearchableSelect
+                                  value={leadDrawer.community || ""}
+                                  onChange={async v => {
+                                    setLeadDrawer(prev => ({ ...prev, community: v }));
+                                    try {
+                                      const activity = [...(leadDrawer.activity || []), { type: "edit", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Community updated" }];
+                                      await setDoc(doc(db, "leads", leadDrawer.id), { community: v, activity, updatedAt: new Date().toISOString() }, { merge: true });
+                                      notify("Community saved");
+                                      fetchLeads();
+                                    } catch { notify("Error saving"); }
+                                  }}
+                                  options={leadCommunities.map(c => ({ value: c, label: c }))}
+                                  placeholder="Select community..."
+                                  style={{ background: T.surfaceAlt, fontSize: 12 }}
+                                />
+                              </div>
                             </div>
                             {/* Nationality select in drawer */}
                             <div style={{ marginBottom: 12 }}>
                               <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Nationality</label>
-                              <select value={leadDrawer.nationality || ""}
-                                onChange={e => setLeadDrawer(prev => ({ ...prev, nationality: e.target.value }))}
-                                onBlur={async e => {
+                              <SearchableSelect
+                                value={leadDrawer.nationality || ""}
+                                onChange={async v => {
+                                  setLeadDrawer(prev => ({ ...prev, nationality: v }));
                                   try {
                                     const activity = [...(leadDrawer.activity || []), { type: "edit", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Nationality updated" }];
-                                    await setDoc(doc(db, "leads", leadDrawer.id), { nationality: e.target.value, activity, updatedAt: new Date().toISOString() }, { merge: true });
+                                    await setDoc(doc(db, "leads", leadDrawer.id), { nationality: v, activity, updatedAt: new Date().toISOString() }, { merge: true });
                                     notify("Nationality saved");
                                     fetchLeads();
                                   } catch { notify("Error saving"); }
                                 }}
-                                style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: leadDrawer.nationality ? T.white : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
-                                <option value="">Select nationality...</option>
-                                {DUBAI_NATIONALITIES.map(n => <option key={n} value={n}>{n}</option>)}
-                              </select>
+                                options={DUBAI_NATIONALITIES.map(n => ({ value: n, label: n }))}
+                                placeholder="Select nationality..."
+                                style={{ background: T.surfaceAlt, fontSize: 12 }}
+                              />
                             </div>
 
                             {/* Tags in drawer */}
