@@ -9081,11 +9081,13 @@ const ProfileDrawerComponent = ({
                     ["Phone",         u.phone || "—",  null],
                     ["Country",       u.country || "—", null],
                     ["Sign-in",       u.provider || "email", null],
-                    ["Email Verified", u.emailVerified ? "Verified" : "Not verified", null, u.emailVerified ? T.green : T.red],
+                    ["Email Verified", u.emailVerified ? "✓ Verified" : "✗ Not verified", null, u.emailVerified ? T.green : T.red],
                     ["Last Login",    u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Never", null],
                     ["Signed Up",     (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" }); } catch { return "—"; } })(), null],
                     ["Created By",    u.createdByAdmin ? `Admin (${u.createdByAdmin})` : "Self-signup", null],
                     ["Trial End",     u.trialEnd ? new Date(u.trialEnd).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }) : "—", null],
+                    ["Last Device",   u.lastDevice || u.userAgent?.split(" ").slice(-1)[0] || "—", null],
+                    ["Last IP",       u.lastIp || "—", null],
                   ].map(([label, value, copyKey, valColor], idx, arr) => (
                     <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 16px", background: "transparent", borderBottom: idx < arr.length - 1 ? `1px solid ${T.border}` : "none", transition: "background 0.1s", cursor: "default" }}
                       onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
@@ -9098,6 +9100,35 @@ const ProfileDrawerComponent = ({
                     </div>
                   ))}
                 </div>
+
+                {/* Lifecycle & Churn Risk */}
+                {(() => {
+                  const daysSince = u.lastLoginAt ? (new Date() - new Date(u.lastLoginAt)) / 86400000 : 999;
+                  const daysSinceSignup = u.createdAt ? (new Date() - new Date(u.createdAt)) / 86400000 : 999;
+                  let stage, stageColor, churnRisk, churnColor;
+                  if (u.suspended) { stage = "Suspended"; stageColor = T.red; churnRisk = 100; churnColor = T.red; }
+                  else if (daysSinceSignup <= 7) { stage = "Onboarding"; stageColor = T.teal; churnRisk = 10; churnColor = T.green; }
+                  else if (daysSince <= 3) { stage = "Active"; stageColor = T.green; churnRisk = 5; churnColor = T.green; }
+                  else if (daysSince <= 14) { stage = "Cooling"; stageColor = T.gold; churnRisk = 30; churnColor = T.gold; }
+                  else if (daysSince <= 30) { stage = "At Risk"; stageColor = T.orange; churnRisk = 60; churnColor = T.orange; }
+                  else { stage = "Churned"; stageColor = T.red; churnRisk = 90; churnColor = T.red; }
+                  return (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+                      <div style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                        <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>Lifecycle Stage</div>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: stageColor, fontFamily: "'Fraunces',serif" }}>{stage}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{daysSince < 999 ? `Last seen ${Math.round(daysSince)}d ago` : "Never logged in"}</div>
+                      </div>
+                      <div style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                        <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>Churn Risk</div>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: churnColor, fontFamily: "'Fraunces',serif" }}>{churnRisk}%</div>
+                        <div style={{ marginTop: 4, height: 3, borderRadius: 2, background: T.border }}>
+                          <div style={{ height: "100%", borderRadius: 2, background: churnColor, width: `${churnRisk}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {u.notes && (
                   <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderLeft: `3px solid ${T.gold}`, borderRadius: 8, padding: "12px 14px", marginBottom: 16 }}>
@@ -9392,6 +9423,12 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const [loadingUsers,       setLoadingUsers]        = useState(false); // FIX #30
   const [copiedId,           setCopiedId]            = useState(null);  // FIX #36
   const [drawerTab,          setDrawerTab]           = useState("details"); // drawer sub-nav
+  const [showBulkEmailModal, setShowBulkEmailModal]  = useState(false);
+  const [bulkEmailTargets,   setBulkEmailTargets]    = useState([]);
+  const [bulkEmailSubject,   setBulkEmailSubject]    = useState("");
+  const [bulkEmailBody,      setBulkEmailBody]       = useState("");
+  const [bulkEmailSending,   setBulkEmailSending]    = useState(false);
+  const [bulkEmailProgress,  setBulkEmailProgress]   = useState(0);
 
   const PAGE_SIZE    = 25;
   const AT_RISK_DAYS = 3; // FIX #6 — single source of truth
@@ -9552,7 +9589,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       else if (tierFilter === "Suspended")  matchTier = !!u.suspended;
       else if (tierFilter === "AtRisk")     matchTier = (() => { const d = trialDaysLeft(u); return d !== null && d <= AT_RISK_DAYS && d >= 0; })(); // FIX #1
 
-      const matchCountry = !filterCountry || (u.country || "").toLowerCase().includes(filterCountry.toLowerCase());
+      const matchCountry = !filterCountry || (u.country || "").toLowerCase() === filterCountry.toLowerCase();
       const matchRole    = !filterRole    || (u.role || "") === filterRole; // FIX #27
 
       return matchSearch && matchTier && matchCountry && matchRole;
@@ -10148,6 +10185,74 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <BulkImportModal />
       <EditUserModal />
       <NotifUserModal />
+
+      {/* ── BULK EMAIL MODAL ── */}
+      {showBulkEmailModal && (
+        <Modal onClose={() => { if (!bulkEmailSending) setShowBulkEmailModal(false); }} maxWidth={540}>
+          <ModalHeader title="Bulk Email" sub={`Sending to ${bulkEmailTargets.length} user${bulkEmailTargets.length !== 1 ? "s" : ""} with email addresses`} onClose={() => { if (!bulkEmailSending) setShowBulkEmailModal(false); }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {/* Quick templates */}
+            <div>
+              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Quick Templates</label>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {[
+                  { label: "Trial Expiring", subject: "Your DXB Analytics trial is expiring soon", body: "Hi {name},\n\nYour free trial of DXB Analytics is expiring soon. Upgrade now to keep full access to all features.\n\nUpgrade here: https://emaar-dashboard.vercel.app\n\nBest regards,\nDXB Analytics Team" },
+                  { label: "New Feature", subject: "New feature available on DXB Analytics", body: "Hi {name},\n\nWe've just launched a new feature on DXB Analytics that we think you'll love.\n\nLog in to check it out: https://emaar-dashboard.vercel.app\n\nBest regards,\nDXB Analytics Team" },
+                  { label: "Check-in", subject: "How is DXB Analytics working for you?", body: "Hi {name},\n\nWe wanted to check in and see how your experience with DXB Analytics has been.\n\nIf you have any questions or feedback, just reply to this email.\n\nBest regards,\nDXB Analytics Team" },
+                ].map(t => (
+                  <button key={t.label} type="button" onClick={() => { setBulkEmailSubject(t.subject); setBulkEmailBody(t.body); }}
+                    style={{ fontSize: 11, padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, cursor: "pointer" }}>{t.label}</button>
+                ))}
+              </div>
+            </div>
+            <Field label="Subject *">
+              <input type="text" placeholder="Email subject..." value={bulkEmailSubject} onChange={e => setBulkEmailSubject(e.target.value)} style={inputStyle} onFocus={focusIn} onBlur={focusOut} />
+            </Field>
+            <Field label={`Message * (use {name} for personalization)`}>
+              <textarea placeholder="Write your message..." value={bulkEmailBody} onChange={e => setBulkEmailBody(e.target.value)} rows={6} style={{ ...inputStyle, resize: "vertical" }} onFocus={focusIn} onBlur={focusOut} />
+            </Field>
+            {bulkEmailSending && (
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontSize: 11, color: T.textMuted }}>Sending...</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: T.gold }}>{bulkEmailProgress} / {bulkEmailTargets.length}</span>
+                </div>
+                <div style={{ height: 4, borderRadius: 2, background: T.border }}>
+                  <div style={{ height: "100%", borderRadius: 2, background: T.gold, width: `${bulkEmailTargets.length > 0 ? (bulkEmailProgress / bulkEmailTargets.length) * 100 : 0}%`, transition: "width 0.3s" }} />
+                </div>
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 10 }}>
+              <BtnGhost onClick={() => setShowBulkEmailModal(false)} style={{ flex: 1 }}>Cancel</BtnGhost>
+              <Btn disabled={bulkEmailSending || !bulkEmailSubject || !bulkEmailBody} color={T.blue} style={{ flex: 2 }} onClick={async () => {
+                if (!bulkEmailSubject || !bulkEmailBody) { notify("Subject and message required"); return; }
+                setBulkEmailSending(true);
+                setBulkEmailProgress(0);
+                let sent = 0;
+                for (const user of bulkEmailTargets) {
+                  try {
+                    await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+                      user_email:   user.email,
+                      user_name:    user.name || user.email,
+                      project_name: "DXB Analytics",
+                      change_type:  bulkEmailSubject,
+                      new_value:    bulkEmailBody.replace(/\{name\}/g, user.name || "there"),
+                      old_value:    "",
+                      updated_at:   new Date().toLocaleString("en-AE"),
+                    }, "USkwUhp0csGCVDkdQ");
+                    sent++;
+                  } catch(e) { console.error("Bulk email failed for", user.email, e); }
+                  setBulkEmailProgress(sent);
+                }
+                setBulkEmailSending(false);
+                notify(`✅ Sent ${sent}/${bulkEmailTargets.length} emails`);
+                setShowBulkEmailModal(false);
+                setBulkEmailSubject(""); setBulkEmailBody(""); setBulkEmailTargets([]); setBulkSel([]);
+              }}>{bulkEmailSending ? `Sending ${bulkEmailProgress}/${bulkEmailTargets.length}...` : `Send to ${bulkEmailTargets.length} users`}</Btn>
+            </div>
+          </div>
+        </Modal>
+      )}
       <ProfileDrawerComponent
         drawerUser={drawerUser}
         onClose={() => setDrawerUserWithCallback(null)}
@@ -10335,7 +10440,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 14, display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
           <div>
             <Field label="Country" hint="(filled when user completes profile)">
-              <input type="text" placeholder="e.g. UAE, Saudi..." value={filterCountry} onChange={e => { setFilterCountry(e.target.value); setPage(1); }} style={{ ...inputStyle, maxWidth: 180 }} onFocus={focusIn} onBlur={focusOut} />
+              <SearchableSelect
+                value={filterCountry}
+                onChange={v => { setFilterCountry(v); setPage(1); }}
+                options={["UAE","Saudi Arabia","Qatar","Kuwait","Bahrain","Oman","Jordan","Lebanon","Egypt","Pakistan","India","Bangladesh","Philippines","UK","USA","Canada","Australia","Germany","France","Russia","China","Turkey","Nigeria","Other"].map(c => ({ value: c, label: c }))}
+                placeholder="All Countries"
+                style={{ background: T.bg, fontSize: 12, minWidth: 160 }}
+              />
             </Field>
           </div>
           {/* FIX #27: role filter */}
@@ -10379,6 +10490,14 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
           </select>
           <button type="button" onClick={handleBulkAction} disabled={!bulkTier} style={{ padding: "6px 14px", borderRadius: 7, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: bulkTier ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", opacity: bulkTier ? 1 : 0.5 }}>Apply</button>
+          <button type="button" onClick={() => {
+            const selected = users.filter(u => bulkSel.includes(u.uid) && u.email);
+            if (selected.length === 0) { notify("No selected users have email addresses"); return; }
+            setShowBulkEmailModal(true);
+            setBulkEmailTargets(selected);
+          }} style={{ padding: "6px 14px", borderRadius: 7, border: `1px solid ${T.blue}`, background: "rgba(59,130,246,0.08)", color: T.blue, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+            ✉️ Email ({users.filter(u => bulkSel.includes(u.uid) && u.email).length})
+          </button>
           <button type="button" onClick={() => setBulkSel([])} style={{ padding: "6px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
         </div>
       )}
@@ -10454,7 +10573,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                     {u.name || u.email?.split("@")[0]}
                     {u.suspended && <span style={{ fontSize: 9, color: T.red, fontWeight: 700, background: "rgba(239,68,68,0.12)", padding: "1px 5px", borderRadius: 4 }}>SUSPENDED</span>}
                     {u.role === "admin" && <span style={{ fontSize: 9, color: T.gold, fontWeight: 700, background: "rgba(212,168,67,0.12)", padding: "1px 5px", borderRadius: 4 }}>ADMIN</span>}
-                    {/* FIX #33: notes badge is clickable */}
+                    {u.emailVerified && <span style={{ fontSize: 9, color: T.green, fontWeight: 700, background: "rgba(16,185,129,0.12)", padding: "1px 5px", borderRadius: 4 }}>✓ Verified</span>}
                     {u.notes && <button type="button" onClick={() => { setNoteUser(u); setNoteText(u.notes || ""); }} title="Click to view/edit note" style={{ fontSize: 9, color: "#8B5CF6", background: "rgba(139,92,246,0.12)", padding: "1px 5px", borderRadius: 4, border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>note</button>}
                   </div>
                   <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2, display: "flex", alignItems: "center", gap: 4, overflow: "hidden" }}>
@@ -10462,6 +10581,17 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {health.label}
                       {jobRole && <span style={{ marginLeft: 5, color: jobRole.color, fontWeight: 700 }}>· {jobRole.label}</span>}
+                      {(() => {
+                        // Lifecycle stage
+                        const daysSince = u.lastLoginAt ? (new Date() - new Date(u.lastLoginAt)) / 86400000 : 999;
+                        const daysSinceSignup = u.createdAt ? (new Date() - new Date(u.createdAt)) / 86400000 : 999;
+                        if (u.suspended) return null;
+                        if (daysSinceSignup <= 7) return <span style={{ marginLeft: 5, color: T.teal, fontWeight: 700 }}>· Onboarding</span>;
+                        if (daysSince <= 3) return <span style={{ marginLeft: 5, color: T.green, fontWeight: 700 }}>· Active</span>;
+                        if (daysSince <= 14) return <span style={{ marginLeft: 5, color: T.gold, fontWeight: 700 }}>· Cooling</span>;
+                        if (daysSince <= 30) return <span style={{ marginLeft: 5, color: T.orange, fontWeight: 700 }}>· At Risk</span>;
+                        return <span style={{ marginLeft: 5, color: T.red, fontWeight: 700 }}>· Churned</span>;
+                      })()}
                       {(u.tags || []).length > 0 && <span style={{ marginLeft: 5, color: "#8B5CF6" }}>· {(u.tags || []).map(t => TAGS_OPTIONS.find(x => x.value === t)?.label).filter(Boolean).join(", ")}</span>}
                     </span>
                   </div>
