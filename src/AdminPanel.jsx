@@ -20672,7 +20672,6 @@ export default function AdminPanel() {
                       <option value="all">🌍 All Nationalities ({leadNationalities.length})</option>
                       {leadNationalities.map(n => <option key={n} value={n}>{n}</option>)}
                     </select>
-                    </select>
 
                     {/* Source filter */}
                     <select value={leadSourceFilter} onChange={e => { setLeadSourceFilter(e.target.value); searchAllLeads(leadSearch, leadFilter, e.target.value, leadCommunityFilter, leadNationalityFilter); }}
