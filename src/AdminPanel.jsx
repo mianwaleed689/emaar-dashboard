@@ -12927,21 +12927,58 @@ export default function AdminPanel() {
     return () => { if (unsub) unsub(); };
   }, [isAdmin, fetchVerifications]);
 
+  const [leadsTotal, setLeadsTotal] = useState(0);
+  const [leadsSearching, setLeadsSearching] = useState(false);
+
   const fetchLeads = useCallback(async (lim = 500) => {
     try {
       const q = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(lim + 1));
       const snap = await getDocs(q);
       const list = [];
       snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
-      if (list.length > lim) {
-        list.pop();
-        setLeadsHasMore(true);
-      } else {
-        setLeadsHasMore(false);
-      }
+      if (list.length > lim) { list.pop(); setLeadsHasMore(true); }
+      else { setLeadsHasMore(false); }
       setLeads(list);
     } catch (e) { console.error("Fetch leads:", e); }
   }, []);
+
+  // Firestore-powered search — queries ALL leads not just loaded 500
+  const searchAllLeads = useCallback(async (searchTerm, statusFilter, sourceFilter) => {
+    if (!searchTerm && statusFilter === "all" && sourceFilter === "all") {
+      fetchLeads(500);
+      return;
+    }
+    setLeadsSearching(true);
+    try {
+      let q;
+      // Status filter via Firestore
+      if (statusFilter !== "all") {
+        q = query(collection(db, "leads"), where("status", "==", statusFilter === "new" ? "New" : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)), orderBy("createdAt", "desc"), limit(1000));
+      } else if (sourceFilter !== "all") {
+        q = query(collection(db, "leads"), where("source", "==", sourceFilter), orderBy("createdAt", "desc"), limit(1000));
+      } else {
+        q = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(2000));
+      }
+      const snap = await getDocs(q);
+      let list = [];
+      snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
+      // Client-side search filter on top
+      if (searchTerm) {
+        const s = searchTerm.toLowerCase();
+        list = list.filter(l =>
+          (l.name || "").toLowerCase().includes(s) ||
+          (l.email || "").toLowerCase().includes(s) ||
+          (l.phone || "").includes(s) ||
+          (l.project || "").toLowerCase().includes(s) ||
+          (l.community || "").toLowerCase().includes(s) ||
+          (l.nationality || "").toLowerCase().includes(s)
+        );
+      }
+      setLeads(list);
+      setLeadsHasMore(false);
+    } catch (e) { console.error("Search leads:", e); }
+    setLeadsSearching(false);
+  }, [fetchLeads]);
 
   useEffect(() => { if (isAdmin) fetchLeads(500); }, [isAdmin, fetchLeads]);
 
@@ -20491,7 +20528,7 @@ export default function AdminPanel() {
                     { id: "converted", label: "Converted", count: stats.converted, color: T.green },
                     { id: "lost", label: "Lost", count: stats.lost, color: T.red },
                   ].map(s => (
-                    <div key={s.id} onClick={() => setLeadFilter(leadFilter === s.id ? "all" : s.id)} className="fade-up" style={{ padding: "16px 18px", borderRadius: 12, cursor: "pointer", background: leadFilter === s.id ? `${s.color}15` : T.surface, border: `1px solid ${leadFilter === s.id ? s.color : T.border}`, transition: "all 0.15s" }}>
+                    <div key={s.id} onClick={() => { const newFilter = leadFilter === s.id ? "all" : s.id; setLeadFilter(newFilter); searchAllLeads(leadSearch, newFilter, leadSourceFilter); }} className="fade-up" style={{ padding: "16px 18px", borderRadius: 12, cursor: "pointer", background: leadFilter === s.id ? `${s.color}15` : T.surface, border: `1px solid ${leadFilter === s.id ? s.color : T.border}`, transition: "all 0.15s" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                         <span style={{ fontSize: 11, fontWeight: 700, color: s.color, textTransform: "uppercase", letterSpacing: 1 }}>{s.label}</span>
                       </div>
@@ -20556,8 +20593,17 @@ export default function AdminPanel() {
 
                 {/* FILTERS */}
                 <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
-                  <input type="text" placeholder="Search name, email, phone, nationality, project..." value={leadSearch} onChange={e => setLeadSearch(e.target.value)} style={{ flex: 1, minWidth: 200, padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                  <select value={leadSourceFilter} onChange={e => setLeadSourceFilter(e.target.value)} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                  <div style={{ flex: 1, minWidth: 200, position: "relative" }}>
+                    <input type="text" placeholder="Search all leads — name, email, phone, community, project, nationality..." value={leadSearch} onChange={e => {
+                      setLeadSearch(e.target.value);
+                      clearTimeout(window._leadSearchTimer);
+                      window._leadSearchTimer = setTimeout(() => {
+                        searchAllLeads(e.target.value, leadFilter, leadSourceFilter);
+                      }, 500);
+                    }} style={{ width: "100%", padding: "10px 14px", background: T.surface, border: `1px solid ${leadSearch ? T.blue : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                    {leadsSearching && <div style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: T.blue }}>Searching...</div>}
+                  </div>
+                  <select value={leadSourceFilter} onChange={e => { setLeadSourceFilter(e.target.value); searchAllLeads(leadSearch, leadFilter, e.target.value); }} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
                     <option value="all">All Sources</option>
                     {sources.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
@@ -20570,9 +20616,9 @@ export default function AdminPanel() {
                     <option value="today_followup">Due Today</option>
                   </select>
                   {(leadFilter !== "all" || leadSourceFilter !== "all" || leadDateRange !== "all" || leadSearch) && (
-                    <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); }} style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
+                    <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); fetchLeads(500); }} style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
                   )}
-                  <span style={{ fontSize: 11, color: T.textMuted }}>{filtered.length} of {leads.length}</span>
+                  <span style={{ fontSize: 11, color: T.textMuted }}>{leadsSearching ? "Searching..." : `${filtered.length} shown${leadsHasMore ? " (500 of 19,600+)" : ""}`}</span>
                 </div>
 
                 {/* KANBAN VIEW */}
