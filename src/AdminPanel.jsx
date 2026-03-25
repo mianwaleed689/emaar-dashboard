@@ -10443,13 +10443,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       ["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"],
     ].sort((a,b) => a[1].localeCompare(b[1]));
 
-    const COUNTRIES = [
-      "UAE","Saudi Arabia","Qatar","Kuwait","Bahrain","Oman","Jordan","Lebanon","Egypt","Iraq",
-      "Syria","Yemen","Libya","Morocco","Tunisia","Algeria","Sudan","Pakistan","India","Bangladesh",
-      "Philippines","Indonesia","Sri Lanka","Nepal","UK","USA","Canada","Australia","Germany",
-      "France","Italy","Spain","Russia","China","Japan","Korea","Turkey","Iran","Nigeria",
-      "Kenya","South Africa","Brazil","Other"
-    ].sort();
+    const COUNTRIES = ["Afghanistan","Albania","Algeria","Angola","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahrain","Bangladesh","Belarus","Belgium","Bolivia","Bosnia","Brazil","Bulgaria","Cambodia","Cameroon","Canada","Chile","China","Colombia","Congo","Croatia","Cuba","Czech Republic","Denmark","Egypt","Ethiopia","Finland","France","Germany","Ghana","Greece","Hungary","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Korea (South)","Kuwait","Laos","Latvia","Lebanon","Libya","Lithuania","Malaysia","Maldives","Mali","Malta","Morocco","Mozambique","Nepal","Netherlands","New Zealand","Nigeria","Norway","Oman","Pakistan","Palestine","Panama","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saudi Arabia","Senegal","Serbia","Singapore","Slovakia","Somalia","South Africa","Spain","Sri Lanka","Sudan","Sweden","Switzerland","Syria","Taiwan","Tanzania","Thailand","Tunisia","Turkey","Uganda","Ukraine","UAE","United Kingdom","United States","Uruguay","Uzbekistan","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe","Other"].sort();
 
     if (!showAddUser) return null;
     return (
@@ -11069,7 +11063,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
               <select value={filterCountry} onChange={e => { setFilterCountry(e.target.value); setPage(1); }}
                 style={{ ...inputStyle, maxWidth: 200, cursor: "pointer", color: filterCountry ? "#E2E8F0" : "#64748B" }}>
                 <option value="">All Countries</option>
-                {["UAE","Saudi Arabia","Qatar","Kuwait","Bahrain","Oman","Jordan","Lebanon","Egypt","Pakistan","India","Bangladesh","Philippines","UK","USA","Canada","Australia","Germany","France","Russia","China","Turkey","Nigeria","Other"].map(c => <option key={c} value={c}>{c}</option>)}
+                {["Afghanistan","Albania","Algeria","Angola","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahrain","Bangladesh","Belarus","Belgium","Bolivia","Bosnia","Brazil","Bulgaria","Cambodia","Cameroon","Canada","Chile","China","Colombia","Congo","Croatia","Cuba","Czech Republic","Denmark","Egypt","Ethiopia","Finland","France","Germany","Ghana","Greece","Hungary","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Japan","Jordan","Kazakhstan","Kenya","Korea (South)","Kuwait","Latvia","Lebanon","Libya","Lithuania","Malaysia","Maldives","Mali","Morocco","Mozambique","Nepal","Netherlands","New Zealand","Nigeria","Norway","Oman","Pakistan","Palestine","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saudi Arabia","Senegal","Serbia","Singapore","Slovakia","Somalia","South Africa","Spain","Sri Lanka","Sudan","Sweden","Switzerland","Syria","Taiwan","Tanzania","Thailand","Tunisia","Turkey","Uganda","Ukraine","UAE","United Kingdom","United States","Uruguay","Uzbekistan","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe","Other"].sort().map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </Field>
           </div>
