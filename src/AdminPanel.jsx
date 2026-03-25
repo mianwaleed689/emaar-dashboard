@@ -20303,8 +20303,8 @@ export default function AdminPanel() {
               }
               // Golden Visa eligible (budget >= AED 2M)
               if (leadGoldenVisa && (parseFloat(l.budget) || 0) < 2000000) return false;
-              // Has WhatsApp (has phone number)
-              if (leadHasWhatsApp && !l.phone) return false;
+              // Has WhatsApp (has phone number AND not tagged No WhatsApp)
+              if (leadHasWhatsApp && (!l.phone || (l.tags || []).includes("No WhatsApp"))) return false;
               // Has Email
               if (leadHasEmail && !l.email) return false;
               // Property type
@@ -21003,6 +21003,7 @@ export default function AdminPanel() {
                       <option value="End-User">🏠 End-User</option>
                       <option value="Flipper">🔄 Flipper</option>
                       <option value="Referral">👥 Referral</option>
+                      <option value="No WhatsApp">✕ No WhatsApp</option>
                     </select>
 
                     {/* Toggle buttons */}
@@ -21156,7 +21157,23 @@ export default function AdminPanel() {
                                   </td>
                                   <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
                                     <div style={{ display: "flex", gap: 5 }}>
-                                      {lead.phone && <a href={`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${lead.name || ""}, following up on your interest in ${lead.project || "the property"}.`)}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>WA</a>}
+                                      {lead.phone && !(lead.tags || []).includes("No WhatsApp") && (
+                                        <a href={`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${lead.name || ""}, following up on your interest in ${lead.project || "the property"}.`)}`}
+                                          target="_blank" rel="noreferrer"
+                                          style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, background: "rgba(37,211,102,0.15)", color: "#25D366", textDecoration: "none", fontWeight: 600 }}>WA</a>
+                                      )}
+                                      {lead.phone && !(lead.tags || []).includes("No WhatsApp") && (
+                                        <button type="button" title="Mark as No WhatsApp" onClick={async e => {
+                                          e.stopPropagation();
+                                          const newTags = [...(lead.tags || []), "No WhatsApp"];
+                                          await setDoc(doc(db, "leads", lead.id), { tags: newTags, updatedAt: new Date().toISOString() }, { merge: true });
+                                          fetchLeads();
+                                          notify("Marked as No WhatsApp");
+                                        }} style={{ fontSize: 10, padding: "4px 6px", borderRadius: 6, border: "none", background: "rgba(239,68,68,0.1)", color: T.red, cursor: "pointer", fontWeight: 700 }}>✕WA</button>
+                                      )}
+                                      {(lead.tags || []).includes("No WhatsApp") && (
+                                        <span style={{ fontSize: 9, padding: "4px 8px", borderRadius: 6, background: "rgba(239,68,68,0.08)", color: T.red, fontWeight: 600 }}>No WA</span>
+                                      )}
                                       <button type="button" onClick={() => setShowFollowUpModal(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: "none", background: "rgba(212,168,67,0.12)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>+Followup</button>
                                       <button type="button" onClick={() => setLeadDrawer(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.08)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>Open</button>
                                     </div>
@@ -21270,6 +21287,7 @@ export default function AdminPanel() {
                             <option value="End-User">🏠 End-User</option>
                             <option value="Flipper">🔄 Flipper</option>
                             <option value="Referral">👥 Referral</option>
+                            <option value="No WhatsApp">✕ No WhatsApp</option>
                           </select>
                         </div>
                         {/* Phone with country code */}
@@ -21938,7 +21956,7 @@ export default function AdminPanel() {
                             <div style={{ marginBottom: 12 }}>
                               <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 6, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Tags</label>
                               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                                {["VIP","Investor","End-User","Flipper","Referral"].map(tag => {
+                                {["VIP","Investor","End-User","Flipper","Referral","No WhatsApp"].map(tag => {
                                   const active = (leadDrawer.tags || []).includes(tag);
                                   return (
                                     <button key={tag} type="button" onClick={async () => {
@@ -21951,7 +21969,7 @@ export default function AdminPanel() {
                                         notify(`Tag ${active ? "removed" : "added"}: ${tag}`);
                                       } catch { notify("Error saving tag"); }
                                     }} style={{ padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: active ? 700 : 400, border: `1px solid ${active ? T.gold : T.border}`, background: active ? "rgba(212,168,67,0.15)" : T.bg, color: active ? T.gold : T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}>
-                                      {tag === "VIP" ? "⭐" : tag === "Investor" ? "💼" : tag === "End-User" ? "🏠" : tag === "Flipper" ? "🔄" : "👥"} {tag}
+                                      {tag === "VIP" ? "⭐" : tag === "Investor" ? "💼" : tag === "End-User" ? "🏠" : tag === "Flipper" ? "🔄" : tag === "No WhatsApp" ? "✕" : "👥"} {tag}
                                     </button>
                                   );
                                 })}
