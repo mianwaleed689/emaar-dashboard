@@ -10073,7 +10073,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       else if (tierFilter === "Suspended")  matchTier = !!u.suspended;
       else if (tierFilter === "AtRisk")     matchTier = (() => { const d = trialDaysLeft(u); return d !== null && d <= AT_RISK_DAYS && d >= 0; })(); // FIX #1
 
-      const matchCountry = !filterCountry || (u.country || "").toLowerCase() === filterCountry.toLowerCase();
+      const matchCountry = !filterCountry || (u.country || "") === filterCountry;
       const matchRole    = !filterRole    || (u.role || "") === filterRole; // FIX #27
 
       return matchSearch && matchTier && matchCountry && matchRole;
@@ -10426,13 +10426,18 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           </div>
         ))}
         <div><Field label="Country">
-          <SearchableSelect
-            value={addUserForm.country || ""}
-            onChange={v => setAddUserForm(p => ({ ...p, country: v }))}
-            options={["UAE","Saudi Arabia","Qatar","Kuwait","Bahrain","Oman","Jordan","Lebanon","Egypt","Iraq","Syria","Yemen","Libya","Morocco","Tunisia","Algeria","Sudan","Pakistan","India","Bangladesh","Philippines","Indonesia","Sri Lanka","Nepal","UK","USA","Canada","Australia","Germany","France","Italy","Spain","Russia","China","Japan","Korea","Turkey","Iran","Nigeria","Kenya","South Africa","Brazil","Other"].map(c => ({ value: c, label: c }))}
-            placeholder="Select Country"
-            style={{ background: T.bg, fontSize: 13, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white }}
-          />
+          {(() => {
+            const COUNTRIES = ["UAE","Saudi Arabia","Qatar","Kuwait","Bahrain","Oman","Jordan","Lebanon","Egypt","Iraq","Syria","Yemen","Libya","Morocco","Tunisia","Algeria","Sudan","Pakistan","India","Bangladesh","Philippines","Indonesia","Sri Lanka","Nepal","UK","USA","Canada","Australia","Germany","France","Italy","Spain","Russia","China","Japan","Korea","Turkey","Iran","Nigeria","Kenya","South Africa","Brazil","Other"];
+            return (
+              <div style={{ position: "relative" }}>
+                <select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({ ...p, country: e.target.value }))}
+                  style={{ ...inputStyle, cursor: "pointer", color: addUserForm.country ? "#E2E8F0" : "#64748B" }}>
+                  <option value="">Select Country...</option>
+                  {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            );
+          })()}
         </Field></div>
         <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
@@ -10579,13 +10584,10 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div style={{ gridColumn: "1 / -1" }}><Field label="Full Name"><input type="text" placeholder="Full name" value={editUserForm.name || ""} onChange={e => setEditUserForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field></div>
         <Field label="Phone"><input type="tel" placeholder="+971 50 000 0000" value={editUserForm.phone || ""} onChange={e => setEditUserForm(p => ({ ...p, phone: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
         <Field label="Country">
-          <SearchableSelect
-            value={editUserForm.country || ""}
-            onChange={v => setEditUserForm(p => ({ ...p, country: v }))}
-            options={["UAE","Saudi Arabia","Qatar","Kuwait","Bahrain","Oman","Jordan","Lebanon","Egypt","Iraq","Syria","Yemen","Libya","Morocco","Tunisia","Algeria","Sudan","Pakistan","India","Bangladesh","Philippines","Indonesia","Sri Lanka","Nepal","UK","USA","Canada","Australia","Germany","France","Italy","Spain","Russia","China","Japan","Korea","Turkey","Iran","Nigeria","Kenya","South Africa","Brazil","Other"].map(c => ({ value: c, label: c }))}
-            placeholder="Select Country"
-            style={{ background: T.bg, fontSize: 13 }}
-          />
+          <select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer", color: editUserForm.country ? "#E2E8F0" : "#64748B" }}>
+            <option value="">Select Country...</option>
+            {["UAE","Saudi Arabia","Qatar","Kuwait","Bahrain","Oman","Jordan","Lebanon","Egypt","Iraq","Syria","Yemen","Libya","Morocco","Tunisia","Algeria","Sudan","Pakistan","India","Bangladesh","Philippines","Indonesia","Sri Lanka","Nepal","UK","USA","Canada","Australia","Germany","France","Italy","Spain","Russia","China","Japan","Korea","Turkey","Iran","Nigeria","Kenya","South Africa","Brazil","Other"].map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
         </Field>
         <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
@@ -10924,13 +10926,11 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 14, display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
           <div>
             <Field label="Country" hint="(filled when user completes profile)">
-              <SearchableSelect
-                value={filterCountry}
-                onChange={v => { setFilterCountry(v); setPage(1); }}
-                options={["UAE","Saudi Arabia","Qatar","Kuwait","Bahrain","Oman","Jordan","Lebanon","Egypt","Pakistan","India","Bangladesh","Philippines","UK","USA","Canada","Australia","Germany","France","Russia","China","Turkey","Nigeria","Other"].map(c => ({ value: c, label: c }))}
-                placeholder="All Countries"
-                style={{ background: T.bg, fontSize: 12, minWidth: 160 }}
-              />
+              <select value={filterCountry} onChange={e => { setFilterCountry(e.target.value); setPage(1); }}
+                style={{ ...inputStyle, maxWidth: 200, cursor: "pointer", color: filterCountry ? "#E2E8F0" : "#64748B" }}>
+                <option value="">All Countries</option>
+                {["UAE","Saudi Arabia","Qatar","Kuwait","Bahrain","Oman","Jordan","Lebanon","Egypt","Pakistan","India","Bangladesh","Philippines","UK","USA","Canada","Australia","Germany","France","Russia","China","Turkey","Nigeria","Other"].map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
             </Field>
           </div>
           {/* FIX #27: role filter */}
