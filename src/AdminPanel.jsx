@@ -12568,6 +12568,8 @@ export default function AdminPanel() {
     try { return localStorage.getItem("admin_leadFilter") || "all"; } catch { return "all"; }
   }); // all | new | contacted | qualified | converted | lost
   const [leadSourceFilter, setLeadSourceFilter] = useState("all");
+  const [leadCommunityFilter, setLeadCommunityFilter] = useState("all");
+  const [leadNationalityFilter, setLeadNationalityFilter] = useState("all");
   const [leadSearch, setLeadSearch] = useState("");
   const [leadDateRange, setLeadDateRange] = useState("all"); // all | today | week | month
   const [showAddLead, setShowAddLead] = useState(false);
@@ -12943,26 +12945,30 @@ export default function AdminPanel() {
   }, []);
 
   // Firestore-powered search — queries ALL leads not just loaded 500
-  const searchAllLeads = useCallback(async (searchTerm, statusFilter, sourceFilter) => {
-    if (!searchTerm && statusFilter === "all" && sourceFilter === "all") {
-      fetchLeads(500);
-      return;
-    }
+  const searchAllLeads = useCallback(async (searchTerm, statusFilter, sourceFilter, communityFilter, nationalityFilter) => {
+    const noFilters = !searchTerm && statusFilter === "all" && sourceFilter === "all" && (!communityFilter || communityFilter === "all") && (!nationalityFilter || nationalityFilter === "all");
+    if (noFilters) { fetchLeads(500); return; }
     setLeadsSearching(true);
     try {
       let q;
-      // Status filter via Firestore
       if (statusFilter !== "all") {
-        q = query(collection(db, "leads"), where("status", "==", statusFilter === "new" ? "New" : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)), orderBy("createdAt", "desc"), limit(1000));
+        q = query(collection(db, "leads"), where("status", "==", statusFilter === "new" ? "New" : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)), orderBy("createdAt", "desc"), limit(2000));
       } else if (sourceFilter !== "all") {
-        q = query(collection(db, "leads"), where("source", "==", sourceFilter), orderBy("createdAt", "desc"), limit(1000));
+        q = query(collection(db, "leads"), where("source", "==", sourceFilter), orderBy("createdAt", "desc"), limit(2000));
+      } else if (communityFilter && communityFilter !== "all") {
+        q = query(collection(db, "leads"), where("community", "==", communityFilter), orderBy("createdAt", "desc"), limit(2000));
+      } else if (nationalityFilter && nationalityFilter !== "all") {
+        q = query(collection(db, "leads"), where("nationality", "==", nationalityFilter), orderBy("createdAt", "desc"), limit(2000));
       } else {
         q = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(2000));
       }
       const snap = await getDocs(q);
       let list = [];
       snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
-      // Client-side search filter on top
+      // Client-side filters on top
+      if (communityFilter && communityFilter !== "all") list = list.filter(l => (l.community || "") === communityFilter);
+      if (nationalityFilter && nationalityFilter !== "all") list = list.filter(l => (l.nationality || "") === nationalityFilter);
+      if (sourceFilter !== "all") list = list.filter(l => (l.source || "") === sourceFilter);
       if (searchTerm) {
         const s = searchTerm.toLowerCase();
         list = list.filter(l =>
@@ -20612,33 +20618,166 @@ export default function AdminPanel() {
                 )}
 
                 {/* FILTERS */}
-                <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
-                  <div style={{ flex: 1, minWidth: 200, position: "relative" }}>
-                    <input type="text" placeholder="Search all leads — name, email, phone, community, project, nationality..." value={leadSearch} onChange={e => {
-                      setLeadSearch(e.target.value);
-                      clearTimeout(window._leadSearchTimer);
-                      window._leadSearchTimer = setTimeout(() => {
-                        searchAllLeads(e.target.value, leadFilter, leadSourceFilter);
-                      }, 500);
-                    }} style={{ width: "100%", padding: "10px 14px", background: T.surface, border: `1px solid ${leadSearch ? T.blue : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
-                    {leadsSearching && <div style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: T.blue }}>Searching...</div>}
+                <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: "14px 16px", marginBottom: 16 }}>
+                  {/* Row 1: Search */}
+                  <div style={{ display: "flex", gap: 10, marginBottom: 10, alignItems: "center" }}>
+                    <div style={{ flex: 1, position: "relative" }}>
+                      <input type="text" placeholder="🔍  Search by name, phone, email, project..." value={leadSearch} onChange={e => {
+                        setLeadSearch(e.target.value);
+                        clearTimeout(window._leadSearchTimer);
+                        window._leadSearchTimer = setTimeout(() => {
+                          searchAllLeads(e.target.value, leadFilter, leadSourceFilter, leadCommunityFilter, leadNationalityFilter);
+                        }, 500);
+                      }} style={{ width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid ${leadSearch ? T.blue : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                      {leadsSearching && <div style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: T.blue, fontWeight: 600 }}>Searching...</div>}
+                    </div>
+                    {(leadFilter !== "all" || leadSourceFilter !== "all" || leadDateRange !== "all" || leadSearch || leadCommunityFilter !== "all" || leadNationalityFilter !== "all") && (
+                      <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); setLeadCommunityFilter("all"); setLeadNationalityFilter("all"); fetchLeads(500); }}
+                        style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>✕ Clear All</button>
+                    )}
+                    <span style={{ fontSize: 11, color: T.textMuted, whiteSpace: "nowrap" }}>{leadsSearching ? "Searching..." : `${filtered.length} shown${leadsHasMore ? " (500 of 19,600+)" : " of " + leads.length.toLocaleString()}`}</span>
                   </div>
-                  <select value={leadSourceFilter} onChange={e => { setLeadSourceFilter(e.target.value); searchAllLeads(leadSearch, leadFilter, e.target.value); }} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                    <option value="all">All Sources</option>
-                    {sources.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  <select value={leadDateRange} onChange={e => setLeadDateRange(e.target.value)} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                    <option value="all">All Time</option>
-                    <option value="today">Today</option>
-                    <option value="week">This Week</option>
-                    <option value="month">This Month</option>
-                    <option value="overdue">Overdue Follow-ups</option>
-                    <option value="today_followup">Due Today</option>
-                  </select>
-                  {(leadFilter !== "all" || leadSourceFilter !== "all" || leadDateRange !== "all" || leadSearch) && (
-                    <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); fetchLeads(500); }} style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
-                  )}
-                  <span style={{ fontSize: 11, color: T.textMuted }}>{leadsSearching ? "Searching..." : `${filtered.length} shown${leadsHasMore ? " (500 of 19,600+)" : ""}`}</span>
+                  {/* Row 2: Dropdown filters */}
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                    {/* Community filter */}
+                    <select value={leadCommunityFilter} onChange={e => { setLeadCommunityFilter(e.target.value); searchAllLeads(leadSearch, leadFilter, leadSourceFilter, e.target.value, leadNationalityFilter); }}
+                      style={{ padding: "8px 12px", background: leadCommunityFilter !== "all" ? "rgba(212,168,67,0.12)" : T.bg, border: `1px solid ${leadCommunityFilter !== "all" ? T.gold : T.border}`, borderRadius: 8, color: leadCommunityFilter !== "all" ? T.gold : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadCommunityFilter !== "all" ? 700 : 400 }}>
+                      <option value="all">🏘 All Communities</option>
+                      <optgroup label="── JBR / Marina ──">
+                        <option value="JBR - Elan">JBR - Elan</option>
+                        <option value="JBR - Jumeirah Gate">JBR - Jumeirah Gate</option>
+                      </optgroup>
+                      <optgroup label="── Arabian Ranches ──">
+                        <option value="Arabian Ranches">Arabian Ranches</option>
+                        <option value="Arabian Ranches III">Arabian Ranches III</option>
+                      </optgroup>
+                      <optgroup label="── Villas / Emirates Living ──">
+                        <option value="Jumeirah Park">Jumeirah Park</option>
+                        <option value="Meadows / Lakes / Springs">Meadows / Lakes / Springs</option>
+                        <option value="Meydan">Meydan - Polo Residence</option>
+                        <option value="The Villa - Dubailand">The Villa - Dubailand</option>
+                        <option value="Al Waha - Dubailand">Al Waha - Dubailand</option>
+                      </optgroup>
+                      <optgroup label="── Al Barari Cluster ──">
+                        <option value="Al Barari">Al Barari</option>
+                        <option value="Majan - Al Barari">Majan - Al Barari</option>
+                        <option value="Living Legends">Living Legends</option>
+                        <option value="Seventh Heaven">Seventh Heaven</option>
+                        <option value="Al Barari (Other)">Al Barari (Other)</option>
+                      </optgroup>
+                      <optgroup label="── Business Bay / Downtown ──">
+                        <option value="Business Bay">Business Bay</option>
+                        <option value="City Walk - Al Wasl">City Walk - Al Wasl</option>
+                      </optgroup>
+                      <optgroup label="── Mudon / Dubailand ──">
+                        <option value="Mudon">Mudon / Arabella</option>
+                        <option value="DAMAC Hills">DAMAC Hills</option>
+                        <option value="DAMAC Hills 2 - Akoya">DAMAC Hills 2 - Akoya</option>
+                        <option value="DAMAC Hills - Trump Estates">Trump Estates</option>
+                      </optgroup>
+                      <optgroup label="── Other Areas ──">
+                        <option value="Al Furjan">Al Furjan</option>
+                        <option value="Arjan - Al Barsha South">Arjan - Al Barsha South</option>
+                        <option value="Dubai Sports City">Dubai Sports City</option>
+                        <option value="Al Satwa">Al Satwa</option>
+                      </optgroup>
+                    </select>
+
+                    {/* Nationality filter */}
+                    <select value={leadNationalityFilter} onChange={e => { setLeadNationalityFilter(e.target.value); searchAllLeads(leadSearch, leadFilter, leadSourceFilter, leadCommunityFilter, e.target.value); }}
+                      style={{ padding: "8px 12px", background: leadNationalityFilter !== "all" ? "rgba(59,130,246,0.12)" : T.bg, border: `1px solid ${leadNationalityFilter !== "all" ? T.blue : T.border}`, borderRadius: 8, color: leadNationalityFilter !== "all" ? T.blue : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadNationalityFilter !== "all" ? 700 : 400 }}>
+                      <option value="all">🌍 All Nationalities</option>
+                      <optgroup label="── GCC ──">
+                        <option value="Emirati">🇦🇪 Emirati</option>
+                        <option value="Saudi Arabian">🇸🇦 Saudi Arabian</option>
+                        <option value="Kuwaiti">🇰🇼 Kuwaiti</option>
+                        <option value="Qatari">🇶🇦 Qatari</option>
+                        <option value="Bahraini">🇧🇭 Bahraini</option>
+                        <option value="Omani">🇴🇲 Omani</option>
+                      </optgroup>
+                      <optgroup label="── South Asia ──">
+                        <option value="Indian">🇮🇳 Indian</option>
+                        <option value="Pakistani">🇵🇰 Pakistani</option>
+                        <option value="Bangladeshi">🇧🇩 Bangladeshi</option>
+                        <option value="Sri Lankan">🇱🇰 Sri Lankan</option>
+                        <option value="Nepali">🇳🇵 Nepali</option>
+                      </optgroup>
+                      <optgroup label="── Arab World ──">
+                        <option value="Egyptian">🇪🇬 Egyptian</option>
+                        <option value="Lebanese">🇱🇧 Lebanese</option>
+                        <option value="Jordanian">🇯🇴 Jordanian</option>
+                        <option value="Syrian">🇸🇾 Syrian</option>
+                        <option value="Iraqi">🇮🇶 Iraqi</option>
+                        <option value="Yemeni">🇾🇪 Yemeni</option>
+                        <option value="Moroccan">🇲🇦 Moroccan</option>
+                        <option value="Sudanese">🇸🇩 Sudanese</option>
+                        <option value="Algerian">🇩🇿 Algerian</option>
+                        <option value="Tunisian">🇹🇳 Tunisian</option>
+                        <option value="Libyan">🇱🇾 Libyan</option>
+                      </optgroup>
+                      <optgroup label="── Europe ──">
+                        <option value="British">🇬🇧 British</option>
+                        <option value="Russian">🇷🇺 Russian</option>
+                        <option value="Ukrainian">🇺🇦 Ukrainian</option>
+                        <option value="German">🇩🇪 German</option>
+                        <option value="French">🇫🇷 French</option>
+                        <option value="Italian">🇮🇹 Italian</option>
+                        <option value="Spanish">🇪🇸 Spanish</option>
+                        <option value="Dutch">🇳🇱 Dutch</option>
+                        <option value="Swiss">🇨🇭 Swiss</option>
+                        <option value="Swedish">🇸🇪 Swedish</option>
+                        <option value="Kazakhstani">🇰🇿 Kazakhstani</option>
+                      </optgroup>
+                      <optgroup label="── Americas / Oceania ──">
+                        <option value="American">🇺🇸 American</option>
+                        <option value="Canadian">🇨🇦 Canadian</option>
+                        <option value="Australian">🇦🇺 Australian</option>
+                        <option value="Brazilian">🇧🇷 Brazilian</option>
+                      </optgroup>
+                      <optgroup label="── East / Southeast Asia ──">
+                        <option value="Chinese">🇨🇳 Chinese</option>
+                        <option value="Filipino">🇵🇭 Filipino</option>
+                        <option value="Iranian">🇮🇷 Iranian</option>
+                        <option value="Turkish">🇹🇷 Turkish</option>
+                        <option value="Malaysian">🇲🇾 Malaysian</option>
+                      </optgroup>
+                      <optgroup label="── Africa ──">
+                        <option value="Nigerian">🇳🇬 Nigerian</option>
+                        <option value="South African">🇿🇦 South African</option>
+                        <option value="Kenyan">🇰🇪 Kenyan</option>
+                        <option value="Ghanaian">🇬🇭 Ghanaian</option>
+                      </optgroup>
+                    </select>
+
+                    {/* Source filter */}
+                    <select value={leadSourceFilter} onChange={e => { setLeadSourceFilter(e.target.value); searchAllLeads(leadSearch, leadFilter, e.target.value, leadCommunityFilter, leadNationalityFilter); }}
+                      style={{ padding: "8px 12px", background: leadSourceFilter !== "all" ? "rgba(16,185,129,0.12)" : T.bg, border: `1px solid ${leadSourceFilter !== "all" ? T.green : T.border}`, borderRadius: 8, color: leadSourceFilter !== "all" ? T.green : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadSourceFilter !== "all" ? 700 : 400 }}>
+                      <option value="all">📋 All Sources</option>
+                      <option value="DLD Data">🏛 DLD Data</option>
+                      <option value="Manual">✏️ Manual</option>
+                      <option value="WhatsApp">💬 WhatsApp</option>
+                      <option value="Bayut">🏠 Bayut</option>
+                      <option value="PropertyFinder">🔍 PropertyFinder</option>
+                      <option value="Referral">👥 Referral</option>
+                      <option value="Website">🌐 Website</option>
+                      <option value="Instagram">📸 Instagram</option>
+                      <option value="LinkedIn">💼 LinkedIn</option>
+                      <option value="Phone Call">📞 Phone Call</option>
+                      <option value="Email Inquiry">📧 Email Inquiry</option>
+                      <option value="Walk-in">🚶 Walk-in</option>
+                    </select>
+
+                    {/* Date filter */}
+                    <select value={leadDateRange} onChange={e => setLeadDateRange(e.target.value)}
+                      style={{ padding: "8px 12px", background: leadDateRange !== "all" ? "rgba(139,92,246,0.12)" : T.bg, border: `1px solid ${leadDateRange !== "all" ? T.purple : T.border}`, borderRadius: 8, color: leadDateRange !== "all" ? T.purple : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadDateRange !== "all" ? 700 : 400 }}>
+                      <option value="all">📅 All Time</option>
+                      <option value="today">Today</option>
+                      <option value="week">This Week</option>
+                      <option value="month">This Month</option>
+                      <option value="overdue">⚠️ Overdue Follow-ups</option>
+                      <option value="today_followup">🔔 Due Today</option>
+                    </select>
+                  </div>
                 </div>
 
                 {/* KANBAN VIEW */}
