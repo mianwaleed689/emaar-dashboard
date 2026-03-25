@@ -12620,6 +12620,10 @@ export default function AdminPanel() {
   const [showDeduplicateModal, setShowDeduplicateModal] = useState(false);
   const [deduplicating, setDeduplicating] = useState(false);
   const [deduplicateResult, setDeduplicateResult] = useState(null);
+  const [showPhoneFixer, setShowPhoneFixer] = useState(false);
+  const [phoneFixerScanning, setPhoneFixerScanning] = useState(false);
+  const [phoneFixerResult, setPhoneFixerResult] = useState(null);
+  const [phoneFixerPreview, setPhoneFixerPreview] = useState([]);
   const [showFollowUpModal, setShowFollowUpModal] = useState(null); // lead object
   const [followUpDate, setFollowUpDate] = useState("");
   const [followUpNote, setFollowUpNote] = useState("");
@@ -13031,8 +13035,21 @@ export default function AdminPanel() {
   useEffect(() => { if (isAdmin) fetchLeads(500); }, [isAdmin, fetchLeads]);
 
   // Fetch unique communities and nationalities from ALL leads
-  const fetchLeadMeta = useCallback(async () => {
+  const fetchLeadMeta = useCallback(async (forceRefresh = false) => {
     try {
+      // Check localStorage cache — only rescan once per day
+      const cacheKey = "dxb_lead_meta";
+      const cached = localStorage.getItem(cacheKey);
+      if (!forceRefresh && cached) {
+        const { communities, nationalities, cachedAt } = JSON.parse(cached);
+        const ageHours = (Date.now() - cachedAt) / (1000 * 60 * 60);
+        if (ageHours < 24 && communities.length > 0) {
+          setLeadCommunities(communities);
+          setLeadNationalities(nationalities);
+          return;
+        }
+      }
+      // Full scan — runs max once per day
       const communities = new Set();
       const nationalities = new Set();
       let lastDoc = null;
@@ -13050,8 +13067,10 @@ export default function AdminPanel() {
         if (snap.docs.length < 1000) { keepGoing = false; }
         else { lastDoc = snap.docs[snap.docs.length - 1]; }
       }
-      setLeadCommunities([...communities].sort());
-      setLeadNationalities([...nationalities].sort());
+      const sorted = { communities: [...communities].sort(), nationalities: [...nationalities].sort(), cachedAt: Date.now() };
+      try { localStorage.setItem(cacheKey, JSON.stringify(sorted)); } catch {}
+      setLeadCommunities(sorted.communities);
+      setLeadNationalities(sorted.nationalities);
     } catch (e) { console.error("fetchLeadMeta:", e); }
   }, []);
 
@@ -20207,18 +20226,36 @@ export default function AdminPanel() {
             // ── Lead Scoring (0-100) ──────────────────────────────────────
             const scoreLead = (lead) => {
               let score = 0;
-              if (lead.email) score += 20;
-              if (lead.phone) score += 20;
-              if (lead.budget) score += 15;
-              if (lead.nationality) score += 10;
-              if (lead.project) score += 15;
+              // Data completeness
+              if (lead.email) score += 15;
+              if (lead.phone) score += 15;
+              if (lead.budget) score += 10;
+              if (lead.nationality) score += 5;
+              if (lead.project) score += 10;
+              if (lead.community) score += 5;
+              // Recency
               const daysSinceCreated = (now - new Date(lead.createdAt || now)) / (1000 * 60 * 60 * 24);
-              if (daysSinceCreated < 1) score += 20;
-              else if (daysSinceCreated < 7) score += 10;
-              if ((lead.notes || []).length > 0) score += 10;
-              if (lead.status === "Qualified") score = Math.max(score, 60);
-              if (lead.status === "Converted") score = 100;
-              if (lead.status === "Lost") score = 0;
+              if (daysSinceCreated < 1) score += 15;
+              else if (daysSinceCreated < 7) score += 8;
+              else if (daysSinceCreated < 30) score += 3;
+              // Behavior signals
+              if ((lead.notes || []).length > 0) score += 5;
+              if ((lead.notes || []).length > 2) score += 5;
+              if (lead.followUpDate) score += 5;
+              if ((lead.activity || []).length > 2) score += 5;
+              // Budget signals
+              const budget = parseFloat(lead.budget) || 0;
+              if (budget >= 5000000) score += 10;
+              else if (budget >= 2000000) score += 7;
+              else if (budget >= 1000000) score += 4;
+              // Premium community bonus
+              const premComm = ["JBR","Business Bay","Meydan","Al Barari","City Walk","Creek Harbour","Dubai Hills","Grand Polo","Emaar Beachfront","Palm"];
+              if (premComm.some(c => (lead.community || "").includes(c) || (lead.project || "").includes(c))) score += 5;
+              // Status overrides
+              if (lead.status === "Qualified") score = Math.max(score, 65);
+              if (lead.status === "Contacted") score = Math.max(score, 45);
+              if (lead.status === "Converted") return 100;
+              if (lead.status === "Lost") return 0;
               return Math.min(score, 100);
             };
             const getScoreColor = (score) => score >= 70 ? T.green : score >= 40 ? T.gold : T.red;
@@ -20725,6 +20762,7 @@ export default function AdminPanel() {
                     <button type="button" onClick={() => setShowAddLead(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.08)", color: T.green, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>+ Add Lead</button>
                     <button type="button" onClick={() => { setShowImportLeads(true); setImportLeadsData([]); setImportLeadsDone(false); setImportLeadsProgress(0); setImportLeadsErrors([]); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.blue}`, background: "rgba(59,130,246,0.08)", color: T.blue, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>⬆ Import CSV</button>
                     <button type="button" onClick={() => setShowDeduplicateModal(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.orange}`, background: "rgba(245,158,11,0.08)", color: T.orange, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>🔁 Deduplicate</button>
+                    <button type="button" onClick={() => { setShowPhoneFixer(true); setPhoneFixerResult(null); setPhoneFixerPreview([]); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.purple}`, background: "rgba(139,92,246,0.08)", color: T.purple, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>📞 Fix Phones</button>
                     <button type="button" onClick={exportLeadsCSV} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} Export</button>
                   </div>
                 </div>
@@ -20751,43 +20789,164 @@ export default function AdminPanel() {
                 </div>
 
                 {/* PIPELINE ANALYTICS */}
-                {leadAnalyticsView && (
-                  <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: 24, marginBottom: 20 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 20 }}>Pipeline Analytics</div>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
-                      {[
-                        { label: "Win Rate", value: `${winRate}%`, sub: `${stats.converted} won of ${stats.converted + stats.lost} closed`, color: T.green },
-                        { label: "Avg Days to Close", value: avgDaysToClose !== null ? `${avgDaysToClose} days` : "-", sub: "From lead to conversion", color: T.blue },
-                        { label: "Hot Leads", value: stats.hot, sub: "Score 70+ (ready to close)", color: T.red },
-                        { label: "Pipeline Value", value: "AED " + leads.filter(l => l.budget).reduce((sum, l) => sum + (parseFloat(l.budget) || 0), 0).toLocaleString(), sub: "Total budget across active leads", color: T.gold },
+                {leadAnalyticsView && (() => {
+                  const communityBreakdown = leads.reduce((acc, l) => {
+                    const c = l.community || "Unknown";
+                    if (!acc[c]) acc[c] = 0;
+                    acc[c]++;
+                    return acc;
+                  }, {});
+                  const topCommunities = Object.entries(communityBreakdown).sort((a,b) => b[1]-a[1]).slice(0, 8);
+                  const maxComm = topCommunities[0]?.[1] || 1;
+
+                  const hotCount = leads.filter(l => scoreLead(l) >= 70).length;
+                  const warmCount = leads.filter(l => { const s = scoreLead(l); return s >= 40 && s < 70; }).length;
+                  const coldCount = leads.filter(l => scoreLead(l) < 40).length;
+
+                  const withPhone = leads.filter(l => l.phone && l.phone.startsWith("+971")).length;
+                  const withPhoneRaw = leads.filter(l => l.phone && !l.phone.startsWith("+971")).length;
+                  const noPhone = leads.filter(l => !l.phone).length;
+                  const withEmail = leads.filter(l => l.email).length;
+
+                  const budgetTiers = [
+                    { label: "Under 1M", count: leads.filter(l => parseFloat(l.budget) < 1000000 && l.budget).length, color: T.blue },
+                    { label: "1M-2M", count: leads.filter(l => { const b = parseFloat(l.budget); return b >= 1000000 && b < 2000000; }).length, color: T.teal },
+                    { label: "2M-5M", count: leads.filter(l => { const b = parseFloat(l.budget); return b >= 2000000 && b < 5000000; }).length, color: T.green },
+                    { label: "5M-10M", count: leads.filter(l => { const b = parseFloat(l.budget); return b >= 5000000 && b < 10000000; }).length, color: T.gold },
+                    { label: "10M+", count: leads.filter(l => parseFloat(l.budget) >= 10000000).length, color: T.orange },
+                  ];
+                  const maxBudget = Math.max(...budgetTiers.map(b => b.count), 1);
+
+                  return (
+                    <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: 24, marginBottom: 20 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Pipeline Analytics</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>Based on {leads.length} loaded leads</div>
+                      </div>
+
+                      {/* Row 1 — KPI cards */}
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+                        {[
+                          { label: "Win Rate", value: `${winRate}%`, sub: `${stats.converted} won of ${stats.converted + stats.lost} closed`, color: T.green },
+                          { label: "Avg Days to Close", value: avgDaysToClose !== null ? `${avgDaysToClose}d` : "—", sub: "Lead created → converted", color: T.blue },
+                          { label: "Hot Leads", value: hotCount, sub: "Score 70+ ready to close", color: T.red },
+                          { label: "Pipeline Value", value: "AED " + (leads.filter(l => l.budget).reduce((s, l) => s + (parseFloat(l.budget) || 0), 0) / 1000000).toFixed(1) + "M", sub: "Total budget of loaded leads", color: T.gold },
+                        ].map((item, i) => (
+                          <div key={i} style={{ padding: "14px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                            <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{item.label}</div>
+                            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: item.color, marginBottom: 2 }}>{item.value}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted }}>{item.sub}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+                        {/* Community breakdown */}
+                        <div style={{ background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, padding: 16 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 }}>Top Communities</div>
+                          {topCommunities.map(([comm, count]) => (
+                            <div key={comm} style={{ marginBottom: 8 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                                <span style={{ fontSize: 11, color: T.textSecondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "70%" }}>{comm}</span>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: T.gold }}>{count}</span>
+                              </div>
+                              <div style={{ height: 4, borderRadius: 2, background: T.border }}>
+                                <div style={{ height: "100%", borderRadius: 2, background: T.gold, width: `${(count / maxComm) * 100}%` }} />
+                              </div>
+                            </div>
+                          ))}
+                          {topCommunities.length === 0 && <div style={{ fontSize: 11, color: T.textMuted }}>No community data</div>}
+                        </div>
+
+                        {/* Budget distribution */}
+                        <div style={{ background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, padding: 16 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 }}>Budget Distribution (AED)</div>
+                          {budgetTiers.map(tier => (
+                            <div key={tier.label} style={{ marginBottom: 8 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                                <span style={{ fontSize: 11, color: T.textSecondary }}>{tier.label}</span>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: tier.color }}>{tier.count}</span>
+                              </div>
+                              <div style={{ height: 4, borderRadius: 2, background: T.border }}>
+                                <div style={{ height: "100%", borderRadius: 2, background: tier.color, width: `${(tier.count / maxBudget) * 100}%` }} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                        {/* Lead score distribution */}
+                        <div style={{ background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, padding: 16 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 }}>Lead Quality</div>
+                          {[
+                            { label: "🔥 Hot (70-100)", count: hotCount, color: T.green },
+                            { label: "🌡 Warm (40-69)", count: warmCount, color: T.gold },
+                            { label: "❄️ Cold (0-39)", count: coldCount, color: T.red },
+                          ].map(tier => (
+                            <div key={tier.label} style={{ marginBottom: 8 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                                <span style={{ fontSize: 11, color: T.textSecondary }}>{tier.label}</span>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: tier.color }}>{tier.count} ({leads.length > 0 ? Math.round(tier.count/leads.length*100) : 0}%)</span>
+                              </div>
+                              <div style={{ height: 4, borderRadius: 2, background: T.border }}>
+                                <div style={{ height: "100%", borderRadius: 2, background: tier.color, width: `${leads.length > 0 ? (tier.count/leads.length)*100 : 0}%` }} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Phone & Email quality */}
+                        <div style={{ background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, padding: 16 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 }}>Contact Quality</div>
+                          {[
+                            { label: "✅ WhatsApp Ready (+971)", count: withPhone, color: "#25D366" },
+                            { label: "⚠️ Phone (needs fixing)", count: withPhoneRaw, color: T.orange },
+                            { label: "❌ No phone", count: noPhone, color: T.red },
+                            { label: "📧 Has email", count: withEmail, color: T.blue },
+                          ].map(item => (
+                            <div key={item.label} style={{ marginBottom: 8 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                                <span style={{ fontSize: 11, color: T.textSecondary }}>{item.label}</span>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: item.color }}>{item.count}</span>
+                              </div>
+                              <div style={{ height: 4, borderRadius: 2, background: T.border }}>
+                                <div style={{ height: "100%", borderRadius: 2, background: item.color, width: `${leads.length > 0 ? (item.count/leads.length)*100 : 0}%` }} />
+                              </div>
+                            </div>
+                          ))}
+                          <button type="button" onClick={() => { setShowPhoneFixer(true); setPhoneFixerResult(null); setPhoneFixerPreview([]); }}
+                            style={{ marginTop: 8, width: "100%", padding: "7px", borderRadius: 6, border: `1px solid ${T.purple}`, background: "rgba(139,92,246,0.08)", color: T.purple, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                            📞 Fix {withPhoneRaw} phones now
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Source performance */}
+                      <div style={{ marginTop: 16, background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, padding: 16 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 }}>Source Performance</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+                          {Object.entries(sourceBreakdown).map(([source, data]) => {
+                            const wr = data.total > 0 ? Math.round((data.converted / data.total) * 100) : 0;
+                            return (
+                              <div key={source} style={{ padding: "10px 12px", background: T.bg, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                                <div style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, marginBottom: 6 }}>{source}</div>
+                                <div style={{ fontSize: 20, fontWeight: 900, color: wr >= 50 ? T.green : wr >= 20 ? T.gold : T.red, fontFamily: "'Fraunces',serif" }}>{wr}%</div>
+                                <div style={{ fontSize: 10, color: T.textMuted }}>{data.total} leads</div>
+                                <div style={{ marginTop: 4, height: 3, borderRadius: 2, background: T.border }}>
+                                  <div style={{ height: "100%", background: wr >= 50 ? T.green : wr >= 20 ? T.gold : T.red, width: `${wr}%`, borderRadius: 2 }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {Object.keys(sourceBreakdown).length === 0 && <div style={{ fontSize: 11, color: T.textMuted }}>No data yet</div>}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
                       ].map((item, i) => (
                         <div key={i} style={{ padding: "16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
-                          <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>{item.label}</div>
-                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: item.color, marginBottom: 4 }}>{item.value}</div>
-                          <div style={{ fontSize: 10, color: T.textMuted }}>{item.sub}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, marginBottom: 12 }}>Win Rate by Source</div>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
-                      {Object.entries(sourceBreakdown).map(([source, data]) => {
-                        const wr = data.total > 0 ? Math.round((data.converted / data.total) * 100) : 0;
-                        return (
-                          <div key={source} style={{ padding: "12px 14px", background: T.bg, borderRadius: 8, border: `1px solid ${T.border}` }}>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, marginBottom: 8 }}>{source}</div>
-                            <div style={{ fontSize: 18, fontWeight: 900, color: wr >= 50 ? T.green : wr >= 25 ? T.gold : T.red, fontFamily: "'Fraunces',serif" }}>{wr}%</div>
-                            <div style={{ fontSize: 10, color: T.textMuted }}>{data.converted}/{data.total} converted</div>
-                            <div style={{ marginTop: 6, height: 3, borderRadius: 2, background: T.border }}>
-                              <div style={{ height: "100%", background: wr >= 50 ? T.green : wr >= 25 ? T.gold : T.red, width: `${wr}%`, borderRadius: 2 }} />
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {Object.keys(sourceBreakdown).length === 0 && <div style={{ fontSize: 11, color: T.textMuted, gridColumn: "1/-1" }}>No source data yet.</div>}
-                    </div>
-                  </div>
-                )}
-
                 {/* BULK ACTIONS */}
                 {leadSelectedIds.length > 0 && (
                   <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: `rgba(59,130,246,0.08)`, border: `1px solid rgba(59,130,246,0.3)`, marginBottom: 16, flexWrap: "wrap" }}>
@@ -20837,6 +20996,7 @@ export default function AdminPanel() {
                       <option value="all">🏘 All Communities ({leadCommunities.length})</option>
                       {leadCommunities.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
+                    <button type="button" title="Refresh community & nationality lists" onClick={() => fetchLeadMeta(true)} style={{ padding: "8px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: T.bg, color: T.textMuted, fontSize: 11, cursor: "pointer" }}>↺</button>
 
                     {/* Nationality filter — dynamic from Firestore */}
                     <select value={leadNationalityFilter} onChange={e => { setLeadNationalityFilter(e.target.value); setLeadsPage(1); searchAllLeads(leadSearch, leadFilter, leadSourceFilter, leadCommunityFilter, e.target.value); }}
@@ -21539,6 +21699,151 @@ export default function AdminPanel() {
                         <button type="button" onClick={() => { setShowFollowUpModal(null); setFollowUpDate(""); setFollowUpNote(""); }} style={{ flex: 1, padding: "11px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
                         <button type="button" onClick={scheduleFollowUp} style={{ flex: 2, padding: "11px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8860B)`, color: T.bg, cursor: "pointer", fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>Schedule Follow-Up</button>
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── PHONE FIXER MODAL ────────────────────────────── */}
+                {showPhoneFixer && (
+                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => { if (!phoneFixerScanning) setShowPhoneFixer(false); }}>
+                    <div style={{ background: T.surface, border: `1px solid rgba(139,92,246,0.4)`, borderRadius: 16, width: "95%", maxWidth: 560, padding: 28, maxHeight: "90vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                        <div>
+                          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.purple, marginBottom: 4 }}>📞 Fix Phone Numbers</h3>
+                          <p style={{ fontSize: 11, color: T.textMuted }}>Scans all leads and standardises UAE phone numbers to +971 format for WhatsApp</p>
+                        </div>
+                        {!phoneFixerScanning && <button type="button" onClick={() => setShowPhoneFixer(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>}
+                      </div>
+
+                      {!phoneFixerResult && !phoneFixerScanning && (
+                        <div>
+                          <div style={{ padding: "14px 16px", borderRadius: 10, background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.2)", marginBottom: 16 }}>
+                            <div style={{ fontSize: 12, color: T.purple, fontWeight: 700, marginBottom: 8 }}>Rules applied:</div>
+                            <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.8 }}>
+                              • <code style={{ color: T.green }}>5XXXXXXXX</code> (9 digits) → <code style={{ color: T.gold }}>+9715XXXXXXXX</code><br/>
+                              • <code style={{ color: T.green }}>05XXXXXXXX</code> (10 digits) → <code style={{ color: T.gold }}>+97105XXXXXXXX</code> remove 0<br/>
+                              • <code style={{ color: T.green }}>9715XXXXXXXX</code> → <code style={{ color: T.gold }}>+9715XXXXXXXX</code> add +<br/>
+                              • <code style={{ color: T.green }}>00971XXXXXXX</code> → <code style={{ color: T.gold }}>+971XXXXXXX</code><br/>
+                              • Numbers &lt; 8 digits → skip (incomplete)<br/>
+                              • Numbers already in +971 format → skip
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", gap: 10 }}>
+                            <button type="button" onClick={async () => {
+                              setPhoneFixerScanning(true);
+                              const fixPhone = (raw) => {
+                                if (!raw) return null;
+                                let p = raw.replace(/[\s\-\(\)\.]/g, "");
+                                if (p.startsWith("+971")) return p.length >= 12 ? p : null;
+                                if (p.startsWith("00971")) p = "+" + p.slice(2);
+                                else if (p.startsWith("0971")) p = "+" + p.slice(1);
+                                else if (p.startsWith("971") && p.length >= 12) p = "+" + p;
+                                else if (p.startsWith("05") && p.length === 10) p = "+971" + p.slice(1);
+                                else if (p.startsWith("5") && p.length === 9) p = "+971" + p;
+                                else return null;
+                                return p.length >= 12 ? p : null;
+                              };
+                              try {
+                                const preview = [];
+                                let lastDoc = null;
+                                let keepGoing = true;
+                                while (keepGoing && preview.length < 20) {
+                                  const q = lastDoc
+                                    ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500))
+                                    : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
+                                  const snap = await getDocs(q);
+                                  snap.forEach(d => {
+                                    const data = d.data();
+                                    const fixed = fixPhone(data.phone);
+                                    if (fixed && fixed !== data.phone) {
+                                      preview.push({ id: d.id, name: data.name, old: data.phone, new: fixed });
+                                    }
+                                  });
+                                  if (snap.docs.length < 500) keepGoing = false;
+                                  else lastDoc = snap.docs[snap.docs.length - 1];
+                                }
+                                setPhoneFixerPreview(preview);
+                              } catch (e) { notify("Scan error: " + e.message); }
+                              setPhoneFixerScanning(false);
+                            }} style={{ flex: 1, padding: "11px", borderRadius: 8, border: "none", background: T.surfaceAlt, color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                              Preview Changes
+                            </button>
+                            <button type="button" onClick={async () => {
+                              setPhoneFixerScanning(true);
+                              const fixPhone = (raw) => {
+                                if (!raw) return null;
+                                let p = raw.replace(/[\s\-\(\)\.]/g, "");
+                                if (p.startsWith("+971")) return p.length >= 12 ? p : null;
+                                if (p.startsWith("00971")) p = "+" + p.slice(2);
+                                else if (p.startsWith("0971")) p = "+" + p.slice(1);
+                                else if (p.startsWith("971") && p.length >= 12) p = "+" + p;
+                                else if (p.startsWith("05") && p.length === 10) p = "+971" + p.slice(1);
+                                else if (p.startsWith("5") && p.length === 9) p = "+971" + p;
+                                else return null;
+                                return p.length >= 12 ? p : null;
+                              };
+                              try {
+                                let fixed = 0; let skipped = 0; let lastDoc = null; let keepGoing = true;
+                                while (keepGoing) {
+                                  const q = lastDoc
+                                    ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500))
+                                    : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
+                                  const snap = await getDocs(q);
+                                  const updates = [];
+                                  snap.forEach(d => {
+                                    const data = d.data();
+                                    const fp = fixPhone(data.phone);
+                                    if (fp && fp !== data.phone) updates.push({ id: d.id, phone: fp });
+                                    else skipped++;
+                                  });
+                                  await Promise.all(updates.map(u => setDoc(doc(db, "leads", u.id), { phone: u.phone, updatedAt: new Date().toISOString() }, { merge: true })));
+                                  fixed += updates.length;
+                                  if (snap.docs.length < 500) keepGoing = false;
+                                  else lastDoc = snap.docs[snap.docs.length - 1];
+                                }
+                                setPhoneFixerResult({ fixed, skipped });
+                                fetchLeads(500);
+                              } catch (e) { notify("Fix error: " + e.message); }
+                              setPhoneFixerScanning(false);
+                            }} style={{ flex: 1, padding: "11px", borderRadius: 8, border: "none", background: T.purple, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                              Fix All Numbers
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {phoneFixerPreview.length > 0 && !phoneFixerResult && (
+                        <div style={{ marginTop: 16 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Preview (first 20 changes)</div>
+                          <div style={{ background: T.surfaceAlt, borderRadius: 8, overflow: "hidden", border: `1px solid ${T.border}` }}>
+                            {phoneFixerPreview.map((r, i) => (
+                              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 12px", borderBottom: i < phoneFixerPreview.length - 1 ? `1px solid ${T.border}` : "none", fontSize: 11 }}>
+                                <span style={{ color: T.textMuted, width: 120, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{r.name}</span>
+                                <span style={{ color: T.red, textDecoration: "line-through" }}>{r.old}</span>
+                                <span style={{ color: T.textMuted }}>→</span>
+                                <span style={{ color: T.green, fontWeight: 700 }}>{r.new}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {phoneFixerScanning && (
+                        <div style={{ textAlign: "center", padding: "20px 0" }}>
+                          <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: T.purple }}>Scanning all leads...</div>
+                        </div>
+                      )}
+
+                      {phoneFixerResult && (
+                        <div style={{ textAlign: "center", padding: "20px 0" }}>
+                          <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: T.green, marginBottom: 8 }}>Phone Numbers Fixed!</div>
+                          <div style={{ fontSize: 13, color: T.green, marginBottom: 4 }}>Fixed: {phoneFixerResult.fixed.toLocaleString()} numbers → +971 format</div>
+                          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 20 }}>Skipped: {phoneFixerResult.skipped.toLocaleString()} (already correct or incomplete)</div>
+                          <button type="button" onClick={() => setShowPhoneFixer(false)} style={{ padding: "10px 28px", borderRadius: 8, border: "none", background: T.green, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Done</button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
