@@ -20661,16 +20661,38 @@ export default function AdminPanel() {
 
             // ── Send email ────────────────────────────────────────────────
             const sendLeadEmail = async (lead, subject, body) => {
+              if (!lead.email) { notify("This lead has no email address"); return; }
               setSendingEmail(true);
               try {
-                await emailjs.send("service_da7nshv", "template_gl1xqhy", { to_email: lead.email, to_name: lead.name || "there", subject: subject || `Following up on ${lead.project || "your inquiry"}`, message: body || `Hi ${lead.name || "there"},\n\nThank you for your interest in ${lead.project || "our properties"}.\n\nBest regards,\nDXB Analytics`, project_name: lead.project || "DXB Analytics" }, "USkwUhp0csGCVDkdQ");
+                const result = await emailjs.send(
+                  "service_da7nshv",
+                  "template_gl1xqhy",
+                  {
+                    to_email: lead.email,
+                    to_name: lead.name || "there",
+                    subject: subject || `Following up on ${lead.project || "your inquiry"}`,
+                    message: body || `Hi ${lead.name || "there"},\n\nThank you for your interest in ${lead.project || "our properties"}.\n\nBest regards,\nDXB Analytics`,
+                    project_name: lead.project || "DXB Analytics",
+                  },
+                  "USkwUhp0csGCVDkdQ"
+                );
+                if (result.status !== 200) throw new Error("EmailJS status: " + result.status + " " + result.text);
                 const activity = [...(lead.activity || []), { type: "email_sent", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Email sent: ${subject || "Follow-up email"}` }];
                 await setDoc(doc(db, "leads", lead.id), { respondedAt: new Date().toISOString(), updatedAt: new Date().toISOString(), activity }, { merge: true });
                 await logAudit(db, { action: "lead_email_sent", leadId: lead.id });
-                notify("Email sent!");
+                notify("✅ Email sent to " + lead.email);
                 fetchLeads();
                 if (leadDrawer?.id === lead.id) setLeadDrawer(prev => ({ ...prev, activity }));
-              } catch (e) { notify("Email failed: " + e.message); }
+              } catch (e) {
+                console.error("EmailJS full error:", e);
+                let msg = "Unknown error — check browser console";
+                if (typeof e === "string") msg = e;
+                else if (e?.text) msg = e.text;
+                else if (e?.message) msg = e.message;
+                else if (e?.status) msg = `EmailJS status ${e.status} — check service/template IDs`;
+                else msg = "Check EmailJS credentials or quota (emailjs.com)";
+                notify("Email failed: " + msg);
+              }
               setSendingEmail(false);
             };
 
