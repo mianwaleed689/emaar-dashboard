@@ -10,7 +10,7 @@ import { getAuth } from "firebase/auth";
 import emailjs from "@emailjs/browser";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter, getCountFromServer } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
 import ProjectManager from "./ProjectManager";
@@ -12972,10 +12972,14 @@ export default function AdminPanel() {
         setLeadsHasMore(false);
       }
       setLeads(list);
-      // Also get total count if we haven't loaded all
+      // Get total count efficiently
       if (list.length >= lim) {
-        const countSnap = await getDocs(collection(db, "leads"));
-        setLeadsTotal(countSnap.size);
+        try {
+          const countResult = await getCountFromServer(collection(db, "leads"));
+          setLeadsTotal(countResult.data().count);
+        } catch {
+          setLeadsTotal(list.length + 500);
+        }
       } else {
         setLeadsTotal(list.length);
       }
@@ -20449,9 +20453,11 @@ export default function AdminPanel() {
               setAddLeadLoading(true);
               try {
                 const id = `lead_${Date.now()}`;
+                const { phoneNum, phoneCode, ...formData } = addLeadForm;
                 await setDoc(doc(db, "leads", id), {
-                  ...addLeadForm,
+                  ...formData,
                   status: "New",
+                  updatedAt: new Date().toISOString(),
                   createdAt: new Date().toISOString(),
                   activity: [{ type: "created", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Lead created" }],
                   notes: addLeadForm.notes ? [{ text: addLeadForm.notes, by: adminUser?.email || "admin", at: new Date().toISOString() }] : [],
@@ -21648,9 +21654,8 @@ export default function AdminPanel() {
                                   group.slice(1).forEach(l => toDelete.push(l.id));
                                 }
                               });
-                              // Delete in batches
+                              // Delete in batches of 400
                               for (let i = 0; i < toDelete.length; i += 400) {
-                                const batch = db.batch ? db.batch() : null;
                                 const chunk = toDelete.slice(i, i + 400);
                                 await Promise.all(chunk.map(id => deleteDoc(doc(db, "leads", id))));
                               }
