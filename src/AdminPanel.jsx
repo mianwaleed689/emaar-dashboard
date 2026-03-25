@@ -1695,7 +1695,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
       if (newStatus === "resolved" && ticketDrawer) {
         try {
           await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-            to_email: ticketDrawer.userEmail,
+            user_email: ticketDrawer.userEmail,
             to_name: ticketDrawer.userName || ticketDrawer.userEmail,
             subject: `Your support ticket has been resolved: ${ticketDrawer.subject}`,
             message: `Hi ${ticketDrawer.userName || "there"},\n\nYour support ticket "${ticketDrawer.subject}" has been marked as resolved.\n\nIf you have any further questions, feel free to reply to this email or open a new ticket.\n\nBest regards,\nDXB Analytics Support`,
@@ -2001,7 +2001,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
       setTicketDrawer(prev => ({ ...prev, ...update }));
       try {
         await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-          to_email: ticketDrawer.userEmail,
+          user_email: ticketDrawer.userEmail,
           to_name: ticketDrawer.userName || ticketDrawer.userEmail,
           subject: `Re: ${ticketDrawer.subject}`,
           message: `Hi ${ticketDrawer.userName || "there"},\n\n${ticketReply}\n\n---\nDXB Analytics Support`,
@@ -7951,7 +7951,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
         if (!user.email) { failed++; continue; }
         try {
           await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-            to_email: user.email,
+            user_email: user.email,
             to_name: user.name || user.email,
             subject: emailForm.subject,
             message: emailForm.body,
@@ -8591,7 +8591,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
     setTestSending(true);
     try {
       await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-        to_email: testEmail,
+        user_email: testEmail,
         to_name: testEmail.split("@")[0],
         subject: "[TEST] " + digestTemplate.subject,
         message: `${digestTemplate.greeting.replace("{{name}}", testEmail.split("@")[0])}\n\n${digestTemplate.intro}\n\nSections: ${digestTemplate.sections.map(s => sectionMeta[s]?.label || s).join(", ")}\n\n${digestTemplate.cta}\n\n---\n${digestTemplate.footer}`,
@@ -8613,7 +8613,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
       for (const user of segmentUsers) {
         try {
           await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-            to_email: user.email,
+            user_email: user.email,
             to_name: user.name || user.email.split("@")[0],
             subject: digestTemplate.subject,
             message: `${digestTemplate.greeting.replace("{{name}}", user.name || user.email.split("@")[0])}\n\n${digestTemplate.intro}\n\nView your personalized insights at https://dxbanalytics.com\n\n${digestTemplate.cta}\n\n---\n${digestTemplate.footer}`,
@@ -8661,7 +8661,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
       try {
         const name = u.name || u.email.split("@")[0];
         await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-          to_email: u.email,
+          user_email: u.email,
           to_name: name,
           subject: "Dubai RE market moved this week — your data is waiting",
           message: `Hi ${name},\n\nWe noticed you haven't logged in to DXB Analytics in a while.\n\nHere's what happened in Dubai real estate this week:\n• Dubai off-plan market up 44% YoY in Creek Harbour\n• EIBOR holding at 3.47% — mortgage rates stable\n• 3 new project launches this month\n\nYour dashboard is waiting with the latest data.\n\nhttps://dxbanalytics.com\n\n— DXB Analytics Team\n\nUnsubscribe: mailto:mianwaleed689@gmail.com?subject=Unsubscribe`,
@@ -10110,20 +10110,21 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       try {
         await emailjs.send("service_da7nshv", "template_gl1xqhy", {
           user_email:   u.email,
+          name:         "DXB Analytics",
+          email:        "info@theaddressholding.ae",
           user_name:    u.name || u.email,
           project_name: "DXB Analytics Platform",
-          change_type:  days === 0 ? "░ Your Trial Has Expired" : `⚡ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
+          change_type:  days === 0 ? "Your Trial Has Expired" : `Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
           new_value:    days === 0
-            ? "Your 7-day trial has ended. Upgrade now to keep full access."
+            ? "Your 7-day trial has ended. Upgrade now to keep full access to DXB Analytics."
             : `Only ${days} day${days !== 1 ? "s" : ""} left on your free trial. Upgrade before you lose access.`,
           old_value:    "Pro Trial",
-          updated_at:   new Date().toLocaleString("en-AE"),
         }, "USkwUhp0csGCVDkdQ");
         sent++;
-      } catch(e) {}
+      } catch(e) { console.error("Trial email failed:", u.email, e); }
     }
     setSendingTrialEmails(false);
-    notify(sent > 0 ? `[v] Sent ${sent} trial expiry email${sent > 1 ? "s" : ""}` : " No at-risk trials to email");
+    notify(sent > 0 ? `✅ Sent ${sent} trial expiry email${sent > 1 ? "s" : ""}` : "No at-risk trials to email");
   };
 
   /* ─── ACTIONS ─── */
@@ -10158,19 +10159,22 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     if (!emailSubject || !emailBody) { notify("Error: Subject and message required"); return; }
     setEmailSending(true);
     try {
-      // FIX #15: correct EmailJS template field names
       await emailjs.send("service_da7nshv", "template_gl1xqhy", {
         user_email:   sendEmailUser.email,
+        name:         "The Address Holding",
+        email:        "info@theaddressholding.ae",
         user_name:    sendEmailUser.name || sendEmailUser.email,
         project_name: "DXB Analytics",
         change_type:  emailSubject,
         new_value:    emailBody,
         old_value:    "",
-        updated_at:   new Date().toLocaleString("en-AE"),
       }, "USkwUhp0csGCVDkdQ");
-      notify(`Email sent to ${sendEmailUser.email}`);
+      notify(`✅ Email sent to ${sendEmailUser.email}`);
       setSendEmailUser(null); setEmailSubject(""); setEmailBody("");
-    } catch(e) { notify("Error: Email failed — check EmailJS config"); }
+    } catch(e) {
+      const msg = e?.text || e?.message || "Check EmailJS quota (168 requests left)";
+      notify("Email failed: " + msg);
+    }
     setEmailSending(false);
   };
 
@@ -14004,7 +14008,7 @@ export default function AdminPanel() {
       // Send approval email
       if (v.email) {
         emailjs.send("service_da7nshv", "template_gl1xqhy", {
-          to_email: v.email,
+          user_email: v.email,
           to_name: v.name || "there",
           subject: "Verification Approved - DXB Analytics",
           message: `Great news! Your ${v.level || "Basic"} verification has been approved. You now have access to enhanced features on DXB Analytics.`,
@@ -14028,7 +14032,7 @@ export default function AdminPanel() {
       // Send rejection email
       if (v.email) {
         emailjs.send("service_da7nshv", "template_gl1xqhy", {
-          to_email: v.email,
+          user_email: v.email,
           to_name: v.name || "there",
           subject: "Verification Update - DXB Analytics",
           message: `Your verification request was not approved.\n\nReason: ${rejectReason}\n\nPlease review the requirements and resubmit your documents.`,
@@ -21318,11 +21322,14 @@ export default function AdminPanel() {
                   "service_da7nshv",
                   "template_gl1xqhy",
                   {
-                    to_email: lead.email,
-                    to_name: lead.name || "there",
-                    subject: subject || `Following up on ${lead.project || "your inquiry"}`,
-                    message: body || `Hi ${lead.name || "there"},\n\nThank you for your interest in ${lead.project || "our properties"}.\n\nBest regards,\nDXB Analytics`,
-                    project_name: lead.project || "DXB Analytics",
+                    user_email:   lead.email,
+                    name:         "The Address Holding",
+                    email:        adminUser?.email || "info@theaddressholding.ae",
+                    user_name:    lead.name || "there",
+                    project_name: lead.project || lead.community || "DXB Analytics",
+                    change_type:  subject || `Following up on ${lead.project || "your inquiry"}`,
+                    new_value:    body || `Hi ${lead.name || "there"},\n\nThank you for your interest in ${lead.project || "our properties"}.\n\nBest regards,\nThe Address Holding Team`,
+                    old_value:    "",
                   },
                   "USkwUhp0csGCVDkdQ"
                 );
@@ -21335,12 +21342,7 @@ export default function AdminPanel() {
                 if (leadDrawer?.id === lead.id) setLeadDrawer(prev => ({ ...prev, activity }));
               } catch (e) {
                 console.error("EmailJS full error:", e);
-                let msg = "Unknown error — check browser console";
-                if (typeof e === "string") msg = e;
-                else if (e?.text) msg = e.text;
-                else if (e?.message) msg = e.message;
-                else if (e?.status) msg = `EmailJS status ${e.status} — check service/template IDs`;
-                else msg = "Check EmailJS credentials or quota (emailjs.com)";
+                const msg = e?.text || e?.message || (e?.status ? `Status ${e.status}` : "Check EmailJS quota at emailjs.com (168 requests left)");
                 notify("Email failed: " + msg);
               }
               setSendingEmail(false);
