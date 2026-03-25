@@ -20810,7 +20810,8 @@ export default function AdminPanel() {
                         <button type="button" onClick={() => setShowAddLead(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>x</button>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                        {[\n                          { key: "name", label: "Full Name *", placeholder: "John Smith", full: true },
+                        {[
+                          { key: "name", label: "Full Name *", placeholder: "John Smith", full: true },
                           { key: "email", label: "Email", placeholder: "john@example.com", type: "email" },
                           { key: "budget", label: "Budget (AED)", placeholder: "e.g. 2000000", type: "number" },
                           { key: "project", label: "Interested Project", placeholder: "e.g. The Valley" },
