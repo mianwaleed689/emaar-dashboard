@@ -12571,6 +12571,8 @@ export default function AdminPanel() {
   const [leadSearch, setLeadSearch] = useState("");
   const [leadDateRange, setLeadDateRange] = useState("all"); // all | today | week | month
   const [showAddLead, setShowAddLead] = useState(false);
+  const [leadsLimit, setLeadsLimit] = useState(500);
+  const [leadsHasMore, setLeadsHasMore] = useState(false);
   const [showImportLeads, setShowImportLeads] = useState(false);
   const [importLeadsData, setImportLeadsData] = useState([]);
   const [importLeadsLoading, setImportLeadsLoading] = useState(false);
@@ -12925,32 +12927,26 @@ export default function AdminPanel() {
     return () => { if (unsub) unsub(); };
   }, [isAdmin, fetchVerifications]);
 
-  const fetchLeads = useCallback(async () => {
+  const fetchLeads = useCallback(async (lim = 500) => {
     try {
-      const snap = await getDocs(collection(db, "leads"));
+      const q = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(lim + 1));
+      const snap = await getDocs(q);
       const list = [];
       snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
-      list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      if (list.length > lim) {
+        list.pop();
+        setLeadsHasMore(true);
+      } else {
+        setLeadsHasMore(false);
+      }
       setLeads(list);
     } catch (e) { console.error("Fetch leads:", e); }
   }, []);
 
-  useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin, fetchLeads]);
+  useEffect(() => { if (isAdmin) fetchLeads(500); }, [isAdmin, fetchLeads]);
 
-  // Real-time listener for leads
-  useEffect(() => {
-    if (!isAdmin) return;
-    let unsub;
-    try {
-      unsub = onSnapshot(collection(db, "leads"), (snap) => {
-        const list = [];
-        snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
-        list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-        setLeads(list);
-      });
-    } catch (e) { fetchLeads(); }
-    return () => { if (unsub) unsub(); };
-  }, [isAdmin, fetchLeads]);
+  // NOTE: Real-time listener removed for leads — too expensive with 67k+ documents.
+  // Leads are fetched on demand (on tab open, after add/edit/delete).
 
   /* ─── FETCH AUDIT LOG ─── */
   const fetchAuditLog = useCallback(async () => {
@@ -20728,6 +20724,14 @@ export default function AdminPanel() {
                         </table>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* LOAD MORE */}
+                {leadsHasMore && leadsViewMode === "table" && !leadAnalyticsView && (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, padding: "16px 0", marginTop: 8 }}>
+                    <span style={{ fontSize: 11, color: T.textMuted }}>Showing {leads.length.toLocaleString()} most recent leads</span>
+                    <button type="button" onClick={() => { const newLim = leads.length + 500; setLeadsLimit(newLim); fetchLeads(newLim); }} style={{ fontSize: 11, padding: "8px 20px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.08)", color: T.gold, cursor: "pointer", fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>Load 500 More</button>
                   </div>
                 )}
 
