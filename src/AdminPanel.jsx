@@ -320,7 +320,16 @@ function SearchableSelect({ value, onChange, options, placeholder = "Search...",
   const [query, setQuery] = React.useState("");
   const ref = React.useRef(null);
 
-  // Close on outside click
+  // Hardcoded theme colors — same as T object, no CSS vars needed
+  const bg       = style.background || "#04090F";
+  const surface  = "#0A1628";
+  const border   = style.border || "rgba(212,168,67,0.08)";
+  const white    = "#FFFFFF";
+  const textMuted    = "#64748B";
+  const textSecondary = "#94A3B8";
+  const gold     = "#D4A843";
+  const fontSize = style.fontSize || 13;
+
   React.useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener("mousedown", handler);
@@ -332,38 +341,54 @@ function SearchableSelect({ value, onChange, options, placeholder = "Search...",
     : options;
 
   const selectedLabel = value
-    ? (options.find(o => (o.value || o) === value) ? (options.find(o => (o.value || o) === value).label || value) : value)
+    ? (options.find(o => (o.value || o) === value)?.label || value)
     : null;
 
   return (
-    <div ref={ref} style={{ position: "relative", ...style }}>
+    <div ref={ref} style={{ position: "relative", ...style, background: undefined, border: undefined }}>
       <div onClick={() => { setOpen(o => !o); setQuery(""); }}
-        style={{ padding: "9px 12px", background: style.background || "var(--bg)", border: `1px solid ${open ? "#D4A843" : "var(--border)"}`, borderRadius: 8, color: selectedLabel ? "var(--white)" : "var(--textMuted)", fontSize: style.fontSize || 13, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "'Outfit',sans-serif", userSelect: "none" }}>
+        style={{ padding: "9px 12px", background: bg, border: `1px solid ${open ? gold : border}`, borderRadius: style.borderRadius || 8, color: selectedLabel ? white : textMuted, fontSize, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "'Outfit',sans-serif", userSelect: "none", boxSizing: "border-box", width: "100%" }}>
         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedLabel || placeholder}</span>
         <span style={{ fontSize: 10, marginLeft: 6, flexShrink: 0, opacity: 0.5 }}>{open ? "▲" : "▼"}</span>
       </div>
       {open && (
-        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 9999, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.6)", overflow: "hidden" }}>
-          <div style={{ padding: "8px 10px", borderBottom: "1px solid var(--border)" }}>
+        <div style={{ position: "fixed", zIndex: 99999, background: surface, border: `1px solid ${border}`, borderRadius: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.8)", overflow: "hidden", minWidth: ref.current?.offsetWidth || 200, maxWidth: 320 }}
+          ref={el => {
+            if (el && ref.current) {
+              const rect = ref.current.getBoundingClientRect();
+              const spaceBelow = window.innerHeight - rect.bottom;
+              const dropHeight = Math.min(260, el.scrollHeight);
+              if (spaceBelow < dropHeight && rect.top > dropHeight) {
+                el.style.top = (rect.top - dropHeight - 4) + "px";
+              } else {
+                el.style.top = (rect.bottom + 4) + "px";
+              }
+              el.style.left = rect.left + "px";
+              el.style.width = rect.width + "px";
+            }
+          }}>
+          <div style={{ padding: "8px 10px", borderBottom: `1px solid ${border}` }}>
             <input autoFocus type="text" value={query} onChange={e => setQuery(e.target.value)}
               placeholder="Type to search..."
-              style={{ width: "100%", padding: "7px 10px", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 6, color: "var(--white)", fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+              style={{ width: "100%", padding: "7px 10px", background: bg, border: `1px solid ${border}`, borderRadius: 6, color: white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
           </div>
           <div style={{ maxHeight: 220, overflowY: "auto" }}>
             {value && (
               <div onClick={() => { onChange(""); setOpen(false); setQuery(""); }}
-                style={{ padding: "9px 14px", fontSize: 12, color: "var(--textMuted)", cursor: "pointer", borderBottom: "1px solid var(--border)" }}>
+                style={{ padding: "9px 14px", fontSize: 12, color: textMuted, cursor: "pointer", borderBottom: `1px solid ${border}` }}>
                 ✕ Clear selection
               </div>
             )}
-            {filtered.length === 0 && <div style={{ padding: "12px 14px", fontSize: 12, color: "var(--textMuted)" }}>No results</div>}
+            {filtered.length === 0 && <div style={{ padding: "12px 14px", fontSize: 12, color: textMuted }}>No results</div>}
             {filtered.map((o, i) => {
               const val = o.value || o;
               const label = o.label || o;
               const active = val === value;
               return (
                 <div key={i} onClick={() => { onChange(val); setOpen(false); setQuery(""); }}
-                  style={{ padding: "9px 14px", fontSize: 12, color: active ? "#D4A843" : "var(--textSecondary)", background: active ? "rgba(212,168,67,0.08)" : "transparent", cursor: "pointer", fontWeight: active ? 700 : 400, borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+                  style={{ padding: "9px 14px", fontSize: 12, color: active ? gold : textSecondary, background: active ? "rgba(212,168,67,0.08)" : "transparent", cursor: "pointer", fontWeight: active ? 700 : 400, borderBottom: "1px solid rgba(255,255,255,0.03)" }}
+                  onMouseEnter={e => { if (!active) e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+                  onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}>
                   {label}
                 </div>
               );
@@ -9947,7 +9972,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             onChange={v => setAddUserForm(p => ({ ...p, country: v }))}
             options={["UAE","Saudi Arabia","Qatar","Kuwait","Bahrain","Oman","Jordan","Lebanon","Egypt","Iraq","Syria","Yemen","Libya","Morocco","Tunisia","Algeria","Sudan","Pakistan","India","Bangladesh","Philippines","Indonesia","Sri Lanka","Nepal","UK","USA","Canada","Australia","Germany","France","Italy","Spain","Russia","China","Japan","Korea","Turkey","Iran","Nigeria","Kenya","South Africa","Brazil","Other"].map(c => ({ value: c, label: c }))}
             placeholder="Select Country"
-            style={{ background: T.bg, fontSize: 13 }}
+            style={{ background: T.bg, fontSize: 13, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white }}
           />
         </Field></div>
         <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
