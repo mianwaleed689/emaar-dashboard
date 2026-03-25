@@ -10075,8 +10075,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
          <strong>Note:</strong> Creating an account here uses Firebase client-side auth. The new user will receive a verification email. You will remain logged in as admin.
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        {[
-          {/* Name */}
+        {/* Name */}
         <div style={{ gridColumn: "1/-1" }}>
           <Field label="Full Name *"><input type="text" placeholder="John Smith" value={addUserForm.name || ""} onChange={e => setAddUserForm(p => ({...p, name: e.target.value}))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
         </div>
@@ -10109,10 +10108,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             </select>
           </Field>
         </div>
-        <div><Field label="Country"><select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="">Select Country</option>
-          {[" UAE"," Saudi Arabia"," Qatar"," Kuwait"," Bahrain"," Oman"," UK"," USA"," India"," Pakistan"," Egypt"," Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
-        </select></Field></div>
         <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
         </select></Field></div>
