@@ -35,3 +35,14 @@ checkextra.js
 functions/node_modules
 
 serviceAccount.json
+
+*.json
+*.js
+!src/**/*.js
+*.pdf
+*.xlsx
+*.XLSX
+*.zip
+leads_*
+import_*
+*adminsdk*
