@@ -24806,6 +24806,3 @@ export default function AdminPanel() {
     </div>
   );
 }
-// STABLE_RECOVERY_0945_PPSF_FIXED
-// BEAST_UI_UPGRADE_1005_MAR24
-// BEAST_BADGE_GLOBAL_1012_MAR24
