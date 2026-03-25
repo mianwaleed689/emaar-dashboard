@@ -20945,8 +20945,6 @@ export default function AdminPanel() {
                     </div>
                   );
                 })()}
-                      ].map((item, i) => (
-                        <div key={i} style={{ padding: "16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
                 {/* BULK ACTIONS */}
                 {leadSelectedIds.length > 0 && (
                   <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: `rgba(59,130,246,0.08)`, border: `1px solid rgba(59,130,246,0.3)`, marginBottom: 16, flexWrap: "wrap" }}>
@@ -21715,113 +21713,175 @@ export default function AdminPanel() {
                         {!phoneFixerScanning && <button type="button" onClick={() => setShowPhoneFixer(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>}
                       </div>
 
-                      {!phoneFixerResult && !phoneFixerScanning && (
-                        <div>
-                          <div style={{ padding: "14px 16px", borderRadius: 10, background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.2)", marginBottom: 16 }}>
-                            <div style={{ fontSize: 12, color: T.purple, fontWeight: 700, marginBottom: 8 }}>Rules applied:</div>
-                            <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.8 }}>
-                              • <code style={{ color: T.green }}>5XXXXXXXX</code> (9 digits) → <code style={{ color: T.gold }}>+9715XXXXXXXX</code><br/>
-                              • <code style={{ color: T.green }}>05XXXXXXXX</code> (10 digits) → <code style={{ color: T.gold }}>+97105XXXXXXXX</code> remove 0<br/>
-                              • <code style={{ color: T.green }}>9715XXXXXXXX</code> → <code style={{ color: T.gold }}>+9715XXXXXXXX</code> add +<br/>
-                              • <code style={{ color: T.green }}>00971XXXXXXX</code> → <code style={{ color: T.gold }}>+971XXXXXXX</code><br/>
-                              • Numbers &lt; 8 digits → skip (incomplete)<br/>
-                              • Numbers already in +971 format → skip
+                      {!phoneFixerResult && !phoneFixerScanning && (() => {
+                        // UAE Phone Number Intelligence (based on TDRA/ITU-T E.164 research)
+                        const UAE_MOBILE_PREFIXES = ["50","51","52","53","54","55","56","57","58","59"];
+                        const UAE_LANDLINE_AREAS = { "2":"Abu Dhabi","3":"Al Ain","4":"Dubai","6":"Sharjah/Ajman/UAQ","7":"Ras Al Khaimah","9":"Fujairah" };
+                        const CARRIER_MAP = { "050":"Etisalat","051":"Etisalat","054":"Etisalat","056":"Etisalat","059":"Etisalat","052":"Du","055":"Du","057":"Du","053":"Virgin/Du","058":"Du/Virgin" };
+
+                        const classifyNumber = (raw) => {
+                          if (!raw) return { type: "empty", carrier: null, country: null };
+                          const clean = raw.replace(/[\s\-\(\)\.]/g, "");
+                          // Already international
+                          const local = clean.startsWith("+971") ? clean.slice(4) : clean.startsWith("00971") ? clean.slice(5) : clean.startsWith("971") && clean.length >= 11 ? clean.slice(3) : clean.startsWith("0") ? clean.slice(1) : clean;
+                          if (UAE_MOBILE_PREFIXES.includes(local.slice(0,2)) && local.length === 9) {
+                            const prefix = "0" + local.slice(0,2);
+                            return { type: "uae_mobile", carrier: CARRIER_MAP[prefix] || "UAE", country: "🇦🇪 UAE", local };
+                          }
+                          if (UAE_LANDLINE_AREAS[local[0]] && local.length === 8) {
+                            return { type: "uae_landline", carrier: "Landline", country: `🇦🇪 ${UAE_LANDLINE_AREAS[local[0]]}`, local };
+                          }
+                          if (clean.startsWith("+") && !clean.startsWith("+971") && clean.length >= 10) {
+                            return { type: "international", carrier: null, country: "🌍 International", local };
+                          }
+                          if (local.length < 7) return { type: "incomplete", carrier: null, country: null, local };
+                          return { type: "unknown", carrier: null, country: null, local };
+                        };
+
+                        return (
+                          <div>
+                            <div style={{ padding: "14px 16px", borderRadius: 10, background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.2)", marginBottom: 16 }}>
+                              <div style={{ fontSize: 12, color: T.purple, fontWeight: 700, marginBottom: 10 }}>UAE Phone Intelligence (TDRA/ITU-T E.164)</div>
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 11, color: T.textSecondary, lineHeight: 1.8 }}>
+                                <div>
+                                  <div style={{ color: T.gold, fontWeight: 700, marginBottom: 4 }}>UAE Mobile Prefixes</div>
+                                  <div>050, 054, 056 → Etisalat</div>
+                                  <div>052, 055, 057, 058 → Du</div>
+                                  <div>053 → Virgin/Du</div>
+                                  <div>051, 059 → Etisalat (new)</div>
+                                </div>
+                                <div>
+                                  <div style={{ color: T.gold, fontWeight: 700, marginBottom: 4 }}>UAE Landline Area Codes</div>
+                                  <div>02 → Abu Dhabi</div>
+                                  <div>03 → Al Ain</div>
+                                  <div>04 → Dubai</div>
+                                  <div>06 → Sharjah/Ajman/UAQ</div>
+                                  <div>07 → Ras Al Khaimah</div>
+                                  <div>09 → Fujairah</div>
+                                </div>
+                              </div>
+                              <div style={{ marginTop: 10, padding: "8px 10px", borderRadius: 6, background: T.bg, fontSize: 10, color: T.textMuted }}>
+                                ⚠️ Numbers &lt;7 digits from DLD data are incomplete — cannot be recovered. International numbers (+44, +91, etc.) are kept as-is.
+                              </div>
+                            </div>
+                            <div style={{ display: "flex", gap: 10 }}>
+                              <button type="button" onClick={async () => {
+                                setPhoneFixerScanning(true);
+                                const fixPhone = (raw) => {
+                                  if (!raw) return null;
+                                  let p = raw.replace(/[\s\-\(\)\.]/g, "");
+                                  // Already correct
+                                  if (p.startsWith("+971") && p.length === 13) return null;
+                                  // International numbers — keep as-is
+                                  if (p.startsWith("+") && !p.startsWith("+971")) return null;
+                                  // Strip 00971 or 0971
+                                  if (p.startsWith("00971")) p = "+" + p.slice(2);
+                                  else if (p.startsWith("0971")) p = "+" + p.slice(1);
+                                  // Strip 971 prefix
+                                  else if (p.startsWith("971") && p.length >= 12) p = "+" + p;
+                                  // Local with 0 prefix: 05XXXXXXXX = 10 digits
+                                  else if (p.startsWith("05") && p.length === 10) p = "+971" + p.slice(1);
+                                  // Local without 0: 5XXXXXXXX = 9 digits
+                                  else if (UAE_MOBILE_PREFIXES.includes(p.slice(0,2)) && p.length === 9) p = "+971" + p;
+                                  // Landline with 0: 04XXXXXXX = 9 digits
+                                  else if (p.startsWith("0") && p.length === 9 && UAE_LANDLINE_AREAS[p[1]]) p = "+971" + p.slice(1);
+                                  // Landline without 0: 4XXXXXXX = 8 digits
+                                  else if (p.length === 8 && UAE_LANDLINE_AREAS[p[0]]) p = "+971" + p;
+                                  else return null;
+                                  // Final validation
+                                  return (p.startsWith("+971") && p.length >= 12 && p.length <= 13) ? p : null;
+                                };
+                                try {
+                                  const preview = [];
+                                  let lastDoc = null;
+                                  let keepGoing = true;
+                                  while (keepGoing && preview.length < 25) {
+                                    const q = lastDoc
+                                      ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500))
+                                      : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
+                                    const snap = await getDocs(q);
+                                    snap.forEach(d => {
+                                      const data = d.data();
+                                      const fixed = fixPhone(data.phone);
+                                      if (fixed && fixed !== data.phone) {
+                                        const info = classifyNumber(fixed);
+                                        preview.push({ id: d.id, name: data.name, old: data.phone, new: fixed, carrier: info.carrier, country: info.country });
+                                      }
+                                    });
+                                    if (snap.docs.length < 500) keepGoing = false;
+                                    else lastDoc = snap.docs[snap.docs.length - 1];
+                                  }
+                                  setPhoneFixerPreview(preview);
+                                } catch (e) { notify("Scan error: " + e.message); }
+                                setPhoneFixerScanning(false);
+                              }} style={{ flex: 1, padding: "11px", borderRadius: 8, border: "none", background: T.surfaceAlt, color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                                Preview Changes
+                              </button>
+                              <button type="button" onClick={async () => {
+                                setPhoneFixerScanning(true);
+                                const fixPhone = (raw) => {
+                                  if (!raw) return null;
+                                  let p = raw.replace(/[\s\-\(\)\.]/g, "");
+                                  if (p.startsWith("+971") && p.length === 13) return null;
+                                  if (p.startsWith("+") && !p.startsWith("+971")) return null;
+                                  if (p.startsWith("00971")) p = "+" + p.slice(2);
+                                  else if (p.startsWith("0971")) p = "+" + p.slice(1);
+                                  else if (p.startsWith("971") && p.length >= 12) p = "+" + p;
+                                  else if (p.startsWith("05") && p.length === 10) p = "+971" + p.slice(1);
+                                  else if (UAE_MOBILE_PREFIXES.includes(p.slice(0,2)) && p.length === 9) p = "+971" + p;
+                                  else if (p.startsWith("0") && p.length === 9 && UAE_LANDLINE_AREAS[p[1]]) p = "+971" + p.slice(1);
+                                  else if (p.length === 8 && UAE_LANDLINE_AREAS[p[0]]) p = "+971" + p;
+                                  else return null;
+                                  return (p.startsWith("+971") && p.length >= 12 && p.length <= 13) ? p : null;
+                                };
+                                try {
+                                  let fixed = 0; let skipped = 0; let incomplete = 0; let international = 0;
+                                  let lastDoc = null; let keepGoing = true;
+                                  while (keepGoing) {
+                                    const q = lastDoc
+                                      ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500))
+                                      : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
+                                    const snap = await getDocs(q);
+                                    const updates = [];
+                                    snap.forEach(d => {
+                                      const data = d.data();
+                                      const raw = data.phone || "";
+                                      if (!raw) { skipped++; return; }
+                                      const clean = raw.replace(/[\s\-\(\)\.]/g, "");
+                                      if (clean.startsWith("+") && !clean.startsWith("+971")) { international++; return; }
+                                      if (clean.length < 7) { incomplete++; return; }
+                                      const fp = fixPhone(raw);
+                                      if (fp && fp !== raw) updates.push({ id: d.id, phone: fp });
+                                      else skipped++;
+                                    });
+                                    await Promise.all(updates.map(u => setDoc(doc(db, "leads", u.id), { phone: u.phone, updatedAt: new Date().toISOString() }, { merge: true })));
+                                    fixed += updates.length;
+                                    if (snap.docs.length < 500) keepGoing = false;
+                                    else lastDoc = snap.docs[snap.docs.length - 1];
+                                  }
+                                  setPhoneFixerResult({ fixed, skipped, incomplete, international });
+                                  fetchLeads(500);
+                                } catch (e) { notify("Fix error: " + e.message); }
+                                setPhoneFixerScanning(false);
+                              }} style={{ flex: 1, padding: "11px", borderRadius: 8, border: "none", background: T.purple, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                                Fix All Numbers
+                              </button>
                             </div>
                           </div>
-                          <div style={{ display: "flex", gap: 10 }}>
-                            <button type="button" onClick={async () => {
-                              setPhoneFixerScanning(true);
-                              const fixPhone = (raw) => {
-                                if (!raw) return null;
-                                let p = raw.replace(/[\s\-\(\)\.]/g, "");
-                                if (p.startsWith("+971")) return p.length >= 12 ? p : null;
-                                if (p.startsWith("00971")) p = "+" + p.slice(2);
-                                else if (p.startsWith("0971")) p = "+" + p.slice(1);
-                                else if (p.startsWith("971") && p.length >= 12) p = "+" + p;
-                                else if (p.startsWith("05") && p.length === 10) p = "+971" + p.slice(1);
-                                else if (p.startsWith("5") && p.length === 9) p = "+971" + p;
-                                else return null;
-                                return p.length >= 12 ? p : null;
-                              };
-                              try {
-                                const preview = [];
-                                let lastDoc = null;
-                                let keepGoing = true;
-                                while (keepGoing && preview.length < 20) {
-                                  const q = lastDoc
-                                    ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500))
-                                    : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
-                                  const snap = await getDocs(q);
-                                  snap.forEach(d => {
-                                    const data = d.data();
-                                    const fixed = fixPhone(data.phone);
-                                    if (fixed && fixed !== data.phone) {
-                                      preview.push({ id: d.id, name: data.name, old: data.phone, new: fixed });
-                                    }
-                                  });
-                                  if (snap.docs.length < 500) keepGoing = false;
-                                  else lastDoc = snap.docs[snap.docs.length - 1];
-                                }
-                                setPhoneFixerPreview(preview);
-                              } catch (e) { notify("Scan error: " + e.message); }
-                              setPhoneFixerScanning(false);
-                            }} style={{ flex: 1, padding: "11px", borderRadius: 8, border: "none", background: T.surfaceAlt, color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-                              Preview Changes
-                            </button>
-                            <button type="button" onClick={async () => {
-                              setPhoneFixerScanning(true);
-                              const fixPhone = (raw) => {
-                                if (!raw) return null;
-                                let p = raw.replace(/[\s\-\(\)\.]/g, "");
-                                if (p.startsWith("+971")) return p.length >= 12 ? p : null;
-                                if (p.startsWith("00971")) p = "+" + p.slice(2);
-                                else if (p.startsWith("0971")) p = "+" + p.slice(1);
-                                else if (p.startsWith("971") && p.length >= 12) p = "+" + p;
-                                else if (p.startsWith("05") && p.length === 10) p = "+971" + p.slice(1);
-                                else if (p.startsWith("5") && p.length === 9) p = "+971" + p;
-                                else return null;
-                                return p.length >= 12 ? p : null;
-                              };
-                              try {
-                                let fixed = 0; let skipped = 0; let lastDoc = null; let keepGoing = true;
-                                while (keepGoing) {
-                                  const q = lastDoc
-                                    ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500))
-                                    : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
-                                  const snap = await getDocs(q);
-                                  const updates = [];
-                                  snap.forEach(d => {
-                                    const data = d.data();
-                                    const fp = fixPhone(data.phone);
-                                    if (fp && fp !== data.phone) updates.push({ id: d.id, phone: fp });
-                                    else skipped++;
-                                  });
-                                  await Promise.all(updates.map(u => setDoc(doc(db, "leads", u.id), { phone: u.phone, updatedAt: new Date().toISOString() }, { merge: true })));
-                                  fixed += updates.length;
-                                  if (snap.docs.length < 500) keepGoing = false;
-                                  else lastDoc = snap.docs[snap.docs.length - 1];
-                                }
-                                setPhoneFixerResult({ fixed, skipped });
-                                fetchLeads(500);
-                              } catch (e) { notify("Fix error: " + e.message); }
-                              setPhoneFixerScanning(false);
-                            }} style={{ flex: 1, padding: "11px", borderRadius: 8, border: "none", background: T.purple, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-                              Fix All Numbers
-                            </button>
-                          </div>
-                        </div>
-                      )}
+                        );
+                      })()}
 
                       {phoneFixerPreview.length > 0 && !phoneFixerResult && (
                         <div style={{ marginTop: 16 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Preview (first 20 changes)</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Preview (first 25 changes)</div>
                           <div style={{ background: T.surfaceAlt, borderRadius: 8, overflow: "hidden", border: `1px solid ${T.border}` }}>
                             {phoneFixerPreview.map((r, i) => (
-                              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 12px", borderBottom: i < phoneFixerPreview.length - 1 ? `1px solid ${T.border}` : "none", fontSize: 11 }}>
-                                <span style={{ color: T.textMuted, width: 120, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{r.name}</span>
-                                <span style={{ color: T.red, textDecoration: "line-through" }}>{r.old}</span>
+                              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderBottom: i < phoneFixerPreview.length - 1 ? `1px solid ${T.border}` : "none", fontSize: 11 }}>
+                                <span style={{ color: T.textMuted, width: 100, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
+                                <span style={{ color: T.red, textDecoration: "line-through", flexShrink: 0 }}>{r.old}</span>
                                 <span style={{ color: T.textMuted }}>→</span>
-                                <span style={{ color: T.green, fontWeight: 700 }}>{r.new}</span>
+                                <span style={{ color: T.green, fontWeight: 700, flexShrink: 0 }}>{r.new}</span>
+                                {r.carrier && <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: "rgba(139,92,246,0.12)", color: T.purple, flexShrink: 0 }}>{r.carrier}</span>}
                               </div>
                             ))}
                           </div>
@@ -21838,9 +21898,25 @@ export default function AdminPanel() {
                       {phoneFixerResult && (
                         <div style={{ textAlign: "center", padding: "20px 0" }}>
                           <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
-                          <div style={{ fontSize: 16, fontWeight: 700, color: T.green, marginBottom: 8 }}>Phone Numbers Fixed!</div>
-                          <div style={{ fontSize: 13, color: T.green, marginBottom: 4 }}>Fixed: {phoneFixerResult.fixed.toLocaleString()} numbers → +971 format</div>
-                          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 20 }}>Skipped: {phoneFixerResult.skipped.toLocaleString()} (already correct or incomplete)</div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: T.green, marginBottom: 16 }}>Phone Numbers Fixed!</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20, textAlign: "left" }}>
+                            <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(16,185,129,0.08)", border: `1px solid ${T.green}` }}>
+                              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Fixed to +971</div>
+                              <div style={{ fontSize: 22, fontWeight: 900, color: T.green, fontFamily: "'Fraunces',serif" }}>{phoneFixerResult.fixed.toLocaleString()}</div>
+                            </div>
+                            <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(59,130,246,0.08)", border: `1px solid ${T.blue}` }}>
+                              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>International (kept)</div>
+                              <div style={{ fontSize: 22, fontWeight: 900, color: T.blue, fontFamily: "'Fraunces',serif" }}>{(phoneFixerResult.international || 0).toLocaleString()}</div>
+                            </div>
+                            <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: `1px solid ${T.orange}` }}>
+                              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Incomplete (&lt;7 digits)</div>
+                              <div style={{ fontSize: 22, fontWeight: 900, color: T.orange, fontFamily: "'Fraunces',serif" }}>{(phoneFixerResult.incomplete || 0).toLocaleString()}</div>
+                            </div>
+                            <div style={{ padding: "10px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
+                              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>No change needed</div>
+                              <div style={{ fontSize: 22, fontWeight: 900, color: T.textSecondary, fontFamily: "'Fraunces',serif" }}>{phoneFixerResult.skipped.toLocaleString()}</div>
+                            </div>
+                          </div>
                           <button type="button" onClick={() => setShowPhoneFixer(false)} style={{ padding: "10px 28px", borderRadius: 8, border: "none", background: T.green, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Done</button>
                         </div>
                       )}
