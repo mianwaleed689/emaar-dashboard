@@ -10406,51 +10406,129 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   );
 
   /* FIX #14: Add User → Invite User (client SDK limitation explained) */
-  const AddUserModal = () => showAddUser && (
-    <Modal onClose={() => setShowAddUser(false)} maxWidth={520}>
+  const AddUserModal = () => {
+    const PHONE_CODES = [
+      ["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+376","🇦🇩 Andorra"],["+244","🇦🇴 Angola"],
+      ["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],
+      ["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],
+      ["+229","🇧🇯 Benin"],["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+267","🇧🇼 Botswana"],
+      ["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],
+      ["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+238","🇨🇻 Cape Verde"],["+236","🇨🇫 Central African Rep"],
+      ["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+269","🇰🇲 Comoros"],
+      ["+242","🇨🇬 Congo"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],
+      ["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],["+1","🇩🇴 Dominican Republic"],["+593","🇪🇨 Ecuador"],
+      ["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+372","🇪🇪 Estonia"],["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],
+      ["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],
+      ["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],
+      ["+245","🇬🇼 Guinea-Bissau"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],["+36","🇭🇺 Hungary"],
+      ["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],
+      ["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],["+81","🇯🇵 Japan"],
+      ["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea (South)"],["+965","🇰🇼 Kuwait"],
+      ["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+266","🇱🇸 Lesotho"],
+      ["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],
+      ["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],
+      ["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],
+      ["+382","🇲🇪 Montenegro"],["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+977","🇳🇵 Nepal"],
+      ["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+227","🇳🇪 Niger"],["+234","🇳🇬 Nigeria"],
+      ["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],
+      ["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],
+      ["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],
+      ["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+232","🇸🇱 Sierra Leone"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],
+      ["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],
+      ["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+597","🇸🇷 Suriname"],["+268","🇸🇿 Swaziland"],["+46","🇸🇪 Sweden"],
+      ["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],
+      ["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+1","🇹🇹 Trinidad & Tobago"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],
+      ["+993","🇹🇲 Turkmenistan"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],
+      ["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],
+      ["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"],
+    ].sort((a,b) => a[1].localeCompare(b[1]));
+
+    const COUNTRIES = [
+      "UAE","Saudi Arabia","Qatar","Kuwait","Bahrain","Oman","Jordan","Lebanon","Egypt","Iraq",
+      "Syria","Yemen","Libya","Morocco","Tunisia","Algeria","Sudan","Pakistan","India","Bangladesh",
+      "Philippines","Indonesia","Sri Lanka","Nepal","UK","USA","Canada","Australia","Germany",
+      "France","Italy","Spain","Russia","China","Japan","Korea","Turkey","Iran","Nigeria",
+      "Kenya","South Africa","Brazil","Other"
+    ].sort();
+
+    if (!showAddUser) return null;
+    return (
+    <Modal onClose={() => setShowAddUser(false)} maxWidth={560}>
       <ModalHeader title="Add New User" sub="Create a new account directly from admin" onClose={() => setShowAddUser(false)} />
       <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 18, fontSize: 12, color: "#93C5FD", lineHeight: 1.6 }}>
-         <strong>Note:</strong> Creating an account here uses Firebase client-side auth. The new user will receive a verification email. You will remain logged in as admin.
+        <strong>Note:</strong> Creating an account here uses Firebase client-side auth. The new user will receive a verification email. You will remain logged in as admin.
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        {[
-          { label: "Full Name *", key: "name", type: "text", placeholder: "John Smith", full: true },
-          { label: "Email Address *", key: "email", type: "email", placeholder: "john@company.com", full: true },
-          { label: "Password *", key: "password", type: "password", placeholder: "Min 6 characters", full: true },
-          { label: "Phone", key: "phone", type: "tel", placeholder: "+971 50 000 0000" },
-        ].map(f => (
-          <div key={f.key} style={{ gridColumn: f.full ? "1 / -1" : "auto" }}>
-            <Field label={f.label}>
-              <input type={f.type} placeholder={f.placeholder} value={addUserForm[f.key] || ""} onChange={e => setAddUserForm(p => ({ ...p, [f.key]: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} />
-            </Field>
-            {/* FIX #29: password validation */}
-            {f.key === "password" && addUserForm.password && addUserForm.password.length < 6 && (
-              <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>⚡ Password must be at least 6 characters</div>
-            )}
-          </div>
-        ))}
-        <div><Field label="Country">
-          {(() => {
-            const COUNTRIES = ["UAE","Saudi Arabia","Qatar","Kuwait","Bahrain","Oman","Jordan","Lebanon","Egypt","Iraq","Syria","Yemen","Libya","Morocco","Tunisia","Algeria","Sudan","Pakistan","India","Bangladesh","Philippines","Indonesia","Sri Lanka","Nepal","UK","USA","Canada","Australia","Germany","France","Italy","Spain","Russia","China","Japan","Korea","Turkey","Iran","Nigeria","Kenya","South Africa","Brazil","Other"];
-            return (
-              <div style={{ position: "relative" }}>
-                <select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({ ...p, country: e.target.value }))}
-                  style={{ ...inputStyle, cursor: "pointer", color: addUserForm.country ? "#E2E8F0" : "#64748B" }}>
-                  <option value="">Select Country...</option>
-                  {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-            );
-          })()}
-        </Field></div>
-        <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
-        </select></Field></div>
-        <div style={{ gridColumn: "1 / -1" }}><Field label="Job Role"><select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="user">— No role assigned —</option>
-          {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-        </select></Field></div>
-        <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
+        {/* Full Name */}
+        <div style={{ gridColumn: "1/-1" }}>
+          <Field label="Full Name *">
+            <input type="text" placeholder="John Smith" value={addUserForm.name || ""} onChange={e => setAddUserForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} />
+          </Field>
+        </div>
+        {/* Email */}
+        <div style={{ gridColumn: "1/-1" }}>
+          <Field label="Email Address *">
+            <input type="email" placeholder="john@company.com" value={addUserForm.email || ""} onChange={e => setAddUserForm(p => ({ ...p, email: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} />
+          </Field>
+        </div>
+        {/* Password */}
+        <div style={{ gridColumn: "1/-1" }}>
+          <Field label="Password *">
+            <input type="password" placeholder="Min 6 characters" value={addUserForm.password || ""} onChange={e => setAddUserForm(p => ({ ...p, password: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} />
+          </Field>
+          {addUserForm.password && addUserForm.password.length < 6 && (
+            <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>⚡ Password must be at least 6 characters</div>
+          )}
+        </div>
+        {/* Phone with country code — same as leads tab */}
+        <div style={{ gridColumn: "1/-1" }}>
+          <Field label="Phone / WhatsApp">
+            <div style={{ display: "flex", gap: 8 }}>
+              <select value={addUserForm.phoneCode || "+971"} onChange={e => setAddUserForm(p => ({ ...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum || "").replace(/\s/g,"") }))}
+                style={{ ...inputStyle, width: 200, flexShrink: 0, cursor: "pointer" }}>
+                {PHONE_CODES.map(([code, name]) => (
+                  <option key={code+name} value={code}>{name} ({code})</option>
+                ))}
+              </select>
+              <input type="tel" placeholder="50 123 4567" value={addUserForm.phoneNum || ""}
+                onChange={e => { const num = e.target.value.replace(/[^\d\s]/g,""); setAddUserForm(p => ({ ...p, phoneNum: num, phone: (p.phoneCode || "+971") + num.replace(/\s/g,"") })); }}
+                style={{ ...inputStyle, flex: 1 }} onFocus={focusIn} onBlur={focusOut} />
+            </div>
+          </Field>
+        </div>
+        {/* Country — full list */}
+        <div>
+          <Field label="Country">
+            <select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({ ...p, country: e.target.value }))}
+              style={{ ...inputStyle, cursor: "pointer", color: addUserForm.country ? "#E2E8F0" : "#64748B" }}>
+              <option value="">Select Country...</option>
+              {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </Field>
+        </div>
+        {/* Access Tier */}
+        <div>
+          <Field label="Access Tier">
+            <select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+              {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
+            </select>
+          </Field>
+        </div>
+        {/* Job Role */}
+        <div style={{ gridColumn: "1/-1" }}>
+          <Field label="Job Role">
+            <select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+              <option value="user">— No role assigned —</option>
+              {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+            </select>
+          </Field>
+        </div>
+        {/* Admin Notes */}
+        <div style={{ gridColumn: "1/-1" }}>
+          <Field label="Admin Notes">
+            <textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} />
+          </Field>
+        </div>
       </div>
       {/* Duplicate email warning */}
       {addUserForm.email && users.some(u => u.email && u.email.toLowerCase() === addUserForm.email.toLowerCase()) && (
@@ -10467,7 +10545,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <Btn onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} color={T.gold} style={{ flex: 2, color: T.bg }}>{addUserLoading ? "Creating..." : "Create User"}</Btn>
       </div>
     </Modal>
-  );
+    );
+  };
 
   /* ── BULK IMPORT MODAL ── */
   const BulkImportModal = () => showBulkImport && (
@@ -10581,16 +10660,73 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </Modal>
   );
 
-  const EditUserModal = () => editingUser && (
-    <Modal onClose={() => setEditingUser(null)} maxWidth={520}>
+  const EditUserModal = () => {
+    const EDIT_PHONE_CODES = [
+      ["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+244","🇦🇴 Angola"],["+54","🇦🇷 Argentina"],
+      ["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+973","🇧🇭 Bahrain"],
+      ["+880","🇧🇩 Bangladesh"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],["+229","🇧🇯 Benin"],
+      ["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+267","🇧🇼 Botswana"],["+55","🇧🇷 Brazil"],
+      ["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],["+855","🇰🇭 Cambodia"],
+      ["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+238","🇨🇻 Cape Verde"],["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],
+      ["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+242","🇨🇬 Congo"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],
+      ["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],
+      ["+1","🇩🇴 Dominican Republic"],["+593","🇪🇨 Ecuador"],["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+372","🇪🇪 Estonia"],
+      ["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],
+      ["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],
+      ["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],
+      ["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],
+      ["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],
+      ["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea (South)"],
+      ["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],
+      ["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],
+      ["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],
+      ["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],
+      ["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],
+      ["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+234","🇳🇬 Nigeria"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],
+      ["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],
+      ["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],
+      ["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],
+      ["+232","🇸🇱 Sierra Leone"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],
+      ["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],
+      ["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+255","🇹🇿 Tanzania"],
+      ["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],
+      ["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],
+      ["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],
+      ["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"],
+    ].sort((a,b) => a[1].localeCompare(b[1]));
+
+    const EDIT_COUNTRIES = ["Afghanistan","Albania","Algeria","Angola","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahrain","Bangladesh","Belarus","Belgium","Bolivia","Bosnia","Brazil","Bulgaria","Cambodia","Cameroon","Canada","Chile","China","Colombia","Congo","Croatia","Cuba","Czech Republic","Denmark","Egypt","Ethiopia","Finland","France","Germany","Ghana","Greece","Hungary","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Korea (South)","Kuwait","Laos","Latvia","Lebanon","Libya","Lithuania","Malaysia","Maldives","Mali","Malta","Morocco","Mozambique","Nepal","Netherlands","New Zealand","Nigeria","Norway","Oman","Pakistan","Palestine","Panama","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saudi Arabia","Senegal","Serbia","Singapore","Slovakia","Somalia","South Africa","Spain","Sri Lanka","Sudan","Sweden","Switzerland","Syria","Taiwan","Tanzania","Thailand","Tunisia","Turkey","Uganda","Ukraine","UAE","United Kingdom","United States","Uruguay","Uzbekistan","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe","Other"].sort();
+
+    if (!editingUser) return null;
+    // Parse existing phone to extract code and number
+    const existingPhone = editUserForm.phone || "";
+    const existingCode = EDIT_PHONE_CODES.find(([c]) => existingPhone.startsWith(c))?.[0] || "+971";
+    const existingNum = existingPhone.startsWith(existingCode) ? existingPhone.slice(existingCode.length) : existingPhone;
+
+    return (
+    <Modal onClose={() => setEditingUser(null)} maxWidth={540}>
       <ModalHeader title="Edit User" sub={editingUser.email} onClose={() => setEditingUser(null)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Full Name"><input type="text" placeholder="Full name" value={editUserForm.name || ""} onChange={e => setEditUserForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field></div>
-        <Field label="Phone"><input type="tel" placeholder="+971 50 000 0000" value={editUserForm.phone || ""} onChange={e => setEditUserForm(p => ({ ...p, phone: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
+        {/* Phone with country code picker */}
+        <div style={{ gridColumn: "1 / -1" }}>
+          <Field label="Phone / WhatsApp">
+            <div style={{ display: "flex", gap: 8 }}>
+              <select defaultValue={existingCode} onChange={e => setEditUserForm(p => ({ ...p, phone: e.target.value + existingNum }))}
+                style={{ ...inputStyle, width: 200, flexShrink: 0, cursor: "pointer" }}>
+                {EDIT_PHONE_CODES.map(([code, name]) => <option key={code+name} value={code}>{name} ({code})</option>)}
+              </select>
+              <input type="tel" placeholder="50 123 4567" defaultValue={existingNum}
+                onChange={e => { const num = e.target.value.replace(/[^\d\s]/g,""); setEditUserForm(p => ({ ...p, phone: existingCode + num.replace(/\s/g,"") })); }}
+                style={{ ...inputStyle, flex: 1 }} onFocus={focusIn} onBlur={focusOut} />
+            </div>
+          </Field>
+        </div>
+        {/* Country full list */}
         <Field label="Country">
           <select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer", color: editUserForm.country ? "#E2E8F0" : "#64748B" }}>
             <option value="">Select Country...</option>
-            {["UAE","Saudi Arabia","Qatar","Kuwait","Bahrain","Oman","Jordan","Lebanon","Egypt","Iraq","Syria","Yemen","Libya","Morocco","Tunisia","Algeria","Sudan","Pakistan","India","Bangladesh","Philippines","Indonesia","Sri Lanka","Nepal","UK","USA","Canada","Australia","Germany","France","Italy","Spain","Russia","China","Japan","Korea","Turkey","Iran","Nigeria","Kenya","South Africa","Brazil","Other"].map(c => <option key={c} value={c}>{c}</option>)}
+            {EDIT_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </Field>
         <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
@@ -10600,7 +10736,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           <option value="user">— No role assigned —</option>
           {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
         </select></Field>
-        {/* FIX #8: normalize trial date to ISO format */}
         <Field label="Trial End Date"><input type="date" value={editUserForm.trialEnd ? editUserForm.trialEnd.slice(0, 10) : ""} onChange={e => setEditUserForm(p => ({ ...p, trialEnd: e.target.value ? e.target.value + "T00:00:00.000Z" : "" }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={editUserForm.notes || ""} onChange={e => setEditUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
       </div>
@@ -10609,7 +10744,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <Btn onClick={saveEditUser} disabled={editUserLoading} color={T.gold} style={{ flex: 2, color: T.bg }}>{editUserLoading ? "Saving..." : "Save Changes"}</Btn>
       </div>
     </Modal>
-  );
+    );
+  };
 
   const NotifUserModal = () => notifUser && (
     <Modal onClose={() => setNotifUser(null)} maxWidth={440}>
@@ -13158,7 +13294,7 @@ export default function AdminPanel() {
   const [showAddUser, setShowAddUser] = useState(false);
   const [pendingOpenUid, setPendingOpenUid] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [addUserForm, setAddUserForm] = useState({ name: "", email: "", password: "", phone: "", country: "", tier: "free", notes: "" });
+  const [addUserForm, setAddUserForm] = useState({ name: "", email: "", password: "", phone: "", phoneCode: "+971", phoneNum: "", country: "", tier: "free", role: "user", notes: "" });
   const [addUserLoading, setAddUserLoading] = useState(false);
   const [editUserLoading, setEditUserLoading] = useState(false);
   // eslint-disable-next-line no-unused-vars
