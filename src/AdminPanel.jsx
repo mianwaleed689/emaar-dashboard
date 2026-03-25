@@ -12571,6 +12571,13 @@ export default function AdminPanel() {
   const [leadSearch, setLeadSearch] = useState("");
   const [leadDateRange, setLeadDateRange] = useState("all"); // all | today | week | month
   const [showAddLead, setShowAddLead] = useState(false);
+  const [showImportLeads, setShowImportLeads] = useState(false);
+  const [importLeadsData, setImportLeadsData] = useState([]);
+  const [importLeadsLoading, setImportLeadsLoading] = useState(false);
+  const [importLeadsProgress, setImportLeadsProgress] = useState(0);
+  const [importLeadsTotal, setImportLeadsTotal] = useState(0);
+  const [importLeadsDone, setImportLeadsDone] = useState(false);
+  const [importLeadsErrors, setImportLeadsErrors] = useState([]);
   const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
   const [addLeadLoading, setAddLeadLoading] = useState(false);
   const [leadNote, setLeadNote] = useState("");
@@ -20314,6 +20321,95 @@ export default function AdminPanel() {
               setSendingEmail(false);
             };
 
+            // ── CSV Import ────────────────────────────────────────
+            const processCSVFile = (file) => {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                try {
+                  const text = e.target.result;
+                  const lines = text.split(/\r?\n/).filter(l => l.trim());
+                  if (lines.length < 2) { notify("CSV file is empty or has no data rows"); return; }
+                  // Parse headers — lowercase, trim
+                  const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/[^a-z]/g, ""));
+                  const rows = [];
+                  const errors = [];
+                  for (let i = 1; i < lines.length; i++) {
+                    // Handle quoted fields
+                    const cols = [];
+                    let cur = "", inQ = false;
+                    for (const ch of lines[i]) {
+                      if (ch === '"') { inQ = !inQ; }
+                      else if (ch === "," && !inQ) { cols.push(cur.trim()); cur = ""; }
+                      else { cur += ch; }
+                    }
+                    cols.push(cur.trim());
+                    const obj = {};
+                    headers.forEach((h, idx) => { obj[h] = (cols[idx] || "").replace(/^"|"$/g, "").trim(); });
+                    if (!obj.name || obj.name.length < 2) { errors.push(i + 1); continue; }
+                    rows.push({
+                      name:        obj.name || "",
+                      phone:       obj.phone || obj.mobile || obj.whatsapp || "",
+                      email:       obj.email || "",
+                      project:     obj.project || obj.building || "",
+                      community:   obj.community || obj.area || "",
+                      nationality: obj.nationality || "",
+                      budget:      obj.budget || "",
+                      source:      obj.source || "Manual",
+                      notes:       obj.notes || obj.note || "",
+                    });
+                  }
+                  setImportLeadsData(rows);
+                  setImportLeadsErrors(errors);
+                  if (rows.length === 0) notify("No valid rows found — make sure CSV has a 'name' column");
+                } catch (err) { notify("Error reading CSV: " + err.message); }
+              };
+              reader.readAsText(file);
+            };
+
+            const startLeadsImport = async () => {
+              if (importLeadsData.length === 0) return;
+              setImportLeadsLoading(true);
+              setImportLeadsTotal(importLeadsData.length);
+              setImportLeadsProgress(0);
+              const now = new Date().toISOString();
+              let count = 0;
+              const CHUNK = 50; // Import 50 at a time to avoid overwhelming Firestore
+              for (let i = 0; i < importLeadsData.length; i += CHUNK) {
+                const chunk = importLeadsData.slice(i, i + CHUNK);
+                await Promise.all(chunk.map(async (r) => {
+                  try {
+                    const id = `lead_${Date.now()}_${Math.random().toString(36).substr(2,6)}`;
+                    await setDoc(doc(db, "leads", id), {
+                      name:         r.name,
+                      phone:        r.phone,
+                      email:        r.email,
+                      project:      r.project,
+                      community:    r.community,
+                      nationality:  r.nationality,
+                      budget:       r.budget,
+                      source:       r.source || "Manual",
+                      status:       "New",
+                      notes:        r.notes ? [{ text: r.notes, by: adminUser?.email || "admin", at: now }] : [],
+                      activity:     [{ type: "created", by: adminUser?.email || "admin", at: now, note: `Imported from CSV — ${r.community || r.project || "bulk import"}` }],
+                      createdAt:    now,
+                      updatedAt:    now,
+                      followUpDate: "",
+                      respondedAt:  "",
+                      convertedAt:  "",
+                      lossReason:   "",
+                    });
+                    count++;
+                  } catch (err) { console.error("Import row failed:", err.message); }
+                }));
+                setImportLeadsProgress(Math.min(i + CHUNK, importLeadsData.length));
+                await new Promise(r => setTimeout(r, 200)); // Small delay between chunks
+              }
+              await logAudit(db, { action: "leads_csv_imported", count });
+              setImportLeadsLoading(false);
+              setImportLeadsDone(true);
+              notify(`✅ ${count.toLocaleString()} leads imported!`);
+            };
+
             // ── Export CSV ────────────────────────────────────────────────
             const exportLeadsCSV = () => {
               const headers = ["Name", "Email", "Phone", "Nationality", "Budget", "Project", "Community", "Source", "Status", "Score", "Follow-Up Date", "Created", "Notes"];
@@ -20385,6 +20481,7 @@ export default function AdminPanel() {
                       <button type="button" onClick={() => setLeadAnalyticsView(v => !v)} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: leadAnalyticsView ? T.gold + "20" : "transparent", color: leadAnalyticsView ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}>Analytics</button>
                     </div>
                     <button type="button" onClick={() => setShowAddLead(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.08)", color: T.green, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>+ Add Lead</button>
+                    <button type="button" onClick={() => { setShowImportLeads(true); setImportLeadsData([]); setImportLeadsDone(false); setImportLeadsProgress(0); setImportLeadsErrors([]); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.blue}`, background: "rgba(59,130,246,0.08)", color: T.blue, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>⬆ Import CSV</button>
                     <button type="button" onClick={exportLeadsCSV} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} Export</button>
                   </div>
                 </div>
@@ -20721,6 +20818,129 @@ export default function AdminPanel() {
                         <button type="button" onClick={() => { setShowFollowUpModal(null); setFollowUpDate(""); setFollowUpNote(""); }} style={{ flex: 1, padding: "11px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
                         <button type="button" onClick={scheduleFollowUp} style={{ flex: 2, padding: "11px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8860B)`, color: T.bg, cursor: "pointer", fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>Schedule Follow-Up</button>
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── CSV IMPORT MODAL ─────────────────────────────── */}
+                {showImportLeads && (
+                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => { if (!importLeadsLoading) setShowImportLeads(false); }}>
+                    <div style={{ background: T.surface, border: `1px solid rgba(59,130,246,0.4)`, borderRadius: 16, width: "95%", maxWidth: 640, padding: 28, maxHeight: "90vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+                      {/* Header */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                        <div>
+                          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.blue, marginBottom: 4 }}>⬆ Import Leads from CSV</h3>
+                          <p style={{ fontSize: 11, color: T.textMuted }}>Upload a CSV file with columns: name, phone, email, project, community, nationality, budget, source</p>
+                        </div>
+                        {!importLeadsLoading && <button type="button" onClick={() => setShowImportLeads(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>}
+                      </div>
+
+                      {/* Column guide */}
+                      {!importLeadsDone && importLeadsData.length === 0 && (
+                        <div style={{ marginBottom: 20, padding: "14px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Expected CSV Columns</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+                            {[
+                              { col: "name", req: true }, { col: "phone", req: false },
+                              { col: "email", req: false }, { col: "project", req: false },
+                              { col: "community", req: false }, { col: "nationality", req: false },
+                              { col: "budget", req: false }, { col: "source", req: false },
+                            ].map(({ col, req }) => (
+                              <div key={col} style={{ padding: "6px 10px", borderRadius: 6, background: req ? "rgba(16,185,129,0.1)" : T.bg, border: `1px solid ${req ? T.green : T.border}` }}>
+                                <span style={{ fontSize: 10, color: req ? T.green : T.textSecondary, fontWeight: req ? 700 : 400 }}>{col}{req ? " *" : ""}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>* Required. All other columns optional. Column names are case-insensitive.</div>
+                        </div>
+                      )}
+
+                      {/* File upload */}
+                      {!importLeadsDone && importLeadsData.length === 0 && (
+                        <div style={{ marginBottom: 20 }}>
+                          <label style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 20px", borderRadius: 12, border: `2px dashed rgba(59,130,246,0.4)`, background: "rgba(59,130,246,0.04)", cursor: "pointer", transition: "all 0.15s" }}
+                            onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = T.blue; }}
+                            onDragLeave={e => { e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)"; }}
+                            onDrop={e => {
+                              e.preventDefault();
+                              e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)";
+                              const file = e.dataTransfer.files[0];
+                              if (file) processCSVFile(file);
+                            }}>
+                            <input type="file" accept=".csv" style={{ display: "none" }} onChange={e => { if (e.target.files[0]) processCSVFile(e.target.files[0]); }} id="csv-import-input" />
+                            <div style={{ fontSize: 28, marginBottom: 10 }}>📄</div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 4 }}>Drop your CSV file here</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>or click to browse</div>
+                            <label htmlFor="csv-import-input" style={{ padding: "8px 20px", borderRadius: 8, border: `1px solid ${T.blue}`, background: "rgba(59,130,246,0.1)", color: T.blue, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Choose File</label>
+                          </label>
+                        </div>
+                      )}
+
+                      {/* Preview */}
+                      {!importLeadsDone && importLeadsData.length > 0 && !importLeadsLoading && (
+                        <div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                            <div>
+                              <span style={{ fontSize: 13, fontWeight: 700, color: T.green }}>{importLeadsData.length.toLocaleString()} leads ready to import</span>
+                              {importLeadsErrors.length > 0 && <span style={{ fontSize: 11, color: T.orange, marginLeft: 8 }}>({importLeadsErrors.length} rows skipped — missing name)</span>}
+                            </div>
+                            <button type="button" onClick={() => { setImportLeadsData([]); setImportLeadsErrors([]); }} style={{ fontSize: 11, color: T.textMuted, background: "none", border: "none", cursor: "pointer" }}>← Change file</button>
+                          </div>
+                          {/* Preview table */}
+                          <div style={{ background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, overflow: "hidden", marginBottom: 16 }}>
+                            <div style={{ overflowX: "auto" }}>
+                              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                                <thead>
+                                  <tr style={{ borderBottom: `1px solid ${T.border}` }}>
+                                    {["Name", "Phone", "Email", "Community", "Project", "Budget", "Source"].map(h => (
+                                      <th key={h} style={{ padding: "8px 12px", textAlign: "left", color: T.gold, fontWeight: 600, fontSize: 9, textTransform: "uppercase", background: T.bg }}>{h}</th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {importLeadsData.slice(0, 5).map((r, i) => (
+                                    <tr key={i} style={{ borderBottom: `1px solid ${T.border}` }}>
+                                      <td style={{ padding: "8px 12px", color: T.white, fontWeight: 600 }}>{r.name || "-"}</td>
+                                      <td style={{ padding: "8px 12px", color: T.green }}>{r.phone || "-"}</td>
+                                      <td style={{ padding: "8px 12px", color: T.blue }}>{r.email || "-"}</td>
+                                      <td style={{ padding: "8px 12px", color: T.gold }}>{r.community || "-"}</td>
+                                      <td style={{ padding: "8px 12px", color: T.textSecondary }}>{r.project || "-"}</td>
+                                      <td style={{ padding: "8px 12px", color: T.green }}>{r.budget ? `AED ${parseFloat(r.budget).toLocaleString()}` : "-"}</td>
+                                      <td style={{ padding: "8px 12px", color: T.textMuted }}>{r.source || "Manual"}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                            {importLeadsData.length > 5 && <div style={{ padding: "8px 12px", fontSize: 10, color: T.textMuted, borderTop: `1px solid ${T.border}` }}>...and {(importLeadsData.length - 5).toLocaleString()} more rows</div>}
+                          </div>
+                          <button type="button" onClick={startLeadsImport} style={{ width: "100%", padding: "13px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.blue}, #2563EB)`, color: "#FFFFFF", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                            Import {importLeadsData.length.toLocaleString()} Leads →
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Progress */}
+                      {importLeadsLoading && (
+                        <div style={{ textAlign: "center", padding: "20px 0" }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.blue, marginBottom: 16 }}>Importing leads...</div>
+                          <div style={{ height: 8, borderRadius: 4, background: T.border, marginBottom: 10, overflow: "hidden" }}>
+                            <div style={{ height: "100%", borderRadius: 4, background: T.blue, width: `${importLeadsTotal > 0 ? Math.round((importLeadsProgress / importLeadsTotal) * 100) : 0}%`, transition: "width 0.3s" }} />
+                          </div>
+                          <div style={{ fontSize: 12, color: T.textMuted }}>{importLeadsProgress.toLocaleString()} / {importLeadsTotal.toLocaleString()} ({importLeadsTotal > 0 ? Math.round((importLeadsProgress / importLeadsTotal) * 100) : 0}%)</div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>Do not close this window</div>
+                        </div>
+                      )}
+
+                      {/* Done */}
+                      {importLeadsDone && (
+                        <div style={{ textAlign: "center", padding: "20px 0" }}>
+                          <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: T.green, marginBottom: 8 }}>Import Complete!</div>
+                          <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 20 }}>{importLeadsProgress.toLocaleString()} leads imported successfully</div>
+                          <button type="button" onClick={() => { setShowImportLeads(false); fetchLeads(); }} style={{ padding: "10px 28px", borderRadius: 8, border: "none", background: T.green, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View Leads</button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -24806,3 +25026,6 @@ export default function AdminPanel() {
     </div>
   );
 }
+// STABLE_RECOVERY_0945_PPSF_FIXED
+// BEAST_UI_UPGRADE_1005_MAR24
+// BEAST_BADGE_GLOBAL_1012_MAR24
