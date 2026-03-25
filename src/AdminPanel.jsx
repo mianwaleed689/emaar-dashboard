@@ -12602,7 +12602,7 @@ export default function AdminPanel() {
   const [importLeadsTotal, setImportLeadsTotal] = useState(0);
   const [importLeadsDone, setImportLeadsDone] = useState(false);
   const [importLeadsErrors, setImportLeadsErrors] = useState([]);
-  const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
+  const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", source: "Manual", project: "", community: "", notes: "", budget: "", nationality: "", followUpDate: "", tags: [] });
   const [addLeadLoading, setAddLeadLoading] = useState(false);
   const [leadNote, setLeadNote] = useState("");
   const [leadNoteSaving, setLeadNoteSaving] = useState(false);
@@ -12613,6 +12613,13 @@ export default function AdminPanel() {
   /* ─── LEADS CRM PRO STATE ─── */
   const [leadSelectedIds, setLeadSelectedIds] = useState([]); // bulk selection
   const [leadBulkAction, setLeadBulkAction] = useState(""); // bulk action value
+  const [showBulkWhatsApp, setShowBulkWhatsApp] = useState(false);
+  const [bulkWhatsAppLeads, setBulkWhatsAppLeads] = useState([]);
+  const [bulkWhatsAppMessage, setBulkWhatsAppMessage] = useState("");
+  const [bulkWhatsAppIndex, setBulkWhatsAppIndex] = useState(0);
+  const [showDeduplicateModal, setShowDeduplicateModal] = useState(false);
+  const [deduplicating, setDeduplicating] = useState(false);
+  const [deduplicateResult, setDeduplicateResult] = useState(null);
   const [showFollowUpModal, setShowFollowUpModal] = useState(null); // lead object
   const [followUpDate, setFollowUpDate] = useState("");
   const [followUpNote, setFollowUpNote] = useState("");
@@ -12958,9 +12965,20 @@ export default function AdminPanel() {
       const snap = await getDocs(q);
       const list = [];
       snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
-      if (list.length > lim) { list.pop(); setLeadsHasMore(true); }
-      else { setLeadsHasMore(false); }
+      if (list.length > lim) {
+        list.pop();
+        setLeadsHasMore(true);
+      } else {
+        setLeadsHasMore(false);
+      }
       setLeads(list);
+      // Also get total count if we haven't loaded all
+      if (list.length >= lim) {
+        const countSnap = await getDocs(collection(db, "leads"));
+        setLeadsTotal(countSnap.size);
+      } else {
+        setLeadsTotal(list.length);
+      }
     } catch (e) { console.error("Fetch leads:", e); }
   }, []);
 
@@ -20214,8 +20232,9 @@ export default function AdminPanel() {
             };
 
             // ── Stats ─────────────────────────────────────────────────────
+            // Note: pipeline stats from loaded 500, total from leadsTotal state
             const stats = {
-              total: leads.length,
+              total: leadsTotal > 0 ? leadsTotal : leads.length,
               new: leads.filter(l => (l.status || "New") === "New").length,
               contacted: leads.filter(l => l.status === "Contacted").length,
               qualified: leads.filter(l => l.status === "Qualified").length,
@@ -20274,9 +20293,9 @@ export default function AdminPanel() {
               // Lead score filter
               if (leadScoreFilter !== "all") {
                 const sc = scoreLead(l);
-                if (leadScoreFilter === "hot" && sc < 80) return false;
-                if (leadScoreFilter === "warm" && (sc < 50 || sc >= 80)) return false;
-                if (leadScoreFilter === "cold" && sc >= 50) return false;
+                if (leadScoreFilter === "hot" && sc < 70) return false;
+                if (leadScoreFilter === "warm" && (sc < 40 || sc >= 70)) return false;
+                if (leadScoreFilter === "cold" && sc >= 40) return false;
               }
               // Golden Visa eligible (budget >= AED 2M)
               if (leadGoldenVisa && (parseFloat(l.budget) || 0) < 2000000) return false;
@@ -20440,7 +20459,7 @@ export default function AdminPanel() {
                 await logAudit(db, { action: "lead_created", leadId: id });
                 notify("Lead added!");
                 setShowAddLead(false);
-                setAddLeadForm({ name: "", email: "", phone: "", phoneNum: "", phoneCode: "+971", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
+                setAddLeadForm({ name: "", email: "", phone: "", phoneNum: "", phoneCode: "+971", source: "Manual", project: "", community: "", notes: "", budget: "", nationality: "", followUpDate: "", tags: [] });
                 fetchLeads();
               } catch (e) { notify("Error: " + e.message); }
               setAddLeadLoading(false);
@@ -20699,6 +20718,7 @@ export default function AdminPanel() {
                     </div>
                     <button type="button" onClick={() => setShowAddLead(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.08)", color: T.green, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>+ Add Lead</button>
                     <button type="button" onClick={() => { setShowImportLeads(true); setImportLeadsData([]); setImportLeadsDone(false); setImportLeadsProgress(0); setImportLeadsErrors([]); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.blue}`, background: "rgba(59,130,246,0.08)", color: T.blue, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>⬆ Import CSV</button>
+                    <button type="button" onClick={() => setShowDeduplicateModal(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.orange}`, background: "rgba(245,158,11,0.08)", color: T.orange, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>🔁 Deduplicate</button>
                     <button type="button" onClick={exportLeadsCSV} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} Export</button>
                   </div>
                 </div>
@@ -20764,12 +20784,19 @@ export default function AdminPanel() {
 
                 {/* BULK ACTIONS */}
                 {leadSelectedIds.length > 0 && (
-                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: `rgba(59,130,246,0.08)`, border: `1px solid rgba(59,130,246,0.3)`, marginBottom: 16 }}>
+                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: `rgba(59,130,246,0.08)`, border: `1px solid rgba(59,130,246,0.3)`, marginBottom: 16, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: T.blue }}>{leadSelectedIds.length} selected</span>
-                    <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
+                    <div style={{ display: "flex", gap: 8, marginLeft: "auto", flexWrap: "wrap" }}>
                       {["Contacted", "Qualified", "Lost"].map(status => (
                         <button key={status} type="button" onClick={() => bulkUpdateStatus(status)} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${statusColors[status]?.border}`, background: statusColors[status]?.bg, color: statusColors[status]?.color, cursor: "pointer", fontWeight: 600 }}>Set {status}</button>
                       ))}
+                      <button type="button" onClick={() => {
+                        // Bulk WhatsApp — open each selected lead's WhatsApp
+                        const selectedLeads = leads.filter(l => leadSelectedIds.includes(l.id) && l.phone);
+                        if (selectedLeads.length === 0) { notify("No selected leads have phone numbers"); return; }
+                        setShowBulkWhatsApp(true);
+                        setBulkWhatsAppLeads(selectedLeads);
+                      }} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: "1px solid #25D366", background: "rgba(37,211,102,0.1)", color: "#25D366", cursor: "pointer", fontWeight: 600 }}>💬 Bulk WhatsApp ({leads.filter(l => leadSelectedIds.includes(l.id) && l.phone).length})</button>
                       <button type="button" onClick={() => setLeadSelectedIds([])} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer" }}>Clear</button>
                     </div>
                   </div>
@@ -20860,9 +20887,9 @@ export default function AdminPanel() {
                     <select value={leadScoreFilter} onChange={e => { setLeadScoreFilter(e.target.value); setLeadsPage(1); }}
                       style={{ padding: "7px 10px", background: leadScoreFilter !== "all" ? "rgba(239,68,68,0.12)" : T.bg, border: `1px solid ${leadScoreFilter !== "all" ? T.red : T.border}`, borderRadius: 7, color: leadScoreFilter !== "all" ? T.red : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadScoreFilter !== "all" ? 700 : 400 }}>
                       <option value="all">⭐ All Scores</option>
-                      <option value="hot">🔥 Hot (80-100)</option>
-                      <option value="warm">🌡 Warm (50-79)</option>
-                      <option value="cold">❄️ Cold (0-49)</option>
+                      <option value="hot">🔥 Hot (70-100)</option>
+                      <option value="warm">🌡 Warm (40-69)</option>
+                      <option value="cold">❄️ Cold (0-39)</option>
                     </select>
 
                     {/* Property Type */}
@@ -21214,6 +21241,31 @@ export default function AdminPanel() {
                               style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
                           </div>
                         ))}
+                        {/* Community dropdown */}
+                        <div>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Community</label>
+                          <select value={addLeadForm.community || ""} onChange={e => setAddLeadForm(prev => ({ ...prev, community: e.target.value }))}
+                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: addLeadForm.community ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                            <option value="">Select community...</option>
+                            {leadCommunities.length > 0
+                              ? leadCommunities.map(c => <option key={c} value={c}>{c}</option>)
+                              : ["JBR - Elan","JBR - Jumeirah Gate","Arabian Ranches","Arabian Ranches III","Business Bay","Dubai Hills Estate","Dubai Creek Harbour","Emaar South","The Valley","Grand Polo Club"].map(c => <option key={c} value={c}>{c}</option>)
+                            }
+                          </select>
+                        </div>
+                        {/* Tag */}
+                        <div>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Tag</label>
+                          <select value={(addLeadForm.tags || [])[0] || ""} onChange={e => setAddLeadForm(prev => ({ ...prev, tags: e.target.value ? [e.target.value] : [] }))}
+                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: (addLeadForm.tags || [])[0] ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                            <option value="">No tag</option>
+                            <option value="VIP">⭐ VIP</option>
+                            <option value="Investor">💼 Investor</option>
+                            <option value="End-User">🏠 End-User</option>
+                            <option value="Flipper">🔄 Flipper</option>
+                            <option value="Referral">👥 Referral</option>
+                          </select>
+                        </div>
                         {/* Phone with country code */}
                         <div style={{ gridColumn: "1/-1" }}>
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone / WhatsApp</label>
@@ -21467,6 +21519,174 @@ export default function AdminPanel() {
                   </div>
                 )}
 
+                {/* ── BULK WHATSAPP MODAL ───────────────────────────── */}
+                {showBulkWhatsApp && (
+                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowBulkWhatsApp(false)}>
+                    <div style={{ background: T.surface, border: "1px solid rgba(37,211,102,0.4)", borderRadius: 16, width: "95%", maxWidth: 560, padding: 28 }} onClick={e => e.stopPropagation()}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                        <div>
+                          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: "#25D366", marginBottom: 4 }}>💬 Bulk WhatsApp</h3>
+                          <p style={{ fontSize: 11, color: T.textMuted }}>{bulkWhatsAppLeads.length} leads with phone numbers selected</p>
+                        </div>
+                        <button type="button" onClick={() => setShowBulkWhatsApp(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
+                      </div>
+
+                      {/* Message template */}
+                      <div style={{ marginBottom: 16 }}>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Message Template</label>
+                        <textarea value={bulkWhatsAppMessage} onChange={e => setBulkWhatsAppMessage(e.target.value)} rows={5}
+                          placeholder={"Hi {name},\n\nI'm reaching out regarding your property at {community}.\n\nWould you be interested in exploring Emaar's latest projects in your area?\n\nBest regards,\nThe Address Holding"}
+                          style={{ width: "100%", padding: "12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
+                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>Use {"{name}"}, {"{community}"}, {"{project}"} as placeholders — auto-replaced for each lead</div>
+                      </div>
+
+                      {/* Quick templates */}
+                      <div style={{ marginBottom: 16 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Quick Templates</div>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {[
+                            { label: "Emaar Match", msg: "Hi {name}, as a property owner in {community}, you may qualify for exclusive Emaar projects with prices starting from AED 1.5M. Interested to know more? - The Address Holding" },
+                            { label: "Golden Visa", msg: "Hi {name}, did you know your property in {community} may qualify you for a UAE Golden Visa (10 years)? Let's discuss your options. - The Address Holding" },
+                            { label: "Market Update", msg: "Hi {name}, property values in {community} have increased 18% this year. Would you like a free valuation of your property? - The Address Holding" },
+                          ].map(t => (
+                            <button key={t.label} type="button" onClick={() => setBulkWhatsAppMessage(t.msg)}
+                              style={{ fontSize: 10, padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, cursor: "pointer" }}>{t.label}</button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Progress */}
+                      <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
+                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>Progress: <span style={{ color: T.white, fontWeight: 700 }}>{bulkWhatsAppIndex}</span> / {bulkWhatsAppLeads.length} sent</div>
+                        <div style={{ height: 4, borderRadius: 2, background: T.border }}>
+                          <div style={{ height: "100%", borderRadius: 2, background: "#25D366", width: `${bulkWhatsAppLeads.length > 0 ? (bulkWhatsAppIndex / bulkWhatsAppLeads.length) * 100 : 0}%`, transition: "width 0.3s" }} />
+                        </div>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div style={{ display: "flex", gap: 10 }}>
+                        <button type="button" onClick={() => {
+                          if (bulkWhatsAppIndex >= bulkWhatsAppLeads.length) { notify("All leads sent!"); setShowBulkWhatsApp(false); return; }
+                          const lead = bulkWhatsAppLeads[bulkWhatsAppIndex];
+                          const msg = (bulkWhatsAppMessage || `Hi {name}, I'm reaching out regarding your property in {community}. - The Address Holding`)
+                            .replace(/\{name\}/g, lead.name || "there")
+                            .replace(/\{community\}/g, lead.community || "Dubai")
+                            .replace(/\{project\}/g, lead.project || "your project");
+                          const phone = (lead.phone || "").replace(/[^0-9+]/g, "");
+                          const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+                          window.open(url, "_blank");
+                          setBulkWhatsAppIndex(prev => prev + 1);
+                          // Log activity
+                          setDoc(doc(db, "leads", lead.id), {
+                            activity: [...(lead.activity || []), { type: "whatsapp", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "WhatsApp sent via bulk campaign" }],
+                            status: lead.status === "New" ? "Contacted" : lead.status,
+                            updatedAt: new Date().toISOString()
+                          }, { merge: true });
+                        }} style={{ flex: 1, padding: "12px", borderRadius: 8, border: "none", background: "#25D366", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          {bulkWhatsAppIndex >= bulkWhatsAppLeads.length ? "✅ All Done!" : `Send to ${bulkWhatsAppLeads[bulkWhatsAppIndex]?.name || "next lead"} →`}
+                        </button>
+                        <button type="button" onClick={() => setBulkWhatsAppIndex(0)} style={{ padding: "12px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 12, cursor: "pointer" }}>↺ Reset</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── DEDUPLICATE MODAL ─────────────────────────────── */}
+                {showDeduplicateModal && (
+                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => { if (!deduplicating) setShowDeduplicateModal(false); }}>
+                    <div style={{ background: T.surface, border: `1px solid rgba(245,158,11,0.4)`, borderRadius: 16, width: "95%", maxWidth: 500, padding: 28 }} onClick={e => e.stopPropagation()}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                        <div>
+                          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.orange, marginBottom: 4 }}>🔁 Remove Duplicates</h3>
+                          <p style={{ fontSize: 11, color: T.textMuted }}>Scans all leads and removes duplicates by phone number. Keeps the newest record.</p>
+                        </div>
+                        {!deduplicating && <button type="button" onClick={() => setShowDeduplicateModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>}
+                      </div>
+
+                      {!deduplicateResult && !deduplicating && (
+                        <div>
+                          <div style={{ padding: "14px 16px", borderRadius: 10, background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", marginBottom: 20 }}>
+                            <div style={{ fontSize: 12, color: T.orange, fontWeight: 600, marginBottom: 6 }}>⚠️ What this does:</div>
+                            <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6 }}>
+                              • Scans all {leadsTotal.toLocaleString()} leads in batches<br/>
+                              • Groups leads by phone number<br/>
+                              • Keeps the most recently created lead<br/>
+                              • Permanently deletes older duplicates<br/>
+                              • This cannot be undone
+                            </div>
+                          </div>
+                          <button type="button" onClick={async () => {
+                            setDeduplicating(true);
+                            try {
+                              // Scan all leads
+                              const phoneMap = {};
+                              let lastDoc = null;
+                              let keepGoing = true;
+                              let totalScanned = 0;
+                              while (keepGoing) {
+                                const q = lastDoc
+                                  ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500))
+                                  : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
+                                const snap = await getDocs(q);
+                                snap.forEach(d => {
+                                  const data = d.data();
+                                  const phone = (data.phone || "").replace(/[^0-9]/g, "");
+                                  if (phone && phone.length > 6) {
+                                    if (!phoneMap[phone]) phoneMap[phone] = [];
+                                    phoneMap[phone].push({ id: d.id, createdAt: data.createdAt || "" });
+                                  }
+                                  totalScanned++;
+                                });
+                                if (snap.docs.length < 500) keepGoing = false;
+                                else lastDoc = snap.docs[snap.docs.length - 1];
+                              }
+                              // Find duplicates (keep newest = first since sorted desc)
+                              const toDelete = [];
+                              Object.values(phoneMap).forEach(group => {
+                                if (group.length > 1) {
+                                  // First is newest (sorted by createdAt desc), delete the rest
+                                  group.slice(1).forEach(l => toDelete.push(l.id));
+                                }
+                              });
+                              // Delete in batches
+                              for (let i = 0; i < toDelete.length; i += 400) {
+                                const batch = db.batch ? db.batch() : null;
+                                const chunk = toDelete.slice(i, i + 400);
+                                await Promise.all(chunk.map(id => deleteDoc(doc(db, "leads", id))));
+                              }
+                              setDeduplicateResult({ scanned: totalScanned, deleted: toDelete.length });
+                              fetchLeads(500);
+                              fetchLeadMeta();
+                            } catch (e) { notify("Error: " + e.message); }
+                            setDeduplicating(false);
+                          }} style={{ width: "100%", padding: "13px", borderRadius: 10, border: "none", background: T.orange, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                            Start Deduplication
+                          </button>
+                        </div>
+                      )}
+
+                      {deduplicating && (
+                        <div style={{ textAlign: "center", padding: "20px 0" }}>
+                          <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: T.orange, marginBottom: 8 }}>Scanning all leads...</div>
+                          <div style={{ fontSize: 11, color: T.textMuted }}>This may take 1-2 minutes for large databases</div>
+                        </div>
+                      )}
+
+                      {deduplicateResult && (
+                        <div style={{ textAlign: "center", padding: "20px 0" }}>
+                          <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: T.green, marginBottom: 8 }}>Deduplication Complete!</div>
+                          <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 4 }}>Scanned: {deduplicateResult.scanned.toLocaleString()} leads</div>
+                          <div style={{ fontSize: 13, color: T.red, marginBottom: 20 }}>Deleted: {deduplicateResult.deleted.toLocaleString()} duplicates</div>
+                          <button type="button" onClick={() => { setShowDeduplicateModal(false); setDeduplicateResult(null); }}
+                            style={{ padding: "10px 28px", borderRadius: 8, border: "none", background: T.green, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Done</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* ── CSV IMPORT MODAL ─────────────────────────────── */}
                 {showImportLeads && (
                   <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => { if (!importLeadsLoading) setShowImportLeads(false); }}>
@@ -21668,7 +21888,7 @@ export default function AdminPanel() {
                           <div style={{ padding: "20px 24px" }}>
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
                               {[
-                                { key: "name", label: "Name" }, { key: "email", label: "Email" },
+                              { key: "name", label: "Name" }, { key: "email", label: "Email" },
                                 { key: "phone", label: "Phone" }, { key: "nationality", label: "Nationality" },
                                 { key: "budget", label: "Budget (AED)", type: "number" }, { key: "project", label: "Project" },
                                 { key: "community", label: "Community" }, { key: "source", label: "Source" },
@@ -21707,6 +21927,30 @@ export default function AdminPanel() {
                                 <option value="">Select nationality...</option>
                                 {DUBAI_NATIONALITIES.map(n => <option key={n} value={n}>{n}</option>)}
                               </select>
+                            </div>
+
+                            {/* Tags in drawer */}
+                            <div style={{ marginBottom: 12 }}>
+                              <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 6, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Tags</label>
+                              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                {["VIP","Investor","End-User","Flipper","Referral"].map(tag => {
+                                  const active = (leadDrawer.tags || []).includes(tag);
+                                  return (
+                                    <button key={tag} type="button" onClick={async () => {
+                                      const current = leadDrawer.tags || [];
+                                      const newTags = active ? current.filter(t => t !== tag) : [...current, tag];
+                                      setLeadDrawer(prev => ({ ...prev, tags: newTags }));
+                                      try {
+                                        const activity = [...(leadDrawer.activity || []), { type: "edit", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Tag ${active ? "removed" : "added"}: ${tag}` }];
+                                        await setDoc(doc(db, "leads", leadDrawer.id), { tags: newTags, activity, updatedAt: new Date().toISOString() }, { merge: true });
+                                        notify(`Tag ${active ? "removed" : "added"}: ${tag}`);
+                                      } catch { notify("Error saving tag"); }
+                                    }} style={{ padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: active ? 700 : 400, border: `1px solid ${active ? T.gold : T.border}`, background: active ? "rgba(212,168,67,0.15)" : T.bg, color: active ? T.gold : T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}>
+                                      {tag === "VIP" ? "⭐" : tag === "Investor" ? "💼" : tag === "End-User" ? "🏠" : tag === "Flipper" ? "🔄" : "👥"} {tag}
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             </div>
 
                             {/* Duplicate warning in drawer */}
