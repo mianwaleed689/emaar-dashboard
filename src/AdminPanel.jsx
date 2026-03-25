@@ -9904,10 +9904,15 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             )}
           </div>
         ))}
-        <div><Field label="Country"><select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="">Select Country</option>
-          {[" UAE"," Saudi Arabia"," Qatar"," Kuwait"," Bahrain"," Oman"," UK"," USA"," India"," Pakistan"," Egypt"," Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
-        </select></Field></div>
+        <div><Field label="Country">
+          <SearchableSelect
+            value={addUserForm.country || ""}
+            onChange={v => setAddUserForm(p => ({ ...p, country: v }))}
+            options={["UAE","Saudi Arabia","Qatar","Kuwait","Bahrain","Oman","Jordan","Lebanon","Egypt","Iraq","Syria","Yemen","Libya","Morocco","Tunisia","Algeria","Sudan","Pakistan","India","Bangladesh","Philippines","Indonesia","Sri Lanka","Nepal","UK","USA","Canada","Australia","Germany","France","Italy","Spain","Russia","China","Japan","Korea","Turkey","Iran","Nigeria","Kenya","South Africa","Brazil","Other"].map(c => ({ value: c, label: c }))}
+            placeholder="Select Country"
+            style={{ background: T.bg, fontSize: 13 }}
+          />
+        </Field></div>
         <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
         </select></Field></div>
@@ -9917,7 +9922,17 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </select></Field></div>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
       </div>
-      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+      {/* Duplicate email warning */}
+      {addUserForm.email && users.some(u => u.email && u.email.toLowerCase() === addUserForm.email.toLowerCase()) && (
+        <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 14 }}>⚠️</span>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>Email already exists</div>
+            <div style={{ fontSize: 11, color: T.textMuted }}>A user with this email is already registered. Creating another account may cause login issues.</div>
+          </div>
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
         <BtnGhost onClick={() => setShowAddUser(false)} style={{ flex: 1 }}>Cancel</BtnGhost>
         <Btn onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} color={T.gold} style={{ flex: 2, color: T.bg }}>{addUserLoading ? "Creating..." : "Create User"}</Btn>
       </div>
@@ -10042,10 +10057,15 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Full Name"><input type="text" placeholder="Full name" value={editUserForm.name || ""} onChange={e => setEditUserForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field></div>
         <Field label="Phone"><input type="tel" placeholder="+971 50 000 0000" value={editUserForm.phone || ""} onChange={e => setEditUserForm(p => ({ ...p, phone: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
-        <Field label="Country"><select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="">Select Country</option>
-          {[" UAE"," Saudi Arabia"," Qatar"," Kuwait"," Bahrain"," Oman"," UK"," USA"," India"," Pakistan"," Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
-        </select></Field>
+        <Field label="Country">
+          <SearchableSelect
+            value={editUserForm.country || ""}
+            onChange={v => setEditUserForm(p => ({ ...p, country: v }))}
+            options={["UAE","Saudi Arabia","Qatar","Kuwait","Bahrain","Oman","Jordan","Lebanon","Egypt","Iraq","Syria","Yemen","Libya","Morocco","Tunisia","Algeria","Sudan","Pakistan","India","Bangladesh","Philippines","Indonesia","Sri Lanka","Nepal","UK","USA","Canada","Australia","Germany","France","Italy","Spain","Russia","China","Japan","Korea","Turkey","Iran","Nigeria","Kenya","South Africa","Brazil","Other"].map(c => ({ value: c, label: c }))}
+            placeholder="Select Country"
+            style={{ background: T.bg, fontSize: 13 }}
+          />
+        </Field>
         <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
         </select></Field>
@@ -10348,6 +10368,12 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       {bulkSel.length > 0 && (
         <div style={{ background: "rgba(212,168,67,0.06)", border: "1px solid rgba(212,168,67,0.25)", borderRadius: 10, padding: "10px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>✔ {bulkSel.length} users selected</span>
+          {bulkSel.length < allFiltered.length && (
+            <button type="button" onClick={() => setBulkSel(allFiltered.map(u => u.uid))}
+              style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+              Select all {allFiltered.length}
+            </button>
+          )}
           <select value={bulkTier} onChange={e => setBulkTier(e.target.value)} style={{ padding: "6px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" }}>
             <option value="">Change access tier to...</option>
             {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
@@ -10361,7 +10387,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <div className="users-table-desktop" style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
         {/* Header */}
         <div style={{ display: "grid", gridTemplateColumns: "36px 28px 2fr 1.6fr 110px 115px 85px 85px 145px", gap: 6, padding: "10px 16px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt, alignItems: "center" }}>
-          <div><input type="checkbox" onChange={e => setBulkSel(e.target.checked ? pagedUsers.map(u => u.uid) : [])} checked={bulkSel.length === pagedUsers.length && pagedUsers.length > 0} style={{ cursor: "pointer", accentColor: T.gold }} /></div>
+          <div title={bulkSel.length === allFiltered.length ? "Deselect all" : "Select this page"}><input type="checkbox" onChange={e => setBulkSel(e.target.checked ? pagedUsers.map(u => u.uid) : [])} checked={bulkSel.length > 0 && pagedUsers.every(u => bulkSel.includes(u.uid))} style={{ cursor: "pointer", accentColor: T.gold }} /></div>
           <ColHeader label="#" />
           <ColHeader label="User" field="name" />
           <ColHeader label="Email" />
@@ -10569,6 +10595,15 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>Next </button>
           <button type="button" onClick={() => setPage(totalPages)} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>»</button>
           <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>Page {page} of {totalPages}</span>
+          {/* Jump to page */}
+          {totalPages > 5 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 5, marginLeft: 6 }}>
+              <span style={{ fontSize: 11, color: T.textMuted }}>Go to</span>
+              <input type="number" min="1" max={totalPages} placeholder={page}
+                onKeyDown={e => { if (e.key === "Enter") { const p = parseInt(e.target.value); if (p >= 1 && p <= totalPages) { setPage(p); e.target.value = ""; } } }}
+                style={{ width: 48, padding: "4px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", textAlign: "center" }} />
+            </div>
+          )}
         </div>
         {/* FIX #16: MRR only shown once — here at bottom */}
         <span style={{ fontSize: 11, color: T.textMuted }}>
