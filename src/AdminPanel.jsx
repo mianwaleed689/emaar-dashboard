@@ -20687,66 +20687,34 @@ export default function AdminPanel() {
                     <select value={leadNationalityFilter} onChange={e => { setLeadNationalityFilter(e.target.value); searchAllLeads(leadSearch, leadFilter, leadSourceFilter, leadCommunityFilter, e.target.value); }}
                       style={{ padding: "8px 12px", background: leadNationalityFilter !== "all" ? "rgba(59,130,246,0.12)" : T.bg, border: `1px solid ${leadNationalityFilter !== "all" ? T.blue : T.border}`, borderRadius: 8, color: leadNationalityFilter !== "all" ? T.blue : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadNationalityFilter !== "all" ? 700 : 400 }}>
                       <option value="all">🌍 All Nationalities</option>
-                      <optgroup label="── GCC ──">
-                        <option value="Emirati">🇦🇪 Emirati</option>
-                        <option value="Saudi Arabian">🇸🇦 Saudi Arabian</option>
-                        <option value="Kuwaiti">🇰🇼 Kuwaiti</option>
-                        <option value="Qatari">🇶🇦 Qatari</option>
-                        <option value="Bahraini">🇧🇭 Bahraini</option>
-                        <option value="Omani">🇴🇲 Omani</option>
-                      </optgroup>
-                      <optgroup label="── South Asia ──">
-                        <option value="Indian">🇮🇳 Indian</option>
-                        <option value="Pakistani">🇵🇰 Pakistani</option>
-                        <option value="Bangladeshi">🇧🇩 Bangladeshi</option>
-                        <option value="Sri Lankan">🇱🇰 Sri Lankan</option>
-                        <option value="Nepali">🇳🇵 Nepali</option>
-                      </optgroup>
-                      <optgroup label="── Arab World ──">
-                        <option value="Egyptian">🇪🇬 Egyptian</option>
-                        <option value="Lebanese">🇱🇧 Lebanese</option>
-                        <option value="Jordanian">🇯🇴 Jordanian</option>
-                        <option value="Syrian">🇸🇾 Syrian</option>
-                        <option value="Iraqi">🇮🇶 Iraqi</option>
-                        <option value="Yemeni">🇾🇪 Yemeni</option>
-                        <option value="Moroccan">🇲🇦 Moroccan</option>
-                        <option value="Sudanese">🇸🇩 Sudanese</option>
-                        <option value="Algerian">🇩🇿 Algerian</option>
-                        <option value="Tunisian">🇹🇳 Tunisian</option>
-                        <option value="Libyan">🇱🇾 Libyan</option>
-                      </optgroup>
-                      <optgroup label="── Europe ──">
-                        <option value="British">🇬🇧 British</option>
-                        <option value="Russian">🇷🇺 Russian</option>
-                        <option value="Ukrainian">🇺🇦 Ukrainian</option>
-                        <option value="German">🇩🇪 German</option>
-                        <option value="French">🇫🇷 French</option>
-                        <option value="Italian">🇮🇹 Italian</option>
-                        <option value="Spanish">🇪🇸 Spanish</option>
-                        <option value="Dutch">🇳🇱 Dutch</option>
-                        <option value="Swiss">🇨🇭 Swiss</option>
-                        <option value="Swedish">🇸🇪 Swedish</option>
-                        <option value="Kazakhstani">🇰🇿 Kazakhstani</option>
-                      </optgroup>
-                      <optgroup label="── Americas / Oceania ──">
-                        <option value="American">🇺🇸 American</option>
-                        <option value="Canadian">🇨🇦 Canadian</option>
-                        <option value="Australian">🇦🇺 Australian</option>
-                        <option value="Brazilian">🇧🇷 Brazilian</option>
-                      </optgroup>
-                      <optgroup label="── East / Southeast Asia ──">
-                        <option value="Chinese">🇨🇳 Chinese</option>
-                        <option value="Filipino">🇵🇭 Filipino</option>
-                        <option value="Iranian">🇮🇷 Iranian</option>
-                        <option value="Turkish">🇹🇷 Turkish</option>
-                        <option value="Malaysian">🇲🇾 Malaysian</option>
-                      </optgroup>
-                      <optgroup label="── Africa ──">
-                        <option value="Nigerian">🇳🇬 Nigerian</option>
-                        <option value="South African">🇿🇦 South African</option>
-                        <option value="Kenyan">🇰🇪 Kenyan</option>
-                        <option value="Ghanaian">🇬🇭 Ghanaian</option>
-                      </optgroup>
+                      {[
+                        "Afghan","Albanian","Algerian","American","Andorran","Angolan","Antiguan",
+                        "Argentine","Armenian","Australian","Austrian","Azerbaijani","Bahamian",
+                        "Bahraini","Bangladeshi","Barbadian","Belarusian","Belgian","Belizean",
+                        "Beninese","Bhutanese","Bolivian","Bosnian","Botswanan","Brazilian",
+                        "British","Bruneian","Bulgarian","Burkinabe","Burundian","Cambodian",
+                        "Cameroonian","Canadian","Cape Verdean","Central African","Chadian",
+                        "Chilean","Chinese","Colombian","Comorian","Congolese","Costa Rican",
+                        "Croatian","Cuban","Cypriot","Czech","Danish","Djiboutian","Dominican",
+                        "Dutch","East Timorese","Ecuadorian","Egyptian","Emirati","Eritrean",
+                        "Estonian","Ethiopian","Fijian","Finnish","French","Gabonese","Gambian",
+                        "Georgian","German","Ghanaian","Greek","Grenadian","Guatemalan","Guinean",
+                        "Guyanese","Haitian","Honduran","Hungarian","Icelandic","Indian",
+                        "Indonesian","Iranian","Iraqi","Irish","Israeli","Italian","Ivorian",
+                        "Jamaican","Japanese","Jordanian","Kazakhstani","Kenyan","Korean",
+                        "Kuwaiti","Kyrgyzstani","Laotian","Latvian","Lebanese","Liberian",
+                        "Libyan","Lithuanian","Luxembourgish","Macedonian","Malagasy","Malawian",
+                        "Malaysian","Maldivian","Malian","Maltese","Mauritanian","Mauritian",
+                        "Mexican","Moldovan","Mongolian","Montenegrin","Moroccan","Mozambican",
+                        "Namibian","Nepali","New Zealander","Nicaraguan","Nigerian","Norwegian",
+                        "Omani","Pakistani","Palestinian","Panamanian","Paraguayan","Peruvian",
+                        "Filipino","Polish","Portuguese","Qatari","Romanian","Russian","Rwandan",
+                        "Saudi Arabian","Senegalese","Serbian","Singaporean","Slovak","Slovenian",
+                        "Somali","South African","South Sudanese","Spanish","Sri Lankan","Sudanese",
+                        "Swedish","Swiss","Syrian","Taiwanese","Tanzanian","Thai","Tunisian",
+                        "Turkish","Turkmenistani","Ugandan","Ukrainian","Uruguayan","Uzbekistani",
+                        "Venezuelan","Vietnamese","Yemeni","Zambian","Zimbabwean","Other"
+                      ].sort().map(n => <option key={n} value={n}>{n}</option>)}
                     </select>
 
                     {/* Source filter */}
@@ -20966,17 +20934,179 @@ export default function AdminPanel() {
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone / WhatsApp</label>
                           <div style={{ display: "flex", gap: 8 }}>
                             <select value={addLeadForm.phoneCode || "+971"} onChange={e => setAddLeadForm(prev => ({ ...prev, phoneCode: e.target.value }))}
-                              style={{ width: 110, padding: "10px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
+                              style={{ width: 130, padding: "10px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
                               {[
-                                ["+971","🇦🇪 UAE"],["  +966","🇸🇦 KSA"],["+974","🇶🇦 Qatar"],["+973","🇧🇭 Bahrain"],["+968","🇴🇲 Oman"],["+965","🇰🇼 Kuwait"],
-                                ["+44","🇬🇧 UK"],["+1","🇺🇸 USA"],["+91","🇮🇳 India"],["+92","🇵🇰 Pakistan"],["+20","🇪🇬 Egypt"],["+90","🇹🇷 Turkey"],
-                                ["+7","🇷🇺 Russia"],["+86","🇨🇳 China"],["+49","🇩🇪 Germany"],["+33","🇫🇷 France"],["+39","🇮🇹 Italy"],["+34","🇪🇸 Spain"],
-                                ["+31","🇳🇱 Netherlands"],["+41","🇨🇭 Switzerland"],["+46","🇸🇪 Sweden"],["+61","🇦🇺 Australia"],["+1","🇨🇦 Canada"],
-                                ["+55","🇧🇷 Brazil"],["+27","🇿🇦 S.Africa"],["+234","🇳🇬 Nigeria"],["+254","🇰🇪 Kenya"],["+63","🇵🇭 Philippines"],
-                                ["+880","🇧🇩 Bangladesh"],["+94","🇱🇰 Sri Lanka"],["+60","🇲🇾 Malaysia"],["+65","🇸🇬 Singapore"],["+98","🇮🇷 Iran"],
-                                ["+962","🇯🇴 Jordan"],["+961","🇱🇧 Lebanon"],["+964","🇮🇶 Iraq"],["+967","🇾🇪 Yemen"],["+212","🇲🇦 Morocco"],
-                                ["+216","🇹🇳 Tunisia"],["+213","🇩🇿 Algeria"],["+249","🇸🇩 Sudan"],["+380","🇺🇦 Ukraine"],["+48","🇵🇱 Poland"],
-                              ].map(([code, label]) => <option key={code+label} value={code}>{label} ({code})</option>)}
+                                ["+93","Afghanistan"],
+                                ["+355","Albania"],
+                                ["+213","Algeria"],
+                                ["+376","Andorra"],
+                                ["+244","Angola"],
+                                ["+54","Argentina"],
+                                ["+374","Armenia"],
+                                ["+61","Australia"],
+                                ["+43","Austria"],
+                                ["+994","Azerbaijan"],
+                                ["+973","Bahrain"],
+                                ["+880","Bangladesh"],
+                                ["+375","Belarus"],
+                                ["+32","Belgium"],
+                                ["+501","Belize"],
+                                ["+229","Benin"],
+                                ["+975","Bhutan"],
+                                ["+591","Bolivia"],
+                                ["+387","Bosnia"],
+                                ["+267","Botswana"],
+                                ["+55","Brazil"],
+                                ["+673","Brunei"],
+                                ["+359","Bulgaria"],
+                                ["+226","Burkina Faso"],
+                                ["+257","Burundi"],
+                                ["+855","Cambodia"],
+                                ["+237","Cameroon"],
+                                ["+1","Canada"],
+                                ["+238","Cape Verde"],
+                                ["+236","Central African Rep."],
+                                ["+235","Chad"],
+                                ["+56","Chile"],
+                                ["+86","China"],
+                                ["+57","Colombia"],
+                                ["+269","Comoros"],
+                                ["+242","Congo"],
+                                ["+506","Costa Rica"],
+                                ["+385","Croatia"],
+                                ["+53","Cuba"],
+                                ["+357","Cyprus"],
+                                ["+420","Czech Republic"],
+                                ["+45","Denmark"],
+                                ["+253","Djibouti"],
+                                ["+1","Dominican Republic"],
+                                ["+593","Ecuador"],
+                                ["+20","Egypt"],
+                                ["+503","El Salvador"],
+                                ["+240","Equatorial Guinea"],
+                                ["+291","Eritrea"],
+                                ["+372","Estonia"],
+                                ["+251","Ethiopia"],
+                                ["+679","Fiji"],
+                                ["+358","Finland"],
+                                ["+33","France"],
+                                ["+241","Gabon"],
+                                ["+220","Gambia"],
+                                ["+995","Georgia"],
+                                ["+49","Germany"],
+                                ["+233","Ghana"],
+                                ["+30","Greece"],
+                                ["+502","Guatemala"],
+                                ["+224","Guinea"],
+                                ["+592","Guyana"],
+                                ["+509","Haiti"],
+                                ["+504","Honduras"],
+                                ["+36","Hungary"],
+                                ["+354","Iceland"],
+                                ["+91","India"],
+                                ["+62","Indonesia"],
+                                ["+98","Iran"],
+                                ["+964","Iraq"],
+                                ["+353","Ireland"],
+                                ["+972","Israel"],
+                                ["+39","Italy"],
+                                ["+225","Ivory Coast"],
+                                ["+1","Jamaica"],
+                                ["+81","Japan"],
+                                ["+962","Jordan"],
+                                ["+7","Kazakhstan"],
+                                ["+254","Kenya"],
+                                ["+850","North Korea"],
+                                ["+82","South Korea"],
+                                ["+965","Kuwait"],
+                                ["+996","Kyrgyzstan"],
+                                ["+856","Laos"],
+                                ["+371","Latvia"],
+                                ["+961","Lebanon"],
+                                ["+266","Lesotho"],
+                                ["+231","Liberia"],
+                                ["+218","Libya"],
+                                ["+423","Liechtenstein"],
+                                ["+370","Lithuania"],
+                                ["+352","Luxembourg"],
+                                ["+389","Macedonia"],
+                                ["+261","Madagascar"],
+                                ["+265","Malawi"],
+                                ["+60","Malaysia"],
+                                ["+960","Maldives"],
+                                ["+223","Mali"],
+                                ["+356","Malta"],
+                                ["+222","Mauritania"],
+                                ["+230","Mauritius"],
+                                ["+52","Mexico"],
+                                ["+373","Moldova"],
+                                ["+976","Mongolia"],
+                                ["+382","Montenegro"],
+                                ["+212","Morocco"],
+                                ["+258","Mozambique"],
+                                ["+264","Namibia"],
+                                ["+977","Nepal"],
+                                ["+31","Netherlands"],
+                                ["+64","New Zealand"],
+                                ["+505","Nicaragua"],
+                                ["+227","Niger"],
+                                ["+234","Nigeria"],
+                                ["+47","Norway"],
+                                ["+968","Oman"],
+                                ["+92","Pakistan"],
+                                ["+970","Palestine"],
+                                ["+507","Panama"],
+                                ["+675","Papua New Guinea"],
+                                ["+595","Paraguay"],
+                                ["+51","Peru"],
+                                ["+63","Philippines"],
+                                ["+48","Poland"],
+                                ["+351","Portugal"],
+                                ["+974","Qatar"],
+                                ["+40","Romania"],
+                                ["+7","Russia"],
+                                ["+250","Rwanda"],
+                                ["+966","Saudi Arabia"],
+                                ["+221","Senegal"],
+                                ["+381","Serbia"],
+                                ["+65","Singapore"],
+                                ["+421","Slovakia"],
+                                ["+386","Slovenia"],
+                                ["+252","Somalia"],
+                                ["+27","South Africa"],
+                                ["+211","South Sudan"],
+                                ["+34","Spain"],
+                                ["+94","Sri Lanka"],
+                                ["+249","Sudan"],
+                                ["+597","Suriname"],
+                                ["+268","Swaziland"],
+                                ["+46","Sweden"],
+                                ["+41","Switzerland"],
+                                ["+963","Syria"],
+                                ["+886","Taiwan"],
+                                ["+992","Tajikistan"],
+                                ["+255","Tanzania"],
+                                ["+66","Thailand"],
+                                ["+228","Togo"],
+                                ["+1","Trinidad & Tobago"],
+                                ["+216","Tunisia"],
+                                ["+90","Turkey"],
+                                ["+993","Turkmenistan"],
+                                ["+256","Uganda"],
+                                ["+380","Ukraine"],
+                                ["+971","UAE"],
+                                ["+44","United Kingdom"],
+                                ["+1","United States"],
+                                ["+598","Uruguay"],
+                                ["+998","Uzbekistan"],
+                                ["+58","Venezuela"],
+                                ["+84","Vietnam"],
+                                ["+967","Yemen"],
+                                ["+260","Zambia"],
+                                ["+263","Zimbabwe"],
+                              ].sort((a,b) => a[1].localeCompare(b[1])).map(([code, name]) => (
+                                <option key={code+name} value={code}>{name} ({code})</option>
+                              ))}
                             </select>
                             <input type="tel" placeholder="50 123 4567" value={addLeadForm.phoneNum || ""}
                               onChange={e => { const num = e.target.value.replace(/[^\d\s]/g,""); setAddLeadForm(prev => ({ ...prev, phoneNum: num, phone: (prev.phoneCode || "+971") + num.replace(/\s/g,"") })); }}
