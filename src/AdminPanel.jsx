@@ -12570,6 +12570,8 @@ export default function AdminPanel() {
   const [leadSourceFilter, setLeadSourceFilter] = useState("all");
   const [leadCommunityFilter, setLeadCommunityFilter] = useState("all");
   const [leadNationalityFilter, setLeadNationalityFilter] = useState("all");
+  const [leadCommunities, setLeadCommunities] = useState([]);
+  const [leadNationalities, setLeadNationalities] = useState([]);
   const [leadSearch, setLeadSearch] = useState("");
   const [leadDateRange, setLeadDateRange] = useState("all"); // all | today | week | month
   const [showAddLead, setShowAddLead] = useState(false);
@@ -12987,6 +12989,24 @@ export default function AdminPanel() {
   }, [fetchLeads]);
 
   useEffect(() => { if (isAdmin) fetchLeads(500); }, [isAdmin, fetchLeads]);
+
+  // Fetch unique communities and nationalities from ALL leads
+  const fetchLeadMeta = useCallback(async () => {
+    try {
+      const snap = await getDocs(query(collection(db, "leads"), limit(5000)));
+      const communities = new Set();
+      const nationalities = new Set();
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.community && data.community.trim()) communities.add(data.community.trim());
+        if (data.nationality && data.nationality.trim()) nationalities.add(data.nationality.trim());
+      });
+      setLeadCommunities([...communities].sort());
+      setLeadNationalities([...nationalities].sort());
+    } catch (e) { console.error("fetchLeadMeta:", e); }
+  }, []);
+
+  useEffect(() => { if (isAdmin) fetchLeadMeta(); }, [isAdmin, fetchLeadMeta]);
 
   // NOTE: Real-time listener removed for leads — too expensive with 67k+ documents.
   // Leads are fetched on demand (on tab open, after add/edit/delete).
@@ -20639,82 +20659,19 @@ export default function AdminPanel() {
                   </div>
                   {/* Row 2: Dropdown filters */}
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                    {/* Community filter */}
+                    {/* Community filter — dynamic from Firestore */}
                     <select value={leadCommunityFilter} onChange={e => { setLeadCommunityFilter(e.target.value); searchAllLeads(leadSearch, leadFilter, leadSourceFilter, e.target.value, leadNationalityFilter); }}
                       style={{ padding: "8px 12px", background: leadCommunityFilter !== "all" ? "rgba(212,168,67,0.12)" : T.bg, border: `1px solid ${leadCommunityFilter !== "all" ? T.gold : T.border}`, borderRadius: 8, color: leadCommunityFilter !== "all" ? T.gold : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadCommunityFilter !== "all" ? 700 : 400 }}>
-                      <option value="all">🏘 All Communities</option>
-                      <optgroup label="── JBR / Marina ──">
-                        <option value="JBR - Elan">JBR - Elan</option>
-                        <option value="JBR - Jumeirah Gate">JBR - Jumeirah Gate</option>
-                      </optgroup>
-                      <optgroup label="── Arabian Ranches ──">
-                        <option value="Arabian Ranches">Arabian Ranches</option>
-                        <option value="Arabian Ranches III">Arabian Ranches III</option>
-                      </optgroup>
-                      <optgroup label="── Villas / Emirates Living ──">
-                        <option value="Jumeirah Park">Jumeirah Park</option>
-                        <option value="Meadows / Lakes / Springs">Meadows / Lakes / Springs</option>
-                        <option value="Meydan">Meydan - Polo Residence</option>
-                        <option value="The Villa - Dubailand">The Villa - Dubailand</option>
-                        <option value="Al Waha - Dubailand">Al Waha - Dubailand</option>
-                      </optgroup>
-                      <optgroup label="── Al Barari Cluster ──">
-                        <option value="Al Barari">Al Barari</option>
-                        <option value="Majan - Al Barari">Majan - Al Barari</option>
-                        <option value="Living Legends">Living Legends</option>
-                        <option value="Seventh Heaven">Seventh Heaven</option>
-                        <option value="Al Barari (Other)">Al Barari (Other)</option>
-                      </optgroup>
-                      <optgroup label="── Business Bay / Downtown ──">
-                        <option value="Business Bay">Business Bay</option>
-                        <option value="City Walk - Al Wasl">City Walk - Al Wasl</option>
-                      </optgroup>
-                      <optgroup label="── Mudon / Dubailand ──">
-                        <option value="Mudon">Mudon / Arabella</option>
-                        <option value="DAMAC Hills">DAMAC Hills</option>
-                        <option value="DAMAC Hills 2 - Akoya">DAMAC Hills 2 - Akoya</option>
-                        <option value="DAMAC Hills - Trump Estates">Trump Estates</option>
-                      </optgroup>
-                      <optgroup label="── Other Areas ──">
-                        <option value="Al Furjan">Al Furjan</option>
-                        <option value="Arjan - Al Barsha South">Arjan - Al Barsha South</option>
-                        <option value="Dubai Sports City">Dubai Sports City</option>
-                        <option value="Al Satwa">Al Satwa</option>
-                      </optgroup>
+                      <option value="all">🏘 All Communities ({leadCommunities.length})</option>
+                      {leadCommunities.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
 
-                    {/* Nationality filter */}
+                    {/* Nationality filter — dynamic from Firestore */}
                     <select value={leadNationalityFilter} onChange={e => { setLeadNationalityFilter(e.target.value); searchAllLeads(leadSearch, leadFilter, leadSourceFilter, leadCommunityFilter, e.target.value); }}
                       style={{ padding: "8px 12px", background: leadNationalityFilter !== "all" ? "rgba(59,130,246,0.12)" : T.bg, border: `1px solid ${leadNationalityFilter !== "all" ? T.blue : T.border}`, borderRadius: 8, color: leadNationalityFilter !== "all" ? T.blue : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadNationalityFilter !== "all" ? 700 : 400 }}>
-                      <option value="all">🌍 All Nationalities</option>
-                      {[
-                        "Afghan","Albanian","Algerian","American","Andorran","Angolan","Antiguan",
-                        "Argentine","Armenian","Australian","Austrian","Azerbaijani","Bahamian",
-                        "Bahraini","Bangladeshi","Barbadian","Belarusian","Belgian","Belizean",
-                        "Beninese","Bhutanese","Bolivian","Bosnian","Botswanan","Brazilian",
-                        "British","Bruneian","Bulgarian","Burkinabe","Burundian","Cambodian",
-                        "Cameroonian","Canadian","Cape Verdean","Central African","Chadian",
-                        "Chilean","Chinese","Colombian","Comorian","Congolese","Costa Rican",
-                        "Croatian","Cuban","Cypriot","Czech","Danish","Djiboutian","Dominican",
-                        "Dutch","East Timorese","Ecuadorian","Egyptian","Emirati","Eritrean",
-                        "Estonian","Ethiopian","Fijian","Finnish","French","Gabonese","Gambian",
-                        "Georgian","German","Ghanaian","Greek","Grenadian","Guatemalan","Guinean",
-                        "Guyanese","Haitian","Honduran","Hungarian","Icelandic","Indian",
-                        "Indonesian","Iranian","Iraqi","Irish","Israeli","Italian","Ivorian",
-                        "Jamaican","Japanese","Jordanian","Kazakhstani","Kenyan","Korean",
-                        "Kuwaiti","Kyrgyzstani","Laotian","Latvian","Lebanese","Liberian",
-                        "Libyan","Lithuanian","Luxembourgish","Macedonian","Malagasy","Malawian",
-                        "Malaysian","Maldivian","Malian","Maltese","Mauritanian","Mauritian",
-                        "Mexican","Moldovan","Mongolian","Montenegrin","Moroccan","Mozambican",
-                        "Namibian","Nepali","New Zealander","Nicaraguan","Nigerian","Norwegian",
-                        "Omani","Pakistani","Palestinian","Panamanian","Paraguayan","Peruvian",
-                        "Filipino","Polish","Portuguese","Qatari","Romanian","Russian","Rwandan",
-                        "Saudi Arabian","Senegalese","Serbian","Singaporean","Slovak","Slovenian",
-                        "Somali","South African","South Sudanese","Spanish","Sri Lankan","Sudanese",
-                        "Swedish","Swiss","Syrian","Taiwanese","Tanzanian","Thai","Tunisian",
-                        "Turkish","Turkmenistani","Ugandan","Ukrainian","Uruguayan","Uzbekistani",
-                        "Venezuelan","Vietnamese","Yemeni","Zambian","Zimbabwean","Other"
-                      ].sort().map(n => <option key={n} value={n}>{n}</option>)}
+                      <option value="all">🌍 All Nationalities ({leadNationalities.length})</option>
+                      {leadNationalities.map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
                     </select>
 
                     {/* Source filter */}
