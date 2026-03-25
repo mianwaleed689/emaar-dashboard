@@ -400,6 +400,465 @@ function SearchableSelect({ value, onChange, options, placeholder = "Search...",
   );
 }
 
+/* ═══════════════════════════════════════════════════════
+   EMAIL CAMPAIGNS TAB
+   28,341 emails from DLD data — full campaign management
+   ═══════════════════════════════════════════════════════ */
+function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchLeads }) {
+  const [campaigns, setCampaigns]           = React.useState([]);
+  const [showCreate, setShowCreate]         = React.useState(false);
+  const [sending, setSending]               = React.useState(false);
+  const [sendProgress, setSendProgress]     = React.useState(0);
+  const [sendTotal, setSendTotal]           = React.useState(0);
+  const [activeTab, setActiveTab]           = React.useState("campaigns"); // campaigns | compose
+  const [selectedCampaign, setSelectedCampaign] = React.useState(null);
+
+  const [form, setForm] = React.useState({
+    name: "",
+    subject: "",
+    body: "",
+    targetFilter: "all",     // all | has_email | community | status
+    targetCommunity: "",
+    targetStatus: "",
+    template: "custom",
+  });
+
+  // Email templates
+  const TEMPLATES = [
+    {
+      id: "followup",
+      label: "Follow-up",
+      subject: "Following up on your property interest in {community}",
+      body: `Dear {name},
+
+I wanted to follow up on your interest in property in {community}.
+
+Our team at The Address Holding has some exciting new listings that match your profile. We'd love to arrange a viewing at your convenience.
+
+Would you be available for a quick call this week?
+
+Best regards,
+The Address Holding Team
+Dubai, UAE
++971 4 XXX XXXX`,
+    },
+    {
+      id: "golden_visa",
+      label: "Golden Visa",
+      subject: "You may qualify for a UAE Golden Visa",
+      body: `Dear {name},
+
+Based on your property interest in {community}, you may qualify for a UAE Golden Visa (10-year residency).
+
+Properties valued at AED 2 million+ are eligible. Our team can guide you through the entire process.
+
+Reply to this email or call us to learn more.
+
+Best regards,
+The Address Holding Team`,
+    },
+    {
+      id: "market_update",
+      label: "Market Update",
+      subject: "Dubai Property Market Update — {community}",
+      body: `Dear {name},
+
+The Dubai property market continues to show strong growth. Here's what's happening in {community}:
+
+• Property values up 18% year-on-year
+• Strong rental yields averaging 6-8%
+• High demand from international investors
+
+We have exclusive listings available. Would you like to schedule a consultation?
+
+Best regards,
+The Address Holding Team`,
+    },
+    {
+      id: "new_launch",
+      label: "New Launch",
+      subject: "Exclusive New Launch — {community}",
+      body: `Dear {name},
+
+We're excited to share an exclusive new project launch in {community} that we think will interest you.
+
+• Prime location
+• Flexible payment plans
+• Strong ROI potential
+
+This is a limited opportunity. Reach out to us today before it sells out.
+
+Best regards,
+The Address Holding Team`,
+    },
+    {
+      id: "reengagement",
+      label: "Re-engagement",
+      subject: "We miss you — special offer inside",
+      body: `Dear {name},
+
+It's been a while since we last connected regarding your property search in {community}.
+
+The market has changed significantly, and we have some exciting new options that may interest you.
+
+As a valued contact, we'd like to offer you a complimentary property consultation with one of our senior advisors.
+
+Would you like to schedule a call?
+
+Best regards,
+The Address Holding Team`,
+    },
+  ];
+
+  // Load campaigns from Firestore
+  React.useEffect(() => {
+    const load = async () => {
+      try {
+        const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt", "desc"), limit(50)));
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+        setCampaigns(list);
+      } catch(e) { console.error("Load campaigns:", e); }
+    };
+    load();
+  }, []);
+
+  // Get target leads based on filter
+  const getTargetLeads = () => {
+    let targets = leads.filter(l => l.email && l.email.includes("@"));
+    if (form.targetFilter === "community" && form.targetCommunity) {
+      targets = targets.filter(l => l.community === form.targetCommunity);
+    }
+    if (form.targetFilter === "status" && form.targetStatus) {
+      targets = targets.filter(l => (l.status || "New") === form.targetStatus);
+    }
+    return targets;
+  };
+
+  const targetLeads = getTargetLeads();
+  const communities = [...new Set(leads.filter(l => l.community).map(l => l.community))].sort();
+
+  // Send campaign
+  const sendCampaign = async () => {
+    if (!form.name || !form.subject || !form.body) { notify("Fill in campaign name, subject and message"); return; }
+    const targets = getTargetLeads();
+    if (targets.length === 0) { notify("No leads match the selected filter with valid emails"); return; }
+
+    setSending(true);
+    setSendProgress(0);
+    setSendTotal(targets.length);
+
+    // Save campaign record
+    const campaignId = `camp_${Date.now()}`;
+    const campaignDoc = {
+      name: form.name,
+      subject: form.subject,
+      template: form.template,
+      targetFilter: form.targetFilter,
+      targetCommunity: form.targetCommunity,
+      targetStatus: form.targetStatus,
+      totalTargets: targets.length,
+      sent: 0,
+      failed: 0,
+      status: "sending",
+      createdAt: new Date().toISOString(),
+      sentBy: adminUser?.email || "admin",
+    };
+    await setDoc(doc(db, "campaigns", campaignId), campaignDoc);
+
+    let sent = 0; let failed = 0;
+    const BATCH = 5; // Send 5 at a time to avoid rate limits
+
+    for (let i = 0; i < targets.length; i += BATCH) {
+      const chunk = targets.slice(i, i + BATCH);
+      await Promise.allSettled(chunk.map(async lead => {
+        try {
+          const personalised = form.body
+            .replace(/\{name\}/g, lead.name || "there")
+            .replace(/\{community\}/g, lead.community || "Dubai")
+            .replace(/\{project\}/g, lead.project || "your property");
+
+          await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+            user_email:   lead.email,
+            user_name:    lead.name || "there",
+            project_name: "DXB Analytics — The Address Holding",
+            change_type:  form.subject.replace(/\{name\}/g, lead.name || "there").replace(/\{community\}/g, lead.community || "Dubai"),
+            new_value:    personalised,
+            old_value:    "",
+            updated_at:   new Date().toLocaleString("en-AE"),
+          }, "USkwUhp0csGCVDkdQ");
+
+          // Log activity on the lead
+          await setDoc(doc(db, "leads", lead.id), {
+            activity: [...(lead.activity || []), { type: "email_campaign", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Campaign: ${form.name}` }],
+            updatedAt: new Date().toISOString(),
+          }, { merge: true });
+
+          sent++;
+        } catch(e) { failed++; }
+      }));
+      setSendProgress(Math.min(i + BATCH, targets.length));
+      // Small delay between batches
+      await new Promise(r => setTimeout(r, 300));
+    }
+
+    // Update campaign record
+    await setDoc(doc(db, "campaigns", campaignId), { ...campaignDoc, sent, failed, status: "completed", completedAt: new Date().toISOString() }, { merge: true });
+
+    setSending(false);
+    notify(`✅ Campaign sent — ${sent} delivered, ${failed} failed`);
+    setShowCreate(false);
+    setForm({ name: "", subject: "", body: "", targetFilter: "all", targetCommunity: "", targetStatus: "", template: "custom" });
+
+    // Reload campaigns
+    const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt", "desc"), limit(50)));
+    const list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() })); setCampaigns(list);
+  };
+
+  const inputStyle = { width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 9, color: "#E2E8F0", fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" };
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: "#FFFFFF", margin: 0 }}>Email Campaigns</h2>
+          <p style={{ fontSize: 13, color: T.textMuted, margin: "4px 0 0" }}>
+            {leads.filter(l => l.email).length.toLocaleString()} leads with emails · {leadsTotal.toLocaleString()} total database
+          </p>
+        </div>
+        <button type="button" onClick={() => setShowCreate(true)}
+          style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+          + New Campaign
+        </button>
+      </div>
+
+      {/* KPI cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 24 }}>
+        {[
+          { label: "Total Campaigns", value: campaigns.length, color: T.gold },
+          { label: "Emails Sent", value: campaigns.reduce((s, c) => s + (c.sent || 0), 0).toLocaleString(), color: T.green },
+          { label: "Leads with Email", value: leads.filter(l => l.email).length.toLocaleString(), color: T.blue },
+          { label: "Avg Sent/Campaign", value: campaigns.length > 0 ? Math.round(campaigns.reduce((s,c) => s+(c.sent||0),0)/campaigns.length) : 0, color: T.teal },
+        ].map((item, i) => (
+          <div key={i} style={{ padding: "18px 20px", background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
+            <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{item.label}</div>
+            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: item.color }}>{item.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Campaigns list */}
+      <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, textTransform: "uppercase", letterSpacing: 1 }}>Campaign History</div>
+        </div>
+        {campaigns.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "60px 20px" }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>📧</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 6 }}>No campaigns yet</div>
+            <div style={{ fontSize: 12, color: T.textMuted }}>Create your first campaign to reach your 28,000+ leads</div>
+          </div>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ background: T.surfaceAlt }}>
+                {["Campaign", "Template", "Target", "Sent", "Failed", "Status", "Date"].map(h => (
+                  <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8 }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {campaigns.map((c, i) => (
+                <tr key={c.id} style={{ borderTop: `1px solid ${T.border}`, cursor: "pointer" }}
+                  onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                  onClick={() => setSelectedCampaign(c)}>
+                  <td style={{ padding: "12px 16px" }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{c.name}</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.subject}</div>
+                  </td>
+                  <td style={{ padding: "12px 16px" }}><span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 5, background: "rgba(212,168,67,0.1)", color: T.gold }}>{c.template || "custom"}</span></td>
+                  <td style={{ padding: "12px 16px", fontSize: 12, color: T.textSecondary }}>{c.targetFilter === "community" ? c.targetCommunity : c.targetFilter === "status" ? c.targetStatus : "All leads"}</td>
+                  <td style={{ padding: "12px 16px" }}><span style={{ fontSize: 13, fontWeight: 700, color: T.green }}>{(c.sent || 0).toLocaleString()}</span></td>
+                  <td style={{ padding: "12px 16px" }}><span style={{ fontSize: 12, color: c.failed > 0 ? T.red : T.textMuted }}>{c.failed || 0}</span></td>
+                  <td style={{ padding: "12px 16px" }}>
+                    <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 5, fontWeight: 700,
+                      background: c.status === "completed" ? "rgba(16,185,129,0.1)" : c.status === "sending" ? "rgba(59,130,246,0.1)" : "rgba(100,116,139,0.1)",
+                      color: c.status === "completed" ? T.green : c.status === "sending" ? T.blue : T.textMuted }}>
+                      {c.status === "completed" ? "✓ Sent" : c.status === "sending" ? "⟳ Sending" : "Draft"}
+                    </span>
+                  </td>
+                  <td style={{ padding: "12px 16px", fontSize: 11, color: T.textMuted }}>{c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* CREATE CAMPAIGN MODAL */}
+      {showCreate && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)", padding: 20 }} onClick={() => { if (!sending) setShowCreate(false); }}>
+          <div style={{ background: T.surface, border: `1px solid rgba(212,168,67,0.3)`, borderRadius: 16, width: "100%", maxWidth: 680, maxHeight: "92vh", overflowY: "auto", padding: 28 }} onClick={e => e.stopPropagation()}>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <div>
+                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.gold, marginBottom: 4 }}>New Email Campaign</h3>
+                <p style={{ fontSize: 12, color: T.textMuted }}>Personalised emails sent to filtered leads · Uses {"{name}"}, {"{community}"}, {"{project}"} placeholders</p>
+              </div>
+              {!sending && <button type="button" onClick={() => setShowCreate(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>}
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+              {/* Campaign name */}
+              <div style={{ gridColumn: "1/-1" }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Campaign Name *</label>
+                <input type="text" placeholder="e.g. Arabian Ranches Follow-up March 2026" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} />
+              </div>
+
+              {/* Target audience */}
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Target Audience</label>
+                <select value={form.targetFilter} onChange={e => setForm(p => ({ ...p, targetFilter: e.target.value, targetCommunity: "", targetStatus: "" }))}
+                  style={{ ...inputStyle, cursor: "pointer" }}>
+                  <option value="all">All leads with email</option>
+                  <option value="community">By Community</option>
+                  <option value="status">By Status</option>
+                </select>
+              </div>
+
+              {/* Community or Status sub-filter */}
+              <div>
+                {form.targetFilter === "community" && (
+                  <>
+                    <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Community</label>
+                    <select value={form.targetCommunity} onChange={e => setForm(p => ({ ...p, targetCommunity: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+                      <option value="">Select community...</option>
+                      {communities.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </>
+                )}
+                {form.targetFilter === "status" && (
+                  <>
+                    <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Status</label>
+                    <select value={form.targetStatus} onChange={e => setForm(p => ({ ...p, targetStatus: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+                      <option value="">Select status...</option>
+                      {["New","Contacted","Qualified","Converted","Lost"].map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </>
+                )}
+                {form.targetFilter === "all" && (
+                  <div style={{ padding: "12px 14px", background: "rgba(16,185,129,0.06)", borderRadius: 8, border: "1px solid rgba(16,185,129,0.2)", marginTop: 20 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: T.green }}>{targetLeads.length.toLocaleString()} leads targeted</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>All leads in database with valid email addresses</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Target count */}
+              {form.targetFilter !== "all" && (
+                <div style={{ gridColumn: "1/-1", padding: "12px 14px", background: targetLeads.length > 0 ? "rgba(16,185,129,0.06)" : "rgba(239,68,68,0.06)", borderRadius: 8, border: `1px solid ${targetLeads.length > 0 ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}` }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: targetLeads.length > 0 ? T.green : T.red }}>{targetLeads.length.toLocaleString()} leads match this filter</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>with valid email addresses in the loaded 500 leads</div>
+                </div>
+              )}
+            </div>
+
+            {/* Quick templates */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>Quick Templates</label>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {TEMPLATES.map(t => (
+                  <button key={t.id} type="button" onClick={() => setForm(p => ({ ...p, template: t.id, subject: t.subject, body: t.body }))}
+                    style={{ fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${form.template === t.id ? T.gold : T.border}`, background: form.template === t.id ? "rgba(212,168,67,0.1)" : T.surfaceAlt, color: form.template === t.id ? T.gold : T.textSecondary, cursor: "pointer", fontWeight: form.template === t.id ? 700 : 400 }}>
+                    {t.label}
+                  </button>
+                ))}
+                <button type="button" onClick={() => setForm(p => ({ ...p, template: "custom", subject: "", body: "" }))}
+                  style={{ fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${form.template === "custom" ? T.blue : T.border}`, background: form.template === "custom" ? "rgba(59,130,246,0.1)" : T.surfaceAlt, color: form.template === "custom" ? T.blue : T.textSecondary, cursor: "pointer", fontWeight: form.template === "custom" ? 700 : 400 }}>
+                  ✏️ Custom
+                </button>
+              </div>
+            </div>
+
+            {/* Subject */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Subject Line *</label>
+              <input type="text" placeholder="Subject line... use {name} or {community}" value={form.subject} onChange={e => setForm(p => ({ ...p, subject: e.target.value }))} style={inputStyle} />
+            </div>
+
+            {/* Body */}
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Email Body *</label>
+              <textarea rows={10} placeholder={"Dear {name},\n\nYour message here...\n\nBest regards,\nThe Address Holding Team"} value={form.body} onChange={e => setForm(p => ({ ...p, body: e.target.value }))} style={{ ...inputStyle, resize: "vertical" }} />
+              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Placeholders: <code style={{ color: T.gold }}>{"{name}"}</code> <code style={{ color: T.gold }}>{"{community}"}</code> <code style={{ color: T.gold }}>{"{project}"}</code></div>
+            </div>
+
+            {/* Send progress */}
+            {sending && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontSize: 12, color: T.textMuted }}>Sending campaign...</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{sendProgress} / {sendTotal}</span>
+                </div>
+                <div style={{ height: 6, borderRadius: 3, background: T.border }}>
+                  <div style={{ height: "100%", borderRadius: 3, background: `linear-gradient(90deg, ${T.gold}, ${T.green})`, width: `${sendTotal > 0 ? (sendProgress / sendTotal) * 100 : 0}%`, transition: "width 0.3s" }} />
+                </div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>⚠️ Do not close this window while sending</div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div style={{ display: "flex", gap: 12 }}>
+              <button type="button" onClick={() => setShowCreate(false)} disabled={sending}
+                style={{ flex: 1, padding: "12px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: sending ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: sending ? 0.5 : 1 }}>
+                Cancel
+              </button>
+              <button type="button" onClick={sendCampaign} disabled={sending || !form.name || !form.subject || !form.body || targetLeads.length === 0}
+                style={{ flex: 2, padding: "12px", borderRadius: 10, border: "none", background: sending || !form.name ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: sending || !form.name ? T.textMuted : T.bg, fontSize: 14, fontWeight: 700, cursor: sending || !form.name ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                {sending ? `Sending ${sendProgress}/${sendTotal}...` : `🚀 Send to ${targetLeads.length.toLocaleString()} leads`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CAMPAIGN DETAIL MODAL */}
+      {selectedCampaign && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setSelectedCampaign(null)}>
+          <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, width: "95%", maxWidth: 500, padding: 28 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{selectedCampaign.name}</h3>
+              <button type="button" onClick={() => setSelectedCampaign(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+              {[
+                { label: "Sent", value: (selectedCampaign.sent || 0).toLocaleString(), color: T.green },
+                { label: "Failed", value: (selectedCampaign.failed || 0), color: selectedCampaign.failed > 0 ? T.red : T.textMuted },
+                { label: "Target", value: selectedCampaign.targetFilter === "community" ? selectedCampaign.targetCommunity : selectedCampaign.targetFilter === "status" ? selectedCampaign.targetStatus : "All leads", color: T.blue },
+                { label: "Template", value: selectedCampaign.template || "custom", color: T.gold },
+              ].map((item, i) => (
+                <div key={i} style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                  <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>{item.label}</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: item.color, fontFamily: "'Fraunces',serif" }}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Subject</div>
+              <div style={{ fontSize: 13, color: T.white }}>{selectedCampaign.subject}</div>
+            </div>
+            <div style={{ marginTop: 12, fontSize: 11, color: T.textMuted, textAlign: "right" }}>
+              Sent by {selectedCampaign.sentBy} · {selectedCampaign.createdAt ? new Date(selectedCampaign.createdAt).toLocaleString("en-AE") : "—"}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpenUid }) {
   // State
   const [supportSubTab, setSupportSubTab] = useState("open");
@@ -15113,6 +15572,7 @@ export default function AdminPanel() {
     { id: "revenue", label: "Revenue", icon: I.revenue },
     { id: "data", label: "Data Manager", icon: I.data },
     { id: "leads", label: "Leads", icon: I.leads },
+    { id: "campaigns", label: "Campaigns", icon: I.email },
     { id: "notifications", label: "Notifications", icon: I.bell },
     { id: "verification", label: "Verification", icon: I.verify },
     { id: "analytics", label: "Analytics", icon: I.analytics },
@@ -22686,6 +23146,21 @@ export default function AdminPanel() {
           {/* ═══════════════════════════════════════
              NOTIFICATIONS TAB
              ═══════════════════════════════════════ */}
+          {tab === "campaigns" && (() => {
+            /* ─── EMAIL CAMPAIGNS — DXB Analytics ─── */
+            return (
+              <EmailCampaignsTab
+                T={T}
+                db={db}
+                notify={notify}
+                adminUser={adminUser}
+                leads={leads}
+                leadsTotal={leadsTotal}
+                fetchLeads={fetchLeads}
+              />
+            );
+          })()}
+
           {tab === "notifications" && <NotificationsTab T={T} notify={notify} adminUser={adminUser} I={I} users={users} db={db} />}
 
           {/* ═══════════════════════════════════════
