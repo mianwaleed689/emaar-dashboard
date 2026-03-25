@@ -20222,14 +20222,34 @@ export default function AdminPanel() {
 
             // ── Dubai nationalities ──────────────────────────────────────
             const DUBAI_NATIONALITIES = [
-              "Indian", "Pakistani", "British", "Russian", "Chinese",
-              "Filipino", "Bangladeshi", "Egyptian", "Emirati", "Saudi Arabian",
-              "German", "French", "Italian", "Canadian", "Australian",
-              "American", "Lebanese", "Jordanian", "Iranian", "Ukrainian",
-              "Kazakhstani", "Nigerian", "South African", "Turkish", "Dutch",
-              "Swedish", "Swiss", "Spanish", "Brazilian", "Colombian",
-              "Other"
-            ];
+              "Afghan","Albanian","Algerian","American","Andorran","Angolan","Antiguan","Argentine",
+              "Armenian","Australian","Austrian","Azerbaijani","Bahamian","Bahraini","Bangladeshi",
+              "Barbadian","Belarusian","Belgian","Belizean","Beninese","Bhutanese","Bolivian",
+              "Bosnian","Botswanan","Brazilian","British","Bruneian","Bulgarian","Burkinabe",
+              "Burundian","Cambodian","Cameroonian","Canadian","Cape Verdean","Central African",
+              "Chadian","Chilean","Chinese","Colombian","Comorian","Congolese","Costa Rican",
+              "Croatian","Cuban","Cypriot","Czech","Danish","Djiboutian","Dominican","Dutch",
+              "East Timorese","Ecuadorian","Egyptian","Emirati","Equatorial Guinean","Eritrean",
+              "Estonian","Ethiopian","Fijian","Finnish","French","Gabonese","Gambian","Georgian",
+              "German","Ghanaian","Greek","Grenadian","Guatemalan","Guinean","Guinea-Bissauan",
+              "Guyanese","Haitian","Honduran","Hungarian","Icelandic","Indian","Indonesian","Iranian",
+              "Iraqi","Irish","Israeli","Italian","Ivorian","Jamaican","Japanese","Jordanian",
+              "Kazakhstani","Kenyan","Kiribatian","Korean","Kuwaiti","Kyrgyzstani","Laotian",
+              "Latvian","Lebanese","Lesothan","Liberian","Libyan","Liechtensteiner","Lithuanian",
+              "Luxembourgish","Macedonian","Malagasy","Malawian","Malaysian","Maldivian","Malian",
+              "Maltese","Marshallese","Mauritanian","Mauritian","Mexican","Micronesian","Moldovan",
+              "Monacan","Mongolian","Montenegrin","Moroccan","Mozambican","Namibian","Nauruan",
+              "Nepali","New Zealander","Nicaraguan","Nigerien","Nigerian","Norwegian","Omani",
+              "Pakistani","Palauan","Palestinian","Panamanian","Papua New Guinean","Paraguayan",
+              "Peruvian","Filipino","Polish","Portuguese","Qatari","Romanian","Russian","Rwandan",
+              "Saint Lucian","Salvadoran","Samoan","Saudi Arabian","Senegalese","Serbian",
+              "Seychellois","Sierra Leonean","Singaporean","Slovak","Slovenian","Solomon Islander",
+              "Somali","South African","South Sudanese","Spanish","Sri Lankan","Sudanese","Surinamese",
+              "Swazi","Swedish","Swiss","Syrian","Taiwanese","Tajikistani","Tanzanian","Thai",
+              "Togolese","Tongan","Trinidadian","Tunisian","Turkish","Turkmenistani","Tuvaluan",
+              "Ugandan","Ukrainian","Uruguayan","Uzbekistani","Vanuatuan","Venezuelan","Vietnamese",
+              "Yemeni","Zambian","Zimbabwean","Other"
+            ].sort();
 
             // ── Duplicate detection ───────────────────────────────────────
             const getDuplicates = (lead) => {
@@ -20256,7 +20276,7 @@ export default function AdminPanel() {
                 await logAudit(db, { action: "lead_created", leadId: id });
                 notify("Lead added!");
                 setShowAddLead(false);
-                setAddLeadForm({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
+                setAddLeadForm({ name: "", email: "", phone: "", phoneNum: "", phoneCode: "+971", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
                 fetchLeads();
               } catch (e) { notify("Error: " + e.message); }
               setAddLeadLoading(false);
@@ -20790,10 +20810,8 @@ export default function AdminPanel() {
                         <button type="button" onClick={() => setShowAddLead(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>x</button>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                        {[
-                          { key: "name", label: "Full Name *", placeholder: "John Smith", full: true },
+                        {[\n                          { key: "name", label: "Full Name *", placeholder: "John Smith", full: true },
                           { key: "email", label: "Email", placeholder: "john@example.com", type: "email" },
-                          { key: "phone", label: "Phone / WhatsApp", placeholder: "+971 50 123 4567" },
                           { key: "budget", label: "Budget (AED)", placeholder: "e.g. 2000000", type: "number" },
                           { key: "project", label: "Interested Project", placeholder: "e.g. The Valley" },
                         ].map(f => (
@@ -20803,6 +20821,28 @@ export default function AdminPanel() {
                               style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
                           </div>
                         ))}
+                        {/* Phone with country code */}
+                        <div style={{ gridColumn: "1/-1" }}>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone / WhatsApp</label>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <select value={addLeadForm.phoneCode || "+971"} onChange={e => setAddLeadForm(prev => ({ ...prev, phoneCode: e.target.value }))}
+                              style={{ width: 110, padding: "10px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
+                              {[
+                                ["+971","🇦🇪 UAE"],["  +966","🇸🇦 KSA"],["+974","🇶🇦 Qatar"],["+973","🇧🇭 Bahrain"],["+968","🇴🇲 Oman"],["+965","🇰🇼 Kuwait"],
+                                ["+44","🇬🇧 UK"],["+1","🇺🇸 USA"],["+91","🇮🇳 India"],["+92","🇵🇰 Pakistan"],["+20","🇪🇬 Egypt"],["+90","🇹🇷 Turkey"],
+                                ["+7","🇷🇺 Russia"],["+86","🇨🇳 China"],["+49","🇩🇪 Germany"],["+33","🇫🇷 France"],["+39","🇮🇹 Italy"],["+34","🇪🇸 Spain"],
+                                ["+31","🇳🇱 Netherlands"],["+41","🇨🇭 Switzerland"],["+46","🇸🇪 Sweden"],["+61","🇦🇺 Australia"],["+1","🇨🇦 Canada"],
+                                ["+55","🇧🇷 Brazil"],["+27","🇿🇦 S.Africa"],["+234","🇳🇬 Nigeria"],["+254","🇰🇪 Kenya"],["+63","🇵🇭 Philippines"],
+                                ["+880","🇧🇩 Bangladesh"],["+94","🇱🇰 Sri Lanka"],["+60","🇲🇾 Malaysia"],["+65","🇸🇬 Singapore"],["+98","🇮🇷 Iran"],
+                                ["+962","🇯🇴 Jordan"],["+961","🇱🇧 Lebanon"],["+964","🇮🇶 Iraq"],["+967","🇾🇪 Yemen"],["+212","🇲🇦 Morocco"],
+                                ["+216","🇹🇳 Tunisia"],["+213","🇩🇿 Algeria"],["+249","🇸🇩 Sudan"],["+380","🇺🇦 Ukraine"],["+48","🇵🇱 Poland"],
+                              ].map(([code, label]) => <option key={code+label} value={code}>{label} ({code})</option>)}
+                            </select>
+                            <input type="tel" placeholder="50 123 4567" value={addLeadForm.phoneNum || ""}
+                              onChange={e => { const num = e.target.value.replace(/[^\d\s]/g,""); setAddLeadForm(prev => ({ ...prev, phoneNum: num, phone: (prev.phoneCode || "+971") + num.replace(/\s/g,"") })); }}
+                              style={{ flex: 1, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                          </div>
+                        </div>
                         {/* Nationality dropdown */}
                         <div>
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Nationality</label>
