@@ -13013,22 +13013,20 @@ export default function AdminPanel() {
     try {
       const communities = new Set();
       const nationalities = new Set();
-      // Fetch in batches to get all unique values
       let lastDoc = null;
-      let hasMore = true;
-      while (hasMore) {
-        let q = lastDoc
+      let keepGoing = true;
+      while (keepGoing) {
+        const q = lastDoc
           ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(1000))
           : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(1000));
         const snap = await getDocs(q);
-        if (snap.empty || snap.docs.length < 1000) hasMore = false;
         snap.forEach(d => {
           const data = d.data();
           if (data.community && data.community.trim()) communities.add(data.community.trim());
           if (data.nationality && data.nationality.trim()) nationalities.add(data.nationality.trim());
         });
-        lastDoc = snap.docs[snap.docs.length - 1];
-        if (snap.docs.length < 1000) hasMore = false;
+        if (snap.docs.length < 1000) { keepGoing = false; }
+        else { lastDoc = snap.docs[snap.docs.length - 1]; }
       }
       setLeadCommunities([...communities].sort());
       setLeadNationalities([...nationalities].sort());
@@ -20796,7 +20794,7 @@ export default function AdminPanel() {
                       <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); setLeadCommunityFilter("all"); setLeadNationalityFilter("all"); setLeadBudgetFilter("all"); setLeadScoreFilter("all"); setLeadGoldenVisa(false); setLeadHasWhatsApp(false); setLeadHasEmail(false); setLeadPropertyType("all"); setLeadLanguage("all"); setLeadAgeFilter("all"); setLeadBedroomFilter("all"); setLeadPropertyPlan("all"); setLeadDeveloper("all"); setLeadPaymentPlan("all"); setLeadVisaEligible("all"); setLeadTagFilter("all"); setLeadNeverContacted(false); setLeadHasFollowUp(false); setLeadsPage(1); fetchLeads(500); }}
                         style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>✕ Clear All</button>
                     )}
-                    <span style={{ fontSize: 11, color: T.textMuted, whiteSpace: "nowrap" }}>{leadsSearching ? "Searching..." : `${filtered.length.toLocaleString()} leads${leadsHasMore ? " (filtered from 500 loaded)" : ""}`}</span>
+                    <span style={{ fontSize: 11, color: T.textMuted, whiteSpace: "nowrap" }}>{leadsSearching ? "Searching all 19,600+ leads..." : `${filtered.length.toLocaleString()} leads shown${leadsHasMore ? " — search or filter to find all 19,600+" : ""}`}</span>
                   </div>
                   {/* Row 2: Dropdown filters */}
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
@@ -21146,7 +21144,7 @@ export default function AdminPanel() {
                     {/* Info */}
                     <div style={{ fontSize: 11, color: T.textMuted }}>
                       Showing <span style={{ color: T.white, fontWeight: 600 }}>{((safePage-1)*LEADS_PER_PAGE)+1}–{Math.min(safePage*LEADS_PER_PAGE, filtered.length)}</span> of <span style={{ color: T.gold, fontWeight: 700 }}>{filtered.length.toLocaleString()}</span> leads
-                      {leadsHasMore && <span style={{ color: T.textMuted }}> (showing latest 500 — use filters to find specific leads)</span>}
+                      {leadsHasMore && <span style={{ color: T.textMuted }}> · <span style={{ color: T.blue }}>Search or filter above to access all 19,600+ leads</span></span>}
                     </div>
                     {/* Page controls */}
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
