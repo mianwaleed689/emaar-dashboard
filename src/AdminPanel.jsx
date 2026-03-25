@@ -10,7 +10,7 @@ import { getAuth } from "firebase/auth";
 import emailjs from "@emailjs/browser";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter, getCountFromServer } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
 import ProjectManager from "./ProjectManager";
@@ -62,7 +62,6 @@ const css = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { font-size: 14px; }
-:root { --bg: ${T.bg}; --surface: ${T.surface}; --surfaceAlt: ${T.surfaceAlt}; --border: ${T.border}; --white: ${T.white}; --textMuted: ${T.textMuted}; --textSecondary: ${T.textSecondary}; --gold: ${T.gold}; }
 body { background: ${T.bg}; color: ${T.textPrimary}; font-family: 'Outfit', sans-serif; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -314,544 +313,245 @@ const TabHelp = ({ items }) => {
    PHASE 1B: Collision Detection, Attachments, @Mentions
    PHASE 2: Merge Tickets, Link Related, Custom Fields
 ═══════════════════════════════════════════════════════════════════ */
-// ── Searchable dropdown component ─────────────────────────────────────────────
-function SearchableSelect({ value, onChange, options, placeholder = "Search...", style = {} }) {
-  const [open, setOpen] = React.useState(false);
-  const [query, setQuery] = React.useState("");
-  const ref = React.useRef(null);
-
-  // Hardcoded theme colors — same as T object, no CSS vars needed
-  const bg       = style.background || "#04090F";
-  const surface  = "#0A1628";
-  const border   = style.border || "rgba(212,168,67,0.08)";
-  const white    = "#FFFFFF";
-  const textMuted    = "#64748B";
-  const textSecondary = "#94A3B8";
-  const gold     = "#D4A843";
-  const fontSize = style.fontSize || 13;
-
-  React.useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const filtered = query
-    ? options.filter(o => (o.label || o).toLowerCase().includes(query.toLowerCase()))
-    : options;
-
-  const selectedLabel = value
-    ? (options.find(o => (o.value || o) === value)?.label || value)
-    : null;
-
-  return (
-    <div ref={ref} style={{ position: "relative", ...style, background: undefined, border: undefined }}>
-      <div onClick={() => { setOpen(o => !o); setQuery(""); }}
-        style={{ padding: "9px 12px", background: bg, border: `1px solid ${open ? gold : border}`, borderRadius: style.borderRadius || 8, color: selectedLabel ? white : textMuted, fontSize, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "'Outfit',sans-serif", userSelect: "none", boxSizing: "border-box", width: "100%" }}>
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedLabel || placeholder}</span>
-        <span style={{ fontSize: 10, marginLeft: 6, flexShrink: 0, opacity: 0.5 }}>{open ? "▲" : "▼"}</span>
-      </div>
-      {open && (
-        <div style={{ position: "fixed", zIndex: 99999, background: surface, border: `1px solid ${border}`, borderRadius: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.8)", overflow: "hidden", minWidth: ref.current?.offsetWidth || 200, maxWidth: 320 }}
-          ref={el => {
-            if (el && ref.current) {
-              const rect = ref.current.getBoundingClientRect();
-              const spaceBelow = window.innerHeight - rect.bottom;
-              const dropHeight = Math.min(260, el.scrollHeight);
-              if (spaceBelow < dropHeight && rect.top > dropHeight) {
-                el.style.top = (rect.top - dropHeight - 4) + "px";
-              } else {
-                el.style.top = (rect.bottom + 4) + "px";
-              }
-              el.style.left = rect.left + "px";
-              el.style.width = rect.width + "px";
-            }
-          }}>
-          <div style={{ padding: "8px 10px", borderBottom: `1px solid ${border}` }}>
-            <input autoFocus type="text" value={query} onChange={e => setQuery(e.target.value)}
-              placeholder="Type to search..."
-              style={{ width: "100%", padding: "7px 10px", background: bg, border: `1px solid ${border}`, borderRadius: 6, color: white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
-          </div>
-          <div style={{ maxHeight: 220, overflowY: "auto" }}>
-            {value && (
-              <div onClick={() => { onChange(""); setOpen(false); setQuery(""); }}
-                style={{ padding: "9px 14px", fontSize: 12, color: textMuted, cursor: "pointer", borderBottom: `1px solid ${border}` }}>
-                ✕ Clear selection
-              </div>
-            )}
-            {filtered.length === 0 && <div style={{ padding: "12px 14px", fontSize: 12, color: textMuted }}>No results</div>}
-            {filtered.map((o, i) => {
-              const val = o.value || o;
-              const label = o.label || o;
-              const active = val === value;
-              return (
-                <div key={i} onClick={() => { onChange(val); setOpen(false); setQuery(""); }}
-                  style={{ padding: "9px 14px", fontSize: 12, color: active ? gold : textSecondary, background: active ? "rgba(212,168,67,0.08)" : "transparent", cursor: "pointer", fontWeight: active ? 700 : 400, borderBottom: "1px solid rgba(255,255,255,0.03)" }}
-                  onMouseEnter={e => { if (!active) e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
-                  onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}>
-                  {label}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 /* ═══════════════════════════════════════════════════════
    EMAIL CAMPAIGNS TAB
-   28,341 emails from DLD data — full campaign management
    ═══════════════════════════════════════════════════════ */
 function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchLeads }) {
-  const [campaigns, setCampaigns]           = React.useState([]);
-  const [showCreate, setShowCreate]         = React.useState(false);
-  const [sending, setSending]               = React.useState(false);
-  const [sendProgress, setSendProgress]     = React.useState(0);
-  const [sendTotal, setSendTotal]           = React.useState(0);
-  const [activeTab, setActiveTab]           = React.useState("campaigns"); // campaigns | compose
+  const [campaigns, setCampaigns] = React.useState([]);
+  const [showCreate, setShowCreate] = React.useState(false);
+  const [sending, setSending] = React.useState(false);
+  const [sendProgress, setSendProgress] = React.useState(0);
+  const [sendTotal, setSendTotal] = React.useState(0);
   const [selectedCampaign, setSelectedCampaign] = React.useState(null);
+  const [form, setForm] = React.useState({ name: "", subject: "", body: "", targetFilter: "all", targetCommunity: "", targetStatus: "", template: "custom" });
 
-  const [form, setForm] = React.useState({
-    name: "",
-    subject: "",
-    body: "",
-    targetFilter: "all",     // all | has_email | community | status
-    targetCommunity: "",
-    targetStatus: "",
-    template: "custom",
-  });
-
-  // Email templates
   const TEMPLATES = [
-    {
-      id: "followup",
-      label: "Follow-up",
-      subject: "Following up on your property interest in {community}",
-      body: `Dear {name},
-
-I wanted to follow up on your interest in property in {community}.
-
-Our team at The Address Holding has some exciting new listings that match your profile. We'd love to arrange a viewing at your convenience.
-
-Would you be available for a quick call this week?
-
-Best regards,
-The Address Holding Team
-Dubai, UAE
-+971 4 XXX XXXX`,
-    },
-    {
-      id: "golden_visa",
-      label: "Golden Visa",
-      subject: "You may qualify for a UAE Golden Visa",
-      body: `Dear {name},
-
-Based on your property interest in {community}, you may qualify for a UAE Golden Visa (10-year residency).
-
-Properties valued at AED 2 million+ are eligible. Our team can guide you through the entire process.
-
-Reply to this email or call us to learn more.
-
-Best regards,
-The Address Holding Team`,
-    },
-    {
-      id: "market_update",
-      label: "Market Update",
-      subject: "Dubai Property Market Update — {community}",
-      body: `Dear {name},
-
-The Dubai property market continues to show strong growth. Here's what's happening in {community}:
-
-• Property values up 18% year-on-year
-• Strong rental yields averaging 6-8%
-• High demand from international investors
-
-We have exclusive listings available. Would you like to schedule a consultation?
-
-Best regards,
-The Address Holding Team`,
-    },
-    {
-      id: "new_launch",
-      label: "New Launch",
-      subject: "Exclusive New Launch — {community}",
-      body: `Dear {name},
-
-We're excited to share an exclusive new project launch in {community} that we think will interest you.
-
-• Prime location
-• Flexible payment plans
-• Strong ROI potential
-
-This is a limited opportunity. Reach out to us today before it sells out.
-
-Best regards,
-The Address Holding Team`,
-    },
-    {
-      id: "reengagement",
-      label: "Re-engagement",
-      subject: "We miss you — special offer inside",
-      body: `Dear {name},
-
-It's been a while since we last connected regarding your property search in {community}.
-
-The market has changed significantly, and we have some exciting new options that may interest you.
-
-As a valued contact, we'd like to offer you a complimentary property consultation with one of our senior advisors.
-
-Would you like to schedule a call?
-
-Best regards,
-The Address Holding Team`,
-    },
+    { id: "followup", label: "Follow-up", subject: "Following up on your interest in {community}", body: "Dear {name},\n\nI wanted to follow up on your interest in property in {community}.\n\nWe have some exciting new listings that match your profile. We'd love to arrange a viewing.\n\nBest regards,\nThe Address Holding Team" },
+    { id: "golden_visa", label: "Golden Visa", subject: "You may qualify for a UAE Golden Visa", body: "Dear {name},\n\nBased on your property interest in {community}, you may qualify for a UAE Golden Visa (10-year residency).\n\nProperties valued at AED 2 million+ are eligible. Our team can guide you through the entire process.\n\nBest regards,\nThe Address Holding Team" },
+    { id: "market_update", label: "Market Update", subject: "Dubai Property Market Update — {community}", body: "Dear {name},\n\nThe Dubai property market continues to show strong growth in {community}.\n\n• Property values up 18% year-on-year\n• Strong rental yields averaging 6-8%\n• High demand from international investors\n\nWe have exclusive listings available. Would you like to schedule a consultation?\n\nBest regards,\nThe Address Holding Team" },
+    { id: "new_launch", label: "New Launch", subject: "Exclusive New Launch — {community}", body: "Dear {name},\n\nWe're excited to share an exclusive new project launch in {community}.\n\n• Prime location\n• Flexible payment plans\n• Strong ROI potential\n\nThis is a limited opportunity. Reach out today.\n\nBest regards,\nThe Address Holding Team" },
+    { id: "reengagement", label: "Re-engagement", subject: "We miss you — special offer inside", body: "Dear {name},\n\nIt's been a while since we last connected regarding your property search in {community}.\n\nAs a valued contact, we'd like to offer you a complimentary property consultation with one of our senior advisors.\n\nBest regards,\nThe Address Holding Team" },
   ];
 
-  // Load campaigns from Firestore
   React.useEffect(() => {
     const load = async () => {
       try {
         const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt", "desc"), limit(50)));
-        const list = [];
-        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-        setCampaigns(list);
+        const list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() })); setCampaigns(list);
       } catch(e) { console.error("Load campaigns:", e); }
     };
     load();
   }, []);
 
-  // Get target leads based on filter
   const getTargetLeads = () => {
-    let targets = leads.filter(l => l.email && l.email.includes("@"));
-    if (form.targetFilter === "community" && form.targetCommunity) {
-      targets = targets.filter(l => l.community === form.targetCommunity);
-    }
-    if (form.targetFilter === "status" && form.targetStatus) {
-      targets = targets.filter(l => (l.status || "New") === form.targetStatus);
-    }
+    let targets = (leads||[]).filter(l => l.email && l.email.includes("@"));
+    if (form.targetFilter === "community" && form.targetCommunity) targets = targets.filter(l => l.community === form.targetCommunity);
+    if (form.targetFilter === "status" && form.targetStatus) targets = targets.filter(l => (l.status || "New") === form.targetStatus);
     return targets;
   };
 
   const targetLeads = getTargetLeads();
-  const communities = [...new Set(leads.filter(l => l.community).map(l => l.community))].sort();
+  const communities = [...new Set((leads||[]).filter(l => l.community).map(l => l.community))].sort();
+  const inputStyle = { width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 9, color: "#E2E8F0", fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" };
 
-  // Send campaign
   const sendCampaign = async () => {
     if (!form.name || !form.subject || !form.body) { notify("Fill in campaign name, subject and message"); return; }
     const targets = getTargetLeads();
-    if (targets.length === 0) { notify("No leads match the selected filter with valid emails"); return; }
-
-    setSending(true);
-    setSendProgress(0);
-    setSendTotal(targets.length);
-
-    // Save campaign record
+    if (targets.length === 0) { notify("No leads match the filter with valid emails"); return; }
+    setSending(true); setSendProgress(0); setSendTotal(targets.length);
     const campaignId = `camp_${Date.now()}`;
-    const campaignDoc = {
-      name: form.name,
-      subject: form.subject,
-      template: form.template,
-      targetFilter: form.targetFilter,
-      targetCommunity: form.targetCommunity,
-      targetStatus: form.targetStatus,
-      totalTargets: targets.length,
-      sent: 0,
-      failed: 0,
-      status: "sending",
-      createdAt: new Date().toISOString(),
-      sentBy: adminUser?.email || "admin",
-    };
+    const campaignDoc = { name: form.name, subject: form.subject, template: form.template, targetFilter: form.targetFilter, targetCommunity: form.targetCommunity, targetStatus: form.targetStatus, totalTargets: targets.length, sent: 0, failed: 0, status: "sending", createdAt: new Date().toISOString(), sentBy: adminUser?.email || "admin" };
     await setDoc(doc(db, "campaigns", campaignId), campaignDoc);
-
-    let sent = 0; let failed = 0;
-    const BATCH = 5; // Send 5 at a time to avoid rate limits
-
+    let sent = 0; let failed = 0; const BATCH = 5;
     for (let i = 0; i < targets.length; i += BATCH) {
       const chunk = targets.slice(i, i + BATCH);
       await Promise.allSettled(chunk.map(async lead => {
         try {
-          const personalised = form.body
-            .replace(/\{name\}/g, lead.name || "there")
-            .replace(/\{community\}/g, lead.community || "Dubai")
-            .replace(/\{project\}/g, lead.project || "your property");
-
-          await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-            user_email:   lead.email,
-            user_name:    lead.name || "there",
-            project_name: "DXB Analytics — The Address Holding",
-            change_type:  form.subject.replace(/\{name\}/g, lead.name || "there").replace(/\{community\}/g, lead.community || "Dubai"),
-            new_value:    personalised,
-            old_value:    "",
-            updated_at:   new Date().toLocaleString("en-AE"),
-          }, "USkwUhp0csGCVDkdQ");
-
-          // Log activity on the lead
-          await setDoc(doc(db, "leads", lead.id), {
-            activity: [...(lead.activity || []), { type: "email_campaign", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Campaign: ${form.name}` }],
-            updatedAt: new Date().toISOString(),
-          }, { merge: true });
-
+          const body = form.body.replace(/\{name\}/g, lead.name||"there").replace(/\{community\}/g, lead.community||"Dubai").replace(/\{project\}/g, lead.project||"your property");
+          await emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: lead.email, name: "The Address Holding", email: "info@theaddressholding.ae", user_name: lead.name||"there", project_name: lead.project||lead.community||"DXB Analytics", change_type: form.subject.replace(/\{name\}/g,lead.name||"there").replace(/\{community\}/g,lead.community||"Dubai"), new_value: body, old_value: "" }, "USkwUhp0csGCVDkdQ");
+          await setDoc(doc(db, "leads", lead.id), { activity: [...(lead.activity||[]), { type: "email_campaign", by: adminUser?.email||"admin", at: new Date().toISOString(), note: `Campaign: ${form.name}` }], updatedAt: new Date().toISOString() }, { merge: true });
           sent++;
         } catch(e) { failed++; }
       }));
       setSendProgress(Math.min(i + BATCH, targets.length));
-      // Small delay between batches
       await new Promise(r => setTimeout(r, 300));
     }
-
-    // Update campaign record
     await setDoc(doc(db, "campaigns", campaignId), { ...campaignDoc, sent, failed, status: "completed", completedAt: new Date().toISOString() }, { merge: true });
-
-    setSending(false);
-    notify(`✅ Campaign sent — ${sent} delivered, ${failed} failed`);
-    setShowCreate(false);
-    setForm({ name: "", subject: "", body: "", targetFilter: "all", targetCommunity: "", targetStatus: "", template: "custom" });
-
-    // Reload campaigns
+    setSending(false); notify(`✅ Campaign sent — ${sent} delivered, ${failed} failed`);
+    setShowCreate(false); setForm({ name: "", subject: "", body: "", targetFilter: "all", targetCommunity: "", targetStatus: "", template: "custom" });
     const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt", "desc"), limit(50)));
     const list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() })); setCampaigns(list);
   };
 
-  const inputStyle = { width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 9, color: "#E2E8F0", fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" };
-
   return (
     <div>
-      {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: "#FFFFFF", margin: 0 }}>Email Campaigns</h2>
-          <p style={{ fontSize: 13, color: T.textMuted, margin: "4px 0 0" }}>
-            {leads.filter(l => l.email).length.toLocaleString()} leads with emails · {leadsTotal.toLocaleString()} total database
-          </p>
+          <p style={{ fontSize: 13, color: T.textMuted, margin: "4px 0 0" }}>{(leads||[]).filter(l => l.email).length.toLocaleString()} leads with emails · {(leadsTotal||0).toLocaleString()} total database</p>
         </div>
-        <button type="button" onClick={() => setShowCreate(true)}
-          style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-          + New Campaign
-        </button>
+        <button type="button" onClick={() => setShowCreate(true)} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>+ New Campaign</button>
       </div>
-
-      {/* KPI cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 24 }}>
         {[
           { label: "Total Campaigns", value: campaigns.length, color: T.gold },
-          { label: "Emails Sent", value: campaigns.reduce((s, c) => s + (c.sent || 0), 0).toLocaleString(), color: T.green },
-          { label: "Leads with Email", value: leads.filter(l => l.email).length.toLocaleString(), color: T.blue },
-          { label: "Avg Sent/Campaign", value: campaigns.length > 0 ? Math.round(campaigns.reduce((s,c) => s+(c.sent||0),0)/campaigns.length) : 0, color: T.teal },
-        ].map((item, i) => (
+          { label: "Emails Sent", value: campaigns.reduce((s,c)=>s+(c.sent||0),0).toLocaleString(), color: T.green },
+          { label: "Leads with Email", value: (leads||[]).filter(l=>l.email).length.toLocaleString(), color: T.blue },
+          { label: "Avg per Campaign", value: campaigns.length > 0 ? Math.round(campaigns.reduce((s,c)=>s+(c.sent||0),0)/campaigns.length) : 0, color: T.teal },
+        ].map((item,i) => (
           <div key={i} style={{ padding: "18px 20px", background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
             <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{item.label}</div>
             <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: item.color }}>{item.value}</div>
           </div>
         ))}
       </div>
-
-      {/* Campaigns list */}
       <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}` }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, textTransform: "uppercase", letterSpacing: 1 }}>Campaign History</div>
         </div>
         {campaigns.length === 0 ? (
           <div style={{ textAlign: "center", padding: "60px 20px" }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>📧</div>
             <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 6 }}>No campaigns yet</div>
-            <div style={{ fontSize: 12, color: T.textMuted }}>Create your first campaign to reach your 28,000+ leads</div>
+            <div style={{ fontSize: 12, color: T.textMuted }}>Create your first campaign to reach your leads</div>
           </div>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ background: T.surfaceAlt }}>
-                {["Campaign", "Template", "Target", "Sent", "Failed", "Status", "Date"].map(h => (
-                  <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8 }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {campaigns.map((c, i) => (
-                <tr key={c.id} style={{ borderTop: `1px solid ${T.border}`, cursor: "pointer" }}
-                  onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
-                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                  onClick={() => setSelectedCampaign(c)}>
-                  <td style={{ padding: "12px 16px" }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{c.name}</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.subject}</div>
-                  </td>
-                  <td style={{ padding: "12px 16px" }}><span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 5, background: "rgba(212,168,67,0.1)", color: T.gold }}>{c.template || "custom"}</span></td>
-                  <td style={{ padding: "12px 16px", fontSize: 12, color: T.textSecondary }}>{c.targetFilter === "community" ? c.targetCommunity : c.targetFilter === "status" ? c.targetStatus : "All leads"}</td>
-                  <td style={{ padding: "12px 16px" }}><span style={{ fontSize: 13, fontWeight: 700, color: T.green }}>{(c.sent || 0).toLocaleString()}</span></td>
-                  <td style={{ padding: "12px 16px" }}><span style={{ fontSize: 12, color: c.failed > 0 ? T.red : T.textMuted }}>{c.failed || 0}</span></td>
-                  <td style={{ padding: "12px 16px" }}>
-                    <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 5, fontWeight: 700,
-                      background: c.status === "completed" ? "rgba(16,185,129,0.1)" : c.status === "sending" ? "rgba(59,130,246,0.1)" : "rgba(100,116,139,0.1)",
-                      color: c.status === "completed" ? T.green : c.status === "sending" ? T.blue : T.textMuted }}>
-                      {c.status === "completed" ? "✓ Sent" : c.status === "sending" ? "⟳ Sending" : "Draft"}
-                    </span>
-                  </td>
-                  <td style={{ padding: "12px 16px", fontSize: 11, color: T.textMuted }}>{c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</td>
-                </tr>
+            <thead><tr style={{ background: T.surfaceAlt }}>
+              {["Campaign","Template","Target","Sent","Failed","Status","Date"].map(h => (
+                <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8 }}>{h}</th>
               ))}
-            </tbody>
+            </tr></thead>
+            <tbody>{campaigns.map((c,i) => (
+              <tr key={c.id} style={{ borderTop: `1px solid ${T.border}`, cursor: "pointer" }}
+                onMouseEnter={e=>e.currentTarget.style.background=T.surfaceAlt} onMouseLeave={e=>e.currentTarget.style.background="transparent"}
+                onClick={() => setSelectedCampaign(c)}>
+                <td style={{ padding: "12px 16px" }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{c.name}</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2, maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.subject}</div>
+                </td>
+                <td style={{ padding: "12px 16px" }}><span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 5, background: "rgba(212,168,67,0.1)", color: T.gold }}>{c.template||"custom"}</span></td>
+                <td style={{ padding: "12px 16px", fontSize: 12, color: T.textSecondary }}>{c.targetFilter==="community"?c.targetCommunity:c.targetFilter==="status"?c.targetStatus:"All leads"}</td>
+                <td style={{ padding: "12px 16px" }}><span style={{ fontSize: 13, fontWeight: 700, color: T.green }}>{(c.sent||0).toLocaleString()}</span></td>
+                <td style={{ padding: "12px 16px" }}><span style={{ fontSize: 12, color: c.failed>0?T.red:T.textMuted }}>{c.failed||0}</span></td>
+                <td style={{ padding: "12px 16px" }}><span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 5, fontWeight: 700, background: c.status==="completed"?"rgba(16,185,129,0.1)":"rgba(59,130,246,0.1)", color: c.status==="completed"?T.green:T.blue }}>{c.status==="completed"?"✓ Sent":"⟳ Sending"}</span></td>
+                <td style={{ padding: "12px 16px", fontSize: 11, color: T.textMuted }}>{c.createdAt?new Date(c.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"numeric"}):"—"}</td>
+              </tr>
+            ))}</tbody>
           </table>
         )}
       </div>
-
-      {/* CREATE CAMPAIGN MODAL */}
       {showCreate && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)", padding: 20 }} onClick={() => { if (!sending) setShowCreate(false); }}>
           <div style={{ background: T.surface, border: `1px solid rgba(212,168,67,0.3)`, borderRadius: 16, width: "100%", maxWidth: 680, maxHeight: "92vh", overflowY: "auto", padding: 28 }} onClick={e => e.stopPropagation()}>
-
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
               <div>
                 <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.gold, marginBottom: 4 }}>New Email Campaign</h3>
-                <p style={{ fontSize: 12, color: T.textMuted }}>Personalised emails sent to filtered leads · Uses {"{name}"}, {"{community}"}, {"{project}"} placeholders</p>
+                <p style={{ fontSize: 12, color: T.textMuted }}>Personalised emails · use {"{name}"}, {"{community}"}, {"{project}"} placeholders</p>
               </div>
               {!sending && <button type="button" onClick={() => setShowCreate(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>}
             </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
-              {/* Campaign name */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
               <div style={{ gridColumn: "1/-1" }}>
                 <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Campaign Name *</label>
-                <input type="text" placeholder="e.g. Arabian Ranches Follow-up March 2026" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} />
+                <input type="text" placeholder="e.g. Arabian Ranches Follow-up March 2026" value={form.name} onChange={e => setForm(p => ({...p, name: e.target.value}))} style={inputStyle} />
               </div>
-
-              {/* Target audience */}
               <div>
                 <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Target Audience</label>
-                <select value={form.targetFilter} onChange={e => setForm(p => ({ ...p, targetFilter: e.target.value, targetCommunity: "", targetStatus: "" }))}
-                  style={{ ...inputStyle, cursor: "pointer" }}>
+                <select value={form.targetFilter} onChange={e => setForm(p => ({...p, targetFilter: e.target.value, targetCommunity: "", targetStatus: ""}))} style={{ ...inputStyle, cursor: "pointer" }}>
                   <option value="all">All leads with email</option>
                   <option value="community">By Community</option>
                   <option value="status">By Status</option>
                 </select>
               </div>
-
-              {/* Community or Status sub-filter */}
               <div>
-                {form.targetFilter === "community" && (
-                  <>
-                    <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Community</label>
-                    <select value={form.targetCommunity} onChange={e => setForm(p => ({ ...p, targetCommunity: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-                      <option value="">Select community...</option>
-                      {communities.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </>
-                )}
-                {form.targetFilter === "status" && (
-                  <>
-                    <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Status</label>
-                    <select value={form.targetStatus} onChange={e => setForm(p => ({ ...p, targetStatus: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-                      <option value="">Select status...</option>
-                      {["New","Contacted","Qualified","Converted","Lost"].map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </>
-                )}
-                {form.targetFilter === "all" && (
-                  <div style={{ padding: "12px 14px", background: "rgba(16,185,129,0.06)", borderRadius: 8, border: "1px solid rgba(16,185,129,0.2)", marginTop: 20 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: T.green }}>{targetLeads.length.toLocaleString()} leads targeted</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>All leads in database with valid email addresses</div>
-                  </div>
-                )}
+                {form.targetFilter === "community" && <>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Community</label>
+                  <select value={form.targetCommunity} onChange={e => setForm(p=>({...p, targetCommunity: e.target.value}))} style={{ ...inputStyle, cursor: "pointer" }}>
+                    <option value="">Select...</option>
+                    {communities.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </>}
+                {form.targetFilter === "status" && <>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Status</label>
+                  <select value={form.targetStatus} onChange={e => setForm(p=>({...p, targetStatus: e.target.value}))} style={{ ...inputStyle, cursor: "pointer" }}>
+                    <option value="">Select...</option>
+                    {["New","Contacted","Qualified","Converted","Lost"].map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </>}
+                {form.targetFilter === "all" && <div style={{ padding: "12px 14px", background: "rgba(16,185,129,0.06)", borderRadius: 8, border: "1px solid rgba(16,185,129,0.2)", marginTop: 20 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: T.green }}>{targetLeads.length.toLocaleString()} leads targeted</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>All leads with valid email addresses</div>
+                </div>}
               </div>
-
-              {/* Target count */}
               {form.targetFilter !== "all" && (
                 <div style={{ gridColumn: "1/-1", padding: "12px 14px", background: targetLeads.length > 0 ? "rgba(16,185,129,0.06)" : "rgba(239,68,68,0.06)", borderRadius: 8, border: `1px solid ${targetLeads.length > 0 ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}` }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: targetLeads.length > 0 ? T.green : T.red }}>{targetLeads.length.toLocaleString()} leads match this filter</div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>with valid email addresses in the loaded 500 leads</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: targetLeads.length > 0 ? T.green : T.red }}>{targetLeads.length.toLocaleString()} leads match</div>
                 </div>
               )}
             </div>
-
-            {/* Quick templates */}
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 14 }}>
               <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>Quick Templates</label>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {TEMPLATES.map(t => (
-                  <button key={t.id} type="button" onClick={() => setForm(p => ({ ...p, template: t.id, subject: t.subject, body: t.body }))}
-                    style={{ fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${form.template === t.id ? T.gold : T.border}`, background: form.template === t.id ? "rgba(212,168,67,0.1)" : T.surfaceAlt, color: form.template === t.id ? T.gold : T.textSecondary, cursor: "pointer", fontWeight: form.template === t.id ? 700 : 400 }}>
+                  <button key={t.id} type="button" onClick={() => setForm(p => ({...p, template: t.id, subject: t.subject, body: t.body}))}
+                    style={{ fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${form.template===t.id?T.gold:T.border}`, background: form.template===t.id?"rgba(212,168,67,0.1)":T.surfaceAlt, color: form.template===t.id?T.gold:T.textSecondary, cursor: "pointer", fontWeight: form.template===t.id?700:400 }}>
                     {t.label}
                   </button>
                 ))}
-                <button type="button" onClick={() => setForm(p => ({ ...p, template: "custom", subject: "", body: "" }))}
-                  style={{ fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${form.template === "custom" ? T.blue : T.border}`, background: form.template === "custom" ? "rgba(59,130,246,0.1)" : T.surfaceAlt, color: form.template === "custom" ? T.blue : T.textSecondary, cursor: "pointer", fontWeight: form.template === "custom" ? 700 : 400 }}>
-                  ✏️ Custom
-                </button>
               </div>
             </div>
-
-            {/* Subject */}
             <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Subject Line *</label>
-              <input type="text" placeholder="Subject line... use {name} or {community}" value={form.subject} onChange={e => setForm(p => ({ ...p, subject: e.target.value }))} style={inputStyle} />
+              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Subject *</label>
+              <input type="text" placeholder="Subject... use {name} or {community}" value={form.subject} onChange={e => setForm(p=>({...p, subject: e.target.value}))} style={inputStyle} />
             </div>
-
-            {/* Body */}
             <div style={{ marginBottom: 20 }}>
               <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Email Body *</label>
-              <textarea rows={10} placeholder={"Dear {name},\n\nYour message here...\n\nBest regards,\nThe Address Holding Team"} value={form.body} onChange={e => setForm(p => ({ ...p, body: e.target.value }))} style={{ ...inputStyle, resize: "vertical" }} />
+              <textarea rows={10} placeholder={"Dear {name},\n\nYour message here..."} value={form.body} onChange={e => setForm(p=>({...p, body: e.target.value}))} style={{ ...inputStyle, resize: "vertical" }} />
               <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Placeholders: <code style={{ color: T.gold }}>{"{name}"}</code> <code style={{ color: T.gold }}>{"{community}"}</code> <code style={{ color: T.gold }}>{"{project}"}</code></div>
             </div>
-
-            {/* Send progress */}
             {sending && (
-              <div style={{ marginBottom: 20 }}>
+              <div style={{ marginBottom: 16 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontSize: 12, color: T.textMuted }}>Sending campaign...</span>
+                  <span style={{ fontSize: 12, color: T.textMuted }}>Sending...</span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{sendProgress} / {sendTotal}</span>
                 </div>
                 <div style={{ height: 6, borderRadius: 3, background: T.border }}>
-                  <div style={{ height: "100%", borderRadius: 3, background: `linear-gradient(90deg, ${T.gold}, ${T.green})`, width: `${sendTotal > 0 ? (sendProgress / sendTotal) * 100 : 0}%`, transition: "width 0.3s" }} />
+                  <div style={{ height: "100%", borderRadius: 3, background: `linear-gradient(90deg, ${T.gold}, ${T.green})`, width: `${sendTotal > 0 ? (sendProgress/sendTotal)*100 : 0}%`, transition: "width 0.3s" }} />
                 </div>
-                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>⚠️ Do not close this window while sending</div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>⚠️ Do not close this window while sending</div>
               </div>
             )}
-
-            {/* Actions */}
             <div style={{ display: "flex", gap: 12 }}>
-              <button type="button" onClick={() => setShowCreate(false)} disabled={sending}
-                style={{ flex: 1, padding: "12px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: sending ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: sending ? 0.5 : 1 }}>
-                Cancel
-              </button>
+              <button type="button" onClick={() => setShowCreate(false)} disabled={sending} style={{ flex: 1, padding: "12px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: sending?"not-allowed":"pointer", fontFamily: "'Outfit',sans-serif", opacity: sending?0.5:1 }}>Cancel</button>
               <button type="button" onClick={sendCampaign} disabled={sending || !form.name || !form.subject || !form.body || targetLeads.length === 0}
-                style={{ flex: 2, padding: "12px", borderRadius: 10, border: "none", background: sending || !form.name ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: sending || !form.name ? T.textMuted : T.bg, fontSize: 14, fontWeight: 700, cursor: sending || !form.name ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                style={{ flex: 2, padding: "12px", borderRadius: 10, border: "none", background: (sending||!form.name)?T.surfaceAlt:`linear-gradient(135deg, ${T.gold}, #B8912F)`, color: (sending||!form.name)?T.textMuted:T.bg, fontSize: 14, fontWeight: 700, cursor: (sending||!form.name)?"not-allowed":"pointer", fontFamily: "'Outfit',sans-serif" }}>
                 {sending ? `Sending ${sendProgress}/${sendTotal}...` : `🚀 Send to ${targetLeads.length.toLocaleString()} leads`}
               </button>
             </div>
           </div>
         </div>
       )}
-
-      {/* CAMPAIGN DETAIL MODAL */}
       {selectedCampaign && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setSelectedCampaign(null)}>
-          <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, width: "95%", maxWidth: 500, padding: 28 }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setSelectedCampaign(null)}>
+          <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, width: "95%", maxWidth: 480, padding: 28 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
               <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{selectedCampaign.name}</h3>
               <button type="button" onClick={() => setSelectedCampaign(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-              {[
-                { label: "Sent", value: (selectedCampaign.sent || 0).toLocaleString(), color: T.green },
-                { label: "Failed", value: (selectedCampaign.failed || 0), color: selectedCampaign.failed > 0 ? T.red : T.textMuted },
-                { label: "Target", value: selectedCampaign.targetFilter === "community" ? selectedCampaign.targetCommunity : selectedCampaign.targetFilter === "status" ? selectedCampaign.targetStatus : "All leads", color: T.blue },
-                { label: "Template", value: selectedCampaign.template || "custom", color: T.gold },
-              ].map((item, i) => (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+              {[["Sent",(selectedCampaign.sent||0).toLocaleString(),T.green],["Failed",selectedCampaign.failed||0,selectedCampaign.failed>0?T.red:T.textMuted],["Target",selectedCampaign.targetFilter==="community"?selectedCampaign.targetCommunity:selectedCampaign.targetFilter==="status"?selectedCampaign.targetStatus:"All leads",T.blue],["Template",selectedCampaign.template||"custom",T.gold]].map(([l,v,c],i) => (
                 <div key={i} style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
-                  <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>{item.label}</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: item.color, fontFamily: "'Fraunces',serif" }}>{item.value}</div>
+                  <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>{l}</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: c, fontFamily: "'Fraunces',serif" }}>{v}</div>
                 </div>
               ))}
             </div>
             <div style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Subject</div>
+              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", marginBottom: 4 }}>Subject</div>
               <div style={{ fontSize: 13, color: T.white }}>{selectedCampaign.subject}</div>
             </div>
-            <div style={{ marginTop: 12, fontSize: 11, color: T.textMuted, textAlign: "right" }}>
-              Sent by {selectedCampaign.sentBy} · {selectedCampaign.createdAt ? new Date(selectedCampaign.createdAt).toLocaleString("en-AE") : "—"}
-            </div>
+            <div style={{ marginTop: 10, fontSize: 11, color: T.textMuted, textAlign: "right" }}>Sent by {selectedCampaign.sentBy} · {selectedCampaign.createdAt?new Date(selectedCampaign.createdAt).toLocaleString("en-AE"):"—"}</div>
           </div>
         </div>
       )}
@@ -9565,13 +9265,11 @@ const ProfileDrawerComponent = ({
                     ["Phone",         u.phone || "—",  null],
                     ["Country",       u.country || "—", null],
                     ["Sign-in",       u.provider || "email", null],
-                    ["Email Verified", u.emailVerified ? "✓ Verified" : "✗ Not verified", null, u.emailVerified ? T.green : T.red],
+                    ["Email Verified", u.emailVerified ? "Verified" : "Not verified", null, u.emailVerified ? T.green : T.red],
                     ["Last Login",    u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString("en-AE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Never", null],
                     ["Signed Up",     (() => { try { return new Date(u.createdAt).toLocaleDateString("en", { day: "numeric", month: "long", year: "numeric" }); } catch { return "—"; } })(), null],
                     ["Created By",    u.createdByAdmin ? `Admin (${u.createdByAdmin})` : "Self-signup", null],
                     ["Trial End",     u.trialEnd ? new Date(u.trialEnd).toLocaleDateString("en", { day: "numeric", month: "short", year: "numeric" }) : "—", null],
-                    ["Last Device",   u.lastDevice || u.userAgent?.split(" ").slice(-1)[0] || "—", null],
-                    ["Last IP",       u.lastIp || "—", null],
                   ].map(([label, value, copyKey, valColor], idx, arr) => (
                     <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 16px", background: "transparent", borderBottom: idx < arr.length - 1 ? `1px solid ${T.border}` : "none", transition: "background 0.1s", cursor: "default" }}
                       onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
@@ -9584,35 +9282,6 @@ const ProfileDrawerComponent = ({
                     </div>
                   ))}
                 </div>
-
-                {/* Lifecycle & Churn Risk */}
-                {(() => {
-                  const daysSince = u.lastLoginAt ? (new Date() - new Date(u.lastLoginAt)) / 86400000 : 999;
-                  const daysSinceSignup = u.createdAt ? (new Date() - new Date(u.createdAt)) / 86400000 : 999;
-                  let stage, stageColor, churnRisk, churnColor;
-                  if (u.suspended) { stage = "Suspended"; stageColor = T.red; churnRisk = 100; churnColor = T.red; }
-                  else if (daysSinceSignup <= 7) { stage = "Onboarding"; stageColor = T.teal; churnRisk = 10; churnColor = T.green; }
-                  else if (daysSince <= 3) { stage = "Active"; stageColor = T.green; churnRisk = 5; churnColor = T.green; }
-                  else if (daysSince <= 14) { stage = "Cooling"; stageColor = T.gold; churnRisk = 30; churnColor = T.gold; }
-                  else if (daysSince <= 30) { stage = "At Risk"; stageColor = T.orange; churnRisk = 60; churnColor = T.orange; }
-                  else { stage = "Churned"; stageColor = T.red; churnRisk = 90; churnColor = T.red; }
-                  return (
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-                      <div style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
-                        <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>Lifecycle Stage</div>
-                        <div style={{ fontSize: 15, fontWeight: 800, color: stageColor, fontFamily: "'Fraunces',serif" }}>{stage}</div>
-                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{daysSince < 999 ? `Last seen ${Math.round(daysSince)}d ago` : "Never logged in"}</div>
-                      </div>
-                      <div style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
-                        <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>Churn Risk</div>
-                        <div style={{ fontSize: 15, fontWeight: 800, color: churnColor, fontFamily: "'Fraunces',serif" }}>{churnRisk}%</div>
-                        <div style={{ marginTop: 4, height: 3, borderRadius: 2, background: T.border }}>
-                          <div style={{ height: "100%", borderRadius: 2, background: churnColor, width: `${churnRisk}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
 
                 {u.notes && (
                   <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderLeft: `3px solid ${T.gold}`, borderRadius: 8, padding: "12px 14px", marginBottom: 16 }}>
@@ -9907,12 +9576,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const [loadingUsers,       setLoadingUsers]        = useState(false); // FIX #30
   const [copiedId,           setCopiedId]            = useState(null);  // FIX #36
   const [drawerTab,          setDrawerTab]           = useState("details"); // drawer sub-nav
-  const [showBulkEmailModal, setShowBulkEmailModal]  = useState(false);
-  const [bulkEmailTargets,   setBulkEmailTargets]    = useState([]);
-  const [bulkEmailSubject,   setBulkEmailSubject]    = useState("");
-  const [bulkEmailBody,      setBulkEmailBody]       = useState("");
-  const [bulkEmailSending,   setBulkEmailSending]    = useState(false);
-  const [bulkEmailProgress,  setBulkEmailProgress]   = useState(0);
 
   const PAGE_SIZE    = 25;
   const AT_RISK_DAYS = 3; // FIX #6 — single source of truth
@@ -10073,7 +9736,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       else if (tierFilter === "Suspended")  matchTier = !!u.suspended;
       else if (tierFilter === "AtRisk")     matchTier = (() => { const d = trialDaysLeft(u); return d !== null && d <= AT_RISK_DAYS && d >= 0; })(); // FIX #1
 
-      const matchCountry = !filterCountry || (u.country || "") === filterCountry;
+      const matchCountry = !filterCountry || (u.country || "").toLowerCase().includes(filterCountry.toLowerCase());
       const matchRole    = !filterRole    || (u.role || "") === filterRole; // FIX #27
 
       return matchSearch && matchTier && matchCountry && matchRole;
@@ -10110,21 +9773,22 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       try {
         await emailjs.send("service_da7nshv", "template_gl1xqhy", {
           user_email:   u.email,
-          name:         "DXB Analytics",
-          email:        "info@theaddressholding.ae",
           user_name:    u.name || u.email,
           project_name: "DXB Analytics Platform",
           change_type:  days === 0 ? "Your Trial Has Expired" : `Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
+          name:         "DXB Analytics",
+          email:        "info@theaddressholding.ae",
           new_value:    days === 0
-            ? "Your 7-day trial has ended. Upgrade now to keep full access to DXB Analytics."
+            ? "Your 7-day trial has ended. Upgrade now to keep full access."
             : `Only ${days} day${days !== 1 ? "s" : ""} left on your free trial. Upgrade before you lose access.`,
           old_value:    "Pro Trial",
+          updated_at:   new Date().toLocaleString("en-AE"),
         }, "USkwUhp0csGCVDkdQ");
         sent++;
-      } catch(e) { console.error("Trial email failed:", u.email, e); }
+      } catch(e) {}
     }
     setSendingTrialEmails(false);
-    notify(sent > 0 ? `✅ Sent ${sent} trial expiry email${sent > 1 ? "s" : ""}` : "No at-risk trials to email");
+    notify(sent > 0 ? `[v] Sent ${sent} trial expiry email${sent > 1 ? "s" : ""}` : " No at-risk trials to email");
   };
 
   /* ─── ACTIONS ─── */
@@ -10159,6 +9823,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     if (!emailSubject || !emailBody) { notify("Error: Subject and message required"); return; }
     setEmailSending(true);
     try {
+      // FIX #15: correct EmailJS template field names
       await emailjs.send("service_da7nshv", "template_gl1xqhy", {
         user_email:   sendEmailUser.email,
         name:         "The Address Holding",
@@ -10169,12 +9834,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         new_value:    emailBody,
         old_value:    "",
       }, "USkwUhp0csGCVDkdQ");
-      notify(`✅ Email sent to ${sendEmailUser.email}`);
+      notify(`Email sent to ${sendEmailUser.email}`);
       setSendEmailUser(null); setEmailSubject(""); setEmailBody("");
-    } catch(e) {
-      const msg = e?.text || e?.message || "Check EmailJS quota (168 requests left)";
-      notify("Email failed: " + msg);
-    }
+    } catch(e) { notify("Error: Email failed — check EmailJS config"); }
     setEmailSending(false);
   };
 
@@ -10406,11 +10068,470 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   );
 
   /* FIX #14: Add User → Invite User (client SDK limitation explained) */
-  const AddUserModal = () => {
-    const PHONE_CODES = [["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+376","🇦🇩 Andorra"],["+244","🇦🇴 Angola"],["+1","🇦🇬 Antigua and Barbuda"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+1","🇧🇸 Bahamas"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+1","🇧🇧 Barbados"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],["+229","🇧🇯 Benin"],["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia and Herzegovina"],["+267","🇧🇼 Botswana"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],["+238","🇨🇻 Cape Verde"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+236","🇨🇫 Central African Republic"],["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+269","🇰🇲 Comoros"],["+242","🇨🇬 Congo"],["+243","🇨🇩 Congo (DRC)"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],["+1","🇩🇲 Dominica"],["+1","🇩🇴 Dominican Republic"],["+670","🇹🇱 East Timor"],["+593","🇪🇨 Ecuador"],["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+240","🇬🇶 Equatorial Guinea"],["+291","🇪🇷 Eritrea"],["+372","🇪🇪 Estonia"],["+268","🇸🇿 Eswatini"],["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+1","🇬🇩 Grenada"],["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],["+245","🇬🇼 Guinea-Bissau"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+686","🇰🇮 Kiribati"],["+850","🇰🇵 Korea (North)"],["+82","🇰🇷 Korea (South)"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+266","🇱🇸 Lesotho"],["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+423","🇱🇮 Liechtenstein"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],["+692","🇲🇭 Marshall Islands"],["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+691","🇫🇲 Micronesia"],["+373","🇲🇩 Moldova"],["+377","🇲🇨 Monaco"],["+976","🇲🇳 Mongolia"],["+382","🇲🇪 Montenegro"],["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+674","🇳🇷 Nauru"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+227","🇳🇪 Niger"],["+234","🇳🇬 Nigeria"],["+389","🇲🇰 North Macedonia"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+680","🇵🇼 Palau"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+675","🇵🇬 Papua New Guinea"],["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+1","🇰🇳 Saint Kitts and Nevis"],["+1","🇱🇨 Saint Lucia"],["+1","🇻🇨 Saint Vincent"],["+685","🇼🇸 Samoa"],["+378","🇸🇲 San Marino"],["+239","🇸🇹 Sao Tome and Principe"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+248","🇸🇨 Seychelles"],["+232","🇸🇱 Sierra Leone"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+677","🇸🇧 Solomon Islands"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+597","🇸🇷 Suriname"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+676","🇹🇴 Tonga"],["+1","🇹🇹 Trinidad and Tobago"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+688","🇹🇻 Tuvalu"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+678","🇻🇺 Vanuatu"],["+39","🇻🇦 Vatican City"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b) => a[1].localeCompare(b[1]));
-
-    const COUNTRIES = ["Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon","Canada","Cape Verde","Central African Republic","Chad","Chile","China","Colombia","Comoros","Congo","Congo (DRC)","Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominica","Dominican Republic","East Timor","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Korea (North)","Korea (South)","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Namibia","Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia","Saint Vincent","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu","UAE","Uganda","Ukraine","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"].sort().map(c => <option key={c} value={c}>{c}</option>)}
+  const AddUserModal = () => showAddUser && (
+    <Modal onClose={() => setShowAddUser(false)} maxWidth={520}>
+      <ModalHeader title="Add New User" sub="Create a new account directly from admin" onClose={() => setShowAddUser(false)} />
+      <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 18, fontSize: 12, color: "#93C5FD", lineHeight: 1.6 }}>
+         <strong>Note:</strong> Creating an account here uses Firebase client-side auth. The new user will receive a verification email. You will remain logged in as admin.
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        {[
+          {/* Name */}
+        <div style={{ gridColumn: "1/-1" }}>
+          <Field label="Full Name *"><input type="text" placeholder="John Smith" value={addUserForm.name || ""} onChange={e => setAddUserForm(p => ({...p, name: e.target.value}))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
+        </div>
+        {/* Email */}
+        <div style={{ gridColumn: "1/-1" }}>
+          <Field label="Email Address *"><input type="email" placeholder="john@company.com" value={addUserForm.email || ""} onChange={e => setAddUserForm(p => ({...p, email: e.target.value}))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
+        </div>
+        {/* Password */}
+        <div style={{ gridColumn: "1/-1" }}>
+          <Field label="Password *"><input type="password" placeholder="Min 6 characters" value={addUserForm.password || ""} onChange={e => setAddUserForm(p => ({...p, password: e.target.value}))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
+          {addUserForm.password && addUserForm.password.length < 6 && <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>⚡ Min 6 characters</div>}
+        </div>
+        {/* Phone with 160+ country codes */}
+        <div style={{ gridColumn: "1/-1" }}>
+          <Field label="Phone / WhatsApp">
+            <div style={{ display: "flex", gap: 8 }}>
+              <select value={addUserForm.phoneCode || "+971"} onChange={e => setAddUserForm(p => ({...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum||"").replace(/\s/g,"")}))} style={{...inputStyle, width: 200, flexShrink: 0, cursor: "pointer"}}>
+                {[["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+376","🇦🇩 Andorra"],["+244","🇦🇴 Angola"],["+1","🇦🇬 Antigua"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+1","🇧🇸 Bahamas"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+1","🇧🇧 Barbados"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],["+229","🇧🇯 Benin"],["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+267","🇧🇼 Botswana"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],["+238","🇨🇻 Cape Verde"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+242","🇨🇬 Congo"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],["+1","🇩🇴 Dominican Republic"],["+593","🇪🇨 Ecuador"],["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+291","🇪🇷 Eritrea"],["+372","🇪🇪 Estonia"],["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea South"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],["+382","🇲🇪 Montenegro"],["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+227","🇳🇪 Niger"],["+234","🇳🇬 Nigeria"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+1","🇹🇹 Trinidad"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
               </select>
+              <input type="tel" placeholder="50 123 4567" value={addUserForm.phoneNum || ""} onChange={e => { const num=e.target.value.replace(/[^\d\s]/g,""); setAddUserForm(p=>({...p,phoneNum:num,phone:(p.phoneCode||"+971")+num.replace(/\s/g,"")})); }} style={{...inputStyle,flex:1}} onFocus={focusIn} onBlur={focusOut} />
+            </div>
+          </Field>
+        </div>
+        {/* Country — 160+ countries */}
+        <div>
+          <Field label="Country">
+            <select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({...p, country: e.target.value}))} style={{...inputStyle, cursor:"pointer", color: addUserForm.country?"#E2E8F0":"#64748B"}}>
+              <option value="">Select Country...</option>
+              {["Afghanistan","Albania","Algeria","Angola","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahrain","Bangladesh","Belarus","Belgium","Belize","Benin","Bolivia","Bosnia","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon","Canada","Chad","Chile","China","Colombia","Congo","Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominican Republic","Ecuador","Egypt","El Salvador","Eritrea","Estonia","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Guatemala","Guinea","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Korea South","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Liberia","Libya","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Mauritania","Mauritius","Mexico","Moldova","Mongolia","Montenegro","Morocco","Mozambique","Namibia","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","Norway","Oman","Pakistan","Palestine","Panama","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saudi Arabia","Senegal","Serbia","Singapore","Slovakia","Slovenia","Somalia","South Africa","South Sudan","Spain","Sri Lanka","Sudan","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Togo","Trinidad","Tunisia","Turkey","Turkmenistan","Uganda","Ukraine","UAE","United Kingdom","United States","Uruguay","Uzbekistan","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe","Other"].sort().map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </Field>
+        </div>
+        <div><Field label="Country"><select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          <option value="">Select Country</option>
+          {[" UAE"," Saudi Arabia"," Qatar"," Kuwait"," Bahrain"," Oman"," UK"," USA"," India"," Pakistan"," Egypt"," Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
+        </select></Field></div>
+        <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
+        </select></Field></div>
+        <div style={{ gridColumn: "1 / -1" }}><Field label="Job Role"><select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          <option value="user">— No role assigned —</option>
+          {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+        </select></Field></div>
+        <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
+      </div>
+      {addUserForm.email && users.some(u => u.email && u.email.toLowerCase() === addUserForm.email.toLowerCase()) && (
+        <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 14 }}>⚠️</span>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>Email already exists</div>
+            <div style={{ fontSize: 11, color: T.textMuted }}>A user with this email is already registered.</div>
+          </div>
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+        <BtnGhost onClick={() => setShowAddUser(false)} style={{ flex: 1 }}>Cancel</BtnGhost>
+        <Btn onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} color={T.gold} style={{ flex: 2, color: T.bg }}>{addUserLoading ? "Creating..." : "Create User"}</Btn>
+      </div>
+    </Modal>
+  );
+
+  /* ── BULK IMPORT MODAL ── */
+  const BulkImportModal = () => showBulkImport && (
+    <Modal onClose={() => { setShowBulkImport(false); setBulkImportData([]); }} maxWidth={700}>
+      <ModalHeader title="Bulk Import Users" sub="Upload a CSV file to import multiple users at once" onClose={() => { setShowBulkImport(false); setBulkImportData([]); }} />
+      <div style={{ background: "rgba(20,184,166,0.06)", border: "1px solid rgba(20,184,166,0.2)", borderRadius: 10, padding: "12px 16px", marginBottom: 18 }}>
+        <div style={{ fontSize: 12, color: T.teal, fontWeight: 600, marginBottom: 6 }}>CSV Format Required:</div>
+        <div style={{ fontSize: 11, color: T.textMuted, fontFamily: "monospace", background: "rgba(0,0,0,0.2)", padding: "8px 12px", borderRadius: 6 }}>
+          name,email,phone,tier,country<br/>
+          John Smith,john@email.com,+971501234567,pro,UAE<br/>
+          Jane Doe,jane@email.com,+971509876543,free,UK
+        </div>
+        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>
+          Valid tiers: free, pro_trial, pro, enterprise · Password will be auto-generated and emailed
+        </div>
+      </div>
+      
+      {bulkImportData.length === 0 ? (
+        <div style={{ border: `2px dashed ${T.border}`, borderRadius: 12, padding: "40px 20px", textAlign: "center", background: T.surfaceAlt }}>
+          <input type="file" accept=".csv" id="csvUpload" style={{ display: "none" }} onChange={e => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const text = ev.target?.result;
+              if (!text) return;
+              const lines = text.split("\n").filter(l => l.trim());
+              const headers = lines[0].toLowerCase().split(",").map(h => h.trim());
+              const parsed = [];
+              for (let i = 1; i < lines.length; i++) {
+                const vals = lines[i].split(",").map(v => v.trim().replace(/^"|"$/g, ""));
+                if (vals.length < 2) continue;
+                const row = {};
+                headers.forEach((h, idx) => { row[h] = vals[idx] || ""; });
+                if (row.email) parsed.push({ ...row, valid: row.email.includes("@"), imported: false });
+              }
+              setBulkImportData(parsed);
+            };
+            reader.readAsText(file);
+          }} />
+          <label htmlFor="csvUpload" style={{ cursor: "pointer" }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📄</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: T.white, marginBottom: 4 }}>Drop CSV file or click to upload</div>
+            <div style={{ fontSize: 12, color: T.textMuted }}>Supports .csv files up to 1000 rows</div>
+          </label>
+        </div>
+      ) : (
+        <>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{bulkImportData.length} users parsed</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <span style={{ fontSize: 11, color: T.green }}>{bulkImportData.filter(r => r.valid && !r.imported).length} valid</span>
+              <span style={{ fontSize: 11, color: T.red }}>{bulkImportData.filter(r => !r.valid).length} invalid</span>
+              <span style={{ fontSize: 11, color: T.teal }}>{bulkImportData.filter(r => r.imported).length} imported</span>
+            </div>
+          </div>
+          <div style={{ maxHeight: 280, overflowY: "auto", border: `1px solid ${T.border}`, borderRadius: 10 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+              <thead><tr style={{ background: T.surfaceAlt }}>
+                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Name</th>
+                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Email</th>
+                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Tier</th>
+                <th style={{ padding: "8px 10px", textAlign: "center", color: T.textMuted, fontWeight: 600 }}>Status</th>
+              </tr></thead>
+              <tbody>
+                {bulkImportData.map((row, i) => (
+                  <tr key={i} style={{ borderTop: `1px solid ${T.border}` }}>
+                    <td style={{ padding: "8px 10px", color: T.white }}>{row.name || "—"}</td>
+                    <td style={{ padding: "8px 10px", color: row.valid ? T.textSecondary : T.red }}>{row.email}</td>
+                    <td style={{ padding: "8px 10px" }}><span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: row.tier === "pro" ? `${T.gold}20` : row.tier === "enterprise" ? `${T.purple}20` : `${T.textMuted}20`, color: row.tier === "pro" ? T.gold : row.tier === "enterprise" ? T.purple : T.textMuted }}>{row.tier || "free"}</span></td>
+                    <td style={{ padding: "8px 10px", textAlign: "center" }}>{row.imported ? <span style={{ color: T.green }}>✔</span> : row.valid ? <span style={{ color: T.textMuted }}>—</span> : <span style={{ color: T.red }}></span>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+      
+      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+        <BtnGhost onClick={() => { setShowBulkImport(false); setBulkImportData([]); }} style={{ flex: 1 }}>Cancel</BtnGhost>
+        {bulkImportData.length > 0 && (
+          <BtnGhost onClick={() => setBulkImportData([])} style={{ flex: 1 }}>Clear</BtnGhost>
+        )}
+        <Btn 
+          onClick={async () => {
+            if (setBulkImportLoading) setBulkImportLoading(true);
+            const validRows = bulkImportData.filter(r => r.valid && !r.imported);
+            for (const row of validRows) {
+              try {
+                const uid = `imported_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+                await setDoc(doc(db, "users", uid), {
+                  uid, name: row.name || "", email: row.email, phone: row.phone || "",
+                  tier: row.tier || "free", country: row.country || "",
+                  createdAt: new Date().toISOString(), source: "bulk_import"
+                });
+                row.imported = true;
+                setBulkImportData([...bulkImportData]);
+              } catch(e) { console.error("Import error:", e); }
+            }
+            if (setBulkImportLoading) setBulkImportLoading(false);
+            notify(`Imported ${validRows.length} users`);
+            fetchUsers();
+          }} 
+          disabled={bulkImportLoading || bulkImportData.filter(r => r.valid && !r.imported).length === 0} 
+          color={T.teal} 
+          style={{ flex: 2 }}>
+          {bulkImportLoading ? "Importing..." : `Import ${bulkImportData.filter(r => r.valid && !r.imported).length} Users`}
+        </Btn>
+      </div>
+    </Modal>
+  );
+
+  const EditUserModal = () => editingUser && (
+    <Modal onClose={() => setEditingUser(null)} maxWidth={520}>
+      <ModalHeader title="Edit User" sub={editingUser.email} onClose={() => setEditingUser(null)} />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div style={{ gridColumn: "1 / -1" }}><Field label="Full Name"><input type="text" placeholder="Full name" value={editUserForm.name || ""} onChange={e => setEditUserForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field></div>
+        <Field label="Phone"><input type="tel" placeholder="+971 50 123 4567" value={editUserForm.phone || ""} onChange={e => setEditUserForm(p => ({...p, phone: e.target.value}))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
+        <Field label="Country">
+          <select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({...p, country: e.target.value}))} style={{...inputStyle, cursor: "pointer", color: editUserForm.country?"#E2E8F0":"#64748B"}}>
+            <option value="">Select Country...</option>
+            {["Afghanistan","Albania","Algeria","Angola","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahrain","Bangladesh","Belarus","Belgium","Bolivia","Bosnia","Brazil","Brunei","Bulgaria","Cambodia","Cameroon","Canada","Chile","China","Colombia","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Egypt","Ethiopia","Finland","France","Georgia","Germany","Ghana","Greece","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Japan","Jordan","Kazakhstan","Kenya","Korea South","Kuwait","Kyrgyzstan","Latvia","Lebanon","Libya","Lithuania","Malaysia","Maldives","Malta","Mexico","Moldova","Morocco","Mozambique","Namibia","Nepal","Netherlands","New Zealand","Nigeria","Norway","Oman","Pakistan","Palestine","Panama","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saudi Arabia","Senegal","Serbia","Singapore","Slovakia","Slovenia","South Africa","South Sudan","Spain","Sri Lanka","Sudan","Sweden","Switzerland","Syria","Taiwan","Tanzania","Thailand","Tunisia","Turkey","Turkmenistan","Uganda","Ukraine","UAE","United Kingdom","United States","Uruguay","Uzbekistan","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe","Other"].sort().map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </Field></Field>
+        <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
+        </select></Field>
+        <Field label="Job Role"><select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          <option value="user">— No role assigned —</option>
+          {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+        </select></Field>
+        {/* FIX #8: normalize trial date to ISO format */}
+        <Field label="Trial End Date"><input type="date" value={editUserForm.trialEnd ? editUserForm.trialEnd.slice(0, 10) : ""} onChange={e => setEditUserForm(p => ({ ...p, trialEnd: e.target.value ? e.target.value + "T00:00:00.000Z" : "" }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
+        <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={editUserForm.notes || ""} onChange={e => setEditUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
+      </div>
+      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+        <BtnGhost onClick={() => setEditingUser(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
+        <Btn onClick={saveEditUser} disabled={editUserLoading} color={T.gold} style={{ flex: 2, color: T.bg }}>{editUserLoading ? "Saving..." : "Save Changes"}</Btn>
+      </div>
+    </Modal>
+  );
+
+  const NotifUserModal = () => notifUser && (
+    <Modal onClose={() => setNotifUser(null)} maxWidth={440}>
+      <ModalHeader title={`Notify — ${notifUser.name || notifUser.email}`} sub="Appears instantly in their notification bell" onClose={() => setNotifUser(null)} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div>
+          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>Icon</label>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {["","","","[^]","⚡","","[v]","","",""].map(ic => (
+              <button key={ic} type="button" onClick={() => setNotifIcon(ic)}
+                style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${notifIcon === ic ? T.gold : T.border}`, background: notifIcon === ic ? T.goldGlow : T.surfaceAlt, cursor: "pointer", fontSize: 16 }}>{ic}</button>
+            ))}
+          </div>
+        </div>
+        <Field label="Title"><input type="text" placeholder="Notification title..." value={notifTitle} onChange={e => setNotifTitle(e.target.value)} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
+        <Field label="Message"><textarea placeholder="Write the notification message..." value={notifMessage} onChange={e => setNotifMessage(e.target.value)} rows={3} style={{ ...inputStyle, resize: "vertical" }} onFocus={focusIn} onBlur={focusOut} /></Field>
+        <div style={{ padding: "10px 14px", background: "rgba(212,168,67,0.05)", borderRadius: 9, border: "1px solid rgba(212,168,67,0.15)" }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <span style={{ fontSize: 18 }}>{notifIcon}</span>
+            <div>
+              <div style={{ fontWeight: 700, color: T.white, fontSize: 13, marginBottom: 3 }}>{notifTitle || "Preview title"}</div>
+              <div style={{ color: T.textMuted, fontSize: 12, lineHeight: 1.5 }}>{notifMessage || "Preview message..."}</div>
+            </div>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <BtnGhost onClick={() => setNotifUser(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
+          <Btn onClick={sendDirectNotification} disabled={notifSendingUser} color={T.gold} style={{ flex: 2, color: T.bg }}>{notifSendingUser ? "Sending..." : "Send"}</Btn>
+        </div>
+      </div>
+    </Modal>
+  );
+
+  /* ══════════════════════════════════════════════
+     PROFILE DRAWER — rebuilt for professional SaaS quality
+  ══════════════════════════════════════════════ */
+
+    /* ══════════════════════════════════════════════
+     LOADING SKELETON — FIX #30
+  ══════════════════════════════════════════════ */
+  const SkeletonRow = () => (
+    <div style={{ display: "grid", gridTemplateColumns: "36px 28px minmax(160px,2fr) minmax(150px,1.5fr) 100px 110px 75px 75px 140px", gap: 6, padding: "12px 16px", borderBottom: `1px solid ${T.border}`, alignItems: "center" }}>
+      {[36,28,160,150,100,110,75,75,140].map((w,i) => (
+        <div key={i} style={{ height: 12, background: `${T.border}`, borderRadius: 6, opacity: 0.5, width: i < 2 ? w : "100%", animation: "pulse 1.5s ease-in-out infinite", animationDelay: `${i*0.05}s` }} />
+      ))}
+    </div>
+  );
+
+  /* ══════════════════════════════════════════════
+     MAIN RENDER
+  ══════════════════════════════════════════════ */
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+
+      {/* All modals */}
+      <DeleteConfirmModal />
+      <SuspendConfirmModal />
+      <ExtendConfirmModal />
+      <EmailModal />
+      <NoteModal />
+      <TagsModal />
+      <AddUserModal />
+      <BulkImportModal />
+      <EditUserModal />
+      <NotifUserModal />
+      <ProfileDrawerComponent
+        drawerUser={drawerUser}
+        onClose={() => setDrawerUserWithCallback(null)}
+        drawerTab={drawerTab}
+        setDrawerTab={setDrawerTab}
+        T={T}
+        getTierBadge={getTierBadge}
+        getJobRoleBadge={getJobRoleBadge}
+        getHealth={getHealth}
+        trialDaysLeft={trialDaysLeft}
+        copyToClipboard={copyToClipboard}
+        copiedId={copiedId}
+        TAGS_OPTIONS={TAGS_OPTIONS}
+        BILLING_TIERS={BILLING_TIERS}
+        JOB_ROLES={JOB_ROLES}
+        handleTierChange={handleTierChange}
+        setNoteUser={setNoteUser}
+        setNoteText={setNoteText}
+        setTagUser={setTagUser}
+        setConfirmSuspend={setConfirmSuspend}
+        setConfirmDelete={setConfirmDelete}
+        sendResetEmail={sendResetEmail}
+        setNotifUser={setNotifUser}
+        setNotifTitle={setNotifTitle}
+        setNotifMessage={setNotifMessage}
+        setSendEmailUser={setSendEmailUser}
+        setEmailSubject={setEmailSubject}
+        setEmailBody={setEmailBody}
+        timeSince={timeSince}
+        lastActiveLabel={lastActiveLabel}
+        lastActiveColor={lastActiveColor}
+        getUserLTV={getUserLTV}
+        AT_RISK_DAYS={AT_RISK_DAYS}
+        handleJobRoleChange={handleJobRoleChange}
+        inputStyle={inputStyle}
+        confirmAndExtend={confirmAndExtend}
+        notify={notify}
+        openEditUser={openEditUser}
+        auditLog={auditLog}
+      />
+
+      {/* Inline tier dropdown */}
+      {inlineTierUser && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 900 }} onClick={() => setInlineTierUser(null)}>
+          <div style={{ position: "fixed", top: inlineTierUser.y, left: inlineTierUser.x, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: 6, zIndex: 901, minWidth: 180, boxShadow: "0 16px 48px rgba(0,0,0,0.5)", animation: "slideUp 0.15s ease-out" }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, padding: "4px 10px 8px" }}>Change Tier</div>
+            {BILLING_TIERS.map(r => {
+              const isCurrent = (inlineTierUser.user.tier || "free") === r.value;
+              return (
+                <button key={r.value} type="button" onClick={() => handleTierChange(inlineTierUser.user.uid, r.value, inlineTierUser.user.tier)}
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: 7, border: "none", background: isCurrent ? r.bg : "transparent", color: isCurrent ? r.color : T.textSecondary, fontSize: 12, fontWeight: isCurrent ? 700 : 500, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left", display: "flex", justifyContent: "space-between" }}>
+                  <span>{r.label}</span>
+                  <span style={{ fontSize: 10, color: isCurrent ? r.color : T.textMuted }}>{r.price || (isCurrent ? "✔" : "")}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ══ HEADER ══ */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.white, margin: 0 }}>User Management</h2>
+          <p style={{ fontSize: 13, color: T.textMuted, margin: "4px 0 0" }}>
+            {total} registered · Live Firestore · {allFiltered.length} shown · <span style={{ color: T.green }}>{activeToday} active today</span>
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {/* Refresh button */}
+          <button type="button" onClick={() => { fetchUsers(); notify("Users refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.refresh} Refresh</button>
+          <div style={{ position: "relative" }} className="risk-btn-wrap">
+            <button type="button" onClick={sendTrialExpiryEmails} disabled={sendingTrialEmails || atRiskCount === 0}
+              style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${atRiskCount > 0 ? T.red + "60" : T.border}`, background: atRiskCount > 0 ? "rgba(239,68,68,0.06)" : "transparent", color: atRiskCount > 0 ? T.red : T.textMuted, cursor: atRiskCount > 0 ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", fontWeight: 600, opacity: sendingTrialEmails ? 0.6 : 1 }}>
+              {sendingTrialEmails ? "Sending..." : `Email At-Risk (${atRiskCount})`}
+            </button>
+            {atRiskCount > 0 && (
+              <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: T.surface, border: `1px solid ${T.red}30`, borderRadius: 8, padding: "8px 12px", fontSize: 11, color: T.textMuted, whiteSpace: "nowrap", zIndex: 50, pointerEvents: "none", boxShadow: "0 8px 24px rgba(0,0,0,0.4)", opacity: 0, transition: "opacity 0.2s" }} className="risk-tooltip">
+                Will email: {atRisk.map(u => u.name || u.email).join(", ")} · {AT_RISK_DAYS} days left
+              </div>
+            )}
+          </div>
+          <button type="button" onClick={exportFiltered} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} Export ({allFiltered.length})</button>
+          <button type="button" onClick={() => setShowBulkImport && setShowBulkImport(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.teal}40`, background: `${T.teal}10`, color: T.teal, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>← Import CSV</button>
+          <button type="button" onClick={() => setShowAddUser(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "8px 16px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 700 }}>+ Add User <span style={{ fontSize: 10, opacity: 0.6 }}>[N]</span></button>
+        </div>
+      </div>
+
+      {/* ══ KPI CARDS — FIX #1, #2, #18 ══ */}
+      <div className="users-kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10, marginBottom: 16 }}>
+        {[
+          { label: "Total",        value: total,          color: T.white,     sub: "All accounts",    border: T.border,         filter: "All",      tip: "Show all users" },
+          { label: "Paying",       value: paid,           color: "#10B981",   sub: `AED ${mrr}/mo`,   border: "#10B98125",       filter: "Pro",      tip: "Pro + Enterprise" }, // FIX #2
+          { label: "Trial",        value: trial,          color: T.gold,      sub: "7-day trial",     border: `${T.gold}25`,    filter: "Pro Trial", tip: "Active trial users" },
+          { label: "Free",         value: free,           color: T.textMuted, sub: "To convert",      border: T.border,         filter: "Free",     tip: "Free tier users" },
+          { label: "At Risk",      value: atRiskCount,    color: T.red,       sub: `${AT_RISK_DAYS}d left`, border: `${T.red}25`, filter: "AtRisk", tip: `Trial ending in ${AT_RISK_DAYS} days` }, // FIX #1 + #6
+          { label: "Active Today", value: activeToday,    color: T.teal,      sub: "Logged in today", border: `${T.teal}25`,    filter: null,       tip: "Logged in within 24h" },
+          { label: "Conversion",   value: convRate + "%", color: "#06B6D4",   sub: "Free → Paid",     border: "#06B6D425",      filter: null,       tip: "Free to paid conversion rate" },
+        ].map(s => (
+          <div key={s.label} className="kpi-card"
+            onClick={() => { if (s.filter) { setTierFilter(s.filter); setPage(1); } }}
+            style={{ border: `1px solid ${tierFilter === s.filter && s.filter ? s.color + "60" : s.border}`, textAlign: "center", cursor: s.filter ? "pointer" : "default", transform: tierFilter === s.filter && s.filter ? "translateY(-2px)" : "none", transition: "all 0.15s" }}
+            title={s.tip}>
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: s.color, opacity: 0.6, borderRadius: "16px 16px 0 0" }} />
+            <div style={{ fontSize: 22, fontWeight: 800, color: s.color, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>{s.value}</div>
+            <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 4 }}>{s.label}</div>
+            <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{s.sub}</div>
+            {s.filter && <div style={{ fontSize: 10, color: s.color, marginTop: 3, opacity: tierFilter === s.filter ? 1 : 0.5 }}>{tierFilter === s.filter ? "✔ filtered" : "click to filter"}</div>}
+          </div>
+        ))}
+      </div>
+
+      {/* ══ CONVERSION FUNNEL — FIX #16 (removed duplicate MRR), #26 ══ */}
+      <div style={{ background: T.surfaceAlt, borderRadius: 14, padding: "16px 20px", border: `1px solid ${T.border}`, marginBottom: 18 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Conversion Funnel</div>
+          {suspended > 0 && <span style={{ color: T.red, fontSize: 11, fontWeight: 700 }}> {suspended} suspended</span>}
+        </div>
+        <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
+          {[
+            { label: "Signed Up",       value: total,        pct: 100, color: T.textSecondary },
+            { label: "Activated Trial", value: trial + paid, pct: total > 0 ? Math.round(((trial + paid) / total) * 100) : 0, color: T.gold }, // FIX #26
+            { label: "Converted Paid",  value: paid,         pct: total > 0 ? Math.round((paid / total) * 100) : 0, color: "#10B981" },
+          ].map((s, i) => (
+            <React.Fragment key={i}>
+              <div style={{ flex: 1, background: `${s.color}10`, borderRadius: 10, padding: "12px 14px", textAlign: "center", border: `1px solid ${s.color}20`, position: "relative", overflow: "hidden" }}>
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: `${s.pct}%`, background: `${s.color}08` }} />
+                <div style={{ fontSize: 22, fontWeight: 800, color: s.color, fontFamily: "'Fraunces',serif", position: "relative" }}>{s.value}</div>
+                <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, marginTop: 2, position: "relative" }}>{s.label}</div>
+                {i > 0 && total > 0 && <div style={{ fontSize: 11, color: s.color, fontWeight: 700, marginTop: 2, position: "relative" }}>{s.pct}% of total</div>}
+              </div>
+              {i < 2 && <div style={{ display: "flex", alignItems: "center", padding: "0 8px", color: T.textMuted, fontSize: 18 }}>→</div>}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* ══ SAVED VIEWS ══ */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginRight: 4 }}>Quick Views:</span>
+        {[
+          { label: "At Risk",      tier: "AtRisk" },    // FIX #3
+          { label: "Enterprise",   tier: "Enterprise" },
+          { label: "Free Users",   tier: "Free" },
+          { label: "Suspended",    tier: "Suspended" },
+          { label: " Expired",      tier: "Expired" },
+        ].map(v => (
+          <button key={v.label} type="button" onClick={() => { setTierFilter(v.tier); setPage(1); }}
+            style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${tierFilter === v.tier ? T.gold : T.border}`, background: tierFilter === v.tier ? T.goldGlow : "transparent", color: tierFilter === v.tier ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+            {v.label}
+          </button>
+        ))}
+        {tierFilter !== "All" && (
+          <button type="button" onClick={() => { setTierFilter("All"); setPage(1); }}
+            style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${T.red}30`, background: "transparent", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}> Clear</button>
+        )}
+        <div style={{ marginLeft: "auto", fontSize: 10, color: T.textMuted, fontStyle: "italic" }}>
+          ←↑ J/K · Enter=open · E=edit · N=new
+        </div>
+      </div>
+
+      {/* ══ SEARCH + FILTERS — FIX #32 (active sort badge) ══ */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ position: "relative", flex: "1 1 280px", maxWidth: 360 }}>
+          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</span>
+          <input value={userSearch} onChange={e => { setUserSearch(e.target.value); setPage(1); }} placeholder="Search name, email, role, notes, country..."
+            style={{ ...inputStyle, paddingLeft: 36 }} onFocus={focusIn} onBlur={focusOut} />
+        </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {["All","Free","Pro Trial","Pro","Enterprise","Suspended","Expired"].map(f => (
+            <button key={f} type="button" onClick={() => { setTierFilter(f); setPage(1); }}
+              style={{ padding: "7px 12px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", border: `1px solid ${tierFilter === f ? T.gold : T.border}`, background: tierFilter === f ? T.goldGlow : "transparent", color: tierFilter === f ? T.gold : T.textSecondary }}>
+              {f}
+            </button>
+          ))}
+        </div>
+        <button type="button" onClick={() => setShowFilters(p => !p)}
+          style={{ padding: "7px 12px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", border: `1px solid ${(showFilters || activeFilterCount > 0) ? T.teal : T.border}`, background: (showFilters || activeFilterCount > 0) ? "rgba(6,182,212,0.08)" : "transparent", color: (showFilters || activeFilterCount > 0) ? T.teal : T.textMuted }}>
+          Filters {activeFilterCount > 0 ? `• ${activeFilterCount}` : ""}
+        </button>
+      </div>
+
+      {/* Advanced filters — FIX #27 (role filter), FIX #32 (sort badge) */}
+      {showFilters && (
+        <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 14, display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <div>
+            <Field label="Country" hint="(filled when user completes profile)">
+              <input type="text" placeholder="e.g. UAE, Saudi..." value={filterCountry} onChange={e => { setFilterCountry(e.target.value); setPage(1); }} style={{ ...inputStyle, maxWidth: 180 }} onFocus={focusIn} onBlur={focusOut} />
             </Field>
           </div>
           {/* FIX #27: role filter */}
@@ -10443,25 +10564,11 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       {bulkSel.length > 0 && (
         <div style={{ background: "rgba(212,168,67,0.06)", border: "1px solid rgba(212,168,67,0.25)", borderRadius: 10, padding: "10px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>✔ {bulkSel.length} users selected</span>
-          {bulkSel.length < allFiltered.length && (
-            <button type="button" onClick={() => setBulkSel(allFiltered.map(u => u.uid))}
-              style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-              Select all {allFiltered.length}
-            </button>
-          )}
           <select value={bulkTier} onChange={e => setBulkTier(e.target.value)} style={{ padding: "6px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" }}>
             <option value="">Change access tier to...</option>
             {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
           </select>
           <button type="button" onClick={handleBulkAction} disabled={!bulkTier} style={{ padding: "6px 14px", borderRadius: 7, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: bulkTier ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", opacity: bulkTier ? 1 : 0.5 }}>Apply</button>
-          <button type="button" onClick={() => {
-            const selected = users.filter(u => bulkSel.includes(u.uid) && u.email);
-            if (selected.length === 0) { notify("No selected users have email addresses"); return; }
-            setShowBulkEmailModal(true);
-            setBulkEmailTargets(selected);
-          }} style={{ padding: "6px 14px", borderRadius: 7, border: `1px solid ${T.blue}`, background: "rgba(59,130,246,0.08)", color: T.blue, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-            ✉️ Email ({users.filter(u => bulkSel.includes(u.uid) && u.email).length})
-          </button>
           <button type="button" onClick={() => setBulkSel([])} style={{ padding: "6px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
         </div>
       )}
@@ -10470,7 +10577,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <div className="users-table-desktop" style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
         {/* Header */}
         <div style={{ display: "grid", gridTemplateColumns: "36px 28px 2fr 1.6fr 110px 115px 85px 85px 145px", gap: 6, padding: "10px 16px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt, alignItems: "center" }}>
-          <div title={bulkSel.length === allFiltered.length ? "Deselect all" : "Select this page"}><input type="checkbox" onChange={e => setBulkSel(e.target.checked ? pagedUsers.map(u => u.uid) : [])} checked={bulkSel.length > 0 && pagedUsers.every(u => bulkSel.includes(u.uid))} style={{ cursor: "pointer", accentColor: T.gold }} /></div>
+          <div><input type="checkbox" onChange={e => setBulkSel(e.target.checked ? pagedUsers.map(u => u.uid) : [])} checked={bulkSel.length === pagedUsers.length && pagedUsers.length > 0} style={{ cursor: "pointer", accentColor: T.gold }} /></div>
           <ColHeader label="#" />
           <ColHeader label="User" field="name" />
           <ColHeader label="Email" />
@@ -10538,6 +10645,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                     {u.suspended && <span style={{ fontSize: 9, color: T.red, fontWeight: 700, background: "rgba(239,68,68,0.12)", padding: "1px 5px", borderRadius: 4 }}>SUSPENDED</span>}
                     {u.role === "admin" && <span style={{ fontSize: 9, color: T.gold, fontWeight: 700, background: "rgba(212,168,67,0.12)", padding: "1px 5px", borderRadius: 4 }}>ADMIN</span>}
                     {u.emailVerified && <span style={{ fontSize: 9, color: T.green, fontWeight: 700, background: "rgba(16,185,129,0.12)", padding: "1px 5px", borderRadius: 4 }}>✓ Verified</span>}
+                    {/* FIX #33: notes badge is clickable */}
                     {u.notes && <button type="button" onClick={() => { setNoteUser(u); setNoteText(u.notes || ""); }} title="Click to view/edit note" style={{ fontSize: 9, color: "#8B5CF6", background: "rgba(139,92,246,0.12)", padding: "1px 5px", borderRadius: 4, border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>note</button>}
                   </div>
                   <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2, display: "flex", alignItems: "center", gap: 4, overflow: "hidden" }}>
@@ -10546,14 +10654,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                       {health.label}
                       {jobRole && <span style={{ marginLeft: 5, color: jobRole.color, fontWeight: 700 }}>· {jobRole.label}</span>}
                       {(() => {
-                        // Lifecycle stage
                         const daysSince = u.lastLoginAt ? (new Date() - new Date(u.lastLoginAt)) / 86400000 : 999;
                         const daysSinceSignup = u.createdAt ? (new Date() - new Date(u.createdAt)) / 86400000 : 999;
                         if (u.suspended) return null;
                         if (daysSinceSignup <= 7) return <span style={{ marginLeft: 5, color: T.teal, fontWeight: 700 }}>· Onboarding</span>;
                         if (daysSince <= 3) return <span style={{ marginLeft: 5, color: T.green, fontWeight: 700 }}>· Active</span>;
                         if (daysSince <= 14) return <span style={{ marginLeft: 5, color: T.gold, fontWeight: 700 }}>· Cooling</span>;
-                        if (daysSince <= 30) return <span style={{ marginLeft: 5, color: T.orange, fontWeight: 700 }}>· At Risk</span>;
+                        if (daysSince <= 30) return <span style={{ marginLeft: 5, color: "#F97316", fontWeight: 700 }}>· At Risk</span>;
                         return <span style={{ marginLeft: 5, color: T.red, fontWeight: 700 }}>· Churned</span>;
                       })()}
                       {(u.tags || []).length > 0 && <span style={{ marginLeft: 5, color: "#8B5CF6" }}>· {(u.tags || []).map(t => TAGS_OPTIONS.find(x => x.value === t)?.label).filter(Boolean).join(", ")}</span>}
@@ -10689,7 +10796,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>Next </button>
           <button type="button" onClick={() => setPage(totalPages)} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>»</button>
           <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>Page {page} of {totalPages}</span>
-          {/* Jump to page */}
           {totalPages > 5 && (
             <div style={{ display: "flex", alignItems: "center", gap: 5, marginLeft: 6 }}>
               <span style={{ fontSize: 11, color: T.textMuted }}>Go to</span>
@@ -12759,50 +12865,10 @@ export default function AdminPanel() {
     try { return localStorage.getItem("admin_leadFilter") || "all"; } catch { return "all"; }
   }); // all | new | contacted | qualified | converted | lost
   const [leadSourceFilter, setLeadSourceFilter] = useState("all");
-  const [leadCommunityFilter, setLeadCommunityFilter] = useState("all");
-  const [leadNationalityFilter, setLeadNationalityFilter] = useState("all");
-  // ALL 24 communities from DLD data — guaranteed fallback, always shown even before meta scan
-  const ALL_DLD_COMMUNITIES = [
-    "Al Satwa","Arabian Ranches","Arabian Ranches II","Arabian Ranches III",
-    "Business Bay","Dubai Creek Harbour","Dubai Hills Estate","Dubai Marina",
-    "Dubai Sports City","Emaar South","Grand Polo Club","JBR - Elan",
-    "JBR - Jumeirah Gate","Jumeirah Park","Meadows / Lakes / Springs",
-    "Meydan","Motor City / Sports City","Palm Jumeirah","Remraam",
-    "The Valley","Town Square","Umm Suqeim","Victory Heights","Villanova"
-  ].sort();
-  const [leadCommunities, setLeadCommunities] = useState(ALL_DLD_COMMUNITIES);
-  const [leadNationalities, setLeadNationalities] = useState([]);
-  const [leadBudgetFilter, setLeadBudgetFilter] = useState("all");
-  const [leadScoreFilter, setLeadScoreFilter] = useState("all");
-  const [leadGoldenVisa, setLeadGoldenVisa] = useState(false);
-  const [leadHasWhatsApp, setLeadHasWhatsApp] = useState(false);
-  const [leadHasEmail, setLeadHasEmail] = useState(false);
-  const [leadPropertyType, setLeadPropertyType] = useState("all");
-  const [leadLanguage, setLeadLanguage] = useState("all");
-  const [leadAgeFilter, setLeadAgeFilter] = useState("all");
-  const [leadBedroomFilter, setLeadBedroomFilter] = useState("all");
-  const [leadPropertyPlan, setLeadPropertyPlan] = useState("all");
-  const [leadDeveloper, setLeadDeveloper] = useState("all");
-  const [leadPaymentPlan, setLeadPaymentPlan] = useState("all");
-  const [leadVisaEligible, setLeadVisaEligible] = useState("all");
-  const [leadTagFilter, setLeadTagFilter] = useState("all");
-  const [leadNeverContacted, setLeadNeverContacted] = useState(false);
-  const [leadHasFollowUp, setLeadHasFollowUp] = useState(false);
   const [leadSearch, setLeadSearch] = useState("");
   const [leadDateRange, setLeadDateRange] = useState("all"); // all | today | week | month
   const [showAddLead, setShowAddLead] = useState(false);
-  const [leadsLimit, setLeadsLimit] = useState(500);
-  const [leadsHasMore, setLeadsHasMore] = useState(false);
-  const [leadsPage, setLeadsPage] = useState(1);
-  const LEADS_PER_PAGE = 100;
-  const [showImportLeads, setShowImportLeads] = useState(false);
-  const [importLeadsData, setImportLeadsData] = useState([]);
-  const [importLeadsLoading, setImportLeadsLoading] = useState(false);
-  const [importLeadsProgress, setImportLeadsProgress] = useState(0);
-  const [importLeadsTotal, setImportLeadsTotal] = useState(0);
-  const [importLeadsDone, setImportLeadsDone] = useState(false);
-  const [importLeadsErrors, setImportLeadsErrors] = useState([]);
-  const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", source: "Manual", project: "", community: "", notes: "", budget: "", nationality: "", followUpDate: "", tags: [] });
+  const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
   const [addLeadLoading, setAddLeadLoading] = useState(false);
   const [leadNote, setLeadNote] = useState("");
   const [leadNoteSaving, setLeadNoteSaving] = useState(false);
@@ -12813,17 +12879,6 @@ export default function AdminPanel() {
   /* ─── LEADS CRM PRO STATE ─── */
   const [leadSelectedIds, setLeadSelectedIds] = useState([]); // bulk selection
   const [leadBulkAction, setLeadBulkAction] = useState(""); // bulk action value
-  const [showBulkWhatsApp, setShowBulkWhatsApp] = useState(false);
-  const [bulkWhatsAppLeads, setBulkWhatsAppLeads] = useState([]);
-  const [bulkWhatsAppMessage, setBulkWhatsAppMessage] = useState("");
-  const [bulkWhatsAppIndex, setBulkWhatsAppIndex] = useState(0);
-  const [showDeduplicateModal, setShowDeduplicateModal] = useState(false);
-  const [deduplicating, setDeduplicating] = useState(false);
-  const [deduplicateResult, setDeduplicateResult] = useState(null);
-  const [showPhoneFixer, setShowPhoneFixer] = useState(false);
-  const [phoneFixerScanning, setPhoneFixerScanning] = useState(false);
-  const [phoneFixerResult, setPhoneFixerResult] = useState(null);
-  const [phoneFixerPreview, setPhoneFixerPreview] = useState([]);
   const [showFollowUpModal, setShowFollowUpModal] = useState(null); // lead object
   const [followUpDate, setFollowUpDate] = useState("");
   const [followUpNote, setFollowUpNote] = useState("");
@@ -13160,127 +13215,32 @@ export default function AdminPanel() {
     return () => { if (unsub) unsub(); };
   }, [isAdmin, fetchVerifications]);
 
-  const [leadsTotal, setLeadsTotal] = useState(0);
-  const [leadsSearching, setLeadsSearching] = useState(false);
-
-  const fetchLeads = useCallback(async (lim = 500) => {
+  const fetchLeads = useCallback(async () => {
     try {
-      const q = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(lim + 1));
-      const snap = await getDocs(q);
+      const snap = await getDocs(collection(db, "leads"));
       const list = [];
       snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
-      if (list.length > lim) {
-        list.pop();
-        setLeadsHasMore(true);
-      } else {
-        setLeadsHasMore(false);
-      }
+      list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
       setLeads(list);
-      // Get total count efficiently
-      if (list.length >= lim) {
-        try {
-          const countResult = await getCountFromServer(collection(db, "leads"));
-          setLeadsTotal(countResult.data().count);
-        } catch {
-          setLeadsTotal(list.length + 500);
-        }
-      } else {
-        setLeadsTotal(list.length);
-      }
     } catch (e) { console.error("Fetch leads:", e); }
   }, []);
 
-  // Firestore-powered search — queries ALL leads not just loaded 500
-  const searchAllLeads = useCallback(async (searchTerm, statusFilter, sourceFilter, communityFilter, nationalityFilter) => {
-    const noFilters = !searchTerm && statusFilter === "all" && sourceFilter === "all" && (!communityFilter || communityFilter === "all") && (!nationalityFilter || nationalityFilter === "all");
-    if (noFilters) { fetchLeads(500); return; }
-    setLeadsSearching(true);
+  useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin, fetchLeads]);
+
+  // Real-time listener for leads
+  useEffect(() => {
+    if (!isAdmin) return;
+    let unsub;
     try {
-      let q;
-      if (statusFilter !== "all") {
-        q = query(collection(db, "leads"), where("status", "==", statusFilter === "new" ? "New" : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)), orderBy("createdAt", "desc"), limit(2000));
-      } else if (sourceFilter !== "all") {
-        q = query(collection(db, "leads"), where("source", "==", sourceFilter), orderBy("createdAt", "desc"), limit(2000));
-      } else if (communityFilter && communityFilter !== "all") {
-        q = query(collection(db, "leads"), where("community", "==", communityFilter), orderBy("createdAt", "desc"), limit(2000));
-      } else if (nationalityFilter && nationalityFilter !== "all") {
-        q = query(collection(db, "leads"), where("nationality", "==", nationalityFilter), orderBy("createdAt", "desc"), limit(2000));
-      } else {
-        q = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(2000));
-      }
-      const snap = await getDocs(q);
-      let list = [];
-      snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
-      // Client-side filters on top
-      if (communityFilter && communityFilter !== "all") list = list.filter(l => (l.community || "") === communityFilter);
-      if (nationalityFilter && nationalityFilter !== "all") list = list.filter(l => (l.nationality || "") === nationalityFilter);
-      if (sourceFilter !== "all") list = list.filter(l => (l.source || "") === sourceFilter);
-      if (searchTerm) {
-        const s = searchTerm.toLowerCase();
-        list = list.filter(l =>
-          (l.name || "").toLowerCase().includes(s) ||
-          (l.email || "").toLowerCase().includes(s) ||
-          (l.phone || "").includes(s) ||
-          (l.project || "").toLowerCase().includes(s) ||
-          (l.community || "").toLowerCase().includes(s) ||
-          (l.nationality || "").toLowerCase().includes(s)
-        );
-      }
-      setLeads(list);
-      setLeadsHasMore(false);
-    } catch (e) { console.error("Search leads:", e); }
-    setLeadsSearching(false);
-  }, [fetchLeads]);
-
-  useEffect(() => { if (isAdmin) fetchLeads(500); }, [isAdmin, fetchLeads]);
-
-  // Fetch unique communities and nationalities from ALL leads
-  const fetchLeadMeta = useCallback(async (forceRefresh = false) => {
-    try {
-      // Check localStorage cache — only rescan once per day
-      const cacheKey = "dxb_lead_meta";
-      const cached = localStorage.getItem(cacheKey);
-      if (!forceRefresh && cached) {
-        const { communities, nationalities, cachedAt } = JSON.parse(cached);
-        const ageHours = (Date.now() - cachedAt) / (1000 * 60 * 60);
-        if (ageHours < 24 && communities.length > 0) {
-          const merged = [...new Set([...ALL_DLD_COMMUNITIES, ...communities])].sort();
-          setLeadCommunities(merged);
-          setLeadNationalities(nationalities);
-          return;
-        }
-      }
-      // Full scan — runs max once per day
-      const communities = new Set();
-      const nationalities = new Set();
-      let lastDoc = null;
-      let keepGoing = true;
-      while (keepGoing) {
-        const q = lastDoc
-          ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(1000))
-          : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(1000));
-        const snap = await getDocs(q);
-        snap.forEach(d => {
-          const data = d.data();
-          if (data.community && data.community.trim()) communities.add(data.community.trim());
-          if (data.nationality && data.nationality.trim()) nationalities.add(data.nationality.trim());
-        });
-        if (snap.docs.length < 1000) { keepGoing = false; }
-        else { lastDoc = snap.docs[snap.docs.length - 1]; }
-      }
-      const merged = [...new Set([...ALL_DLD_COMMUNITIES, ...communities])].sort();
-      const mergedNat = [...new Set([...nationalities])].sort();
-      const sorted = { communities: merged, nationalities: mergedNat, cachedAt: Date.now() };
-      try { localStorage.setItem(cacheKey, JSON.stringify(sorted)); } catch {}
-      setLeadCommunities(merged);
-      setLeadNationalities(mergedNat);
-    } catch (e) { console.error("fetchLeadMeta:", e); }
-  }, []);
-
-  useEffect(() => { if (isAdmin) fetchLeadMeta(); }, [isAdmin, fetchLeadMeta]);
-
-  // NOTE: Real-time listener removed for leads — too expensive with 67k+ documents.
-  // Leads are fetched on demand (on tab open, after add/edit/delete).
+      unsub = onSnapshot(collection(db, "leads"), (snap) => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
+        list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        setLeads(list);
+      });
+    } catch (e) { fetchLeads(); }
+    return () => { if (unsub) unsub(); };
+  }, [isAdmin, fetchLeads]);
 
   /* ─── FETCH AUDIT LOG ─── */
   const fetchAuditLog = useCallback(async () => {
@@ -15052,7 +15012,7 @@ export default function AdminPanel() {
     { id: "revenue", label: "Revenue", icon: I.revenue },
     { id: "data", label: "Data Manager", icon: I.data },
     { id: "leads", label: "Leads", icon: I.leads },
-    { id: "campaigns", label: "Campaigns", icon: I.email },
+    { id: "campaigns", label: "Campaigns", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> },
     { id: "notifications", label: "Notifications", icon: I.bell },
     { id: "verification", label: "Verification", icon: I.verify },
     { id: "analytics", label: "Analytics", icon: I.analytics },
@@ -20430,36 +20390,18 @@ export default function AdminPanel() {
             // ── Lead Scoring (0-100) ──────────────────────────────────────
             const scoreLead = (lead) => {
               let score = 0;
-              // Data completeness
-              if (lead.email) score += 15;
-              if (lead.phone) score += 15;
-              if (lead.budget) score += 10;
-              if (lead.nationality) score += 5;
-              if (lead.project) score += 10;
-              if (lead.community) score += 5;
-              // Recency
+              if (lead.email) score += 20;
+              if (lead.phone) score += 20;
+              if (lead.budget) score += 15;
+              if (lead.nationality) score += 10;
+              if (lead.project) score += 15;
               const daysSinceCreated = (now - new Date(lead.createdAt || now)) / (1000 * 60 * 60 * 24);
-              if (daysSinceCreated < 1) score += 15;
-              else if (daysSinceCreated < 7) score += 8;
-              else if (daysSinceCreated < 30) score += 3;
-              // Behavior signals
-              if ((lead.notes || []).length > 0) score += 5;
-              if ((lead.notes || []).length > 2) score += 5;
-              if (lead.followUpDate) score += 5;
-              if ((lead.activity || []).length > 2) score += 5;
-              // Budget signals
-              const budget = parseFloat(lead.budget) || 0;
-              if (budget >= 5000000) score += 10;
-              else if (budget >= 2000000) score += 7;
-              else if (budget >= 1000000) score += 4;
-              // Premium community bonus
-              const premComm = ["JBR","Business Bay","Meydan","Al Barari","City Walk","Creek Harbour","Dubai Hills","Grand Polo","Emaar Beachfront","Palm"];
-              if (premComm.some(c => (lead.community || "").includes(c) || (lead.project || "").includes(c))) score += 5;
-              // Status overrides
-              if (lead.status === "Qualified") score = Math.max(score, 65);
-              if (lead.status === "Contacted") score = Math.max(score, 45);
-              if (lead.status === "Converted") return 100;
-              if (lead.status === "Lost") return 0;
+              if (daysSinceCreated < 1) score += 20;
+              else if (daysSinceCreated < 7) score += 10;
+              if ((lead.notes || []).length > 0) score += 10;
+              if (lead.status === "Qualified") score = Math.max(score, 60);
+              if (lead.status === "Converted") score = 100;
+              if (lead.status === "Lost") score = 0;
               return Math.min(score, 100);
             };
             const getScoreColor = (score) => score >= 70 ? T.green : score >= 40 ? T.gold : T.red;
@@ -20477,9 +20419,8 @@ export default function AdminPanel() {
             };
 
             // ── Stats ─────────────────────────────────────────────────────
-            // Note: pipeline stats from loaded 500, total from leadsTotal state
             const stats = {
-              total: leadsTotal > 0 ? leadsTotal : leads.length,
+              total: leads.length,
               new: leads.filter(l => (l.status || "New") === "New").length,
               contacted: leads.filter(l => l.status === "Contacted").length,
               qualified: leads.filter(l => l.status === "Qualified").length,
@@ -20519,120 +20460,14 @@ export default function AdminPanel() {
             const filtered = leads.filter(l => {
               if (leadFilter !== "all" && (l.status || "New").toLowerCase() !== leadFilter) return false;
               if (leadSourceFilter !== "all" && l.source !== leadSourceFilter) return false;
-              if (leadCommunityFilter !== "all" && (l.community || "") !== leadCommunityFilter) return false;
-              if (leadNationalityFilter !== "all" && (l.nationality || "") !== leadNationalityFilter) return false;
               if (leadDateRange === "today" && new Date(l.createdAt) < todayStart) return false;
               if (leadDateRange === "week" && new Date(l.createdAt) < weekAgo) return false;
               if (leadDateRange === "month" && new Date(l.createdAt) < monthAgo) return false;
               if (leadDateRange === "overdue") { if (!isOverdue(l) || l.status === "Converted" || l.status === "Lost") return false; }
               if (leadDateRange === "today_followup") { if (!isDueToday(l)) return false; }
-              // Budget range filter
-              if (leadBudgetFilter !== "all") {
-                const b = parseFloat(l.budget) || 0;
-                if (leadBudgetFilter === "under1m" && b >= 1000000) return false;
-                if (leadBudgetFilter === "1m2m" && (b < 1000000 || b >= 2000000)) return false;
-                if (leadBudgetFilter === "2m5m" && (b < 2000000 || b >= 5000000)) return false;
-                if (leadBudgetFilter === "5m10m" && (b < 5000000 || b >= 10000000)) return false;
-                if (leadBudgetFilter === "10m+" && b < 10000000) return false;
-              }
-              // Lead score filter
-              if (leadScoreFilter !== "all") {
-                const sc = scoreLead(l);
-                if (leadScoreFilter === "hot" && sc < 70) return false;
-                if (leadScoreFilter === "warm" && (sc < 40 || sc >= 70)) return false;
-                if (leadScoreFilter === "cold" && sc >= 40) return false;
-              }
-              // Golden Visa eligible (budget >= AED 2M)
-              if (leadGoldenVisa && (parseFloat(l.budget) || 0) < 2000000) return false;
-              // Has WhatsApp (has phone number AND not tagged No WhatsApp)
-              if (leadHasWhatsApp && (!l.phone || (l.tags || []).includes("No WhatsApp"))) return false;
-              // Has Email
-              if (leadHasEmail && !l.email) return false;
-              // Property type
-              if (leadPropertyType !== "all") {
-                const proj = (l.project || "").toLowerCase();
-                const comm = (l.community || "").toLowerCase();
-                if (leadPropertyType === "villa" && !proj.includes("villa") && !proj.includes("estate") && !comm.includes("villa") && !proj.includes("townhouse") && !proj.includes("ranches") && !comm.includes("ranches") && !proj.includes("hills") && !proj.includes("park") && !proj.includes("meadow") && !proj.includes("spring") && !proj.includes("lake")) return false;
-                if (leadPropertyType === "apartment" && (proj.includes("villa") || proj.includes("estate") || proj.includes("townhouse"))) return false;
-              }
-              // Language preference
-              if (leadLanguage !== "all") {
-                const nat = (l.nationality || "").toLowerCase();
-                if (leadLanguage === "arabic" && !["egyptian","lebanese","jordanian","syrian","iraqi","yemeni","moroccan","sudanese","algerian","tunisian","libyan","saudi arabian","emirati","kuwaiti","qatari","bahraini","omani","palestinian"].some(n => nat.includes(n))) return false;
-                if (leadLanguage === "russian" && !["russian","ukrainian","kazakhstani","uzbekistani","azerbaijani","armenian","georgian"].some(n => nat.includes(n))) return false;
-                if (leadLanguage === "chinese" && !nat.includes("chinese")) return false;
-                if (leadLanguage === "hindi" && !["indian","nepali","sri lankan"].some(n => nat.includes(n))) return false;
-                if (leadLanguage === "french" && !["french","algerian","moroccan","tunisian","congolese","ivorian","senegalese","cameroonian"].some(n => nat.includes(n))) return false;
-              }
-              // Bedroom preference
-              if (leadBedroomFilter !== "all") {
-                const proj = (l.project || "").toLowerCase();
-                const notes = (l.notes || []).map(n => (n.text || "").toLowerCase()).join(" ");
-                if (leadBedroomFilter === "studio" && !proj.includes("studio") && !notes.includes("studio")) return false;
-                if (leadBedroomFilter === "1br" && !proj.includes("1 bed") && !proj.includes("1br") && !notes.includes("1 bed") && !notes.includes("1br")) return false;
-                if (leadBedroomFilter === "2br" && !proj.includes("2 bed") && !proj.includes("2br") && !notes.includes("2 bed") && !notes.includes("2br")) return false;
-                if (leadBedroomFilter === "3br" && !proj.includes("3 bed") && !proj.includes("3br") && !notes.includes("3 bed") && !notes.includes("3br")) return false;
-                if (leadBedroomFilter === "4br+" && !proj.includes("4 bed") && !proj.includes("4br") && !proj.includes("5 bed") && !proj.includes("villa") && !notes.includes("4 bed") && !notes.includes("4br") && !notes.includes("5 bed")) return false;
-              }
-              // Off-plan vs Ready
-              if (leadPropertyPlan !== "all") {
-                const proj = (l.project || "").toLowerCase();
-                const notes = (l.notes || []).map(n => (n.text || "").toLowerCase()).join(" ");
-                const isOffPlan = proj.includes("off-plan") || proj.includes("off plan") || notes.includes("off-plan") || notes.includes("off plan") || notes.includes("offplan");
-                if (leadPropertyPlan === "offplan" && !isOffPlan) return false;
-                if (leadPropertyPlan === "ready" && isOffPlan) return false;
-              }
-              // Developer preference
-              if (leadDeveloper !== "all") {
-                const proj = (l.project || "").toLowerCase();
-                const comm = (l.community || "").toLowerCase();
-                const notes = (l.notes || []).map(n => (n.text || "").toLowerCase()).join(" ");
-                const combined = proj + " " + comm + " " + notes;
-                if (leadDeveloper === "emaar" && !combined.includes("emaar") && !combined.includes("dubai hills") && !combined.includes("creek harbour") && !combined.includes("arabian ranches") && !combined.includes("the valley") && !combined.includes("emaar south") && !combined.includes("grand polo")) return false;
-                if (leadDeveloper === "damac" && !combined.includes("damac") && !combined.includes("akoya") && !combined.includes("trump")) return false;
-                if (leadDeveloper === "sobha" && !combined.includes("sobha")) return false;
-                if (leadDeveloper === "nakheel" && !combined.includes("nakheel") && !combined.includes("palm") && !combined.includes("jumeirah park") && !combined.includes("al furjan")) return false;
-                if (leadDeveloper === "meraas" && !combined.includes("meraas") && !combined.includes("city walk") && !combined.includes("bluewaters")) return false;
-                if (leadDeveloper === "aldar" && !combined.includes("aldar")) return false;
-              }
-              // Payment plan interest
-              if (leadPaymentPlan !== "all") {
-                const notes = (l.notes || []).map(n => (n.text || "").toLowerCase()).join(" ");
-                if (leadPaymentPlan === "yes" && !notes.includes("payment plan") && !notes.includes("installment") && !notes.includes("post-handover")) return false;
-                if (leadPaymentPlan === "cash" && !notes.includes("cash") && !notes.includes("full payment") && !notes.includes("no mortgage")) return false;
-              }
-              // Visa eligibility
-              if (leadVisaEligible !== "all") {
-                const b = parseFloat(l.budget) || 0;
-                if (leadVisaEligible === "2yr" && b < 750000) return false;
-                if (leadVisaEligible === "golden" && b < 2000000) return false;
-              }
-              // Tags
-              if (leadTagFilter !== "all") {
-                const tags = (l.tags || []);
-                if (!tags.includes(leadTagFilter)) return false;
-              }
-              // Never contacted
-              if (leadNeverContacted) {
-                const activity = l.activity || [];
-                const hasContact = activity.some(a => ["contacted","called","whatsapp","email_sent","meeting"].includes(a.type));
-                if (hasContact) return false;
-              }
-              // Has follow-up set
-              if (leadHasFollowUp && !l.followUpDate) return false;
-              // Lead age filter
-              if (leadAgeFilter !== "all") {
-                const created = new Date(l.createdAt).getTime();
-                const now = Date.now();
-                const days = (now - created) / (1000 * 60 * 60 * 24);
-                if (leadAgeFilter === "fresh" && days > 7) return false;
-                if (leadAgeFilter === "recent" && (days <= 7 || days > 30)) return false;
-                if (leadAgeFilter === "old" && (days <= 30 || days > 90)) return false;
-                if (leadAgeFilter === "stale" && days <= 90) return false;
-              }
               if (leadSearch) {
                 const s = leadSearch.toLowerCase();
-                if (!((l.name || "").toLowerCase().includes(s) || (l.email || "").toLowerCase().includes(s) || (l.phone || "").includes(s) || (l.project || "").toLowerCase().includes(s) || (l.nationality || "").toLowerCase().includes(s) || (l.community || "").toLowerCase().includes(s))) return false;
+                if (!((l.name || "").toLowerCase().includes(s) || (l.email || "").toLowerCase().includes(s) || (l.phone || "").includes(s) || (l.project || "").toLowerCase().includes(s) || (l.nationality || "").toLowerCase().includes(s))) return false;
               }
               return true;
             }).sort((a, b) => {
@@ -20641,43 +20476,18 @@ export default function AdminPanel() {
               return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
             });
 
-            // ── Pagination ────────────────────────────────────────────
-            const totalPages = Math.max(1, Math.ceil(filtered.length / LEADS_PER_PAGE));
-            const safePage = Math.min(leadsPage, totalPages);
-            const paginatedLeads = filtered.slice((safePage - 1) * LEADS_PER_PAGE, safePage * LEADS_PER_PAGE);
-
             const sources = [...new Set(leads.map(l => l.source).filter(Boolean))];
 
             // ── Dubai nationalities ──────────────────────────────────────
             const DUBAI_NATIONALITIES = [
-              "Afghan","Albanian","Algerian","American","Andorran","Angolan","Antiguan","Argentine",
-              "Armenian","Australian","Austrian","Azerbaijani","Bahamian","Bahraini","Bangladeshi",
-              "Barbadian","Belarusian","Belgian","Belizean","Beninese","Bhutanese","Bolivian",
-              "Bosnian","Botswanan","Brazilian","British","Bruneian","Bulgarian","Burkinabe",
-              "Burundian","Cambodian","Cameroonian","Canadian","Cape Verdean","Central African",
-              "Chadian","Chilean","Chinese","Colombian","Comorian","Congolese","Costa Rican",
-              "Croatian","Cuban","Cypriot","Czech","Danish","Djiboutian","Dominican","Dutch",
-              "East Timorese","Ecuadorian","Egyptian","Emirati","Equatorial Guinean","Eritrean",
-              "Estonian","Ethiopian","Fijian","Finnish","French","Gabonese","Gambian","Georgian",
-              "German","Ghanaian","Greek","Grenadian","Guatemalan","Guinean","Guinea-Bissauan",
-              "Guyanese","Haitian","Honduran","Hungarian","Icelandic","Indian","Indonesian","Iranian",
-              "Iraqi","Irish","Israeli","Italian","Ivorian","Jamaican","Japanese","Jordanian",
-              "Kazakhstani","Kenyan","Kiribatian","Korean","Kuwaiti","Kyrgyzstani","Laotian",
-              "Latvian","Lebanese","Lesothan","Liberian","Libyan","Liechtensteiner","Lithuanian",
-              "Luxembourgish","Macedonian","Malagasy","Malawian","Malaysian","Maldivian","Malian",
-              "Maltese","Marshallese","Mauritanian","Mauritian","Mexican","Micronesian","Moldovan",
-              "Monacan","Mongolian","Montenegrin","Moroccan","Mozambican","Namibian","Nauruan",
-              "Nepali","New Zealander","Nicaraguan","Nigerien","Nigerian","Norwegian","Omani",
-              "Pakistani","Palauan","Palestinian","Panamanian","Papua New Guinean","Paraguayan",
-              "Peruvian","Filipino","Polish","Portuguese","Qatari","Romanian","Russian","Rwandan",
-              "Saint Lucian","Salvadoran","Samoan","Saudi Arabian","Senegalese","Serbian",
-              "Seychellois","Sierra Leonean","Singaporean","Slovak","Slovenian","Solomon Islander",
-              "Somali","South African","South Sudanese","Spanish","Sri Lankan","Sudanese","Surinamese",
-              "Swazi","Swedish","Swiss","Syrian","Taiwanese","Tajikistani","Tanzanian","Thai",
-              "Togolese","Tongan","Trinidadian","Tunisian","Turkish","Turkmenistani","Tuvaluan",
-              "Ugandan","Ukrainian","Uruguayan","Uzbekistani","Vanuatuan","Venezuelan","Vietnamese",
-              "Yemeni","Zambian","Zimbabwean","Other"
-            ].sort();
+              "Indian", "Pakistani", "British", "Russian", "Chinese",
+              "Filipino", "Bangladeshi", "Egyptian", "Emirati", "Saudi Arabian",
+              "German", "French", "Italian", "Canadian", "Australian",
+              "American", "Lebanese", "Jordanian", "Iranian", "Ukrainian",
+              "Kazakhstani", "Nigerian", "South African", "Turkish", "Dutch",
+              "Swedish", "Swiss", "Spanish", "Brazilian", "Colombian",
+              "Other"
+            ];
 
             // ── Duplicate detection ───────────────────────────────────────
             const getDuplicates = (lead) => {
@@ -20694,11 +20504,9 @@ export default function AdminPanel() {
               setAddLeadLoading(true);
               try {
                 const id = `lead_${Date.now()}`;
-                const { phoneNum, phoneCode, ...formData } = addLeadForm;
                 await setDoc(doc(db, "leads", id), {
-                  ...formData,
+                  ...addLeadForm,
                   status: "New",
-                  updatedAt: new Date().toISOString(),
                   createdAt: new Date().toISOString(),
                   activity: [{ type: "created", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Lead created" }],
                   notes: addLeadForm.notes ? [{ text: addLeadForm.notes, by: adminUser?.email || "admin", at: new Date().toISOString() }] : [],
@@ -20706,7 +20514,7 @@ export default function AdminPanel() {
                 await logAudit(db, { action: "lead_created", leadId: id });
                 notify("Lead added!");
                 setShowAddLead(false);
-                setAddLeadForm({ name: "", email: "", phone: "", phoneNum: "", phoneCode: "+971", source: "Manual", project: "", community: "", notes: "", budget: "", nationality: "", followUpDate: "", tags: [] });
+                setAddLeadForm({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
                 fetchLeads();
               } catch (e) { notify("Error: " + e.message); }
               setAddLeadLoading(false);
@@ -20791,126 +20599,17 @@ export default function AdminPanel() {
 
             // ── Send email ────────────────────────────────────────────────
             const sendLeadEmail = async (lead, subject, body) => {
-              if (!lead.email) { notify("This lead has no email address"); return; }
               setSendingEmail(true);
               try {
-                const result = await emailjs.send(
-                  "service_da7nshv",
-                  "template_gl1xqhy",
-                  {
-                    user_email:   lead.email,
-                    name:         "The Address Holding",
-                    email:        adminUser?.email || "info@theaddressholding.ae",
-                    user_name:    lead.name || "there",
-                    project_name: lead.project || lead.community || "DXB Analytics",
-                    change_type:  subject || `Following up on ${lead.project || "your inquiry"}`,
-                    new_value:    body || `Hi ${lead.name || "there"},\n\nThank you for your interest in ${lead.project || "our properties"}.\n\nBest regards,\nThe Address Holding Team`,
-                    old_value:    "",
-                  },
-                  "USkwUhp0csGCVDkdQ"
-                );
-                if (result.status !== 200) throw new Error("EmailJS status: " + result.status + " " + result.text);
+                await emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: lead.email, to_name: lead.name || "there", subject: subject || `Following up on ${lead.project || "your inquiry"}`, message: body || `Hi ${lead.name || "there"},\n\nThank you for your interest in ${lead.project || "our properties"}.\n\nBest regards,\nDXB Analytics`, project_name: lead.project || "DXB Analytics" }, "USkwUhp0csGCVDkdQ");
                 const activity = [...(lead.activity || []), { type: "email_sent", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Email sent: ${subject || "Follow-up email"}` }];
                 await setDoc(doc(db, "leads", lead.id), { respondedAt: new Date().toISOString(), updatedAt: new Date().toISOString(), activity }, { merge: true });
                 await logAudit(db, { action: "lead_email_sent", leadId: lead.id });
-                notify("✅ Email sent to " + lead.email);
+                notify("Email sent!");
                 fetchLeads();
                 if (leadDrawer?.id === lead.id) setLeadDrawer(prev => ({ ...prev, activity }));
-              } catch (e) {
-                console.error("EmailJS full error:", e);
-                const msg = e?.text || e?.message || (e?.status ? `Status ${e.status}` : "Check EmailJS quota at emailjs.com (168 requests left)");
-                notify("Email failed: " + msg);
-              }
+              } catch (e) { notify("Email failed: " + e.message); }
               setSendingEmail(false);
-            };
-
-            // ── CSV Import ────────────────────────────────────────
-            const processCSVFile = (file) => {
-              const reader = new FileReader();
-              reader.onload = (e) => {
-                try {
-                  const text = e.target.result;
-                  const lines = text.split(/\r?\n/).filter(l => l.trim());
-                  if (lines.length < 2) { notify("CSV file is empty or has no data rows"); return; }
-                  // Parse headers — lowercase, trim
-                  const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/[^a-z]/g, ""));
-                  const rows = [];
-                  const errors = [];
-                  for (let i = 1; i < lines.length; i++) {
-                    // Handle quoted fields
-                    const cols = [];
-                    let cur = "", inQ = false;
-                    for (const ch of lines[i]) {
-                      if (ch === '"') { inQ = !inQ; }
-                      else if (ch === "," && !inQ) { cols.push(cur.trim()); cur = ""; }
-                      else { cur += ch; }
-                    }
-                    cols.push(cur.trim());
-                    const obj = {};
-                    headers.forEach((h, idx) => { obj[h] = (cols[idx] || "").replace(/^"|"$/g, "").trim(); });
-                    if (!obj.name || obj.name.length < 2) { errors.push(i + 1); continue; }
-                    rows.push({
-                      name:        obj.name || "",
-                      phone:       obj.phone || obj.mobile || obj.whatsapp || "",
-                      email:       obj.email || "",
-                      project:     obj.project || obj.building || "",
-                      community:   obj.community || obj.area || "",
-                      nationality: obj.nationality || "",
-                      budget:      obj.budget || "",
-                      source:      obj.source || "Manual",
-                      notes:       obj.notes || obj.note || "",
-                    });
-                  }
-                  setImportLeadsData(rows);
-                  setImportLeadsErrors(errors);
-                  if (rows.length === 0) notify("No valid rows found — make sure CSV has a 'name' column");
-                } catch (err) { notify("Error reading CSV: " + err.message); }
-              };
-              reader.readAsText(file);
-            };
-
-            const startLeadsImport = async () => {
-              if (importLeadsData.length === 0) return;
-              setImportLeadsLoading(true);
-              setImportLeadsTotal(importLeadsData.length);
-              setImportLeadsProgress(0);
-              const now = new Date().toISOString();
-              let count = 0;
-              const CHUNK = 50; // Import 50 at a time to avoid overwhelming Firestore
-              for (let i = 0; i < importLeadsData.length; i += CHUNK) {
-                const chunk = importLeadsData.slice(i, i + CHUNK);
-                await Promise.all(chunk.map(async (r) => {
-                  try {
-                    const id = `lead_${Date.now()}_${Math.random().toString(36).substr(2,6)}`;
-                    await setDoc(doc(db, "leads", id), {
-                      name:         r.name,
-                      phone:        r.phone,
-                      email:        r.email,
-                      project:      r.project,
-                      community:    r.community,
-                      nationality:  r.nationality,
-                      budget:       r.budget,
-                      source:       r.source || "Manual",
-                      status:       "New",
-                      notes:        r.notes ? [{ text: r.notes, by: adminUser?.email || "admin", at: now }] : [],
-                      activity:     [{ type: "created", by: adminUser?.email || "admin", at: now, note: `Imported from CSV — ${r.community || r.project || "bulk import"}` }],
-                      createdAt:    now,
-                      updatedAt:    now,
-                      followUpDate: "",
-                      respondedAt:  "",
-                      convertedAt:  "",
-                      lossReason:   "",
-                    });
-                    count++;
-                  } catch (err) { console.error("Import row failed:", err.message); }
-                }));
-                setImportLeadsProgress(Math.min(i + CHUNK, importLeadsData.length));
-                await new Promise(r => setTimeout(r, 200)); // Small delay between chunks
-              }
-              await logAudit(db, { action: "leads_csv_imported", count });
-              setImportLeadsLoading(false);
-              setImportLeadsDone(true);
-              notify(`✅ ${count.toLocaleString()} leads imported!`);
             };
 
             // ── Export CSV ────────────────────────────────────────────────
@@ -20984,9 +20683,6 @@ export default function AdminPanel() {
                       <button type="button" onClick={() => setLeadAnalyticsView(v => !v)} style={{ padding: "6px 12px", fontSize: 10, fontWeight: 600, background: leadAnalyticsView ? T.gold + "20" : "transparent", color: leadAnalyticsView ? T.gold : T.textMuted, border: "none", cursor: "pointer" }}>Analytics</button>
                     </div>
                     <button type="button" onClick={() => setShowAddLead(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.08)", color: T.green, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>+ Add Lead</button>
-                    <button type="button" onClick={() => { setShowImportLeads(true); setImportLeadsData([]); setImportLeadsDone(false); setImportLeadsProgress(0); setImportLeadsErrors([]); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.blue}`, background: "rgba(59,130,246,0.08)", color: T.blue, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>⬆ Import CSV</button>
-                    <button type="button" onClick={() => setShowDeduplicateModal(true)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.orange}`, background: "rgba(245,158,11,0.08)", color: T.orange, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>🔁 Deduplicate</button>
-                    <button type="button" onClick={() => { setShowPhoneFixer(true); setPhoneFixerResult(null); setPhoneFixerPreview([]); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.purple}`, background: "rgba(139,92,246,0.08)", color: T.purple, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>📞 Fix Phones</button>
                     <button type="button" onClick={exportLeadsCSV} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>{I.download} Export</button>
                   </div>
                 </div>
@@ -21000,7 +20696,7 @@ export default function AdminPanel() {
                     { id: "converted", label: "Converted", count: stats.converted, color: T.green },
                     { id: "lost", label: "Lost", count: stats.lost, color: T.red },
                   ].map(s => (
-                    <div key={s.id} onClick={() => { const newFilter = leadFilter === s.id ? "all" : s.id; setLeadFilter(newFilter); searchAllLeads(leadSearch, newFilter, leadSourceFilter); }} className="fade-up" style={{ padding: "16px 18px", borderRadius: 12, cursor: "pointer", background: leadFilter === s.id ? `${s.color}15` : T.surface, border: `1px solid ${leadFilter === s.id ? s.color : T.border}`, transition: "all 0.15s" }}>
+                    <div key={s.id} onClick={() => setLeadFilter(leadFilter === s.id ? "all" : s.id)} className="fade-up" style={{ padding: "16px 18px", borderRadius: 12, cursor: "pointer", background: leadFilter === s.id ? `${s.color}15` : T.surface, border: `1px solid ${leadFilter === s.id ? s.color : T.border}`, transition: "all 0.15s" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                         <span style={{ fontSize: 11, fontWeight: 700, color: s.color, textTransform: "uppercase", letterSpacing: 1 }}>{s.label}</span>
                       </div>
@@ -21013,397 +20709,75 @@ export default function AdminPanel() {
                 </div>
 
                 {/* PIPELINE ANALYTICS */}
-                {leadAnalyticsView && (() => {
-                  const communityBreakdown = leads.reduce((acc, l) => {
-                    const c = l.community || "Unknown";
-                    if (!acc[c]) acc[c] = 0;
-                    acc[c]++;
-                    return acc;
-                  }, {});
-                  const topCommunities = Object.entries(communityBreakdown).sort((a,b) => b[1]-a[1]).slice(0, 8);
-                  const maxComm = topCommunities[0]?.[1] || 1;
-
-                  const hotCount = leads.filter(l => scoreLead(l) >= 70).length;
-                  const warmCount = leads.filter(l => { const s = scoreLead(l); return s >= 40 && s < 70; }).length;
-                  const coldCount = leads.filter(l => scoreLead(l) < 40).length;
-
-                  const withPhone = leads.filter(l => l.phone && l.phone.startsWith("+971")).length;
-                  const withPhoneRaw = leads.filter(l => l.phone && !l.phone.startsWith("+971")).length;
-                  const noPhone = leads.filter(l => !l.phone).length;
-                  const withEmail = leads.filter(l => l.email).length;
-
-                  const budgetTiers = [
-                    { label: "Under 1M", count: leads.filter(l => parseFloat(l.budget) < 1000000 && l.budget).length, color: T.blue },
-                    { label: "1M-2M", count: leads.filter(l => { const b = parseFloat(l.budget); return b >= 1000000 && b < 2000000; }).length, color: T.teal },
-                    { label: "2M-5M", count: leads.filter(l => { const b = parseFloat(l.budget); return b >= 2000000 && b < 5000000; }).length, color: T.green },
-                    { label: "5M-10M", count: leads.filter(l => { const b = parseFloat(l.budget); return b >= 5000000 && b < 10000000; }).length, color: T.gold },
-                    { label: "10M+", count: leads.filter(l => parseFloat(l.budget) >= 10000000).length, color: T.orange },
-                  ];
-                  const maxBudget = Math.max(...budgetTiers.map(b => b.count), 1);
-
-                  return (
-                    <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: 24, marginBottom: 20 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Pipeline Analytics</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>Based on {leads.length} loaded leads</div>
-                      </div>
-
-                      {/* Row 1 — KPI cards */}
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
-                        {[
-                          { label: "Win Rate", value: `${winRate}%`, sub: `${stats.converted} won of ${stats.converted + stats.lost} closed`, color: T.green },
-                          { label: "Avg Days to Close", value: avgDaysToClose !== null ? `${avgDaysToClose}d` : "—", sub: "Lead created → converted", color: T.blue },
-                          { label: "Hot Leads", value: hotCount, sub: "Score 70+ ready to close", color: T.red },
-                          { label: "Pipeline Value", value: "AED " + (leads.filter(l => l.budget).reduce((s, l) => s + (parseFloat(l.budget) || 0), 0) / 1000000).toFixed(1) + "M", sub: "Total budget of loaded leads", color: T.gold },
-                        ].map((item, i) => (
-                          <div key={i} style={{ padding: "14px 16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
-                            <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{item.label}</div>
-                            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: item.color, marginBottom: 2 }}>{item.value}</div>
-                            <div style={{ fontSize: 10, color: T.textMuted }}>{item.sub}</div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-                        {/* Community breakdown */}
-                        <div style={{ background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, padding: 16 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 }}>Top Communities</div>
-                          {topCommunities.map(([comm, count]) => (
-                            <div key={comm} style={{ marginBottom: 8 }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                                <span style={{ fontSize: 11, color: T.textSecondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "70%" }}>{comm}</span>
-                                <span style={{ fontSize: 11, fontWeight: 700, color: T.gold }}>{count}</span>
-                              </div>
-                              <div style={{ height: 4, borderRadius: 2, background: T.border }}>
-                                <div style={{ height: "100%", borderRadius: 2, background: T.gold, width: `${(count / maxComm) * 100}%` }} />
-                              </div>
-                            </div>
-                          ))}
-                          {topCommunities.length === 0 && <div style={{ fontSize: 11, color: T.textMuted }}>No community data</div>}
+                {leadAnalyticsView && (
+                  <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: 24, marginBottom: 20 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 20 }}>Pipeline Analytics</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+                      {[
+                        { label: "Win Rate", value: `${winRate}%`, sub: `${stats.converted} won of ${stats.converted + stats.lost} closed`, color: T.green },
+                        { label: "Avg Days to Close", value: avgDaysToClose !== null ? `${avgDaysToClose} days` : "-", sub: "From lead to conversion", color: T.blue },
+                        { label: "Hot Leads", value: stats.hot, sub: "Score 70+ (ready to close)", color: T.red },
+                        { label: "Pipeline Value", value: "AED " + leads.filter(l => l.budget).reduce((sum, l) => sum + (parseFloat(l.budget) || 0), 0).toLocaleString(), sub: "Total budget across active leads", color: T.gold },
+                      ].map((item, i) => (
+                        <div key={i} style={{ padding: "16px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+                          <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>{item.label}</div>
+                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: item.color, marginBottom: 4 }}>{item.value}</div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>{item.sub}</div>
                         </div>
-
-                        {/* Budget distribution */}
-                        <div style={{ background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, padding: 16 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 }}>Budget Distribution (AED)</div>
-                          {budgetTiers.map(tier => (
-                            <div key={tier.label} style={{ marginBottom: 8 }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                                <span style={{ fontSize: 11, color: T.textSecondary }}>{tier.label}</span>
-                                <span style={{ fontSize: 11, fontWeight: 700, color: tier.color }}>{tier.count}</span>
-                              </div>
-                              <div style={{ height: 4, borderRadius: 2, background: T.border }}>
-                                <div style={{ height: "100%", borderRadius: 2, background: tier.color, width: `${(tier.count / maxBudget) * 100}%` }} />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                        {/* Lead score distribution */}
-                        <div style={{ background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, padding: 16 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 }}>Lead Quality</div>
-                          {[
-                            { label: "🔥 Hot (70-100)", count: hotCount, color: T.green },
-                            { label: "🌡 Warm (40-69)", count: warmCount, color: T.gold },
-                            { label: "❄️ Cold (0-39)", count: coldCount, color: T.red },
-                          ].map(tier => (
-                            <div key={tier.label} style={{ marginBottom: 8 }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                                <span style={{ fontSize: 11, color: T.textSecondary }}>{tier.label}</span>
-                                <span style={{ fontSize: 11, fontWeight: 700, color: tier.color }}>{tier.count} ({leads.length > 0 ? Math.round(tier.count/leads.length*100) : 0}%)</span>
-                              </div>
-                              <div style={{ height: 4, borderRadius: 2, background: T.border }}>
-                                <div style={{ height: "100%", borderRadius: 2, background: tier.color, width: `${leads.length > 0 ? (tier.count/leads.length)*100 : 0}%` }} />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Phone & Email quality */}
-                        <div style={{ background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, padding: 16 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 }}>Contact Quality</div>
-                          {[
-                            { label: "✅ WhatsApp Ready (+971)", count: withPhone, color: "#25D366" },
-                            { label: "⚠️ Phone (needs fixing)", count: withPhoneRaw, color: T.orange },
-                            { label: "❌ No phone", count: noPhone, color: T.red },
-                            { label: "📧 Has email", count: withEmail, color: T.blue },
-                          ].map(item => (
-                            <div key={item.label} style={{ marginBottom: 8 }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                                <span style={{ fontSize: 11, color: T.textSecondary }}>{item.label}</span>
-                                <span style={{ fontSize: 11, fontWeight: 700, color: item.color }}>{item.count}</span>
-                              </div>
-                              <div style={{ height: 4, borderRadius: 2, background: T.border }}>
-                                <div style={{ height: "100%", borderRadius: 2, background: item.color, width: `${leads.length > 0 ? (item.count/leads.length)*100 : 0}%` }} />
-                              </div>
-                            </div>
-                          ))}
-                          <button type="button" onClick={() => { setShowPhoneFixer(true); setPhoneFixerResult(null); setPhoneFixerPreview([]); }}
-                            style={{ marginTop: 8, width: "100%", padding: "7px", borderRadius: 6, border: `1px solid ${T.purple}`, background: "rgba(139,92,246,0.08)", color: T.purple, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-                            📞 Fix {withPhoneRaw} phones now
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Source performance */}
-                      <div style={{ marginTop: 16, background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, padding: 16 }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 }}>Source Performance</div>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
-                          {Object.entries(sourceBreakdown).map(([source, data]) => {
-                            const wr = data.total > 0 ? Math.round((data.converted / data.total) * 100) : 0;
-                            return (
-                              <div key={source} style={{ padding: "10px 12px", background: T.bg, borderRadius: 8, border: `1px solid ${T.border}` }}>
-                                <div style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, marginBottom: 6 }}>{source}</div>
-                                <div style={{ fontSize: 20, fontWeight: 900, color: wr >= 50 ? T.green : wr >= 20 ? T.gold : T.red, fontFamily: "'Fraunces',serif" }}>{wr}%</div>
-                                <div style={{ fontSize: 10, color: T.textMuted }}>{data.total} leads</div>
-                                <div style={{ marginTop: 4, height: 3, borderRadius: 2, background: T.border }}>
-                                  <div style={{ height: "100%", background: wr >= 50 ? T.green : wr >= 20 ? T.gold : T.red, width: `${wr}%`, borderRadius: 2 }} />
-                                </div>
-                              </div>
-                            );
-                          })}
-                          {Object.keys(sourceBreakdown).length === 0 && <div style={{ fontSize: 11, color: T.textMuted }}>No data yet</div>}
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  );
-                })()}
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textSecondary, marginBottom: 12 }}>Win Rate by Source</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
+                      {Object.entries(sourceBreakdown).map(([source, data]) => {
+                        const wr = data.total > 0 ? Math.round((data.converted / data.total) * 100) : 0;
+                        return (
+                          <div key={source} style={{ padding: "12px 14px", background: T.bg, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, marginBottom: 8 }}>{source}</div>
+                            <div style={{ fontSize: 18, fontWeight: 900, color: wr >= 50 ? T.green : wr >= 25 ? T.gold : T.red, fontFamily: "'Fraunces',serif" }}>{wr}%</div>
+                            <div style={{ fontSize: 10, color: T.textMuted }}>{data.converted}/{data.total} converted</div>
+                            <div style={{ marginTop: 6, height: 3, borderRadius: 2, background: T.border }}>
+                              <div style={{ height: "100%", background: wr >= 50 ? T.green : wr >= 25 ? T.gold : T.red, width: `${wr}%`, borderRadius: 2 }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {Object.keys(sourceBreakdown).length === 0 && <div style={{ fontSize: 11, color: T.textMuted, gridColumn: "1/-1" }}>No source data yet.</div>}
+                    </div>
+                  </div>
+                )}
+
                 {/* BULK ACTIONS */}
                 {leadSelectedIds.length > 0 && (
-                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: `rgba(59,130,246,0.08)`, border: `1px solid rgba(59,130,246,0.3)`, marginBottom: 16, flexWrap: "wrap" }}>
+                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: `rgba(59,130,246,0.08)`, border: `1px solid rgba(59,130,246,0.3)`, marginBottom: 16 }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: T.blue }}>{leadSelectedIds.length} selected</span>
-                    <div style={{ display: "flex", gap: 8, marginLeft: "auto", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
                       {["Contacted", "Qualified", "Lost"].map(status => (
                         <button key={status} type="button" onClick={() => bulkUpdateStatus(status)} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${statusColors[status]?.border}`, background: statusColors[status]?.bg, color: statusColors[status]?.color, cursor: "pointer", fontWeight: 600 }}>Set {status}</button>
                       ))}
-                      <button type="button" onClick={() => {
-                        // Bulk WhatsApp — open each selected lead's WhatsApp
-                        const selectedLeads = leads.filter(l => leadSelectedIds.includes(l.id) && l.phone);
-                        if (selectedLeads.length === 0) { notify("No selected leads have phone numbers"); return; }
-                        setShowBulkWhatsApp(true);
-                        setBulkWhatsAppLeads(selectedLeads);
-                      }} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: "1px solid #25D366", background: "rgba(37,211,102,0.1)", color: "#25D366", cursor: "pointer", fontWeight: 600 }}>💬 Bulk WhatsApp ({leads.filter(l => leadSelectedIds.includes(l.id) && l.phone).length})</button>
                       <button type="button" onClick={() => setLeadSelectedIds([])} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer" }}>Clear</button>
                     </div>
                   </div>
                 )}
 
                 {/* FILTERS */}
-                <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: "14px 16px", marginBottom: 16 }}>
-                  {/* Row 1: Search */}
-                  <div style={{ display: "flex", gap: 10, marginBottom: 10, alignItems: "center" }}>
-                    <div style={{ flex: 1, position: "relative" }}>
-                      <input type="text" placeholder="🔍  Search by name, phone, email, project..." value={leadSearch} onChange={e => {
-                        setLeadSearch(e.target.value);
-                        setLeadsPage(1);
-                        clearTimeout(window._leadSearchTimer);
-                        window._leadSearchTimer = setTimeout(() => {
-                          searchAllLeads(e.target.value, leadFilter, leadSourceFilter, leadCommunityFilter, leadNationalityFilter);
-                        }, 500);
-                      }} style={{ width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid ${leadSearch ? T.blue : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
-                      {leadsSearching && <div style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: T.blue, fontWeight: 600 }}>Searching...</div>}
-                    </div>
-                    {(leadFilter !== "all" || leadSourceFilter !== "all" || leadDateRange !== "all" || leadSearch || leadCommunityFilter !== "all" || leadNationalityFilter !== "all" || leadBudgetFilter !== "all" || leadScoreFilter !== "all" || leadGoldenVisa || leadHasWhatsApp || leadHasEmail || leadPropertyType !== "all" || leadLanguage !== "all" || leadAgeFilter !== "all" || leadBedroomFilter !== "all" || leadPropertyPlan !== "all" || leadDeveloper !== "all" || leadPaymentPlan !== "all" || leadVisaEligible !== "all" || leadTagFilter !== "all" || leadNeverContacted || leadHasFollowUp) && (
-                      <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); setLeadCommunityFilter("all"); setLeadNationalityFilter("all"); setLeadBudgetFilter("all"); setLeadScoreFilter("all"); setLeadGoldenVisa(false); setLeadHasWhatsApp(false); setLeadHasEmail(false); setLeadPropertyType("all"); setLeadLanguage("all"); setLeadAgeFilter("all"); setLeadBedroomFilter("all"); setLeadPropertyPlan("all"); setLeadDeveloper("all"); setLeadPaymentPlan("all"); setLeadVisaEligible("all"); setLeadTagFilter("all"); setLeadNeverContacted(false); setLeadHasFollowUp(false); setLeadsPage(1); fetchLeads(500); }}
-                        style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>✕ Clear All</button>
-                    )}
-                    <span style={{ fontSize: 11, color: T.textMuted, whiteSpace: "nowrap" }}>{leadsSearching ? "Searching all 19,600+ leads..." : `${filtered.length.toLocaleString()} leads shown${leadsHasMore ? " — search or filter to find all 19,600+" : ""}`}</span>
-                  </div>
-                  {/* Row 2: Dropdown filters */}
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                    {/* Community filter — searchable */}
-                    <SearchableSelect
-                      value={leadCommunityFilter === "all" ? "" : leadCommunityFilter}
-                      onChange={v => { const val = v || "all"; setLeadCommunityFilter(val); setLeadsPage(1); searchAllLeads(leadSearch, leadFilter, leadSourceFilter, val, leadNationalityFilter); }}
-                      options={[{ value: "all", label: `🏘 All Communities (${leadCommunities.length})` }, ...leadCommunities.map(c => ({ value: c, label: c }))]}
-                      placeholder={`🏘 All Communities (${leadCommunities.length})`}
-                      style={{ minWidth: 200, background: leadCommunityFilter !== "all" ? "rgba(212,168,67,0.12)" : T.bg, fontSize: 11 }}
-                    />
-                    <button type="button" title="Refresh community & nationality lists" onClick={() => { localStorage.removeItem("dxb_lead_meta"); fetchLeadMeta(true); notify("Refreshing lists..."); }} style={{ padding: "8px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: T.bg, color: T.textMuted, fontSize: 11, cursor: "pointer" }}>↺</button>
-
-                    {/* Nationality filter — searchable */}
-                    <SearchableSelect
-                      value={leadNationalityFilter === "all" ? "" : leadNationalityFilter}
-                      onChange={v => { const val = v || "all"; setLeadNationalityFilter(val); setLeadsPage(1); searchAllLeads(leadSearch, leadFilter, leadSourceFilter, leadCommunityFilter, val); }}
-                      options={[{ value: "all", label: `🌍 All Nationalities (${leadNationalities.length})` }, ...leadNationalities.map(n => ({ value: n, label: n }))]}
-                      placeholder={`🌍 All Nationalities (${leadNationalities.length})`}
-                      style={{ minWidth: 200, background: leadNationalityFilter !== "all" ? "rgba(59,130,246,0.12)" : T.bg, fontSize: 11 }}
-                    />
-
-                    {/* Source filter */}
-                    <select value={leadSourceFilter} onChange={e => { setLeadSourceFilter(e.target.value); setLeadsPage(1); searchAllLeads(leadSearch, leadFilter, e.target.value, leadCommunityFilter, leadNationalityFilter); }}
-                      style={{ padding: "8px 12px", background: leadSourceFilter !== "all" ? "rgba(16,185,129,0.12)" : T.bg, border: `1px solid ${leadSourceFilter !== "all" ? T.green : T.border}`, borderRadius: 8, color: leadSourceFilter !== "all" ? T.green : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadSourceFilter !== "all" ? 700 : 400 }}>
-                      <option value="all">📋 All Sources</option>
-                      <option value="DLD Data">🏛 DLD Data</option>
-                      <option value="Manual">✏️ Manual</option>
-                      <option value="WhatsApp">💬 WhatsApp</option>
-                      <option value="Bayut">🏠 Bayut</option>
-                      <option value="PropertyFinder">🔍 PropertyFinder</option>
-                      <option value="Referral">👥 Referral</option>
-                      <option value="Website">🌐 Website</option>
-                      <option value="Instagram">📸 Instagram</option>
-                      <option value="LinkedIn">💼 LinkedIn</option>
-                      <option value="Phone Call">📞 Phone Call</option>
-                      <option value="Email Inquiry">📧 Email Inquiry</option>
-                      <option value="Walk-in">🚶 Walk-in</option>
-                    </select>
-
-                    {/* Date filter */}
-                    <select value={leadDateRange} onChange={e => { setLeadDateRange(e.target.value); setLeadsPage(1); }}
-                      style={{ padding: "8px 12px", background: leadDateRange !== "all" ? "rgba(139,92,246,0.12)" : T.bg, border: `1px solid ${leadDateRange !== "all" ? T.purple : T.border}`, borderRadius: 8, color: leadDateRange !== "all" ? T.purple : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadDateRange !== "all" ? 700 : 400 }}>
-                      <option value="all">📅 All Time</option>
-                      <option value="today">Today</option>
-                      <option value="week">This Week</option>
-                      <option value="month">This Month</option>
-                      <option value="overdue">⚠️ Overdue Follow-ups</option>
-                      <option value="today_followup">🔔 Due Today</option>
-                    </select>
-                  </div>
-
-                  {/* Row 3 — Tier 2 filters */}
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", paddingTop: 10, borderTop: `1px solid ${T.border}` }}>
-
-                    {/* Budget Range */}
-                    <select value={leadBudgetFilter} onChange={e => { setLeadBudgetFilter(e.target.value); setLeadsPage(1); }}
-                      style={{ padding: "7px 10px", background: leadBudgetFilter !== "all" ? "rgba(16,185,129,0.12)" : T.bg, border: `1px solid ${leadBudgetFilter !== "all" ? T.green : T.border}`, borderRadius: 7, color: leadBudgetFilter !== "all" ? T.green : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadBudgetFilter !== "all" ? 700 : 400 }}>
-                      <option value="all">💰 All Budgets</option>
-                      <option value="under1m">Under AED 1M</option>
-                      <option value="1m2m">AED 1M – 2M</option>
-                      <option value="2m5m">AED 2M – 5M</option>
-                      <option value="5m10m">AED 5M – 10M</option>
-                      <option value="10m+">AED 10M+</option>
-                    </select>
-
-                    {/* Lead Score */}
-                    <select value={leadScoreFilter} onChange={e => { setLeadScoreFilter(e.target.value); setLeadsPage(1); }}
-                      style={{ padding: "7px 10px", background: leadScoreFilter !== "all" ? "rgba(239,68,68,0.12)" : T.bg, border: `1px solid ${leadScoreFilter !== "all" ? T.red : T.border}`, borderRadius: 7, color: leadScoreFilter !== "all" ? T.red : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadScoreFilter !== "all" ? 700 : 400 }}>
-                      <option value="all">⭐ All Scores</option>
-                      <option value="hot">🔥 Hot (70-100)</option>
-                      <option value="warm">🌡 Warm (40-69)</option>
-                      <option value="cold">❄️ Cold (0-39)</option>
-                    </select>
-
-                    {/* Property Type */}
-                    <select value={leadPropertyType} onChange={e => { setLeadPropertyType(e.target.value); setLeadsPage(1); }}
-                      style={{ padding: "7px 10px", background: leadPropertyType !== "all" ? "rgba(212,168,67,0.12)" : T.bg, border: `1px solid ${leadPropertyType !== "all" ? T.gold : T.border}`, borderRadius: 7, color: leadPropertyType !== "all" ? T.gold : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadPropertyType !== "all" ? 700 : 400 }}>
-                      <option value="all">🏠 All Property Types</option>
-                      <option value="villa">🏡 Villa / Townhouse</option>
-                      <option value="apartment">🏢 Apartment</option>
-                    </select>
-
-                    {/* Language */}
-                    <select value={leadLanguage} onChange={e => { setLeadLanguage(e.target.value); setLeadsPage(1); }}
-                      style={{ padding: "7px 10px", background: leadLanguage !== "all" ? "rgba(59,130,246,0.12)" : T.bg, border: `1px solid ${leadLanguage !== "all" ? T.blue : T.border}`, borderRadius: 7, color: leadLanguage !== "all" ? T.blue : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadLanguage !== "all" ? 700 : 400 }}>
-                      <option value="all">🗣 All Languages</option>
-                      <option value="arabic">🌙 Arabic</option>
-                      <option value="russian">🇷🇺 Russian</option>
-                      <option value="chinese">🇨🇳 Chinese</option>
-                      <option value="hindi">🇮🇳 Hindi</option>
-                      <option value="french">🇫🇷 French</option>
-                    </select>
-
-                    {/* Lead Age */}
-                    <select value={leadAgeFilter} onChange={e => { setLeadAgeFilter(e.target.value); setLeadsPage(1); }}
-                      style={{ padding: "7px 10px", background: leadAgeFilter !== "all" ? "rgba(139,92,246,0.12)" : T.bg, border: `1px solid ${leadAgeFilter !== "all" ? T.purple : T.border}`, borderRadius: 7, color: leadAgeFilter !== "all" ? T.purple : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadAgeFilter !== "all" ? 700 : 400 }}>
-                      <option value="all">🕐 All Ages</option>
-                      <option value="fresh">🟢 Fresh (0-7 days)</option>
-                      <option value="recent">🟡 Recent (7-30 days)</option>
-                      <option value="old">🟠 Old (30-90 days)</option>
-                      <option value="stale">🔴 Stale (90+ days)</option>
-                    </select>
-
-                    {/* Toggle filters */}
-                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                      <button type="button" onClick={() => { setLeadGoldenVisa(!leadGoldenVisa); setLeadsPage(1); }}
-                        style={{ padding: "7px 12px", borderRadius: 7, border: `1px solid ${leadGoldenVisa ? T.gold : T.border}`, background: leadGoldenVisa ? "rgba(212,168,67,0.15)" : T.bg, color: leadGoldenVisa ? T.gold : T.textSecondary, fontSize: 11, fontWeight: leadGoldenVisa ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                        🏆 Golden Visa {leadGoldenVisa ? "✓" : ""}
-                      </button>
-                      <button type="button" onClick={() => { setLeadHasWhatsApp(!leadHasWhatsApp); setLeadsPage(1); }}
-                        style={{ padding: "7px 12px", borderRadius: 7, border: `1px solid ${leadHasWhatsApp ? "#25D366" : T.border}`, background: leadHasWhatsApp ? "rgba(37,211,102,0.12)" : T.bg, color: leadHasWhatsApp ? "#25D366" : T.textSecondary, fontSize: 11, fontWeight: leadHasWhatsApp ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                        💬 Has WhatsApp {leadHasWhatsApp ? "✓" : ""}
-                      </button>
-                      <button type="button" onClick={() => { setLeadHasEmail(!leadHasEmail); setLeadsPage(1); }}
-                        style={{ padding: "7px 12px", borderRadius: 7, border: `1px solid ${leadHasEmail ? T.blue : T.border}`, background: leadHasEmail ? "rgba(59,130,246,0.12)" : T.bg, color: leadHasEmail ? T.blue : T.textSecondary, fontSize: 11, fontWeight: leadHasEmail ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                        📧 Has Email {leadHasEmail ? "✓" : ""}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Row 4 — Advanced Dubai RE filters */}
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", paddingTop: 10, borderTop: `1px solid ${T.border}` }}>
-
-                    {/* Bedroom Preference */}
-                    <select value={leadBedroomFilter} onChange={e => { setLeadBedroomFilter(e.target.value); setLeadsPage(1); }}
-                      style={{ padding: "7px 10px", background: leadBedroomFilter !== "all" ? "rgba(212,168,67,0.12)" : T.bg, border: `1px solid ${leadBedroomFilter !== "all" ? T.gold : T.border}`, borderRadius: 7, color: leadBedroomFilter !== "all" ? T.gold : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadBedroomFilter !== "all" ? 700 : 400 }}>
-                      <option value="all">🛏 All Bedrooms</option>
-                      <option value="studio">Studio</option>
-                      <option value="1br">1 Bedroom</option>
-                      <option value="2br">2 Bedrooms</option>
-                      <option value="3br">3 Bedrooms</option>
-                      <option value="4br+">4+ Bedrooms / Villa</option>
-                    </select>
-
-                    {/* Off-Plan vs Ready */}
-                    <select value={leadPropertyPlan} onChange={e => { setLeadPropertyPlan(e.target.value); setLeadsPage(1); }}
-                      style={{ padding: "7px 10px", background: leadPropertyPlan !== "all" ? "rgba(139,92,246,0.12)" : T.bg, border: `1px solid ${leadPropertyPlan !== "all" ? T.purple : T.border}`, borderRadius: 7, color: leadPropertyPlan !== "all" ? T.purple : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadPropertyPlan !== "all" ? 700 : 400 }}>
-                      <option value="all">🏗 Off-Plan / Ready</option>
-                      <option value="offplan">🏗 Off-Plan Interest</option>
-                      <option value="ready">🏠 Ready Property</option>
-                    </select>
-
-                    {/* Developer Preference */}
-                    <select value={leadDeveloper} onChange={e => { setLeadDeveloper(e.target.value); setLeadsPage(1); }}
-                      style={{ padding: "7px 10px", background: leadDeveloper !== "all" ? "rgba(16,185,129,0.12)" : T.bg, border: `1px solid ${leadDeveloper !== "all" ? T.green : T.border}`, borderRadius: 7, color: leadDeveloper !== "all" ? T.green : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadDeveloper !== "all" ? 700 : 400 }}>
-                      <option value="all">🏢 All Developers</option>
-                      <option value="emaar">Emaar</option>
-                      <option value="damac">DAMAC</option>
-                      <option value="sobha">Sobha</option>
-                      <option value="nakheel">Nakheel</option>
-                      <option value="meraas">Meraas</option>
-                      <option value="aldar">Aldar</option>
-                    </select>
-
-                    {/* Payment Plan */}
-                    <select value={leadPaymentPlan} onChange={e => { setLeadPaymentPlan(e.target.value); setLeadsPage(1); }}
-                      style={{ padding: "7px 10px", background: leadPaymentPlan !== "all" ? "rgba(59,130,246,0.12)" : T.bg, border: `1px solid ${leadPaymentPlan !== "all" ? T.blue : T.border}`, borderRadius: 7, color: leadPaymentPlan !== "all" ? T.blue : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadPaymentPlan !== "all" ? 700 : 400 }}>
-                      <option value="all">💳 Payment Type</option>
-                      <option value="yes">📅 Payment Plan</option>
-                      <option value="cash">💵 Cash Buyer</option>
-                    </select>
-
-                    {/* Visa Eligibility */}
-                    <select value={leadVisaEligible} onChange={e => { setLeadVisaEligible(e.target.value); setLeadsPage(1); }}
-                      style={{ padding: "7px 10px", background: leadVisaEligible !== "all" ? "rgba(212,168,67,0.12)" : T.bg, border: `1px solid ${leadVisaEligible !== "all" ? T.gold : T.border}`, borderRadius: 7, color: leadVisaEligible !== "all" ? T.gold : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadVisaEligible !== "all" ? 700 : 400 }}>
-                      <option value="all">🛂 Visa Eligibility</option>
-                      <option value="2yr">2-Year Visa (750K+)</option>
-                      <option value="golden">🏆 Golden Visa (2M+)</option>
-                    </select>
-
-                    {/* Tags */}
-                    <select value={leadTagFilter} onChange={e => { setLeadTagFilter(e.target.value); setLeadsPage(1); }}
-                      style={{ padding: "7px 10px", background: leadTagFilter !== "all" ? "rgba(239,68,68,0.12)" : T.bg, border: `1px solid ${leadTagFilter !== "all" ? T.red : T.border}`, borderRadius: 7, color: leadTagFilter !== "all" ? T.red : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadTagFilter !== "all" ? 700 : 400 }}>
-                      <option value="all">🏷 All Tags</option>
-                      <option value="VIP">⭐ VIP</option>
-                      <option value="Investor">💼 Investor</option>
-                      <option value="End-User">🏠 End-User</option>
-                      <option value="Flipper">🔄 Flipper</option>
-                      <option value="Referral">👥 Referral</option>
-                      <option value="No WhatsApp">✕ No WhatsApp</option>
-                    </select>
-
-                    {/* Toggle buttons */}
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <button type="button" onClick={() => { setLeadNeverContacted(!leadNeverContacted); setLeadsPage(1); }}
-                        style={{ padding: "7px 12px", borderRadius: 7, border: `1px solid ${leadNeverContacted ? T.orange : T.border}`, background: leadNeverContacted ? "rgba(245,158,11,0.12)" : T.bg, color: leadNeverContacted ? T.orange : T.textSecondary, fontSize: 11, fontWeight: leadNeverContacted ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                        👻 Never Contacted {leadNeverContacted ? "✓" : ""}
-                      </button>
-                      <button type="button" onClick={() => { setLeadHasFollowUp(!leadHasFollowUp); setLeadsPage(1); }}
-                        style={{ padding: "7px 12px", borderRadius: 7, border: `1px solid ${leadHasFollowUp ? T.purple : T.border}`, background: leadHasFollowUp ? "rgba(139,92,246,0.12)" : T.bg, color: leadHasFollowUp ? T.purple : T.textSecondary, fontSize: 11, fontWeight: leadHasFollowUp ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                        🔔 Has Follow-up {leadHasFollowUp ? "✓" : ""}
-                      </button>
-                    </div>
-                  </div>
+                <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
+                  <input type="text" placeholder="Search name, email, phone, nationality, project..." value={leadSearch} onChange={e => setLeadSearch(e.target.value)} style={{ flex: 1, minWidth: 200, padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                  <select value={leadSourceFilter} onChange={e => setLeadSourceFilter(e.target.value)} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                    <option value="all">All Sources</option>
+                    {sources.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <select value={leadDateRange} onChange={e => setLeadDateRange(e.target.value)} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="overdue">Overdue Follow-ups</option>
+                    <option value="today_followup">Due Today</option>
+                  </select>
+                  {(leadFilter !== "all" || leadSourceFilter !== "all" || leadDateRange !== "all" || leadSearch) && (
+                    <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); }} style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
+                  )}
+                  <span style={{ fontSize: 11, color: T.textMuted }}>{filtered.length} of {leads.length}</span>
                 </div>
 
                 {/* KANBAN VIEW */}
@@ -21490,7 +20864,7 @@ export default function AdminPanel() {
                             </tr>
                           </thead>
                           <tbody>
-                            {paginatedLeads.map((lead) => {
+                            {filtered.map((lead) => {
                               const sc = statusColors[lead.status || "New"] || statusColors.New;
                               const score = scoreLead(lead);
                               const overdue = isOverdue(lead);
@@ -21543,23 +20917,7 @@ export default function AdminPanel() {
                                   </td>
                                   <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
                                     <div style={{ display: "flex", gap: 5 }}>
-                                      {lead.phone && !(lead.tags || []).includes("No WhatsApp") && (
-                                        <a href={`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${lead.name || ""}, following up on your interest in ${lead.project || "the property"}.`)}`}
-                                          target="_blank" rel="noreferrer"
-                                          style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, background: "rgba(37,211,102,0.15)", color: "#25D366", textDecoration: "none", fontWeight: 600 }}>WA</a>
-                                      )}
-                                      {lead.phone && !(lead.tags || []).includes("No WhatsApp") && (
-                                        <button type="button" title="Mark as No WhatsApp" onClick={async e => {
-                                          e.stopPropagation();
-                                          const newTags = [...(lead.tags || []), "No WhatsApp"];
-                                          await setDoc(doc(db, "leads", lead.id), { tags: newTags, updatedAt: new Date().toISOString() }, { merge: true });
-                                          fetchLeads();
-                                          notify("Marked as No WhatsApp");
-                                        }} style={{ fontSize: 10, padding: "4px 6px", borderRadius: 6, border: "none", background: "rgba(239,68,68,0.1)", color: T.red, cursor: "pointer", fontWeight: 700 }}>✕WA</button>
-                                      )}
-                                      {(lead.tags || []).includes("No WhatsApp") && (
-                                        <span style={{ fontSize: 9, padding: "4px 8px", borderRadius: 6, background: "rgba(239,68,68,0.08)", color: T.red, fontWeight: 600 }}>No WA</span>
-                                      )}
+                                      {lead.phone && <a href={`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${lead.name || ""}, following up on your interest in ${lead.project || "the property"}.`)}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>WA</a>}
                                       <button type="button" onClick={() => setShowFollowUpModal(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: "none", background: "rgba(212,168,67,0.12)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>+Followup</button>
                                       <button type="button" onClick={() => setLeadDrawer(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.08)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>Open</button>
                                     </div>
@@ -21571,73 +20929,6 @@ export default function AdminPanel() {
                         </table>
                       </div>
                     )}
-                  </div>
-                )}
-
-                {/* PAGINATION BAR */}
-                {leadsViewMode === "table" && !leadAnalyticsView && filtered.length > 0 && (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, marginTop: 12, flexWrap: "wrap", gap: 10 }}>
-                    {/* Info */}
-                    <div style={{ fontSize: 11, color: T.textMuted }}>
-                      Showing <span style={{ color: T.white, fontWeight: 600 }}>{((safePage-1)*LEADS_PER_PAGE)+1}–{Math.min(safePage*LEADS_PER_PAGE, filtered.length)}</span> of <span style={{ color: T.gold, fontWeight: 700 }}>{filtered.length.toLocaleString()}</span> loaded
-                      {leadsHasMore && <span style={{ color: T.textMuted }}> · <span style={{ color: T.gold, fontWeight: 600 }}>{leadsTotal.toLocaleString()} total in database</span></span>}
-                    </div>
-                    {/* Page controls */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                      {/* Prev */}
-                      <button type="button" disabled={safePage === 1} onClick={() => setLeadsPage(p => Math.max(1, p-1))}
-                        style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: safePage === 1 ? "transparent" : T.surfaceAlt, color: safePage === 1 ? T.textMuted : T.white, cursor: safePage === 1 ? "not-allowed" : "pointer", fontSize: 12, fontWeight: 600 }}>←</button>
-
-                      {/* Page numbers */}
-                      {(() => {
-                        const pages = [];
-                        let start = Math.max(1, safePage - 2);
-                        let end = Math.min(totalPages, start + 4);
-                        if (end - start < 4) start = Math.max(1, end - 4);
-
-                        if (start > 1) {
-                          pages.push(<button key="1" type="button" onClick={() => setLeadsPage(1)} style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, cursor: "pointer", fontSize: 11 }}>1</button>);
-                          if (start > 2) pages.push(<span key="dots1" style={{ color: T.textMuted, fontSize: 11, padding: "0 4px" }}>...</span>);
-                        }
-
-                        for (let i = start; i <= end; i++) {
-                          pages.push(
-                            <button key={i} type="button" onClick={() => setLeadsPage(i)}
-                              style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${i === safePage ? T.gold : T.border}`, background: i === safePage ? "rgba(212,168,67,0.15)" : T.surfaceAlt, color: i === safePage ? T.gold : T.textSecondary, cursor: "pointer", fontSize: 11, fontWeight: i === safePage ? 700 : 400 }}>{i}</button>
-                          );
-                        }
-
-                        if (end < totalPages) {
-                          if (end < totalPages - 1) pages.push(<span key="dots2" style={{ color: T.textMuted, fontSize: 11, padding: "0 4px" }}>...</span>);
-                          pages.push(<button key={totalPages} type="button" onClick={() => setLeadsPage(totalPages)} style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, cursor: "pointer", fontSize: 11 }}>{totalPages}</button>);
-                        }
-                        return pages;
-                      })()}
-
-                      {/* Next */}
-                      <button type="button" disabled={safePage === totalPages} onClick={() => setLeadsPage(p => Math.min(totalPages, p+1))}
-                        style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: safePage === totalPages ? "transparent" : T.surfaceAlt, color: safePage === totalPages ? T.textMuted : T.white, cursor: safePage === totalPages ? "not-allowed" : "pointer", fontSize: 12, fontWeight: 600 }}>→</button>
-
-                      {/* Jump to page */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: 4 }}>
-                        <span style={{ fontSize: 11, color: T.textMuted }}>Go to</span>
-                        <input type="number" min="1" max={totalPages} placeholder={safePage}
-                          onKeyDown={e => { if (e.key === "Enter") { const p = parseInt(e.target.value); if (p >= 1 && p <= totalPages) { setLeadsPage(p); e.target.value = ""; } } }}
-                          style={{ width: 52, padding: "6px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", textAlign: "center" }} />
-                      </div>
-
-                      {/* Load Next 500 — only shows on last page when more exist */}
-                      {leadsHasMore && safePage === totalPages && (
-                        <button type="button" onClick={() => {
-                          const newLim = leads.length + 500;
-                          setLeadsLimit(newLim);
-                          fetchLeads(newLim);
-                          setLeadsPage(totalPages + 1);
-                        }} style={{ padding: "6px 14px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.1)", color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", marginLeft: 4 }}>
-                          ↓ Load Next 500
-                        </button>
-                      )}
-                    </div>
                   </div>
                 )}
 
@@ -21653,6 +20944,7 @@ export default function AdminPanel() {
                         {[
                           { key: "name", label: "Full Name *", placeholder: "John Smith", full: true },
                           { key: "email", label: "Email", placeholder: "john@example.com", type: "email" },
+                          { key: "phone", label: "Phone / WhatsApp", placeholder: "+971 50 123 4567" },
                           { key: "budget", label: "Budget (AED)", placeholder: "e.g. 2000000", type: "number" },
                           { key: "project", label: "Interested Project", placeholder: "e.g. The Valley" },
                         ].map(f => (
@@ -21662,91 +20954,14 @@ export default function AdminPanel() {
                               style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
                           </div>
                         ))}
-                        {/* Community searchable */}
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Community</label>
-                          <SearchableSelect
-                            value={addLeadForm.community || ""}
-                            onChange={v => setAddLeadForm(prev => ({ ...prev, community: v }))}
-                            options={leadCommunities.map(c => ({ value: c, label: c }))}
-                            placeholder="Select community..."
-                            style={{ background: T.bg, fontSize: 13 }}
-                          />
-                        </div>
-                        {/* Tag */}
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Tag</label>
-                          <select value={(addLeadForm.tags || [])[0] || ""} onChange={e => setAddLeadForm(prev => ({ ...prev, tags: e.target.value ? [e.target.value] : [] }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: (addLeadForm.tags || [])[0] ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="">No tag</option>
-                            <option value="VIP">⭐ VIP</option>
-                            <option value="Investor">💼 Investor</option>
-                            <option value="End-User">🏠 End-User</option>
-                            <option value="Flipper">🔄 Flipper</option>
-                            <option value="Referral">👥 Referral</option>
-                            <option value="No WhatsApp">✕ No WhatsApp</option>
-                          </select>
-                        </div>
-                        {/* Phone with country code */}
-                        <div style={{ gridColumn: "1/-1" }}>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone / WhatsApp</label>
-                          <div style={{ display: "flex", gap: 8 }}>
-                            <SearchableSelect
-                              value={addLeadForm.phoneCode || "+971"}
-                              onChange={v => setAddLeadForm(prev => ({ ...prev, phoneCode: v || "+971", phone: (v || "+971") + (prev.phoneNum || "").replace(/\s/g,"") }))}
-                              options={[
-                                ["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+376","🇦🇩 Andorra"],["+244","🇦🇴 Angola"],
-                                ["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],
-                                ["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],
-                                ["+229","🇧🇯 Benin"],["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+267","🇧🇼 Botswana"],
-                                ["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],
-                                ["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+238","🇨🇻 Cape Verde"],["+236","🇨🇫 Central African Rep"],
-                                ["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+269","🇰🇲 Comoros"],
-                                ["+242","🇨🇬 Congo"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],
-                                ["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],["+1","🇩🇴 Dominican Republic"],["+593","🇪🇨 Ecuador"],
-                                ["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+372","🇪🇪 Estonia"],["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],
-                                ["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],
-                                ["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],
-                                ["+245","🇬🇼 Guinea-Bissau"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],["+36","🇭🇺 Hungary"],
-                                ["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],
-                                ["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],["+81","🇯🇵 Japan"],
-                                ["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea (South)"],["+965","🇰🇼 Kuwait"],
-                                ["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+266","🇱🇸 Lesotho"],
-                                ["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],
-                                ["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],
-                                ["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],
-                                ["+382","🇲🇪 Montenegro"],["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+977","🇳🇵 Nepal"],
-                                ["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+227","🇳🇪 Niger"],["+234","🇳🇬 Nigeria"],
-                                ["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],
-                                ["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],
-                                ["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],
-                                ["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+232","🇸🇱 Sierra Leone"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],
-                                ["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],
-                                ["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+597","🇸🇷 Suriname"],["+268","🇸🇿 Swaziland"],["+46","🇸🇪 Sweden"],
-                                ["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],
-                                ["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+1","🇹🇹 Trinidad & Tobago"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],
-                                ["+993","🇹🇲 Turkmenistan"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],
-                                ["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],
-                                ["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"],
-                              ].sort((a,b) => a[1].localeCompare(b[1])).map(([code, name]) => ({ value: code, label: `${name} (${code})` }))}
-                              placeholder="🇦🇪 UAE (+971)"
-                              style={{ width: 190, background: T.bg, fontSize: 11, flexShrink: 0 }}
-                            />
-                            <input type="tel" placeholder="50 123 4567" value={addLeadForm.phoneNum || ""}
-                              onChange={e => { const num = e.target.value.replace(/[^\d\s]/g,""); setAddLeadForm(prev => ({ ...prev, phoneNum: num, phone: (prev.phoneCode || "+971") + num.replace(/\s/g,"") })); }}
-                              style={{ flex: 1, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                          </div>
-                        </div>
                         {/* Nationality dropdown */}
                         <div>
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Nationality</label>
-                          <SearchableSelect
-                            value={addLeadForm.nationality || ""}
-                            onChange={v => setAddLeadForm(prev => ({ ...prev, nationality: v }))}
-                            options={DUBAI_NATIONALITIES.map(n => ({ value: n, label: n }))}
-                            placeholder="Select nationality..."
-                            style={{ background: T.bg, fontSize: 13 }}
-                          />
+                          <select value={addLeadForm.nationality || ""} onChange={e => setAddLeadForm(prev => ({ ...prev, nationality: e.target.value }))}
+                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: addLeadForm.nationality ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                            <option value="">Select nationality...</option>
+                            {DUBAI_NATIONALITIES.map(n => <option key={n} value={n}>{n}</option>)}
+                          </select>
                         </div>
                         {/* Duplicate email warning */}
                         {addLeadForm.email && leads.some(l => l.email && l.email.toLowerCase() === addLeadForm.email.toLowerCase()) && (
@@ -21804,519 +21019,6 @@ export default function AdminPanel() {
                         <button type="button" onClick={() => { setShowFollowUpModal(null); setFollowUpDate(""); setFollowUpNote(""); }} style={{ flex: 1, padding: "11px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
                         <button type="button" onClick={scheduleFollowUp} style={{ flex: 2, padding: "11px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8860B)`, color: T.bg, cursor: "pointer", fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>Schedule Follow-Up</button>
                       </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* ── PHONE FIXER MODAL ────────────────────────────── */}
-                {showPhoneFixer && (
-                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => { if (!phoneFixerScanning) setShowPhoneFixer(false); }}>
-                    <div style={{ background: T.surface, border: `1px solid rgba(139,92,246,0.4)`, borderRadius: 16, width: "95%", maxWidth: 560, padding: 28, maxHeight: "90vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                        <div>
-                          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.purple, marginBottom: 4 }}>📞 Fix Phone Numbers</h3>
-                          <p style={{ fontSize: 11, color: T.textMuted }}>Scans all leads and standardises UAE phone numbers to +971 format for WhatsApp</p>
-                        </div>
-                        {!phoneFixerScanning && <button type="button" onClick={() => setShowPhoneFixer(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>}
-                      </div>
-
-                      {!phoneFixerResult && !phoneFixerScanning && (() => {
-                        // UAE Phone Number Intelligence (based on TDRA/ITU-T E.164 research)
-                        const UAE_MOBILE_PREFIXES = ["50","51","52","53","54","55","56","57","58","59"];
-                        const UAE_LANDLINE_AREAS = { "2":"Abu Dhabi","3":"Al Ain","4":"Dubai","6":"Sharjah/Ajman/UAQ","7":"Ras Al Khaimah","9":"Fujairah" };
-                        const CARRIER_MAP = { "050":"Etisalat","051":"Etisalat","054":"Etisalat","056":"Etisalat","059":"Etisalat","052":"Du","055":"Du","057":"Du","053":"Virgin/Du","058":"Du/Virgin" };
-
-                        const classifyNumber = (raw) => {
-                          if (!raw) return { type: "empty", carrier: null, country: null };
-                          const clean = raw.replace(/[\s\-\(\)\.]/g, "");
-                          // Already international
-                          const local = clean.startsWith("+971") ? clean.slice(4) : clean.startsWith("00971") ? clean.slice(5) : clean.startsWith("971") && clean.length >= 11 ? clean.slice(3) : clean.startsWith("0") ? clean.slice(1) : clean;
-                          if (UAE_MOBILE_PREFIXES.includes(local.slice(0,2)) && local.length === 9) {
-                            const prefix = "0" + local.slice(0,2);
-                            return { type: "uae_mobile", carrier: CARRIER_MAP[prefix] || "UAE", country: "🇦🇪 UAE", local };
-                          }
-                          if (UAE_LANDLINE_AREAS[local[0]] && local.length === 8) {
-                            return { type: "uae_landline", carrier: "Landline", country: `🇦🇪 ${UAE_LANDLINE_AREAS[local[0]]}`, local };
-                          }
-                          if (clean.startsWith("+") && !clean.startsWith("+971") && clean.length >= 10) {
-                            return { type: "international", carrier: null, country: "🌍 International", local };
-                          }
-                          if (local.length < 7) return { type: "incomplete", carrier: null, country: null, local };
-                          return { type: "unknown", carrier: null, country: null, local };
-                        };
-
-                        return (
-                          <div>
-                            <div style={{ padding: "14px 16px", borderRadius: 10, background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.2)", marginBottom: 16 }}>
-                              <div style={{ fontSize: 12, color: T.purple, fontWeight: 700, marginBottom: 10 }}>UAE Phone Intelligence (TDRA/ITU-T E.164)</div>
-                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 11, color: T.textSecondary, lineHeight: 1.8 }}>
-                                <div>
-                                  <div style={{ color: T.gold, fontWeight: 700, marginBottom: 4 }}>UAE Mobile Prefixes</div>
-                                  <div>050, 054, 056 → Etisalat</div>
-                                  <div>052, 055, 057, 058 → Du</div>
-                                  <div>053 → Virgin/Du</div>
-                                  <div>051, 059 → Etisalat (new)</div>
-                                </div>
-                                <div>
-                                  <div style={{ color: T.gold, fontWeight: 700, marginBottom: 4 }}>UAE Landline Area Codes</div>
-                                  <div>02 → Abu Dhabi</div>
-                                  <div>03 → Al Ain</div>
-                                  <div>04 → Dubai</div>
-                                  <div>06 → Sharjah/Ajman/UAQ</div>
-                                  <div>07 → Ras Al Khaimah</div>
-                                  <div>09 → Fujairah</div>
-                                </div>
-                              </div>
-                              <div style={{ marginTop: 10, padding: "8px 10px", borderRadius: 6, background: T.bg, fontSize: 10, color: T.textMuted }}>
-                                ⚠️ Numbers &lt;7 digits from DLD data are incomplete — cannot be recovered. International numbers (+44, +91, etc.) are kept as-is.
-                              </div>
-                            </div>
-                            <div style={{ display: "flex", gap: 10 }}>
-                              <button type="button" onClick={async () => {
-                                setPhoneFixerScanning(true);
-                                const fixPhone = (raw) => {
-                                  if (!raw) return null;
-                                  let p = raw.replace(/[\s\-\(\)\.]/g, "");
-                                  // Already correct
-                                  if (p.startsWith("+971") && p.length === 13) return null;
-                                  // International numbers — keep as-is
-                                  if (p.startsWith("+") && !p.startsWith("+971")) return null;
-                                  // Strip 00971 or 0971
-                                  if (p.startsWith("00971")) p = "+" + p.slice(2);
-                                  else if (p.startsWith("0971")) p = "+" + p.slice(1);
-                                  // Strip 971 prefix
-                                  else if (p.startsWith("971") && p.length >= 12) p = "+" + p;
-                                  // Local with 0 prefix: 05XXXXXXXX = 10 digits
-                                  else if (p.startsWith("05") && p.length === 10) p = "+971" + p.slice(1);
-                                  // Local without 0: 5XXXXXXXX = 9 digits
-                                  else if (UAE_MOBILE_PREFIXES.includes(p.slice(0,2)) && p.length === 9) p = "+971" + p;
-                                  // Landline with 0: 04XXXXXXX = 9 digits
-                                  else if (p.startsWith("0") && p.length === 9 && UAE_LANDLINE_AREAS[p[1]]) p = "+971" + p.slice(1);
-                                  // Landline without 0: 4XXXXXXX = 8 digits
-                                  else if (p.length === 8 && UAE_LANDLINE_AREAS[p[0]]) p = "+971" + p;
-                                  else return null;
-                                  // Final validation
-                                  return (p.startsWith("+971") && p.length >= 12 && p.length <= 13) ? p : null;
-                                };
-                                try {
-                                  const preview = [];
-                                  let lastDoc = null;
-                                  let keepGoing = true;
-                                  while (keepGoing && preview.length < 25) {
-                                    const q = lastDoc
-                                      ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500))
-                                      : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
-                                    const snap = await getDocs(q);
-                                    snap.forEach(d => {
-                                      const data = d.data();
-                                      const fixed = fixPhone(data.phone);
-                                      if (fixed && fixed !== data.phone) {
-                                        const info = classifyNumber(fixed);
-                                        preview.push({ id: d.id, name: data.name, old: data.phone, new: fixed, carrier: info.carrier, country: info.country });
-                                      }
-                                    });
-                                    if (snap.docs.length < 500) keepGoing = false;
-                                    else lastDoc = snap.docs[snap.docs.length - 1];
-                                  }
-                                  setPhoneFixerPreview(preview);
-                                } catch (e) { notify("Scan error: " + e.message); }
-                                setPhoneFixerScanning(false);
-                              }} style={{ flex: 1, padding: "11px", borderRadius: 8, border: "none", background: T.surfaceAlt, color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-                                Preview Changes
-                              </button>
-                              <button type="button" onClick={async () => {
-                                setPhoneFixerScanning(true);
-                                const fixPhone = (raw) => {
-                                  if (!raw) return null;
-                                  let p = raw.replace(/[\s\-\(\)\.]/g, "");
-                                  if (p.startsWith("+971") && p.length === 13) return null;
-                                  if (p.startsWith("+") && !p.startsWith("+971")) return null;
-                                  if (p.startsWith("00971")) p = "+" + p.slice(2);
-                                  else if (p.startsWith("0971")) p = "+" + p.slice(1);
-                                  else if (p.startsWith("971") && p.length >= 12) p = "+" + p;
-                                  else if (p.startsWith("05") && p.length === 10) p = "+971" + p.slice(1);
-                                  else if (UAE_MOBILE_PREFIXES.includes(p.slice(0,2)) && p.length === 9) p = "+971" + p;
-                                  else if (p.startsWith("0") && p.length === 9 && UAE_LANDLINE_AREAS[p[1]]) p = "+971" + p.slice(1);
-                                  else if (p.length === 8 && UAE_LANDLINE_AREAS[p[0]]) p = "+971" + p;
-                                  else return null;
-                                  return (p.startsWith("+971") && p.length >= 12 && p.length <= 13) ? p : null;
-                                };
-                                try {
-                                  let fixed = 0; let skipped = 0; let incomplete = 0; let international = 0;
-                                  let lastDoc = null; let keepGoing = true;
-                                  while (keepGoing) {
-                                    const q = lastDoc
-                                      ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500))
-                                      : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
-                                    const snap = await getDocs(q);
-                                    const updates = [];
-                                    snap.forEach(d => {
-                                      const data = d.data();
-                                      const raw = data.phone || "";
-                                      if (!raw) { skipped++; return; }
-                                      const clean = raw.replace(/[\s\-\(\)\.]/g, "");
-                                      if (clean.startsWith("+") && !clean.startsWith("+971")) { international++; return; }
-                                      if (clean.length < 7) { incomplete++; return; }
-                                      const fp = fixPhone(raw);
-                                      if (fp && fp !== raw) updates.push({ id: d.id, phone: fp });
-                                      else skipped++;
-                                    });
-                                    await Promise.all(updates.map(u => setDoc(doc(db, "leads", u.id), { phone: u.phone, updatedAt: new Date().toISOString() }, { merge: true })));
-                                    fixed += updates.length;
-                                    if (snap.docs.length < 500) keepGoing = false;
-                                    else lastDoc = snap.docs[snap.docs.length - 1];
-                                  }
-                                  setPhoneFixerResult({ fixed, skipped, incomplete, international });
-                                  fetchLeads(500);
-                                } catch (e) { notify("Fix error: " + e.message); }
-                                setPhoneFixerScanning(false);
-                              }} style={{ flex: 1, padding: "11px", borderRadius: 8, border: "none", background: T.purple, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-                                Fix All Numbers
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      {phoneFixerPreview.length > 0 && !phoneFixerResult && (
-                        <div style={{ marginTop: 16 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Preview (first 25 changes)</div>
-                          <div style={{ background: T.surfaceAlt, borderRadius: 8, overflow: "hidden", border: `1px solid ${T.border}` }}>
-                            {phoneFixerPreview.map((r, i) => (
-                              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderBottom: i < phoneFixerPreview.length - 1 ? `1px solid ${T.border}` : "none", fontSize: 11 }}>
-                                <span style={{ color: T.textMuted, width: 100, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
-                                <span style={{ color: T.red, textDecoration: "line-through", flexShrink: 0 }}>{r.old}</span>
-                                <span style={{ color: T.textMuted }}>→</span>
-                                <span style={{ color: T.green, fontWeight: 700, flexShrink: 0 }}>{r.new}</span>
-                                {r.carrier && <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: "rgba(139,92,246,0.12)", color: T.purple, flexShrink: 0 }}>{r.carrier}</span>}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {phoneFixerScanning && (
-                        <div style={{ textAlign: "center", padding: "20px 0" }}>
-                          <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: T.purple }}>Scanning all leads...</div>
-                        </div>
-                      )}
-
-                      {phoneFixerResult && (
-                        <div style={{ textAlign: "center", padding: "20px 0" }}>
-                          <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
-                          <div style={{ fontSize: 16, fontWeight: 700, color: T.green, marginBottom: 16 }}>Phone Numbers Fixed!</div>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20, textAlign: "left" }}>
-                            <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(16,185,129,0.08)", border: `1px solid ${T.green}` }}>
-                              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Fixed to +971</div>
-                              <div style={{ fontSize: 22, fontWeight: 900, color: T.green, fontFamily: "'Fraunces',serif" }}>{phoneFixerResult.fixed.toLocaleString()}</div>
-                            </div>
-                            <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(59,130,246,0.08)", border: `1px solid ${T.blue}` }}>
-                              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>International (kept)</div>
-                              <div style={{ fontSize: 22, fontWeight: 900, color: T.blue, fontFamily: "'Fraunces',serif" }}>{(phoneFixerResult.international || 0).toLocaleString()}</div>
-                            </div>
-                            <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: `1px solid ${T.orange}` }}>
-                              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Incomplete (&lt;7 digits)</div>
-                              <div style={{ fontSize: 22, fontWeight: 900, color: T.orange, fontFamily: "'Fraunces',serif" }}>{(phoneFixerResult.incomplete || 0).toLocaleString()}</div>
-                            </div>
-                            <div style={{ padding: "10px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
-                              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>No change needed</div>
-                              <div style={{ fontSize: 22, fontWeight: 900, color: T.textSecondary, fontFamily: "'Fraunces',serif" }}>{phoneFixerResult.skipped.toLocaleString()}</div>
-                            </div>
-                          </div>
-                          <button type="button" onClick={() => setShowPhoneFixer(false)} style={{ padding: "10px 28px", borderRadius: 8, border: "none", background: T.green, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Done</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* ── BULK WHATSAPP MODAL ───────────────────────────── */}
-                {showBulkWhatsApp && (
-                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowBulkWhatsApp(false)}>
-                    <div style={{ background: T.surface, border: "1px solid rgba(37,211,102,0.4)", borderRadius: 16, width: "95%", maxWidth: 560, padding: 28 }} onClick={e => e.stopPropagation()}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                        <div>
-                          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: "#25D366", marginBottom: 4 }}>💬 Bulk WhatsApp</h3>
-                          <p style={{ fontSize: 11, color: T.textMuted }}>{bulkWhatsAppLeads.length} leads with phone numbers selected</p>
-                        </div>
-                        <button type="button" onClick={() => setShowBulkWhatsApp(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>
-                      </div>
-
-                      {/* Message template */}
-                      <div style={{ marginBottom: 16 }}>
-                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Message Template</label>
-                        <textarea value={bulkWhatsAppMessage} onChange={e => setBulkWhatsAppMessage(e.target.value)} rows={5}
-                          placeholder={"Hi {name},\n\nI'm reaching out regarding your property at {community}.\n\nWould you be interested in exploring Emaar's latest projects in your area?\n\nBest regards,\nThe Address Holding"}
-                          style={{ width: "100%", padding: "12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
-                        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>Use {"{name}"}, {"{community}"}, {"{project}"} as placeholders — auto-replaced for each lead</div>
-                      </div>
-
-                      {/* Quick templates */}
-                      <div style={{ marginBottom: 16 }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Quick Templates</div>
-                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                          {[
-                            { label: "Emaar Match", msg: "Hi {name}, as a property owner in {community}, you may qualify for exclusive Emaar projects with prices starting from AED 1.5M. Interested to know more? - The Address Holding" },
-                            { label: "Golden Visa", msg: "Hi {name}, did you know your property in {community} may qualify you for a UAE Golden Visa (10 years)? Let's discuss your options. - The Address Holding" },
-                            { label: "Market Update", msg: "Hi {name}, property values in {community} have increased 18% this year. Would you like a free valuation of your property? - The Address Holding" },
-                          ].map(t => (
-                            <button key={t.label} type="button" onClick={() => setBulkWhatsAppMessage(t.msg)}
-                              style={{ fontSize: 10, padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, cursor: "pointer" }}>{t.label}</button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Progress */}
-                      <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
-                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>Progress: <span style={{ color: T.white, fontWeight: 700 }}>{bulkWhatsAppIndex}</span> / {bulkWhatsAppLeads.length} sent</div>
-                        <div style={{ height: 4, borderRadius: 2, background: T.border }}>
-                          <div style={{ height: "100%", borderRadius: 2, background: "#25D366", width: `${bulkWhatsAppLeads.length > 0 ? (bulkWhatsAppIndex / bulkWhatsAppLeads.length) * 100 : 0}%`, transition: "width 0.3s" }} />
-                        </div>
-                      </div>
-
-                      {/* Action buttons */}
-                      <div style={{ display: "flex", gap: 10 }}>
-                        <button type="button" onClick={() => {
-                          if (bulkWhatsAppIndex >= bulkWhatsAppLeads.length) { notify("All leads sent!"); setShowBulkWhatsApp(false); return; }
-                          const lead = bulkWhatsAppLeads[bulkWhatsAppIndex];
-                          const msg = (bulkWhatsAppMessage || `Hi {name}, I'm reaching out regarding your property in {community}. - The Address Holding`)
-                            .replace(/\{name\}/g, lead.name || "there")
-                            .replace(/\{community\}/g, lead.community || "Dubai")
-                            .replace(/\{project\}/g, lead.project || "your project");
-                          const phone = (lead.phone || "").replace(/[^0-9+]/g, "");
-                          const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
-                          window.open(url, "_blank");
-                          setBulkWhatsAppIndex(prev => prev + 1);
-                          // Log activity
-                          setDoc(doc(db, "leads", lead.id), {
-                            activity: [...(lead.activity || []), { type: "whatsapp", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "WhatsApp sent via bulk campaign" }],
-                            status: lead.status === "New" ? "Contacted" : lead.status,
-                            updatedAt: new Date().toISOString()
-                          }, { merge: true });
-                        }} style={{ flex: 1, padding: "12px", borderRadius: 8, border: "none", background: "#25D366", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                          {bulkWhatsAppIndex >= bulkWhatsAppLeads.length ? "✅ All Done!" : `Send to ${bulkWhatsAppLeads[bulkWhatsAppIndex]?.name || "next lead"} →`}
-                        </button>
-                        <button type="button" onClick={() => setBulkWhatsAppIndex(0)} style={{ padding: "12px 16px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 12, cursor: "pointer" }}>↺ Reset</button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* ── DEDUPLICATE MODAL ─────────────────────────────── */}
-                {showDeduplicateModal && (
-                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => { if (!deduplicating) setShowDeduplicateModal(false); }}>
-                    <div style={{ background: T.surface, border: `1px solid rgba(245,158,11,0.4)`, borderRadius: 16, width: "95%", maxWidth: 500, padding: 28 }} onClick={e => e.stopPropagation()}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                        <div>
-                          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.orange, marginBottom: 4 }}>🔁 Remove Duplicates</h3>
-                          <p style={{ fontSize: 11, color: T.textMuted }}>Scans all leads and removes duplicates by phone number. Keeps the newest record.</p>
-                        </div>
-                        {!deduplicating && <button type="button" onClick={() => setShowDeduplicateModal(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>}
-                      </div>
-
-                      {!deduplicateResult && !deduplicating && (
-                        <div>
-                          <div style={{ padding: "14px 16px", borderRadius: 10, background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", marginBottom: 20 }}>
-                            <div style={{ fontSize: 12, color: T.orange, fontWeight: 600, marginBottom: 6 }}>⚠️ What this does:</div>
-                            <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6 }}>
-                              • Scans all {leadsTotal.toLocaleString()} leads in batches<br/>
-                              • Groups leads by phone number<br/>
-                              • Keeps the most recently created lead<br/>
-                              • Permanently deletes older duplicates<br/>
-                              • This cannot be undone
-                            </div>
-                          </div>
-                          <button type="button" onClick={async () => {
-                            setDeduplicating(true);
-                            try {
-                              // Scan all leads
-                              const phoneMap = {};
-                              let lastDoc = null;
-                              let keepGoing = true;
-                              let totalScanned = 0;
-                              while (keepGoing) {
-                                const q = lastDoc
-                                  ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500))
-                                  : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
-                                const snap = await getDocs(q);
-                                snap.forEach(d => {
-                                  const data = d.data();
-                                  const phone = (data.phone || "").replace(/[^0-9]/g, "");
-                                  if (phone && phone.length > 6) {
-                                    if (!phoneMap[phone]) phoneMap[phone] = [];
-                                    phoneMap[phone].push({ id: d.id, createdAt: data.createdAt || "" });
-                                  }
-                                  totalScanned++;
-                                });
-                                if (snap.docs.length < 500) keepGoing = false;
-                                else lastDoc = snap.docs[snap.docs.length - 1];
-                              }
-                              // Find duplicates (keep newest = first since sorted desc)
-                              const toDelete = [];
-                              Object.values(phoneMap).forEach(group => {
-                                if (group.length > 1) {
-                                  // First is newest (sorted by createdAt desc), delete the rest
-                                  group.slice(1).forEach(l => toDelete.push(l.id));
-                                }
-                              });
-                              // Delete in batches of 400
-                              for (let i = 0; i < toDelete.length; i += 400) {
-                                const chunk = toDelete.slice(i, i + 400);
-                                await Promise.all(chunk.map(id => deleteDoc(doc(db, "leads", id))));
-                              }
-                              setDeduplicateResult({ scanned: totalScanned, deleted: toDelete.length });
-                              fetchLeads(500);
-                              fetchLeadMeta();
-                            } catch (e) { notify("Error: " + e.message); }
-                            setDeduplicating(false);
-                          }} style={{ width: "100%", padding: "13px", borderRadius: 10, border: "none", background: T.orange, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                            Start Deduplication
-                          </button>
-                        </div>
-                      )}
-
-                      {deduplicating && (
-                        <div style={{ textAlign: "center", padding: "20px 0" }}>
-                          <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: T.orange, marginBottom: 8 }}>Scanning all leads...</div>
-                          <div style={{ fontSize: 11, color: T.textMuted }}>This may take 1-2 minutes for large databases</div>
-                        </div>
-                      )}
-
-                      {deduplicateResult && (
-                        <div style={{ textAlign: "center", padding: "20px 0" }}>
-                          <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
-                          <div style={{ fontSize: 16, fontWeight: 700, color: T.green, marginBottom: 8 }}>Deduplication Complete!</div>
-                          <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 4 }}>Scanned: {deduplicateResult.scanned.toLocaleString()} leads</div>
-                          <div style={{ fontSize: 13, color: T.red, marginBottom: 20 }}>Deleted: {deduplicateResult.deleted.toLocaleString()} duplicates</div>
-                          <button type="button" onClick={() => { setShowDeduplicateModal(false); setDeduplicateResult(null); }}
-                            style={{ padding: "10px 28px", borderRadius: 8, border: "none", background: T.green, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Done</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* ── CSV IMPORT MODAL ─────────────────────────────── */}
-                {showImportLeads && (
-                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => { if (!importLeadsLoading) setShowImportLeads(false); }}>
-                    <div style={{ background: T.surface, border: `1px solid rgba(59,130,246,0.4)`, borderRadius: 16, width: "95%", maxWidth: 640, padding: 28, maxHeight: "90vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
-                      {/* Header */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                        <div>
-                          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.blue, marginBottom: 4 }}>⬆ Import Leads from CSV</h3>
-                          <p style={{ fontSize: 11, color: T.textMuted }}>Upload a CSV file with columns: name, phone, email, project, community, nationality, budget, source</p>
-                        </div>
-                        {!importLeadsLoading && <button type="button" onClick={() => setShowImportLeads(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20 }}>×</button>}
-                      </div>
-
-                      {/* Column guide */}
-                      {!importLeadsDone && importLeadsData.length === 0 && (
-                        <div style={{ marginBottom: 20, padding: "14px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Expected CSV Columns</div>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
-                            {[
-                              { col: "name", req: true }, { col: "phone", req: false },
-                              { col: "email", req: false }, { col: "project", req: false },
-                              { col: "community", req: false }, { col: "nationality", req: false },
-                              { col: "budget", req: false }, { col: "source", req: false },
-                            ].map(({ col, req }) => (
-                              <div key={col} style={{ padding: "6px 10px", borderRadius: 6, background: req ? "rgba(16,185,129,0.1)" : T.bg, border: `1px solid ${req ? T.green : T.border}` }}>
-                                <span style={{ fontSize: 10, color: req ? T.green : T.textSecondary, fontWeight: req ? 700 : 400 }}>{col}{req ? " *" : ""}</span>
-                              </div>
-                            ))}
-                          </div>
-                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>* Required. All other columns optional. Column names are case-insensitive.</div>
-                        </div>
-                      )}
-
-                      {/* File upload */}
-                      {!importLeadsDone && importLeadsData.length === 0 && (
-                        <div style={{ marginBottom: 20 }}>
-                          <label style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 20px", borderRadius: 12, border: `2px dashed rgba(59,130,246,0.4)`, background: "rgba(59,130,246,0.04)", cursor: "pointer", transition: "all 0.15s" }}
-                            onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = T.blue; }}
-                            onDragLeave={e => { e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)"; }}
-                            onDrop={e => {
-                              e.preventDefault();
-                              e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)";
-                              const file = e.dataTransfer.files[0];
-                              if (file) processCSVFile(file);
-                            }}>
-                            <input type="file" accept=".csv" style={{ display: "none" }} onChange={e => { if (e.target.files[0]) processCSVFile(e.target.files[0]); }} id="csv-import-input" />
-                            <div style={{ fontSize: 28, marginBottom: 10 }}>📄</div>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: T.white, marginBottom: 4 }}>Drop your CSV file here</div>
-                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>or click to browse</div>
-                            <label htmlFor="csv-import-input" style={{ padding: "8px 20px", borderRadius: 8, border: `1px solid ${T.blue}`, background: "rgba(59,130,246,0.1)", color: T.blue, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Choose File</label>
-                          </label>
-                        </div>
-                      )}
-
-                      {/* Preview */}
-                      {!importLeadsDone && importLeadsData.length > 0 && !importLeadsLoading && (
-                        <div>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                            <div>
-                              <span style={{ fontSize: 13, fontWeight: 700, color: T.green }}>{importLeadsData.length.toLocaleString()} leads ready to import</span>
-                              {importLeadsErrors.length > 0 && <span style={{ fontSize: 11, color: T.orange, marginLeft: 8 }}>({importLeadsErrors.length} rows skipped — missing name)</span>}
-                            </div>
-                            <button type="button" onClick={() => { setImportLeadsData([]); setImportLeadsErrors([]); }} style={{ fontSize: 11, color: T.textMuted, background: "none", border: "none", cursor: "pointer" }}>← Change file</button>
-                          </div>
-                          {/* Preview table */}
-                          <div style={{ background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, overflow: "hidden", marginBottom: 16 }}>
-                            <div style={{ overflowX: "auto" }}>
-                              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-                                <thead>
-                                  <tr style={{ borderBottom: `1px solid ${T.border}` }}>
-                                    {["Name", "Phone", "Email", "Community", "Project", "Budget", "Source"].map(h => (
-                                      <th key={h} style={{ padding: "8px 12px", textAlign: "left", color: T.gold, fontWeight: 600, fontSize: 9, textTransform: "uppercase", background: T.bg }}>{h}</th>
-                                    ))}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {importLeadsData.slice(0, 5).map((r, i) => (
-                                    <tr key={i} style={{ borderBottom: `1px solid ${T.border}` }}>
-                                      <td style={{ padding: "8px 12px", color: T.white, fontWeight: 600 }}>{r.name || "-"}</td>
-                                      <td style={{ padding: "8px 12px", color: T.green }}>{r.phone || "-"}</td>
-                                      <td style={{ padding: "8px 12px", color: T.blue }}>{r.email || "-"}</td>
-                                      <td style={{ padding: "8px 12px", color: T.gold }}>{r.community || "-"}</td>
-                                      <td style={{ padding: "8px 12px", color: T.textSecondary }}>{r.project || "-"}</td>
-                                      <td style={{ padding: "8px 12px", color: T.green }}>{r.budget ? `AED ${parseFloat(r.budget).toLocaleString()}` : "-"}</td>
-                                      <td style={{ padding: "8px 12px", color: T.textMuted }}>{r.source || "Manual"}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                            {importLeadsData.length > 5 && <div style={{ padding: "8px 12px", fontSize: 10, color: T.textMuted, borderTop: `1px solid ${T.border}` }}>...and {(importLeadsData.length - 5).toLocaleString()} more rows</div>}
-                          </div>
-                          <button type="button" onClick={startLeadsImport} style={{ width: "100%", padding: "13px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.blue}, #2563EB)`, color: "#FFFFFF", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                            Import {importLeadsData.length.toLocaleString()} Leads →
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Progress */}
-                      {importLeadsLoading && (
-                        <div style={{ textAlign: "center", padding: "20px 0" }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: T.blue, marginBottom: 16 }}>Importing leads...</div>
-                          <div style={{ height: 8, borderRadius: 4, background: T.border, marginBottom: 10, overflow: "hidden" }}>
-                            <div style={{ height: "100%", borderRadius: 4, background: T.blue, width: `${importLeadsTotal > 0 ? Math.round((importLeadsProgress / importLeadsTotal) * 100) : 0}%`, transition: "width 0.3s" }} />
-                          </div>
-                          <div style={{ fontSize: 12, color: T.textMuted }}>{importLeadsProgress.toLocaleString()} / {importLeadsTotal.toLocaleString()} ({importLeadsTotal > 0 ? Math.round((importLeadsProgress / importLeadsTotal) * 100) : 0}%)</div>
-                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>Do not close this window</div>
-                        </div>
-                      )}
-
-                      {/* Done */}
-                      {importLeadsDone && (
-                        <div style={{ textAlign: "center", padding: "20px 0" }}>
-                          <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
-                          <div style={{ fontSize: 16, fontWeight: 700, color: T.green, marginBottom: 8 }}>Import Complete!</div>
-                          <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 20 }}>{importLeadsProgress.toLocaleString()} leads imported successfully</div>
-                          <button type="button" onClick={() => { setShowImportLeads(false); fetchLeads(); }} style={{ padding: "10px 28px", borderRadius: 8, border: "none", background: T.green, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View Leads</button>
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
@@ -22399,10 +21101,10 @@ export default function AdminPanel() {
                           <div style={{ padding: "20px 24px" }}>
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
                               {[
-                              { key: "name", label: "Name" }, { key: "email", label: "Email" },
+                                { key: "name", label: "Name" }, { key: "email", label: "Email" },
                                 { key: "phone", label: "Phone" }, { key: "nationality", label: "Nationality" },
                                 { key: "budget", label: "Budget (AED)", type: "number" }, { key: "project", label: "Project" },
-                                { key: "source", label: "Source" },
+                                { key: "community", label: "Community" }, { key: "source", label: "Source" },
                               ].map(field => (
                                 <div key={field.key}>
                                   <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{field.label}</label>
@@ -22420,68 +21122,24 @@ export default function AdminPanel() {
                                   />
                                 </div>
                               ))}
-                              {/* Community — searchable dropdown */}
-                              <div>
-                                <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Community</label>
-                                <SearchableSelect
-                                  value={leadDrawer.community || ""}
-                                  onChange={async v => {
-                                    setLeadDrawer(prev => ({ ...prev, community: v }));
-                                    try {
-                                      const activity = [...(leadDrawer.activity || []), { type: "edit", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Community updated" }];
-                                      await setDoc(doc(db, "leads", leadDrawer.id), { community: v, activity, updatedAt: new Date().toISOString() }, { merge: true });
-                                      notify("Community saved");
-                                      fetchLeads();
-                                    } catch { notify("Error saving"); }
-                                  }}
-                                  options={leadCommunities.map(c => ({ value: c, label: c }))}
-                                  placeholder="Select community..."
-                                  style={{ background: T.surfaceAlt, fontSize: 12 }}
-                                />
-                              </div>
                             </div>
                             {/* Nationality select in drawer */}
                             <div style={{ marginBottom: 12 }}>
                               <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Nationality</label>
-                              <SearchableSelect
-                                value={leadDrawer.nationality || ""}
-                                onChange={async v => {
-                                  setLeadDrawer(prev => ({ ...prev, nationality: v }));
+                              <select value={leadDrawer.nationality || ""}
+                                onChange={e => setLeadDrawer(prev => ({ ...prev, nationality: e.target.value }))}
+                                onBlur={async e => {
                                   try {
                                     const activity = [...(leadDrawer.activity || []), { type: "edit", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Nationality updated" }];
-                                    await setDoc(doc(db, "leads", leadDrawer.id), { nationality: v, activity, updatedAt: new Date().toISOString() }, { merge: true });
+                                    await setDoc(doc(db, "leads", leadDrawer.id), { nationality: e.target.value, activity, updatedAt: new Date().toISOString() }, { merge: true });
                                     notify("Nationality saved");
                                     fetchLeads();
                                   } catch { notify("Error saving"); }
                                 }}
-                                options={DUBAI_NATIONALITIES.map(n => ({ value: n, label: n }))}
-                                placeholder="Select nationality..."
-                                style={{ background: T.surfaceAlt, fontSize: 12 }}
-                              />
-                            </div>
-
-                            {/* Tags in drawer */}
-                            <div style={{ marginBottom: 12 }}>
-                              <label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: 6, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Tags</label>
-                              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                                {["VIP","Investor","End-User","Flipper","Referral","No WhatsApp"].map(tag => {
-                                  const active = (leadDrawer.tags || []).includes(tag);
-                                  return (
-                                    <button key={tag} type="button" onClick={async () => {
-                                      const current = leadDrawer.tags || [];
-                                      const newTags = active ? current.filter(t => t !== tag) : [...current, tag];
-                                      setLeadDrawer(prev => ({ ...prev, tags: newTags }));
-                                      try {
-                                        const activity = [...(leadDrawer.activity || []), { type: "edit", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Tag ${active ? "removed" : "added"}: ${tag}` }];
-                                        await setDoc(doc(db, "leads", leadDrawer.id), { tags: newTags, activity, updatedAt: new Date().toISOString() }, { merge: true });
-                                        notify(`Tag ${active ? "removed" : "added"}: ${tag}`);
-                                      } catch { notify("Error saving tag"); }
-                                    }} style={{ padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: active ? 700 : 400, border: `1px solid ${active ? T.gold : T.border}`, background: active ? "rgba(212,168,67,0.15)" : T.bg, color: active ? T.gold : T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.15s" }}>
-                                      {tag === "VIP" ? "⭐" : tag === "Investor" ? "💼" : tag === "End-User" ? "🏠" : tag === "Flipper" ? "🔄" : tag === "No WhatsApp" ? "✕" : "👥"} {tag}
-                                    </button>
-                                  );
-                                })}
-                              </div>
+                                style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: leadDrawer.nationality ? T.white : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
+                                <option value="">Select nationality...</option>
+                                {DUBAI_NATIONALITIES.map(n => <option key={n} value={n}>{n}</option>)}
+                              </select>
                             </div>
 
                             {/* Duplicate warning in drawer */}
@@ -22624,21 +21282,9 @@ export default function AdminPanel() {
           {/* ═══════════════════════════════════════
              NOTIFICATIONS TAB
              ═══════════════════════════════════════ */}
-          {tab === "campaigns" && (() => {
-            /* ─── EMAIL CAMPAIGNS — DXB Analytics ─── */
-            return (
-              <EmailCampaignsTab
-                T={T}
-                db={db}
-                notify={notify}
-                adminUser={adminUser}
-                leads={leads}
-                leadsTotal={leadsTotal}
-                fetchLeads={fetchLeads}
-              />
-            );
-          })()}
-
+          {tab === "campaigns" && (
+            <EmailCampaignsTab T={T} db={db} notify={notify} adminUser={adminUser} leads={leads} leadsTotal={leadsTotal} fetchLeads={fetchLeads} />
+          )}
           {tab === "notifications" && <NotificationsTab T={T} notify={notify} adminUser={adminUser} I={I} users={users} db={db} />}
 
           {/* ═══════════════════════════════════════
