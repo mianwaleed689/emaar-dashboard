@@ -10,7 +10,7 @@ import { getAuth } from "firebase/auth";
 import emailjs from "@emailjs/browser";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
 import ProjectManager from "./ProjectManager";
@@ -12577,6 +12577,8 @@ export default function AdminPanel() {
   const [showAddLead, setShowAddLead] = useState(false);
   const [leadsLimit, setLeadsLimit] = useState(500);
   const [leadsHasMore, setLeadsHasMore] = useState(false);
+  const [leadsPage, setLeadsPage] = useState(1);
+  const LEADS_PER_PAGE = 100;
   const [showImportLeads, setShowImportLeads] = useState(false);
   const [importLeadsData, setImportLeadsData] = useState([]);
   const [importLeadsLoading, setImportLeadsLoading] = useState(false);
@@ -12993,14 +12995,25 @@ export default function AdminPanel() {
   // Fetch unique communities and nationalities from ALL leads
   const fetchLeadMeta = useCallback(async () => {
     try {
-      const snap = await getDocs(query(collection(db, "leads"), limit(5000)));
       const communities = new Set();
       const nationalities = new Set();
-      snap.forEach(d => {
-        const data = d.data();
-        if (data.community && data.community.trim()) communities.add(data.community.trim());
-        if (data.nationality && data.nationality.trim()) nationalities.add(data.nationality.trim());
-      });
+      // Fetch in batches to get all unique values
+      let lastDoc = null;
+      let hasMore = true;
+      while (hasMore) {
+        let q = lastDoc
+          ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(1000))
+          : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(1000));
+        const snap = await getDocs(q);
+        if (snap.empty || snap.docs.length < 1000) hasMore = false;
+        snap.forEach(d => {
+          const data = d.data();
+          if (data.community && data.community.trim()) communities.add(data.community.trim());
+          if (data.nationality && data.nationality.trim()) nationalities.add(data.nationality.trim());
+        });
+        lastDoc = snap.docs[snap.docs.length - 1];
+        if (snap.docs.length < 1000) hasMore = false;
+      }
       setLeadCommunities([...communities].sort());
       setLeadNationalities([...nationalities].sort());
     } catch (e) { console.error("fetchLeadMeta:", e); }
@@ -20228,6 +20241,8 @@ export default function AdminPanel() {
             const filtered = leads.filter(l => {
               if (leadFilter !== "all" && (l.status || "New").toLowerCase() !== leadFilter) return false;
               if (leadSourceFilter !== "all" && l.source !== leadSourceFilter) return false;
+              if (leadCommunityFilter !== "all" && (l.community || "") !== leadCommunityFilter) return false;
+              if (leadNationalityFilter !== "all" && (l.nationality || "") !== leadNationalityFilter) return false;
               if (leadDateRange === "today" && new Date(l.createdAt) < todayStart) return false;
               if (leadDateRange === "week" && new Date(l.createdAt) < weekAgo) return false;
               if (leadDateRange === "month" && new Date(l.createdAt) < monthAgo) return false;
@@ -20235,7 +20250,7 @@ export default function AdminPanel() {
               if (leadDateRange === "today_followup") { if (!isDueToday(l)) return false; }
               if (leadSearch) {
                 const s = leadSearch.toLowerCase();
-                if (!((l.name || "").toLowerCase().includes(s) || (l.email || "").toLowerCase().includes(s) || (l.phone || "").includes(s) || (l.project || "").toLowerCase().includes(s) || (l.nationality || "").toLowerCase().includes(s))) return false;
+                if (!((l.name || "").toLowerCase().includes(s) || (l.email || "").toLowerCase().includes(s) || (l.phone || "").includes(s) || (l.project || "").toLowerCase().includes(s) || (l.nationality || "").toLowerCase().includes(s) || (l.community || "").toLowerCase().includes(s))) return false;
               }
               return true;
             }).sort((a, b) => {
@@ -20243,6 +20258,11 @@ export default function AdminPanel() {
               if (!isOverdue(a) && isOverdue(b)) return 1;
               return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
             });
+
+            // ── Pagination ────────────────────────────────────────────
+            const totalPages = Math.max(1, Math.ceil(filtered.length / LEADS_PER_PAGE));
+            const safePage = Math.min(leadsPage, totalPages);
+            const paginatedLeads = filtered.slice((safePage - 1) * LEADS_PER_PAGE, safePage * LEADS_PER_PAGE);
 
             const sources = [...new Set(leads.map(l => l.source).filter(Boolean))];
 
@@ -20644,6 +20664,7 @@ export default function AdminPanel() {
                     <div style={{ flex: 1, position: "relative" }}>
                       <input type="text" placeholder="🔍  Search by name, phone, email, project..." value={leadSearch} onChange={e => {
                         setLeadSearch(e.target.value);
+                        setLeadsPage(1);
                         clearTimeout(window._leadSearchTimer);
                         window._leadSearchTimer = setTimeout(() => {
                           searchAllLeads(e.target.value, leadFilter, leadSourceFilter, leadCommunityFilter, leadNationalityFilter);
@@ -20652,29 +20673,29 @@ export default function AdminPanel() {
                       {leadsSearching && <div style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: T.blue, fontWeight: 600 }}>Searching...</div>}
                     </div>
                     {(leadFilter !== "all" || leadSourceFilter !== "all" || leadDateRange !== "all" || leadSearch || leadCommunityFilter !== "all" || leadNationalityFilter !== "all") && (
-                      <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); setLeadCommunityFilter("all"); setLeadNationalityFilter("all"); fetchLeads(500); }}
+                      <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); setLeadCommunityFilter("all"); setLeadNationalityFilter("all"); setLeadsPage(1); fetchLeads(500); }}
                         style={{ padding: "10px 16px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>✕ Clear All</button>
                     )}
-                    <span style={{ fontSize: 11, color: T.textMuted, whiteSpace: "nowrap" }}>{leadsSearching ? "Searching..." : `${filtered.length} shown${leadsHasMore ? " (500 of 19,600+)" : " of " + leads.length.toLocaleString()}`}</span>
+                    <span style={{ fontSize: 11, color: T.textMuted, whiteSpace: "nowrap" }}>{leadsSearching ? "Searching..." : `${filtered.length.toLocaleString()} leads${leadsHasMore ? " (filtered from 500 loaded)" : ""}`}</span>
                   </div>
                   {/* Row 2: Dropdown filters */}
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                     {/* Community filter — dynamic from Firestore */}
-                    <select value={leadCommunityFilter} onChange={e => { setLeadCommunityFilter(e.target.value); searchAllLeads(leadSearch, leadFilter, leadSourceFilter, e.target.value, leadNationalityFilter); }}
+                    <select value={leadCommunityFilter} onChange={e => { setLeadCommunityFilter(e.target.value); setLeadsPage(1); searchAllLeads(leadSearch, leadFilter, leadSourceFilter, e.target.value, leadNationalityFilter); }}
                       style={{ padding: "8px 12px", background: leadCommunityFilter !== "all" ? "rgba(212,168,67,0.12)" : T.bg, border: `1px solid ${leadCommunityFilter !== "all" ? T.gold : T.border}`, borderRadius: 8, color: leadCommunityFilter !== "all" ? T.gold : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadCommunityFilter !== "all" ? 700 : 400 }}>
                       <option value="all">🏘 All Communities ({leadCommunities.length})</option>
                       {leadCommunities.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
 
                     {/* Nationality filter — dynamic from Firestore */}
-                    <select value={leadNationalityFilter} onChange={e => { setLeadNationalityFilter(e.target.value); searchAllLeads(leadSearch, leadFilter, leadSourceFilter, leadCommunityFilter, e.target.value); }}
+                    <select value={leadNationalityFilter} onChange={e => { setLeadNationalityFilter(e.target.value); setLeadsPage(1); searchAllLeads(leadSearch, leadFilter, leadSourceFilter, leadCommunityFilter, e.target.value); }}
                       style={{ padding: "8px 12px", background: leadNationalityFilter !== "all" ? "rgba(59,130,246,0.12)" : T.bg, border: `1px solid ${leadNationalityFilter !== "all" ? T.blue : T.border}`, borderRadius: 8, color: leadNationalityFilter !== "all" ? T.blue : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadNationalityFilter !== "all" ? 700 : 400 }}>
                       <option value="all">🌍 All Nationalities ({leadNationalities.length})</option>
                       {leadNationalities.map(n => <option key={n} value={n}>{n}</option>)}
                     </select>
 
                     {/* Source filter */}
-                    <select value={leadSourceFilter} onChange={e => { setLeadSourceFilter(e.target.value); searchAllLeads(leadSearch, leadFilter, e.target.value, leadCommunityFilter, leadNationalityFilter); }}
+                    <select value={leadSourceFilter} onChange={e => { setLeadSourceFilter(e.target.value); setLeadsPage(1); searchAllLeads(leadSearch, leadFilter, e.target.value, leadCommunityFilter, leadNationalityFilter); }}
                       style={{ padding: "8px 12px", background: leadSourceFilter !== "all" ? "rgba(16,185,129,0.12)" : T.bg, border: `1px solid ${leadSourceFilter !== "all" ? T.green : T.border}`, borderRadius: 8, color: leadSourceFilter !== "all" ? T.green : T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: leadSourceFilter !== "all" ? 700 : 400 }}>
                       <option value="all">📋 All Sources</option>
                       <option value="DLD Data">🏛 DLD Data</option>
@@ -20788,7 +20809,7 @@ export default function AdminPanel() {
                             </tr>
                           </thead>
                           <tbody>
-                            {filtered.map((lead) => {
+                            {paginatedLeads.map((lead) => {
                               const sc = statusColors[lead.status || "New"] || statusColors.New;
                               const score = scoreLead(lead);
                               const overdue = isOverdue(lead);
@@ -20856,11 +20877,58 @@ export default function AdminPanel() {
                   </div>
                 )}
 
-                {/* LOAD MORE */}
-                {leadsHasMore && leadsViewMode === "table" && !leadAnalyticsView && (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, padding: "16px 0", marginTop: 8 }}>
-                    <span style={{ fontSize: 11, color: T.textMuted }}>Showing {leads.length.toLocaleString()} most recent leads</span>
-                    <button type="button" onClick={() => { const newLim = leads.length + 500; setLeadsLimit(newLim); fetchLeads(newLim); }} style={{ fontSize: 11, padding: "8px 20px", borderRadius: 8, border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.08)", color: T.gold, cursor: "pointer", fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>Load 500 More</button>
+                {/* PAGINATION BAR */}
+                {leadsViewMode === "table" && !leadAnalyticsView && filtered.length > 0 && (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, marginTop: 12, flexWrap: "wrap", gap: 10 }}>
+                    {/* Info */}
+                    <div style={{ fontSize: 11, color: T.textMuted }}>
+                      Showing <span style={{ color: T.white, fontWeight: 600 }}>{((safePage-1)*LEADS_PER_PAGE)+1}–{Math.min(safePage*LEADS_PER_PAGE, filtered.length)}</span> of <span style={{ color: T.gold, fontWeight: 700 }}>{filtered.length.toLocaleString()}</span> leads
+                      {leadsHasMore && <span style={{ color: T.textMuted }}> (showing latest 500 — use filters to find specific leads)</span>}
+                    </div>
+                    {/* Page controls */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      {/* Prev */}
+                      <button type="button" disabled={safePage === 1} onClick={() => setLeadsPage(p => Math.max(1, p-1))}
+                        style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: safePage === 1 ? "transparent" : T.surfaceAlt, color: safePage === 1 ? T.textMuted : T.white, cursor: safePage === 1 ? "not-allowed" : "pointer", fontSize: 12, fontWeight: 600 }}>←</button>
+
+                      {/* Page numbers */}
+                      {(() => {
+                        const pages = [];
+                        let start = Math.max(1, safePage - 2);
+                        let end = Math.min(totalPages, start + 4);
+                        if (end - start < 4) start = Math.max(1, end - 4);
+
+                        if (start > 1) {
+                          pages.push(<button key="1" type="button" onClick={() => setLeadsPage(1)} style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, cursor: "pointer", fontSize: 11 }}>1</button>);
+                          if (start > 2) pages.push(<span key="dots1" style={{ color: T.textMuted, fontSize: 11, padding: "0 4px" }}>...</span>);
+                        }
+
+                        for (let i = start; i <= end; i++) {
+                          pages.push(
+                            <button key={i} type="button" onClick={() => setLeadsPage(i)}
+                              style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${i === safePage ? T.gold : T.border}`, background: i === safePage ? "rgba(212,168,67,0.15)" : T.surfaceAlt, color: i === safePage ? T.gold : T.textSecondary, cursor: "pointer", fontSize: 11, fontWeight: i === safePage ? 700 : 400 }}>{i}</button>
+                          );
+                        }
+
+                        if (end < totalPages) {
+                          if (end < totalPages - 1) pages.push(<span key="dots2" style={{ color: T.textMuted, fontSize: 11, padding: "0 4px" }}>...</span>);
+                          pages.push(<button key={totalPages} type="button" onClick={() => setLeadsPage(totalPages)} style={{ padding: "6px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, cursor: "pointer", fontSize: 11 }}>{totalPages}</button>);
+                        }
+                        return pages;
+                      })()}
+
+                      {/* Next */}
+                      <button type="button" disabled={safePage === totalPages} onClick={() => setLeadsPage(p => Math.min(totalPages, p+1))}
+                        style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: safePage === totalPages ? "transparent" : T.surfaceAlt, color: safePage === totalPages ? T.textMuted : T.white, cursor: safePage === totalPages ? "not-allowed" : "pointer", fontSize: 12, fontWeight: 600 }}>→</button>
+
+                      {/* Jump to page */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: 8 }}>
+                        <span style={{ fontSize: 11, color: T.textMuted }}>Go to</span>
+                        <input type="number" min="1" max={totalPages} placeholder={safePage}
+                          onKeyDown={e => { if (e.key === "Enter") { const p = parseInt(e.target.value); if (p >= 1 && p <= totalPages) { setLeadsPage(p); e.target.value = ""; } } }}
+                          style={{ width: 52, padding: "6px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", textAlign: "center" }} />
+                      </div>
+                    </div>
                   </div>
                 )}
 
