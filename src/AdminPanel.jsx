@@ -20358,6 +20358,8 @@ export default function AdminPanel() {
               }
               // Has follow-up set
               if (leadHasFollowUp && !l.followUpDate) return false;
+              // Lead age filter
+              if (leadAgeFilter !== "all") {
                 const created = new Date(l.createdAt).getTime();
                 const now = Date.now();
                 const days = (now - created) / (1000 * 60 * 60 * 24);
