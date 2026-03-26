@@ -20986,8 +20986,24 @@ export default function AdminPanel() {
                                     </select>
                                   </td>
                                   <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
-                                    <div style={{ display: "flex", gap: 5 }}>
-                                      {lead.phone && <a href={`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${lead.name || ""}, following up on your interest in ${lead.project || "the property"}.`)}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>WA</a>}
+                                    <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                                      {(lead.tags||[]).includes("no_whatsapp")
+                                        ? <button type="button" title="Click to restore WhatsApp" onClick={async () => {
+                                            const tags = (lead.tags||[]).filter(t => t !== "no_whatsapp");
+                                            await setDoc(doc(db, "leads", lead.id), { tags, updatedAt: new Date().toISOString() }, { merge: true });
+                                            setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, tags } : l));
+                                            notify("✅ WhatsApp restored");
+                                          }} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.4)", background: "rgba(239,68,68,0.1)", color: T.red, fontWeight: 600, cursor: "pointer" }}>No WA ↩</button>
+                                        : <>
+                                          {lead.phone && <a href={`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${lead.name || ""}, following up on your interest in ${lead.project || "the property"}.`)}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>WA</a>}
+                                          {lead.phone && <button type="button" title="Mark as No WhatsApp" onClick={async () => {
+                                            const tags = [...(lead.tags||[]).filter(t => t !== "no_whatsapp"), "no_whatsapp"];
+                                            await setDoc(doc(db, "leads", lead.id), { tags, updatedAt: new Date().toISOString() }, { merge: true });
+                                            setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, tags } : l));
+                                            notify("Marked as No WhatsApp");
+                                          }} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: "none", background: "rgba(239,68,68,0.1)", color: T.red, cursor: "pointer", fontWeight: 600 }}>✕WA</button>}
+                                        </>
+                                      }
                                       <button type="button" onClick={() => setShowFollowUpModal(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: "none", background: "rgba(212,168,67,0.12)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>+Followup</button>
                                       <button type="button" onClick={() => setLeadDrawer(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.08)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>Open</button>
                                     </div>
