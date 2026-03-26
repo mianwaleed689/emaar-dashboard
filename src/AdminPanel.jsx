@@ -20618,7 +20618,7 @@ export default function AdminPanel() {
             };
 
             // ── Add lead ──────────────────────────────────────────────────
-            // normalizePhone — cleans any phone to E.164 format
+            // normalizePhone — smart E.164 normalizer for UAE + 194 countries
             const normalizePhone = (raw) => {
               if (!raw || typeof raw !== "string") return "";
               let p = raw.trim().replace(/[\s\-\.\(\)\/\\]/g, "");
@@ -20626,13 +20626,24 @@ export default function AdminPanel() {
               if (p.startsWith("+")) return "+" + p.slice(1).replace(/\D/g, "");
               if (p.startsWith("00")) return "+" + p.slice(2).replace(/\D/g, "");
               const d = p.replace(/\D/g, "");
+              const len = d.length;
+              // UAE specific
               if (/^05[0-9]{8}$/.test(d)) return "+971" + d.slice(1);
               if (/^5[0-9]{8}$/.test(d)) return "+971" + d;
-              if (d.startsWith("971") && d.length >= 11) return "+" + d;
               if (/^04[0-9]{7}$/.test(d)) return "+971" + d.slice(1);
               if (/^4[0-9]{7}$/.test(d)) return "+971" + d;
-              if (d.length >= 10) return "+" + d;
-              if (d.length >= 7) return "+971" + d;
+              if (len >= 7 && len <= 9) return "+971" + d;
+              // International — detect country code
+              const CC = ["421","420","389","387","386","385","382","381","380","376","375","374","373","372","371","370","359","358","357","356","355","354","353","352","351","350","996","995","994","993","992","977","976","975","974","973","972","971","970","968","967","966","965","964","963","962","961","960","886","880","856","855","853","852","850","98","95","94","93","92","91","90","86","84","82","81","66","65","64","63","62","61","60","55","54","53","52","51","49","48","47","46","45","44","43","41","40","39","36","34","33","32","31","30","27","20","7","1"];
+              if (len >= 10) {
+                for (const code of CC) {
+                  if (d.startsWith(code)) {
+                    const rem = d.slice(code.length);
+                    if (rem.length >= 6 && rem.length <= 12) return "+" + code + rem;
+                  }
+                }
+                return "+" + d;
+              }
               return d;
             };
 
