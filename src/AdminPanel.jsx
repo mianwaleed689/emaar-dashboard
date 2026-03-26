@@ -1,3 +1,7 @@
+/* ═══════════════════════════════════════════════════════════════
+   DXB ANALYTICS — ADMIN PANEL
+   Matching dashboard design DNA: sidebar nav, KPI cards, sections
+   ═══════════════════════════════════════════════════════════════ */
 import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { auth, db, storage, firebaseConfig } from "./firebase";
@@ -6,211 +10,11 @@ import { getAuth } from "firebase/auth";
 import emailjs from "@emailjs/browser";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
 import ProjectManager from "./ProjectManager";
 import { useI18n, LANGUAGES } from "./i18n";
-
-/* ═══════════════════════════════════════════════════════
-   EMAIL CAMPAIGNS TAB
-   ═══════════════════════════════════════════════════════ */
-function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchLeads }) {
-  const [campaigns, setCampaigns]       = React.useState([]);
-  const [showCreate, setShowCreate]     = React.useState(false);
-  const [sending, setSending]           = React.useState(false);
-  const [sendProgress, setSendProgress] = React.useState(0);
-  const [sendTotal, setSendTotal]       = React.useState(0);
-  const [selectedCampaign, setSelectedCampaign] = React.useState(null);
-  const [form, setForm] = React.useState({ name: "", subject: "", body: "", targetFilter: "all", targetCommunity: "", targetStatus: "", template: "custom" });
-
-  const TEMPLATES = [
-    { id: "followup", label: "Follow-up", subject: "Following up on your interest in {community}", body: "Dear {name},\n\nI wanted to follow up on your interest in {community}.\n\nBest regards,\nThe Address Holding Team" },
-    { id: "golden_visa", label: "Golden Visa", subject: "You may qualify for a UAE Golden Visa", body: "Dear {name},\n\nBased on your interest in {community}, you may qualify for a UAE Golden Visa.\n\nBest regards,\nThe Address Holding Team" },
-    { id: "market_update", label: "Market Update", subject: "Dubai Property Market Update — {community}", body: "Dear {name},\n\nThe Dubai property market continues to show strong growth in {community}.\n\nBest regards,\nThe Address Holding Team" },
-    { id: "new_launch", label: "New Launch", subject: "Exclusive New Launch — {community}", body: "Dear {name},\n\nWe have an exciting new project launch in {community}.\n\nBest regards,\nThe Address Holding Team" },
-    { id: "reengagement", label: "Re-engagement", subject: "We miss you — special offer inside", body: "Dear {name},\n\nIt\'s been a while since we connected regarding your property search in {community}.\n\nBest regards,\nThe Address Holding Team" },
-  ];
-
-  React.useEffect(() => {
-    const load = async () => {
-      try {
-        const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt", "desc"), limit(50)));
-        const list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() })); setCampaigns(list);
-      } catch(e) { console.error("Load campaigns:", e); }
-    };
-    load();
-  }, []);
-
-  const getTargetLeads = () => {
-    let targets = (leads||[]).filter(l => l.email && l.email.includes("@"));
-    if (form.targetFilter === "community" && form.targetCommunity) targets = targets.filter(l => l.community === form.targetCommunity);
-    if (form.targetFilter === "status" && form.targetStatus) targets = targets.filter(l => (l.status||"New") === form.targetStatus);
-    return targets;
-  };
-
-  const communities = [...new Set((leads||[]).filter(l=>l.community).map(l=>l.community))].sort();
-  const targetLeads = getTargetLeads();
-  const inputStyle = { width:"100%", padding:"10px 14px", background:T.bg, border:"1px solid rgba(212,168,67,0.15)", borderRadius:9, color:"#E2E8F0", fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" };
-
-  const RESEND_API_KEY = "re_FGZe2ET2_9pDv9iEV2MUTQXg1QHJeV3fs";
-
-  const sendWithResend = async (to, subject, html) => {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: "DXB Analytics <onboarding@resend.dev>", to, subject, html }),
-    });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
-  };
-
-  const sendCampaign = async () => {
-    if (!form.name || !form.subject || !form.body) { notify("Fill in campaign name, subject and message"); return; }
-    const targets = getTargetLeads();
-    if (targets.length === 0) { notify("No leads match the filter with valid emails"); return; }
-    setSending(true); setSendProgress(0); setSendTotal(targets.length);
-    const campaignId = `camp_${Date.now()}`;
-    const campaignDoc = { name: form.name, subject: form.subject, template: form.template, targetFilter: form.targetFilter, targetCommunity: form.targetCommunity, targetStatus: form.targetStatus, totalTargets: targets.length, sent: 0, failed: 0, status: "sending", createdAt: new Date().toISOString(), sentBy: adminUser?.email || "admin" };
-    try { await setDoc(doc(db, "campaigns", campaignId), campaignDoc); } catch(e) {}
-    let sent = 0; let failed = 0; const BATCH = 10;
-    for (let i = 0; i < targets.length; i += BATCH) {
-      const chunk = targets.slice(i, i + BATCH);
-      await Promise.allSettled(chunk.map(async lead => {
-        try {
-          const bodyText = form.body.replace(/\{name\}/g, lead.name||"there").replace(/\{community\}/g, lead.community||"Dubai").replace(/\{project\}/g, lead.project||"your property");
-          const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
-            <div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px">
-              <h2 style="color:#D4A843;margin:0;font-size:20px">DXB Analytics</h2>
-              <p style="color:#64748B;margin:4px 0 0;font-size:12px">The Address Holding · Dubai</p>
-            </div>
-            <div style="color:#1E293B;font-size:14px;line-height:1.7;white-space:pre-wrap">${bodyText}</div>
-            <div style="border-top:1px solid #E2E8F0;margin-top:24px;padding-top:16px;color:#94A3B8;font-size:11px">
-              DXB Analytics · The Address Holding · Dubai, UAE<br/>
-              <a href="mailto:info@theaddressholding.ae" style="color:#D4A843">info@theaddressholding.ae</a>
-            </div>
-          </div>`;
-          await sendWithResend(lead.email, form.subject, html);
-          sent++;
-        } catch(e) { failed++; }
-      }));
-      setSendProgress(Math.min(i + BATCH, targets.length));
-      await new Promise(r => setTimeout(r, 200));
-    }
-    try { await setDoc(doc(db, "campaigns", campaignId), { ...campaignDoc, sent, failed, status: "completed", completedAt: new Date().toISOString() }, { merge: true }); } catch(e) {}
-    setSending(false); notify(`✅ Campaign sent — ${sent} delivered, ${failed} failed`);
-    setShowCreate(false); setForm({ name:"", subject:"", body:"", targetFilter:"all", targetCommunity:"", targetStatus:"", template:"custom" });
-    try { const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt", "desc"), limit(50))); const list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() })); setCampaigns(list); } catch(e) {}
-  };
-
-  return (
-    <div>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:24, flexWrap:"wrap", gap:12 }}>
-        <div>
-          <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:"#FFFFFF", margin:0 }}>Email Campaigns</h2>
-          <p style={{ fontSize:13, color:T.textMuted, margin:"4px 0 0" }}>{(leads||[]).filter(l=>l.email).length.toLocaleString()} leads with emails · {(leadsTotal||0).toLocaleString()} total</p>
-        </div>
-        <button type="button" onClick={() => setShowCreate(true)} style={{ padding:"10px 20px", borderRadius:10, border:"none", background:`linear-gradient(135deg, ${T.gold}, #B8912F)`, color:T.bg, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>+ New Campaign</button>
-      </div>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14, marginBottom:24 }}>
-        {[{label:"Total Campaigns",value:campaigns.length,color:T.gold},{label:"Emails Sent",value:campaigns.reduce((s,c)=>s+(c.sent||0),0).toLocaleString(),color:T.green},{label:"Leads with Email",value:(leads||[]).filter(l=>l.email).length.toLocaleString(),color:T.blue}].map((item,i)=>(
-          <div key={i} style={{ padding:"18px 20px", background:T.surface, borderRadius:14, border:`1px solid ${T.border}` }}>
-            <div style={{ fontSize:10, color:T.textMuted, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>{item.label}</div>
-            <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:900, color:item.color }}>{item.value}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{ background:T.surface, borderRadius:14, border:`1px solid ${T.border}`, overflow:"hidden" }}>
-        <div style={{ padding:"14px 20px", borderBottom:`1px solid ${T.border}` }}>
-          <div style={{ fontSize:12, fontWeight:700, color:T.gold, textTransform:"uppercase", letterSpacing:1 }}>Campaign History</div>
-        </div>
-        {campaigns.length === 0 ? (
-          <div style={{ textAlign:"center", padding:"60px 20px" }}>
-            <div style={{ fontSize:40, marginBottom:12 }}>📧</div>
-            <div style={{ fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>No campaigns yet</div>
-          </div>
-        ) : (
-          <table style={{ width:"100%", borderCollapse:"collapse" }}>
-            <thead><tr style={{ background:T.surfaceAlt }}>{["Campaign","Target","Sent","Status","Date"].map(h=><th key={h} style={{ padding:"10px 16px", textAlign:"left", fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase" }}>{h}</th>)}</tr></thead>
-            <tbody>{campaigns.map((c,i)=>(
-              <tr key={c.id} style={{ borderTop:`1px solid ${T.border}`, cursor:"pointer" }} onClick={()=>setSelectedCampaign(c)}>
-                <td style={{ padding:"12px 16px" }}><div style={{ fontSize:13, fontWeight:600, color:T.white }}>{c.name}</div><div style={{ fontSize:11, color:T.textMuted }}>{c.subject}</div></td>
-                <td style={{ padding:"12px 16px", fontSize:12, color:T.textSecondary }}>{c.targetFilter==="community"?c.targetCommunity:c.targetFilter==="status"?c.targetStatus:"All leads"}</td>
-                <td style={{ padding:"12px 16px" }}><span style={{ fontSize:13, fontWeight:700, color:T.green }}>{(c.sent||0).toLocaleString()}</span></td>
-                <td style={{ padding:"12px 16px" }}><span style={{ fontSize:11, padding:"3px 8px", borderRadius:5, fontWeight:700, background:c.status==="completed"?"rgba(16,185,129,0.1)":"rgba(59,130,246,0.1)", color:c.status==="completed"?T.green:T.blue }}>{c.status==="completed"?"✓ Sent":"⟳ Sending"}</span></td>
-                <td style={{ padding:"12px 16px", fontSize:11, color:T.textMuted }}>{c.createdAt?new Date(c.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short"}):"—"}</td>
-              </tr>
-            ))}</tbody>
-          </table>
-        )}
-      </div>
-      {showCreate && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.92)", zIndex:9000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)", padding:20 }} onClick={()=>{ if(!sending) setShowCreate(false); }}>
-          <div style={{ background:T.surface, border:"1px solid rgba(212,168,67,0.3)", borderRadius:16, width:"100%", maxWidth:620, maxHeight:"92vh", overflowY:"auto", padding:28 }} onClick={e=>e.stopPropagation()}>
-            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:20 }}>
-              <h3 style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:700, color:T.gold }}>New Campaign</h3>
-              {!sending && <button type="button" onClick={()=>setShowCreate(false)} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:22 }}>×</button>}
-            </div>
-            <div style={{ marginBottom:14 }}><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Campaign Name *</label><input type="text" placeholder="e.g. Arabian Ranches Follow-up" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} style={inputStyle} /></div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:14 }}>
-              <div><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Target</label><select value={form.targetFilter} onChange={e=>setForm(p=>({...p,targetFilter:e.target.value,targetCommunity:"",targetStatus:""}))} style={{...inputStyle,cursor:"pointer"}}><option value="all">All leads with email</option><option value="community">By Community</option><option value="status">By Status</option></select></div>
-              <div>{form.targetFilter==="community"&&<><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Community</label><select value={form.targetCommunity} onChange={e=>setForm(p=>({...p,targetCommunity:e.target.value}))} style={{...inputStyle,cursor:"pointer"}}><option value="">Select...</option>{communities.map(c=><option key={c} value={c}>{c}</option>)}</select></>}
-              {form.targetFilter==="status"&&<><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Status</label><select value={form.targetStatus} onChange={e=>setForm(p=>({...p,targetStatus:e.target.value}))} style={{...inputStyle,cursor:"pointer"}}><option value="">Select...</option>{["New","Contacted","Qualified","Converted","Lost"].map(s=><option key={s} value={s}>{s}</option>)}</select></>}
-              {form.targetFilter==="all"&&<div style={{ padding:"12px", background:"rgba(16,185,129,0.06)", borderRadius:8, border:"1px solid rgba(16,185,129,0.2)", marginTop:20 }}><div style={{ fontSize:12, fontWeight:700, color:T.green }}>{targetLeads.length.toLocaleString()} leads targeted</div></div>}</div>
-            </div>
-            <div style={{ marginBottom:14 }}><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:8 }}>Templates</label><div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>{TEMPLATES.map(t=><button key={t.id} type="button" onClick={()=>setForm(p=>({...p,template:t.id,subject:t.subject,body:t.body}))} style={{ fontSize:11, padding:"5px 10px", borderRadius:7, border:`1px solid ${form.template===t.id?T.gold:T.border}`, background:form.template===t.id?"rgba(212,168,67,0.1)":T.surfaceAlt, color:form.template===t.id?T.gold:T.textSecondary, cursor:"pointer" }}>{t.label}</button>)}</div></div>
-            <div style={{ marginBottom:14 }}><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Subject *</label><input type="text" placeholder="Subject..." value={form.subject} onChange={e=>setForm(p=>({...p,subject:e.target.value}))} style={inputStyle} /></div>
-            <div style={{ marginBottom:20 }}><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Message *</label><textarea rows={6} value={form.body} onChange={e=>setForm(p=>({...p,body:e.target.value}))} style={{...inputStyle,resize:"vertical"}} /></div>
-            {sending && <div style={{ marginBottom:16 }}><div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}><span style={{ fontSize:11, color:T.textMuted }}>Sending...</span><span style={{ fontSize:11, fontWeight:700, color:T.gold }}>{sendProgress}/{sendTotal}</span></div><div style={{ height:6, borderRadius:3, background:T.border }}><div style={{ height:"100%", borderRadius:3, background:`linear-gradient(90deg,${T.gold},${T.green})`, width:`${sendTotal>0?(sendProgress/sendTotal)*100:0}%`, transition:"width 0.3s" }} /></div></div>}
-            <div style={{ display:"flex", gap:12 }}>
-              <button type="button" onClick={()=>setShowCreate(false)} disabled={sending} style={{ flex:1, padding:"12px", borderRadius:10, border:`1px solid ${T.border}`, background:"transparent", color:T.textSecondary, fontSize:13, fontWeight:600, cursor:sending?"not-allowed":"pointer", fontFamily:"'Outfit',sans-serif" }}>Cancel</button>
-              <button type="button" onClick={sendCampaign} disabled={sending||!form.name||!form.subject||!form.body||targetLeads.length===0} style={{ flex:2, padding:"12px", borderRadius:10, border:"none", background:(sending||!form.name)?T.surfaceAlt:`linear-gradient(135deg,${T.gold},#B8912F)`, color:(sending||!form.name)?T.textMuted:T.bg, fontSize:14, fontWeight:700, cursor:(sending||!form.name)?"not-allowed":"pointer", fontFamily:"'Outfit',sans-serif" }}>{sending?`Sending ${sendProgress}/${sendTotal}...`:`🚀 Send to ${targetLeads.length.toLocaleString()} leads`}</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {selectedCampaign && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.85)", zIndex:9000, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={()=>setSelectedCampaign(null)}>
-          <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:16, width:"95%", maxWidth:440, padding:24 }} onClick={e=>e.stopPropagation()}>
-            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:16 }}><h3 style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:700, color:T.gold }}>{selectedCampaign.name}</h3><button type="button" onClick={()=>setSelectedCampaign(null)} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:20 }}>×</button></div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-              {[["Sent",(selectedCampaign.sent||0).toLocaleString(),T.green],["Failed",selectedCampaign.failed||0,T.red],["Target",selectedCampaign.targetFilter==="community"?selectedCampaign.targetCommunity:"All",T.blue],["Template",selectedCampaign.template||"custom",T.gold]].map(([l,v,c],i)=>(
-                <div key={i} style={{ padding:"10px 12px", background:T.surfaceAlt, borderRadius:8 }}><div style={{ fontSize:10, color:T.textMuted, textTransform:"uppercase", marginBottom:3 }}>{l}</div><div style={{ fontSize:15, fontWeight:700, color:c }}>{v}</div></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   DXB ANALYTICS — ADMIN PANEL
-   Matching dashboard design DNA: sidebar nav, KPI cards, sections
-   ═══════════════════════════════════════════════════════════════ */
-
-/* ─── RESEND EMAIL HELPER ─── */
-const RESEND_KEY = "re_FGZe2ET2_9pDv9iEV2MUTQXg1QHJeV3fs";
-const sendResend = async (to, subject, bodyText) => {
-  const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
-    <div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px">
-      <h2 style="color:#D4A843;margin:0;font-size:18px">DXB Analytics</h2>
-      <p style="color:#64748B;margin:4px 0 0;font-size:11px">The Address Holding · Dubai, UAE</p>
-    </div>
-    <div style="color:#1E293B;font-size:14px;line-height:1.7;white-space:pre-wrap">${bodyText}</div>
-    <div style="border-top:1px solid #E2E8F0;margin-top:24px;padding-top:12px;color:#94A3B8;font-size:11px">
-      DXB Analytics · <a href="mailto:info@theaddressholding.ae" style="color:#D4A843">info@theaddressholding.ae</a>
-    </div>
-  </div>`;
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: "DXB Analytics <onboarding@resend.dev>", to, subject, html }),
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-};
 
 /* ─── THEME (exact dashboard match) ─── */
 const T = {
@@ -509,11 +313,6 @@ const TabHelp = ({ items }) => {
    PHASE 1B: Collision Detection, Attachments, @Mentions
    PHASE 2: Merge Tickets, Link Related, Custom Fields
 ═══════════════════════════════════════════════════════════════════ */
-// Pre-computed constants — outside components to prevent re-render on keystroke
-const PHONE_CODES_LIST = [["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+244","🇦🇴 Angola"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+1","🇧🇸 Bahamas"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+1","🇧🇧 Barbados"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],["+229","🇧🇯 Benin"],["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+267","🇧🇼 Botswana"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],["+238","🇨🇻 Cape Verde"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+242","🇨🇬 Congo"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],["+1","🇩🇴 Dominican Republic"],["+593","🇪🇨 Ecuador"],["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+291","🇪🇷 Eritrea"],["+372","🇪🇪 Estonia"],["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea South"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],["+382","🇲🇪 Montenegro"],["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+227","🇳🇪 Niger"],["+234","🇳🇬 Nigeria"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+597","🇸🇷 Suriname"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+1","🇹🇹 Trinidad"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1]));
-const COUNTRY_LIST = ["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","🌍 Other"].sort();
-
-
 function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpenUid }) {
   // State
   const [supportSubTab, setSupportSubTab] = useState("open");
@@ -1350,7 +1149,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
       if (newStatus === "resolved" && ticketDrawer) {
         try {
           await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-            user_email: ticketDrawer.userEmail,
+            to_email: ticketDrawer.userEmail,
             to_name: ticketDrawer.userName || ticketDrawer.userEmail,
             subject: `Your support ticket has been resolved: ${ticketDrawer.subject}`,
             message: `Hi ${ticketDrawer.userName || "there"},\n\nYour support ticket "${ticketDrawer.subject}" has been marked as resolved.\n\nIf you have any further questions, feel free to reply to this email or open a new ticket.\n\nBest regards,\nDXB Analytics Support`,
@@ -1656,7 +1455,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
       setTicketDrawer(prev => ({ ...prev, ...update }));
       try {
         await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-          user_email: ticketDrawer.userEmail,
+          to_email: ticketDrawer.userEmail,
           to_name: ticketDrawer.userName || ticketDrawer.userEmail,
           subject: `Re: ${ticketDrawer.subject}`,
           message: `Hi ${ticketDrawer.userName || "there"},\n\n${ticketReply}\n\n---\nDXB Analytics Support`,
@@ -7606,7 +7405,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
         if (!user.email) { failed++; continue; }
         try {
           await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-            user_email: user.email,
+            to_email: user.email,
             to_name: user.name || user.email,
             subject: emailForm.subject,
             message: emailForm.body,
@@ -8246,7 +8045,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
     setTestSending(true);
     try {
       await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-        user_email: testEmail,
+        to_email: testEmail,
         to_name: testEmail.split("@")[0],
         subject: "[TEST] " + digestTemplate.subject,
         message: `${digestTemplate.greeting.replace("{{name}}", testEmail.split("@")[0])}\n\n${digestTemplate.intro}\n\nSections: ${digestTemplate.sections.map(s => sectionMeta[s]?.label || s).join(", ")}\n\n${digestTemplate.cta}\n\n---\n${digestTemplate.footer}`,
@@ -8268,7 +8067,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
       for (const user of segmentUsers) {
         try {
           await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-            user_email: user.email,
+            to_email: user.email,
             to_name: user.name || user.email.split("@")[0],
             subject: digestTemplate.subject,
             message: `${digestTemplate.greeting.replace("{{name}}", user.name || user.email.split("@")[0])}\n\n${digestTemplate.intro}\n\nView your personalized insights at https://dxbanalytics.com\n\n${digestTemplate.cta}\n\n---\n${digestTemplate.footer}`,
@@ -8316,7 +8115,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
       try {
         const name = u.name || u.email.split("@")[0];
         await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-          user_email: u.email,
+          to_email: u.email,
           to_name: name,
           subject: "Dubai RE market moved this week — your data is waiting",
           message: `Hi ${name},\n\nWe noticed you haven't logged in to DXB Analytics in a while.\n\nHere's what happened in Dubai real estate this week:\n• Dubai off-plan market up 44% YoY in Creek Harbour\n• EIBOR holding at 3.47% — mortgage rates stable\n• 3 new project launches this month\n\nYour dashboard is waiting with the latest data.\n\nhttps://dxbanalytics.com\n\n— DXB Analytics Team\n\nUnsubscribe: mailto:mianwaleed689@gmail.com?subject=Unsubscribe`,
@@ -9530,13 +9329,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const [notifSendingUser,   setNotifSendingUser]    = useState(false);
   const [loadingUsers,       setLoadingUsers]        = useState(false); // FIX #30
   const [copiedId,           setCopiedId]            = useState(null);  // FIX #36
-  const [drawerTab,          setDrawerTab]           = useState("details");
-  const [showBulkEmailModal, setShowBulkEmailModal]  = useState(false);
-  const [bulkEmailTargets,   setBulkEmailTargets]    = useState([]);
-  const [bulkEmailSubject,   setBulkEmailSubject]    = useState("");
-  const [bulkEmailBody,      setBulkEmailBody]       = useState("");
-  const [bulkEmailSending,   setBulkEmailSending]    = useState(false);
-  const [bulkEmailProgress,  setBulkEmailProgress]   = useState(0);
+  const [drawerTab,          setDrawerTab]           = useState("details"); // drawer sub-nav
 
   const PAGE_SIZE    = 25;
   const AT_RISK_DAYS = 3; // FIX #6 — single source of truth
@@ -10037,6 +9830,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           { label: "Full Name *", key: "name", type: "text", placeholder: "John Smith", full: true },
           { label: "Email Address *", key: "email", type: "email", placeholder: "john@company.com", full: true },
           { label: "Password *", key: "password", type: "password", placeholder: "Min 6 characters", full: true },
+          { label: "Phone", key: "phone", type: "tel", placeholder: "+971 50 000 0000" },
         ].map(f => (
           <div key={f.key} style={{ gridColumn: f.full ? "1 / -1" : "auto" }}>
             <Field label={f.label}>
@@ -10048,26 +9842,10 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             )}
           </div>
         ))}
-        {/* Phone with 190+ country codes */}
-        <div style={{ gridColumn: "1/-1" }}>
-          <Field label="Phone / WhatsApp">
-            <div style={{ display: "flex", gap: 8 }}>
-              <select value={addUserForm.phoneCode || "+971"} onChange={e => setAddUserForm(p => ({...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum||"").replace(/\s/g,"")}))} style={{...inputStyle, width: 200, flexShrink: 0, cursor: "pointer"}}>
-                {[["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+244","🇦🇴 Angola"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+1","🇧🇸 Bahamas"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+1","🇧🇧 Barbados"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],["+229","🇧🇯 Benin"],["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+267","🇧🇼 Botswana"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],["+238","🇨🇻 Cape Verde"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+242","🇨🇬 Congo"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],["+1","🇩🇴 Dominican Republic"],["+593","🇪🇨 Ecuador"],["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+291","🇪🇷 Eritrea"],["+372","🇪🇪 Estonia"],["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea South"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],["+382","🇲🇪 Montenegro"],["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+227","🇳🇪 Niger"],["+234","🇳🇬 Nigeria"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+597","🇸🇷 Suriname"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+1","🇹🇹 Trinidad"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
-              </select>
-              <input type="tel" placeholder="50 123 4567" value={addUserForm.phoneNum || ""} onChange={e => { const num=e.target.value.replace(/[^\d\s]/g,""); setAddUserForm(p=>({...p,phoneNum:num,phone:(p.phoneCode||"+971")+num.replace(/\s/g,"")})); }} style={{...inputStyle,flex:1}} onFocus={focusIn} onBlur={focusOut} />
-            </div>
-          </Field>
-        </div>
-        {/* Country — 190+ countries with flags */}
-        <div>
-          <Field label="Country">
-            <select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({...p, country: e.target.value}))} style={{...inputStyle, cursor:"pointer", color: addUserForm.country?"#E2E8F0":"#64748B"}}>
-              <option value="">Select Country...</option>
-              {["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","🌍 Other"].sort().map(c => <option key={c} value={c.split(" ").slice(1).join(" ")}>{c}</option>)}
-            </select>
-          </Field>
-        </div>
+        <div><Field label="Country"><select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          <option value="">Select Country</option>
+          {[" UAE"," Saudi Arabia"," Qatar"," Kuwait"," Bahrain"," Oman"," UK"," USA"," India"," Pakistan"," Egypt"," Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
+        </select></Field></div>
         <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
         </select></Field></div>
@@ -10077,16 +9855,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </select></Field></div>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
       </div>
-      {addUserForm.email && users.some(u => u.email && u.email.toLowerCase() === addUserForm.email.toLowerCase()) && (
-        <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 14 }}>⚠️</span>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>Email already exists</div>
-            <div style={{ fontSize: 11, color: T.textMuted }}>A user with this email is already registered.</div>
-          </div>
-        </div>
-      )}
-      <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
         <BtnGhost onClick={() => setShowAddUser(false)} style={{ flex: 1 }}>Cancel</BtnGhost>
         <Btn onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} color={T.gold} style={{ flex: 2, color: T.bg }}>{addUserLoading ? "Creating..." : "Create User"}</Btn>
       </div>
@@ -10212,8 +9981,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <div style={{ gridColumn: "1 / -1" }}><Field label="Full Name"><input type="text" placeholder="Full name" value={editUserForm.name || ""} onChange={e => setEditUserForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field></div>
         <Field label="Phone"><input type="tel" placeholder="+971 50 000 0000" value={editUserForm.phone || ""} onChange={e => setEditUserForm(p => ({ ...p, phone: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
         <Field label="Country"><select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="">Select Country...</option>
-          {["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","🌍 Other"].sort().map(c => <option key={c} value={c.split(" ").slice(1).join(" ")}>{c}</option>)}
+          <option value="">Select Country</option>
+          {[" UAE"," Saudi Arabia"," Qatar"," Kuwait"," Bahrain"," Oman"," UK"," USA"," India"," Pakistan"," Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
         </select></Field>
         <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
@@ -10294,6 +10063,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <NoteModal />
       <TagsModal />
       <AddUserModal />
+      <BulkImportModal />
       <EditUserModal />
       <NotifUserModal />
       <ProfileDrawerComponent
@@ -10521,77 +10291,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
           </select>
           <button type="button" onClick={handleBulkAction} disabled={!bulkTier} style={{ padding: "6px 14px", borderRadius: 7, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: bulkTier ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", opacity: bulkTier ? 1 : 0.5 }}>Apply</button>
-          <button type="button" onClick={() => {
-            const selected = users.filter(u => bulkSel.includes(u.uid) && u.email);
-            if (selected.length === 0) { notify("No selected users have email addresses"); return; }
-            setShowBulkEmailModal(true); setBulkEmailTargets(selected);
-          }} style={{ padding: "6px 14px", borderRadius: 7, border: `1px solid ${T.blue}`, background: "rgba(59,130,246,0.08)", color: T.blue, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-            ✉️ Email ({users.filter(u => bulkSel.includes(u.uid) && u.email).length})
-          </button>
           <button type="button" onClick={() => setBulkSel([])} style={{ padding: "6px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
         </div>
-      )}
-      {/* BULK EMAIL MODAL */}
-      {showBulkEmailModal && (
-        <Modal onClose={() => { if (!bulkEmailSending) setShowBulkEmailModal(false); }} maxWidth={540}>
-          <ModalHeader title="Bulk Email" sub={`Sending to ${bulkEmailTargets.length} user${bulkEmailTargets.length !== 1 ? "s" : ""}`} onClose={() => { if (!bulkEmailSending) setShowBulkEmailModal(false); }} />
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div>
-              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>Quick Templates</label>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {[
-                  { label: "Trial Expiring", subject: "Your DXB Analytics trial is expiring soon", body: "Hi {name},\n\nYour free trial is expiring soon. Upgrade now to keep full access.\n\nBest regards,\nDXB Analytics Team" },
-                  { label: "New Feature", subject: "New feature available on DXB Analytics", body: "Hi {name},\n\nWe just launched a new feature we think you'll love. Log in to check it out!\n\nBest regards,\nDXB Analytics Team" },
-                  { label: "Check-in", subject: "How is DXB Analytics working for you?", body: "Hi {name},\n\nWe wanted to check in on your experience. Any questions or feedback?\n\nBest regards,\nDXB Analytics Team" },
-                ].map(t => (
-                  <button key={t.label} type="button" onClick={() => { setBulkEmailSubject(t.subject); setBulkEmailBody(t.body); }}
-                    style={{ fontSize: 11, padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, cursor: "pointer" }}>{t.label}</button>
-                ))}
-              </div>
-            </div>
-            <Field label="Subject *">
-              <input type="text" placeholder="Email subject..." value={bulkEmailSubject} onChange={e => setBulkEmailSubject(e.target.value)} style={inputStyle} onFocus={focusIn} onBlur={focusOut} />
-            </Field>
-            <Field label="Message * (use {name} for personalization)">
-              <textarea placeholder="Write your message..." value={bulkEmailBody} onChange={e => setBulkEmailBody(e.target.value)} rows={6} style={{ ...inputStyle, resize: "vertical" }} onFocus={focusIn} onBlur={focusOut} />
-            </Field>
-            {bulkEmailSending && (
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span style={{ fontSize: 11, color: T.textMuted }}>Sending...</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: T.gold }}>{bulkEmailProgress} / {bulkEmailTargets.length}</span>
-                </div>
-                <div style={{ height: 4, borderRadius: 2, background: T.border }}>
-                  <div style={{ height: "100%", borderRadius: 2, background: T.gold, width: `${bulkEmailTargets.length > 0 ? (bulkEmailProgress / bulkEmailTargets.length) * 100 : 0}%`, transition: "width 0.3s" }} />
-                </div>
-              </div>
-            )}
-            <div style={{ display: "flex", gap: 10 }}>
-              <BtnGhost onClick={() => setShowBulkEmailModal(false)} style={{ flex: 1 }}>Cancel</BtnGhost>
-              <Btn disabled={bulkEmailSending || !bulkEmailSubject || !bulkEmailBody} color={T.blue} style={{ flex: 2 }} onClick={async () => {
-                if (!bulkEmailSubject || !bulkEmailBody) { notify("Subject and message required"); return; }
-                setBulkEmailSending(true); setBulkEmailProgress(0);
-                let sent = 0;
-                for (const user of bulkEmailTargets) {
-                  try {
-                    const bodyText = bulkEmailBody.replace(/\{name\}/g, user.name || "there");
-                    const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px"><div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px"><h2 style="color:#D4A843;margin:0">DXB Analytics</h2></div><div style="color:#1E293B;font-size:14px;line-height:1.7;white-space:pre-wrap">${bodyText}</div></div>`;
-                    await fetch("https://api.resend.com/emails", {
-                      method: "POST",
-                      headers: { "Authorization": "Bearer re_FGZe2ET2_9pDv9iEV2MUTQXg1QHJeV3fs", "Content-Type": "application/json" },
-                      body: JSON.stringify({ from: "DXB Analytics <onboarding@resend.dev>", to: user.email, subject: bulkEmailSubject, html }),
-                    });
-                    sent++;
-                  } catch(e) {}
-                  setBulkEmailProgress(sent);
-                }
-                setBulkEmailSending(false);
-                notify(`✅ Sent ${sent}/${bulkEmailTargets.length} emails`);
-                setShowBulkEmailModal(false); setBulkEmailSubject(""); setBulkEmailBody(""); setBulkEmailTargets([]); setBulkSel([]);
-              }}>{bulkEmailSending ? `Sending ${bulkEmailProgress}/${bulkEmailTargets.length}...` : `Send to ${bulkEmailTargets.length} users`}</Btn>
-            </div>
-          </div>
-        </Modal>
       )}
 
       {/* ══ DESKTOP TABLE ══ */}
@@ -10665,7 +10366,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                     {u.name || u.email?.split("@")[0]}
                     {u.suspended && <span style={{ fontSize: 9, color: T.red, fontWeight: 700, background: "rgba(239,68,68,0.12)", padding: "1px 5px", borderRadius: 4 }}>SUSPENDED</span>}
                     {u.role === "admin" && <span style={{ fontSize: 9, color: T.gold, fontWeight: 700, background: "rgba(212,168,67,0.12)", padding: "1px 5px", borderRadius: 4 }}>ADMIN</span>}
-                    {u.emailVerified && <span style={{ fontSize: 9, color: T.green, fontWeight: 700, background: "rgba(16,185,129,0.12)", padding: "1px 5px", borderRadius: 4 }}>✓ Verified</span>}
                     {/* FIX #33: notes badge is clickable */}
                     {u.notes && <button type="button" onClick={() => { setNoteUser(u); setNoteText(u.notes || ""); }} title="Click to view/edit note" style={{ fontSize: 9, color: "#8B5CF6", background: "rgba(139,92,246,0.12)", padding: "1px 5px", borderRadius: 4, border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>note</button>}
                   </div>
@@ -12743,7 +12443,7 @@ export default function AdminPanel() {
   const [showAddUser, setShowAddUser] = useState(false);
   const [pendingOpenUid, setPendingOpenUid] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [addUserForm, setAddUserForm] = useState({ name: "", email: "", password: "", phone: "", phoneCode: "+971", phoneNum: "", country: "", tier: "free", role: "user", notes: "" });
+  const [addUserForm, setAddUserForm] = useState({ name: "", email: "", password: "", phone: "", country: "", tier: "free", notes: "" });
   const [addUserLoading, setAddUserLoading] = useState(false);
   const [editUserLoading, setEditUserLoading] = useState(false);
   // eslint-disable-next-line no-unused-vars
@@ -12861,7 +12561,6 @@ export default function AdminPanel() {
   /* ─── KYC VERIFICATION STATE ─── */
   const [verifications, setVerifications] = useState([]);
   const [leads, setLeads] = useState([]);
-  const [leadsLoading, setLeadsLoading] = useState(false);
   
   /* ─── LEADS CRM STATE ─── */
   const [leadDrawer, setLeadDrawer] = useState(null); // lead object or null
@@ -12870,33 +12569,9 @@ export default function AdminPanel() {
   }); // all | new | contacted | qualified | converted | lost
   const [leadSourceFilter, setLeadSourceFilter] = useState("all");
   const [leadSearch, setLeadSearch] = useState("");
-  const [leadDateRange, setLeadDateRange] = useState("all");
-  const [leadPage, setLeadPage] = useState(1);
-  const LEADS_PER_PAGE = 100;
-  // ── All 23 advanced filters ──
-  const [lfCommunity,      setLfCommunity]      = useState("all");
-  const [lfNationality,    setLfNationality]    = useState("all");
-  const [lfBudgetMin,      setLfBudgetMin]      = useState("");
-  const [lfBudgetMax,      setLfBudgetMax]      = useState("");
-  const [lfScoreMin,       setLfScoreMin]       = useState("");
-  const [lfPropType,       setLfPropType]       = useState("all");
-  const [lfLanguage,       setLfLanguage]       = useState("all");
-  const [lfLeadAge,        setLfLeadAge]        = useState("all");
-  const [lfGoldenVisa,     setLfGoldenVisa]     = useState(false);
-  const [lfHasWhatsApp,    setLfHasWhatsApp]    = useState(false);
-  const [lfHasEmail,       setLfHasEmail]       = useState(false);
-  const [lfNoWhatsApp,     setLfNoWhatsApp]     = useState(false);
-  const [lfBedrooms,       setLfBedrooms]       = useState("all");
-  const [lfOffPlan,        setLfOffPlan]        = useState("all");
-  const [lfDeveloper,      setLfDeveloper]      = useState("all");
-  const [lfPayment,        setLfPayment]        = useState("all");
-  const [lfVisa,           setLfVisa]           = useState("all");
-  const [lfTag,            setLfTag]            = useState("all");
-  const [lfNeverContacted, setLfNeverContacted] = useState(false);
-  const [lfHasFollowUp,    setLfHasFollowUp]    = useState(false);
-  const [showLeadFilters,  setShowLeadFilters]  = useState(false);
+  const [leadDateRange, setLeadDateRange] = useState("all"); // all | today | week | month
   const [showAddLead, setShowAddLead] = useState(false);
-  const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", phoneCode: "+971", phoneNum: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
+  const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
   const [addLeadLoading, setAddLeadLoading] = useState(false);
   const [leadNote, setLeadNote] = useState("");
   const [leadNoteSaving, setLeadNoteSaving] = useState(false);
@@ -12906,12 +12581,6 @@ export default function AdminPanel() {
 
   /* ─── LEADS CRM PRO STATE ─── */
   const [leadSelectedIds, setLeadSelectedIds] = useState([]); // bulk selection
-  const [showLeadBulkEmail, setShowLeadBulkEmail] = useState(false);
-  const [leadBulkEmailTargets, setLeadBulkEmailTargets] = useState([]);
-  const [leadBulkEmailSubject, setLeadBulkEmailSubject] = useState("");
-  const [leadBulkEmailBody, setLeadBulkEmailBody] = useState("");
-  const [leadBulkEmailSending, setLeadBulkEmailSending] = useState(false);
-  const [leadBulkEmailProgress, setLeadBulkEmailProgress] = useState(0);
   const [leadBulkAction, setLeadBulkAction] = useState(""); // bulk action value
   const [showFollowUpModal, setShowFollowUpModal] = useState(null); // lead object
   const [followUpDate, setFollowUpDate] = useState("");
@@ -13249,70 +12918,32 @@ export default function AdminPanel() {
     return () => { if (unsub) unsub(); };
   }, [isAdmin, fetchVerifications]);
 
-  const fetchLeads = useCallback(async (forceRefresh = false) => {
-    setLeadsLoading(true);
+  const fetchLeads = useCallback(async () => {
     try {
-      const cacheKey = "dxb_leads_v3";
-      const cacheTS  = "dxb_leads_v3_ts";
-      const TTL = 30 * 60 * 1000; // 30 min cache
-      const now = Date.now();
-      if (!forceRefresh) {
-        try {
-          const ts = parseInt(localStorage.getItem(cacheTS) || "0");
-          if (now - ts < TTL) {
-            const cached = JSON.parse(localStorage.getItem(cacheKey) || "[]");
-            if (cached.length > 100) { setLeads(cached); setLeadsLoading(false); return; }
-          }
-        } catch(e) {}
-      }
-      // Step 1: Show first 500 immediately so page is usable
-      let firstBatch = [];
-      let lastDoc = null;
-      try {
-        const q1 = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
-        const snap1 = await getDocs(q1);
-        snap1.forEach(d => firstBatch.push({ id: d.id, ...plainify(d.data()) }));
-        lastDoc = snap1.empty ? null : snap1.docs[snap1.docs.length - 1];
-        setLeads(firstBatch); // ← only render once with first 500
-        setLeadsLoading(false);
-      } catch(e) {
-        // No index — simple fetch
-        const snap1 = await getDocs(collection(db, "leads"));
-        snap1.forEach(d => firstBatch.push({ id: d.id, ...plainify(d.data()) }));
-        setLeads(firstBatch);
-        setLeadsLoading(false);
-        // Cache and return — no pagination without index
-        try {
-          firstBatch.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
-          localStorage.setItem(cacheKey, JSON.stringify(firstBatch));
-          localStorage.setItem(cacheTS, String(now));
-        } catch(e2) {}
-        return;
-      }
-      // Step 2: Silently fetch ALL remaining — NO re-renders until complete
-      let all = [...firstBatch];
-      try {
-        while (lastDoc) {
-          const q = query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500));
-          const snap = await getDocs(q);
-          if (snap.empty) break;
-          snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
-          lastDoc = snap.docs[snap.docs.length - 1];
-          if (snap.docs.length < 500) break;
-        }
-      } catch(e) { console.warn("Background fetch partial:", e.message); }
+      const snap = await getDocs(collection(db, "leads"));
+      const list = [];
+      snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
+      list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      setLeads(list);
+    } catch (e) { console.error("Fetch leads:", e); }
+  }, []);
 
-      all.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      setLeads(all); // ← single re-render when all batches done
-      try {
-        localStorage.setItem(cacheKey, JSON.stringify(all));
-        localStorage.setItem(cacheTS, String(now));
-      } catch(e) {}
-    } catch(e) { console.error("fetchLeads:", e); }
-    setLeadsLoading(false);
-  }, [db]);
+  useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin, fetchLeads]);
 
-  useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin]); // eslint-disable-line
+  // Real-time listener for leads
+  useEffect(() => {
+    if (!isAdmin) return;
+    let unsub;
+    try {
+      unsub = onSnapshot(collection(db, "leads"), (snap) => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
+        list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        setLeads(list);
+      });
+    } catch (e) { fetchLeads(); }
+    return () => { if (unsub) unsub(); };
+  }, [isAdmin, fetchLeads]);
 
   /* ─── FETCH AUDIT LOG ─── */
   const fetchAuditLog = useCallback(async () => {
@@ -13516,7 +13147,7 @@ export default function AdminPanel() {
       // Send approval email
       if (v.email) {
         emailjs.send("service_da7nshv", "template_gl1xqhy", {
-          user_email: v.email,
+          to_email: v.email,
           to_name: v.name || "there",
           subject: "Verification Approved - DXB Analytics",
           message: `Great news! Your ${v.level || "Basic"} verification has been approved. You now have access to enhanced features on DXB Analytics.`,
@@ -13540,7 +13171,7 @@ export default function AdminPanel() {
       // Send rejection email
       if (v.email) {
         emailjs.send("service_da7nshv", "template_gl1xqhy", {
-          user_email: v.email,
+          to_email: v.email,
           to_name: v.name || "there",
           subject: "Verification Update - DXB Analytics",
           message: `Your verification request was not approved.\n\nReason: ${rejectReason}\n\nPlease review the requirements and resubmit your documents.`,
@@ -15084,7 +14715,6 @@ export default function AdminPanel() {
     { id: "revenue", label: "Revenue", icon: I.revenue },
     { id: "data", label: "Data Manager", icon: I.data },
     { id: "leads", label: "Leads", icon: I.leads },
-    { id: "campaigns", label: "Campaigns", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> },
     { id: "notifications", label: "Notifications", icon: I.bell },
     { id: "verification", label: "Verification", icon: I.verify },
     { id: "analytics", label: "Analytics", icon: I.analytics },
@@ -15266,7 +14896,7 @@ export default function AdminPanel() {
                   stats.atRisk > 0 && { key: "atrisk", color: T.red, icon: "", label: `${stats.atRisk} at risk`, action: () => {
                     stats.atRiskUsers.forEach(u => {
                       const days = trialDaysLeft(u);
-                      sendResend(u.email, `⚡ Your DXB Analytics trial expires in ${days} day${days !== 1 ? "s" : ""}`, `Hi ${u.name || "there"},\n\nYour Pro trial expires in ${days} day${days !== 1 ? "s" : ""}. Upgrade now to keep full access.\n\nBest regards,\nDXB Analytics Team`).catch(() => {});
+                      emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `⚡ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`, new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {});
                     });
                     notify(`Sent ${stats.atRisk} at-risk emails`);
                   }},
@@ -15423,7 +15053,7 @@ export default function AdminPanel() {
                       { label: "Avg days left (active)", value: (() => { const active = users.filter(u => u.tier === "pro_trial"); if (!active.length) return "—"; const avg = active.reduce((s, u) => s + Math.max(0, trialDaysLeft(u)), 0) / active.length; return `${Math.round(avg)} days`; })() },
                     ],
                     actions: [
-                      { label: `Email All ${stats.atRisk} At-Risk`, color: T.red, fn: () => { stats.atRiskUsers.forEach(u => { const days = trialDaysLeft(u); sendResend(u.email, `Your DXB Analytics trial expires in ${days} day${days !== 1 ? "s" : ""}`, `Hi ${u.name || "there"},\n\nYour Pro trial expires in ${days} day${days !== 1 ? "s" : ""}. Upgrade now to keep full access.\n\nBest regards,\nDXB Analytics Team`).catch(() => {}); }); notify(`Sent ${stats.atRisk} at-risk emails`); } },
+                      { label: `Email All ${stats.atRisk} At-Risk`, color: T.red, fn: () => { stats.atRiskUsers.forEach(u => { const days = trialDaysLeft(u); emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`, new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {}); }); notify(`Sent ${stats.atRisk} at-risk emails`); } },
                       { label: "View Trial Users", color: T.gold, fn: () => { setTab("users"); setTierFilter("Pro Trial"); } },
                     ]
                   })}>
@@ -15693,7 +15323,7 @@ export default function AdminPanel() {
                           <button type="button"
                             onClick={e => {
                               e.stopPropagation();
-                              sendResend(u.email, `Your DXB Analytics trial expires in ${u.daysLeft} day${u.daysLeft !== 1 ? "s" : ""}`, `Hi ${u.name || "there"},\n\nYour Pro trial expires in ${u.daysLeft} day${u.daysLeft !== 1 ? "s" : ""}. Upgrade now to keep full access.\n\nBest regards,\nDXB Analytics Team`).then(() => notify(`Email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
+                              emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `Trial Expiring in ${u.daysLeft} Day${u.daysLeft !== 1 ? "s" : ""}`, new_value: `Only ${u.daysLeft} day${u.daysLeft !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").then(() => notify(`Email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
                             }}
                             style={{ fontSize: 10, fontWeight: 700, color: urgency, background: `${urgency}10`, border: `1px solid ${urgency}30`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
                             Nudge
@@ -15743,7 +15373,7 @@ export default function AdminPanel() {
                             <button type="button"
                               onClick={e => {
                                 e.stopPropagation();
-                                sendResend(u.email, "Start Your Free DXB Analytics Pro Trial", `Hi ${u.name || "there"},\n\nTry all Pro features free for 7 days — no credit card needed.\n\nLog in now to activate your trial.\n\nBest regards,\nDXB Analytics Team`).then(() => notify(`Email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
+                                emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: "Start Your Free Pro Trial", new_value: "Try all Pro features free for 7 days — no credit card needed.", old_value: "Free Plan", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").then(() => notify(`Email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
                               }}
                               style={{ fontSize: 10, fontWeight: 700, color: T.teal, background: `${T.teal}10`, border: `1px solid ${T.teal}30`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
                               Invite
@@ -16119,7 +15749,7 @@ export default function AdminPanel() {
                             <button type="button"
                               onClick={e => {
                                 e.stopPropagation();
-                                sendResend(u.email, "We miss you — special offer inside", `Hi ${u.name || "there"},\n\nYour trial ended but we'd love to have you back.\n\nContact us at info@theaddressholding.ae for a special rate.\n\nBest regards,\nDXB Analytics Team`).then(() => notify(`Win-back email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
+                                emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: "Come Back — Special Offer", new_value: "Your trial ended but we'd love to have you back. Contact us for a special rate.", old_value: "Expired Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").then(() => notify(`Win-back email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
                               }}
                               style={{ fontSize: 10, fontWeight: 700, color: T.red, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
                               Win-back
@@ -20539,35 +20169,8 @@ export default function AdminPanel() {
               if (leadDateRange === "today_followup") { if (!isDueToday(l)) return false; }
               if (leadSearch) {
                 const s = leadSearch.toLowerCase();
-                if (!((l.name || "").toLowerCase().includes(s) || (l.email || "").toLowerCase().includes(s) || (l.phone || "").includes(s) || (l.project || "").toLowerCase().includes(s) || (l.nationality || "").toLowerCase().includes(s) || (l.community || "").toLowerCase().includes(s))) return false;
+                if (!((l.name || "").toLowerCase().includes(s) || (l.email || "").toLowerCase().includes(s) || (l.phone || "").includes(s) || (l.project || "").toLowerCase().includes(s) || (l.nationality || "").toLowerCase().includes(s))) return false;
               }
-              // Advanced filters
-              if (lfCommunity !== "all" && (l.community || "") !== lfCommunity) return false;
-              if (lfNationality !== "all" && (l.nationality || "") !== lfNationality) return false;
-              if (lfBudgetMin && (parseFloat(l.budget)||0) < parseFloat(lfBudgetMin)) return false;
-              if (lfBudgetMax && (parseFloat(l.budget)||0) > parseFloat(lfBudgetMax)) return false;
-              if (lfScoreMin && scoreLead(l) < parseInt(lfScoreMin)) return false;
-              if (lfPropType !== "all" && (l.propertyType || l.property_type || "") !== lfPropType) return false;
-              if (lfLanguage !== "all" && (l.language || "") !== lfLanguage) return false;
-              if (lfLeadAge !== "all") {
-                const ageDays = (new Date() - new Date(l.createdAt)) / 86400000;
-                if (lfLeadAge === "fresh" && ageDays > 7) return false;
-                if (lfLeadAge === "week" && (ageDays < 7 || ageDays > 30)) return false;
-                if (lfLeadAge === "month" && (ageDays < 30 || ageDays > 90)) return false;
-                if (lfLeadAge === "old" && ageDays < 90) return false;
-              }
-              if (lfGoldenVisa && (parseFloat(l.budget)||0) < 2000000) return false;
-              if (lfHasWhatsApp && (!l.phone || (l.tags||[]).includes("no_whatsapp"))) return false;
-              if (lfNoWhatsApp && !(l.tags||[]).includes("no_whatsapp")) return false;
-              if (lfHasEmail && !l.email) return false;
-              if (lfBedrooms !== "all" && String(l.bedrooms || "") !== lfBedrooms) return false;
-              if (lfOffPlan !== "all" && (l.planType || l.plan_type || "") !== lfOffPlan) return false;
-              if (lfDeveloper !== "all" && (l.developer || "") !== lfDeveloper) return false;
-              if (lfPayment !== "all" && (l.paymentType || l.payment_type || "") !== lfPayment) return false;
-              if (lfVisa !== "all" && (l.visaEligibility || l.visa || "") !== lfVisa) return false;
-              if (lfTag !== "all" && !(l.tags||[]).includes(lfTag)) return false;
-              if (lfNeverContacted && l.status !== "New") return false;
-              if (lfHasFollowUp && !l.followUpDate) return false;
               return true;
             }).sort((a, b) => {
               if (isOverdue(a) && !isOverdue(b)) return -1;
@@ -20575,38 +20178,18 @@ export default function AdminPanel() {
               return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
             });
 
-            const totalLeadPages = Math.max(1, Math.ceil(filtered.length / LEADS_PER_PAGE));
-            const pagedLeads = filtered.slice((leadPage - 1) * LEADS_PER_PAGE, leadPage * LEADS_PER_PAGE);
-
             const sources = [...new Set(leads.map(l => l.source).filter(Boolean))];
 
             // ── Dubai nationalities ──────────────────────────────────────
             const DUBAI_NATIONALITIES = [
-              "🇦🇫 Afghan","🇦🇱 Albanian","🇩🇿 Algerian","🇦🇴 Angolan","🇦🇷 Argentine","🇦🇲 Armenian","🇦🇺 Australian","🇦🇹 Austrian","🇦🇿 Azerbaijani",
-              "🇧🇭 Bahraini","🇧🇩 Bangladeshi","🇧🇾 Belarusian","🇧🇪 Belgian","🇧🇴 Bolivian","🇧🇦 Bosnian","🇧🇷 Brazilian","🇧🇳 Bruneian","🇧🇬 Bulgarian",
-              "🇰🇭 Cambodian","🇨🇲 Cameroonian","🇨🇦 Canadian","🇨🇱 Chilean","🇨🇳 Chinese","🇨🇴 Colombian","🇭🇷 Croatian","🇨🇺 Cuban","🇨🇾 Cypriot","🇨🇿 Czech",
-              "🇩🇰 Danish","🇩🇯 Djiboutian","🇩🇴 Dominican",
-              "🇪🇨 Ecuadorian","🇪🇬 Egyptian","🇸🇻 El Salvadoran","🇪🇷 Eritrean","🇪🇪 Estonian","🇪🇹 Ethiopian",
-              "🇫🇯 Fijian","🇫🇮 Finnish","🇫🇷 French",
-              "🇬🇦 Gabonese","🇬🇲 Gambian","🇬🇪 Georgian","🇩🇪 German","🇬🇭 Ghanaian","🇬🇷 Greek","🇬🇹 Guatemalan","🇬🇳 Guinean","🇬🇾 Guyanese",
-              "🇭🇹 Haitian","🇭🇳 Honduran","🇭🇺 Hungarian",
-              "🇮🇸 Icelandic","🇮🇳 Indian","🇮🇩 Indonesian","🇮🇷 Iranian","🇮🇶 Iraqi","🇮🇪 Irish","🇮🇱 Israeli","🇮🇹 Italian",
-              "🇯🇲 Jamaican","🇯🇵 Japanese","🇯🇴 Jordanian",
-              "🇰🇿 Kazakhstani","🇰🇪 Kenyan","🇰🇷 Korean","🇰🇼 Kuwaiti","🇰🇬 Kyrgyz",
-              "🇱🇦 Laotian","🇱🇻 Latvian","🇱🇧 Lebanese","🇱🇷 Liberian","🇱🇾 Libyan","🇱🇹 Lithuanian","🇱🇺 Luxembourgish",
-              "🇲🇬 Malagasy","🇲🇼 Malawian","🇲🇾 Malaysian","🇲🇻 Maldivian","🇲🇱 Malian","🇲🇹 Maltese","🇲🇷 Mauritanian","🇲🇺 Mauritian","🇲🇽 Mexican","🇲🇩 Moldovan","🇲🇳 Mongolian","🇲🇪 Montenegrin","🇲🇦 Moroccan","🇲🇿 Mozambican",
-              "🇳🇦 Namibian","🇳🇵 Nepalese","🇳🇱 Dutch","🇳🇿 New Zealander","🇳🇮 Nicaraguan","🇳🇬 Nigerian","🇳🇴 Norwegian",
-              "🇴🇲 Omani",
-              "🇵🇰 Pakistani","🇵🇸 Palestinian","🇵🇦 Panamanian","🇵🇾 Paraguayan","🇵🇪 Peruvian","🇵🇭 Filipino","🇵🇱 Polish","🇵🇹 Portuguese",
-              "🇶🇦 Qatari",
-              "🇷🇴 Romanian","🇷🇺 Russian","🇷🇼 Rwandan",
-              "🇸🇦 Saudi Arabian","🇸🇳 Senegalese","🇷🇸 Serbian","🇸🇬 Singaporean","🇸🇰 Slovak","🇸🇮 Slovenian","🇸🇴 Somali","🇿🇦 South African","🇸🇸 South Sudanese","🇪🇸 Spanish","🇱🇰 Sri Lankan","🇸🇩 Sudanese","🇸🇷 Surinamese","🇸🇪 Swedish","🇨🇭 Swiss","🇸🇾 Syrian",
-              "🇹🇼 Taiwanese","🇹🇯 Tajik","🇹🇿 Tanzanian","🇹🇭 Thai","🇹🇬 Togolese","🇹🇹 Trinidadian","🇹🇳 Tunisian","🇹🇷 Turkish","🇹🇲 Turkmen",
-              "🇺🇬 Ugandan","🇺🇦 Ukrainian","🇦🇪 Emirati","🇬🇧 British","🇺🇸 American","🇺🇾 Uruguayan","🇺🇿 Uzbek",
-              "🇻🇪 Venezuelan","🇻🇳 Vietnamese",
-              "🇾🇪 Yemeni",
-              "🇿🇲 Zambian","🇿🇼 Zimbabwean","🌍 Other"
-            ].sort();
+              "Indian", "Pakistani", "British", "Russian", "Chinese",
+              "Filipino", "Bangladeshi", "Egyptian", "Emirati", "Saudi Arabian",
+              "German", "French", "Italian", "Canadian", "Australian",
+              "American", "Lebanese", "Jordanian", "Iranian", "Ukrainian",
+              "Kazakhstani", "Nigerian", "South African", "Turkish", "Dutch",
+              "Swedish", "Swiss", "Spanish", "Brazilian", "Colombian",
+              "Other"
+            ];
 
             // ── Duplicate detection ───────────────────────────────────────
             const getDuplicates = (lead) => {
@@ -20720,7 +20303,7 @@ export default function AdminPanel() {
             const sendLeadEmail = async (lead, subject, body) => {
               setSendingEmail(true);
               try {
-                await emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: lead.email, to_name: lead.name || "there", subject: subject || `Following up on ${lead.project || "your inquiry"}`, message: body || `Hi ${lead.name || "there"},\n\nThank you for your interest in ${lead.project || "our properties"}.\n\nBest regards,\nDXB Analytics`, project_name: lead.project || "DXB Analytics" }, "USkwUhp0csGCVDkdQ");
+                await emailjs.send("service_da7nshv", "template_gl1xqhy", { to_email: lead.email, to_name: lead.name || "there", subject: subject || `Following up on ${lead.project || "your inquiry"}`, message: body || `Hi ${lead.name || "there"},\n\nThank you for your interest in ${lead.project || "our properties"}.\n\nBest regards,\nDXB Analytics`, project_name: lead.project || "DXB Analytics" }, "USkwUhp0csGCVDkdQ");
                 const activity = [...(lead.activity || []), { type: "email_sent", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Email sent: ${subject || "Follow-up email"}` }];
                 await setDoc(doc(db, "leads", lead.id), { respondedAt: new Date().toISOString(), updatedAt: new Date().toISOString(), activity }, { merge: true });
                 await logAudit(db, { action: "lead_email_sent", leadId: lead.id });
@@ -20779,7 +20362,7 @@ export default function AdminPanel() {
 
                 {/* KPI BAR */}
                 <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, overflow: "hidden", flexWrap: "wrap" }}>
-                  <button type="button" onClick={() => { localStorage.removeItem("dxb_leads_v3"); localStorage.removeItem("dxb_leads_v3_ts"); fetchLeads(true); notify("↺ Reloading all leads..."); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
+                  <button type="button" onClick={() => { fetchLeads(); notify("Leads refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                   {[
                     { label: "Total", value: stats.total, color: T.gold },
                     { label: "New", value: stats.new, color: "#3B82F6" },
@@ -20873,164 +20456,31 @@ export default function AdminPanel() {
                       {["Contacted", "Qualified", "Lost"].map(status => (
                         <button key={status} type="button" onClick={() => bulkUpdateStatus(status)} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${statusColors[status]?.border}`, background: statusColors[status]?.bg, color: statusColors[status]?.color, cursor: "pointer", fontWeight: 600 }}>Set {status}</button>
                       ))}
-                      <button type="button" onClick={() => {
-                        const targets = leads.filter(l => leadSelectedIds.includes(l.id) && l.email);
-                        if (targets.length === 0) { notify("No selected leads have email addresses"); return; }
-                        setShowLeadBulkEmail(true); setLeadBulkEmailTargets(targets);
-                      }} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.08)", color: T.green, cursor: "pointer", fontWeight: 600 }}>
-                        ✉️ Email ({leads.filter(l => leadSelectedIds.includes(l.id) && l.email).length})
-                      </button>
                       <button type="button" onClick={() => setLeadSelectedIds([])} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer" }}>Clear</button>
                     </div>
                   </div>
                 )}
 
                 {/* FILTERS */}
-                {(() => {
-                  const communities = [...new Set(leads.map(l => l.community).filter(Boolean))].sort();
-                  const nationalities = [...new Set(leads.map(l => l.nationality).filter(Boolean))].sort();
-                  const developers = [...new Set(leads.map(l => l.developer).filter(Boolean))].sort();
-                  const activeFiltersCount = [
-                    leadFilter !== "all", leadSourceFilter !== "all", leadDateRange !== "all", leadSearch,
-                    lfCommunity !== "all", lfNationality !== "all", lfBudgetMin, lfBudgetMax, lfScoreMin,
-                    lfPropType !== "all", lfLanguage !== "all", lfLeadAge !== "all",
-                    lfGoldenVisa, lfHasWhatsApp, lfHasEmail, lfNoWhatsApp,
-                    lfBedrooms !== "all", lfOffPlan !== "all", lfDeveloper !== "all",
-                    lfPayment !== "all", lfVisa !== "all", lfTag !== "all",
-                    lfNeverContacted, lfHasFollowUp,
-                  ].filter(Boolean).length;
-                  const sel = { padding: "9px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" };
-                  const toggleBtn = (active, onClick, label) => (
-                    <button type="button" onClick={onClick} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${active ? T.gold : T.border}`, background: active ? "rgba(212,168,67,0.12)" : T.surface, color: active ? T.gold : T.textMuted, fontSize: 11, fontWeight: active ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>{label}</button>
-                  );
-                  const clearAll = () => {
-                    setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch("");
-                    setLfCommunity("all"); setLfNationality("all"); setLfBudgetMin(""); setLfBudgetMax(""); setLfScoreMin("");
-                    setLfPropType("all"); setLfLanguage("all"); setLfLeadAge("all");
-                    setLfGoldenVisa(false); setLfHasWhatsApp(false); setLfHasEmail(false); setLfNoWhatsApp(false);
-                    setLfBedrooms("all"); setLfOffPlan("all"); setLfDeveloper("all");
-                    setLfPayment("all"); setLfVisa("all"); setLfTag("all");
-                    setLfNeverContacted(false); setLfHasFollowUp(false); setLeadPage(1);
-                  };
-                  return (
-                    <div style={{ marginBottom: 16 }}>
-                      {/* Row 1: Search + Status + Source + Date + toggle */}
-                      <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
-                        <input type="text" placeholder="🔍  Search by name, phone, email, project..." value={leadSearch} onChange={e => { setLeadSearch(e.target.value); setLeadPage(1); }}
-                          style={{ flex: 1, minWidth: 220, padding: "9px 14px", background: T.surface, border: `1px solid ${leadSearch ? T.gold : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                        <select value={leadFilter} onChange={e => { setLeadFilter(e.target.value); setLeadPage(1); }} style={sel}>
-                          <option value="all">📋 All Status</option>
-                          <option value="new">🆕 New</option>
-                          <option value="contacted">📞 Contacted</option>
-                          <option value="qualified">⭐ Qualified</option>
-                          <option value="converted">✅ Converted</option>
-                          <option value="lost">❌ Lost</option>
-                        </select>
-                        <select value={leadSourceFilter} onChange={e => { setLeadSourceFilter(e.target.value); setLeadPage(1); }} style={sel}>
-                          <option value="all">📋 All Sources</option>
-                          {sources.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                        <select value={leadDateRange} onChange={e => { setLeadDateRange(e.target.value); setLeadPage(1); }} style={sel}>
-                          <option value="all">📅 All Time</option>
-                          <option value="today">Today</option>
-                          <option value="week">This Week</option>
-                          <option value="month">This Month</option>
-                          <option value="overdue">⚠️ Overdue</option>
-                          <option value="today_followup">🔔 Due Today</option>
-                        </select>
-                        <button type="button" onClick={() => setShowLeadFilters(p => !p)}
-                          style={{ padding: "9px 14px", borderRadius: 8, border: `1px solid ${showLeadFilters || activeFiltersCount > 0 ? T.gold : T.border}`, background: showLeadFilters || activeFiltersCount > 0 ? "rgba(212,168,67,0.1)" : T.surface, color: showLeadFilters || activeFiltersCount > 0 ? T.gold : T.textMuted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                          ⚙ Filters {activeFiltersCount > 0 ? `(${activeFiltersCount})` : ""}
-                        </button>
-                        {activeFiltersCount > 0 && (
-                          <button type="button" onClick={clearAll} style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.4)", background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>✕ Clear All</button>
-                        )}
-                        {leadsLoading
-                          ? <span style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>⟳ Loading all leads...</span>
-                          : <span style={{ fontSize: 11, color: T.textMuted }}>
-                              {filtered.length !== leads.length
-                                ? <><strong style={{ color: T.gold }}>{filtered.length.toLocaleString()}</strong> matched · {leads.length.toLocaleString()} total</>
-                                : <><strong style={{ color: T.white }}>{leads.length.toLocaleString()}</strong> leads</>}
-                            </span>}
-                      </div>
-                      {/* Row 2: Advanced filters panel */}
-                      {showLeadFilters && (
-                        <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
-                          <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Community</div>
-                            <select value={lfCommunity} onChange={e => { setLfCommunity(e.target.value); setLeadPage(1); }} style={sel}>
-                              <option value="all">All Communities</option>
-                              {communities.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Nationality</div>
-                            <select value={lfNationality} onChange={e => { setLfNationality(e.target.value); setLeadPage(1); }} style={sel}>
-                              <option value="all">All Nationalities</option>
-                              {nationalities.map(n => <option key={n} value={n}>{n}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Budget (AED)</div>
-                            <div style={{ display: "flex", gap: 4 }}>
-                              <input type="number" placeholder="Min" value={lfBudgetMin} onChange={e => { setLfBudgetMin(e.target.value); setLeadPage(1); }} style={{ ...sel, width: 90 }} />
-                              <input type="number" placeholder="Max" value={lfBudgetMax} onChange={e => { setLfBudgetMax(e.target.value); setLeadPage(1); }} style={{ ...sel, width: 90 }} />
-                            </div>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Min Score</div>
-                            <select value={lfScoreMin} onChange={e => { setLfScoreMin(e.target.value); setLeadPage(1); }} style={sel}>
-                              <option value="">All Scores</option>
-                              <option value="70">Hot (70+)</option>
-                              <option value="40">Warm+ (40+)</option>
-                              <option value="20">20+</option>
-                            </select>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Bedrooms</div>
-                            <select value={lfBedrooms} onChange={e => { setLfBedrooms(e.target.value); setLeadPage(1); }} style={sel}>
-                              <option value="all">All Beds</option>
-                              {["Studio","1","2","3","4","5","6+"].map(b => <option key={b} value={b}>{b === "Studio" ? "Studio" : `${b} BR`}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Type</div>
-                            <select value={lfOffPlan} onChange={e => { setLfOffPlan(e.target.value); setLeadPage(1); }} style={sel}>
-                              <option value="all">Off-Plan / Ready</option>
-                              <option value="off-plan">Off-Plan</option>
-                              <option value="ready">Ready</option>
-                            </select>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Developer</div>
-                            <select value={lfDeveloper} onChange={e => { setLfDeveloper(e.target.value); setLeadPage(1); }} style={sel}>
-                              <option value="all">All Developers</option>
-                              {developers.map(d => <option key={d} value={d}>{d}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Lead Age</div>
-                            <select value={lfLeadAge} onChange={e => { setLfLeadAge(e.target.value); setLeadPage(1); }} style={sel}>
-                              <option value="all">All Ages</option>
-                              <option value="fresh">Fresh (0-7d)</option>
-                              <option value="week">1-4 weeks</option>
-                              <option value="month">1-3 months</option>
-                              <option value="old">3+ months</option>
-                            </select>
-                          </div>
-                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginTop: 2 }}>
-                            {toggleBtn(lfGoldenVisa, () => { setLfGoldenVisa(p=>!p); setLeadPage(1); }, "🏆 Golden Visa")}
-                            {toggleBtn(lfHasWhatsApp, () => { setLfHasWhatsApp(p=>!p); setLeadPage(1); }, "💬 Has WhatsApp")}
-                            {toggleBtn(lfNoWhatsApp, () => { setLfNoWhatsApp(p=>!p); setLeadPage(1); }, "✕ No WhatsApp")}
-                            {toggleBtn(lfHasEmail, () => { setLfHasEmail(p=>!p); setLeadPage(1); }, "📧 Has Email")}
-                            {toggleBtn(lfNeverContacted, () => { setLfNeverContacted(p=>!p); setLeadPage(1); }, "👻 Never Contacted")}
-                            {toggleBtn(lfHasFollowUp, () => { setLfHasFollowUp(p=>!p); setLeadPage(1); }, "🔔 Has Follow-up")}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
+                  <input type="text" placeholder="Search name, email, phone, nationality, project..." value={leadSearch} onChange={e => setLeadSearch(e.target.value)} style={{ flex: 1, minWidth: 200, padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                  <select value={leadSourceFilter} onChange={e => setLeadSourceFilter(e.target.value)} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                    <option value="all">All Sources</option>
+                    {sources.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <select value={leadDateRange} onChange={e => setLeadDateRange(e.target.value)} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="overdue">Overdue Follow-ups</option>
+                    <option value="today_followup">Due Today</option>
+                  </select>
+                  {(leadFilter !== "all" || leadSourceFilter !== "all" || leadDateRange !== "all" || leadSearch) && (
+                    <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); }} style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
+                  )}
+                  <span style={{ fontSize: 11, color: T.textMuted }}>{filtered.length} of {leads.length}</span>
+                </div>
 
                 {/* KANBAN VIEW */}
                 {leadsViewMode === "kanban" && !leadAnalyticsView && (
@@ -21116,7 +20566,7 @@ export default function AdminPanel() {
                             </tr>
                           </thead>
                           <tbody>
-                            {pagedLeads.map((lead) => {
+                            {filtered.map((lead) => {
                               const sc = statusColors[lead.status || "New"] || statusColors.New;
                               const score = scoreLead(lead);
                               const overdue = isOverdue(lead);
@@ -21168,24 +20618,8 @@ export default function AdminPanel() {
                                     </select>
                                   </td>
                                   <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
-                                    <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-                                      {(lead.tags||[]).includes("no_whatsapp")
-                                        ? <button type="button" title="Click to restore WhatsApp" onClick={async () => {
-                                            const tags = (lead.tags||[]).filter(t => t !== "no_whatsapp");
-                                            await setDoc(doc(db, "leads", lead.id), { tags, updatedAt: new Date().toISOString() }, { merge: true });
-                                            setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, tags } : l));
-                                            notify("✅ WhatsApp restored");
-                                          }} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.4)", background: "rgba(239,68,68,0.1)", color: T.red, fontWeight: 600, cursor: "pointer" }}>No WA ↩</button>
-                                        : <>
-                                          {lead.phone && <a href={`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${lead.name || ""}, following up on your interest in ${lead.project || "the property"}.`)}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>WA</a>}
-                                          {lead.phone && <button type="button" title="Mark as No WhatsApp" onClick={async () => {
-                                            const tags = [...(lead.tags||[]).filter(t => t !== "no_whatsapp"), "no_whatsapp"];
-                                            await setDoc(doc(db, "leads", lead.id), { tags, updatedAt: new Date().toISOString() }, { merge: true });
-                                            setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, tags } : l));
-                                            notify("Marked as No WhatsApp");
-                                          }} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: "none", background: "rgba(239,68,68,0.1)", color: T.red, cursor: "pointer", fontWeight: 600 }}>✕WA</button>}
-                                        </>
-                                      }
+                                    <div style={{ display: "flex", gap: 5 }}>
+                                      {lead.phone && <a href={`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${lead.name || ""}, following up on your interest in ${lead.project || "the property"}.`)}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>WA</a>}
                                       <button type="button" onClick={() => setShowFollowUpModal(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: "none", background: "rgba(212,168,67,0.12)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>+Followup</button>
                                       <button type="button" onClick={() => setLeadDrawer(lead)} style={{ fontSize: 10, padding: "4px 8px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "rgba(212,168,67,0.08)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>Open</button>
                                     </div>
@@ -21195,102 +20629,8 @@ export default function AdminPanel() {
                             })}
                           </tbody>
                         </table>
-                        {/* PAGINATION */}
-                        {totalLeadPages > 1 && (
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderTop: `1px solid ${T.border}`, flexWrap: "wrap", gap: 10 }}>
-                            <span style={{ fontSize: 11, color: T.textMuted }}>
-                              Showing <strong style={{ color: T.white }}>{((leadPage-1)*LEADS_PER_PAGE+1).toLocaleString()}–{Math.min(leadPage*LEADS_PER_PAGE, filtered.length).toLocaleString()}</strong> of <strong style={{ color: T.gold }}>{filtered.length.toLocaleString()}</strong> leads
-                            </span>
-                            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                              <button type="button" onClick={() => setLeadPage(1)} disabled={leadPage===1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===1?T.textMuted:T.textSecondary, cursor: leadPage===1?"not-allowed":"pointer", fontSize: 11 }}>«</button>
-                              <button type="button" onClick={() => setLeadPage(p=>Math.max(1,p-1))} disabled={leadPage===1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===1?T.textMuted:T.textSecondary, cursor: leadPage===1?"not-allowed":"pointer", fontSize: 11 }}>←</button>
-                              {Array.from({length: Math.min(5, totalLeadPages)}, (_,i) => {
-                                let p;
-                                if (totalLeadPages<=5) p=i+1;
-                                else if (leadPage<=3) p=i+1;
-                                else if (leadPage>=totalLeadPages-2) p=totalLeadPages-4+i;
-                                else p=leadPage-2+i;
-                                return <button key={p} type="button" onClick={() => setLeadPage(p)} style={{ width:32, height:30, borderRadius:7, border:`1px solid ${p===leadPage?T.gold:T.border}`, background:p===leadPage?"rgba(212,168,67,0.15)":"transparent", color:p===leadPage?T.gold:T.textSecondary, cursor:"pointer", fontSize:11, fontWeight:p===leadPage?700:400 }}>{p}</button>;
-                              })}
-                              <button type="button" onClick={() => setLeadPage(p=>Math.min(totalLeadPages,p+1))} disabled={leadPage===totalLeadPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===totalLeadPages?T.textMuted:T.textSecondary, cursor: leadPage===totalLeadPages?"not-allowed":"pointer", fontSize: 11 }}>→</button>
-                              <button type="button" onClick={() => setLeadPage(totalLeadPages)} disabled={leadPage===totalLeadPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===totalLeadPages?T.textMuted:T.textSecondary, cursor: leadPage===totalLeadPages?"not-allowed":"pointer", fontSize: 11 }}>»</button>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     )}
-                  </div>
-                )}
-
-                {/* LEAD BULK EMAIL MODAL */}
-                {showLeadBulkEmail && (
-                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)", padding: 20 }} onClick={() => { if (!leadBulkEmailSending) setShowLeadBulkEmail(false); }}>
-                    <div style={{ background: T.surface, border: `1px solid rgba(16,185,129,0.3)`, borderRadius: 16, width: "100%", maxWidth: 540, padding: 28 }} onClick={e => e.stopPropagation()}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                        <div>
-                          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.green, margin: 0 }}>✉️ Email Leads</h3>
-                          <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{leadBulkEmailTargets.length} leads with emails selected · Use {"{name}"}, {"{community}"}, {"{project}"}</p>
-                        </div>
-                        {!leadBulkEmailSending && <button type="button" onClick={() => setShowLeadBulkEmail(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>}
-                      </div>
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
-                        {[
-                          { label: "Follow-up", subject: "Following up on your property inquiry", body: "Hi {name},\n\nI wanted to follow up on your interest in {community}. We have some exciting new options available.\n\nWould you be available for a quick call?\n\nBest regards,\nThe Address Holding Team" },
-                          { label: "New Listing", subject: "New property available in {community}", body: "Hi {name},\n\nWe have a new listing in {community} that matches your criteria.\n\nWould you like to schedule a viewing?\n\nBest regards,\nThe Address Holding Team" },
-                          { label: "Golden Visa", subject: "You may qualify for a UAE Golden Visa", body: "Hi {name},\n\nBased on your interest in {community}, you may qualify for the UAE Golden Visa.\n\nProperties valued at AED 2M+ are eligible. Let us guide you through the process.\n\nBest regards,\nThe Address Holding Team" },
-                        ].map(t => (
-                          <button key={t.label} type="button" onClick={() => { setLeadBulkEmailSubject(t.subject); setLeadBulkEmailBody(t.body); }}
-                            style={{ fontSize: 11, padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, cursor: "pointer" }}>{t.label}</button>
-                        ))}
-                      </div>
-                      <div style={{ marginBottom: 12 }}>
-                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Subject *</label>
-                        <input type="text" value={leadBulkEmailSubject} onChange={e => setLeadBulkEmailSubject(e.target.value)} placeholder="Email subject..." style={{ width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
-                      </div>
-                      <div style={{ marginBottom: 16 }}>
-                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Message *</label>
-                        <textarea value={leadBulkEmailBody} onChange={e => setLeadBulkEmailBody(e.target.value)} rows={6} placeholder="Write your message..." style={{ width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", resize: "vertical", boxSizing: "border-box" }} />
-                      </div>
-                      {leadBulkEmailSending && (
-                        <div style={{ marginBottom: 14 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                            <span style={{ fontSize: 11, color: T.textMuted }}>Sending...</span>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: T.green }}>{leadBulkEmailProgress} / {leadBulkEmailTargets.length}</span>
-                          </div>
-                          <div style={{ height: 4, borderRadius: 2, background: T.border }}>
-                            <div style={{ height: "100%", borderRadius: 2, background: T.green, width: `${leadBulkEmailTargets.length > 0 ? (leadBulkEmailProgress / leadBulkEmailTargets.length) * 100 : 0}%`, transition: "width 0.3s" }} />
-                          </div>
-                        </div>
-                      )}
-                      <div style={{ display: "flex", gap: 10 }}>
-                        <button type="button" onClick={() => setShowLeadBulkEmail(false)} disabled={leadBulkEmailSending} style={{ flex: 1, padding: "12px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
-                        <button type="button" disabled={leadBulkEmailSending || !leadBulkEmailSubject || !leadBulkEmailBody}
-                          onClick={async () => {
-                            if (!leadBulkEmailSubject || !leadBulkEmailBody) { notify("Subject and message required"); return; }
-                            setLeadBulkEmailSending(true); setLeadBulkEmailProgress(0);
-                            let sent = 0; const BATCH = 10;
-                            for (let i = 0; i < leadBulkEmailTargets.length; i += BATCH) {
-                              const chunk = leadBulkEmailTargets.slice(i, i + BATCH);
-                              await Promise.allSettled(chunk.map(async lead => {
-                                try {
-                                  const body = leadBulkEmailBody.replace(/\{name\}/g, lead.name||"there").replace(/\{community\}/g, lead.community||"Dubai").replace(/\{project\}/g, lead.project||"your property");
-                                  const subject = leadBulkEmailSubject.replace(/\{name\}/g, lead.name||"there").replace(/\{community\}/g, lead.community||"Dubai");
-                                  await sendResend(lead.email, subject, body);
-                                  sent++;
-                                } catch(e) {}
-                              }));
-                              setLeadBulkEmailProgress(Math.min(i + BATCH, leadBulkEmailTargets.length));
-                              await new Promise(r => setTimeout(r, 200));
-                            }
-                            setLeadBulkEmailSending(false);
-                            notify(`✅ Sent ${sent}/${leadBulkEmailTargets.length} emails to leads`);
-                            setShowLeadBulkEmail(false); setLeadBulkEmailSubject(""); setLeadBulkEmailBody(""); setLeadBulkEmailTargets([]); setLeadSelectedIds([]);
-                          }}
-                          style={{ flex: 2, padding: "12px", borderRadius: 10, border: "none", background: leadBulkEmailSending ? T.surfaceAlt : `linear-gradient(135deg,${T.green},#059669)`, color: leadBulkEmailSending ? T.textMuted : T.bg, fontSize: 14, fontWeight: 700, cursor: leadBulkEmailSending ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                          {leadBulkEmailSending ? `Sending ${leadBulkEmailProgress}/${leadBulkEmailTargets.length}...` : `🚀 Send to ${leadBulkEmailTargets.length} leads`}
-                        </button>
-                      </div>
-                    </div>
                   </div>
                 )}
 
@@ -21306,6 +20646,7 @@ export default function AdminPanel() {
                         {[
                           { key: "name", label: "Full Name *", placeholder: "John Smith", full: true },
                           { key: "email", label: "Email", placeholder: "john@example.com", type: "email" },
+                          { key: "phone", label: "Phone / WhatsApp", placeholder: "+971 50 123 4567" },
                           { key: "budget", label: "Budget (AED)", placeholder: "e.g. 2000000", type: "number" },
                           { key: "project", label: "Interested Project", placeholder: "e.g. The Valley" },
                         ].map(f => (
@@ -21315,19 +20656,6 @@ export default function AdminPanel() {
                               style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
                           </div>
                         ))}
-                        {/* Phone with country code */}
-                        <div style={{ gridColumn: "1/-1" }}>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone / WhatsApp</label>
-                          <div style={{ display: "flex", gap: 8 }}>
-                            <select value={addLeadForm.phoneCode || "+971"} onChange={e => setAddLeadForm(p => ({...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum||"").replace(/\s/g,"")}))}
-                              style={{ width: 200, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", flexShrink: 0 }}>
-                              {[["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+244","🇦🇴 Angola"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+20","🇪🇬 Egypt"],["+251","🇪🇹 Ethiopia"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea South"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+356","🇲🇹 Malta"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],["+212","🇲🇦 Morocco"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+234","🇳🇬 Nigeria"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
-                            </select>
-                            <input type="tel" placeholder="50 123 4567" value={addLeadForm.phoneNum || ""}
-                              onChange={e => { const num=e.target.value.replace(/[^\d\s]/g,""); setAddLeadForm(p=>({...p,phoneNum:num,phone:(p.phoneCode||"+971")+num.replace(/\s/g,"")})); }}
-                              style={{ flex: 1, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
-                          </div>
-                        </div>
                         {/* Nationality dropdown */}
                         <div>
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Nationality</label>
@@ -21657,7 +20985,6 @@ export default function AdminPanel() {
              NOTIFICATIONS TAB
              ═══════════════════════════════════════ */}
           {tab === "notifications" && <NotificationsTab T={T} notify={notify} adminUser={adminUser} I={I} users={users} db={db} />}
-          {tab === "campaigns" && <EmailCampaignsTab T={T} db={db} notify={notify} adminUser={adminUser} leads={leads} leadsTotal={leads.length} fetchLeads={fetchLeads} />}
 
           {/* ═══════════════════════════════════════
              VERIFICATION TAB (Binance-style KYC)
@@ -22069,6 +21396,20 @@ export default function AdminPanel() {
             const dauDelta = dau - dauYesterday;
             const wauDelta = wau - wauPrev;
             const mauDelta = mau - mauPrev;
+
+            // DAU/MAU Industry Benchmarks (Source: Mixpanel 2024 Product Benchmarks Report)
+            // Consumer apps: 25%+ = excellent, 15%+ = good, 8%+ = average
+            // B2B SaaS: 13%+ = excellent, 8%+ = good, 4%+ = average
+            // Real estate / proptech: 10%+ = excellent (weekly use expected, not daily)
+            const dauMauBenchmark = { poor: 4, average: 8, good: 13, excellent: 20 };
+            const dauMauLabel = dauMauRatio >= dauMauBenchmark.excellent ? "Excellent 🏆"
+              : dauMauRatio >= dauMauBenchmark.good ? "Good ✅"
+              : dauMauRatio >= dauMauBenchmark.average ? "Average ⚠️"
+              : "Needs improvement 🔴";
+            const dauMauColor = dauMauRatio >= dauMauBenchmark.excellent ? T.green
+              : dauMauRatio >= dauMauBenchmark.good ? T.teal
+              : dauMauRatio >= dauMauBenchmark.average ? T.gold
+              : T.red;
 
             // MRR History (6 months)
             const mrrHistory = (() => {
@@ -22519,23 +21860,64 @@ export default function AdminPanel() {
                   return data;
                 })();
                 
-                // Feature Adoption Data
+                // Feature Adoption — Real DXB Analytics tabs from audit log
+                // Research: Product analytics best practice (Mixpanel, Amplitude methodology)
+                // Feature adoption = % of active users who used this feature in the period
                 const featureAdoption = (() => {
+                  // Map actual DXB Analytics tabs/features to audit log action keys
                   const features = [
-                    { name: "Dashboard", key: "view", icon: "\uD83D\uDCCA", baseline: 85 },
-                    { name: "Search", key: "search", icon: "\uD83D\uDD0D", baseline: 62 },
-                    { name: "Export", key: "export", icon: "\uD83D\uDCE5", baseline: 41 },
-                    { name: "Alerts", key: "alert", icon: "\uD83D\uDD14", baseline: 28 },
-                    { name: "Reports", key: "report", icon: "\uD83D\uDCC4", baseline: 35 },
-                    { name: "Settings", key: "setting", icon: "\u2699\uFE0F", baseline: 22 },
+                    { name: "Overview", key: "tab_view_overview", icon: "📊", category: "Core" },
+                    { name: "Projects", key: "tab_view_projects", icon: "🏗️", category: "Core" },
+                    { name: "Yields", key: "tab_view_yields", icon: "💰", category: "Research" },
+                    { name: "Map", key: "tab_view_map", icon: "🗺️", category: "Research" },
+                    { name: "DLD Volumes", key: "tab_view_dld", icon: "📈", category: "Research" },
+                    { name: "Mortgage Calc", key: "tab_view_mortgage", icon: "🏦", category: "Tools" },
+                    { name: "ROI Calculator", key: "tab_view_roi", icon: "🧮", category: "Tools" },
+                    { name: "Portfolio", key: "tab_view_portfolio", icon: "💼", category: "Personal" },
+                    { name: "Launch Calendar", key: "tab_view_launch", icon: "🚀", category: "Research" },
+                    { name: "Risk Analysis", key: "tab_view_risk", icon: "⚠️", category: "Research" },
+                    { name: "PDF Export", key: "pdf_export", icon: "📄", category: "Tools" },
+                    { name: "WhatsApp Share", key: "whatsapp_click", icon: "💬", category: "Tools" },
+                    { name: "AI Insights", key: "ai_insight", icon: "✦", category: "AI" },
+                    { name: "Currency Conv.", key: "tab_view_currency", icon: "💱", category: "Tools" },
                   ];
-                  
+
+                  const totalActiveUsers = Math.max(mau, 1);
+
                   return features.map(f => {
-                    const usageCount = auditLog.filter(l => l.action?.toLowerCase().includes(f.key)).length;
-                    const adoption = Math.min(100, f.baseline + Math.round(usageCount * 0.5));
-                    return { ...f, adoption, usageCount };
+                    // Count unique users who triggered this action in the range
+                    const relevantLogs = auditInRange.filter(l =>
+                      l.action?.toLowerCase().includes(f.key.toLowerCase()) ||
+                      (f.key.includes("tab_view") && l.action === "tab_view" && l.tabId?.toLowerCase().includes(f.key.replace("tab_view_", "")))
+                    );
+                    const uniqueUsers = new Set(relevantLogs.map(l => l.uid)).size;
+                    const adoption = Math.round((uniqueUsers / totalActiveUsers) * 100);
+                    const usageCount = relevantLogs.length;
+                    // Trend: compare to previous period
+                    const prevLogs = auditLog.filter(l => {
+                      try {
+                        const d = new Date(l.changedAt);
+                        return d >= new Date(rangeStart.getTime() - (rangeDays * 24 * 60 * 60 * 1000)) &&
+                               d < rangeStart &&
+                               (l.action?.toLowerCase().includes(f.key.toLowerCase()));
+                      } catch { return false; }
+                    });
+                    const prevUniqueUsers = new Set(prevLogs.map(l => l.uid)).size;
+                    const prevAdoption = Math.round((prevUniqueUsers / totalActiveUsers) * 100);
+                    const trend = adoption - prevAdoption;
+                    return { ...f, adoption: Math.min(adoption, 100), usageCount, uniqueUsers, trend };
                   }).sort((a, b) => b.adoption - a.adoption);
                 })();
+
+                // Feature adoption benchmark (industry research)
+                // Source: Mixpanel 2024 Product Benchmarks Report
+                const adoptionBenchmarks = {
+                  "Core": { label: "Core features (daily use)", benchmark: 60 },
+                  "Research": { label: "Research features", benchmark: 40 },
+                  "Tools": { label: "Tool features", benchmark: 30 },
+                  "Personal": { label: "Personal features", benchmark: 20 },
+                  "AI": { label: "AI features", benchmark: 25 },
+                };
                 
                 // Actions per session
                 const actionsPerSession = auditLog.length > 0 && users.length > 0 
@@ -22652,33 +22034,56 @@ export default function AdminPanel() {
                         <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 8 }}>
                           {engagementScore >= 70 ? "Excellent" : engagementScore >= 50 ? "Good" : engagementScore >= 30 ? "Needs Work" : "Critical"}
                         </div>
-                        <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 12, fontSize: 9, color: T.textMuted }}>
-                          <span>Stickiness: {dauMauRatio}%</span>
-                          <span>|</span>
-                          <span>Actions/Session: {actionsPerSession}</span>
+                        <div style={{ marginTop: 12 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: dauMauColor, textAlign: "center", marginBottom: 6 }}>
+                            {dauMauRatio}% Stickiness — {dauMauLabel}
+                          </div>
+                          <div style={{ height: 4, borderRadius: 2, background: T.border, marginBottom: 6, position: "relative" }}>
+                            <div style={{ height: "100%", borderRadius: 2, background: dauMauColor, width: `${Math.min(dauMauRatio * 3, 100)}%`, transition: "width 0.8s" }} />
+                            {/* Benchmark markers */}
+                            {[dauMauBenchmark.average, dauMauBenchmark.good, dauMauBenchmark.excellent].map((b, i) => (
+                              <div key={i} style={{ position: "absolute", top: -2, left: `${Math.min(b * 3, 100)}%`, width: 2, height: 8, background: T.textMuted, opacity: 0.4 }} />
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 8, color: T.textMuted }}>
+                            <span>Poor &lt;{dauMauBenchmark.average}%</span>
+                            <span>Avg {dauMauBenchmark.average}%</span>
+                            <span>Good {dauMauBenchmark.good}%</span>
+                            <span>Excellent {dauMauBenchmark.excellent}%+</span>
+                          </div>
+                          <div style={{ fontSize: 9, color: T.textMuted, textAlign: "center", marginTop: 6 }}>
+                            B2B SaaS benchmark · Source: Mixpanel 2024
+                          </div>
                         </div>
                       </div>
                       
-                      {/* Feature Adoption */}
+                      {/* Feature Adoption — DXB Analytics tabs */}
                       <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 16, flex: 1 }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Feature Adoption</div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                          {featureAdoption.slice(0, 5).map(f => (
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>Feature Adoption</div>
+                          <div style={{ fontSize: 9, color: T.textMuted }}>% of MAU ({mau} users)</div>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          {featureAdoption.slice(0, 8).map(f => {
+                            const benchmark = adoptionBenchmarks[f.category]?.benchmark || 30;
+                            const aboveBenchmark = f.adoption >= benchmark;
+                            return (
                             <div key={f.name}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                                <span style={{ fontSize: 11, color: T.textPrimary, display: "flex", alignItems: "center", gap: 6 }}>
-                                  <span>{f.icon}</span> {f.name}
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                                <span style={{ fontSize: 11, color: T.textPrimary, display: "flex", alignItems: "center", gap: 5 }}>
+                                  <span style={{ fontSize: 12 }}>{f.icon}</span>
+                                  <span>{f.name}</span>
+                                  <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 3, background: `${T.textMuted}15`, color: T.textMuted }}>{f.category}</span>
                                 </span>
-                                <span style={{ fontSize: 11, fontWeight: 700, color: f.adoption >= 60 ? T.green : f.adoption >= 40 ? T.gold : T.orange }}>{f.adoption}%</span>
+                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                  {f.trend !== 0 && <span style={{ fontSize: 9, color: f.trend > 0 ? T.green : T.red, fontWeight: 600 }}>{f.trend > 0 ? "+" : ""}{f.trend}%</span>}
+                                  <span style={{ fontSize: 11, fontWeight: 700, color: aboveBenchmark ? T.green : T.gold }}>{f.adoption}%</span>
+                                </div>
                               </div>
-                              <div style={{ height: 6, background: T.border, borderRadius: 3, overflow: "hidden" }}>
-                                <div style={{ 
-                                  height: "100%", 
-                                  width: `${f.adoption}%`, 
-                                  background: f.adoption >= 60 ? T.green : f.adoption >= 40 ? T.gold : T.orange, 
-                                  borderRadius: 3,
-                                  transition: "width 0.5s ease"
-                                }} />
+                              <div style={{ height: 5, background: T.border, borderRadius: 3, overflow: "hidden", position: "relative" }}>
+                                <div style={{ height: "100%", width: `${f.adoption}%`, background: aboveBenchmark ? T.green : T.gold, borderRadius: 3, transition: "width 0.5s ease" }} />
+                                {/* Benchmark marker */}
+                                <div style={{ position: "absolute", top: 0, bottom: 0, left: `${benchmark}%`, width: 1, background: T.textMuted, opacity: 0.5 }} />
                               </div>
                             </div>
                           ))}
@@ -23116,6 +22521,33 @@ export default function AdminPanel() {
                       </div>
                     </div>
                     
+                    {/* Funnel Drop-off Recommendations */}
+                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20, marginBottom: 0 }}>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 4 }}>Drop-off Recommendations</div>
+                      <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 14 }}>Where users leave and what to fix — research-backed actions</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {dropoffs.map((d, i) => {
+                          const recs = {
+                            0: { action: "Improve landing page — add social proof, reduce form fields, A/B test CTA", bench: "Benchmark: 2-5% of visitors sign up (B2B SaaS)" },
+                            1: { action: "Fix onboarding — send activation email within 1hr, add in-app checklist", bench: "Benchmark: 60%+ should activate within 7 days" },
+                            2: { action: "Boost engagement — weekly digest email, feature discovery prompts", bench: "Benchmark: 40%+ return within 7 days" },
+                            3: { action: "Upgrade prompts — show paywall at day 5, urgency email day 6", bench: "Benchmark: 15-25% trial to paid (SaaS)" },
+                          };
+                          const rec = recs[i] || { action: "Monitor this stage", bench: "No benchmark" };
+                          return (
+                            <div key={i} style={{ padding: "10px 14px", borderRadius: 8, background: d.dropRate > 50 ? "rgba(239,68,68,0.06)" : d.dropRate > 30 ? "rgba(245,158,11,0.06)" : "rgba(16,185,129,0.06)", border: `1px solid ${d.color}20` }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                                <span style={{ fontSize: 12, fontWeight: 700, color: d.color }}>{d.from} → {d.to}</span>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: d.color }}>{d.dropRate}% drop ({d.dropped} users)</span>
+                              </div>
+                              <div style={{ fontSize: 11, color: T.textSecondary, marginBottom: 3 }}>{rec.action}</div>
+                              <div style={{ fontSize: 9, color: T.textMuted }}>{rec.bench}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                     {/* Time to Convert & Insights */}
                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                       {/* Time to Convert */}
@@ -25479,6 +24911,3 @@ export default function AdminPanel() {
     </div>
   );
 }
-// STABLE_RECOVERY_0945_PPSF_FIXED
-// BEAST_UI_UPGRADE_1005_MAR24
-// BEAST_BADGE_GLOBAL_1012_MAR24
