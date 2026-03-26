@@ -12596,6 +12596,8 @@ export default function AdminPanel() {
   const [lfNeverContacted, setLfNeverContacted] = useState(false);
   const [lfHasFollowUp,    setLfHasFollowUp]    = useState(false);
   const [showLeadFilters,  setShowLeadFilters]  = useState(false);
+  const [leadPage,         setLeadPage]         = useState(1);
+  const LEADS_PER_PAGE = 100;
   const [showAddLead, setShowAddLead] = useState(false);
   const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
   const [addLeadLoading, setAddLeadLoading] = useState(false);
@@ -12952,6 +12954,7 @@ export default function AdminPanel() {
       const TTL = 5 * 60 * 1000;
       const now = Date.now();
 
+      // Use cache if fresh
       if (!forceRefresh) {
         try {
           const ts = parseInt(localStorage.getItem(cacheTS) || "0");
@@ -12962,34 +12965,58 @@ export default function AdminPanel() {
         } catch(e) {}
       }
 
-      // Batch fetch all leads 500 at a time
-      let all = [];
+      // Step 1: Show first 500 immediately so page isn't blank
+      let firstBatch = [];
+      try {
+        const q1 = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
+        const snap1 = await getDocs(q1);
+        snap1.forEach(d => firstBatch.push({ id: d.id, ...plainify(d.data()) }));
+        setLeads(firstBatch); // show immediately
+        setLeadsLoading(false); // stop spinner — page is usable now
+      } catch(e) {
+        // No index — fetch without order
+        const snap1 = await getDocs(query(collection(db, "leads"), limit(500)));
+        snap1.forEach(d => firstBatch.push({ id: d.id, ...plainify(d.data()) }));
+        setLeads(firstBatch);
+        setLeadsLoading(false);
+      }
+
+      // Step 2: Load ALL remaining leads in background (no spinner)
+      let all = [...firstBatch];
       try {
         let lastDoc = null;
-        while (true) {
-          const q = lastDoc
-            ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500))
-            : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
+        // Get the last doc of first batch for cursor
+        const q1check = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
+        const snap1check = await getDocs(q1check);
+        if (!snap1check.empty) lastDoc = snap1check.docs[snap1check.docs.length - 1];
+
+        while (lastDoc) {
+          const q = query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500));
           const snap = await getDocs(q);
           if (snap.empty) break;
           snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
           lastDoc = snap.docs[snap.docs.length - 1];
+          setLeads([...all]); // update live as each batch arrives
           if (snap.docs.length < 500) break;
         }
       } catch(e) {
-        // No index yet - fallback to simple fetch
-        const snap = await getDocs(collection(db, "leads"));
-        snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
+        // Fallback: simple full fetch
+        try {
+          const snap = await getDocs(collection(db, "leads"));
+          all = [];
+          snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
+        } catch(e2) {}
       }
 
       all.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
       setLeads(all);
+
+      // Cache full result
       try {
         localStorage.setItem(cacheKey, JSON.stringify(all));
         localStorage.setItem(cacheTS, String(now));
       } catch(e) {}
-    } catch(e) { console.error("fetchLeads:", e); }
-    setLeadsLoading(false);
+    } catch(e) { console.error("fetchLeads:", e); setLeadsLoading(false); }
   }, [db]);
 
   useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin]);
@@ -20587,14 +20614,17 @@ export default function AdminPanel() {
                     setLfBedrooms("all"); setLfOffPlan("all"); setLfDeveloper("all");
                     setLfPayment("all"); setLfVisa("all"); setLfTag("all");
                     setLfNeverContacted(false); setLfHasFollowUp(false);
+                    setLeadPage(1);
                   };
+                  const totalLeadPages = Math.max(1, Math.ceil(filtered.length / LEADS_PER_PAGE));
+                  const pagedLeads = filtered.slice((leadPage - 1) * LEADS_PER_PAGE, leadPage * LEADS_PER_PAGE);
                   return (
                     <div style={{ marginBottom: 16 }}>
                       {/* Row 1: Search + Status + Source + Date + Filters toggle */}
                       <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
-                        <input type="text" placeholder="🔍  Search by name, phone, email, project..." value={leadSearch} onChange={e => setLeadSearch(e.target.value)}
+                        <input type="text" placeholder="🔍  Search by name, phone, email, project..." value={leadSearch} onChange={e => { setLeadSearch(e.target.value); setLeadPage(1); }}
                           style={{ flex: 1, minWidth: 220, padding: "9px 14px", background: T.surface, border: `1px solid ${leadSearch ? T.gold : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                        <select value={leadFilter} onChange={e => setLeadFilter(e.target.value)} style={sel}>
+                        <select value={leadFilter} onChange={e => { setLeadFilter(e.target.value); setLeadPage(1); }} style={sel}>
                           <option value="all">📋 All Status</option>
                           <option value="new">🆕 New</option>
                           <option value="contacted">📞 Contacted</option>
@@ -20602,11 +20632,11 @@ export default function AdminPanel() {
                           <option value="converted">✅ Converted</option>
                           <option value="lost">❌ Lost</option>
                         </select>
-                        <select value={leadSourceFilter} onChange={e => setLeadSourceFilter(e.target.value)} style={sel}>
+                        <select value={leadSourceFilter} onChange={e => { setLeadSourceFilter(e.target.value); setLeadPage(1); }} style={sel}>
                           <option value="all">📋 All Sources</option>
                           {sources.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
-                        <select value={leadDateRange} onChange={e => setLeadDateRange(e.target.value)} style={sel}>
+                        <select value={leadDateRange} onChange={e => { setLeadDateRange(e.target.value); setLeadPage(1); }} style={sel}>
                           <option value="all">📅 All Time</option>
                           <option value="today">Today</option>
                           <option value="week">This Week</option>
@@ -20636,7 +20666,7 @@ export default function AdminPanel() {
                           {/* Community */}
                           <div>
                             <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Community</div>
-                            <select value={lfCommunity} onChange={e => setLfCommunity(e.target.value)} style={sel}>
+                            <select value={lfCommunity} onChange={e => { setLfCommunity(e.target.value); setLeadPage(1); }} style={sel}>
                               <option value="all">All Communities</option>
                               {[...new Set(leads.map(l => l.community).filter(Boolean))].sort().map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
@@ -20644,7 +20674,7 @@ export default function AdminPanel() {
                           {/* Nationality */}
                           <div>
                             <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Nationality</div>
-                            <select value={lfNationality} onChange={e => setLfNationality(e.target.value)} style={sel}>
+                            <select value={lfNationality} onChange={e => { setLfNationality(e.target.value); setLeadPage(1); }} style={sel}>
                               <option value="all">All Nationalities</option>
                               {[...new Set(leads.map(l => l.nationality).filter(Boolean))].sort().map(n => <option key={n} value={n}>{n}</option>)}
                             </select>
@@ -20653,14 +20683,14 @@ export default function AdminPanel() {
                           <div>
                             <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Budget (AED)</div>
                             <div style={{ display: "flex", gap: 4 }}>
-                              <input type="number" placeholder="Min" value={lfBudgetMin} onChange={e => setLfBudgetMin(e.target.value)} style={{ ...sel, width: 90 }} />
-                              <input type="number" placeholder="Max" value={lfBudgetMax} onChange={e => setLfBudgetMax(e.target.value)} style={{ ...sel, width: 90 }} />
+                              <input type="number" placeholder="Min" value={lfBudgetMin} onChange={e => { setLfBudgetMin(e.target.value); setLeadPage(1); }} style={{ ...sel, width: 90 }} />
+                              <input type="number" placeholder="Max" value={lfBudgetMax} onChange={e => { setLfBudgetMax(e.target.value); setLeadPage(1); }} style={{ ...sel, width: 90 }} />
                             </div>
                           </div>
                           {/* Score */}
                           <div>
                             <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Min Score</div>
-                            <select value={lfScoreMin} onChange={e => setLfScoreMin(e.target.value)} style={sel}>
+                            <select value={lfScoreMin} onChange={e => { setLfScoreMin(e.target.value); setLeadPage(1); }} style={sel}>
                               <option value="">All Scores</option>
                               <option value="70">Hot (70+)</option>
                               <option value="40">Warm+ (40+)</option>
@@ -20670,7 +20700,7 @@ export default function AdminPanel() {
                           {/* Bedrooms */}
                           <div>
                             <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Bedrooms</div>
-                            <select value={lfBedrooms} onChange={e => setLfBedrooms(e.target.value)} style={sel}>
+                            <select value={lfBedrooms} onChange={e => { setLfBedrooms(e.target.value); setLeadPage(1); }} style={sel}>
                               <option value="all">All Beds</option>
                               {["Studio","1","2","3","4","5","6+"].map(b => <option key={b} value={b}>{b === "Studio" ? "Studio" : `${b} BR`}</option>)}
                             </select>
@@ -20678,7 +20708,7 @@ export default function AdminPanel() {
                           {/* Off-plan / Ready */}
                           <div>
                             <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Type</div>
-                            <select value={lfOffPlan} onChange={e => setLfOffPlan(e.target.value)} style={sel}>
+                            <select value={lfOffPlan} onChange={e => { setLfOffPlan(e.target.value); setLeadPage(1); }} style={sel}>
                               <option value="all">Off-Plan / Ready</option>
                               <option value="off-plan">Off-Plan</option>
                               <option value="ready">Ready</option>
@@ -20688,7 +20718,7 @@ export default function AdminPanel() {
                           {developers.length > 0 && (
                             <div>
                               <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Developer</div>
-                              <select value={lfDeveloper} onChange={e => setLfDeveloper(e.target.value)} style={sel}>
+                              <select value={lfDeveloper} onChange={e => { setLfDeveloper(e.target.value); setLeadPage(1); }} style={sel}>
                                 <option value="all">All Developers</option>
                                 {[...new Set(leads.map(l => l.developer).filter(Boolean))].sort().map(d => <option key={d} value={d}>{d}</option>)}
                               </select>
@@ -20697,7 +20727,7 @@ export default function AdminPanel() {
                           {/* Lead age */}
                           <div>
                             <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Lead Age</div>
-                            <select value={lfLeadAge} onChange={e => setLfLeadAge(e.target.value)} style={sel}>
+                            <select value={lfLeadAge} onChange={e => { setLfLeadAge(e.target.value); setLeadPage(1); }} style={sel}>
                               <option value="all">All Ages</option>
                               <option value="fresh">Fresh (0-7d)</option>
                               <option value="week">1-4 weeks</option>
@@ -20808,7 +20838,7 @@ export default function AdminPanel() {
                             </tr>
                           </thead>
                           <tbody>
-                            {filtered.map((lead) => {
+                            {pagedLeads.map((lead) => {
                               const sc = statusColors[lead.status || "New"] || statusColors.New;
                               const score = scoreLead(lead);
                               const overdue = isOverdue(lead);
@@ -20871,6 +20901,37 @@ export default function AdminPanel() {
                             })}
                           </tbody>
                         </table>
+                        {/* PAGINATION BAR */}
+                        {totalLeadPages > 1 && (
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderTop: `1px solid ${T.border}`, flexWrap: "wrap", gap: 10 }}>
+                            <span style={{ fontSize: 11, color: T.textMuted }}>
+                              Showing <strong style={{ color: T.white }}>{((leadPage - 1) * LEADS_PER_PAGE + 1).toLocaleString()}–{Math.min(leadPage * LEADS_PER_PAGE, filtered.length).toLocaleString()}</strong> of <strong style={{ color: T.gold }}>{filtered.length.toLocaleString()}</strong> leads
+                              {leads.length !== filtered.length && <> · <span style={{ color: T.textMuted }}>{leads.length.toLocaleString()} total loaded</span></>}
+                            </span>
+                            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                              <button type="button" onClick={() => setLeadPage(1)} disabled={leadPage === 1}
+                                style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage === 1 ? T.textMuted : T.textSecondary, cursor: leadPage === 1 ? "not-allowed" : "pointer", fontSize: 11 }}>«</button>
+                              <button type="button" onClick={() => setLeadPage(p => Math.max(1, p - 1))} disabled={leadPage === 1}
+                                style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage === 1 ? T.textMuted : T.textSecondary, cursor: leadPage === 1 ? "not-allowed" : "pointer", fontSize: 11 }}>←</button>
+                              {Array.from({ length: Math.min(5, totalLeadPages) }, (_, i) => {
+                                let p;
+                                if (totalLeadPages <= 5) p = i + 1;
+                                else if (leadPage <= 3) p = i + 1;
+                                else if (leadPage >= totalLeadPages - 2) p = totalLeadPages - 4 + i;
+                                else p = leadPage - 2 + i;
+                                return (
+                                  <button key={p} type="button" onClick={() => setLeadPage(p)}
+                                    style={{ width: 32, height: 30, borderRadius: 7, border: `1px solid ${p === leadPage ? T.gold : T.border}`, background: p === leadPage ? "rgba(212,168,67,0.15)" : "transparent", color: p === leadPage ? T.gold : T.textSecondary, cursor: "pointer", fontSize: 11, fontWeight: p === leadPage ? 700 : 400 }}>{p}</button>
+                                );
+                              })}
+                              <button type="button" onClick={() => setLeadPage(p => Math.min(totalLeadPages, p + 1))} disabled={leadPage === totalLeadPages}
+                                style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage === totalLeadPages ? T.textMuted : T.textSecondary, cursor: leadPage === totalLeadPages ? "not-allowed" : "pointer", fontSize: 11 }}>→</button>
+                              <button type="button" onClick={() => setLeadPage(totalLeadPages)} disabled={leadPage === totalLeadPages}
+                                style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage === totalLeadPages ? T.textMuted : T.textSecondary, cursor: leadPage === totalLeadPages ? "not-allowed" : "pointer", fontSize: 11 }}>»</button>
+                              <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>Page {leadPage} of {totalLeadPages}</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
