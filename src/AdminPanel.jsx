@@ -12739,9 +12739,31 @@ export default function AdminPanel() {
   }); // all | new | contacted | qualified | converted | lost
   const [leadSourceFilter, setLeadSourceFilter] = useState("all");
   const [leadSearch, setLeadSearch] = useState("");
-  const [leadDateRange, setLeadDateRange] = useState("all"); // all | today | week | month
+  const [leadDateRange, setLeadDateRange] = useState("all");
   const [leadPage, setLeadPage] = useState(1);
   const LEADS_PER_PAGE = 100;
+  // ── All 23 advanced filters ──
+  const [lfCommunity,      setLfCommunity]      = useState("all");
+  const [lfNationality,    setLfNationality]    = useState("all");
+  const [lfBudgetMin,      setLfBudgetMin]      = useState("");
+  const [lfBudgetMax,      setLfBudgetMax]      = useState("");
+  const [lfScoreMin,       setLfScoreMin]       = useState("");
+  const [lfPropType,       setLfPropType]       = useState("all");
+  const [lfLanguage,       setLfLanguage]       = useState("all");
+  const [lfLeadAge,        setLfLeadAge]        = useState("all");
+  const [lfGoldenVisa,     setLfGoldenVisa]     = useState(false);
+  const [lfHasWhatsApp,    setLfHasWhatsApp]    = useState(false);
+  const [lfHasEmail,       setLfHasEmail]       = useState(false);
+  const [lfNoWhatsApp,     setLfNoWhatsApp]     = useState(false);
+  const [lfBedrooms,       setLfBedrooms]       = useState("all");
+  const [lfOffPlan,        setLfOffPlan]        = useState("all");
+  const [lfDeveloper,      setLfDeveloper]      = useState("all");
+  const [lfPayment,        setLfPayment]        = useState("all");
+  const [lfVisa,           setLfVisa]           = useState("all");
+  const [lfTag,            setLfTag]            = useState("all");
+  const [lfNeverContacted, setLfNeverContacted] = useState(false);
+  const [lfHasFollowUp,    setLfHasFollowUp]    = useState(false);
+  const [showLeadFilters,  setShowLeadFilters]  = useState(false);
   const [showAddLead, setShowAddLead] = useState(false);
   const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
   const [addLeadLoading, setAddLeadLoading] = useState(false);
@@ -20341,8 +20363,35 @@ export default function AdminPanel() {
               if (leadDateRange === "today_followup") { if (!isDueToday(l)) return false; }
               if (leadSearch) {
                 const s = leadSearch.toLowerCase();
-                if (!((l.name || "").toLowerCase().includes(s) || (l.email || "").toLowerCase().includes(s) || (l.phone || "").includes(s) || (l.project || "").toLowerCase().includes(s) || (l.nationality || "").toLowerCase().includes(s))) return false;
+                if (!((l.name || "").toLowerCase().includes(s) || (l.email || "").toLowerCase().includes(s) || (l.phone || "").includes(s) || (l.project || "").toLowerCase().includes(s) || (l.nationality || "").toLowerCase().includes(s) || (l.community || "").toLowerCase().includes(s))) return false;
               }
+              // Advanced filters
+              if (lfCommunity !== "all" && (l.community || "") !== lfCommunity) return false;
+              if (lfNationality !== "all" && (l.nationality || "") !== lfNationality) return false;
+              if (lfBudgetMin && (parseFloat(l.budget)||0) < parseFloat(lfBudgetMin)) return false;
+              if (lfBudgetMax && (parseFloat(l.budget)||0) > parseFloat(lfBudgetMax)) return false;
+              if (lfScoreMin && scoreLead(l) < parseInt(lfScoreMin)) return false;
+              if (lfPropType !== "all" && (l.propertyType || l.property_type || "") !== lfPropType) return false;
+              if (lfLanguage !== "all" && (l.language || "") !== lfLanguage) return false;
+              if (lfLeadAge !== "all") {
+                const ageDays = (new Date() - new Date(l.createdAt)) / 86400000;
+                if (lfLeadAge === "fresh" && ageDays > 7) return false;
+                if (lfLeadAge === "week" && (ageDays < 7 || ageDays > 30)) return false;
+                if (lfLeadAge === "month" && (ageDays < 30 || ageDays > 90)) return false;
+                if (lfLeadAge === "old" && ageDays < 90) return false;
+              }
+              if (lfGoldenVisa && (parseFloat(l.budget)||0) < 2000000) return false;
+              if (lfHasWhatsApp && (!l.phone || (l.tags||[]).includes("no_whatsapp"))) return false;
+              if (lfNoWhatsApp && !(l.tags||[]).includes("no_whatsapp")) return false;
+              if (lfHasEmail && !l.email) return false;
+              if (lfBedrooms !== "all" && String(l.bedrooms || "") !== lfBedrooms) return false;
+              if (lfOffPlan !== "all" && (l.planType || l.plan_type || "") !== lfOffPlan) return false;
+              if (lfDeveloper !== "all" && (l.developer || "") !== lfDeveloper) return false;
+              if (lfPayment !== "all" && (l.paymentType || l.payment_type || "") !== lfPayment) return false;
+              if (lfVisa !== "all" && (l.visaEligibility || l.visa || "") !== lfVisa) return false;
+              if (lfTag !== "all" && !(l.tags||[]).includes(lfTag)) return false;
+              if (lfNeverContacted && l.status !== "New") return false;
+              if (lfHasFollowUp && !l.followUpDate) return false;
               return true;
             }).sort((a, b) => {
               if (isOverdue(a) && !isOverdue(b)) return -1;
@@ -20357,14 +20406,31 @@ export default function AdminPanel() {
 
             // ── Dubai nationalities ──────────────────────────────────────
             const DUBAI_NATIONALITIES = [
-              "Indian", "Pakistani", "British", "Russian", "Chinese",
-              "Filipino", "Bangladeshi", "Egyptian", "Emirati", "Saudi Arabian",
-              "German", "French", "Italian", "Canadian", "Australian",
-              "American", "Lebanese", "Jordanian", "Iranian", "Ukrainian",
-              "Kazakhstani", "Nigerian", "South African", "Turkish", "Dutch",
-              "Swedish", "Swiss", "Spanish", "Brazilian", "Colombian",
-              "Other"
-            ];
+              "🇦🇫 Afghan","🇦🇱 Albanian","🇩🇿 Algerian","🇦🇴 Angolan","🇦🇷 Argentine","🇦🇲 Armenian","🇦🇺 Australian","🇦🇹 Austrian","🇦🇿 Azerbaijani",
+              "🇧🇭 Bahraini","🇧🇩 Bangladeshi","🇧🇾 Belarusian","🇧🇪 Belgian","🇧🇴 Bolivian","🇧🇦 Bosnian","🇧🇷 Brazilian","🇧🇳 Bruneian","🇧🇬 Bulgarian",
+              "🇰🇭 Cambodian","🇨🇲 Cameroonian","🇨🇦 Canadian","🇨🇱 Chilean","🇨🇳 Chinese","🇨🇴 Colombian","🇭🇷 Croatian","🇨🇺 Cuban","🇨🇾 Cypriot","🇨🇿 Czech",
+              "🇩🇰 Danish","🇩🇯 Djiboutian","🇩🇴 Dominican",
+              "🇪🇨 Ecuadorian","🇪🇬 Egyptian","🇸🇻 El Salvadoran","🇪🇷 Eritrean","🇪🇪 Estonian","🇪🇹 Ethiopian",
+              "🇫🇯 Fijian","🇫🇮 Finnish","🇫🇷 French",
+              "🇬🇦 Gabonese","🇬🇲 Gambian","🇬🇪 Georgian","🇩🇪 German","🇬🇭 Ghanaian","🇬🇷 Greek","🇬🇹 Guatemalan","🇬🇳 Guinean","🇬🇾 Guyanese",
+              "🇭🇹 Haitian","🇭🇳 Honduran","🇭🇺 Hungarian",
+              "🇮🇸 Icelandic","🇮🇳 Indian","🇮🇩 Indonesian","🇮🇷 Iranian","🇮🇶 Iraqi","🇮🇪 Irish","🇮🇱 Israeli","🇮🇹 Italian",
+              "🇯🇲 Jamaican","🇯🇵 Japanese","🇯🇴 Jordanian",
+              "🇰🇿 Kazakhstani","🇰🇪 Kenyan","🇰🇷 Korean","🇰🇼 Kuwaiti","🇰🇬 Kyrgyz",
+              "🇱🇦 Laotian","🇱🇻 Latvian","🇱🇧 Lebanese","🇱🇷 Liberian","🇱🇾 Libyan","🇱🇹 Lithuanian","🇱🇺 Luxembourgish",
+              "🇲🇬 Malagasy","🇲🇼 Malawian","🇲🇾 Malaysian","🇲🇻 Maldivian","🇲🇱 Malian","🇲🇹 Maltese","🇲🇷 Mauritanian","🇲🇺 Mauritian","🇲🇽 Mexican","🇲🇩 Moldovan","🇲🇳 Mongolian","🇲🇪 Montenegrin","🇲🇦 Moroccan","🇲🇿 Mozambican",
+              "🇳🇦 Namibian","🇳🇵 Nepalese","🇳🇱 Dutch","🇳🇿 New Zealander","🇳🇮 Nicaraguan","🇳🇬 Nigerian","🇳🇴 Norwegian",
+              "🇴🇲 Omani",
+              "🇵🇰 Pakistani","🇵🇸 Palestinian","🇵🇦 Panamanian","🇵🇾 Paraguayan","🇵🇪 Peruvian","🇵🇭 Filipino","🇵🇱 Polish","🇵🇹 Portuguese",
+              "🇶🇦 Qatari",
+              "🇷🇴 Romanian","🇷🇺 Russian","🇷🇼 Rwandan",
+              "🇸🇦 Saudi Arabian","🇸🇳 Senegalese","🇷🇸 Serbian","🇸🇬 Singaporean","🇸🇰 Slovak","🇸🇮 Slovenian","🇸🇴 Somali","🇿🇦 South African","🇸🇸 South Sudanese","🇪🇸 Spanish","🇱🇰 Sri Lankan","🇸🇩 Sudanese","🇸🇷 Surinamese","🇸🇪 Swedish","🇨🇭 Swiss","🇸🇾 Syrian",
+              "🇹🇼 Taiwanese","🇹🇯 Tajik","🇹🇿 Tanzanian","🇹🇭 Thai","🇹🇬 Togolese","🇹🇹 Trinidadian","🇹🇳 Tunisian","🇹🇷 Turkish","🇹🇲 Turkmen",
+              "🇺🇬 Ugandan","🇺🇦 Ukrainian","🇦🇪 Emirati","🇬🇧 British","🇺🇸 American","🇺🇾 Uruguayan","🇺🇿 Uzbek",
+              "🇻🇪 Venezuelan","🇻🇳 Vietnamese",
+              "🇾🇪 Yemeni",
+              "🇿🇲 Zambian","🇿🇼 Zimbabwean","🌍 Other"
+            ].sort();
 
             // ── Duplicate detection ───────────────────────────────────────
             const getDuplicates = (lead) => {
@@ -20637,25 +20703,151 @@ export default function AdminPanel() {
                 )}
 
                 {/* FILTERS */}
-                <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
-                  <input type="text" placeholder="Search name, email, phone, nationality, project..." value={leadSearch} onChange={e => { setLeadSearch(e.target.value); setLeadPage(1); }} style={{ flex: 1, minWidth: 200, padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                  <select value={leadSourceFilter} onChange={e => { setLeadSourceFilter(e.target.value); setLeadPage(1); }} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                    <option value="all">All Sources</option>
-                    {sources.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  <select value={leadDateRange} onChange={e => { setLeadDateRange(e.target.value); setLeadPage(1); }} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                    <option value="all">All Time</option>
-                    <option value="today">Today</option>
-                    <option value="week">This Week</option>
-                    <option value="month">This Month</option>
-                    <option value="overdue">Overdue Follow-ups</option>
-                    <option value="today_followup">Due Today</option>
-                  </select>
-                  {(leadFilter !== "all" || leadSourceFilter !== "all" || leadDateRange !== "all" || leadSearch) && (
-                    <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); setLeadPage(1); }} style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
-                  )}
-                  <span style={{ fontSize: 11, color: T.textMuted }}>{filtered.length} of {leads.length}</span>
-                </div>
+                {(() => {
+                  const communities = [...new Set(leads.map(l => l.community).filter(Boolean))].sort();
+                  const nationalities = [...new Set(leads.map(l => l.nationality).filter(Boolean))].sort();
+                  const developers = [...new Set(leads.map(l => l.developer).filter(Boolean))].sort();
+                  const activeFiltersCount = [
+                    leadFilter !== "all", leadSourceFilter !== "all", leadDateRange !== "all", leadSearch,
+                    lfCommunity !== "all", lfNationality !== "all", lfBudgetMin, lfBudgetMax, lfScoreMin,
+                    lfPropType !== "all", lfLanguage !== "all", lfLeadAge !== "all",
+                    lfGoldenVisa, lfHasWhatsApp, lfHasEmail, lfNoWhatsApp,
+                    lfBedrooms !== "all", lfOffPlan !== "all", lfDeveloper !== "all",
+                    lfPayment !== "all", lfVisa !== "all", lfTag !== "all",
+                    lfNeverContacted, lfHasFollowUp,
+                  ].filter(Boolean).length;
+                  const sel = { padding: "9px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" };
+                  const toggleBtn = (active, onClick, label) => (
+                    <button type="button" onClick={onClick} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${active ? T.gold : T.border}`, background: active ? "rgba(212,168,67,0.12)" : T.surface, color: active ? T.gold : T.textMuted, fontSize: 11, fontWeight: active ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>{label}</button>
+                  );
+                  const clearAll = () => {
+                    setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch("");
+                    setLfCommunity("all"); setLfNationality("all"); setLfBudgetMin(""); setLfBudgetMax(""); setLfScoreMin("");
+                    setLfPropType("all"); setLfLanguage("all"); setLfLeadAge("all");
+                    setLfGoldenVisa(false); setLfHasWhatsApp(false); setLfHasEmail(false); setLfNoWhatsApp(false);
+                    setLfBedrooms("all"); setLfOffPlan("all"); setLfDeveloper("all");
+                    setLfPayment("all"); setLfVisa("all"); setLfTag("all");
+                    setLfNeverContacted(false); setLfHasFollowUp(false); setLeadPage(1);
+                  };
+                  return (
+                    <div style={{ marginBottom: 16 }}>
+                      {/* Row 1: Search + Status + Source + Date + toggle */}
+                      <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
+                        <input type="text" placeholder="🔍  Search by name, phone, email, project..." value={leadSearch} onChange={e => { setLeadSearch(e.target.value); setLeadPage(1); }}
+                          style={{ flex: 1, minWidth: 220, padding: "9px 14px", background: T.surface, border: `1px solid ${leadSearch ? T.gold : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                        <select value={leadFilter} onChange={e => { setLeadFilter(e.target.value); setLeadPage(1); }} style={sel}>
+                          <option value="all">📋 All Status</option>
+                          <option value="new">🆕 New</option>
+                          <option value="contacted">📞 Contacted</option>
+                          <option value="qualified">⭐ Qualified</option>
+                          <option value="converted">✅ Converted</option>
+                          <option value="lost">❌ Lost</option>
+                        </select>
+                        <select value={leadSourceFilter} onChange={e => { setLeadSourceFilter(e.target.value); setLeadPage(1); }} style={sel}>
+                          <option value="all">📋 All Sources</option>
+                          {sources.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <select value={leadDateRange} onChange={e => { setLeadDateRange(e.target.value); setLeadPage(1); }} style={sel}>
+                          <option value="all">📅 All Time</option>
+                          <option value="today">Today</option>
+                          <option value="week">This Week</option>
+                          <option value="month">This Month</option>
+                          <option value="overdue">⚠️ Overdue</option>
+                          <option value="today_followup">🔔 Due Today</option>
+                        </select>
+                        <button type="button" onClick={() => setShowLeadFilters(p => !p)}
+                          style={{ padding: "9px 14px", borderRadius: 8, border: `1px solid ${showLeadFilters || activeFiltersCount > 0 ? T.gold : T.border}`, background: showLeadFilters || activeFiltersCount > 0 ? "rgba(212,168,67,0.1)" : T.surface, color: showLeadFilters || activeFiltersCount > 0 ? T.gold : T.textMuted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          ⚙ Filters {activeFiltersCount > 0 ? `(${activeFiltersCount})` : ""}
+                        </button>
+                        {activeFiltersCount > 0 && (
+                          <button type="button" onClick={clearAll} style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.4)", background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>✕ Clear All</button>
+                        )}
+                        {leadsLoading
+                          ? <span style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>⟳ Loading all leads...</span>
+                          : <span style={{ fontSize: 11, color: T.textMuted }}>
+                              {filtered.length !== leads.length
+                                ? <><strong style={{ color: T.gold }}>{filtered.length.toLocaleString()}</strong> matched · {leads.length.toLocaleString()} total</>
+                                : <><strong style={{ color: T.white }}>{leads.length.toLocaleString()}</strong> leads</>}
+                            </span>}
+                      </div>
+                      {/* Row 2: Advanced filters panel */}
+                      {showLeadFilters && (
+                        <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Community</div>
+                            <select value={lfCommunity} onChange={e => { setLfCommunity(e.target.value); setLeadPage(1); }} style={sel}>
+                              <option value="all">All Communities</option>
+                              {communities.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Nationality</div>
+                            <select value={lfNationality} onChange={e => { setLfNationality(e.target.value); setLeadPage(1); }} style={sel}>
+                              <option value="all">All Nationalities</option>
+                              {nationalities.map(n => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Budget (AED)</div>
+                            <div style={{ display: "flex", gap: 4 }}>
+                              <input type="number" placeholder="Min" value={lfBudgetMin} onChange={e => { setLfBudgetMin(e.target.value); setLeadPage(1); }} style={{ ...sel, width: 90 }} />
+                              <input type="number" placeholder="Max" value={lfBudgetMax} onChange={e => { setLfBudgetMax(e.target.value); setLeadPage(1); }} style={{ ...sel, width: 90 }} />
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Min Score</div>
+                            <select value={lfScoreMin} onChange={e => { setLfScoreMin(e.target.value); setLeadPage(1); }} style={sel}>
+                              <option value="">All Scores</option>
+                              <option value="70">Hot (70+)</option>
+                              <option value="40">Warm+ (40+)</option>
+                              <option value="20">20+</option>
+                            </select>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Bedrooms</div>
+                            <select value={lfBedrooms} onChange={e => { setLfBedrooms(e.target.value); setLeadPage(1); }} style={sel}>
+                              <option value="all">All Beds</option>
+                              {["Studio","1","2","3","4","5","6+"].map(b => <option key={b} value={b}>{b === "Studio" ? "Studio" : `${b} BR`}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Type</div>
+                            <select value={lfOffPlan} onChange={e => { setLfOffPlan(e.target.value); setLeadPage(1); }} style={sel}>
+                              <option value="all">Off-Plan / Ready</option>
+                              <option value="off-plan">Off-Plan</option>
+                              <option value="ready">Ready</option>
+                            </select>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Developer</div>
+                            <select value={lfDeveloper} onChange={e => { setLfDeveloper(e.target.value); setLeadPage(1); }} style={sel}>
+                              <option value="all">All Developers</option>
+                              {developers.map(d => <option key={d} value={d}>{d}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Lead Age</div>
+                            <select value={lfLeadAge} onChange={e => { setLfLeadAge(e.target.value); setLeadPage(1); }} style={sel}>
+                              <option value="all">All Ages</option>
+                              <option value="fresh">Fresh (0-7d)</option>
+                              <option value="week">1-4 weeks</option>
+                              <option value="month">1-3 months</option>
+                              <option value="old">3+ months</option>
+                            </select>
+                          </div>
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginTop: 2 }}>
+                            {toggleBtn(lfGoldenVisa, () => { setLfGoldenVisa(p=>!p); setLeadPage(1); }, "🏆 Golden Visa")}
+                            {toggleBtn(lfHasWhatsApp, () => { setLfHasWhatsApp(p=>!p); setLeadPage(1); }, "💬 Has WhatsApp")}
+                            {toggleBtn(lfNoWhatsApp, () => { setLfNoWhatsApp(p=>!p); setLeadPage(1); }, "✕ No WhatsApp")}
+                            {toggleBtn(lfHasEmail, () => { setLfHasEmail(p=>!p); setLeadPage(1); }, "📧 Has Email")}
+                            {toggleBtn(lfNeverContacted, () => { setLfNeverContacted(p=>!p); setLeadPage(1); }, "👻 Never Contacted")}
+                            {toggleBtn(lfHasFollowUp, () => { setLfHasFollowUp(p=>!p); setLeadPage(1); }, "🔔 Has Follow-up")}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* KANBAN VIEW */}
                 {leadsViewMode === "kanban" && !leadAnalyticsView && (
