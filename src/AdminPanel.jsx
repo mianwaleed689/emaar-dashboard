@@ -13258,29 +13258,31 @@ export default function AdminPanel() {
     setLeadsLoading(true);
     try {
       let all = [];
-      let page = 0;
-      let totalPages = 1;
-      while (page < totalPages) {
-        const { results } = await algoliaClient.search({
-          requests: [{ indexName: "leads", query: "", hitsPerPage: 1000, page }]
-        });
-        const result = results[0];
-        totalPages = result.nbPages;
-        const hits = result.hits.map(h => ({ id: h.objectID, ...h }));
-        all = [...all, ...hits];
-        page++;
-        if (page % 10 === 0) setLeads([...all]);
-      }
-      all.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
-      setLeads(all);
-      setLeadsLoading(false);
+      let lastDoc = null;
+      const loadNext = async () => {
+        const q = lastDoc
+          ? query(collection(db, "leads"), limit(500), startAfter(lastDoc))
+          : query(collection(db, "leads"), limit(500));
+        const snap = await getDocs(q);
+        snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
+        if (snap.docs.length === 500) {
+          lastDoc = snap.docs[snap.docs.length - 1];
+          if (all.length % 5000 < 500) {
+            setLeads([...all].sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0)));
+          }
+          setTimeout(loadNext, 200);
+        } else {
+          all.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
+          setLeads([...all]);
+          setLeadsLoading(false);
+        }
+      };
+      await loadNext();
     } catch(e) {
       console.error("fetchLeads:", e);
       setLeadsLoading(false);
     }
-  }, []);
-
-  useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin]); // eslint-disable-line
+  }, [db]);
 
   /* â”€â”€â”€ FETCH AUDIT LOG â”€â”€â”€ */
   const fetchAuditLog = useCallback(async () => {
