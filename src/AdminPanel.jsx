@@ -12731,6 +12731,7 @@ export default function AdminPanel() {
   /* ─── KYC VERIFICATION STATE ─── */
   const [verifications, setVerifications] = useState([]);
   const [leads, setLeads] = useState([]);
+  const [leadsLoading, setLeadsLoading] = useState(false);
   
   /* ─── LEADS CRM STATE ─── */
   const [leadDrawer, setLeadDrawer] = useState(null); // lead object or null
