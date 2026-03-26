@@ -1,4 +1,4 @@
-
+﻿
 
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
@@ -2536,15 +2536,21 @@ export default function EmaarDashboardV2() {
           {/* ── Language Switcher ── */}
           {setLang && LANGUAGES && (
             <div style={{ padding: "8px 12px", marginTop: 4 }}>
-              <select
-                value={lang}
-                onChange={e => setLang(e.target.value)}
-                style={{ width: "100%", padding: "7px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" }}
-              >
-                {LANGUAGES.map(l => (
-                  <option key={l.code} value={l.code}>{l.flag} {l.nativeName}</option>
-                ))}
-              </select>
+              <div style={{ position: "relative" }}>
+                <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", display: "flex", alignItems: "center", gap: 6 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>{langInfo?.flag}</span>
+                </div>
+                <select
+                  value={lang}
+                  onChange={e => setLang(e.target.value)}
+                  style={{ width: "100%", padding: "8px 10px 8px 38px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none", appearance: "none" }}
+                >
+                  {LANGUAGES.map(l => (
+                    <option key={l.code} value={l.code}>{l.flag} {l.nativeName}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           )}
         </div>
