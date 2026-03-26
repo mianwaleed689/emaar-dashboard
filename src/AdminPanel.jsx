@@ -10,7 +10,7 @@ import { getAuth } from "firebase/auth";
 import emailjs from "@emailjs/browser";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter, getCountFromServer } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
 import ProjectManager from "./ProjectManager";
@@ -13212,30 +13212,58 @@ export default function AdminPanel() {
 
   const fetchLeads = useCallback(async () => {
     try {
-      const snap = await getDocs(collection(db, "leads"));
-      const list = [];
-      snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
-      list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      setLeads(list);
-    } catch (e) { console.error("Fetch leads:", e); }
-  }, []);
+      // Load ALL leads in batches of 500 to avoid Firestore streaming limits
+      const cacheKey = "dxb_leads_cache";
+      const cacheTS  = "dxb_leads_cache_ts";
+      const TTL = 5 * 60 * 1000; // 5 min cache
+      const now = Date.now();
+      const lastFetch = parseInt(localStorage.getItem(cacheTS) || "0");
 
-  useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin, fetchLeads]);
+      // Use cache if fresh
+      if (now - lastFetch < TTL) {
+        try {
+          const cached = JSON.parse(localStorage.getItem(cacheKey) || "[]");
+          if (cached.length > 0) { setLeads(cached); return; }
+        } catch(e) {}
+      }
 
-  // Real-time listener for leads
-  useEffect(() => {
-    if (!isAdmin) return;
-    let unsub;
-    try {
-      unsub = onSnapshot(collection(db, "leads"), (snap) => {
+      // Batch fetch all leads
+      let allLeads = [];
+      let lastDoc = null;
+      const BATCH = 500;
+
+      while (true) {
+        let q = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(BATCH));
+        if (lastDoc) q = query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(BATCH));
+        const snap = await getDocs(q);
+        if (snap.empty) break;
+        snap.forEach(d => allLeads.push({ id: d.id, ...plainify(d.data()) }));
+        lastDoc = snap.docs[snap.docs.length - 1];
+        if (snap.docs.length < BATCH) break; // last batch
+      }
+
+      allLeads.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      setLeads(allLeads);
+
+      // Cache result
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify(allLeads));
+        localStorage.setItem(cacheTS, String(now));
+      } catch(e) {} // ignore quota errors
+    } catch (e) {
+      console.error("Fetch leads:", e);
+      // Fallback: simple fetch without pagination
+      try {
+        const snap = await getDocs(collection(db, "leads"));
         const list = [];
         snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
         list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
         setLeads(list);
-      });
-    } catch (e) { fetchLeads(); }
-    return () => { if (unsub) unsub(); };
-  }, [isAdmin, fetchLeads]);
+      } catch(e2) { console.error("Fallback fetch failed:", e2); }
+    }
+  }, [db]);
+
+  useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin]);
 
   /* ─── FETCH AUDIT LOG ─── */
   const fetchAuditLog = useCallback(async () => {
@@ -20655,7 +20683,12 @@ export default function AdminPanel() {
 
                 {/* KPI BAR */}
                 <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, overflow: "hidden", flexWrap: "wrap" }}>
-                  <button type="button" onClick={() => { fetchLeads(); notify("Leads refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
+                  <button type="button" onClick={() => {
+                    localStorage.removeItem("dxb_leads_cache");
+                    localStorage.removeItem("dxb_leads_cache_ts");
+                    fetchLeads();
+                    notify("↺ Reloading all leads from database...");
+                  }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                   {[
                     { label: "Total", value: stats.total, color: T.gold },
                     { label: "New", value: stats.new, color: "#3B82F6" },
@@ -20772,7 +20805,12 @@ export default function AdminPanel() {
                   {(leadFilter !== "all" || leadSourceFilter !== "all" || leadDateRange !== "all" || leadSearch) && (
                     <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); }} style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
                   )}
-                  <span style={{ fontSize: 11, color: T.textMuted }}>{filtered.length} of {leads.length}</span>
+                  <span style={{ fontSize: 11, color: T.textMuted }}>
+                    {filtered.length !== leads.length
+                      ? <><strong style={{ color: T.gold }}>{filtered.length.toLocaleString()}</strong> matched · {leads.length.toLocaleString()} loaded</>
+                      : <><strong style={{ color: T.white }}>{leads.length.toLocaleString()}</strong> leads loaded</>
+                    }
+                  </span>
                 </div>
 
                 {/* KANBAN VIEW */}
