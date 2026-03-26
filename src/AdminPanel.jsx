@@ -12894,6 +12894,10 @@ export default function AdminPanel() {
   const [lfTag,            setLfTag]            = useState("all");
   const [lfNeverContacted, setLfNeverContacted] = useState(false);
   const [lfHasFollowUp,    setLfHasFollowUp]    = useState(false);
+  const [lfUnreachable,    setLfUnreachable]    = useState(false);
+  const [lfDupPhone,       setLfDupPhone]       = useState(false);
+  const [lfDupEmail,       setLfDupEmail]       = useState(false);
+  const [lfShortPhone,     setLfShortPhone]     = useState(false);
   const [showLeadFilters,  setShowLeadFilters]  = useState(false);
   const [showAddLead, setShowAddLead] = useState(false);
   const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", phoneCode: "+971", phoneNum: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
@@ -20568,6 +20572,12 @@ export default function AdminPanel() {
               if (lfTag !== "all" && !(l.tags||[]).includes(lfTag)) return false;
               if (lfNeverContacted && l.status !== "New") return false;
               if (lfHasFollowUp && !l.followUpDate) return false;
+              if (lfUnreachable && !((l.tags||[]).includes("unreachable"))) return false;
+              if (lfDupPhone && !((l.tags||[]).includes("duplicate_phone"))) return false;
+              if (lfDupEmail && !((l.tags||[]).includes("duplicate_email"))) return false;
+              if (lfShortPhone && !((l.tags||[]).includes("phone_short"))) return false;
+              // Fix nan project display inline
+              if (l.project === "nan" || l.project === "NaN" || l.project === "null") l.project = "";
               return true;
             }).sort((a, b) => {
               if (isOverdue(a) && !isOverdue(b)) return -1;
@@ -20621,20 +20631,19 @@ export default function AdminPanel() {
             // normalizePhone — smart E.164 normalizer for UAE + 194 countries
             const normalizePhone = (raw) => {
               if (!raw || typeof raw !== "string") return "";
-              let p = raw.trim().replace(/[\s\-\.\(\)\/\\]/g, "");
-              if (!p || p.length < 4) return raw.trim();
+              let p = raw.toString().trim().replace(/[\s\-\.\(\)\/\\]/g, "");
+              if (!p || p.length < 2) return "";
               if (p.startsWith("+")) return "+" + p.slice(1).replace(/\D/g, "");
               if (p.startsWith("00")) return "+" + p.slice(2).replace(/\D/g, "");
               const d = p.replace(/\D/g, "");
               const len = d.length;
-              // UAE specific
+              if (len < 6) return d;
               if (/^05[0-9]{8}$/.test(d)) return "+971" + d.slice(1);
               if (/^5[0-9]{8}$/.test(d)) return "+971" + d;
               if (/^04[0-9]{7}$/.test(d)) return "+971" + d.slice(1);
               if (/^4[0-9]{7}$/.test(d)) return "+971" + d;
               if (len >= 7 && len <= 9) return "+971" + d;
-              // International — detect country code
-              const CC = ["421","420","389","387","386","385","382","381","380","376","375","374","373","372","371","370","359","358","357","356","355","354","353","352","351","350","996","995","994","993","992","977","976","975","974","973","972","971","970","968","967","966","965","964","963","962","961","960","886","880","856","855","853","852","850","98","95","94","93","92","91","90","86","84","82","81","66","65","64","63","62","61","60","55","54","53","52","51","49","48","47","46","45","44","43","41","40","39","36","34","33","32","31","30","27","20","7","1"];
+              const CC = ["421","420","389","387","386","385","382","381","380","376","375","374","373","372","371","370","359","358","357","356","355","354","353","352","351","350","299","298","297","996","995","994","993","992","977","976","975","974","973","972","971","970","968","967","966","965","964","963","962","961","960","886","880","856","855","853","852","850","509","508","507","506","505","504","503","502","501","500","423","98","95","94","93","92","91","90","86","84","82","81","66","65","64","63","62","61","60","55","54","53","52","51","49","48","47","46","45","44","43","41","40","39","36","34","33","32","31","30","27","20","7","1"];
               if (len >= 10) {
                 for (const code of CC) {
                   if (d.startsWith(code)) {
@@ -21382,6 +21391,7 @@ export default function AdminPanel() {
                     lfBedrooms !== "all", lfOffPlan !== "all", lfDeveloper !== "all",
                     lfPayment !== "all", lfVisa !== "all", lfTag !== "all",
                     lfNeverContacted, lfHasFollowUp,
+                    lfUnreachable, lfDupPhone, lfDupEmail, lfShortPhone,
                   ].filter(Boolean).length;
                   const sel = { padding: "9px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" };
                   const toggleBtn = (active, onClick, label) => (
@@ -21509,6 +21519,10 @@ export default function AdminPanel() {
                             {toggleBtn(lfHasEmail, () => { setLfHasEmail(p=>!p); setLeadPage(1); }, "📧 Has Email")}
                             {toggleBtn(lfNeverContacted, () => { setLfNeverContacted(p=>!p); setLeadPage(1); }, "👻 Never Contacted")}
                             {toggleBtn(lfHasFollowUp, () => { setLfHasFollowUp(p=>!p); setLeadPage(1); }, "🔔 Has Follow-up")}
+                            {toggleBtn(lfUnreachable, () => { setLfUnreachable(p=>!p); setLeadPage(1); }, "🚫 Unreachable")}
+                            {toggleBtn(lfDupPhone, () => { setLfDupPhone(p=>!p); setLeadPage(1); }, "📞 Dup Phone")}
+                            {toggleBtn(lfDupEmail, () => { setLfDupEmail(p=>!p); setLeadPage(1); }, "📧 Dup Email")}
+                            {toggleBtn(lfShortPhone, () => { setLfShortPhone(p=>!p); setLeadPage(1); }, "⚠️ Short Phone")}
                           </div>
                         </div>
                       )}
