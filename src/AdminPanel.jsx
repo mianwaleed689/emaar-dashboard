@@ -10293,8 +10293,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <EmailModal />
       <NoteModal />
       <TagsModal />
-      <AddUserModal />
-      <EditUserModal />
+      {showAddUser ? <AddUserModal /> : null}
+      {editingUser ? <EditUserModal /> : null}
       <NotifUserModal />
       <ProfileDrawerComponent
         drawerUser={drawerUser}
@@ -25997,6 +25997,7 @@ export default function AdminPanel() {
 // STABLE_RECOVERY_0945_PPSF_FIXED
 // BEAST_UI_UPGRADE_1005_MAR24
 // BEAST_BADGE_GLOBAL_1012_MAR24
+
 
 
 
