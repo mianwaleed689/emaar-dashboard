@@ -12906,6 +12906,12 @@ export default function AdminPanel() {
 
   /* ─── LEADS CRM PRO STATE ─── */
   const [leadSelectedIds, setLeadSelectedIds] = useState([]); // bulk selection
+  const [showLeadBulkEmail, setShowLeadBulkEmail] = useState(false);
+  const [leadBulkEmailTargets, setLeadBulkEmailTargets] = useState([]);
+  const [leadBulkEmailSubject, setLeadBulkEmailSubject] = useState("");
+  const [leadBulkEmailBody, setLeadBulkEmailBody] = useState("");
+  const [leadBulkEmailSending, setLeadBulkEmailSending] = useState(false);
+  const [leadBulkEmailProgress, setLeadBulkEmailProgress] = useState(0);
   const [leadBulkAction, setLeadBulkAction] = useState(""); // bulk action value
   const [showFollowUpModal, setShowFollowUpModal] = useState(null); // lead object
   const [followUpDate, setFollowUpDate] = useState("");
@@ -20867,6 +20873,13 @@ export default function AdminPanel() {
                       {["Contacted", "Qualified", "Lost"].map(status => (
                         <button key={status} type="button" onClick={() => bulkUpdateStatus(status)} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${statusColors[status]?.border}`, background: statusColors[status]?.bg, color: statusColors[status]?.color, cursor: "pointer", fontWeight: 600 }}>Set {status}</button>
                       ))}
+                      <button type="button" onClick={() => {
+                        const targets = leads.filter(l => leadSelectedIds.includes(l.id) && l.email);
+                        if (targets.length === 0) { notify("No selected leads have email addresses"); return; }
+                        setShowLeadBulkEmail(true); setLeadBulkEmailTargets(targets);
+                      }} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.green}`, background: "rgba(16,185,129,0.08)", color: T.green, cursor: "pointer", fontWeight: 600 }}>
+                        ✉️ Email ({leads.filter(l => leadSelectedIds.includes(l.id) && l.email).length})
+                      </button>
                       <button type="button" onClick={() => setLeadSelectedIds([])} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, cursor: "pointer" }}>Clear</button>
                     </div>
                   </div>
@@ -21206,6 +21219,78 @@ export default function AdminPanel() {
                         )}
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* LEAD BULK EMAIL MODAL */}
+                {showLeadBulkEmail && (
+                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)", padding: 20 }} onClick={() => { if (!leadBulkEmailSending) setShowLeadBulkEmail(false); }}>
+                    <div style={{ background: T.surface, border: `1px solid rgba(16,185,129,0.3)`, borderRadius: 16, width: "100%", maxWidth: 540, padding: 28 }} onClick={e => e.stopPropagation()}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                        <div>
+                          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.green, margin: 0 }}>✉️ Email Leads</h3>
+                          <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{leadBulkEmailTargets.length} leads with emails selected · Use {"{name}"}, {"{community}"}, {"{project}"}</p>
+                        </div>
+                        {!leadBulkEmailSending && <button type="button" onClick={() => setShowLeadBulkEmail(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>}
+                      </div>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
+                        {[
+                          { label: "Follow-up", subject: "Following up on your property inquiry", body: "Hi {name},\n\nI wanted to follow up on your interest in {community}. We have some exciting new options available.\n\nWould you be available for a quick call?\n\nBest regards,\nThe Address Holding Team" },
+                          { label: "New Listing", subject: "New property available in {community}", body: "Hi {name},\n\nWe have a new listing in {community} that matches your criteria.\n\nWould you like to schedule a viewing?\n\nBest regards,\nThe Address Holding Team" },
+                          { label: "Golden Visa", subject: "You may qualify for a UAE Golden Visa", body: "Hi {name},\n\nBased on your interest in {community}, you may qualify for the UAE Golden Visa.\n\nProperties valued at AED 2M+ are eligible. Let us guide you through the process.\n\nBest regards,\nThe Address Holding Team" },
+                        ].map(t => (
+                          <button key={t.label} type="button" onClick={() => { setLeadBulkEmailSubject(t.subject); setLeadBulkEmailBody(t.body); }}
+                            style={{ fontSize: 11, padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, cursor: "pointer" }}>{t.label}</button>
+                        ))}
+                      </div>
+                      <div style={{ marginBottom: 12 }}>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Subject *</label>
+                        <input type="text" value={leadBulkEmailSubject} onChange={e => setLeadBulkEmailSubject(e.target.value)} placeholder="Email subject..." style={{ width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
+                      </div>
+                      <div style={{ marginBottom: 16 }}>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Message *</label>
+                        <textarea value={leadBulkEmailBody} onChange={e => setLeadBulkEmailBody(e.target.value)} rows={6} placeholder="Write your message..." style={{ width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+                      </div>
+                      {leadBulkEmailSending && (
+                        <div style={{ marginBottom: 14 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                            <span style={{ fontSize: 11, color: T.textMuted }}>Sending...</span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: T.green }}>{leadBulkEmailProgress} / {leadBulkEmailTargets.length}</span>
+                          </div>
+                          <div style={{ height: 4, borderRadius: 2, background: T.border }}>
+                            <div style={{ height: "100%", borderRadius: 2, background: T.green, width: `${leadBulkEmailTargets.length > 0 ? (leadBulkEmailProgress / leadBulkEmailTargets.length) * 100 : 0}%`, transition: "width 0.3s" }} />
+                          </div>
+                        </div>
+                      )}
+                      <div style={{ display: "flex", gap: 10 }}>
+                        <button type="button" onClick={() => setShowLeadBulkEmail(false)} disabled={leadBulkEmailSending} style={{ flex: 1, padding: "12px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                        <button type="button" disabled={leadBulkEmailSending || !leadBulkEmailSubject || !leadBulkEmailBody}
+                          onClick={async () => {
+                            if (!leadBulkEmailSubject || !leadBulkEmailBody) { notify("Subject and message required"); return; }
+                            setLeadBulkEmailSending(true); setLeadBulkEmailProgress(0);
+                            let sent = 0; const BATCH = 10;
+                            for (let i = 0; i < leadBulkEmailTargets.length; i += BATCH) {
+                              const chunk = leadBulkEmailTargets.slice(i, i + BATCH);
+                              await Promise.allSettled(chunk.map(async lead => {
+                                try {
+                                  const body = leadBulkEmailBody.replace(/\{name\}/g, lead.name||"there").replace(/\{community\}/g, lead.community||"Dubai").replace(/\{project\}/g, lead.project||"your property");
+                                  const subject = leadBulkEmailSubject.replace(/\{name\}/g, lead.name||"there").replace(/\{community\}/g, lead.community||"Dubai");
+                                  await sendResend(lead.email, subject, body);
+                                  sent++;
+                                } catch(e) {}
+                              }));
+                              setLeadBulkEmailProgress(Math.min(i + BATCH, leadBulkEmailTargets.length));
+                              await new Promise(r => setTimeout(r, 200));
+                            }
+                            setLeadBulkEmailSending(false);
+                            notify(`✅ Sent ${sent}/${leadBulkEmailTargets.length} emails to leads`);
+                            setShowLeadBulkEmail(false); setLeadBulkEmailSubject(""); setLeadBulkEmailBody(""); setLeadBulkEmailTargets([]); setLeadSelectedIds([]);
+                          }}
+                          style={{ flex: 2, padding: "12px", borderRadius: 10, border: "none", background: leadBulkEmailSending ? T.surfaceAlt : `linear-gradient(135deg,${T.green},#059669)`, color: leadBulkEmailSending ? T.textMuted : T.bg, fontSize: 14, fontWeight: 700, cursor: leadBulkEmailSending ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          {leadBulkEmailSending ? `Sending ${leadBulkEmailProgress}/${leadBulkEmailTargets.length}...` : `🚀 Send to ${leadBulkEmailTargets.length} leads`}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
 
