@@ -13257,11 +13257,20 @@ export default function AdminPanel() {
   const fetchLeads = useCallback(async (forceRefresh = false) => {
     setLeadsLoading(true);
     try {
-      const { results } = await algoliaClient.search({
-        requests: [{ indexName: "leads", query: "", hitsPerPage: 70000 }]
-      });
-      const hits = results[0]?.hits || [];
-      const all = hits.map(h => ({ id: h.objectID, ...h }));
+      let all = [];
+      let page = 0;
+      let totalPages = 1;
+      while (page < totalPages) {
+        const { results } = await algoliaClient.search({
+          requests: [{ indexName: "leads", query: "", hitsPerPage: 1000, page }]
+        });
+        const result = results[0];
+        totalPages = result.nbPages;
+        const hits = result.hits.map(h => ({ id: h.objectID, ...h }));
+        all = [...all, ...hits];
+        page++;
+        if (page % 10 === 0) setLeads([...all]);
+      }
       all.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
       setLeads(all);
       setLeadsLoading(false);
