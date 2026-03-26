@@ -9876,13 +9876,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   };
 
   /* ─── SHARED STYLE HELPERS ─── */
-  const inputStyle = { width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.15)", borderRadius: 9, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" };
+  const inputStyle = { width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.15)", borderRadius: 9, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.2s", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" };
   const focusIn  = e => e.target.style.borderColor = T.gold;
   const focusOut = e => e.target.style.borderColor = "rgba(212,168,67,0.15)";
 
   const Modal = ({ children, maxWidth = 500, onClose }) => (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
-      <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth, maxHeight: "90vh", overflowY: "auto", animation: "slideUp 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 20px", overflowY: "auto" }} onClick={onClose}>
+      <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
         {children}
       </div>
     </div>
@@ -10026,7 +10026,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   );
 
   /* FIX #14: Add User → Invite User (client SDK limitation explained) */
-  const AddUserModal = () => showAddUser && (
+  const AddUserModal = () => !showAddUser ? null : (
     <Modal onClose={() => setShowAddUser(false)} maxWidth={520}>
       <ModalHeader title="Add New User" sub="Create a new account directly from admin" onClose={() => setShowAddUser(false)} />
       <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 18, fontSize: 12, color: "#93C5FD", lineHeight: 1.6 }}>
@@ -10205,7 +10205,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </Modal>
   );
 
-  const EditUserModal = () => editingUser && (
+  const EditUserModal = () => !editingUser ? null : (
     <Modal onClose={() => setEditingUser(null)} maxWidth={520}>
       <ModalHeader title="Edit User" sub={editingUser.email} onClose={() => setEditingUser(null)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -10293,8 +10293,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <EmailModal />
       <NoteModal />
       <TagsModal />
-      <AddUserModal />
-      <EditUserModal />
+      {showAddUser && AddUserModal()}
+      {editingUser && EditUserModal()}
       <NotifUserModal />
       <ProfileDrawerComponent
         drawerUser={drawerUser}
