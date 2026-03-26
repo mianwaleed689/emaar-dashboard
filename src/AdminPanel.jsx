@@ -20616,7 +20616,7 @@ export default function AdminPanel() {
                             <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Community</div>
                             <select value={lfCommunity} onChange={e => setLfCommunity(e.target.value)} style={sel}>
                               <option value="all">All Communities</option>
-                              {communities.map(c => <option key={c} value={c}>{c}</option>)}
+                              {[...new Set(leads.map(l => l.community).filter(Boolean))].sort().map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
                           </div>
                           {/* Nationality */}
@@ -20624,7 +20624,7 @@ export default function AdminPanel() {
                             <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Nationality</div>
                             <select value={lfNationality} onChange={e => setLfNationality(e.target.value)} style={sel}>
                               <option value="all">All Nationalities</option>
-                              {nationalities.map(n => <option key={n} value={n}>{n}</option>)}
+                              {[...new Set(leads.map(l => l.nationality).filter(Boolean))].sort().map(n => <option key={n} value={n}>{n}</option>)}
                             </select>
                           </div>
                           {/* Budget range */}
@@ -20668,7 +20668,7 @@ export default function AdminPanel() {
                               <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Developer</div>
                               <select value={lfDeveloper} onChange={e => setLfDeveloper(e.target.value)} style={sel}>
                                 <option value="all">All Developers</option>
-                                {developers.map(d => <option key={d} value={d}>{d}</option>)}
+                                {[...new Set(leads.map(l => l.developer).filter(Boolean))].sort().map(d => <option key={d} value={d}>{d}</option>)}
                               </select>
                             </div>
                           )}
