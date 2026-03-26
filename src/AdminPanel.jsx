@@ -9882,7 +9882,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
 
   const Modal = ({ children, maxWidth = 500, onClose }) => (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
-      <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth, maxHeight: "90vh", overflowY: "auto", animation: "fadeUp 0.2s ease-out forwards" }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth, maxHeight: "90vh", overflowY: "auto", animation: "none" }} onClick={e => e.stopPropagation()}>
         {children}
       </div>
     </div>
@@ -14981,7 +14981,7 @@ export default function AdminPanel() {
     const { title, color, subtitle, items, chart, actions } = kpiDrill;
     return (
       <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setKpiDrill(null)}>
-        <div style={{ background: T.surface, border: `1px solid ${color}40`, borderRadius: 20, padding: 28, width: "100%", maxWidth: 520, maxHeight: "85vh", overflowY: "auto", animation: "fadeUp 0.2s ease-out forwards", position: "relative" }} onClick={e => e.stopPropagation()}>
+        <div style={{ background: T.surface, border: `1px solid ${color}40`, borderRadius: 20, padding: 28, width: "100%", maxWidth: 520, maxHeight: "85vh", overflowY: "auto", animation: "none", position: "relative" }} onClick={e => e.stopPropagation()}>
           {/* Top accent */}
           <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${color}, ${color}00)`, borderRadius: "20px 20px 0 0" }} />
           {/* Header */}
@@ -15124,7 +15124,7 @@ export default function AdminPanel() {
       {/* Cohort Drilldown Modal */}
       {cohortDrilldown && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setCohortDrilldown(null)}>
-          <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth: 500, maxHeight: "90vh", overflowY: "auto", animation: "fadeUp 0.2s ease-out forwards" }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth: 500, maxHeight: "90vh", overflowY: "auto", animation: "none" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22 }}>
               <div>
                 <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{`Cohort: ${cohortDrilldown.cohortLabel} · Week ${cohortDrilldown.weekNum}`}</div>
@@ -17366,7 +17366,7 @@ export default function AdminPanel() {
                  ═══════════════════════════════════════ */}
               {showDataImport && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => importProgress.status !== "importing" && resetImport()}>
-                  <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 20, width: "100%", maxWidth: 900, maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", animation: "fadeUp 0.2s ease-out forwards" }} onClick={e => e.stopPropagation()}>
+                  <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 20, width: "100%", maxWidth: 900, maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", animation: "none" }} onClick={e => e.stopPropagation()}>
                     {/* Header */}
                     <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(135deg, rgba(212,168,67,0.08) 0%, transparent 60%)" }}>
                       <div>
@@ -25997,6 +25997,7 @@ export default function AdminPanel() {
 // STABLE_RECOVERY_0945_PPSF_FIXED
 // BEAST_UI_UPGRADE_1005_MAR24
 // BEAST_BADGE_GLOBAL_1012_MAR24
+
 
 
 
