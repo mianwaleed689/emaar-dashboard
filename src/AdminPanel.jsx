@@ -12740,6 +12740,8 @@ export default function AdminPanel() {
   const [leadSourceFilter, setLeadSourceFilter] = useState("all");
   const [leadSearch, setLeadSearch] = useState("");
   const [leadDateRange, setLeadDateRange] = useState("all"); // all | today | week | month
+  const [leadPage, setLeadPage] = useState(1);
+  const LEADS_PER_PAGE = 100;
   const [showAddLead, setShowAddLead] = useState(false);
   const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
   const [addLeadLoading, setAddLeadLoading] = useState(false);
@@ -20348,6 +20350,9 @@ export default function AdminPanel() {
               return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
             });
 
+            const totalLeadPages = Math.max(1, Math.ceil(filtered.length / LEADS_PER_PAGE));
+            const pagedLeads = filtered.slice((leadPage - 1) * LEADS_PER_PAGE, leadPage * LEADS_PER_PAGE);
+
             const sources = [...new Set(leads.map(l => l.source).filter(Boolean))];
 
             // ── Dubai nationalities ──────────────────────────────────────
@@ -20633,12 +20638,12 @@ export default function AdminPanel() {
 
                 {/* FILTERS */}
                 <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
-                  <input type="text" placeholder="Search name, email, phone, nationality, project..." value={leadSearch} onChange={e => setLeadSearch(e.target.value)} style={{ flex: 1, minWidth: 200, padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                  <select value={leadSourceFilter} onChange={e => setLeadSourceFilter(e.target.value)} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                  <input type="text" placeholder="Search name, email, phone, nationality, project..." value={leadSearch} onChange={e => { setLeadSearch(e.target.value); setLeadPage(1); }} style={{ flex: 1, minWidth: 200, padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                  <select value={leadSourceFilter} onChange={e => { setLeadSourceFilter(e.target.value); setLeadPage(1); }} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
                     <option value="all">All Sources</option>
                     {sources.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
-                  <select value={leadDateRange} onChange={e => setLeadDateRange(e.target.value)} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
+                  <select value={leadDateRange} onChange={e => { setLeadDateRange(e.target.value); setLeadPage(1); }} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
                     <option value="all">All Time</option>
                     <option value="today">Today</option>
                     <option value="week">This Week</option>
@@ -20647,7 +20652,7 @@ export default function AdminPanel() {
                     <option value="today_followup">Due Today</option>
                   </select>
                   {(leadFilter !== "all" || leadSourceFilter !== "all" || leadDateRange !== "all" || leadSearch) && (
-                    <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); }} style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
+                    <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); setLeadPage(1); }} style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
                   )}
                   <span style={{ fontSize: 11, color: T.textMuted }}>{filtered.length} of {leads.length}</span>
                 </div>
@@ -20736,7 +20741,7 @@ export default function AdminPanel() {
                             </tr>
                           </thead>
                           <tbody>
-                            {filtered.map((lead) => {
+                            {pagedLeads.map((lead) => {
                               const sc = statusColors[lead.status || "New"] || statusColors.New;
                               const score = scoreLead(lead);
                               const overdue = isOverdue(lead);
@@ -20799,6 +20804,28 @@ export default function AdminPanel() {
                             })}
                           </tbody>
                         </table>
+                        {/* PAGINATION */}
+                        {totalLeadPages > 1 && (
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderTop: `1px solid ${T.border}`, flexWrap: "wrap", gap: 10 }}>
+                            <span style={{ fontSize: 11, color: T.textMuted }}>
+                              Showing <strong style={{ color: T.white }}>{((leadPage-1)*LEADS_PER_PAGE+1).toLocaleString()}–{Math.min(leadPage*LEADS_PER_PAGE, filtered.length).toLocaleString()}</strong> of <strong style={{ color: T.gold }}>{filtered.length.toLocaleString()}</strong> leads
+                            </span>
+                            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                              <button type="button" onClick={() => setLeadPage(1)} disabled={leadPage===1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===1?T.textMuted:T.textSecondary, cursor: leadPage===1?"not-allowed":"pointer", fontSize: 11 }}>«</button>
+                              <button type="button" onClick={() => setLeadPage(p=>Math.max(1,p-1))} disabled={leadPage===1} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===1?T.textMuted:T.textSecondary, cursor: leadPage===1?"not-allowed":"pointer", fontSize: 11 }}>←</button>
+                              {Array.from({length: Math.min(5, totalLeadPages)}, (_,i) => {
+                                let p;
+                                if (totalLeadPages<=5) p=i+1;
+                                else if (leadPage<=3) p=i+1;
+                                else if (leadPage>=totalLeadPages-2) p=totalLeadPages-4+i;
+                                else p=leadPage-2+i;
+                                return <button key={p} type="button" onClick={() => setLeadPage(p)} style={{ width:32, height:30, borderRadius:7, border:`1px solid ${p===leadPage?T.gold:T.border}`, background:p===leadPage?"rgba(212,168,67,0.15)":"transparent", color:p===leadPage?T.gold:T.textSecondary, cursor:"pointer", fontSize:11, fontWeight:p===leadPage?700:400 }}>{p}</button>;
+                              })}
+                              <button type="button" onClick={() => setLeadPage(p=>Math.min(totalLeadPages,p+1))} disabled={leadPage===totalLeadPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===totalLeadPages?T.textMuted:T.textSecondary, cursor: leadPage===totalLeadPages?"not-allowed":"pointer", fontSize: 11 }}>→</button>
+                              <button type="button" onClick={() => setLeadPage(totalLeadPages)} disabled={leadPage===totalLeadPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: leadPage===totalLeadPages?T.textMuted:T.textSecondary, cursor: leadPage===totalLeadPages?"not-allowed":"pointer", fontSize: 11 }}>»</button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
