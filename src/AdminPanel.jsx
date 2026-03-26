@@ -1305,7 +1305,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
       if (newStatus === "resolved" && ticketDrawer) {
         try {
           await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-            to_email: ticketDrawer.userEmail,
+            user_email: ticketDrawer.userEmail,
             to_name: ticketDrawer.userName || ticketDrawer.userEmail,
             subject: `Your support ticket has been resolved: ${ticketDrawer.subject}`,
             message: `Hi ${ticketDrawer.userName || "there"},\n\nYour support ticket "${ticketDrawer.subject}" has been marked as resolved.\n\nIf you have any further questions, feel free to reply to this email or open a new ticket.\n\nBest regards,\nDXB Analytics Support`,
@@ -1611,7 +1611,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
       setTicketDrawer(prev => ({ ...prev, ...update }));
       try {
         await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-          to_email: ticketDrawer.userEmail,
+          user_email: ticketDrawer.userEmail,
           to_name: ticketDrawer.userName || ticketDrawer.userEmail,
           subject: `Re: ${ticketDrawer.subject}`,
           message: `Hi ${ticketDrawer.userName || "there"},\n\n${ticketReply}\n\n---\nDXB Analytics Support`,
@@ -7561,7 +7561,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
         if (!user.email) { failed++; continue; }
         try {
           await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-            to_email: user.email,
+            user_email: user.email,
             to_name: user.name || user.email,
             subject: emailForm.subject,
             message: emailForm.body,
@@ -8201,7 +8201,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
     setTestSending(true);
     try {
       await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-        to_email: testEmail,
+        user_email: testEmail,
         to_name: testEmail.split("@")[0],
         subject: "[TEST] " + digestTemplate.subject,
         message: `${digestTemplate.greeting.replace("{{name}}", testEmail.split("@")[0])}\n\n${digestTemplate.intro}\n\nSections: ${digestTemplate.sections.map(s => sectionMeta[s]?.label || s).join(", ")}\n\n${digestTemplate.cta}\n\n---\n${digestTemplate.footer}`,
@@ -8223,7 +8223,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
       for (const user of segmentUsers) {
         try {
           await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-            to_email: user.email,
+            user_email: user.email,
             to_name: user.name || user.email.split("@")[0],
             subject: digestTemplate.subject,
             message: `${digestTemplate.greeting.replace("{{name}}", user.name || user.email.split("@")[0])}\n\n${digestTemplate.intro}\n\nView your personalized insights at https://dxbanalytics.com\n\n${digestTemplate.cta}\n\n---\n${digestTemplate.footer}`,
@@ -8271,7 +8271,7 @@ function DigestTab({ users, db, notify, adminUser, T, I }) {
       try {
         const name = u.name || u.email.split("@")[0];
         await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-          to_email: u.email,
+          user_email: u.email,
           to_name: name,
           subject: "Dubai RE market moved this week — your data is waiting",
           message: `Hi ${name},\n\nWe noticed you haven't logged in to DXB Analytics in a while.\n\nHere's what happened in Dubai real estate this week:\n• Dubai off-plan market up 44% YoY in Creek Harbour\n• EIBOR holding at 3.47% — mortgage rates stable\n• 3 new project launches this month\n\nYour dashboard is waiting with the latest data.\n\nhttps://dxbanalytics.com\n\n— DXB Analytics Team\n\nUnsubscribe: mailto:mianwaleed689@gmail.com?subject=Unsubscribe`,
@@ -9485,7 +9485,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const [notifSendingUser,   setNotifSendingUser]    = useState(false);
   const [loadingUsers,       setLoadingUsers]        = useState(false); // FIX #30
   const [copiedId,           setCopiedId]            = useState(null);  // FIX #36
-  const [drawerTab,          setDrawerTab]           = useState("details"); // drawer sub-nav
+  const [drawerTab,          setDrawerTab]           = useState("details");
+  const [showBulkEmailModal, setShowBulkEmailModal]  = useState(false);
+  const [bulkEmailTargets,   setBulkEmailTargets]    = useState([]);
+  const [bulkEmailSubject,   setBulkEmailSubject]    = useState("");
+  const [bulkEmailBody,      setBulkEmailBody]       = useState("");
+  const [bulkEmailSending,   setBulkEmailSending]    = useState(false);
+  const [bulkEmailProgress,  setBulkEmailProgress]   = useState(0);
 
   const PAGE_SIZE    = 25;
   const AT_RISK_DAYS = 3; // FIX #6 — single source of truth
@@ -10026,7 +10032,16 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </select></Field></div>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
       </div>
-      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+      {addUserForm.email && users.some(u => u.email && u.email.toLowerCase() === addUserForm.email.toLowerCase()) && (
+        <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 14 }}>⚠️</span>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>Email already exists</div>
+            <div style={{ fontSize: 11, color: T.textMuted }}>A user with this email is already registered.</div>
+          </div>
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
         <BtnGhost onClick={() => setShowAddUser(false)} style={{ flex: 1 }}>Cancel</BtnGhost>
         <Btn onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} color={T.gold} style={{ flex: 2, color: T.bg }}>{addUserLoading ? "Creating..." : "Create User"}</Btn>
       </div>
@@ -10461,8 +10476,75 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
             {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
           </select>
           <button type="button" onClick={handleBulkAction} disabled={!bulkTier} style={{ padding: "6px 14px", borderRadius: 7, border: "none", background: T.gold, color: T.bg, fontSize: 12, fontWeight: 700, cursor: bulkTier ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", opacity: bulkTier ? 1 : 0.5 }}>Apply</button>
+          <button type="button" onClick={() => {
+            const selected = users.filter(u => bulkSel.includes(u.uid) && u.email);
+            if (selected.length === 0) { notify("No selected users have email addresses"); return; }
+            setShowBulkEmailModal(true); setBulkEmailTargets(selected);
+          }} style={{ padding: "6px 14px", borderRadius: 7, border: `1px solid ${T.blue}`, background: "rgba(59,130,246,0.08)", color: T.blue, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+            ✉️ Email ({users.filter(u => bulkSel.includes(u.uid) && u.email).length})
+          </button>
           <button type="button" onClick={() => setBulkSel([])} style={{ padding: "6px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
         </div>
+      )}
+      {/* BULK EMAIL MODAL */}
+      {showBulkEmailModal && (
+        <Modal onClose={() => { if (!bulkEmailSending) setShowBulkEmailModal(false); }} maxWidth={540}>
+          <ModalHeader title="Bulk Email" sub={`Sending to ${bulkEmailTargets.length} user${bulkEmailTargets.length !== 1 ? "s" : ""}`} onClose={() => { if (!bulkEmailSending) setShowBulkEmailModal(false); }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>Quick Templates</label>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {[
+                  { label: "Trial Expiring", subject: "Your DXB Analytics trial is expiring soon", body: "Hi {name},\n\nYour free trial is expiring soon. Upgrade now to keep full access.\n\nBest regards,\nDXB Analytics Team" },
+                  { label: "New Feature", subject: "New feature available on DXB Analytics", body: "Hi {name},\n\nWe just launched a new feature we think you'll love. Log in to check it out!\n\nBest regards,\nDXB Analytics Team" },
+                  { label: "Check-in", subject: "How is DXB Analytics working for you?", body: "Hi {name},\n\nWe wanted to check in on your experience. Any questions or feedback?\n\nBest regards,\nDXB Analytics Team" },
+                ].map(t => (
+                  <button key={t.label} type="button" onClick={() => { setBulkEmailSubject(t.subject); setBulkEmailBody(t.body); }}
+                    style={{ fontSize: 11, padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textSecondary, cursor: "pointer" }}>{t.label}</button>
+                ))}
+              </div>
+            </div>
+            <Field label="Subject *">
+              <input type="text" placeholder="Email subject..." value={bulkEmailSubject} onChange={e => setBulkEmailSubject(e.target.value)} style={inputStyle} onFocus={focusIn} onBlur={focusOut} />
+            </Field>
+            <Field label="Message * (use {name} for personalization)">
+              <textarea placeholder="Write your message..." value={bulkEmailBody} onChange={e => setBulkEmailBody(e.target.value)} rows={6} style={{ ...inputStyle, resize: "vertical" }} onFocus={focusIn} onBlur={focusOut} />
+            </Field>
+            {bulkEmailSending && (
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontSize: 11, color: T.textMuted }}>Sending...</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: T.gold }}>{bulkEmailProgress} / {bulkEmailTargets.length}</span>
+                </div>
+                <div style={{ height: 4, borderRadius: 2, background: T.border }}>
+                  <div style={{ height: "100%", borderRadius: 2, background: T.gold, width: `${bulkEmailTargets.length > 0 ? (bulkEmailProgress / bulkEmailTargets.length) * 100 : 0}%`, transition: "width 0.3s" }} />
+                </div>
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 10 }}>
+              <BtnGhost onClick={() => setShowBulkEmailModal(false)} style={{ flex: 1 }}>Cancel</BtnGhost>
+              <Btn disabled={bulkEmailSending || !bulkEmailSubject || !bulkEmailBody} color={T.blue} style={{ flex: 2 }} onClick={async () => {
+                if (!bulkEmailSubject || !bulkEmailBody) { notify("Subject and message required"); return; }
+                setBulkEmailSending(true); setBulkEmailProgress(0);
+                let sent = 0;
+                for (const user of bulkEmailTargets) {
+                  try {
+                    await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+                      user_email: user.email, name: "DXB Analytics", email: "info@theaddressholding.ae",
+                      user_name: user.name || user.email, project_name: "DXB Analytics",
+                      change_type: bulkEmailSubject, new_value: bulkEmailBody.replace(/\{name\}/g, user.name || "there"), old_value: "",
+                    }, "USkwUhp0csGCVDkdQ");
+                    sent++;
+                  } catch(e) {}
+                  setBulkEmailProgress(sent);
+                }
+                setBulkEmailSending(false);
+                notify(`✅ Sent ${sent}/${bulkEmailTargets.length} emails`);
+                setShowBulkEmailModal(false); setBulkEmailSubject(""); setBulkEmailBody(""); setBulkEmailTargets([]); setBulkSel([]);
+              }}>{bulkEmailSending ? `Sending ${bulkEmailProgress}/${bulkEmailTargets.length}...` : `Send to ${bulkEmailTargets.length} users`}</Btn>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {/* ══ DESKTOP TABLE ══ */}
@@ -10536,6 +10618,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                     {u.name || u.email?.split("@")[0]}
                     {u.suspended && <span style={{ fontSize: 9, color: T.red, fontWeight: 700, background: "rgba(239,68,68,0.12)", padding: "1px 5px", borderRadius: 4 }}>SUSPENDED</span>}
                     {u.role === "admin" && <span style={{ fontSize: 9, color: T.gold, fontWeight: 700, background: "rgba(212,168,67,0.12)", padding: "1px 5px", borderRadius: 4 }}>ADMIN</span>}
+                    {u.emailVerified && <span style={{ fontSize: 9, color: T.green, fontWeight: 700, background: "rgba(16,185,129,0.12)", padding: "1px 5px", borderRadius: 4 }}>✓ Verified</span>}
                     {/* FIX #33: notes badge is clickable */}
                     {u.notes && <button type="button" onClick={() => { setNoteUser(u); setNoteText(u.notes || ""); }} title="Click to view/edit note" style={{ fontSize: 9, color: "#8B5CF6", background: "rgba(139,92,246,0.12)", padding: "1px 5px", borderRadius: 4, border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>note</button>}
                   </div>
@@ -13113,32 +13196,71 @@ export default function AdminPanel() {
     return () => { if (unsub) unsub(); };
   }, [isAdmin, fetchVerifications]);
 
-  const fetchLeads = useCallback(async () => {
+  const fetchLeads = useCallback(async (forceRefresh = false) => {
+    setLeadsLoading(true);
     try {
-      const snap = await getDocs(collection(db, "leads"));
-      const list = [];
-      snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
-      list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      setLeads(list);
-    } catch (e) { console.error("Fetch leads:", e); }
-  }, []);
+      const cacheKey = "dxb_leads_v3";
+      const cacheTS  = "dxb_leads_v3_ts";
+      const TTL = 5 * 60 * 1000;
+      const now = Date.now();
+      if (!forceRefresh) {
+        try {
+          const ts = parseInt(localStorage.getItem(cacheTS) || "0");
+          if (now - ts < TTL) {
+            const cached = JSON.parse(localStorage.getItem(cacheKey) || "[]");
+            if (cached.length > 100) { setLeads(cached); setLeadsLoading(false); return; }
+          }
+        } catch(e) {}
+      }
+      // Step 1: Show first 500 immediately
+      let firstBatch = [];
+      try {
+        const q1 = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
+        const snap1 = await getDocs(q1);
+        snap1.forEach(d => firstBatch.push({ id: d.id, ...plainify(d.data()) }));
+        setLeads(firstBatch);
+        setLeadsLoading(false);
+      } catch(e) {
+        const snap1 = await getDocs(collection(db, "leads"));
+        snap1.forEach(d => firstBatch.push({ id: d.id, ...plainify(d.data()) }));
+        setLeads(firstBatch);
+        setLeadsLoading(false);
+      }
+      // Step 2: Load ALL remaining in background
+      let all = [...firstBatch];
+      try {
+        const q1check = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
+        const snap1check = await getDocs(q1check);
+        let lastDoc = snap1check.empty ? null : snap1check.docs[snap1check.docs.length - 1];
+        while (lastDoc) {
+          const q = query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500));
+          const snap = await getDocs(q);
+          if (snap.empty) break;
+          snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
+          lastDoc = snap.docs[snap.docs.length - 1];
+          setLeads([...all]);
+          if (snap.docs.length < 500) break;
+        }
+      } catch(e) {
+        try {
+          const snap = await getDocs(collection(db, "leads"));
+          all = [];
+          snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
+        } catch(e2) {}
+      }
+      all.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      setLeads(all);
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify(all));
+        localStorage.setItem(cacheTS, String(now));
+      } catch(e) {}
+    } catch(e) { console.error("fetchLeads:", e); }
+    setLeadsLoading(false);
+  }, [db]);
 
   useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin, fetchLeads]);
 
-  // Real-time listener for leads
-  useEffect(() => {
-    if (!isAdmin) return;
-    let unsub;
-    try {
-      unsub = onSnapshot(collection(db, "leads"), (snap) => {
-        const list = [];
-        snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
-        list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-        setLeads(list);
-      });
-    } catch (e) { fetchLeads(); }
-    return () => { if (unsub) unsub(); };
-  }, [isAdmin, fetchLeads]);
+  useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin]);
 
   /* ─── FETCH AUDIT LOG ─── */
   const fetchAuditLog = useCallback(async () => {
@@ -13342,7 +13464,7 @@ export default function AdminPanel() {
       // Send approval email
       if (v.email) {
         emailjs.send("service_da7nshv", "template_gl1xqhy", {
-          to_email: v.email,
+          user_email: v.email,
           to_name: v.name || "there",
           subject: "Verification Approved - DXB Analytics",
           message: `Great news! Your ${v.level || "Basic"} verification has been approved. You now have access to enhanced features on DXB Analytics.`,
@@ -13366,7 +13488,7 @@ export default function AdminPanel() {
       // Send rejection email
       if (v.email) {
         emailjs.send("service_da7nshv", "template_gl1xqhy", {
-          to_email: v.email,
+          user_email: v.email,
           to_name: v.name || "there",
           subject: "Verification Update - DXB Analytics",
           message: `Your verification request was not approved.\n\nReason: ${rejectReason}\n\nPlease review the requirements and resubmit your documents.`,
@@ -20545,7 +20667,7 @@ export default function AdminPanel() {
             const sendLeadEmail = async (lead, subject, body) => {
               setSendingEmail(true);
               try {
-                await emailjs.send("service_da7nshv", "template_gl1xqhy", { to_email: lead.email, to_name: lead.name || "there", subject: subject || `Following up on ${lead.project || "your inquiry"}`, message: body || `Hi ${lead.name || "there"},\n\nThank you for your interest in ${lead.project || "our properties"}.\n\nBest regards,\nDXB Analytics`, project_name: lead.project || "DXB Analytics" }, "USkwUhp0csGCVDkdQ");
+                await emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: lead.email, to_name: lead.name || "there", subject: subject || `Following up on ${lead.project || "your inquiry"}`, message: body || `Hi ${lead.name || "there"},\n\nThank you for your interest in ${lead.project || "our properties"}.\n\nBest regards,\nDXB Analytics`, project_name: lead.project || "DXB Analytics" }, "USkwUhp0csGCVDkdQ");
                 const activity = [...(lead.activity || []), { type: "email_sent", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Email sent: ${subject || "Follow-up email"}` }];
                 await setDoc(doc(db, "leads", lead.id), { respondedAt: new Date().toISOString(), updatedAt: new Date().toISOString(), activity }, { merge: true });
                 await logAudit(db, { action: "lead_email_sent", leadId: lead.id });
@@ -21403,6 +21525,7 @@ export default function AdminPanel() {
              NOTIFICATIONS TAB
              ═══════════════════════════════════════ */}
           {tab === "notifications" && <NotificationsTab T={T} notify={notify} adminUser={adminUser} I={I} users={users} db={db} />}
+          {tab === "campaigns" && <EmailCampaignsTab T={T} db={db} notify={notify} adminUser={adminUser} leads={leads} leadsTotal={leads.length} fetchLeads={fetchLeads} />}
 
           {/* ═══════════════════════════════════════
              VERIFICATION TAB (Binance-style KYC)
