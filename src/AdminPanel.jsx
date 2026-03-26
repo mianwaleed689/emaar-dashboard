@@ -10242,7 +10242,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <NoteModal />
       <TagsModal />
       <AddUserModal />
-      <BulkImportModal />
       <EditUserModal />
       <NotifUserModal />
       <ProfileDrawerComponent
