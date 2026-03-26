@@ -13201,7 +13201,7 @@ export default function AdminPanel() {
     try {
       const cacheKey = "dxb_leads_v3";
       const cacheTS  = "dxb_leads_v3_ts";
-      const TTL = 5 * 60 * 1000;
+      const TTL = 30 * 60 * 1000; // 30 min cache
       const now = Date.now();
       if (!forceRefresh) {
         try {
@@ -13212,44 +13212,45 @@ export default function AdminPanel() {
           }
         } catch(e) {}
       }
-      // Step 1: Show first 500 immediately
+      // Step 1: Show first 500 immediately so page is usable
       let firstBatch = [];
+      let lastDoc = null;
       try {
         const q1 = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
         const snap1 = await getDocs(q1);
         snap1.forEach(d => firstBatch.push({ id: d.id, ...plainify(d.data()) }));
-        setLeads(firstBatch);
+        lastDoc = snap1.empty ? null : snap1.docs[snap1.docs.length - 1];
+        setLeads(firstBatch); // ← only render once with first 500
         setLeadsLoading(false);
       } catch(e) {
+        // No index — simple fetch
         const snap1 = await getDocs(collection(db, "leads"));
         snap1.forEach(d => firstBatch.push({ id: d.id, ...plainify(d.data()) }));
         setLeads(firstBatch);
         setLeadsLoading(false);
+        // Cache and return — no pagination without index
+        try {
+          firstBatch.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
+          localStorage.setItem(cacheKey, JSON.stringify(firstBatch));
+          localStorage.setItem(cacheTS, String(now));
+        } catch(e2) {}
+        return;
       }
-      // Step 2: Load ALL remaining in background
+      // Step 2: Silently fetch ALL remaining — NO re-renders until complete
       let all = [...firstBatch];
       try {
-        const q1check = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
-        const snap1check = await getDocs(q1check);
-        let lastDoc = snap1check.empty ? null : snap1check.docs[snap1check.docs.length - 1];
         while (lastDoc) {
           const q = query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500));
           const snap = await getDocs(q);
           if (snap.empty) break;
           snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
           lastDoc = snap.docs[snap.docs.length - 1];
-          setLeads([...all]);
           if (snap.docs.length < 500) break;
         }
-      } catch(e) {
-        try {
-          const snap = await getDocs(collection(db, "leads"));
-          all = [];
-          snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
-        } catch(e2) {}
-      }
+      } catch(e) { console.warn("Background fetch partial:", e.message); }
+
       all.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      setLeads(all);
+      setLeads(all); // ← single re-render when all batches done
       try {
         localStorage.setItem(cacheKey, JSON.stringify(all));
         localStorage.setItem(cacheTS, String(now));
@@ -13258,9 +13259,7 @@ export default function AdminPanel() {
     setLeadsLoading(false);
   }, [db]);
 
-  useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin, fetchLeads]);
-
-  useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin]);
+  useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin]); // eslint-disable-line
 
   /* ─── FETCH AUDIT LOG ─── */
   const fetchAuditLog = useCallback(async () => {
@@ -20726,7 +20725,7 @@ export default function AdminPanel() {
 
                 {/* KPI BAR */}
                 <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, overflow: "hidden", flexWrap: "wrap" }}>
-                  <button type="button" onClick={() => { fetchLeads(); notify("Leads refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
+                  <button type="button" onClick={() => { localStorage.removeItem("dxb_leads_v3"); localStorage.removeItem("dxb_leads_v3_ts"); fetchLeads(true); notify("↺ Reloading all leads..."); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                   {[
                     { label: "Total", value: stats.total, color: T.gold },
                     { label: "New", value: stats.new, color: "#3B82F6" },
