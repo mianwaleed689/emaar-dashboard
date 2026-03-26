@@ -13,9 +13,6 @@ import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
 
 /* ─── DATA ALIASES (for backward compat) ─── */
-const liveCommunityPPSF = 1850; 
-const liveMarketROI = 7.4;      
-const liveTotalTransactions = 34500; 
 const financials = emaarFinancials;
 const segments = emaarSegments;
 const risks = emaarRisks.map(r => ({ factor: r.factor, score: r.score, max: 150, color: r.color }));
@@ -5061,36 +5058,153 @@ export default function EmaarDashboardV2() {
                 <MortgageCalc />
               </Section>
 
-              {/* Bank Rate Comparison — from admin Tab Control */}
-              {liveMortgageRates.length > 0 && (
-                <Section title="Bank Rate Comparison" sub="Updated via Admin · Live rates from UAE banks">
-                  <div style={{ overflowX: "auto", marginTop: 12 }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 600 }}>
-                      <thead>
-                        <tr style={{ borderBottom: `2px solid ${T.border}` }}>
-                          {["Bank", "Rate (p.a.)", "Max LTV", "Processing Fee", "Min Salary", "Notes"].map(h => (
-                            <th key={h} style={{ padding: "10px 12px", textAlign: h === "Bank" ? "left" : "center", color: T.gold, fontWeight: 600, fontSize: 10, letterSpacing: 0.5, textTransform: "uppercase" }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...liveMortgageRates].sort((a,b) => parseFloat(a.rate) - parseFloat(b.rate)).map((b, i) => (
-                          <tr key={i} style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.2s" }}
-                            onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
-                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                            <td style={{ padding: "10px 12px", color: i === 0 ? T.gold : T.white, fontWeight: 600 }}>{b.bank}{i === 0 && <span style={{ marginLeft: 6, fontSize: 9, color: T.green, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "rgba(16,185,129,0.1)" }}>BEST</span>}</td>
-                            <td style={{ padding: "10px 12px", textAlign: "center", color: i === 0 ? T.green : T.textSecondary, fontWeight: 600, fontFamily: "'Fraunces',serif" }}>{b.rate}%</td>
-                            <td style={{ padding: "10px 12px", textAlign: "center", color: T.textSecondary }}>{b.maxLTV}%</td>
-                            <td style={{ padding: "10px 12px", textAlign: "center", color: T.textSecondary }}>{b.processingFee}</td>
-                            <td style={{ padding: "10px 12px", textAlign: "center", color: T.textSecondary }}>AED {parseInt(b.minSalary||0).toLocaleString()}</td>
-                            <td style={{ padding: "10px 12px", textAlign: "center", fontSize: 11, color: T.textMuted }}>{b.notes}</td>
+              {/* ── UAE BANKS COMPARISON — Always visible, live override from Firestore ── */}
+              {(() => {
+                const staticBanks = [
+                  { bank: "Emirates NBD", rate: 4.49, maxLTV: 80, processingFee: "1% (min AED 5,000)", minSalary: 15000, fixedYears: 3, notes: "Largest UAE bank · Fastest approval", badge: "Most Popular", badgeColor: T.gold },
+                  { bank: "ADCB", rate: 4.54, maxLTV: 80, processingFee: "1% (min AED 5,000)", minSalary: 15000, fixedYears: 3, notes: "Strong for expats · Good service", badge: "", badgeColor: "" },
+                  { bank: "FAB (First Abu Dhabi)", rate: 4.59, maxLTV: 80, processingFee: "0.5% (min AED 2,500)", minSalary: 12000, fixedYears: 2, notes: "Lowest processing fee", badge: "Lowest Fee", badgeColor: T.teal },
+                  { bank: "DIB (Dubai Islamic)", rate: 4.64, maxLTV: 80, processingFee: "1% (min AED 5,000)", minSalary: 10000, fixedYears: 3, notes: "Sharia-compliant · Ijara structure", badge: "Islamic", badgeColor: T.green },
+                  { bank: "HSBC UAE", rate: 4.74, maxLTV: 75, processingFee: "1% (min AED 5,000)", minSalary: 15000, fixedYears: 2, notes: "Good for international clients", badge: "", badgeColor: "" },
+                  { bank: "Mashreq Bank", rate: 4.79, maxLTV: 75, processingFee: "1% (min AED 5,000)", minSalary: 10000, fixedYears: 2, notes: "Fast processing · Digital-first", badge: "Fastest", badgeColor: T.blue },
+                  { bank: "RAK Bank", rate: 4.84, maxLTV: 75, processingFee: "1% (min AED 5,000)", minSalary: 8000, fixedYears: 1, notes: "Lowest min salary requirement", badge: "Low Entry", badgeColor: T.purple },
+                  { bank: "Abu Dhabi Islamic (ADIB)", rate: 4.89, maxLTV: 80, processingFee: "1.05%", minSalary: 10000, fixedYears: 3, notes: "Sharia-compliant · Competitive", badge: "Islamic", badgeColor: T.green },
+                  { bank: "Commercial Bank of Dubai", rate: 4.94, maxLTV: 75, processingFee: "1% (min AED 5,000)", minSalary: 12000, fixedYears: 2, notes: "Good for self-employed", badge: "", badgeColor: "" },
+                  { bank: "Standard Chartered", rate: 4.99, maxLTV: 75, processingFee: "1%", minSalary: 20000, fixedYears: 2, notes: "International profile · Premium", badge: "", badgeColor: "" },
+                ];
+                const banks = liveMortgageRates.length > 0
+                  ? [...liveMortgageRates].sort((a,b) => parseFloat(a.rate) - parseFloat(b.rate))
+                  : staticBanks.sort((a,b) => a.rate - b.rate);
+
+                return (
+                  <Section title="UAE Banks Mortgage Comparison" sub="All major UAE banks · Rates based on 3M EIBOR + spread · Mar 2026">
+                    {liveMortgageRates.length === 0 && (
+                      <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 12, padding: "6px 12px", borderRadius: 6, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, display: "inline-block" }}>
+                        Static data · Admin can update live rates via Admin Panel → Tab Control
+                      </div>
+                    )}
+                    <div style={{ overflowX: "auto", marginTop: 8 }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 700 }}>
+                        <thead>
+                          <tr style={{ borderBottom: `2px solid ${T.border}` }}>
+                            {["Bank", "Rate p.a.", "Fixed For", "Max LTV", "Processing Fee", "Min Salary", "Notes"].map(h => (
+                              <th key={h} style={{ padding: "10px 12px", textAlign: h === "Bank" ? "left" : "center", color: T.gold, fontWeight: 600, fontSize: 10, letterSpacing: 0.5, textTransform: "uppercase", background: T.surfaceAlt, whiteSpace: "nowrap" }}>{h}</th>
+                            ))}
                           </tr>
+                        </thead>
+                        <tbody>
+                          {banks.map((b, i) => (
+                            <tr key={i} style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.15s" }}
+                              onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
+                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                              <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <span style={{ fontSize: 13, fontWeight: 700, color: i === 0 ? T.gold : T.white }}>{b.bank}</span>
+                                  {i === 0 && <span style={{ fontSize: 9, color: T.green, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)" }}>BEST RATE</span>}
+                                  {b.badge && i !== 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: `${b.badgeColor}15`, border: `1px solid ${b.badgeColor}30`, color: b.badgeColor }}>{b.badge}</span>}
+                                </div>
+                              </td>
+                              <td style={{ padding: "12px 14px", textAlign: "center" }}>
+                                <span style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 900, color: i === 0 ? T.green : T.white }}>{b.rate}%</span>
+                              </td>
+                              <td style={{ padding: "12px 14px", textAlign: "center", fontSize: 12, color: T.textSecondary }}>{b.fixedYears || "—"} yr{b.fixedYears > 1 ? "s" : ""}</td>
+                              <td style={{ padding: "12px 14px", textAlign: "center", fontSize: 12, color: T.textSecondary }}>{b.maxLTV}%</td>
+                              <td style={{ padding: "12px 14px", textAlign: "center", fontSize: 12, color: T.textSecondary, whiteSpace: "nowrap" }}>{b.processingFee}</td>
+                              <td style={{ padding: "12px 14px", textAlign: "center", fontSize: 12, color: T.textSecondary }}>AED {parseInt(b.minSalary||0).toLocaleString()}</td>
+                              <td style={{ padding: "12px 14px", fontSize: 11, color: T.textMuted }}>{b.notes}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, fontSize: 10, color: T.textMuted, lineHeight: 1.7 }}>
+                      <strong style={{ color: T.gold }}>Important:</strong> Rates shown are indicative based on 3M EIBOR (3.593%) + typical spreads as of March 2026. Actual rates vary by applicant profile, property type, and LTV. Always get a pre-approval letter before committing. Min down payment: 20% for expats, 15% for UAE nationals on properties up to AED 5M.
+                    </div>
+                  </Section>
+                );
+              })()}
+
+              {/* ── AFFORDABILITY CHECKER ── */}
+              {(() => {
+                const [salary, setSalary] = React.useState(25000);
+                const [existingLiabilities, setExistingLiabilities] = React.useState(0);
+                const [affordRate, setAffordRate] = React.useState(5.09);
+                const [affordYears, setAffordYears] = React.useState(25);
+                const [affordDown, setAffordDown] = React.useState(20);
+                const [isNational, setIsNational] = React.useState(false);
+
+                // CBUAE rules: max DBR 50% (debt burden ratio)
+                const maxDBR = 0.50;
+                const maxMonthlyPayment = (salary * maxDBR) - existingLiabilities;
+                // Back-calculate max loan from max monthly payment
+                const mr = affordRate / 100 / 12;
+                const np = affordYears * 12;
+                const maxLoan = maxMonthlyPayment * (Math.pow(1+mr,np) - 1) / (mr * Math.pow(1+mr,np));
+                const minDown = isNational ? 0.15 : 0.20;
+                const maxPrice = maxLoan / (1 - minDown);
+                const downNeeded = maxPrice * minDown;
+                const feesNeeded = maxPrice * 0.06; // DLD 4% + agency 2%
+                const totalCash = downNeeded + feesNeeded;
+
+                const fmt = n => "AED " + Math.round(n).toLocaleString();
+                const fmtM = n => n >= 1000000 ? "AED " + (n/1000000).toFixed(2) + "M" : fmt(n);
+                const affordable = maxPrice > 0;
+
+                return (
+                  <Section title="Affordability Checker" sub="Based on CBUAE 50% Debt Burden Ratio (DBR) rules · UAE Central Bank">
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginTop: 16 }} className="chart-grid-2">
+                      {/* Inputs */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                        {[
+                          { label: "Monthly Salary (AED)", value: salary, set: setSalary, min: 5000, max: 200000, step: 1000, disp: fmt(salary) },
+                          { label: "Existing Monthly Liabilities", value: existingLiabilities, set: setExistingLiabilities, min: 0, max: 50000, step: 500, disp: fmt(existingLiabilities) + "/mo" },
+                          { label: "Interest Rate", value: affordRate, set: setAffordRate, min: 2, max: 10, step: 0.1, disp: affordRate + "%" },
+                          { label: "Loan Term", value: affordYears, set: setAffordYears, min: 5, max: 25, step: 1, disp: affordYears + " years" },
+                          { label: "Down Payment", value: affordDown, set: setAffordDown, min: isNational ? 15 : 20, max: 80, step: 1, disp: affordDown + "%" },
+                        ].map((f, i) => (
+                          <div key={i}>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                              <span style={{ fontSize: 12, color: T.textSecondary }}>{f.label}</span>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{f.disp}</span>
+                            </div>
+                            <input type="range" min={f.min} max={f.max} step={f.step} value={f.value} onChange={e => f.set(Number(e.target.value))} style={{ width: "100%", accentColor: T.gold, cursor: "pointer" }} />
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </Section>
-              )}
+                        <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 12, color: T.textSecondary }}>
+                          <input type="checkbox" checked={isNational} onChange={e => setIsNational(e.target.checked)} style={{ accentColor: T.gold, width: 16, height: 16 }} />
+                          UAE National (15% minimum down payment)
+                        </label>
+                      </div>
+
+                      {/* Results */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                        <div style={{ padding: "20px", borderRadius: 14, background: affordable ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)", border: `1px solid ${affordable ? T.green : T.red}30`, textAlign: "center" }}>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8 }}>Maximum Property Price</div>
+                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 36, fontWeight: 900, color: affordable ? T.green : T.red }}>{affordable ? fmtM(maxPrice) : "—"}</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>Based on {salary.toLocaleString()} salary · {affordRate}% rate · CBUAE 50% DBR rule</div>
+                        </div>
+                        {[
+                          { label: "Max Monthly Payment", value: fmt(Math.max(maxMonthlyPayment, 0)), color: T.gold, icon: "💳" },
+                          { label: "Max Loan Amount", value: fmtM(Math.max(maxLoan, 0)), color: T.teal, icon: "🏦" },
+                          { label: "Down Payment Needed", value: fmtM(downNeeded), color: T.blue, icon: "💰" },
+                          { label: "Total Cash Required", value: fmtM(totalCash), color: T.purple, icon: "🏷️" },
+                        ].map((item, i) => (
+                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: T.surface, border: `1px solid ${T.border}` }}>
+                            <span style={{ fontSize: 20 }}>{item.icon}</span>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 10, color: T.textMuted }}>{item.label}</div>
+                              <div style={{ fontSize: 15, fontWeight: 800, color: item.color, fontFamily: "'Fraunces',serif" }}>{item.value}</div>
+                            </div>
+                          </div>
+                        ))}
+                        <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, fontSize: 10, color: T.textMuted, lineHeight: 1.7 }}>
+                          CBUAE rules: Max 50% of gross salary goes to all debt payments combined. Max loan term 25 years. Max age at end of loan: 65 (employed) / 70 (self-employed).
+                        </div>
+                      </div>
+                    </div>
+                  </Section>
+                );
+              })()}
 
               <TabSources sources={[{ label: "CBUAE — UAE Base Rate", url: "https://www.cbuae.gov.ae" }, { label: "EIBOR 3M: 3.593% (Feb 2026) · CBUAE", url: "https://www.centralbank.ae/en/forex-eibor/eibor-rates/" }, { label: "DLD Fee Schedule (4%)", url: "https://dubailand.gov.ae" }, { label: "UAE Mortgage Law (No. 14 of 2008)" }, { label: "Property Finder Mortgage Rates", url: "https://www.propertyfinder.ae" }]} />
               </>
