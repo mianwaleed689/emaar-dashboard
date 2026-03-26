@@ -13256,12 +13256,12 @@ export default function AdminPanel() {
   const fetchLeads = useCallback(async (forceRefresh = false) => {
     setLeadsLoading(true);
     try {
-      const cacheKey = "dxb_leads_v5";
-      const cacheTS  = "dxb_leads_v5_ts";
+      const cacheKey = "dxb_leads_v6";
+      const cacheTS  = "dxb_leads_v6_ts";
       const TTL = 30 * 60 * 1000; // 30 min cache
       const now = Date.now();
 
-      // Check cache first
+      // ── Step 1: Check cache ──
       if (!forceRefresh) {
         try {
           const ts = parseInt(localStorage.getItem(cacheTS) || "0");
@@ -13276,28 +13276,28 @@ export default function AdminPanel() {
         } catch(e) {}
       }
 
-      // Step 1: Show first 500 immediately so page is usable
-      const q1 = query(collection(db, "leads"), limit(500));
+      // ── Step 2: Load first 100 instantly so page is usable immediately ──
+      const q1 = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(100));
       const snap1 = await getDocs(q1);
       const firstBatch = [];
       snap1.forEach(d => firstBatch.push({ id: d.id, ...plainify(d.data()) }));
-      firstBatch.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
       setLeads(firstBatch);
       setLeadsLoading(false);
 
-      // Step 2: Background fetch ALL remaining — no re-renders until complete
+      // ── Step 3: Background fetch remaining in batches of 500 ──
+      // No re-renders until each batch completes — keeps UI smooth
       let all = [...firstBatch];
       let lastDoc = snap1.empty ? null : snap1.docs[snap1.docs.length - 1];
 
       const loadNext = async () => {
         if (!lastDoc) {
-          // Done — update UI once with everything
+          // All done — sort and update UI once
           all.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
           setLeads([...all]);
-          // Try to cache — skip if too large
+          // Cache if under 4MB
           try {
             const str = JSON.stringify(all);
-            if (str.length < 4 * 1024 * 1024) { // only cache if under 4MB
+            if (str.length < 4 * 1024 * 1024) {
               localStorage.setItem(cacheKey, str);
               localStorage.setItem(cacheTS, String(now));
             }
@@ -13305,30 +13305,23 @@ export default function AdminPanel() {
           return;
         }
         try {
-          const q = query(collection(db, "leads"), limit(500), startAfter(lastDoc));
+          const q = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500), startAfter(lastDoc));
           const snap = await getDocs(q);
-          if (snap.empty || snap.docs.length < 500) {
-            snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
-            lastDoc = null;
-          } else {
-            snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
-            lastDoc = snap.docs[snap.docs.length - 1];
+          snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
+          lastDoc = (snap.empty || snap.docs.length < 500) ? null : snap.docs[snap.docs.length - 1];
+          // Update UI every 2000 leads so user sees progress
+          if (all.length % 2000 < 500) {
+            setLeads([...all].sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0)));
           }
-          // Update UI every 5000 leads so user sees progress
-          if (all.length % 5000 < 500) {
-            const sorted = [...all].sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
-            setLeads(sorted);
-          }
-          setTimeout(loadNext, 200); // small delay to keep browser responsive
+          setTimeout(loadNext, 150); // small delay keeps browser responsive
         } catch(e) {
           console.warn("Background fetch:", e.message);
-          // Still show what we have
           all.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
           setLeads([...all]);
         }
       };
 
-      setTimeout(loadNext, 500);
+      setTimeout(loadNext, 300); // start background fetch after 300ms
 
     } catch(e) {
       console.error("fetchLeads:", e);
