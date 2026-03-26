@@ -53,6 +53,18 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
   const targetLeads = getTargetLeads();
   const inputStyle = { width:"100%", padding:"10px 14px", background:T.bg, border:"1px solid rgba(212,168,67,0.15)", borderRadius:9, color:"#E2E8F0", fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" };
 
+  const RESEND_API_KEY = "re_FGZe2ET2_9pDv9iEV2MUTQXg1QHJeV3fs";
+
+  const sendWithResend = async (to, subject, html) => {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: "DXB Analytics <onboarding@resend.dev>", to, subject, html }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  };
+
   const sendCampaign = async () => {
     if (!form.name || !form.subject || !form.body) { notify("Fill in campaign name, subject and message"); return; }
     const targets = getTargetLeads();
@@ -61,18 +73,29 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
     const campaignId = `camp_${Date.now()}`;
     const campaignDoc = { name: form.name, subject: form.subject, template: form.template, targetFilter: form.targetFilter, targetCommunity: form.targetCommunity, targetStatus: form.targetStatus, totalTargets: targets.length, sent: 0, failed: 0, status: "sending", createdAt: new Date().toISOString(), sentBy: adminUser?.email || "admin" };
     try { await setDoc(doc(db, "campaigns", campaignId), campaignDoc); } catch(e) {}
-    let sent = 0; let failed = 0;
-    for (let i = 0; i < targets.length; i += 5) {
-      const chunk = targets.slice(i, i + 5);
+    let sent = 0; let failed = 0; const BATCH = 10;
+    for (let i = 0; i < targets.length; i += BATCH) {
+      const chunk = targets.slice(i, i + BATCH);
       await Promise.allSettled(chunk.map(async lead => {
         try {
-          const body = form.body.replace(/\{name\}/g, lead.name||"there").replace(/\{community\}/g, lead.community||"Dubai").replace(/\{project\}/g, lead.project||"your property");
-          await emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: lead.email, name: "The Address Holding", email: "info@theaddressholding.ae", user_name: lead.name||"there", project_name: lead.project||lead.community||"DXB Analytics", change_type: form.subject, new_value: body, old_value: "" }, "USkwUhp0csGCVDkdQ");
+          const bodyText = form.body.replace(/\{name\}/g, lead.name||"there").replace(/\{community\}/g, lead.community||"Dubai").replace(/\{project\}/g, lead.project||"your property");
+          const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
+            <div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px">
+              <h2 style="color:#D4A843;margin:0;font-size:20px">DXB Analytics</h2>
+              <p style="color:#64748B;margin:4px 0 0;font-size:12px">The Address Holding · Dubai</p>
+            </div>
+            <div style="color:#1E293B;font-size:14px;line-height:1.7;white-space:pre-wrap">${bodyText}</div>
+            <div style="border-top:1px solid #E2E8F0;margin-top:24px;padding-top:16px;color:#94A3B8;font-size:11px">
+              DXB Analytics · The Address Holding · Dubai, UAE<br/>
+              <a href="mailto:info@theaddressholding.ae" style="color:#D4A843">info@theaddressholding.ae</a>
+            </div>
+          </div>`;
+          await sendWithResend(lead.email, form.subject, html);
           sent++;
         } catch(e) { failed++; }
       }));
-      setSendProgress(Math.min(i + 5, targets.length));
-      await new Promise(r => setTimeout(r, 300));
+      setSendProgress(Math.min(i + BATCH, targets.length));
+      await new Promise(r => setTimeout(r, 200));
     }
     try { await setDoc(doc(db, "campaigns", campaignId), { ...campaignDoc, sent, failed, status: "completed", completedAt: new Date().toISOString() }, { merge: true }); } catch(e) {}
     setSending(false); notify(`✅ Campaign sent — ${sent} delivered, ${failed} failed`);
@@ -10529,11 +10552,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                 let sent = 0;
                 for (const user of bulkEmailTargets) {
                   try {
-                    await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-                      user_email: user.email, name: "DXB Analytics", email: "info@theaddressholding.ae",
-                      user_name: user.name || user.email, project_name: "DXB Analytics",
-                      change_type: bulkEmailSubject, new_value: bulkEmailBody.replace(/\{name\}/g, user.name || "there"), old_value: "",
-                    }, "USkwUhp0csGCVDkdQ");
+                    const bodyText = bulkEmailBody.replace(/\{name\}/g, user.name || "there");
+                    const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px"><div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px"><h2 style="color:#D4A843;margin:0">DXB Analytics</h2></div><div style="color:#1E293B;font-size:14px;line-height:1.7;white-space:pre-wrap">${bodyText}</div></div>`;
+                    await fetch("https://api.resend.com/emails", {
+                      method: "POST",
+                      headers: { "Authorization": "Bearer re_FGZe2ET2_9pDv9iEV2MUTQXg1QHJeV3fs", "Content-Type": "application/json" },
+                      body: JSON.stringify({ from: "DXB Analytics <onboarding@resend.dev>", to: user.email, subject: bulkEmailSubject, html }),
+                    });
                     sent++;
                   } catch(e) {}
                   setBulkEmailProgress(sent);
