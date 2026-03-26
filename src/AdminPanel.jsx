@@ -22068,25 +22068,25 @@ export default function AdminPanel() {
                             const benchmark = adoptionBenchmarks[f.category]?.benchmark || 30;
                             const aboveBenchmark = f.adoption >= benchmark;
                             return (
-                            <div key={f.name}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
-                                <span style={{ fontSize: 11, color: T.textPrimary, display: "flex", alignItems: "center", gap: 5 }}>
-                                  <span style={{ fontSize: 12 }}>{f.icon}</span>
-                                  <span>{f.name}</span>
-                                  <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 3, background: `${T.textMuted}15`, color: T.textMuted }}>{f.category}</span>
-                                </span>
-                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                  {f.trend !== 0 && <span style={{ fontSize: 9, color: f.trend > 0 ? T.green : T.red, fontWeight: 600 }}>{f.trend > 0 ? "+" : ""}{f.trend}%</span>}
-                                  <span style={{ fontSize: 11, fontWeight: 700, color: aboveBenchmark ? T.green : T.gold }}>{f.adoption}%</span>
+                              <div key={f.name}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                                  <span style={{ fontSize: 11, color: T.textPrimary, display: "flex", alignItems: "center", gap: 5 }}>
+                                    <span style={{ fontSize: 12 }}>{f.icon}</span>
+                                    <span>{f.name}</span>
+                                    <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 3, background: `${T.textMuted}15`, color: T.textMuted }}>{f.category}</span>
+                                  </span>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                    {f.trend !== 0 && <span style={{ fontSize: 9, color: f.trend > 0 ? T.green : T.red, fontWeight: 600 }}>{f.trend > 0 ? "+" : ""}{f.trend}%</span>}
+                                    <span style={{ fontSize: 11, fontWeight: 700, color: aboveBenchmark ? T.green : T.gold }}>{f.adoption}%</span>
+                                  </div>
+                                </div>
+                                <div style={{ height: 5, background: T.border, borderRadius: 3, overflow: "hidden", position: "relative" }}>
+                                  <div style={{ height: "100%", width: `${f.adoption}%`, background: aboveBenchmark ? T.green : T.gold, borderRadius: 3, transition: "width 0.5s ease" }} />
+                                  <div style={{ position: "absolute", top: 0, bottom: 0, left: `${benchmark}%`, width: 1, background: T.textMuted, opacity: 0.5 }} />
                                 </div>
                               </div>
-                              <div style={{ height: 5, background: T.border, borderRadius: 3, overflow: "hidden", position: "relative" }}>
-                                <div style={{ height: "100%", width: `${f.adoption}%`, background: aboveBenchmark ? T.green : T.gold, borderRadius: 3, transition: "width 0.5s ease" }} />
-                                {/* Benchmark marker */}
-                                <div style={{ position: "absolute", top: 0, bottom: 0, left: `${benchmark}%`, width: 1, background: T.textMuted, opacity: 0.5 }} />
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
