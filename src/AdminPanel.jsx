@@ -12766,7 +12766,7 @@ export default function AdminPanel() {
   const [lfHasFollowUp,    setLfHasFollowUp]    = useState(false);
   const [showLeadFilters,  setShowLeadFilters]  = useState(false);
   const [showAddLead, setShowAddLead] = useState(false);
-  const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
+  const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", phoneCode: "+971", phoneNum: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
   const [addLeadLoading, setAddLeadLoading] = useState(false);
   const [leadNote, setLeadNote] = useState("");
   const [leadNoteSaving, setLeadNoteSaving] = useState(false);
@@ -21036,7 +21036,6 @@ export default function AdminPanel() {
                         {[
                           { key: "name", label: "Full Name *", placeholder: "John Smith", full: true },
                           { key: "email", label: "Email", placeholder: "john@example.com", type: "email" },
-                          { key: "phone", label: "Phone / WhatsApp", placeholder: "+971 50 123 4567" },
                           { key: "budget", label: "Budget (AED)", placeholder: "e.g. 2000000", type: "number" },
                           { key: "project", label: "Interested Project", placeholder: "e.g. The Valley" },
                         ].map(f => (
@@ -21046,6 +21045,19 @@ export default function AdminPanel() {
                               style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
                           </div>
                         ))}
+                        {/* Phone with country code */}
+                        <div style={{ gridColumn: "1/-1" }}>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone / WhatsApp</label>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <select value={addLeadForm.phoneCode || "+971"} onChange={e => setAddLeadForm(p => ({...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum||"").replace(/\s/g,"")}))}
+                              style={{ width: 200, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", flexShrink: 0 }}>
+                              {[["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+244","🇦🇴 Angola"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+20","🇪🇬 Egypt"],["+251","🇪🇹 Ethiopia"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea South"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+356","🇲🇹 Malta"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],["+212","🇲🇦 Morocco"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+234","🇳🇬 Nigeria"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
+                            </select>
+                            <input type="tel" placeholder="50 123 4567" value={addLeadForm.phoneNum || ""}
+                              onChange={e => { const num=e.target.value.replace(/[^\d\s]/g,""); setAddLeadForm(p=>({...p,phoneNum:num,phone:(p.phoneCode||"+971")+num.replace(/\s/g,"")})); }}
+                              style={{ flex: 1, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
+                          </div>
+                        </div>
                         {/* Nationality dropdown */}
                         <div>
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Nationality</label>
