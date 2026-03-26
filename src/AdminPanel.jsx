@@ -20305,6 +20305,9 @@ export default function AdminPanel() {
               return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
             });
 
+            const totalLeadPages = Math.max(1, Math.ceil(filtered.length / LEADS_PER_PAGE));
+            const pagedLeads = filtered.slice((leadPage - 1) * LEADS_PER_PAGE, leadPage * LEADS_PER_PAGE);
+
             const sources = [...new Set(leads.map(l => l.source).filter(Boolean))];
 
             // ── Dubai nationalities ──────────────────────────────────────
@@ -20616,8 +20619,6 @@ export default function AdminPanel() {
                     setLfNeverContacted(false); setLfHasFollowUp(false);
                     setLeadPage(1);
                   };
-                  const totalLeadPages = Math.max(1, Math.ceil(filtered.length / LEADS_PER_PAGE));
-                  const pagedLeads = filtered.slice((leadPage - 1) * LEADS_PER_PAGE, leadPage * LEADS_PER_PAGE);
                   return (
                     <div style={{ marginBottom: 16 }}>
                       {/* Row 1: Search + Status + Source + Date + Filters toggle */}
