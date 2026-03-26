@@ -11,6 +11,7 @@ import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnaps
 import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
 import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
+import { useI18n } from "./i18n";
 
 /* ─── DATA ALIASES (for backward compat) ─── */
 const financials = emaarFinancials;
@@ -1591,6 +1592,8 @@ function EiborAdminPanel({ db, T }) {
 }
 
 export default function EmaarDashboardV2() {
+  const { t: tr, lang, setLang, langInfo, LANGUAGES, dir } = useI18n();
+  // tr() is our translation function (avoiding conflict with 't' loop variable)
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState("");
   const [userName, setUserName] = useState("");
@@ -2464,25 +2467,26 @@ export default function EmaarDashboardV2() {
         <nav role="navigation" aria-label="Main navigation" style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 3, overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px", flexShrink: 0 }}>Emaar Properties</div>
           <div role="tablist" aria-label="Dashboard sections" style={{ display: "contents" }}>
-          {TABS.filter(t => {
-            const s = tabSettings[t.key];
+          {TABS.filter(tabItem => {
+            const s = tabSettings[tabItem.key];
             if (s && s.visible === false) return false;
             return true;
-          }).map(t => {
-            const s = tabSettings[t.key] || {};
+          }).map(tabItem => {
+            const s = tabSettings[tabItem.key] || {};
             const minTier = s.minTier || "free";
             const tierOrder = { free: 0, pro: 1, enterprise: 2 };
             const userTierOrder = tierOrder[userTier] ?? (userTier === "admin" ? 3 : userTier === "pro_trial" ? 1 : 0);
             const isLocked = tierOrder[minTier] > userTierOrder && userTier !== "admin";
+            const tabLabel = tr ? tr("tabs", tabItem.key) : tabItem.key;
             return (
-              <button type="button" role="tab" aria-selected={tab === t.key} key={t.key}
-                className={`sidebar-btn ${tab === t.key ? "active" : ""}`}
-                onClick={() => isLocked ? setShowUpgrade(true) : handleTabChange(t.key)}
+              <button type="button" role="tab" aria-selected={tab === tabItem.key} key={tabItem.key}
+                className={`sidebar-btn ${tab === tabItem.key ? "active" : ""}`}
+                onClick={() => isLocked ? setShowUpgrade(true) : handleTabChange(tabItem.key)}
                 style={isLocked ? { opacity: 0.55 } : {}}
-                title={isLocked ? `Requires ${minTier} plan` : t.key}
+                title={isLocked ? `Requires ${minTier} plan` : tabLabel}
               >
-                {t.icon}
-                {t.key}
+                {tabItem.icon}
+                {tabLabel}
                 {isLocked && <span style={{ marginLeft: "auto", fontSize: 9, color: minTier === "enterprise" ? "#8B5CF6" : "#D4A843", fontWeight: 700, letterSpacing: 0.5 }}>{minTier === "enterprise" ? "ENT" : "PRO"}</span>}
               </button>
             );
@@ -2529,6 +2533,20 @@ export default function EmaarDashboardV2() {
               {Icons.logout}
             </button>
           </div>
+          {/* ── Language Switcher ── */}
+          {setLang && LANGUAGES && (
+            <div style={{ padding: "8px 12px", marginTop: 4 }}>
+              <select
+                value={lang}
+                onChange={e => setLang(e.target.value)}
+                style={{ width: "100%", padding: "7px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" }}
+              >
+                {LANGUAGES.map(l => (
+                  <option key={l.code} value={l.code}>{l.flag} {l.nativeName}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </aside>
 

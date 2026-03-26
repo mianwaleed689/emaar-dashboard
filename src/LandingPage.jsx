@@ -12,6 +12,7 @@
 import React, { useState, useEffect } from "react";
 import { db } from "./firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { useI18n } from "./i18n";
 
 const T = {
   bg: "#04090F", surface: "#0A1628", surfaceAlt: "#0E1D35", card: "#0D1B30",
@@ -83,7 +84,9 @@ const css = `
   }
 `;
 
-export default function LandingPage({ onLoginClick, onSignUpClick }) {
+export default function LandingPage({
+  const { t: tr, lang, setLang, LANGUAGES } = useI18n();
+ onLoginClick, onSignUpClick }) {
   const [scrollY, setScrollY] = useState(0);
   const [openFaq, setOpenFaq] = useState(null);
   const [billingAnnual, setBillingAnnual] = useState(false);
@@ -194,6 +197,15 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           <a href="#tools" className="nav-link">23 Tools</a>
           <a href="#pricing" className="nav-link">Pricing</a>
           <a href="#faq" className="nav-link">FAQ</a>
+          {setLang && LANGUAGES && (
+            <select
+              value={lang}
+              onChange={e => setLang(e.target.value)}
+              style={{ padding: "7px 10px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(212,168,67,0.2)", borderRadius: 8, color: "#94A3B8", fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" }}
+            >
+              {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.flag} {l.nativeName}</option>)}
+            </select>
+          )}
           <button onClick={onLoginClick} className="cta-outline" style={{ padding: "8px 20px", fontSize: 13 }}>Login</button>
           <button onClick={onSignUpClick} className="cta-primary" style={{ padding: "9px 22px", fontSize: 13 }}>Try Free 7 Days →</button>
         </div>
