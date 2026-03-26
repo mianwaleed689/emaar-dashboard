@@ -1,3 +1,17 @@
+import React, { useState, useEffect, useCallback } from "react";
+import ReactDOM from "react-dom";
+import { auth, db, storage, firebaseConfig } from "./firebase";
+import { initializeApp, deleteApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import emailjs from "@emailjs/browser";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter } from "firebase/firestore";
+import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
+import ProjectManager from "./ProjectManager";
+import { useI18n, LANGUAGES } from "./i18n";
+
 /* ═══════════════════════════════════════════════════════
    EMAIL CAMPAIGNS TAB
    ═══════════════════════════════════════════════════════ */
@@ -152,19 +166,6 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
    DXB ANALYTICS — ADMIN PANEL
    Matching dashboard design DNA: sidebar nav, KPI cards, sections
    ═══════════════════════════════════════════════════════════════ */
-import React, { useState, useEffect, useCallback } from "react";
-import ReactDOM from "react-dom";
-import { auth, db, storage, firebaseConfig } from "./firebase";
-import { initializeApp, deleteApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import emailjs from "@emailjs/browser";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter } from "firebase/firestore";
-import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
-import ProjectManager from "./ProjectManager";
-import { useI18n, LANGUAGES } from "./i18n";
 
 /* ─── THEME (exact dashboard match) ─── */
 const T = {
