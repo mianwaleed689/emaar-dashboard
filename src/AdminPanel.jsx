@@ -317,252 +317,6 @@ const TabHelp = ({ items }) => {
    EMAIL CAMPAIGNS TAB
    ═══════════════════════════════════════════════════════ */
 function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchLeads }) {
-  const [campaigns, setCampaigns]       = React.useState([]);
-  const [showCreate, setShowCreate]     = React.useState(false);
-  const [sending, setSending]           = React.useState(false);
-  const [sendProgress, setSendProgress] = React.useState(0);
-  const [sendTotal, setSendTotal]       = React.useState(0);
-  const [selectedCampaign, setSelectedCampaign] = React.useState(null);
-  const [form, setForm] = React.useState({ name: "", subject: "", body: "", targetFilter: "all", targetCommunity: "", targetStatus: "", template: "custom" });
-
-  const TEMPLATES = [
-    { id: "followup",     label: "Follow-up",     subject: "Following up on your interest in {community}", body: "Dear {name},\n\nI wanted to follow up on your interest in property in {community}.\n\nWe have exciting new listings that match your profile.\n\nBest regards,\nThe Address Holding Team" },
-    { id: "golden_visa",  label: "Golden Visa",   subject: "You may qualify for a UAE Golden Visa", body: "Dear {name},\n\nBased on your interest in {community}, you may qualify for a UAE Golden Visa (10-year residency).\n\nProperties valued at AED 2 million+ are eligible.\n\nBest regards,\nThe Address Holding Team" },
-    { id: "market_update",label: "Market Update", subject: "Dubai Property Market Update — {community}", body: "Dear {name},\n\nThe Dubai property market continues to show strong growth in {community}.\n\n• Values up 18% year-on-year\n• Strong rental yields 6-8%\n\nWe have exclusive listings. Would you like a consultation?\n\nBest regards,\nThe Address Holding Team" },
-    { id: "new_launch",   label: "New Launch",    subject: "Exclusive New Launch — {community}", body: "Dear {name},\n\nWe have an exciting new project launch in {community}.\n\n• Prime location\n• Flexible payment plans\n• Strong ROI\n\nReach out today.\n\nBest regards,\nThe Address Holding Team" },
-    { id: "reengagement", label: "Re-engagement", subject: "We miss you — special offer inside", body: "Dear {name},\n\nIt's been a while since we connected regarding your property search in {community}.\n\nWe'd like to offer you a complimentary consultation.\n\nBest regards,\nThe Address Holding Team" },
-  ];
-
-  React.useEffect(() => {
-    const load = async () => {
-      try {
-        const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt", "desc"), limit(50)));
-        const list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() })); setCampaigns(list);
-      } catch(e) { console.error("Load campaigns:", e); }
-    };
-    load();
-  }, []);
-
-  const getTargetLeads = () => {
-    let targets = (leads||[]).filter(l => l.email && l.email.includes("@"));
-    if (form.targetFilter === "community" && form.targetCommunity) targets = targets.filter(l => l.community === form.targetCommunity);
-    if (form.targetFilter === "status" && form.targetStatus) targets = targets.filter(l => (l.status||"New") === form.targetStatus);
-    return targets;
-  };
-
-  const targetLeads = getTargetLeads();
-  const communities = [...new Set((leads||[]).filter(l=>l.community).map(l=>l.community))].sort();
-  const inputStyle = { width:"100%", padding:"10px 14px", background:T.bg, border:`1px solid rgba(212,168,67,0.15)`, borderRadius:9, color:"#E2E8F0", fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" };
-
-  const sendCampaign = async () => {
-    if (!form.name || !form.subject || !form.body) { notify("Fill in campaign name, subject and message"); return; }
-    const targets = getTargetLeads();
-    if (targets.length === 0) { notify("No leads match the filter with valid emails"); return; }
-    setSending(true); setSendProgress(0); setSendTotal(targets.length);
-    const campaignId = `camp_${Date.now()}`;
-    const campaignDoc = { name: form.name, subject: form.subject, template: form.template, targetFilter: form.targetFilter, targetCommunity: form.targetCommunity, targetStatus: form.targetStatus, totalTargets: targets.length, sent: 0, failed: 0, status: "sending", createdAt: new Date().toISOString(), sentBy: adminUser?.email || "admin" };
-    try { await setDoc(doc(db, "campaigns", campaignId), campaignDoc); } catch(e) {}
-    let sent = 0; let failed = 0; const BATCH = 5;
-    for (let i = 0; i < targets.length; i += BATCH) {
-      const chunk = targets.slice(i, i + BATCH);
-      await Promise.allSettled(chunk.map(async lead => {
-        try {
-          const body = form.body.replace(/\{name\}/g, lead.name||"there").replace(/\{community\}/g, lead.community||"Dubai").replace(/\{project\}/g, lead.project||"your property");
-          await emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: lead.email, name: "The Address Holding", email: "info@theaddressholding.ae", user_name: lead.name||"there", project_name: lead.project||lead.community||"DXB Analytics", change_type: form.subject.replace(/\{name\}/g,lead.name||"there").replace(/\{community\}/g,lead.community||"Dubai"), new_value: body, old_value: "" }, "USkwUhp0csGCVDkdQ");
-          sent++;
-        } catch(e) { failed++; }
-      }));
-      setSendProgress(Math.min(i + BATCH, targets.length));
-      await new Promise(r => setTimeout(r, 300));
-    }
-    try { await setDoc(doc(db, "campaigns", campaignId), { ...campaignDoc, sent, failed, status: "completed", completedAt: new Date().toISOString() }, { merge: true }); } catch(e) {}
-    setSending(false); notify(`✅ Campaign sent — ${sent} delivered, ${failed} failed`);
-    setShowCreate(false); setForm({ name:"", subject:"", body:"", targetFilter:"all", targetCommunity:"", targetStatus:"", template:"custom" });
-    try {
-      const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt", "desc"), limit(50)));
-      const list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() })); setCampaigns(list);
-    } catch(e) {}
-  };
-
-  return (
-    <div>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:24, flexWrap:"wrap", gap:12 }}>
-        <div>
-          <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:800, color:"#FFFFFF", margin:0 }}>Email Campaigns</h2>
-          <p style={{ fontSize:13, color:T.textMuted, margin:"4px 0 0" }}>{(leads||[]).filter(l=>l.email).length.toLocaleString()} leads with emails · {(leadsTotal||0).toLocaleString()} total database</p>
-        </div>
-        <button type="button" onClick={() => setShowCreate(true)} style={{ padding:"10px 20px", borderRadius:10, border:"none", background:`linear-gradient(135deg, ${T.gold}, #B8912F)`, color:T.bg, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>+ New Campaign</button>
-      </div>
-
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:24 }}>
-        {[
-          { label:"Total Campaigns", value:campaigns.length, color:T.gold },
-          { label:"Emails Sent", value:campaigns.reduce((s,c)=>s+(c.sent||0),0).toLocaleString(), color:T.green },
-          { label:"Leads with Email", value:(leads||[]).filter(l=>l.email).length.toLocaleString(), color:T.blue },
-          { label:"Avg per Campaign", value:campaigns.length>0?Math.round(campaigns.reduce((s,c)=>s+(c.sent||0),0)/campaigns.length):0, color:T.teal },
-        ].map((item,i) => (
-          <div key={i} style={{ padding:"18px 20px", background:T.surface, borderRadius:14, border:`1px solid ${T.border}` }}>
-            <div style={{ fontSize:10, color:T.textMuted, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>{item.label}</div>
-            <div style={{ fontFamily:"'Fraunces',serif", fontSize:28, fontWeight:900, color:item.color }}>{item.value}</div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ background:T.surface, borderRadius:14, border:`1px solid ${T.border}`, overflow:"hidden" }}>
-        <div style={{ padding:"14px 20px", borderBottom:`1px solid ${T.border}` }}>
-          <div style={{ fontSize:12, fontWeight:700, color:T.gold, textTransform:"uppercase", letterSpacing:1 }}>Campaign History</div>
-        </div>
-        {campaigns.length === 0 ? (
-          <div style={{ textAlign:"center", padding:"60px 20px" }}>
-            <div style={{ fontSize:40, marginBottom:12 }}>📧</div>
-            <div style={{ fontSize:15, fontWeight:700, color:T.white, marginBottom:6 }}>No campaigns yet</div>
-            <div style={{ fontSize:12, color:T.textMuted }}>Create your first campaign to reach your leads</div>
-          </div>
-        ) : (
-          <table style={{ width:"100%", borderCollapse:"collapse" }}>
-            <thead><tr style={{ background:T.surfaceAlt }}>
-              {["Campaign","Template","Target","Sent","Failed","Status","Date"].map(h => (
-                <th key={h} style={{ padding:"10px 16px", textAlign:"left", fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8 }}>{h}</th>
-              ))}
-            </tr></thead>
-            <tbody>{campaigns.map((c,i) => (
-              <tr key={c.id} style={{ borderTop:`1px solid ${T.border}`, cursor:"pointer" }}
-                onMouseEnter={e=>e.currentTarget.style.background=T.surfaceAlt} onMouseLeave={e=>e.currentTarget.style.background="transparent"}
-                onClick={() => setSelectedCampaign(c)}>
-                <td style={{ padding:"12px 16px" }}>
-                  <div style={{ fontSize:13, fontWeight:600, color:T.white }}>{c.name}</div>
-                  <div style={{ fontSize:11, color:T.textMuted, marginTop:2, maxWidth:280, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.subject}</div>
-                </td>
-                <td style={{ padding:"12px 16px" }}><span style={{ fontSize:11, padding:"3px 8px", borderRadius:5, background:"rgba(212,168,67,0.1)", color:T.gold }}>{c.template||"custom"}</span></td>
-                <td style={{ padding:"12px 16px", fontSize:12, color:T.textSecondary }}>{c.targetFilter==="community"?c.targetCommunity:c.targetFilter==="status"?c.targetStatus:"All leads"}</td>
-                <td style={{ padding:"12px 16px" }}><span style={{ fontSize:13, fontWeight:700, color:T.green }}>{(c.sent||0).toLocaleString()}</span></td>
-                <td style={{ padding:"12px 16px" }}><span style={{ fontSize:12, color:c.failed>0?T.red:T.textMuted }}>{c.failed||0}</span></td>
-                <td style={{ padding:"12px 16px" }}><span style={{ fontSize:11, padding:"3px 8px", borderRadius:5, fontWeight:700, background:c.status==="completed"?"rgba(16,185,129,0.1)":"rgba(59,130,246,0.1)", color:c.status==="completed"?T.green:T.blue }}>{c.status==="completed"?"✓ Sent":"⟳ Sending"}</span></td>
-                <td style={{ padding:"12px 16px", fontSize:11, color:T.textMuted }}>{c.createdAt?new Date(c.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"numeric"}):"—"}</td>
-              </tr>
-            ))}</tbody>
-          </table>
-        )}
-      </div>
-
-      {/* CREATE CAMPAIGN MODAL */}
-      {showCreate && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.92)", zIndex:9000, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(8px)", padding:20 }} onClick={() => { if (!sending) setShowCreate(false); }}>
-          <div style={{ background:T.surface, border:`1px solid rgba(212,168,67,0.3)`, borderRadius:16, width:"100%", maxWidth:680, maxHeight:"92vh", overflowY:"auto", padding:28 }} onClick={e => e.stopPropagation()}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:24 }}>
-              <div>
-                <h3 style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:700, color:T.gold, marginBottom:4 }}>New Email Campaign</h3>
-                <p style={{ fontSize:12, color:T.textMuted }}>Use {"{name}"}, {"{community}"}, {"{project}"} placeholders</p>
-              </div>
-              {!sending && <button type="button" onClick={() => setShowCreate(false)} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:22 }}>×</button>}
-            </div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
-              <div style={{ gridColumn:"1/-1" }}>
-                <label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Campaign Name *</label>
-                <input type="text" placeholder="e.g. Arabian Ranches Follow-up March 2026" value={form.name} onChange={e => setForm(p=>({...p,name:e.target.value}))} style={inputStyle} />
-              </div>
-              <div>
-                <label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Target Audience</label>
-                <select value={form.targetFilter} onChange={e => setForm(p=>({...p,targetFilter:e.target.value,targetCommunity:"",targetStatus:""}))} style={{ ...inputStyle, cursor:"pointer" }}>
-                  <option value="all">All leads with email</option>
-                  <option value="community">By Community</option>
-                  <option value="status">By Status</option>
-                </select>
-              </div>
-              <div>
-                {form.targetFilter==="community" && <>
-                  <label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Community</label>
-                  <select value={form.targetCommunity} onChange={e=>setForm(p=>({...p,targetCommunity:e.target.value}))} style={{ ...inputStyle, cursor:"pointer" }}>
-                    <option value="">Select...</option>{communities.map(c=><option key={c} value={c}>{c}</option>)}
-                  </select>
-                </>}
-                {form.targetFilter==="status" && <>
-                  <label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Status</label>
-                  <select value={form.targetStatus} onChange={e=>setForm(p=>({...p,targetStatus:e.target.value}))} style={{ ...inputStyle, cursor:"pointer" }}>
-                    <option value="">Select...</option>{["New","Contacted","Qualified","Converted","Lost"].map(s=><option key={s} value={s}>{s}</option>)}
-                  </select>
-                </>}
-                {form.targetFilter==="all" && <div style={{ padding:"12px 14px", background:"rgba(16,185,129,0.06)", borderRadius:8, border:"1px solid rgba(16,185,129,0.2)", marginTop:20 }}>
-                  <div style={{ fontSize:12, fontWeight:700, color:T.green }}>{targetLeads.length.toLocaleString()} leads targeted</div>
-                </div>}
-              </div>
-              {form.targetFilter!=="all" && <div style={{ gridColumn:"1/-1", padding:"12px 14px", background:targetLeads.length>0?"rgba(16,185,129,0.06)":"rgba(239,68,68,0.06)", borderRadius:8, border:`1px solid ${targetLeads.length>0?"rgba(16,185,129,0.2)":"rgba(239,68,68,0.2)"}` }}>
-                <div style={{ fontSize:12, fontWeight:700, color:targetLeads.length>0?T.green:T.red }}>{targetLeads.length.toLocaleString()} leads match</div>
-              </div>}
-            </div>
-            <div style={{ marginBottom:14 }}>
-              <label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:8 }}>Quick Templates</label>
-              <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                {TEMPLATES.map(t => (
-                  <button key={t.id} type="button" onClick={() => setForm(p=>({...p,template:t.id,subject:t.subject,body:t.body}))}
-                    style={{ fontSize:11, padding:"6px 12px", borderRadius:8, border:`1px solid ${form.template===t.id?T.gold:T.border}`, background:form.template===t.id?"rgba(212,168,67,0.1)":T.surfaceAlt, color:form.template===t.id?T.gold:T.textSecondary, cursor:"pointer", fontWeight:form.template===t.id?700:400 }}>
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div style={{ marginBottom:14 }}>
-              <label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Subject *</label>
-              <input type="text" placeholder="Subject line..." value={form.subject} onChange={e=>setForm(p=>({...p,subject:e.target.value}))} style={inputStyle} />
-            </div>
-            <div style={{ marginBottom:20 }}>
-              <label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Email Body *</label>
-              <textarea rows={8} placeholder={"Dear {name},\n\nYour message here..."} value={form.body} onChange={e=>setForm(p=>({...p,body:e.target.value}))} style={{ ...inputStyle, resize:"vertical" }} />
-            </div>
-            {sending && (
-              <div style={{ marginBottom:16 }}>
-                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-                  <span style={{ fontSize:12, color:T.textMuted }}>Sending...</span>
-                  <span style={{ fontSize:12, fontWeight:700, color:T.gold }}>{sendProgress} / {sendTotal}</span>
-                </div>
-                <div style={{ height:6, borderRadius:3, background:T.border }}>
-                  <div style={{ height:"100%", borderRadius:3, background:`linear-gradient(90deg,${T.gold},${T.green})`, width:`${sendTotal>0?(sendProgress/sendTotal)*100:0}%`, transition:"width 0.3s" }} />
-                </div>
-              </div>
-            )}
-            <div style={{ display:"flex", gap:12 }}>
-              <button type="button" onClick={() => setShowCreate(false)} disabled={sending} style={{ flex:1, padding:"12px", borderRadius:10, border:`1px solid ${T.border}`, background:"transparent", color:T.textSecondary, fontSize:13, fontWeight:600, cursor:sending?"not-allowed":"pointer", fontFamily:"'Outfit',sans-serif", opacity:sending?0.5:1 }}>Cancel</button>
-              <button type="button" onClick={sendCampaign} disabled={sending||!form.name||!form.subject||!form.body||targetLeads.length===0}
-                style={{ flex:2, padding:"12px", borderRadius:10, border:"none", background:(sending||!form.name)?T.surfaceAlt:`linear-gradient(135deg,${T.gold},#B8912F)`, color:(sending||!form.name)?T.textMuted:T.bg, fontSize:14, fontWeight:700, cursor:(sending||!form.name)?"not-allowed":"pointer", fontFamily:"'Outfit',sans-serif" }}>
-                {sending?`Sending ${sendProgress}/${sendTotal}...`:`🚀 Send to ${targetLeads.length.toLocaleString()} leads`}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CAMPAIGN DETAIL */}
-      {selectedCampaign && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(4,9,15,0.92)", zIndex:9000, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={() => setSelectedCampaign(null)}>
-          <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:16, width:"95%", maxWidth:480, padding:28 }} onClick={e=>e.stopPropagation()}>
-            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:20 }}>
-              <h3 style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:700, color:T.gold }}>{selectedCampaign.name}</h3>
-              <button type="button" onClick={() => setSelectedCampaign(null)} style={{ background:"none", border:"none", color:T.textMuted, cursor:"pointer", fontSize:22 }}>×</button>
-            </div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:14 }}>
-              {[["Sent",(selectedCampaign.sent||0).toLocaleString(),T.green],["Failed",selectedCampaign.failed||0,selectedCampaign.failed>0?T.red:T.textMuted],["Target",selectedCampaign.targetFilter==="community"?selectedCampaign.targetCommunity:selectedCampaign.targetFilter==="status"?selectedCampaign.targetStatus:"All leads",T.blue],["Template",selectedCampaign.template||"custom",T.gold]].map(([l,v,c],i) => (
-                <div key={i} style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
-                  <div style={{ fontSize:10, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:4 }}>{l}</div>
-                  <div style={{ fontSize:16, fontWeight:700, color:c, fontFamily:"'Fraunces',serif" }}>{v}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ padding:"12px 14px", background:T.surfaceAlt, borderRadius:10, border:`1px solid ${T.border}` }}>
-              <div style={{ fontSize:10, color:T.textMuted, textTransform:"uppercase", marginBottom:4 }}>Subject</div>
-              <div style={{ fontSize:13, color:T.white }}>{selectedCampaign.subject}</div>
-            </div>
-            <div style={{ marginTop:10, fontSize:11, color:T.textMuted, textAlign:"right" }}>Sent by {selectedCampaign.sentBy} · {selectedCampaign.createdAt?new Date(selectedCampaign.createdAt).toLocaleString("en-AE"):"—"}</div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════
-   EMAIL CAMPAIGNS TAB
-   ═══════════════════════════════════════════════════════ */
-function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchLeads }) {
   const [campaigns, setCampaigns] = React.useState([]);
   const [showCreate, setShowCreate] = React.useState(false);
   const [sending, setSending] = React.useState(false);
@@ -10334,7 +10088,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           <Field label="Phone / WhatsApp">
             <div style={{ display: "flex", gap: 8 }}>
               <select value={addUserForm.phoneCode || "+971"} onChange={e => setAddUserForm(p => ({...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum||"").replace(/\s/g,"")}))} style={{...inputStyle, width: 200, flexShrink: 0, cursor: "pointer"}}>
-                {[["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+244","🇦🇴 Angola"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+20","🇪🇬 Egypt"],["+251","🇪🇹 Ethiopia"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea South"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],["+212","🇲🇦 Morocco"],["+264","🇳🇦 Namibia"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+234","🇳🇬 Nigeria"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
+                {[["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+376","🇦🇩 Andorra"],["+244","🇦🇴 Angola"],["+1","🇦🇬 Antigua"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+1","🇧🇸 Bahamas"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+1","🇧🇧 Barbados"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],["+229","🇧🇯 Benin"],["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+267","🇧🇼 Botswana"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],["+238","🇨🇻 Cape Verde"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+236","🇨🇫 Central African Rep"],["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+269","🇰🇲 Comoros"],["+242","🇨🇬 Congo"],["+243","🇨🇩 Congo DRC"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],["+1","🇩🇴 Dominican Republic"],["+670","🇹🇱 East Timor"],["+593","🇪🇨 Ecuador"],["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+240","🇬🇶 Equatorial Guinea"],["+291","🇪🇷 Eritrea"],["+372","🇪🇪 Estonia"],["+268","🇸🇿 Eswatini"],["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+1","🇬🇩 Grenada"],["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],["+245","🇬🇼 Guinea-Bissau"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+686","🇰🇮 Kiribati"],["+850","🇰🇵 Korea North"],["+82","🇰🇷 Korea South"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+266","🇱🇸 Lesotho"],["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+423","🇱🇮 Liechtenstein"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],["+692","🇲🇭 Marshall Islands"],["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+691","🇫🇲 Micronesia"],["+373","🇲🇩 Moldova"],["+377","🇲🇨 Monaco"],["+976","🇲🇳 Mongolia"],["+382","🇲🇪 Montenegro"],["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+674","🇳🇷 Nauru"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+227","🇳🇪 Niger"],["+234","🇳🇬 Nigeria"],["+389","🇲🇰 North Macedonia"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+680","🇵🇼 Palau"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+675","🇵🇬 Papua New Guinea"],["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+1","🇰🇳 Saint Kitts"],["+1","🇱🇨 Saint Lucia"],["+1","🇻🇨 Saint Vincent"],["+685","🇼🇸 Samoa"],["+378","🇸🇲 San Marino"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+248","🇸🇨 Seychelles"],["+232","🇸🇱 Sierra Leone"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+677","🇸🇧 Solomon Islands"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+597","🇸🇷 Suriname"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+676","🇹🇴 Tonga"],["+1","🇹🇹 Trinidad"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+688","🇹🇻 Tuvalu"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+678","🇻🇺 Vanuatu"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
               </select>
               <input type="tel" placeholder="50 123 4567" value={addUserForm.phoneNum || ""} onChange={e => { const num=e.target.value.replace(/[^\d\s]/g,""); setAddUserForm(p=>({...p,phoneNum:num,phone:(p.phoneCode||"+971")+num.replace(/\s/g,"")})); }} style={{...inputStyle,flex:1}} onFocus={focusIn} onBlur={focusOut} />
             </div>
@@ -10345,7 +10099,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           <Field label="Country">
             <select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({...p, country: e.target.value}))} style={{...inputStyle, cursor:"pointer", color: addUserForm.country?"#E2E8F0":"#64748B"}}>
               <option value="">Select Country...</option>
-              {["Afghanistan","Albania","Algeria","Angola","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahrain","Bangladesh","Belarus","Belgium","Bolivia","Bosnia","Brazil","Brunei","Bulgaria","Cambodia","Cameroon","Canada","Chile","China","Colombia","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Egypt","Ethiopia","Finland","France","Georgia","Germany","Ghana","Greece","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Japan","Jordan","Kazakhstan","Kenya","Korea South","Kuwait","Kyrgyzstan","Latvia","Lebanon","Libya","Lithuania","Malaysia","Maldives","Mali","Malta","Mauritania","Mauritius","Mexico","Moldova","Mongolia","Morocco","Namibia","Nepal","Netherlands","New Zealand","Nigeria","Norway","Oman","Pakistan","Palestine","Panama","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saudi Arabia","Senegal","Serbia","Singapore","Slovakia","Slovenia","South Africa","South Sudan","Spain","Sri Lanka","Sudan","Sweden","Switzerland","Syria","Taiwan","Tanzania","Thailand","Tunisia","Turkey","Turkmenistan","Uganda","Ukraine","UAE","United Kingdom","United States","Uruguay","Uzbekistan","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe","Other"].sort().map(c => <option key={c} value={c}>{c}</option>)}
+              {["Afghanistan","Albania","Algeria","Andorra","Angola","Antigua","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon","Canada","Cape Verde","Central African Rep","Chad","Chile","China","Colombia","Comoros","Congo","Congo DRC","Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominican Republic","East Timor","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Korea North","Korea South","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Namibia","Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts","Saint Lucia","Saint Vincent","Samoa","San Marino","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Togo","Tonga","Trinidad","Tunisia","Turkey","Turkmenistan","Tuvalu","UAE","Uganda","Ukraine","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe","Other"].sort().map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </Field>
         </div>
@@ -10494,7 +10248,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         <Field label="Phone"><input type="tel" placeholder="+971 50 000 0000" value={editUserForm.phone || ""} onChange={e => setEditUserForm(p => ({ ...p, phone: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
         <Field label="Country"><select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           <option value="">Select Country</option>
-          {["Afghanistan","Albania","Algeria","Angola","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahrain","Bangladesh","Belarus","Belgium","Bolivia","Bosnia","Brazil","Bulgaria","Cambodia","Cameroon","Canada","Chile","China","Colombia","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Egypt","Ethiopia","Finland","France","Georgia","Germany","Ghana","Greece","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Japan","Jordan","Kazakhstan","Kenya","Korea South","Kuwait","Latvia","Lebanon","Libya","Lithuania","Malaysia","Maldives","Malta","Mexico","Moldova","Mongolia","Morocco","Namibia","Nepal","Netherlands","New Zealand","Nigeria","Norway","Oman","Pakistan","Palestine","Panama","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saudi Arabia","Senegal","Serbia","Singapore","Slovakia","Slovenia","South Africa","South Sudan","Spain","Sri Lanka","Sudan","Sweden","Switzerland","Syria","Taiwan","Tanzania","Thailand","Tunisia","Turkey","Turkmenistan","Uganda","Ukraine","UAE","United Kingdom","United States","Uruguay","Uzbekistan","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe","Other"].sort().map(c => <option key={c} value={c}>{c}</option>)}
+          {["Afghanistan","Albania","Algeria","Andorra","Angola","Antigua","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon","Canada","Cape Verde","Central African Rep","Chad","Chile","China","Colombia","Comoros","Congo","Congo DRC","Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominican Republic","East Timor","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Korea North","Korea South","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Namibia","Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts","Saint Lucia","Saint Vincent","Samoa","San Marino","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Togo","Tonga","Trinidad","Tunisia","Turkey","Turkmenistan","Tuvalu","UAE","Uganda","Ukraine","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe","Other"].sort().map(c => <option key={c} value={c}>{c}</option>)}
         </select></Field>
         <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
