@@ -1070,6 +1070,8 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
   const [filterComm, setFilterComm] = React.useState("All");
   const [filterYield, setFilterYield] = React.useState("All");
   const [mapLoaded, setMapLoaded] = React.useState(false);
+  const [mapLayer, setMapLayer] = React.useState("yield"); // yield | ppsf | volume
+  const heatLayersRef = React.useRef([]);
   const mapRef = React.useRef(null);
   const mapInstanceRef = React.useRef(null);
   const markersRef = React.useRef([]);
@@ -1100,6 +1102,38 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
     "Mudon": [25.0200, 55.2500], "Nima": [25.0220, 55.2520],
     "Rashid Yachts": [25.2200, 55.3100], "Elvire": [25.1080, 55.2560],
     "Park Lane": [25.1110, 55.2580], "Golf Place": [25.1060, 55.2620],
+  };
+
+  // Community-level data for heat map layers
+  const communityData = {
+    "Dubai Creek Harbour":  { coords: [25.1876, 55.3344], ppsf: 2200, volume: 3150,  yoy: 44, radius: 1200 },
+    "Dubai Hills Estate":   { coords: [25.1100, 55.2580], ppsf: 2100, volume: 4100,  yoy: 31, radius: 1400 },
+    "Emaar Beachfront":     { coords: [25.0780, 55.1340], ppsf: 3500, volume: 1520,  yoy: 30, radius: 900  },
+    "Downtown Dubai":       { coords: [25.1972, 55.2744], ppsf: 3800, volume: 5800,  yoy: 25, radius: 1100 },
+    "Business Bay":         { coords: [25.1867, 55.2653], ppsf: 1900, volume: 29950, yoy: 22, radius: 1300 },
+    "Arabian Ranches 3":    { coords: [25.0530, 55.2690], ppsf: 1650, volume: 1200,  yoy: 18, radius: 900  },
+    "Emaar South":          { coords: [24.8980, 55.1640], ppsf: 1100, volume: 980,   yoy: 15, radius: 1100 },
+    "The Valley":           { coords: [25.0000, 55.5000], ppsf: 1200, volume: 970,   yoy: 41, radius: 1000 },
+    "Rashid Yachts & Marina":{ coords: [25.2200, 55.3100], ppsf: 2800, volume: 740, yoy: 65, radius: 800  },
+    "The Oasis":            { coords: [25.0200, 55.1800], ppsf: 2400, volume: 850,   yoy: 38, radius: 1000 },
+    "Mudon":                { coords: [25.0200, 55.2500], ppsf: 1400, volume: 620,   yoy: 20, radius: 800  },
+    "Grand Polo Club":      { coords: [24.8500, 55.4200], ppsf: 1800, volume: 420,   yoy: 25, radius: 900  },
+  };
+
+  const getPPSFColor = (ppsf) => {
+    if (ppsf >= 3500) return "#F59E0B"; // Ultra-premium
+    if (ppsf >= 2500) return "#D4A843"; // Luxury
+    if (ppsf >= 1800) return "#14B8A6"; // Premium
+    if (ppsf >= 1400) return "#3B82F6"; // Mid-market
+    return "#10B981";                   // Affordable
+  };
+
+  const getVolumeColor = (volume) => {
+    if (volume >= 10000) return "#EF4444";
+    if (volume >= 3000)  return "#F97316";
+    if (volume >= 1500)  return "#F59E0B";
+    if (volume >= 800)   return "#10B981";
+    return "#3B82F6";
   };
 
   const getCoords = (project) => {
@@ -1215,7 +1249,34 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
       marker.on("click", () => setSelectedProjectMap(p));
       markersRef.current.push(marker);
     });
-  }, [mapLoaded, filteredProjects.length, filterComm, filterYield]);
+
+    // Clear old heat circles
+    heatLayersRef.current.forEach(c => map.removeLayer(c));
+    heatLayersRef.current = [];
+
+    // Add PPSF or Volume heat circles
+    if (mapLayer === "ppsf" || mapLayer === "volume") {
+      Object.entries(communityData).forEach(([name, data]) => {
+        const color = mapLayer === "ppsf" ? getPPSFColor(data.ppsf) : getVolumeColor(data.volume);
+        const value = mapLayer === "ppsf" ? `AED ${data.ppsf.toLocaleString()}/sqft` : `${data.volume.toLocaleString()} deals`;
+        const radiusScale = mapLayer === "volume" ? Math.min(data.volume / 100, 600) + 400 : data.radius;
+        const circle = L.circle(data.coords, {
+          radius: radiusScale,
+          color: color,
+          fillColor: color,
+          fillOpacity: 0.25,
+          weight: 2,
+          opacity: 0.7,
+        }).addTo(map);
+        circle.bindTooltip(`<div style="font-family:'Outfit',sans-serif;background:#0D1821;color:#fff;border:1px solid ${color};border-radius:8px;padding:8px 12px;font-size:12px;">
+          <strong style="color:${color}">${name}</strong><br/>
+          ${mapLayer === "ppsf" ? "PPSF: " : "Volume: "}<strong>${value}</strong><br/>
+          <span style="color:#94A3B8;font-size:10px">YoY: +${data.yoy}%</span>
+        </div>`, { permanent: false, sticky: true, className: "dxb-tooltip" });
+        heatLayersRef.current.push(circle);
+      });
+    }
+  }, [mapLoaded, filteredProjects.length, filterComm, filterYield, mapLayer]);
 
   // Cleanup on unmount
   React.useEffect(() => {
@@ -1230,7 +1291,43 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-      {/* Filters */}
+      {/* Layer switcher + Filters */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: 4 }}>
+        <div style={{ display: "flex", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+          {[
+            { id: "yield",  label: "🎯 Yield Layer",  desc: "Color by rental yield" },
+            { id: "ppsf",   label: "📐 PPSF Layer",   desc: "Color by price/sqft" },
+            { id: "volume", label: "📊 Volume Layer",  desc: "Size by DLD transactions" },
+          ].map(l => (
+            <button key={l.id} type="button" onClick={() => setMapLayer(l.id)}
+              style={{ padding: "7px 14px", fontSize: 11, fontWeight: 600, background: mapLayer === l.id ? `${T.gold}20` : "transparent", color: mapLayer === l.id ? T.gold : T.textMuted, border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
+              {l.label}
+            </button>
+          ))}
+        </div>
+        {/* Layer legend */}
+        {mapLayer === "ppsf" && (
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            {[["#F59E0B","AED 3,500+/sqft"],["#D4A843","AED 2,500+"],["#14B8A6","AED 1,800+"],["#3B82F6","AED 1,400+"],["#10B981","<AED 1,400"]].map(([col, label]) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: col, opacity: 0.8 }} />
+                <span style={{ fontSize: 9, color: T.textMuted }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {mapLayer === "volume" && (
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            {[["#EF4444","10,000+ deals"],["#F97316","3,000+"],["#F59E0B","1,500+"],["#10B981","800+"],["#3B82F6","<800"]].map(([col, label]) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: col, opacity: 0.8 }} />
+                <span style={{ fontSize: 9, color: T.textMuted }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>FILTER:</div>
         <select value={filterComm} onChange={e => setFilterComm(e.target.value)} style={{ padding: "6px 12px", background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 8, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
@@ -1265,7 +1362,10 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
           <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
           {/* Floating counter */}
           <div style={{ position: "absolute", bottom: 12, left: 12, background: "rgba(13,24,33,0.9)", backdropFilter: "blur(8px)", borderRadius: 8, padding: "6px 12px", border: "1px solid " + T.border, zIndex: 999, fontSize: 11, color: T.textSecondary }}>
-            <span style={{ color: T.gold, fontWeight: 700 }}>{filteredProjects.length}</span> projects shown
+            <span style={{ color: T.gold, fontWeight: 700 }}>{filteredProjects.length}</span> projects ·{" "}
+            <span style={{ color: T.teal, fontWeight: 600 }}>
+              {mapLayer === "yield" ? "Yield layer" : mapLayer === "ppsf" ? "PPSF heat map" : "Volume heat map"}
+            </span>
           </div>
         </div>
 
