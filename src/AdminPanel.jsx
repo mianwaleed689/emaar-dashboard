@@ -10,7 +10,7 @@ import { getAuth } from "firebase/auth";
 import emailjs from "@emailjs/browser";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter, getCountFromServer } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
 import ProjectManager from "./ProjectManager";
@@ -313,252 +313,6 @@ const TabHelp = ({ items }) => {
    PHASE 1B: Collision Detection, Attachments, @Mentions
    PHASE 2: Merge Tickets, Link Related, Custom Fields
 ═══════════════════════════════════════════════════════════════════ */
-/* ═══════════════════════════════════════════════════════
-   EMAIL CAMPAIGNS TAB
-   ═══════════════════════════════════════════════════════ */
-function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchLeads }) {
-  const [campaigns, setCampaigns] = React.useState([]);
-  const [showCreate, setShowCreate] = React.useState(false);
-  const [sending, setSending] = React.useState(false);
-  const [sendProgress, setSendProgress] = React.useState(0);
-  const [sendTotal, setSendTotal] = React.useState(0);
-  const [selectedCampaign, setSelectedCampaign] = React.useState(null);
-  const [form, setForm] = React.useState({ name: "", subject: "", body: "", targetFilter: "all", targetCommunity: "", targetStatus: "", template: "custom" });
-
-  const TEMPLATES = [
-    { id: "followup", label: "Follow-up", subject: "Following up on your interest in {community}", body: "Dear {name},\n\nI wanted to follow up on your interest in property in {community}.\n\nWe have some exciting new listings that match your profile. We'd love to arrange a viewing.\n\nBest regards,\nThe Address Holding Team" },
-    { id: "golden_visa", label: "Golden Visa", subject: "You may qualify for a UAE Golden Visa", body: "Dear {name},\n\nBased on your property interest in {community}, you may qualify for a UAE Golden Visa (10-year residency).\n\nProperties valued at AED 2 million+ are eligible. Our team can guide you through the entire process.\n\nBest regards,\nThe Address Holding Team" },
-    { id: "market_update", label: "Market Update", subject: "Dubai Property Market Update — {community}", body: "Dear {name},\n\nThe Dubai property market continues to show strong growth in {community}.\n\n• Property values up 18% year-on-year\n• Strong rental yields averaging 6-8%\n• High demand from international investors\n\nWe have exclusive listings available. Would you like to schedule a consultation?\n\nBest regards,\nThe Address Holding Team" },
-    { id: "new_launch", label: "New Launch", subject: "Exclusive New Launch — {community}", body: "Dear {name},\n\nWe're excited to share an exclusive new project launch in {community}.\n\n• Prime location\n• Flexible payment plans\n• Strong ROI potential\n\nThis is a limited opportunity. Reach out today.\n\nBest regards,\nThe Address Holding Team" },
-    { id: "reengagement", label: "Re-engagement", subject: "We miss you — special offer inside", body: "Dear {name},\n\nIt's been a while since we last connected regarding your property search in {community}.\n\nAs a valued contact, we'd like to offer you a complimentary property consultation with one of our senior advisors.\n\nBest regards,\nThe Address Holding Team" },
-  ];
-
-  React.useEffect(() => {
-    const load = async () => {
-      try {
-        const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt", "desc"), limit(50)));
-        const list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() })); setCampaigns(list);
-      } catch(e) { console.error("Load campaigns:", e); }
-    };
-    load();
-  }, []);
-
-  const getTargetLeads = () => {
-    let targets = (leads||[]).filter(l => l.email && l.email.includes("@"));
-    if (form.targetFilter === "community" && form.targetCommunity) targets = targets.filter(l => l.community === form.targetCommunity);
-    if (form.targetFilter === "status" && form.targetStatus) targets = targets.filter(l => (l.status || "New") === form.targetStatus);
-    return targets;
-  };
-
-  const targetLeads = getTargetLeads();
-  const communities = [...new Set((leads||[]).filter(l => l.community).map(l => l.community))].sort();
-  const inputStyle = { width: "100%", padding: "10px 14px", background: T.bg, border: `1px solid rgba(212,168,67,0.15)`, borderRadius: 9, color: "#E2E8F0", fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" };
-
-  const sendCampaign = async () => {
-    if (!form.name || !form.subject || !form.body) { notify("Fill in campaign name, subject and message"); return; }
-    const targets = getTargetLeads();
-    if (targets.length === 0) { notify("No leads match the filter with valid emails"); return; }
-    setSending(true); setSendProgress(0); setSendTotal(targets.length);
-    const campaignId = `camp_${Date.now()}`;
-    const campaignDoc = { name: form.name, subject: form.subject, template: form.template, targetFilter: form.targetFilter, targetCommunity: form.targetCommunity, targetStatus: form.targetStatus, totalTargets: targets.length, sent: 0, failed: 0, status: "sending", createdAt: new Date().toISOString(), sentBy: adminUser?.email || "admin" };
-    await setDoc(doc(db, "campaigns", campaignId), campaignDoc);
-    let sent = 0; let failed = 0; const BATCH = 5;
-    for (let i = 0; i < targets.length; i += BATCH) {
-      const chunk = targets.slice(i, i + BATCH);
-      await Promise.allSettled(chunk.map(async lead => {
-        try {
-          const body = form.body.replace(/\{name\}/g, lead.name||"there").replace(/\{community\}/g, lead.community||"Dubai").replace(/\{project\}/g, lead.project||"your property");
-          await emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: lead.email, name: "The Address Holding", email: "info@theaddressholding.ae", user_name: lead.name||"there", project_name: lead.project||lead.community||"DXB Analytics", change_type: form.subject.replace(/\{name\}/g,lead.name||"there").replace(/\{community\}/g,lead.community||"Dubai"), new_value: body, old_value: "" }, "USkwUhp0csGCVDkdQ");
-          await setDoc(doc(db, "leads", lead.id), { activity: [...(lead.activity||[]), { type: "email_campaign", by: adminUser?.email||"admin", at: new Date().toISOString(), note: `Campaign: ${form.name}` }], updatedAt: new Date().toISOString() }, { merge: true });
-          sent++;
-        } catch(e) { failed++; }
-      }));
-      setSendProgress(Math.min(i + BATCH, targets.length));
-      await new Promise(r => setTimeout(r, 300));
-    }
-    await setDoc(doc(db, "campaigns", campaignId), { ...campaignDoc, sent, failed, status: "completed", completedAt: new Date().toISOString() }, { merge: true });
-    setSending(false); notify(`✅ Campaign sent — ${sent} delivered, ${failed} failed`);
-    setShowCreate(false); setForm({ name: "", subject: "", body: "", targetFilter: "all", targetCommunity: "", targetStatus: "", template: "custom" });
-    const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt", "desc"), limit(50)));
-    const list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() })); setCampaigns(list);
-  };
-
-  return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: "#FFFFFF", margin: 0 }}>Email Campaigns</h2>
-          <p style={{ fontSize: 13, color: T.textMuted, margin: "4px 0 0" }}>{(leads||[]).filter(l => l.email).length.toLocaleString()} leads with emails · {(leadsTotal||0).toLocaleString()} total database</p>
-        </div>
-        <button type="button" onClick={() => setShowCreate(true)} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>+ New Campaign</button>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 24 }}>
-        {[
-          { label: "Total Campaigns", value: campaigns.length, color: T.gold },
-          { label: "Emails Sent", value: campaigns.reduce((s,c)=>s+(c.sent||0),0).toLocaleString(), color: T.green },
-          { label: "Leads with Email", value: (leads||[]).filter(l=>l.email).length.toLocaleString(), color: T.blue },
-          { label: "Avg per Campaign", value: campaigns.length > 0 ? Math.round(campaigns.reduce((s,c)=>s+(c.sent||0),0)/campaigns.length) : 0, color: T.teal },
-        ].map((item,i) => (
-          <div key={i} style={{ padding: "18px 20px", background: T.surface, borderRadius: 14, border: `1px solid ${T.border}` }}>
-            <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{item.label}</div>
-            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: item.color }}>{item.value}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}` }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, textTransform: "uppercase", letterSpacing: 1 }}>Campaign History</div>
-        </div>
-        {campaigns.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px 20px" }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>📧</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 6 }}>No campaigns yet</div>
-            <div style={{ fontSize: 12, color: T.textMuted }}>Create your first campaign to reach your leads</div>
-          </div>
-        ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead><tr style={{ background: T.surfaceAlt }}>
-              {["Campaign","Template","Target","Sent","Failed","Status","Date"].map(h => (
-                <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8 }}>{h}</th>
-              ))}
-            </tr></thead>
-            <tbody>{campaigns.map((c,i) => (
-              <tr key={c.id} style={{ borderTop: `1px solid ${T.border}`, cursor: "pointer" }}
-                onMouseEnter={e=>e.currentTarget.style.background=T.surfaceAlt} onMouseLeave={e=>e.currentTarget.style.background="transparent"}
-                onClick={() => setSelectedCampaign(c)}>
-                <td style={{ padding: "12px 16px" }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{c.name}</div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2, maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.subject}</div>
-                </td>
-                <td style={{ padding: "12px 16px" }}><span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 5, background: "rgba(212,168,67,0.1)", color: T.gold }}>{c.template||"custom"}</span></td>
-                <td style={{ padding: "12px 16px", fontSize: 12, color: T.textSecondary }}>{c.targetFilter==="community"?c.targetCommunity:c.targetFilter==="status"?c.targetStatus:"All leads"}</td>
-                <td style={{ padding: "12px 16px" }}><span style={{ fontSize: 13, fontWeight: 700, color: T.green }}>{(c.sent||0).toLocaleString()}</span></td>
-                <td style={{ padding: "12px 16px" }}><span style={{ fontSize: 12, color: c.failed>0?T.red:T.textMuted }}>{c.failed||0}</span></td>
-                <td style={{ padding: "12px 16px" }}><span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 5, fontWeight: 700, background: c.status==="completed"?"rgba(16,185,129,0.1)":"rgba(59,130,246,0.1)", color: c.status==="completed"?T.green:T.blue }}>{c.status==="completed"?"✓ Sent":"⟳ Sending"}</span></td>
-                <td style={{ padding: "12px 16px", fontSize: 11, color: T.textMuted }}>{c.createdAt?new Date(c.createdAt).toLocaleDateString("en-AE",{day:"2-digit",month:"short",year:"numeric"}):"—"}</td>
-              </tr>
-            ))}</tbody>
-          </table>
-        )}
-      </div>
-      {showCreate && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)", padding: 20 }} onClick={() => { if (!sending) setShowCreate(false); }}>
-          <div style={{ background: T.surface, border: `1px solid rgba(212,168,67,0.3)`, borderRadius: 16, width: "100%", maxWidth: 680, maxHeight: "92vh", overflowY: "auto", padding: 28 }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-              <div>
-                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.gold, marginBottom: 4 }}>New Email Campaign</h3>
-                <p style={{ fontSize: 12, color: T.textMuted }}>Personalised emails · use {"{name}"}, {"{community}"}, {"{project}"} placeholders</p>
-              </div>
-              {!sending && <button type="button" onClick={() => setShowCreate(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>}
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-              <div style={{ gridColumn: "1/-1" }}>
-                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Campaign Name *</label>
-                <input type="text" placeholder="e.g. Arabian Ranches Follow-up March 2026" value={form.name} onChange={e => setForm(p => ({...p, name: e.target.value}))} style={inputStyle} />
-              </div>
-              <div>
-                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Target Audience</label>
-                <select value={form.targetFilter} onChange={e => setForm(p => ({...p, targetFilter: e.target.value, targetCommunity: "", targetStatus: ""}))} style={{ ...inputStyle, cursor: "pointer" }}>
-                  <option value="all">All leads with email</option>
-                  <option value="community">By Community</option>
-                  <option value="status">By Status</option>
-                </select>
-              </div>
-              <div>
-                {form.targetFilter === "community" && <>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Community</label>
-                  <select value={form.targetCommunity} onChange={e => setForm(p=>({...p, targetCommunity: e.target.value}))} style={{ ...inputStyle, cursor: "pointer" }}>
-                    <option value="">Select...</option>
-                    {communities.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </>}
-                {form.targetFilter === "status" && <>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Status</label>
-                  <select value={form.targetStatus} onChange={e => setForm(p=>({...p, targetStatus: e.target.value}))} style={{ ...inputStyle, cursor: "pointer" }}>
-                    <option value="">Select...</option>
-                    {["New","Contacted","Qualified","Converted","Lost"].map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </>}
-                {form.targetFilter === "all" && <div style={{ padding: "12px 14px", background: "rgba(16,185,129,0.06)", borderRadius: 8, border: "1px solid rgba(16,185,129,0.2)", marginTop: 20 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: T.green }}>{targetLeads.length.toLocaleString()} leads targeted</div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>All leads with valid email addresses</div>
-                </div>}
-              </div>
-              {form.targetFilter !== "all" && (
-                <div style={{ gridColumn: "1/-1", padding: "12px 14px", background: targetLeads.length > 0 ? "rgba(16,185,129,0.06)" : "rgba(239,68,68,0.06)", borderRadius: 8, border: `1px solid ${targetLeads.length > 0 ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}` }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: targetLeads.length > 0 ? T.green : T.red }}>{targetLeads.length.toLocaleString()} leads match</div>
-                </div>
-              )}
-            </div>
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>Quick Templates</label>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {TEMPLATES.map(t => (
-                  <button key={t.id} type="button" onClick={() => setForm(p => ({...p, template: t.id, subject: t.subject, body: t.body}))}
-                    style={{ fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${form.template===t.id?T.gold:T.border}`, background: form.template===t.id?"rgba(212,168,67,0.1)":T.surfaceAlt, color: form.template===t.id?T.gold:T.textSecondary, cursor: "pointer", fontWeight: form.template===t.id?700:400 }}>
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Subject *</label>
-              <input type="text" placeholder="Subject... use {name} or {community}" value={form.subject} onChange={e => setForm(p=>({...p, subject: e.target.value}))} style={inputStyle} />
-            </div>
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Email Body *</label>
-              <textarea rows={10} placeholder={"Dear {name},\n\nYour message here..."} value={form.body} onChange={e => setForm(p=>({...p, body: e.target.value}))} style={{ ...inputStyle, resize: "vertical" }} />
-              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>Placeholders: <code style={{ color: T.gold }}>{"{name}"}</code> <code style={{ color: T.gold }}>{"{community}"}</code> <code style={{ color: T.gold }}>{"{project}"}</code></div>
-            </div>
-            {sending && (
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontSize: 12, color: T.textMuted }}>Sending...</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{sendProgress} / {sendTotal}</span>
-                </div>
-                <div style={{ height: 6, borderRadius: 3, background: T.border }}>
-                  <div style={{ height: "100%", borderRadius: 3, background: `linear-gradient(90deg, ${T.gold}, ${T.green})`, width: `${sendTotal > 0 ? (sendProgress/sendTotal)*100 : 0}%`, transition: "width 0.3s" }} />
-                </div>
-                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>⚠️ Do not close this window while sending</div>
-              </div>
-            )}
-            <div style={{ display: "flex", gap: 12 }}>
-              <button type="button" onClick={() => setShowCreate(false)} disabled={sending} style={{ flex: 1, padding: "12px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: sending?"not-allowed":"pointer", fontFamily: "'Outfit',sans-serif", opacity: sending?0.5:1 }}>Cancel</button>
-              <button type="button" onClick={sendCampaign} disabled={sending || !form.name || !form.subject || !form.body || targetLeads.length === 0}
-                style={{ flex: 2, padding: "12px", borderRadius: 10, border: "none", background: (sending||!form.name)?T.surfaceAlt:`linear-gradient(135deg, ${T.gold}, #B8912F)`, color: (sending||!form.name)?T.textMuted:T.bg, fontSize: 14, fontWeight: 700, cursor: (sending||!form.name)?"not-allowed":"pointer", fontFamily: "'Outfit',sans-serif" }}>
-                {sending ? `Sending ${sendProgress}/${sendTotal}...` : `🚀 Send to ${targetLeads.length.toLocaleString()} leads`}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {selectedCampaign && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setSelectedCampaign(null)}>
-          <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, width: "95%", maxWidth: 480, padding: 28 }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
-              <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{selectedCampaign.name}</h3>
-              <button type="button" onClick={() => setSelectedCampaign(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
-              {[["Sent",(selectedCampaign.sent||0).toLocaleString(),T.green],["Failed",selectedCampaign.failed||0,selectedCampaign.failed>0?T.red:T.textMuted],["Target",selectedCampaign.targetFilter==="community"?selectedCampaign.targetCommunity:selectedCampaign.targetFilter==="status"?selectedCampaign.targetStatus:"All leads",T.blue],["Template",selectedCampaign.template||"custom",T.gold]].map(([l,v,c],i) => (
-                <div key={i} style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
-                  <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>{l}</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: c, fontFamily: "'Fraunces',serif" }}>{v}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", marginBottom: 4 }}>Subject</div>
-              <div style={{ fontSize: 13, color: T.white }}>{selectedCampaign.subject}</div>
-            </div>
-            <div style={{ marginTop: 10, fontSize: 11, color: T.textMuted, textAlign: "right" }}>Sent by {selectedCampaign.sentBy} · {selectedCampaign.createdAt?new Date(selectedCampaign.createdAt).toLocaleString("en-AE"):"—"}</div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpenUid }) {
   // State
   const [supportSubTab, setSupportSubTab] = useState("open");
@@ -9775,9 +9529,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           user_email:   u.email,
           user_name:    u.name || u.email,
           project_name: "DXB Analytics Platform",
-          change_type:  days === 0 ? "Your Trial Has Expired" : `Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
           name:         "DXB Analytics",
           email:        "info@theaddressholding.ae",
+          change_type:  days === 0 ? "Your Trial Has Expired" : `Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`,
           new_value:    days === 0
             ? "Your 7-day trial has ended. Upgrade now to keep full access."
             : `Only ${days} day${days !== 1 ? "s" : ""} left on your free trial. Upgrade before you lose access.`,
@@ -10075,39 +9829,26 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
          <strong>Note:</strong> Creating an account here uses Firebase client-side auth. The new user will receive a verification email. You will remain logged in as admin.
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        {/* Name */}
-        <div style={{ gridColumn: "1/-1" }}>
-          <Field label="Full Name *"><input type="text" placeholder="John Smith" value={addUserForm.name || ""} onChange={e => setAddUserForm(p => ({...p, name: e.target.value}))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
-        </div>
-        {/* Email */}
-        <div style={{ gridColumn: "1/-1" }}>
-          <Field label="Email Address *"><input type="email" placeholder="john@company.com" value={addUserForm.email || ""} onChange={e => setAddUserForm(p => ({...p, email: e.target.value}))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
-        </div>
-        {/* Password */}
-        <div style={{ gridColumn: "1/-1" }}>
-          <Field label="Password *"><input type="password" placeholder="Min 6 characters" value={addUserForm.password || ""} onChange={e => setAddUserForm(p => ({...p, password: e.target.value}))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
-          {addUserForm.password && addUserForm.password.length < 6 && <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>⚡ Min 6 characters</div>}
-        </div>
-        {/* Phone with 160+ country codes */}
-        <div style={{ gridColumn: "1/-1" }}>
-          <Field label="Phone / WhatsApp">
-            <div style={{ display: "flex", gap: 8 }}>
-              <select value={addUserForm.phoneCode || "+971"} onChange={e => setAddUserForm(p => ({...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum||"").replace(/\s/g,"")}))} style={{...inputStyle, width: 200, flexShrink: 0, cursor: "pointer"}}>
-                {[["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+376","🇦🇩 Andorra"],["+244","🇦🇴 Angola"],["+1","🇦🇬 Antigua"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+1","🇧🇸 Bahamas"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+1","🇧🇧 Barbados"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],["+229","🇧🇯 Benin"],["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+267","🇧🇼 Botswana"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],["+238","🇨🇻 Cape Verde"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+242","🇨🇬 Congo"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],["+1","🇩🇴 Dominican Republic"],["+593","🇪🇨 Ecuador"],["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+291","🇪🇷 Eritrea"],["+372","🇪🇪 Estonia"],["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea South"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],["+382","🇲🇪 Montenegro"],["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+227","🇳🇪 Niger"],["+234","🇳🇬 Nigeria"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+1","🇹🇹 Trinidad"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
-              </select>
-              <input type="tel" placeholder="50 123 4567" value={addUserForm.phoneNum || ""} onChange={e => { const num=e.target.value.replace(/[^\d\s]/g,""); setAddUserForm(p=>({...p,phoneNum:num,phone:(p.phoneCode||"+971")+num.replace(/\s/g,"")})); }} style={{...inputStyle,flex:1}} onFocus={focusIn} onBlur={focusOut} />
-            </div>
-          </Field>
-        </div>
-        {/* Country — 160+ countries */}
-        <div>
-          <Field label="Country">
-            <select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({...p, country: e.target.value}))} style={{...inputStyle, cursor:"pointer", color: addUserForm.country?"#E2E8F0":"#64748B"}}>
-              <option value="">Select Country...</option>
-              {["Afghanistan","Albania","Algeria","Angola","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahrain","Bangladesh","Belarus","Belgium","Belize","Benin","Bolivia","Bosnia","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon","Canada","Chad","Chile","China","Colombia","Congo","Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominican Republic","Ecuador","Egypt","El Salvador","Eritrea","Estonia","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Guatemala","Guinea","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Korea South","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Liberia","Libya","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Mauritania","Mauritius","Mexico","Moldova","Mongolia","Montenegro","Morocco","Mozambique","Namibia","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","Norway","Oman","Pakistan","Palestine","Panama","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saudi Arabia","Senegal","Serbia","Singapore","Slovakia","Slovenia","Somalia","South Africa","South Sudan","Spain","Sri Lanka","Sudan","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Togo","Trinidad","Tunisia","Turkey","Turkmenistan","Uganda","Ukraine","UAE","United Kingdom","United States","Uruguay","Uzbekistan","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe","Other"].sort().map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </Field>
-        </div>
+        {[
+          { label: "Full Name *", key: "name", type: "text", placeholder: "John Smith", full: true },
+          { label: "Email Address *", key: "email", type: "email", placeholder: "john@company.com", full: true },
+          { label: "Password *", key: "password", type: "password", placeholder: "Min 6 characters", full: true },
+          { label: "Phone", key: "phone", type: "tel", placeholder: "+971 50 000 0000" },
+        ].map(f => (
+          <div key={f.key} style={{ gridColumn: f.full ? "1 / -1" : "auto" }}>
+            <Field label={f.label}>
+              <input type={f.type} placeholder={f.placeholder} value={addUserForm[f.key] || ""} onChange={e => setAddUserForm(p => ({ ...p, [f.key]: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} />
+            </Field>
+            {/* FIX #29: password validation */}
+            {f.key === "password" && addUserForm.password && addUserForm.password.length < 6 && (
+              <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>⚡ Password must be at least 6 characters</div>
+            )}
+          </div>
+        ))}
+        <div><Field label="Country"><select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          <option value="">Select Country</option>
+          {[" UAE"," Saudi Arabia"," Qatar"," Kuwait"," Bahrain"," Oman"," UK"," USA"," India"," Pakistan"," Egypt"," Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
+        </select></Field></div>
         <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
         </select></Field></div>
@@ -10117,16 +9858,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </select></Field></div>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
       </div>
-      {addUserForm.email && users.some(u => u.email && u.email.toLowerCase() === addUserForm.email.toLowerCase()) && (
-        <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 14 }}>⚠️</span>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>Email already exists</div>
-            <div style={{ fontSize: 11, color: T.textMuted }}>A user with this email is already registered.</div>
-          </div>
-        </div>
-      )}
-      <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
         <BtnGhost onClick={() => setShowAddUser(false)} style={{ flex: 1 }}>Cancel</BtnGhost>
         <Btn onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} color={T.gold} style={{ flex: 2, color: T.bg }}>{addUserLoading ? "Creating..." : "Create User"}</Btn>
       </div>
@@ -10250,13 +9982,11 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <ModalHeader title="Edit User" sub={editingUser.email} onClose={() => setEditingUser(null)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         <div style={{ gridColumn: "1 / -1" }}><Field label="Full Name"><input type="text" placeholder="Full name" value={editUserForm.name || ""} onChange={e => setEditUserForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field></div>
-        <Field label="Phone"><input type="tel" placeholder="+971 50 123 4567" value={editUserForm.phone || ""} onChange={e => setEditUserForm(p => ({...p, phone: e.target.value}))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
-        <Field label="Country">
-          <select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({...p, country: e.target.value}))} style={{...inputStyle, cursor: "pointer", color: editUserForm.country?"#E2E8F0":"#64748B"}}>
-            <option value="">Select Country...</option>
-            {["Afghanistan","Albania","Algeria","Angola","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahrain","Bangladesh","Belarus","Belgium","Bolivia","Bosnia","Brazil","Brunei","Bulgaria","Cambodia","Cameroon","Canada","Chile","China","Colombia","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Egypt","Ethiopia","Finland","France","Georgia","Germany","Ghana","Greece","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Japan","Jordan","Kazakhstan","Kenya","Korea South","Kuwait","Kyrgyzstan","Latvia","Lebanon","Libya","Lithuania","Malaysia","Maldives","Malta","Mexico","Moldova","Morocco","Mozambique","Namibia","Nepal","Netherlands","New Zealand","Nigeria","Norway","Oman","Pakistan","Palestine","Panama","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saudi Arabia","Senegal","Serbia","Singapore","Slovakia","Slovenia","South Africa","South Sudan","Spain","Sri Lanka","Sudan","Sweden","Switzerland","Syria","Taiwan","Tanzania","Thailand","Tunisia","Turkey","Turkmenistan","Uganda","Ukraine","UAE","United Kingdom","United States","Uruguay","Uzbekistan","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe","Other"].sort().map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </Field>
+        <Field label="Phone"><input type="tel" placeholder="+971 50 000 0000" value={editUserForm.phone || ""} onChange={e => setEditUserForm(p => ({ ...p, phone: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
+        <Field label="Country"><select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          <option value="">Select Country</option>
+          {[" UAE"," Saudi Arabia"," Qatar"," Kuwait"," Bahrain"," Oman"," UK"," USA"," India"," Pakistan"," Other"].map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
+        </select></Field>
         <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
         </select></Field>
@@ -10639,7 +10369,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                     {u.name || u.email?.split("@")[0]}
                     {u.suspended && <span style={{ fontSize: 9, color: T.red, fontWeight: 700, background: "rgba(239,68,68,0.12)", padding: "1px 5px", borderRadius: 4 }}>SUSPENDED</span>}
                     {u.role === "admin" && <span style={{ fontSize: 9, color: T.gold, fontWeight: 700, background: "rgba(212,168,67,0.12)", padding: "1px 5px", borderRadius: 4 }}>ADMIN</span>}
-                    {u.emailVerified && <span style={{ fontSize: 9, color: T.green, fontWeight: 700, background: "rgba(16,185,129,0.12)", padding: "1px 5px", borderRadius: 4 }}>✓ Verified</span>}
                     {/* FIX #33: notes badge is clickable */}
                     {u.notes && <button type="button" onClick={() => { setNoteUser(u); setNoteText(u.notes || ""); }} title="Click to view/edit note" style={{ fontSize: 9, color: "#8B5CF6", background: "rgba(139,92,246,0.12)", padding: "1px 5px", borderRadius: 4, border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>note</button>}
                   </div>
@@ -10648,16 +10377,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {health.label}
                       {jobRole && <span style={{ marginLeft: 5, color: jobRole.color, fontWeight: 700 }}>· {jobRole.label}</span>}
-                      {(() => {
-                        const daysSince = u.lastLoginAt ? (new Date() - new Date(u.lastLoginAt)) / 86400000 : 999;
-                        const daysSinceSignup = u.createdAt ? (new Date() - new Date(u.createdAt)) / 86400000 : 999;
-                        if (u.suspended) return null;
-                        if (daysSinceSignup <= 7) return <span style={{ marginLeft: 5, color: T.teal, fontWeight: 700 }}>· Onboarding</span>;
-                        if (daysSince <= 3) return <span style={{ marginLeft: 5, color: T.green, fontWeight: 700 }}>· Active</span>;
-                        if (daysSince <= 14) return <span style={{ marginLeft: 5, color: T.gold, fontWeight: 700 }}>· Cooling</span>;
-                        if (daysSince <= 30) return <span style={{ marginLeft: 5, color: "#F97316", fontWeight: 700 }}>· At Risk</span>;
-                        return <span style={{ marginLeft: 5, color: T.red, fontWeight: 700 }}>· Churned</span>;
-                      })()}
                       {(u.tags || []).length > 0 && <span style={{ marginLeft: 5, color: "#8B5CF6" }}>· {(u.tags || []).map(t => TAGS_OPTIONS.find(x => x.value === t)?.label).filter(Boolean).join(", ")}</span>}
                     </span>
                   </div>
@@ -10791,14 +10510,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>Next </button>
           <button type="button" onClick={() => setPage(totalPages)} disabled={page === totalPages} style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", color: page === totalPages ? T.textMuted : T.textSecondary, cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 11, fontFamily: "'Outfit',sans-serif" }}>»</button>
           <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>Page {page} of {totalPages}</span>
-          {totalPages > 5 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 5, marginLeft: 6 }}>
-              <span style={{ fontSize: 11, color: T.textMuted }}>Go to</span>
-              <input type="number" min="1" max={totalPages} placeholder={page}
-                onKeyDown={e => { if (e.key === "Enter") { const p = parseInt(e.target.value); if (p >= 1 && p <= totalPages) { setPage(p); e.target.value = ""; } } }}
-                style={{ width: 48, padding: "4px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", textAlign: "center" }} />
-            </div>
-          )}
         </div>
         {/* FIX #16: MRR only shown once — here at bottom */}
         <span style={{ fontSize: 11, color: T.textMuted }}>
@@ -12735,7 +12446,7 @@ export default function AdminPanel() {
   const [showAddUser, setShowAddUser] = useState(false);
   const [pendingOpenUid, setPendingOpenUid] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [addUserForm, setAddUserForm] = useState({ name: "", email: "", password: "", phone: "", phoneCode: "+971", phoneNum: "", country: "", tier: "free", role: "user", notes: "" });
+  const [addUserForm, setAddUserForm] = useState({ name: "", email: "", password: "", phone: "", country: "", tier: "free", notes: "" });
   const [addUserLoading, setAddUserLoading] = useState(false);
   const [editUserLoading, setEditUserLoading] = useState(false);
   // eslint-disable-next-line no-unused-vars
@@ -13211,57 +12922,51 @@ export default function AdminPanel() {
     return () => { if (unsub) unsub(); };
   }, [isAdmin, fetchVerifications]);
 
-  const fetchLeads = useCallback(async () => {
+  const fetchLeads = useCallback(async (forceRefresh = false) => {
     setLeadsLoading(true);
     try {
-      const cacheKey = "dxb_leads_cache_v2";
-      const cacheTS  = "dxb_leads_cache_ts_v2";
-      const TTL = 5 * 60 * 1000; // 5 min cache
+      const cacheKey = "dxb_leads_v3";
+      const cacheTS  = "dxb_leads_v3_ts";
+      const TTL = 5 * 60 * 1000;
       const now = Date.now();
-      const lastFetch = parseInt(localStorage.getItem(cacheTS) || "0");
 
-      // Use cache if fresh
-      if (now - lastFetch < TTL) {
+      if (!forceRefresh) {
         try {
-          const cached = JSON.parse(localStorage.getItem(cacheKey) || "[]");
-          if (cached.length > 100) { setLeads(cached); return; }
+          const ts = parseInt(localStorage.getItem(cacheTS) || "0");
+          if (now - ts < TTL) {
+            const cached = JSON.parse(localStorage.getItem(cacheKey) || "[]");
+            if (cached.length > 100) { setLeads(cached); setLeadsLoading(false); return; }
+          }
         } catch(e) {}
       }
 
-      // Try batch fetch first (needs createdAt index)
-      let allLeads = [];
+      // Batch fetch all leads 500 at a time
+      let all = [];
       try {
         let lastDoc = null;
-        const BATCH = 500;
         while (true) {
-          let q = lastDoc
-            ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(BATCH))
-            : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(BATCH));
+          const q = lastDoc
+            ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500))
+            : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
           const snap = await getDocs(q);
           if (snap.empty) break;
-          snap.forEach(d => allLeads.push({ id: d.id, ...plainify(d.data()) }));
+          snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
           lastDoc = snap.docs[snap.docs.length - 1];
-          if (snap.docs.length < BATCH) break;
+          if (snap.docs.length < 500) break;
         }
-      } catch(indexErr) {
-        // Index not ready — fallback to simple full collection fetch
-        console.warn("Ordered query failed, falling back to full fetch:", indexErr.message);
-        allLeads = [];
+      } catch(e) {
+        // No index yet - fallback to simple fetch
         const snap = await getDocs(collection(db, "leads"));
-        snap.forEach(d => allLeads.push({ id: d.id, ...plainify(d.data()) }));
+        snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
       }
 
-      allLeads.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      setLeads(allLeads);
-
-      // Cache result
+      all.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      setLeads(all);
       try {
-        localStorage.setItem(cacheKey, JSON.stringify(allLeads));
+        localStorage.setItem(cacheKey, JSON.stringify(all));
         localStorage.setItem(cacheTS, String(now));
       } catch(e) {}
-    } catch (e) {
-      console.error("Fetch leads failed:", e);
-    }
+    } catch(e) { console.error("fetchLeads:", e); }
     setLeadsLoading(false);
   }, [db]);
 
@@ -20483,17 +20188,67 @@ export default function AdminPanel() {
 
             // ── Filters ───────────────────────────────────────────────────
             const filtered = leads.filter(l => {
+              // 1. Status
               if (leadFilter !== "all" && (l.status || "New").toLowerCase() !== leadFilter) return false;
+              // 2. Source
               if (leadSourceFilter !== "all" && l.source !== leadSourceFilter) return false;
+              // 3. Date range
               if (leadDateRange === "today" && new Date(l.createdAt) < todayStart) return false;
               if (leadDateRange === "week" && new Date(l.createdAt) < weekAgo) return false;
               if (leadDateRange === "month" && new Date(l.createdAt) < monthAgo) return false;
               if (leadDateRange === "overdue") { if (!isOverdue(l) || l.status === "Converted" || l.status === "Lost") return false; }
               if (leadDateRange === "today_followup") { if (!isDueToday(l)) return false; }
+              // 4. Search
               if (leadSearch) {
                 const s = leadSearch.toLowerCase();
-                if (!((l.name || "").toLowerCase().includes(s) || (l.email || "").toLowerCase().includes(s) || (l.phone || "").includes(s) || (l.project || "").toLowerCase().includes(s) || (l.nationality || "").toLowerCase().includes(s))) return false;
+                if (!((l.name||"").toLowerCase().includes(s) || (l.email||"").toLowerCase().includes(s) || (l.phone||"").includes(s) || (l.project||"").toLowerCase().includes(s) || (l.nationality||"").toLowerCase().includes(s) || (l.community||"").toLowerCase().includes(s))) return false;
               }
+              // 5. Community
+              if (lfCommunity !== "all" && (l.community||"") !== lfCommunity) return false;
+              // 6. Nationality
+              if (lfNationality !== "all" && (l.nationality||"") !== lfNationality) return false;
+              // 7. Budget min
+              if (lfBudgetMin && (parseFloat(l.budget)||0) < parseFloat(lfBudgetMin)) return false;
+              // 8. Budget max
+              if (lfBudgetMax && (parseFloat(l.budget)||0) > parseFloat(lfBudgetMax)) return false;
+              // 9. Score min
+              if (lfScoreMin && scoreLead(l) < parseInt(lfScoreMin)) return false;
+              // 10. Property type
+              if (lfPropType !== "all" && (l.propertyType||l.property_type||"") !== lfPropType) return false;
+              // 11. Language
+              if (lfLanguage !== "all" && (l.language||"") !== lfLanguage) return false;
+              // 12. Lead age
+              if (lfLeadAge !== "all") {
+                const ageDays = (new Date() - new Date(l.createdAt)) / 86400000;
+                if (lfLeadAge === "fresh" && ageDays > 7) return false;
+                if (lfLeadAge === "week" && (ageDays < 7 || ageDays > 30)) return false;
+                if (lfLeadAge === "month" && (ageDays < 30 || ageDays > 90)) return false;
+                if (lfLeadAge === "old" && ageDays < 90) return false;
+              }
+              // 13. Golden visa eligible (budget >= 2M)
+              if (lfGoldenVisa && (parseFloat(l.budget)||0) < 2000000) return false;
+              // 14. Has WhatsApp (has phone, not tagged No WhatsApp)
+              if (lfHasWhatsApp && (!l.phone || (l.tags||[]).includes("no_whatsapp"))) return false;
+              // 15. No WhatsApp tag
+              if (lfNoWhatsApp && !(l.tags||[]).includes("no_whatsapp")) return false;
+              // 16. Has email
+              if (lfHasEmail && !l.email) return false;
+              // 17. Bedrooms
+              if (lfBedrooms !== "all" && String(l.bedrooms||"") !== lfBedrooms) return false;
+              // 18. Off-plan / Ready
+              if (lfOffPlan !== "all" && (l.planType||l.plan_type||"") !== lfOffPlan) return false;
+              // 19. Developer
+              if (lfDeveloper !== "all" && (l.developer||"") !== lfDeveloper) return false;
+              // 20. Payment type
+              if (lfPayment !== "all" && (l.paymentType||l.payment_type||"") !== lfPayment) return false;
+              // 21. Visa eligibility
+              if (lfVisa !== "all" && (l.visaEligibility||l.visa||"") !== lfVisa) return false;
+              // 22. Tag
+              if (lfTag !== "all" && !(l.tags||[]).includes(lfTag)) return false;
+              // 23. Never contacted
+              if (lfNeverContacted && l.status !== "New") return false;
+              // 24. Has follow-up
+              if (lfHasFollowUp && !l.followUpDate) return false;
               return true;
             }).sort((a, b) => {
               if (isOverdue(a) && !isOverdue(b)) return -1;
@@ -20685,12 +20440,7 @@ export default function AdminPanel() {
 
                 {/* KPI BAR */}
                 <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, overflow: "hidden", flexWrap: "wrap" }}>
-                  <button type="button" onClick={() => {
-                    localStorage.removeItem("dxb_leads_cache_v2");
-                    localStorage.removeItem("dxb_leads_cache_ts_v2");
-                    fetchLeads();
-                    notify("↺ Reloading all leads from database...");
-                  }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
+                  <button type="button" onClick={() => { localStorage.removeItem("dxb_leads_v3"); localStorage.removeItem("dxb_leads_v3_ts"); fetchLeads(true); notify("↺ Reloading all leads..."); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                   {[
                     { label: "Total", value: stats.total, color: T.gold },
                     { label: "New", value: stats.new, color: "#3B82F6" },
@@ -20790,32 +20540,167 @@ export default function AdminPanel() {
                 )}
 
                 {/* FILTERS */}
-                <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
-                  <input type="text" placeholder="Search name, email, phone, nationality, project..." value={leadSearch} onChange={e => setLeadSearch(e.target.value)} style={{ flex: 1, minWidth: 200, padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                  <select value={leadSourceFilter} onChange={e => setLeadSourceFilter(e.target.value)} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                    <option value="all">All Sources</option>
-                    {sources.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  <select value={leadDateRange} onChange={e => setLeadDateRange(e.target.value)} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                    <option value="all">All Time</option>
-                    <option value="today">Today</option>
-                    <option value="week">This Week</option>
-                    <option value="month">This Month</option>
-                    <option value="overdue">Overdue Follow-ups</option>
-                    <option value="today_followup">Due Today</option>
-                  </select>
-                  {(leadFilter !== "all" || leadSourceFilter !== "all" || leadDateRange !== "all" || leadSearch) && (
-                    <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); }} style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
-                  )}
-                  <span style={{ fontSize: 11, color: T.textMuted }}>
-                    {leadsLoading
-                      ? <span style={{ color: T.gold, fontWeight: 700 }}>⟳ Loading all leads...</span>
-                      : filtered.length !== leads.length
-                        ? <><strong style={{ color: T.gold }}>{filtered.length.toLocaleString()}</strong> matched · {leads.length.toLocaleString()} total loaded</>
-                        : <><strong style={{ color: T.white }}>{leads.length.toLocaleString()}</strong> leads loaded</>
-                    }
-                  </span>
-                </div>
+                {(() => {
+                  const communities = [...new Set(leads.map(l => l.community).filter(Boolean))].sort();
+                  const nationalities = [...new Set(leads.map(l => l.nationality).filter(Boolean))].sort();
+                  const developers = [...new Set(leads.map(l => l.developer).filter(Boolean))].sort();
+                  const activeFiltersCount = [
+                    leadFilter !== "all", leadSourceFilter !== "all", leadDateRange !== "all", leadSearch,
+                    lfCommunity !== "all", lfNationality !== "all", lfBudgetMin, lfBudgetMax, lfScoreMin,
+                    lfPropType !== "all", lfLanguage !== "all", lfLeadAge !== "all",
+                    lfGoldenVisa, lfHasWhatsApp, lfHasEmail, lfNoWhatsApp,
+                    lfBedrooms !== "all", lfOffPlan !== "all", lfDeveloper !== "all",
+                    lfPayment !== "all", lfVisa !== "all", lfTag !== "all",
+                    lfNeverContacted, lfHasFollowUp,
+                  ].filter(Boolean).length;
+                  const sel = { padding: "9px 12px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none" };
+                  const toggleBtn = (active, onClick, label) => (
+                    <button type="button" onClick={onClick} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${active ? T.gold : T.border}`, background: active ? "rgba(212,168,67,0.12)" : T.surface, color: active ? T.gold : T.textMuted, fontSize: 11, fontWeight: active ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>{label}</button>
+                  );
+                  const clearAll = () => {
+                    setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch("");
+                    setLfCommunity("all"); setLfNationality("all"); setLfBudgetMin(""); setLfBudgetMax(""); setLfScoreMin("");
+                    setLfPropType("all"); setLfLanguage("all"); setLfLeadAge("all");
+                    setLfGoldenVisa(false); setLfHasWhatsApp(false); setLfHasEmail(false); setLfNoWhatsApp(false);
+                    setLfBedrooms("all"); setLfOffPlan("all"); setLfDeveloper("all");
+                    setLfPayment("all"); setLfVisa("all"); setLfTag("all");
+                    setLfNeverContacted(false); setLfHasFollowUp(false);
+                  };
+                  return (
+                    <div style={{ marginBottom: 16 }}>
+                      {/* Row 1: Search + Status + Source + Date + Filters toggle */}
+                      <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
+                        <input type="text" placeholder="🔍  Search by name, phone, email, project..." value={leadSearch} onChange={e => setLeadSearch(e.target.value)}
+                          style={{ flex: 1, minWidth: 220, padding: "9px 14px", background: T.surface, border: `1px solid ${leadSearch ? T.gold : T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                        <select value={leadFilter} onChange={e => setLeadFilter(e.target.value)} style={sel}>
+                          <option value="all">📋 All Status</option>
+                          <option value="new">🆕 New</option>
+                          <option value="contacted">📞 Contacted</option>
+                          <option value="qualified">⭐ Qualified</option>
+                          <option value="converted">✅ Converted</option>
+                          <option value="lost">❌ Lost</option>
+                        </select>
+                        <select value={leadSourceFilter} onChange={e => setLeadSourceFilter(e.target.value)} style={sel}>
+                          <option value="all">📋 All Sources</option>
+                          {sources.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <select value={leadDateRange} onChange={e => setLeadDateRange(e.target.value)} style={sel}>
+                          <option value="all">📅 All Time</option>
+                          <option value="today">Today</option>
+                          <option value="week">This Week</option>
+                          <option value="month">This Month</option>
+                          <option value="overdue">⚠️ Overdue</option>
+                          <option value="today_followup">🔔 Due Today</option>
+                        </select>
+                        <button type="button" onClick={() => setShowLeadFilters(p => !p)}
+                          style={{ padding: "9px 14px", borderRadius: 8, border: `1px solid ${showLeadFilters || activeFiltersCount > 0 ? T.gold : T.border}`, background: showLeadFilters || activeFiltersCount > 0 ? "rgba(212,168,67,0.1)" : T.surface, color: showLeadFilters || activeFiltersCount > 0 ? T.gold : T.textMuted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          ⚙ Filters {activeFiltersCount > 0 ? `(${activeFiltersCount})` : ""}
+                        </button>
+                        {activeFiltersCount > 0 && (
+                          <button type="button" onClick={clearAll} style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.4)", background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>✕ Clear All</button>
+                        )}
+                        {leadsLoading
+                          ? <span style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>⟳ Loading all leads...</span>
+                          : <span style={{ fontSize: 11, color: T.textMuted }}>
+                              {filtered.length !== leads.length
+                                ? <><strong style={{ color: T.gold }}>{filtered.length.toLocaleString()}</strong> matched · {leads.length.toLocaleString()} total</>
+                                : <><strong style={{ color: T.white }}>{leads.length.toLocaleString()}</strong> leads</>}
+                            </span>}
+                      </div>
+
+                      {/* Row 2: Advanced filters panel */}
+                      {showLeadFilters && (
+                        <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px 16px", display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+                          {/* Community */}
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Community</div>
+                            <select value={lfCommunity} onChange={e => setLfCommunity(e.target.value)} style={sel}>
+                              <option value="all">All Communities</option>
+                              {communities.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                          </div>
+                          {/* Nationality */}
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Nationality</div>
+                            <select value={lfNationality} onChange={e => setLfNationality(e.target.value)} style={sel}>
+                              <option value="all">All Nationalities</option>
+                              {nationalities.map(n => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                          </div>
+                          {/* Budget range */}
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Budget (AED)</div>
+                            <div style={{ display: "flex", gap: 4 }}>
+                              <input type="number" placeholder="Min" value={lfBudgetMin} onChange={e => setLfBudgetMin(e.target.value)} style={{ ...sel, width: 90 }} />
+                              <input type="number" placeholder="Max" value={lfBudgetMax} onChange={e => setLfBudgetMax(e.target.value)} style={{ ...sel, width: 90 }} />
+                            </div>
+                          </div>
+                          {/* Score */}
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Min Score</div>
+                            <select value={lfScoreMin} onChange={e => setLfScoreMin(e.target.value)} style={sel}>
+                              <option value="">All Scores</option>
+                              <option value="70">Hot (70+)</option>
+                              <option value="40">Warm+ (40+)</option>
+                              <option value="20">20+</option>
+                            </select>
+                          </div>
+                          {/* Bedrooms */}
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Bedrooms</div>
+                            <select value={lfBedrooms} onChange={e => setLfBedrooms(e.target.value)} style={sel}>
+                              <option value="all">All Beds</option>
+                              {["Studio","1","2","3","4","5","6+"].map(b => <option key={b} value={b}>{b === "Studio" ? "Studio" : `${b} BR`}</option>)}
+                            </select>
+                          </div>
+                          {/* Off-plan / Ready */}
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Type</div>
+                            <select value={lfOffPlan} onChange={e => setLfOffPlan(e.target.value)} style={sel}>
+                              <option value="all">Off-Plan / Ready</option>
+                              <option value="off-plan">Off-Plan</option>
+                              <option value="ready">Ready</option>
+                            </select>
+                          </div>
+                          {/* Developer */}
+                          {developers.length > 0 && (
+                            <div>
+                              <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Developer</div>
+                              <select value={lfDeveloper} onChange={e => setLfDeveloper(e.target.value)} style={sel}>
+                                <option value="all">All Developers</option>
+                                {developers.map(d => <option key={d} value={d}>{d}</option>)}
+                              </select>
+                            </div>
+                          )}
+                          {/* Lead age */}
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Lead Age</div>
+                            <select value={lfLeadAge} onChange={e => setLfLeadAge(e.target.value)} style={sel}>
+                              <option value="all">All Ages</option>
+                              <option value="fresh">Fresh (0-7d)</option>
+                              <option value="week">1-4 weeks</option>
+                              <option value="month">1-3 months</option>
+                              <option value="old">3+ months</option>
+                            </select>
+                          </div>
+                          {/* Toggle filters */}
+                          <div>
+                            <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Quick Filters</div>
+                            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                              {toggleBtn(lfGoldenVisa,   () => setLfGoldenVisa(p => !p),     "🏆 Golden Visa")}
+                              {toggleBtn(lfHasWhatsApp,  () => setLfHasWhatsApp(p => !p),    "💬 Has WhatsApp")}
+                              {toggleBtn(lfNoWhatsApp,   () => setLfNoWhatsApp(p => !p),     "🚫 No WhatsApp")}
+                              {toggleBtn(lfHasEmail,     () => setLfHasEmail(p => !p),       "📧 Has Email")}
+                              {toggleBtn(lfNeverContacted, () => setLfNeverContacted(p => !p), "👻 Never Contacted")}
+                              {toggleBtn(lfHasFollowUp,  () => setLfHasFollowUp(p => !p),   "🔔 Has Follow-up")}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
 
                 {/* KANBAN VIEW */}
                 {leadsViewMode === "kanban" && !leadAnalyticsView && (
@@ -21319,9 +21204,7 @@ export default function AdminPanel() {
           {/* ═══════════════════════════════════════
              NOTIFICATIONS TAB
              ═══════════════════════════════════════ */}
-          {tab === "campaigns" && (
-            <EmailCampaignsTab T={T} db={db} notify={notify} adminUser={adminUser} leads={leads} leadsTotal={leadsTotal} fetchLeads={fetchLeads} />
-          )}
+          {tab === "campaigns" && <EmailCampaignsTab T={T} db={db} notify={notify} adminUser={adminUser} leads={leads} leadsTotal={leads.length} fetchLeads={fetchLeads} />}
           {tab === "notifications" && <NotificationsTab T={T} notify={notify} adminUser={adminUser} I={I} users={users} db={db} />}
 
           {/* ═══════════════════════════════════════
