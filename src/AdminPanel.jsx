@@ -21398,7 +21398,7 @@ export default function AdminPanel() {
                 {(() => {
                   // Use ALL leads for dropdowns — not filtered — so options are always complete
                   const communities = [...new Set(leads.map(l => l.community).filter(Boolean).filter(c => c !== "nan" && c !== "NaN" && c.trim()))].sort();
-                  const nationalities = [...new Set(leads.map(l => l.nationality).filter(Boolean).filter(n => n.trim() && n !== "none" && n !== "Unknown" && n !== "nan" && n !== "null" && n !== "-"))].sort();
+                  const nationalities = DUBAI_NATIONALITIES.filter(n => leads.some(l => l.nationality === n));
                   const developers = [...new Set(leads.map(l => l.developer).filter(Boolean))].sort();
                   const activeFiltersCount = [
                     leadFilter !== "all", leadSourceFilter !== "all", leadDateRange !== "all", leadSearch,
@@ -25997,5 +25997,6 @@ export default function AdminPanel() {
 // STABLE_RECOVERY_0945_PPSF_FIXED
 // BEAST_UI_UPGRADE_1005_MAR24
 // BEAST_BADGE_GLOBAL_1012_MAR24
+
 
 
