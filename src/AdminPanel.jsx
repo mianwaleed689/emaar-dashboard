@@ -20628,6 +20628,9 @@ export default function AdminPanel() {
             };
 
             // ── Add lead ──────────────────────────────────────────────────
+            // cleanProject — removes nan/null/NaN junk from project field
+            const cleanProject = (p) => (!p || p === "nan" || p === "NaN" || p === "null" || p === "None") ? "" : p.trim();
+
             // normalizePhone — smart E.164 normalizer for UAE + 194 countries
             const normalizePhone = (raw) => {
               if (!raw || typeof raw !== "string") return "";
@@ -21380,8 +21383,9 @@ export default function AdminPanel() {
 
                 {/* FILTERS */}
                 {(() => {
-                  const communities = [...new Set(leads.map(l => l.community).filter(Boolean))].sort();
-                  const nationalities = [...new Set(leads.map(l => l.nationality).filter(Boolean))].sort();
+                  // Use ALL leads for dropdowns — not filtered — so options are always complete
+                  const communities = [...new Set(leads.map(l => l.community).filter(Boolean).filter(c => c !== "nan" && c !== "NaN" && c.trim()))].sort();
+                  const nationalities = [...new Set(leads.map(l => l.nationality).filter(Boolean).filter(n => n.trim() && n !== "none" && n !== "Unknown" && n !== "nan" && n !== "null" && n !== "-"))].sort();
                   const developers = [...new Set(leads.map(l => l.developer).filter(Boolean))].sort();
                   const activeFiltersCount = [
                     leadFilter !== "all", leadSourceFilter !== "all", leadDateRange !== "all", leadSearch,
