@@ -190,6 +190,28 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
    Matching dashboard design DNA: sidebar nav, KPI cards, sections
    ═══════════════════════════════════════════════════════════════ */
 
+/* ─── RESEND EMAIL HELPER ─── */
+const RESEND_KEY = "re_FGZe2ET2_9pDv9iEV2MUTQXg1QHJeV3fs";
+const sendResend = async (to, subject, bodyText) => {
+  const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
+    <div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px">
+      <h2 style="color:#D4A843;margin:0;font-size:18px">DXB Analytics</h2>
+      <p style="color:#64748B;margin:4px 0 0;font-size:11px">The Address Holding · Dubai, UAE</p>
+    </div>
+    <div style="color:#1E293B;font-size:14px;line-height:1.7;white-space:pre-wrap">${bodyText}</div>
+    <div style="border-top:1px solid #E2E8F0;margin-top:24px;padding-top:12px;color:#94A3B8;font-size:11px">
+      DXB Analytics · <a href="mailto:info@theaddressholding.ae" style="color:#D4A843">info@theaddressholding.ae</a>
+    </div>
+  </div>`;
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: "DXB Analytics <onboarding@resend.dev>", to, subject, html }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+
 /* ─── THEME (exact dashboard match) ─── */
 const T = {
   bg: "#04090F", surface: "#0A1628", surfaceAlt: "#0E1D35", card: "#0D1B30",
@@ -15056,6 +15078,7 @@ export default function AdminPanel() {
     { id: "revenue", label: "Revenue", icon: I.revenue },
     { id: "data", label: "Data Manager", icon: I.data },
     { id: "leads", label: "Leads", icon: I.leads },
+    { id: "campaigns", label: "Campaigns", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> },
     { id: "notifications", label: "Notifications", icon: I.bell },
     { id: "verification", label: "Verification", icon: I.verify },
     { id: "analytics", label: "Analytics", icon: I.analytics },
@@ -15237,7 +15260,7 @@ export default function AdminPanel() {
                   stats.atRisk > 0 && { key: "atrisk", color: T.red, icon: "", label: `${stats.atRisk} at risk`, action: () => {
                     stats.atRiskUsers.forEach(u => {
                       const days = trialDaysLeft(u);
-                      emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `⚡ Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`, new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {});
+                      sendResend(u.email, `⚡ Your DXB Analytics trial expires in ${days} day${days !== 1 ? "s" : ""}`, `Hi ${u.name || "there"},\n\nYour Pro trial expires in ${days} day${days !== 1 ? "s" : ""}. Upgrade now to keep full access.\n\nBest regards,\nDXB Analytics Team`).catch(() => {});
                     });
                     notify(`Sent ${stats.atRisk} at-risk emails`);
                   }},
@@ -15394,7 +15417,7 @@ export default function AdminPanel() {
                       { label: "Avg days left (active)", value: (() => { const active = users.filter(u => u.tier === "pro_trial"); if (!active.length) return "—"; const avg = active.reduce((s, u) => s + Math.max(0, trialDaysLeft(u)), 0) / active.length; return `${Math.round(avg)} days`; })() },
                     ],
                     actions: [
-                      { label: `Email All ${stats.atRisk} At-Risk`, color: T.red, fn: () => { stats.atRiskUsers.forEach(u => { const days = trialDaysLeft(u); emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `Trial Expiring in ${days} Day${days !== 1 ? "s" : ""}`, new_value: `Only ${days} day${days !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").catch(() => {}); }); notify(`Sent ${stats.atRisk} at-risk emails`); } },
+                      { label: `Email All ${stats.atRisk} At-Risk`, color: T.red, fn: () => { stats.atRiskUsers.forEach(u => { const days = trialDaysLeft(u); sendResend(u.email, `Your DXB Analytics trial expires in ${days} day${days !== 1 ? "s" : ""}`, `Hi ${u.name || "there"},\n\nYour Pro trial expires in ${days} day${days !== 1 ? "s" : ""}. Upgrade now to keep full access.\n\nBest regards,\nDXB Analytics Team`).catch(() => {}); }); notify(`Sent ${stats.atRisk} at-risk emails`); } },
                       { label: "View Trial Users", color: T.gold, fn: () => { setTab("users"); setTierFilter("Pro Trial"); } },
                     ]
                   })}>
@@ -15664,7 +15687,7 @@ export default function AdminPanel() {
                           <button type="button"
                             onClick={e => {
                               e.stopPropagation();
-                              emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: `Trial Expiring in ${u.daysLeft} Day${u.daysLeft !== 1 ? "s" : ""}`, new_value: `Only ${u.daysLeft} day${u.daysLeft !== 1 ? "s" : ""} left. Upgrade now.`, old_value: "Pro Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").then(() => notify(`Email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
+                              sendResend(u.email, `Your DXB Analytics trial expires in ${u.daysLeft} day${u.daysLeft !== 1 ? "s" : ""}`, `Hi ${u.name || "there"},\n\nYour Pro trial expires in ${u.daysLeft} day${u.daysLeft !== 1 ? "s" : ""}. Upgrade now to keep full access.\n\nBest regards,\nDXB Analytics Team`).then(() => notify(`Email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
                             }}
                             style={{ fontSize: 10, fontWeight: 700, color: urgency, background: `${urgency}10`, border: `1px solid ${urgency}30`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
                             Nudge
@@ -15714,7 +15737,7 @@ export default function AdminPanel() {
                             <button type="button"
                               onClick={e => {
                                 e.stopPropagation();
-                                emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: "Start Your Free Pro Trial", new_value: "Try all Pro features free for 7 days — no credit card needed.", old_value: "Free Plan", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").then(() => notify(`Email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
+                                sendResend(u.email, "Start Your Free DXB Analytics Pro Trial", `Hi ${u.name || "there"},\n\nTry all Pro features free for 7 days — no credit card needed.\n\nLog in now to activate your trial.\n\nBest regards,\nDXB Analytics Team`).then(() => notify(`Email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
                               }}
                               style={{ fontSize: 10, fontWeight: 700, color: T.teal, background: `${T.teal}10`, border: `1px solid ${T.teal}30`, borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
                               Invite
@@ -16090,7 +16113,7 @@ export default function AdminPanel() {
                             <button type="button"
                               onClick={e => {
                                 e.stopPropagation();
-                                emailjs.send("service_da7nshv", "template_gl1xqhy", { user_email: u.email, user_name: u.name || u.email, project_name: "DXB Analytics", change_type: "Come Back — Special Offer", new_value: "Your trial ended but we'd love to have you back. Contact us for a special rate.", old_value: "Expired Trial", updated_at: new Date().toLocaleString("en-AE") }, "USkwUhp0csGCVDkdQ").then(() => notify(`Win-back email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
+                                sendResend(u.email, "We miss you — special offer inside", `Hi ${u.name || "there"},\n\nYour trial ended but we'd love to have you back.\n\nContact us at info@theaddressholding.ae for a special rate.\n\nBest regards,\nDXB Analytics Team`).then(() => notify(`Win-back email sent to ${u.name || u.email}`)).catch(() => notify("Email failed"));
                               }}
                               style={{ fontSize: 10, fontWeight: 700, color: T.red, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
                               Win-back
