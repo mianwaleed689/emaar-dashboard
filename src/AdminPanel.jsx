@@ -20618,13 +20618,33 @@ export default function AdminPanel() {
             };
 
             // ── Add lead ──────────────────────────────────────────────────
+            // normalizePhone — cleans any phone to E.164 format
+            const normalizePhone = (raw) => {
+              if (!raw || typeof raw !== "string") return "";
+              let p = raw.trim().replace(/[\s\-\.\(\)\/\\]/g, "");
+              if (!p || p.length < 4) return raw.trim();
+              if (p.startsWith("+")) return "+" + p.slice(1).replace(/\D/g, "");
+              if (p.startsWith("00")) return "+" + p.slice(2).replace(/\D/g, "");
+              const d = p.replace(/\D/g, "");
+              if (/^05[0-9]{8}$/.test(d)) return "+971" + d.slice(1);
+              if (/^5[0-9]{8}$/.test(d)) return "+971" + d;
+              if (d.startsWith("971") && d.length >= 11) return "+" + d;
+              if (/^04[0-9]{7}$/.test(d)) return "+971" + d.slice(1);
+              if (/^4[0-9]{7}$/.test(d)) return "+971" + d;
+              if (d.length >= 10) return "+" + d;
+              if (d.length >= 7) return "+971" + d;
+              return d;
+            };
+
             const addLead = async () => {
               if (!addLeadForm.name && !addLeadForm.email) { notify("Name or email required"); return; }
               setAddLeadLoading(true);
               try {
                 const id = `lead_${Date.now()}`;
+                const cleanPhone = normalizePhone(addLeadForm.phone || "");
                 await setDoc(doc(db, "leads", id), {
                   ...addLeadForm,
+                  phone: cleanPhone,
                   status: "New",
                   createdAt: new Date().toISOString(),
                   activity: [{ type: "created", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Lead created" }],
