@@ -2716,8 +2716,8 @@ export default function EmaarDashboardV2() {
                   ].map((c, i) => {
                     const maxPpsf = 4200;
                     const pct = Math.round((c.ppsf / maxPpsf) * 100);
-                    // Override with live data if available
-                    const liveVal = liveCommunityPPSF?.[c.name] || c.ppsf;
+                    // Use static data (live override via Firestore when available)
+                    const liveVal = c.ppsf;
                     return (
                       <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ width: 120, fontSize: 11, color: T.textSecondary, flexShrink: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</div>
@@ -5126,6 +5126,7 @@ export default function EmaarDashboardV2() {
 
               {/* ── AFFORDABILITY CHECKER ── */}
               {(() => {
+                const AffordabilityChecker = () => {
                 const [salary, setSalary] = React.useState(25000);
                 const [existingLiabilities, setExistingLiabilities] = React.useState(0);
                 const [affordRate, setAffordRate] = React.useState(5.09);
@@ -5204,6 +5205,8 @@ export default function EmaarDashboardV2() {
                     </div>
                   </Section>
                 );
+                };
+                return <AffordabilityChecker />;
               })()}
 
               <TabSources sources={[{ label: "CBUAE — UAE Base Rate", url: "https://www.cbuae.gov.ae" }, { label: "EIBOR 3M: 3.593% (Feb 2026) · CBUAE", url: "https://www.centralbank.ae/en/forex-eibor/eibor-rates/" }, { label: "DLD Fee Schedule (4%)", url: "https://dubailand.gov.ae" }, { label: "UAE Mortgage Law (No. 14 of 2008)" }, { label: "Property Finder Mortgage Rates", url: "https://www.propertyfinder.ae" }]} />
