@@ -12853,6 +12853,7 @@ export default function AdminPanel() {
   /* ─── KYC VERIFICATION STATE ─── */
   const [verifications, setVerifications] = useState([]);
   const [leads, setLeads] = useState([]);
+  const [leadsLoading, setLeadsLoading] = useState(false);
   
   /* ─── LEADS CRM STATE ─── */
   const [leadDrawer, setLeadDrawer] = useState(null); // lead object or null
@@ -13211,10 +13212,10 @@ export default function AdminPanel() {
   }, [isAdmin, fetchVerifications]);
 
   const fetchLeads = useCallback(async () => {
+    setLeadsLoading(true);
     try {
-      // Load ALL leads in batches of 500 to avoid Firestore streaming limits
-      const cacheKey = "dxb_leads_cache";
-      const cacheTS  = "dxb_leads_cache_ts";
+      const cacheKey = "dxb_leads_cache_v2";
+      const cacheTS  = "dxb_leads_cache_ts_v2";
       const TTL = 5 * 60 * 1000; // 5 min cache
       const now = Date.now();
       const lastFetch = parseInt(localStorage.getItem(cacheTS) || "0");
@@ -13223,23 +13224,31 @@ export default function AdminPanel() {
       if (now - lastFetch < TTL) {
         try {
           const cached = JSON.parse(localStorage.getItem(cacheKey) || "[]");
-          if (cached.length > 0) { setLeads(cached); return; }
+          if (cached.length > 100) { setLeads(cached); return; }
         } catch(e) {}
       }
 
-      // Batch fetch all leads
+      // Try batch fetch first (needs createdAt index)
       let allLeads = [];
-      let lastDoc = null;
-      const BATCH = 500;
-
-      while (true) {
-        let q = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(BATCH));
-        if (lastDoc) q = query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(BATCH));
-        const snap = await getDocs(q);
-        if (snap.empty) break;
+      try {
+        let lastDoc = null;
+        const BATCH = 500;
+        while (true) {
+          let q = lastDoc
+            ? query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(BATCH))
+            : query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(BATCH));
+          const snap = await getDocs(q);
+          if (snap.empty) break;
+          snap.forEach(d => allLeads.push({ id: d.id, ...plainify(d.data()) }));
+          lastDoc = snap.docs[snap.docs.length - 1];
+          if (snap.docs.length < BATCH) break;
+        }
+      } catch(indexErr) {
+        // Index not ready — fallback to simple full collection fetch
+        console.warn("Ordered query failed, falling back to full fetch:", indexErr.message);
+        allLeads = [];
+        const snap = await getDocs(collection(db, "leads"));
         snap.forEach(d => allLeads.push({ id: d.id, ...plainify(d.data()) }));
-        lastDoc = snap.docs[snap.docs.length - 1];
-        if (snap.docs.length < BATCH) break; // last batch
       }
 
       allLeads.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
@@ -13249,18 +13258,11 @@ export default function AdminPanel() {
       try {
         localStorage.setItem(cacheKey, JSON.stringify(allLeads));
         localStorage.setItem(cacheTS, String(now));
-      } catch(e) {} // ignore quota errors
+      } catch(e) {}
     } catch (e) {
-      console.error("Fetch leads:", e);
-      // Fallback: simple fetch without pagination
-      try {
-        const snap = await getDocs(collection(db, "leads"));
-        const list = [];
-        snap.forEach(d => list.push({ id: d.id, ...plainify(d.data()) }));
-        list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-        setLeads(list);
-      } catch(e2) { console.error("Fallback fetch failed:", e2); }
+      console.error("Fetch leads failed:", e);
     }
+    setLeadsLoading(false);
   }, [db]);
 
   useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin]);
@@ -20684,8 +20686,8 @@ export default function AdminPanel() {
                 {/* KPI BAR */}
                 <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, overflow: "hidden", flexWrap: "wrap" }}>
                   <button type="button" onClick={() => {
-                    localStorage.removeItem("dxb_leads_cache");
-                    localStorage.removeItem("dxb_leads_cache_ts");
+                    localStorage.removeItem("dxb_leads_cache_v2");
+                    localStorage.removeItem("dxb_leads_cache_ts_v2");
                     fetchLeads();
                     notify("↺ Reloading all leads from database...");
                   }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
@@ -20806,9 +20808,11 @@ export default function AdminPanel() {
                     <button type="button" onClick={() => { setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); }} style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.4)`, background: "rgba(239,68,68,0.06)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Clear</button>
                   )}
                   <span style={{ fontSize: 11, color: T.textMuted }}>
-                    {filtered.length !== leads.length
-                      ? <><strong style={{ color: T.gold }}>{filtered.length.toLocaleString()}</strong> matched · {leads.length.toLocaleString()} loaded</>
-                      : <><strong style={{ color: T.white }}>{leads.length.toLocaleString()}</strong> leads loaded</>
+                    {leadsLoading
+                      ? <span style={{ color: T.gold, fontWeight: 700 }}>⟳ Loading all leads...</span>
+                      : filtered.length !== leads.length
+                        ? <><strong style={{ color: T.gold }}>{filtered.length.toLocaleString()}</strong> matched · {leads.length.toLocaleString()} total loaded</>
+                        : <><strong style={{ color: T.white }}>{leads.length.toLocaleString()}</strong> leads loaded</>
                     }
                   </span>
                 </div>
