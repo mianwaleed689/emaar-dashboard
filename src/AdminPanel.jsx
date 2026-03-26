@@ -13256,64 +13256,84 @@ export default function AdminPanel() {
   const fetchLeads = useCallback(async (forceRefresh = false) => {
     setLeadsLoading(true);
     try {
-      const cacheKey = "dxb_leads_v3";
-      const cacheTS  = "dxb_leads_v3_ts";
+      const cacheKey = "dxb_leads_v5";
+      const cacheTS  = "dxb_leads_v5_ts";
       const TTL = 30 * 60 * 1000; // 30 min cache
       const now = Date.now();
+
+      // Check cache first
       if (!forceRefresh) {
         try {
           const ts = parseInt(localStorage.getItem(cacheTS) || "0");
           if (now - ts < TTL) {
             const cached = JSON.parse(localStorage.getItem(cacheKey) || "[]");
-            if (cached.length > 100) { setLeads(cached); setLeadsLoading(false); return; }
+            if (cached.length > 100) {
+              setLeads(cached);
+              setLeadsLoading(false);
+              return;
+            }
           }
         } catch(e) {}
       }
-      // Step 1: Show first 500 immediately so page is usable
-      let firstBatch = [];
-      let lastDoc = null;
-      try {
-        const q1 = query(collection(db, "leads"), orderBy("createdAt", "desc"), limit(500));
-        const snap1 = await getDocs(q1);
-        snap1.forEach(d => firstBatch.push({ id: d.id, ...plainify(d.data()) }));
-        lastDoc = snap1.empty ? null : snap1.docs[snap1.docs.length - 1];
-        setLeads(firstBatch); // ← only render once with first 500
-        setLeadsLoading(false);
-      } catch(e) {
-        // No index — simple fetch
-        const snap1 = await getDocs(collection(db, "leads"));
-        snap1.forEach(d => firstBatch.push({ id: d.id, ...plainify(d.data()) }));
-        setLeads(firstBatch);
-        setLeadsLoading(false);
-        // Cache and return — no pagination without index
-        try {
-          firstBatch.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
-          localStorage.setItem(cacheKey, JSON.stringify(firstBatch));
-          localStorage.setItem(cacheTS, String(now));
-        } catch(e2) {}
-        return;
-      }
-      // Step 2: Silently fetch ALL remaining — NO re-renders until complete
-      let all = [...firstBatch];
-      try {
-        while (lastDoc) {
-          const q = query(collection(db, "leads"), orderBy("createdAt", "desc"), startAfter(lastDoc), limit(500));
-          const snap = await getDocs(q);
-          if (snap.empty) break;
-          snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
-          lastDoc = snap.docs[snap.docs.length - 1];
-          if (snap.docs.length < 500) break;
-        }
-      } catch(e) { console.warn("Background fetch partial:", e.message); }
 
-      all.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      setLeads(all); // ← single re-render when all batches done
-      try {
-        localStorage.setItem(cacheKey, JSON.stringify(all));
-        localStorage.setItem(cacheTS, String(now));
-      } catch(e) {}
-    } catch(e) { console.error("fetchLeads:", e); }
-    setLeadsLoading(false);
+      // Step 1: Show first 500 immediately so page is usable
+      const q1 = query(collection(db, "leads"), limit(500));
+      const snap1 = await getDocs(q1);
+      const firstBatch = [];
+      snap1.forEach(d => firstBatch.push({ id: d.id, ...plainify(d.data()) }));
+      firstBatch.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
+      setLeads(firstBatch);
+      setLeadsLoading(false);
+
+      // Step 2: Background fetch ALL remaining — no re-renders until complete
+      let all = [...firstBatch];
+      let lastDoc = snap1.empty ? null : snap1.docs[snap1.docs.length - 1];
+
+      const loadNext = async () => {
+        if (!lastDoc) {
+          // Done — update UI once with everything
+          all.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
+          setLeads([...all]);
+          // Try to cache — skip if too large
+          try {
+            const str = JSON.stringify(all);
+            if (str.length < 4 * 1024 * 1024) { // only cache if under 4MB
+              localStorage.setItem(cacheKey, str);
+              localStorage.setItem(cacheTS, String(now));
+            }
+          } catch(e) {}
+          return;
+        }
+        try {
+          const q = query(collection(db, "leads"), limit(500), startAfter(lastDoc));
+          const snap = await getDocs(q);
+          if (snap.empty || snap.docs.length < 500) {
+            snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
+            lastDoc = null;
+          } else {
+            snap.forEach(d => all.push({ id: d.id, ...plainify(d.data()) }));
+            lastDoc = snap.docs[snap.docs.length - 1];
+          }
+          // Update UI every 5000 leads so user sees progress
+          if (all.length % 5000 < 500) {
+            const sorted = [...all].sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
+            setLeads(sorted);
+          }
+          setTimeout(loadNext, 200); // small delay to keep browser responsive
+        } catch(e) {
+          console.warn("Background fetch:", e.message);
+          // Still show what we have
+          all.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
+          setLeads([...all]);
+        }
+      };
+
+      setTimeout(loadNext, 500);
+
+    } catch(e) {
+      console.error("fetchLeads:", e);
+      setLeadsLoading(false);
+    }
   }, [db]);
 
   useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin]); // eslint-disable-line
