@@ -10242,8 +10242,38 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <NoteModal />
       <TagsModal />
       <AddUserModal />
-      <EditUserModal />
       <NotifUserModal />
+      {/* Edit User Modal */}
+      {editingUser && (
+        <Modal onClose={() => setEditingUser(null)} maxWidth={580}>
+          <ModalHeader title="Edit User" sub={editingUser.email} onClose={() => setEditingUser(null)} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div style={{ gridColumn: "1/-1" }}><Field label="Full Name"><input type="text" value={editUserForm.name || ""} onChange={e => setEditUserForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field></div>
+            <div style={{ gridColumn: "1/-1" }}><Field label="Email"><input type="email" value={editUserForm.email || ""} onChange={e => setEditUserForm(p => ({ ...p, email: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field></div>
+            <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+              {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
+            </select></Field>
+            <Field label="Job Role"><select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+              <option value="user">— No role assigned —</option>
+              {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+            </select></Field>
+            <Field label="Trial End Date"><input type="date" value={editUserForm.trialEnd ? editUserForm.trialEnd.slice(0, 10) : ""} onChange={e => setEditUserForm(p => ({ ...p, trialEnd: e.target.value ? e.target.value + "T00:00:00.000Z" : "" }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
+            <div>
+              <Field label="Country">
+                <select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+                  <option value="">Select Country...</option>
+                  {["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","🌍 Other"].sort().map(c => <option key={c} value={c.split(" ").slice(1).join(" ")}>{c}</option>)}
+                </select>
+              </Field>
+            </div>
+            <div style={{ gridColumn: "1/-1" }}><Field label="Admin Notes"><textarea value={editUserForm.notes || ""} onChange={e => setEditUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
+          </div>
+          <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+            <BtnGhost onClick={() => setEditingUser(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
+            <Btn onClick={saveEditUser} disabled={editUserLoading} color={T.gold} style={{ flex: 2, color: T.bg }}>{editUserLoading ? "Saving..." : "Save Changes"}</Btn>
+          </div>
+        </Modal>
+      )}
       <ProfileDrawerComponent
         drawerUser={drawerUser}
         onClose={() => setDrawerUserWithCallback(null)}
