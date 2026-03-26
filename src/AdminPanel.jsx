@@ -10026,7 +10026,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   );
 
   /* FIX #14: Add User → Invite User (client SDK limitation explained) */
-  const AddUserModal = React.memo(() => showAddUser && (
+  const AddUserModal = () => showAddUser && (
     <Modal onClose={() => setShowAddUser(false)} maxWidth={520}>
       <ModalHeader title="Add New User" sub="Create a new account directly from admin" onClose={() => setShowAddUser(false)} />
       <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 18, fontSize: 12, color: "#93C5FD", lineHeight: 1.6 }}>
@@ -10205,7 +10205,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </Modal>
   );
 
-  const EditUserModal = React.memo(() => editingUser && (
+  const EditUserModal = () => editingUser && (
     <Modal onClose={() => setEditingUser(null)} maxWidth={520}>
       <ModalHeader title="Edit User" sub={editingUser.email} onClose={() => setEditingUser(null)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -25997,6 +25997,7 @@ export default function AdminPanel() {
 // STABLE_RECOVERY_0945_PPSF_FIXED
 // BEAST_UI_UPGRADE_1005_MAR24
 // BEAST_BADGE_GLOBAL_1012_MAR24
+
 
 
 
