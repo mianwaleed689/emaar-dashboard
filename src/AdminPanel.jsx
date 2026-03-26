@@ -9534,6 +9534,8 @@ const ProfileDrawerComponent = ({
     );
 };
 
+              <select value={addUserForm.phoneCode || "+971"} onChange={e => setAddUserForm(p => ({...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum||"").replace(/\s/g,"")}))} style={{...inputStyle, width: 200, flexShrink: 0, cursor: "pointer"}}>
+                {PHONE_CODES_LIST.map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
               </select>
               <input type="tel" placeholder="50 123 4567" value={addUserForm.phoneNum || ""} onChange={e => { const num=e.target.value.replace(/[^\d\s]/g,""); setAddUserForm(p=>({...p,phoneNum:num,phone:(p.phoneCode||"+971")+num.replace(/\s/g,"")})); }} style={{...inputStyle,flex:1}} onFocus={focusIn} onBlur={focusOut} />
             </div>
