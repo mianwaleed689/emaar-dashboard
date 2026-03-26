@@ -84,9 +84,8 @@ const css = `
   }
 `;
 
-export default function LandingPage({
+export default function LandingPage({ onLoginClick, onSignUpClick }) {
   const { t: tr, lang, setLang, LANGUAGES } = useI18n();
- onLoginClick, onSignUpClick }) {
   const [scrollY, setScrollY] = useState(0);
   const [openFaq, setOpenFaq] = useState(null);
   const [billingAnnual, setBillingAnnual] = useState(false);
