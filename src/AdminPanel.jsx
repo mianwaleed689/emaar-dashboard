@@ -10088,7 +10088,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           <Field label="Phone / WhatsApp">
             <div style={{ display: "flex", gap: 8 }}>
               <select value={addUserForm.phoneCode || "+971"} onChange={e => setAddUserForm(p => ({...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum||"").replace(/\s/g,"")}))} style={{...inputStyle, width: 200, flexShrink: 0, cursor: "pointer"}}>
-                {[["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+376","🇦🇩 Andorra"],["+244","🇦🇴 Angola"],["+1","🇦🇬 Antigua"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+1","🇧🇸 Bahamas"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+1","🇧🇧 Barbados"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],["+229","🇧🇯 Benin"],["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+267","🇧🇼 Botswana"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],["+238","🇨🇻 Cape Verde"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+236","🇨🇫 Central African Rep"],["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+269","🇰🇲 Comoros"],["+242","🇨🇬 Congo"],["+243","🇨🇩 Congo DRC"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],["+1","🇩🇴 Dominican Republic"],["+670","🇹🇱 East Timor"],["+593","🇪🇨 Ecuador"],["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+240","🇬🇶 Equatorial Guinea"],["+291","🇪🇷 Eritrea"],["+372","🇪🇪 Estonia"],["+268","🇸🇿 Eswatini"],["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+1","🇬🇩 Grenada"],["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],["+245","🇬🇼 Guinea-Bissau"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+686","🇰🇮 Kiribati"],["+850","🇰🇵 Korea North"],["+82","🇰🇷 Korea South"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+266","🇱🇸 Lesotho"],["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+423","🇱🇮 Liechtenstein"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],["+692","🇲🇭 Marshall Islands"],["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+691","🇫🇲 Micronesia"],["+373","🇲🇩 Moldova"],["+377","🇲🇨 Monaco"],["+976","🇲🇳 Mongolia"],["+382","🇲🇪 Montenegro"],["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+674","🇳🇷 Nauru"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+227","🇳🇪 Niger"],["+234","🇳🇬 Nigeria"],["+389","🇲🇰 North Macedonia"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+680","🇵🇼 Palau"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+675","🇵🇬 Papua New Guinea"],["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+1","🇰🇳 Saint Kitts"],["+1","🇱🇨 Saint Lucia"],["+1","🇻🇨 Saint Vincent"],["+685","🇼🇸 Samoa"],["+378","🇸🇲 San Marino"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+248","🇸🇨 Seychelles"],["+232","🇸🇱 Sierra Leone"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+677","🇸🇧 Solomon Islands"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+597","🇸🇷 Suriname"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+676","🇹🇴 Tonga"],["+1","🇹🇹 Trinidad"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+688","🇹🇻 Tuvalu"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+678","🇻🇺 Vanuatu"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
+                {[[["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+376","🇦🇩 Andorra"],["+244","🇦🇴 Angola"],["+1","🇦🇬 Antigua and Barbuda"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+1","🇧🇸 Bahamas"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+1","🇧🇧 Barbados"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],["+229","🇧🇯 Benin"],["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+267","🇧🇼 Botswana"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],["+238","🇨🇻 Cape Verde"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+236","🇨🇫 Central African Rep"],["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+269","🇰🇲 Comoros"],["+242","🇨🇬 Congo"],["+243","🇨🇩 Congo DRC"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],["+1","🇩🇲 Dominica"],["+1","🇩🇴 Dominican Republic"],["+670","🇹🇱 East Timor"],["+593","🇪🇨 Ecuador"],["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+240","🇬🇶 Equatorial Guinea"],["+291","🇪🇷 Eritrea"],["+372","🇪🇪 Estonia"],["+268","🇸🇿 Eswatini"],["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+1","🇬🇩 Grenada"],["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],["+245","🇬🇼 Guinea-Bissau"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+686","🇰🇮 Kiribati"],["+850","🇰🇵 Korea North"],["+82","🇰🇷 Korea South"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+266","🇱🇸 Lesotho"],["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+423","🇱🇮 Liechtenstein"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],["+692","🇲🇭 Marshall Islands"],["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+691","🇫🇲 Micronesia"],["+373","🇲🇩 Moldova"],["+377","🇲🇨 Monaco"],["+976","🇲🇳 Mongolia"],["+382","🇲🇪 Montenegro"],["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+674","🇳🇷 Nauru"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+227","🇳🇪 Niger"],["+234","🇳🇬 Nigeria"],["+389","🇲🇰 North Macedonia"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+680","🇵🇼 Palau"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+675","🇵🇬 Papua New Guinea"],["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+1","🇰🇳 Saint Kitts"],["+1","🇱🇨 Saint Lucia"],["+1","🇻🇨 Saint Vincent"],["+685","🇼🇸 Samoa"],["+378","🇸🇲 San Marino"],["+239","🇸🇹 Sao Tome"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+248","🇸🇨 Seychelles"],["+232","🇸🇱 Sierra Leone"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+677","🇸🇧 Solomon Islands"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+597","🇸🇷 Suriname"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+676","🇹🇴 Tonga"],["+1","🇹🇹 Trinidad and Tobago"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+688","🇹🇻 Tuvalu"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+678","🇻🇺 Vanuatu"],["+39","🇻🇦 Vatican City"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
               </select>
               <input type="tel" placeholder="50 123 4567" value={addUserForm.phoneNum || ""} onChange={e => { const num=e.target.value.replace(/[^\d\s]/g,""); setAddUserForm(p=>({...p,phoneNum:num,phone:(p.phoneCode||"+971")+num.replace(/\s/g,"")})); }} style={{...inputStyle,flex:1}} onFocus={focusIn} onBlur={focusOut} />
             </div>
@@ -10099,156 +10099,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           <Field label="Country">
             <select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({...p, country: e.target.value}))} style={{...inputStyle, cursor:"pointer", color: addUserForm.country?"#E2E8F0":"#64748B"}}>
               <option value="">Select Country...</option>
-              {["Afghanistan","Albania","Algeria","Andorra","Angola","Antigua","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon","Canada","Cape Verde","Central African Rep","Chad","Chile","China","Colombia","Comoros","Congo","Congo DRC","Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominican Republic","East Timor","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Korea North","Korea South","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Namibia","Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts","Saint Lucia","Saint Vincent","Samoa","San Marino","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Togo","Tonga","Trinidad","Tunisia","Turkey","Turkmenistan","Tuvalu","UAE","Uganda","Ukraine","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe","Other"].sort().map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </Field>
-        </div>
-        <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
-        </select></Field></div>
-        <div style={{ gridColumn: "1 / -1" }}><Field label="Job Role"><select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="user">— No role assigned —</option>
-          {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-        </select></Field></div>
-        <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
-      </div>
-      {addUserForm.email && users.some(u => u.email && u.email.toLowerCase() === addUserForm.email.toLowerCase()) && (
-        <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 14 }}>⚠️</span>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>Email already exists</div>
-            <div style={{ fontSize: 11, color: T.textMuted }}>A user with this email is already registered.</div>
-          </div>
-        </div>
-      )}
-      <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-        <BtnGhost onClick={() => setShowAddUser(false)} style={{ flex: 1 }}>Cancel</BtnGhost>
-        <Btn onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} color={T.gold} style={{ flex: 2, color: T.bg }}>{addUserLoading ? "Creating..." : "Create User"}</Btn>
-      </div>
-    </Modal>
-  );
-
-  /* ── BULK IMPORT MODAL ── */
-  const BulkImportModal = () => showBulkImport && (
-    <Modal onClose={() => { setShowBulkImport(false); setBulkImportData([]); }} maxWidth={700}>
-      <ModalHeader title="Bulk Import Users" sub="Upload a CSV file to import multiple users at once" onClose={() => { setShowBulkImport(false); setBulkImportData([]); }} />
-      <div style={{ background: "rgba(20,184,166,0.06)", border: "1px solid rgba(20,184,166,0.2)", borderRadius: 10, padding: "12px 16px", marginBottom: 18 }}>
-        <div style={{ fontSize: 12, color: T.teal, fontWeight: 600, marginBottom: 6 }}>CSV Format Required:</div>
-        <div style={{ fontSize: 11, color: T.textMuted, fontFamily: "monospace", background: "rgba(0,0,0,0.2)", padding: "8px 12px", borderRadius: 6 }}>
-          name,email,phone,tier,country<br/>
-          John Smith,john@email.com,+971501234567,pro,UAE<br/>
-          Jane Doe,jane@email.com,+971509876543,free,UK
-        </div>
-        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>
-          Valid tiers: free, pro_trial, pro, enterprise · Password will be auto-generated and emailed
-        </div>
-      </div>
-      
-      {bulkImportData.length === 0 ? (
-        <div style={{ border: `2px dashed ${T.border}`, borderRadius: 12, padding: "40px 20px", textAlign: "center", background: T.surfaceAlt }}>
-          <input type="file" accept=".csv" id="csvUpload" style={{ display: "none" }} onChange={e => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-              const text = ev.target?.result;
-              if (!text) return;
-              const lines = text.split("\n").filter(l => l.trim());
-              const headers = lines[0].toLowerCase().split(",").map(h => h.trim());
-              const parsed = [];
-              for (let i = 1; i < lines.length; i++) {
-                const vals = lines[i].split(",").map(v => v.trim().replace(/^"|"$/g, ""));
-                if (vals.length < 2) continue;
-                const row = {};
-                headers.forEach((h, idx) => { row[h] = vals[idx] || ""; });
-                if (row.email) parsed.push({ ...row, valid: row.email.includes("@"), imported: false });
-              }
-              setBulkImportData(parsed);
-            };
-            reader.readAsText(file);
-          }} />
-          <label htmlFor="csvUpload" style={{ cursor: "pointer" }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>📄</div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: T.white, marginBottom: 4 }}>Drop CSV file or click to upload</div>
-            <div style={{ fontSize: 12, color: T.textMuted }}>Supports .csv files up to 1000 rows</div>
-          </label>
-        </div>
-      ) : (
-        <>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{bulkImportData.length} users parsed</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <span style={{ fontSize: 11, color: T.green }}>{bulkImportData.filter(r => r.valid && !r.imported).length} valid</span>
-              <span style={{ fontSize: 11, color: T.red }}>{bulkImportData.filter(r => !r.valid).length} invalid</span>
-              <span style={{ fontSize: 11, color: T.teal }}>{bulkImportData.filter(r => r.imported).length} imported</span>
-            </div>
-          </div>
-          <div style={{ maxHeight: 280, overflowY: "auto", border: `1px solid ${T.border}`, borderRadius: 10 }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-              <thead><tr style={{ background: T.surfaceAlt }}>
-                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Name</th>
-                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Email</th>
-                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Tier</th>
-                <th style={{ padding: "8px 10px", textAlign: "center", color: T.textMuted, fontWeight: 600 }}>Status</th>
-              </tr></thead>
-              <tbody>
-                {bulkImportData.map((row, i) => (
-                  <tr key={i} style={{ borderTop: `1px solid ${T.border}` }}>
-                    <td style={{ padding: "8px 10px", color: T.white }}>{row.name || "—"}</td>
-                    <td style={{ padding: "8px 10px", color: row.valid ? T.textSecondary : T.red }}>{row.email}</td>
-                    <td style={{ padding: "8px 10px" }}><span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: row.tier === "pro" ? `${T.gold}20` : row.tier === "enterprise" ? `${T.purple}20` : `${T.textMuted}20`, color: row.tier === "pro" ? T.gold : row.tier === "enterprise" ? T.purple : T.textMuted }}>{row.tier || "free"}</span></td>
-                    <td style={{ padding: "8px 10px", textAlign: "center" }}>{row.imported ? <span style={{ color: T.green }}>✔</span> : row.valid ? <span style={{ color: T.textMuted }}>—</span> : <span style={{ color: T.red }}></span>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-      
-      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-        <BtnGhost onClick={() => { setShowBulkImport(false); setBulkImportData([]); }} style={{ flex: 1 }}>Cancel</BtnGhost>
-        {bulkImportData.length > 0 && (
-          <BtnGhost onClick={() => setBulkImportData([])} style={{ flex: 1 }}>Clear</BtnGhost>
-        )}
-        <Btn 
-          onClick={async () => {
-            if (setBulkImportLoading) setBulkImportLoading(true);
-            const validRows = bulkImportData.filter(r => r.valid && !r.imported);
-            for (const row of validRows) {
-              try {
-                const uid = `imported_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-                await setDoc(doc(db, "users", uid), {
-                  uid, name: row.name || "", email: row.email, phone: row.phone || "",
-                  tier: row.tier || "free", country: row.country || "",
-                  createdAt: new Date().toISOString(), source: "bulk_import"
-                });
-                row.imported = true;
-                setBulkImportData([...bulkImportData]);
-              } catch(e) { console.error("Import error:", e); }
-            }
-            if (setBulkImportLoading) setBulkImportLoading(false);
-            notify(`Imported ${validRows.length} users`);
-            fetchUsers();
-          }} 
-          disabled={bulkImportLoading || bulkImportData.filter(r => r.valid && !r.imported).length === 0} 
-          color={T.teal} 
-          style={{ flex: 2 }}>
-          {bulkImportLoading ? "Importing..." : `Import ${bulkImportData.filter(r => r.valid && !r.imported).length} Users`}
-        </Btn>
-      </div>
-    </Modal>
-  );
-
-  const EditUserModal = () => editingUser && (
-    <Modal onClose={() => setEditingUser(null)} maxWidth={520}>
-      <ModalHeader title="Edit User" sub={editingUser.email} onClose={() => setEditingUser(null)} />
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <div style={{ gridColumn: "1 / -1" }}><Field label="Full Name"><input type="text" placeholder="Full name" value={editUserForm.name || ""} onChange={e => setEditUserForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field></div>
-        <Field label="Phone"><input type="tel" placeholder="+971 50 000 0000" value={editUserForm.phone || ""} onChange={e => setEditUserForm(p => ({ ...p, phone: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
-        <Field label="Country"><select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="">Select Country</option>
-          {["Afghanistan","Albania","Algeria","Andorra","Angola","Antigua","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon","Canada","Cape Verde","Central African Rep","Chad","Chile","China","Colombia","Comoros","Congo","Congo DRC","Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominican Republic","East Timor","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Korea North","Korea South","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Namibia","Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts","Saint Lucia","Saint Vincent","Samoa","San Marino","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Togo","Tonga","Trinidad","Tunisia","Turkey","Turkmenistan","Tuvalu","UAE","Uganda","Ukraine","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe","Other"].sort().map(c => <option key={c} value={c}>{c}</option>)}
+              {["Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon","Canada","Cape Verde","Central African Rep","Chad","Chile","China","Colombia","Comoros","Congo","Congo DRC","Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominica","Dominican Republic","East Timor","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Korea North","Korea South","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Namibia","Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts","Saint Lucia","Saint Vincent","Samoa","San Marino","Sao Tome","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu","UAE","Uganda","Ukraine","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"].sort().map(c => <option key={c} value={c}>{c}</option>)}
         </select></Field>
         <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
@@ -12948,7 +12799,7 @@ export default function AdminPanel() {
   const [leadPage,         setLeadPage]         = useState(1);
   const LEADS_PER_PAGE = 100;
   const [showAddLead, setShowAddLead] = useState(false);
-  const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
+  const [addLeadForm, setAddLeadForm] = useState({ name: "", email: "", phone: "", phoneCode: "+971", phoneNum: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
   const [addLeadLoading, setAddLeadLoading] = useState(false);
   const [leadNote, setLeadNote] = useState("");
   const [leadNoteSaving, setLeadNoteSaving] = useState(false);
@@ -20661,14 +20512,31 @@ export default function AdminPanel() {
 
             // ── Dubai nationalities ──────────────────────────────────────
             const DUBAI_NATIONALITIES = [
-              "Indian", "Pakistani", "British", "Russian", "Chinese",
-              "Filipino", "Bangladeshi", "Egyptian", "Emirati", "Saudi Arabian",
-              "German", "French", "Italian", "Canadian", "Australian",
-              "American", "Lebanese", "Jordanian", "Iranian", "Ukrainian",
-              "Kazakhstani", "Nigerian", "South African", "Turkish", "Dutch",
-              "Swedish", "Swiss", "Spanish", "Brazilian", "Colombian",
-              "Other"
-            ];
+              "Afghan","Albanian","Algerian","Andorran","Angolan","Antiguan","Argentine","Armenian","Australian","Austrian","Azerbaijani",
+              "Bahamian","Bahraini","Bangladeshi","Barbadian","Belarusian","Belgian","Belizean","Beninese","Bhutanese","Bolivian","Bosnian","Botswanan","Brazilian","Bruneian","Bulgarian","Burkinabe","Burundian",
+              "Cambodian","Cameroonian","Canadian","Cape Verdean","Central African","Chadian","Chilean","Chinese","Colombian","Congolese","Costa Rican","Croatian","Cuban","Cypriot","Czech",
+              "Danish","Djiboutian","Dominican",
+              "Ecuadorian","Egyptian","El Salvadoran","Equatoguinean","Eritrean","Estonian","Eswatini","Ethiopian",
+              "Fijian","Finnish","French",
+              "Gabonese","Gambian","Georgian","German","Ghanaian","Greek","Grenadian","Guatemalan","Guinean","Guyanese",
+              "Haitian","Honduran","Hungarian",
+              "Icelandic","Indian","Indonesian","Iranian","Iraqi","Irish","Israeli","Italian","Ivorian",
+              "Jamaican","Japanese","Jordanian",
+              "Kazakhstani","Kenyan","Korean","Kuwaiti","Kyrgyz",
+              "Laotian","Latvian","Lebanese","Liberian","Libyan","Liechtenstein","Lithuanian","Luxembourgish",
+              "Malagasy","Malawian","Malaysian","Maldivian","Malian","Maltese","Mauritanian","Mauritian","Mexican","Moldovan","Monegasque","Mongolian","Montenegrin","Moroccan","Mozambican",
+              "Namibian","Nepalese","Dutch","New Zealander","Nicaraguan","Nigerian","Norwegian",
+              "Omani",
+              "Pakistani","Palauan","Palestinian","Panamanian","Papuan","Paraguayan","Peruvian","Filipino","Polish","Portuguese",
+              "Qatari",
+              "Romanian","Russian","Rwandan",
+              "Saudi Arabian","Senegalese","Serbian","Seychellois","Sierra Leonean","Singaporean","Slovak","Slovenian","Somali","South African","South Sudanese","Spanish","Sri Lankan","Sudanese","Surinamese","Swedish","Swiss","Syrian",
+              "Taiwanese","Tajik","Tanzanian","Thai","Togolese","Trinidadian","Tunisian","Turkish","Turkmen",
+              "Ugandan","Ukrainian","Emirati","British","American","Uruguayan","Uzbek",
+              "Vanuatuan","Venezuelan","Vietnamese",
+              "Yemeni",
+              "Zambian","Zimbabwean","Other"
+            ].sort();
 
             // ── Duplicate detection ───────────────────────────────────────
             const getDuplicates = (lead) => {
@@ -21315,7 +21183,6 @@ export default function AdminPanel() {
                         {[
                           { key: "name", label: "Full Name *", placeholder: "John Smith", full: true },
                           { key: "email", label: "Email", placeholder: "john@example.com", type: "email" },
-                          { key: "phone", label: "Phone / WhatsApp", placeholder: "+971 50 123 4567" },
                           { key: "budget", label: "Budget (AED)", placeholder: "e.g. 2000000", type: "number" },
                           { key: "project", label: "Interested Project", placeholder: "e.g. The Valley" },
                         ].map(f => (
@@ -21325,6 +21192,19 @@ export default function AdminPanel() {
                               style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
                           </div>
                         ))}
+                        {/* Phone with country code */}
+                        <div style={{ gridColumn: "1/-1" }}>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone / WhatsApp</label>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <select value={addLeadForm.phoneCode || "+971"} onChange={e => setAddLeadForm(p => ({...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum||"").replace(/\s/g,"")}))}
+                              style={{ width: 200, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", flexShrink: 0 }}>
+                              {["+93,🇦🇫 Afghanistan","+355,🇦🇱 Albania","+213,🇩🇿 Algeria","+244,🇦🇴 Angola","+54,🇦🇷 Argentina","+374,🇦🇲 Armenia","+61,🇦🇺 Australia","+43,🇦🇹 Austria","+994,🇦🇿 Azerbaijan","+1,🇧🇸 Bahamas","+973,🇧🇭 Bahrain","+880,🇧🇩 Bangladesh","+1,🇧🇧 Barbados","+375,🇧🇾 Belarus","+32,🇧🇪 Belgium","+501,🇧🇿 Belize","+229,🇧🇯 Benin","+975,🇧🇹 Bhutan","+591,🇧🇴 Bolivia","+387,🇧🇦 Bosnia","+267,🇧🇼 Botswana","+55,🇧🇷 Brazil","+673,🇧🇳 Brunei","+359,🇧🇬 Bulgaria","+226,🇧🇫 Burkina Faso","+257,🇧🇮 Burundi","+238,🇨🇻 Cape Verde","+855,🇰🇭 Cambodia","+237,🇨🇲 Cameroon","+1,🇨🇦 Canada","+235,🇹🇩 Chad","+56,🇨🇱 Chile","+86,🇨🇳 China","+57,🇨🇴 Colombia","+242,🇨🇬 Congo","+506,🇨🇷 Costa Rica","+385,🇭🇷 Croatia","+53,🇨🇺 Cuba","+357,🇨🇾 Cyprus","+420,🇨🇿 Czech Republic","+45,🇩🇰 Denmark","+253,🇩🇯 Djibouti","+1,🇩🇴 Dominican Republic","+593,🇪🇨 Ecuador","+20,🇪🇬 Egypt","+503,🇸🇻 El Salvador","+291,🇪🇷 Eritrea","+372,🇪🇪 Estonia","+251,🇪🇹 Ethiopia","+679,🇫🇯 Fiji","+358,🇫🇮 Finland","+33,🇫🇷 France","+241,🇬🇦 Gabon","+220,🇬🇲 Gambia","+995,🇬🇪 Georgia","+49,🇩🇪 Germany","+233,🇬🇭 Ghana","+30,🇬🇷 Greece","+502,🇬🇹 Guatemala","+224,🇬🇳 Guinea","+592,🇬🇾 Guyana","+509,🇭🇹 Haiti","+504,🇭🇳 Honduras","+36,🇭🇺 Hungary","+354,🇮🇸 Iceland","+91,🇮🇳 India","+62,🇮🇩 Indonesia","+98,🇮🇷 Iran","+964,🇮🇶 Iraq","+353,🇮🇪 Ireland","+972,🇮🇱 Israel","+39,🇮🇹 Italy","+1,🇯🇲 Jamaica","+81,🇯🇵 Japan","+962,🇯🇴 Jordan","+7,🇰🇿 Kazakhstan","+254,🇰🇪 Kenya","+82,🇰🇷 Korea South","+965,🇰🇼 Kuwait","+996,🇰🇬 Kyrgyzstan","+856,🇱🇦 Laos","+371,🇱🇻 Latvia","+961,🇱🇧 Lebanon","+231,🇱🇷 Liberia","+218,🇱🇾 Libya","+370,🇱🇹 Lithuania","+352,🇱🇺 Luxembourg","+261,🇲🇬 Madagascar","+265,🇲🇼 Malawi","+60,🇲🇾 Malaysia","+960,🇲🇻 Maldives","+223,🇲🇱 Mali","+356,🇲🇹 Malta","+222,🇲🇷 Mauritania","+230,🇲🇺 Mauritius","+52,🇲🇽 Mexico","+373,🇲🇩 Moldova","+976,🇲🇳 Mongolia","+382,🇲🇪 Montenegro","+212,🇲🇦 Morocco","+258,🇲🇿 Mozambique","+264,🇳🇦 Namibia","+977,🇳🇵 Nepal","+31,🇳🇱 Netherlands","+64,🇳🇿 New Zealand","+505,🇳🇮 Nicaragua","+227,🇳🇪 Niger","+234,🇳🇬 Nigeria","+47,🇳🇴 Norway","+968,🇴🇲 Oman","+92,🇵🇰 Pakistan","+970,🇵🇸 Palestine","+507,🇵🇦 Panama","+595,🇵🇾 Paraguay","+51,🇵🇪 Peru","+63,🇵🇭 Philippines","+48,🇵🇱 Poland","+351,🇵🇹 Portugal","+974,🇶🇦 Qatar","+40,🇷🇴 Romania","+7,🇷🇺 Russia","+250,🇷🇼 Rwanda","+966,🇸🇦 Saudi Arabia","+221,🇸🇳 Senegal","+381,🇷🇸 Serbia","+65,🇸🇬 Singapore","+421,🇸🇰 Slovakia","+386,🇸🇮 Slovenia","+252,🇸🇴 Somalia","+27,🇿🇦 South Africa","+211,🇸🇸 South Sudan","+34,🇪🇸 Spain","+94,🇱🇰 Sri Lanka","+249,🇸🇩 Sudan","+597,🇸🇷 Suriname","+46,🇸🇪 Sweden","+41,🇨🇭 Switzerland","+963,🇸🇾 Syria","+886,🇹🇼 Taiwan","+992,🇹🇯 Tajikistan","+255,🇹🇿 Tanzania","+66,🇹🇭 Thailand","+228,🇹🇬 Togo","+1,🇹🇹 Trinidad","+216,🇹🇳 Tunisia","+90,🇹🇷 Turkey","+993,🇹🇲 Turkmenistan","+256,🇺🇬 Uganda","+380,🇺🇦 Ukraine","+971,🇦🇪 UAE","+44,🇬🇧 United Kingdom","+1,🇺🇸 United States","+598,🇺🇾 Uruguay","+998,🇺🇿 Uzbekistan","+58,🇻🇪 Venezuela","+84,🇻🇳 Vietnam","+967,🇾🇪 Yemen","+260,🇿🇲 Zambia","+263,🇿🇼 Zimbabwe"].sort((a,b)=>a.split(',')[1].localeCompare(b.split(',')[1])).map(entry => { const [code,name]=entry.split(','); return <option key={code+name} value={code}>{name} ({code})</option>; })}
+                            </select>
+                            <input type="tel" placeholder="50 123 4567" value={addLeadForm.phoneNum || ""}
+                              onChange={e => { const num=e.target.value.replace(/[^\d\s]/g,""); setAddLeadForm(p=>({...p,phoneNum:num,phone:(p.phoneCode||"+971")+num.replace(/\s/g,"")})); }}
+                              style={{ flex: 1, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
+                          </div>
+                        </div>
                         {/* Nationality dropdown */}
                         <div>
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Nationality</label>
