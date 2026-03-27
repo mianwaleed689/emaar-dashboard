@@ -1,0 +1,114 @@
+/* ─── DXB ANALYTICS — BINGHATTI DATA ────────────────────────────────────────
+   S28: Binghatti Full Intelligence Module
+   Sources: Binghatti Official · Gulf News · Arabian Business · Zawya · The National
+   Last verified: March 2026 — FY2025 AUDITED RESULTS
+────────────────────────────────────────────────────────────────────────── */
+
+export const binghattiIdentity = {
+  id: "binghatti", name: "Binghatti", legalName: "Binghatti Holding Ltd",
+  founded: 2012, chairman: "Muhammad BinGhatti",
+  hq: "Business Bay, Dubai, UAE",
+  type: "Public (ADX listed)", listed: true, exchange: "ADX",
+  creditRating: "BB- (Fitch) · Ba3 (Moody's)",
+  tier: "T1", segment: "Affordable → Ultra-Luxury",
+  color: "#3B82F6", website: "https://www.binghatti.com",
+  confidence: "VERIFIED",
+  usp: "Dubai's #1 developer by units sold — fastest-growing RE company UAE",
+  tagline: "Architecture is Art",
+};
+
+export const binghattiFinancialHistory = [
+  { year:2021, revenue:1.8,  netProfit:0.4,  propertySales:5.2  },
+  { year:2022, revenue:2.8,  netProfit:0.7,  propertySales:9.8  },
+  { year:2023, revenue:3.4,  netProfit:1.0,  propertySales:14.5 },
+  { year:2024, revenue:6.34, netProfit:1.83, propertySales:18.8 },
+  { year:2025, revenue:12.43,netProfit:3.58, propertySales:26.0 },
+];
+
+export const binghattiLive = {
+  propertySales:    26.0,   // AED Billion FY2025 (DLD rank #3 by value)
+  propertySalesUSD: 7.1,
+  revenue:          12.43,  // AED Billion FY2025 AUDITED
+  netProfit:        3.58,   // AED Billion +96% YoY
+  ebitda:           5.2,
+  grossProfit:      5.0,    // +89% YoY
+  grossMargin:      40,     // %
+  netMargin:        29,     // %
+  unitsDelivered:   12500,  // since inception
+  unitsSold2025:    17000,  // Dubai's #1 by units
+  underConstruction:38000,
+  revenueBacklog:   14000,  // AED million at Q3 2025
+  portfolioGDV:     100000, // AED million — "nearly AED 100B"
+  totalAssets:      22000,  // AED million
+  cash:             9000,   // AED million year-end 2025
+  projects2025:     80,     // "over 80 projects"
+  rank:             "#3 Dubai by Sales Value · #1 by Units Sold",
+  latestReportLabel:"FY2025 Annual Results",
+  latestReportDate: "February 2026",
+  source:           "Binghatti Official · Gulf News · Arabian Business · Zawya",
+  updatedAt:        "2026-03-27",
+};
+
+export const binghattiCommunities = [
+  { id:"business-bay-bb",  name:"Business Bay",    type:"Urban Towers",          avgPpsf:2200, avgGrossYield:7.2, highlights:["Core market","Bugatti Residences","Binghatti Skyrise","Canal views"] },
+  { id:"downtown-dubai",   name:"Downtown Dubai",  type:"Luxury Urban",          avgPpsf:3800, avgGrossYield:5.8, highlights:["Mercedes-Benz Places Downtown","Burj Khalifa adjacent","Iconic address"] },
+  { id:"jvc-bing",         name:"JVC",             type:"Affordable-Mid",         avgPpsf:1100, avgGrossYield:8.2, highlights:["High ROI","Binghatti Home","Binghatti Crest","Top-selling community"] },
+  { id:"meydan-city",      name:"Meydan / Nad Al Sheba", type:"Masterplan",      avgPpsf:2400, avgGrossYield:6.5, highlights:["Mercedes-Benz Places Binghatti City","13,386 units","12 towers","AED 30B GDV"] },
+  { id:"dubai-science-park",name:"Dubai Science Park", type:"Innovation District",avgPpsf:1300, avgGrossYield:7.8, highlights:["Tech-hub adjacent","Mid-market","High occupancy"] },
+  { id:"al-jaddaf",        name:"Al Jaddaf",       type:"Waterfront",            avgPpsf:1800, avgGrossYield:7.0, highlights:["Creek views","Jacob & Co partnership","Arts district"] },
+];
+
+export const binghattiProjects = [
+  { id:1,  developerId:"binghatti", name:"Bugatti Residences",              community:"Business Bay",     district:"BB",  type:"Apartments+PH", beds:"1–4BR+PH", status:"Under Construction", handover:"Q4 2026", price:9800000, sizeFrom:3200, sizeTo:35000, ppsf:3063, payment:"60/40", construction:75, branded:true,  brand:"Bugatti",       tier:"Ultra-Luxury",  source:"Binghatti Official", confidence:"VERIFIED" },
+  { id:2,  developerId:"binghatti", name:"Mercedes-Benz Places Downtown",   community:"Downtown Dubai",   district:"DT",  type:"Apartments+PH", beds:"2–4BR+PH", status:"Under Construction", handover:"Q4 2026", price:4500000, sizeFrom:1500, sizeTo:12000, ppsf:3000, payment:"60/40", construction:50, branded:true,  brand:"Mercedes-Benz", tier:"Ultra-Luxury",  source:"Binghatti Official", confidence:"VERIFIED" },
+  { id:3,  developerId:"binghatti", name:"Mercedes-Benz Places Binghatti City",community:"Meydan",         district:"NAS", type:"Master Plan",   beds:"Studio–4BR",status:"Off Plan",           handover:"2029",   price:1500000, sizeFrom:400,  sizeTo:8000,  ppsf:3750, payment:"60/40", construction:0,  branded:true,  brand:"Mercedes-Benz", tier:"Mixed",         source:"Binghatti Official", confidence:"VERIFIED" },
+  { id:4,  developerId:"binghatti", name:"Burj Binghatti Jacob & Co",       community:"Business Bay",     district:"BB",  type:"Apartments+PH", beds:"1–3BR+PH", status:"Under Construction", handover:"Q2 2026", price:8500000, sizeFrom:2000, sizeTo:15000, ppsf:4250, payment:"60/40", construction:85, branded:true,  brand:"Jacob & Co",    tier:"Ultra-Luxury",  source:"Binghatti Official", confidence:"VERIFIED" },
+  { id:5,  developerId:"binghatti", name:"Binghatti Skyrise",               community:"Business Bay",     district:"BB",  type:"Apartments",    beds:"Studio–3BR",status:"Under Construction", handover:"Q4 2026", price:850000,  sizeFrom:400,  sizeTo:2000,  ppsf:2125, payment:"60/40", construction:45, branded:false, brand:"—",             tier:"Mid-Premium",   source:"Binghatti Official", confidence:"VERIFIED" },
+  { id:6,  developerId:"binghatti", name:"Binghatti Hills",                 community:"Dubai Science Park",district:"DSP", type:"Apartments",   beds:"Studio–3BR",status:"Under Construction", handover:"Q2 2027", price:700000,  sizeFrom:350,  sizeTo:1800,  ppsf:2000, payment:"60/40", construction:35, branded:false, brand:"—",             tier:"Mid-Market",    source:"Binghatti Official", confidence:"VERIFIED" },
+  { id:7,  developerId:"binghatti", name:"Binghatti Onyx",                  community:"JVC",              district:"JVC", type:"Apartments",    beds:"Studio–2BR",status:"Under Construction", handover:"Q3 2026", price:500000,  sizeFrom:280,  sizeTo:1200,  ppsf:1786, payment:"60/40", construction:60, branded:false, brand:"—",             tier:"Mid-Market",    source:"Bayut",              confidence:"VERIFIED" },
+  { id:8,  developerId:"binghatti", name:"Binghatti Aquarise",              community:"Business Bay",     district:"BB",  type:"Apartments",    beds:"Studio–2BR",status:"Under Construction", handover:"Q4 2026", price:900000,  sizeFrom:400,  sizeTo:1500,  ppsf:2250, payment:"60/40", construction:30, branded:false, brand:"—",             tier:"Mid-Premium",   source:"Binghatti Official", confidence:"VERIFIED" },
+  { id:9,  developerId:"binghatti", name:"Binghatti Amber",                 community:"JVC",              district:"JVC", type:"Apartments",    beds:"Studio–2BR",status:"Delivered",          handover:"Delivered",price:550000, sizeFrom:300,  sizeTo:1400,  ppsf:1833, payment:"N/A",   construction:100,branded:false, brand:"—",             tier:"Mid-Market",    source:"Binghatti Official", confidence:"VERIFIED" },
+  { id:10, developerId:"binghatti", name:"Binghatti Azure",                 community:"JVC",              district:"JVC", type:"Apartments",    beds:"Studio–2BR",status:"Delivered",          handover:"Delivered",price:480000, sizeFrom:280,  sizeTo:1200,  ppsf:1714, payment:"N/A",   construction:100,branded:false, brand:"—",             tier:"Mid-Market",    source:"Binghatti Official", confidence:"VERIFIED" },
+];
+
+export const binghattiRisks = [
+  { factor:"Rapid Scale — 17,000 Units/Year Pace",     level:4, likelihood:3, impact:4, score:48, mitigation:"Vertically integrated. Strong cash position AED 9B. ADX-listed with credit ratings BB-/Ba3.", assessment:"MODERATE", color:"#F59E0B" },
+  { factor:"Affordable Segment Margin Pressure",        level:3, likelihood:3, impact:3, score:27, mitigation:"Portfolio diversification — ultra-luxury (Bugatti, Mercedes) offsets affordable margin compression.", assessment:"MODERATE", color:"#D4A843" },
+  { factor:"Construction Delivery Risk (38K units)",    level:4, likelihood:3, impact:4, score:48, mitigation:"Track record 12,500+ delivered. 13 new projects FY2025 all on schedule. In-country contractor network.", assessment:"MODERATE", color:"#F59E0B" },
+  { factor:"Branded Partnership Risk",                  level:2, likelihood:2, impact:4, score:16, mitigation:"Bugatti, Mercedes-Benz contracts signed. AED 550M penthouse sale validates ultra-luxury demand.", assessment:"LOW",      color:"#10B981" },
+  { factor:"Market Concentration — Dubai Only",         level:3, likelihood:2, impact:3, score:18, mitigation:"80+ projects diversify across JVC, Business Bay, Downtown, Meydan, Science Park.", assessment:"LOW",      color:"#10B981" },
+  { factor:"Currency Risk (AED Peg)",                   level:1, likelihood:1, impact:2, score:2,  mitigation:"USD peg stable.", assessment:"VERY LOW", color:"#10B981" },
+  { factor:"Regulatory Risk",                           level:1, likelihood:1, impact:2, score:2,  mitigation:"ADX-listed, fully RERA compliant.", assessment:"VERY LOW", color:"#10B981" },
+];
+
+export const binghattiSegments = [
+  { name:"Ultra-Luxury (Bugatti/MB)", revenue:4.8, growth:"+145%", color:"#3B82F6" },
+  { name:"Premium (Business Bay)",    revenue:4.2, growth:"+82%",  color:"#8B5CF6" },
+  { name:"Mid-Market (JVC/DSP)",      revenue:3.4, growth:"+65%",  color:"#00BFA5" },
+];
+
+export const binghattiRadar = [
+  { metric:"Unit Volume",       binghatti:100,emaar:72, damac:85, market:70 },
+  { metric:"Revenue Growth",    binghatti:98, emaar:65, damac:78, market:60 },
+  { metric:"Brand Innovation",  binghatti:92, emaar:75, damac:88, market:65 },
+  { metric:"Sales Speed",       binghatti:95, emaar:80, damac:90, market:70 },
+  { metric:"Margin Quality",    binghatti:75, emaar:92, damac:78, market:70 },
+  { metric:"Delivery Record",   binghatti:80, emaar:92, damac:82, market:72 },
+  { metric:"Financial Strength",binghatti:72, emaar:95, damac:75, market:65 },
+  { metric:"Community Scale",   binghatti:55, emaar:88, damac:90, market:68 },
+];
+
+export const binghattiYields = [
+  { community:"JVC",          unit:"Apartments",  gross:8.2, net:6.2, avgRent:49200,  avgPrice:600000,  demand:"Very High" },
+  { community:"Business Bay", unit:"Apartments",  gross:7.2, net:5.4, avgRent:64800,  avgPrice:900000,  demand:"Very High" },
+  { community:"Downtown",     unit:"Apartments",  gross:5.8, net:4.4, avgRent:261000, avgPrice:4500000, demand:"High" },
+  { community:"Dubai Sci Pk", unit:"Apartments",  gross:7.8, net:5.9, avgRent:54600,  avgPrice:700000,  demand:"High" },
+];
+
+export const binghattiMegaProjects = [
+  { name:"Mercedes-Benz Places Binghatti City", scale:"AED 30B GDV", units:"13,386", sqft:"10M sqft", timeline:"Launched Jan 2026 · 2029 delivery", status:"Off Plan", record:"World's first Mercedes-Benz branded city" },
+  { name:"Bugatti Residences",                  scale:"AED 2B+ GDV", units:"182",    sqft:"Business Bay", timeline:"2023–Q4 2026", status:"Under Construction", record:"AED 550M penthouse — most expensive Middle East" },
+  { name:"Binghatti Skyrise",                   scale:"AED 8B GDV",  units:"3,333",  sqft:"Business Bay", timeline:"2024–Q4 2026", status:"Under Construction", record:"3,333 units single project" },
+];
+
+export default { identity:binghattiIdentity, live:binghattiLive, financialHistory:binghattiFinancialHistory, communities:binghattiCommunities, projects:binghattiProjects, risks:binghattiRisks, segments:binghattiSegments, radar:binghattiRadar, megaProjects:binghattiMegaProjects, yields:binghattiYields };
