@@ -155,7 +155,7 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:14 }}>
               <div><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Target</label><select value={form.targetFilter} onChange={e=>setForm(p=>({...p,targetFilter:e.target.value,targetCommunity:"",targetStatus:""}))} style={{...inputStyle,cursor:"pointer"}}><option value="all">All leads with email</option><option value="community">By Community</option><option value="status">By Status</option></select></div>
               <div>{form.targetFilter==="community"&&<><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Community</label><select value={form.targetCommunity} onChange={e=>setForm(p=>({...p,targetCommunity:e.target.value}))} style={{...inputStyle,cursor:"pointer"}}><option value="">Select...</option>{communities.map(c=><option key={c} value={c}>{c}</option>)}</select></>}
-              {form.targetFilter==="status"&&<><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Status</label><select value={form.targetStatus} onChange={e=>setForm(p=>({...p,targetStatus:e.target.value}))} style={{...inputStyle,cursor:"pointer"}}><option value="">Select...</option>{["New","Contacted","Qualified","Converted","Lost"].map(s=><option key={s} value={s}>{s}</option>)}</select></>}
+              {form.targetFilter==="status"&&<><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Status</label><select value={form.targetStatus} onChange={e=>setForm(p=>({...p,targetStatus:e.target.value}))} style={{...inputStyle,cursor:"pointer"}}><option value="">Select...</option>{["New","Contacted","Qualified","Viewing Scheduled","Offer Made","Converted","Dormant","Lost"].map(s=><option key={s} value={s}>{s}</option>)}</select></>}
               {form.targetFilter==="all"&&<div style={{ padding:"12px", background:"rgba(16,185,129,0.06)", borderRadius:8, border:"1px solid rgba(16,185,129,0.2)", marginTop:20 }}><div style={{ fontSize:12, fontWeight:700, color:T.green }}>{targetLeads.length.toLocaleString()} leads targeted</div></div>}</div>
             </div>
             <div style={{ marginBottom:14 }}><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:8 }}>Templates</label><div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>{TEMPLATES.map(t=><button key={t.id} type="button" onClick={()=>setForm(p=>({...p,template:t.id,subject:t.subject,body:t.body}))} style={{ fontSize:11, padding:"5px 10px", borderRadius:7, border:`1px solid ${form.template===t.id?T.gold:T.border}`, background:form.template===t.id?"rgba(212,168,67,0.1)":T.surfaceAlt, color:form.template===t.id?T.gold:T.textSecondary, cursor:"pointer" }}>{t.label}</button>)}</div></div>
@@ -12980,6 +12980,8 @@ export default function AdminPanel() {
   const [eiborCompareMode, setEiborCompareMode] = useState(false);
   // Leads Pro states
   const [leadsViewMode, setLeadsViewMode] = useState("table"); // table | kanban
+  const [kanbanDragId, setKanbanDragId] = useState(null); // id of lead being dragged
+  const [kanbanDragOver, setKanbanDragOver] = useState(null); // stage id being hovered
 
   // Phase 1A: Real-Time Analytics
   const [realtimeUsers, setRealtimeUsers] = useState(0);
@@ -20501,7 +20503,10 @@ export default function AdminPanel() {
               else if (daysSinceCreated < 7) score += 10;
               if ((lead.notes || []).length > 0) score += 10;
               if (lead.status === "Qualified") score = Math.max(score, 60);
+              if (lead.status === "Viewing Scheduled") score = Math.max(score, 72);
+              if (lead.status === "Offer Made") score = Math.max(score, 85);
               if (lead.status === "Converted") score = 100;
+              if (lead.status === "Dormant") score = Math.min(score, 20);
               if (lead.status === "Lost") score = 0;
               return Math.min(score, 100);
             };
@@ -20525,7 +20530,10 @@ export default function AdminPanel() {
               new: leads.filter(l => (l.status || "New") === "New").length,
               contacted: leads.filter(l => l.status === "Contacted").length,
               qualified: leads.filter(l => l.status === "Qualified").length,
+              viewing: leads.filter(l => l.status === "Viewing Scheduled").length,
+              offerMade: leads.filter(l => l.status === "Offer Made").length,
               converted: leads.filter(l => l.status === "Converted").length,
+              dormant: leads.filter(l => l.status === "Dormant").length,
               lost: leads.filter(l => l.status === "Lost").length,
               today: leads.filter(l => new Date(l.createdAt) >= todayStart).length,
               thisWeek: leads.filter(l => new Date(l.createdAt) >= weekAgo).length,
@@ -20827,21 +20835,32 @@ export default function AdminPanel() {
 
             return (
               <>
-                {/* OVERDUE ALERT */}
+                {/* REMINDER NOTIFICATION BANNERS */}
                 {stats.overdue > 0 && (
-                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(239,68,68,0.08)", border: `1px solid rgba(239,68,68,0.3)`, marginBottom: 16 }}>
-                    <span style={{ fontSize: 14 }}>!</span>
+                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(239,68,68,0.08)", border: `1px solid rgba(239,68,68,0.3)`, marginBottom: 10 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(239,68,68,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>⚠️</div>
                     <div style={{ flex: 1 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: T.red }}>{stats.overdue} overdue follow-up{stats.overdue > 1 ? "s" : ""}</span>
-                      <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 8 }}>These leads need your attention today.</span>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: T.red }}>{stats.overdue} overdue follow-up{stats.overdue > 1 ? "s" : ""}</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>
+                        {leads.filter(l => isOverdue(l) && l.status !== "Converted" && l.status !== "Lost").slice(0,3).map(l => l.name || "Unknown").join(", ")}
+                        {stats.overdue > 3 ? ` +${stats.overdue - 3} more` : ""}
+                      </div>
                     </div>
-                    <button type="button" onClick={() => setLeadDateRange("overdue")} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.red}`, background: "transparent", color: T.red, cursor: "pointer", fontWeight: 600 }}>View Overdue</button>
+                    <button type="button" onClick={() => { setLeadDateRange("overdue"); setLeadsViewMode("table"); }} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.red}`, background: "transparent", color: T.red, cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}>View Overdue</button>
+                    <button type="button" onClick={() => { setLeadDateRange("overdue"); setLeadsViewMode("kanban"); }} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.red}`, background: "rgba(239,68,68,0.1)", color: T.red, cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}>Kanban View</button>
                   </div>
                 )}
-                {stats.dueToday > 0 && stats.overdue === 0 && (
-                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(212,168,67,0.08)", border: `1px solid rgba(212,168,67,0.3)`, marginBottom: 16 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{stats.dueToday} follow-up{stats.dueToday > 1 ? "s" : ""} due today</span>
-                    <button type="button" onClick={() => setLeadDateRange("today_followup")} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontWeight: 600, marginLeft: "auto" }}>View</button>
+                {stats.dueToday > 0 && (
+                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(212,168,67,0.08)", border: `1px solid rgba(212,168,67,0.3)`, marginBottom: 10 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(212,168,67,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>📅</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{stats.dueToday} follow-up{stats.dueToday > 1 ? "s" : ""} due today</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>
+                        {leads.filter(l => isDueToday(l)).slice(0,3).map(l => l.name || "Unknown").join(", ")}
+                        {stats.dueToday > 3 ? ` +${stats.dueToday - 3} more` : ""}
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => { setLeadDateRange("today_followup"); setLeadsViewMode("table"); }} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontWeight: 600 }}>View Today</button>
                   </div>
                 )}
 
@@ -20875,20 +20894,21 @@ export default function AdminPanel() {
                 </div>
 
                 {/* PIPELINE CARDS */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 20 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 10, marginBottom: 20 }}>
                   {[
-                    { id: "new", label: "New", count: stats.new, color: "#3B82F6" },
-                    { id: "contacted", label: "Contacted", count: stats.contacted, color: T.gold },
-                    { id: "qualified", label: "Qualified", count: stats.qualified, color: "#8B5CF6" },
-                    { id: "converted", label: "Converted", count: stats.converted, color: T.green },
-                    { id: "lost", label: "Lost", count: stats.lost, color: T.red },
+                    { id: "new",              label: "New",       count: stats.new,       color: "#3B82F6" },
+                    { id: "contacted",        label: "Contacted", count: stats.contacted, color: T.gold },
+                    { id: "qualified",        label: "Qualified", count: stats.qualified, color: "#8B5CF6" },
+                    { id: "viewing scheduled",label: "Viewing",   count: stats.viewing,   color: "#06B6D4" },
+                    { id: "offer made",       label: "Offer",     count: stats.offerMade, color: "#F97316" },
+                    { id: "converted",        label: "Won",       count: stats.converted, color: T.green },
+                    { id: "dormant",          label: "Dormant",   count: stats.dormant,   color: "#64748B" },
+                    { id: "lost",             label: "Lost",      count: stats.lost,      color: T.red },
                   ].map(s => (
-                    <div key={s.id} onClick={() => setLeadFilter(leadFilter === s.id ? "all" : s.id)} className="fade-up" style={{ padding: "16px 18px", borderRadius: 12, cursor: "pointer", background: leadFilter === s.id ? `${s.color}15` : T.surface, border: `1px solid ${leadFilter === s.id ? s.color : T.border}`, transition: "all 0.15s" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: s.color, textTransform: "uppercase", letterSpacing: 1 }}>{s.label}</span>
-                      </div>
-                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: s.color }}>{s.count}</div>
-                      <div style={{ marginTop: 8, height: 3, borderRadius: 2, background: T.border }}>
+                    <div key={s.id} onClick={() => setLeadFilter(leadFilter === s.id ? "all" : s.id)} className="fade-up" style={{ padding: "12px 14px", borderRadius: 10, cursor: "pointer", background: leadFilter === s.id ? `${s.color}15` : T.surface, border: `1px solid ${leadFilter === s.id ? s.color : T.border}`, transition: "all 0.15s" }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: s.color, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{s.label}</div>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: s.color }}>{s.count}</div>
+                      <div style={{ marginTop: 6, height: 3, borderRadius: 2, background: T.border }}>
                         <div style={{ height: "100%", borderRadius: 2, background: s.color, width: `${stats.total > 0 ? (s.count / stats.total) * 100 : 0}%`, transition: "width 0.5s" }} />
                       </div>
                     </div>
@@ -20902,11 +20922,13 @@ export default function AdminPanel() {
                 {leadAnalyticsView && (() => {
                   // ── Pre-compute everything once ──────────────────────────
                   const pipelineStages = [
-                    { id: "New",       label: "New",       color: "#3B82F6", count: stats.new },
-                    { id: "Contacted", label: "Contacted", color: T.gold,    count: stats.contacted },
-                    { id: "Qualified", label: "Qualified", color: "#8B5CF6", count: stats.qualified },
-                    { id: "Converted", label: "Converted", color: T.green,   count: stats.converted },
-                    { id: "Lost",      label: "Lost",      color: T.red,     count: stats.lost },
+                    { id: "New",               label: "New",       color: "#3B82F6", count: stats.new },
+                    { id: "Contacted",         label: "Contacted", color: T.gold,    count: stats.contacted },
+                    { id: "Qualified",         label: "Qualified", color: "#8B5CF6", count: stats.qualified },
+                    { id: "Viewing Scheduled", label: "Viewing",   color: "#06B6D4", count: stats.viewing },
+                    { id: "Offer Made",        label: "Offer Made",color: "#F97316", count: stats.offerMade },
+                    { id: "Converted",         label: "Won",       color: T.green,   count: stats.converted },
+                    { id: "Lost",              label: "Lost",      color: T.red,     count: stats.lost },
                   ];
                   const funnelMax = Math.max(stats.new || 1, 1);
 
@@ -21559,67 +21581,118 @@ export default function AdminPanel() {
                   );
                 })()}
 
-                {/* KANBAN VIEW */}
-                {leadsViewMode === "kanban" && !leadAnalyticsView && (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 20 }}>
-                    {[
-                      { id: "New", label: "New", color: "#3B82F6" },
-                      { id: "Contacted", label: "Contacted", color: T.gold },
-                      { id: "Qualified", label: "Qualified", color: "#8B5CF6" },
-                      { id: "Converted", label: "Converted", color: T.green },
-                      { id: "Lost", label: "Lost", color: T.red },
-                    ].map(stage => {
-                      const stageLeads = leads.filter(l => (l.status || "New") === stage.id).sort((a, b) => {
-                        if (isOverdue(a) && !isOverdue(b)) return -1;
-                        if (!isOverdue(a) && isOverdue(b)) return 1;
-                        return scoreLead(b) - scoreLead(a);
-                      });
-                      const stageValue = stageLeads.filter(l => l.budget).reduce((sum, l) => sum + (parseFloat(l.budget) || 0), 0);
-                      return (
-                        <div key={stage.id} style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                          <div style={{ padding: "12px 14px", borderBottom: `2px solid ${stage.color}`, background: `${stage.color}08`, flexShrink: 0 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                              <span style={{ fontSize: 12, fontWeight: 700, color: stage.color }}>{stage.label}</span>
-                              <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: `${stage.color}20`, color: stage.color }}>{stageLeads.length}</span>
-                            </div>
-                            {stageValue > 0 && <div style={{ fontSize: 10, color: T.textMuted }}>AED {(stageValue/1000000).toFixed(1)}M pipeline</div>}
-                          </div>
-                          <div style={{ padding: "8px", overflowY: "auto", flex: 1, maxHeight: 420 }}>
-                            {stageLeads.length === 0 ? (
-                              <div style={{ padding: "24px 10px", textAlign: "center", color: T.textMuted, fontSize: 11 }}>No leads</div>
-                            ) : stageLeads.map(lead => {
-                              const score = scoreLead(lead);
-                              const overdue = isOverdue(lead);
-                              const dueToday = isDueToday(lead);
-                              return (
-                                <div key={lead.id} onClick={() => setLeadDrawer(lead)} style={{ padding: "10px 12px", background: overdue ? "rgba(239,68,68,0.06)" : T.surfaceAlt, borderRadius: 8, marginBottom: 6, cursor: "pointer", border: `1px solid ${overdue ? "rgba(239,68,68,0.4)" : T.border}`, transition: "all 0.15s" }}
-                                  onMouseEnter={e => { e.currentTarget.style.borderColor = stage.color + "60"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                                  onMouseLeave={e => { e.currentTarget.style.borderColor = overdue ? "rgba(239,68,68,0.4)" : T.border; e.currentTarget.style.transform = "none"; }}>
-                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-                                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white, lineHeight: 1.3 }}>{lead.name || "Unknown"}</div>
-                                    <div style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${getScoreColor(score)}20`, color: getScoreColor(score), fontWeight: 700, flexShrink: 0, marginLeft: 4 }}>{getScoreLabel(score)}</div>
-                                  </div>
-                                  {lead.project && <div style={{ fontSize: 10, color: T.gold, marginBottom: 2, fontWeight: 500 }}>{lead.project}</div>}
-                                  {lead.budget && <div style={{ fontSize: 10, color: T.green }}>AED {parseFloat(lead.budget).toLocaleString()}</div>}
-                                  {lead.nationality && <div style={{ fontSize: 10, color: T.textMuted }}>({lead.nationality})</div>}
-                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-                                    <span style={{ fontSize: 9, color: overdue ? T.red : dueToday ? T.gold : T.textMuted, fontWeight: overdue || dueToday ? 700 : 400 }}>
-                                      {overdue ? "OVERDUE" : dueToday ? "Due today" : lead.createdAt ? timeSince(new Date(lead.createdAt)) : "-"}
-                                    </span>
-                                    <div style={{ display: "flex", gap: 4 }}>
-                                      {(lead.notes || []).length > 0 && <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 4, background: `rgba(20,184,166,0.2)`, color: T.teal }}>{lead.notes.length}</span>}
-                                      {lead.phone && <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 4, background: "rgba(16,185,129,0.15)", color: T.green }}>WA</span>}
-                                    </div>
-                                  </div>
+                {/* KANBAN VIEW — 8 stages with drag & drop */}
+                {leadsViewMode === "kanban" && !leadAnalyticsView && (() => {
+                  const KANBAN_STAGES = [
+                    { id: "New",                label: "New",               color: "#3B82F6", icon: "🆕" },
+                    { id: "Contacted",          label: "Contacted",         color: T.gold,    icon: "📞" },
+                    { id: "Qualified",          label: "Qualified",         color: "#8B5CF6", icon: "✅" },
+                    { id: "Viewing Scheduled",  label: "Viewing",           color: "#06B6D4", icon: "🏠" },
+                    { id: "Offer Made",         label: "Offer Made",        color: "#F97316", icon: "💰" },
+                    { id: "Converted",          label: "Won",               color: T.green,   icon: "🏆" },
+                    { id: "Dormant",            label: "Dormant",           color: "#64748B", icon: "💤" },
+                    { id: "Lost",               label: "Lost",              color: T.red,     icon: "❌" },
+                  ];
+
+                  const handleDragStart = (e, leadId) => {
+                    setKanbanDragId(leadId);
+                    e.dataTransfer.effectAllowed = "move";
+                  };
+                  const handleDragOver = (e, stageId) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                    setKanbanDragOver(stageId);
+                  };
+                  const handleDrop = async (e, stageId) => {
+                    e.preventDefault();
+                    setKanbanDragOver(null);
+                    if (!kanbanDragId) return;
+                    const lead = leads.find(l => l.id === kanbanDragId);
+                    if (!lead || lead.status === stageId) { setKanbanDragId(null); return; }
+                    try {
+                      const activity = [...(lead.activity || []), { type: "stage_changed", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Stage moved: ${lead.status || "New"} → ${stageId}` }];
+                      await setDoc(doc(db, "leads", kanbanDragId), { status: stageId, activity, updatedAt: new Date().toISOString() }, { merge: true });
+                      setLeads(prev => prev.map(l => l.id === kanbanDragId ? { ...l, status: stageId, activity } : l));
+                      if (leadDrawer?.id === kanbanDragId) setLeadDrawer(prev => ({ ...prev, status: stageId, activity }));
+                      await logAudit(db, { action: "lead_stage_changed", leadId: kanbanDragId, from: lead.status, to: stageId });
+                      notify(`✅ ${lead.name || "Lead"} moved to ${stageId}`);
+                    } catch(err) { notify("❌ Failed to update stage"); }
+                    setKanbanDragId(null);
+                  };
+                  const handleDragEnd = () => { setKanbanDragId(null); setKanbanDragOver(null); };
+
+                  return (
+                    <div style={{ overflowX: "auto", marginBottom: 20 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(8, minmax(160px, 1fr))", gap: 10, minWidth: 1280 }}>
+                        {KANBAN_STAGES.map(stage => {
+                          const stageLeads = leads.filter(l => (l.status || "New") === stage.id).sort((a, b) => {
+                            if (isOverdue(a) && !isOverdue(b)) return -1;
+                            if (!isOverdue(a) && isOverdue(b)) return 1;
+                            return scoreLead(b) - scoreLead(a);
+                          });
+                          const stageValue = stageLeads.filter(l => l.budget).reduce((sum, l) => sum + (parseFloat(l.budget) || 0), 0);
+                          const isDragTarget = kanbanDragOver === stage.id;
+                          return (
+                            <div key={stage.id}
+                              onDragOver={e => handleDragOver(e, stage.id)}
+                              onDrop={e => handleDrop(e, stage.id)}
+                              onDragLeave={() => setKanbanDragOver(null)}
+                              style={{ background: isDragTarget ? `${stage.color}12` : T.surface, borderRadius: 12, border: `1px solid ${isDragTarget ? stage.color : T.border}`, overflow: "hidden", display: "flex", flexDirection: "column", transition: "all 0.15s" }}>
+                              {/* Column header */}
+                              <div style={{ padding: "10px 12px", borderBottom: `2px solid ${stage.color}`, background: `${stage.color}08`, flexShrink: 0 }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                                  <span style={{ fontSize: 11, fontWeight: 700, color: stage.color }}>{stage.icon} {stage.label}</span>
+                                  <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 7px", borderRadius: 10, background: `${stage.color}20`, color: stage.color }}>{stageLeads.length}</span>
                                 </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                                {stageValue > 0 && <div style={{ fontSize: 9, color: T.textMuted }}>AED {stageValue >= 1000000 ? (stageValue/1000000).toFixed(1)+"M" : (stageValue/1000).toFixed(0)+"K"}</div>}
+                              </div>
+                              {/* Drop zone */}
+                              <div style={{ padding: "6px", overflowY: "auto", flex: 1, maxHeight: 400, minHeight: 60 }}>
+                                {stageLeads.length === 0 ? (
+                                  <div style={{ padding: "20px 8px", textAlign: "center", color: isDragTarget ? stage.color : T.textMuted, fontSize: 10, border: isDragTarget ? `1px dashed ${stage.color}` : "1px dashed transparent", borderRadius: 8, transition: "all 0.15s" }}>
+                                    {isDragTarget ? "Drop here" : "Empty"}
+                                  </div>
+                                ) : stageLeads.map(lead => {
+                                  const score = scoreLead(lead);
+                                  const overdue = isOverdue(lead);
+                                  const dueToday = isDueToday(lead);
+                                  const isDragging = kanbanDragId === lead.id;
+                                  return (
+                                    <div key={lead.id}
+                                      draggable
+                                      onDragStart={e => handleDragStart(e, lead.id)}
+                                      onDragEnd={handleDragEnd}
+                                      onClick={() => !isDragging && setLeadDrawer(lead)}
+                                      style={{ padding: "9px 10px", background: overdue ? "rgba(239,68,68,0.06)" : T.surfaceAlt, borderRadius: 7, marginBottom: 5, cursor: "grab", border: `1px solid ${overdue ? "rgba(239,68,68,0.4)" : T.border}`, opacity: isDragging ? 0.4 : 1, transition: "all 0.15s", userSelect: "none" }}
+                                      onMouseEnter={e => { if (!isDragging) { e.currentTarget.style.borderColor = stage.color + "60"; e.currentTarget.style.transform = "translateY(-1px)"; } }}
+                                      onMouseLeave={e => { e.currentTarget.style.borderColor = overdue ? "rgba(239,68,68,0.4)" : T.border; e.currentTarget.style.transform = "none"; }}>
+                                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 3 }}>
+                                        <div style={{ fontSize: 11, fontWeight: 600, color: T.white, lineHeight: 1.3, flex: 1 }}>{lead.name || "Unknown"}</div>
+                                        <div style={{ fontSize: 8, padding: "1px 5px", borderRadius: 4, background: `${getScoreColor(score)}20`, color: getScoreColor(score), fontWeight: 700, flexShrink: 0, marginLeft: 3 }}>{score}</div>
+                                      </div>
+                                      {lead.project && <div style={{ fontSize: 9, color: T.gold, marginBottom: 2, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.project}</div>}
+                                      {lead.budget && <div style={{ fontSize: 9, color: T.green }}>AED {parseFloat(lead.budget).toLocaleString()}</div>}
+                                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 5 }}>
+                                        <span style={{ fontSize: 8, color: overdue ? T.red : dueToday ? T.gold : T.textMuted, fontWeight: overdue || dueToday ? 700 : 400 }}>
+                                          {overdue ? "⚠️ OVERDUE" : dueToday ? "📅 Today" : lead.createdAt ? timeSince(new Date(lead.createdAt)) : "-"}
+                                        </span>
+                                        <div style={{ display: "flex", gap: 3 }}>
+                                          {(lead.notes || []).length > 0 && <span style={{ fontSize: 8, padding: "1px 4px", borderRadius: 3, background: "rgba(20,184,166,0.2)", color: T.teal }}>{lead.notes.length}💬</span>}
+                                          {lead.phone && <span style={{ fontSize: 8, padding: "1px 4px", borderRadius: 3, background: "rgba(37,211,102,0.15)", color: "#25D366" }}>WA</span>}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted, textAlign: "center" }}>💡 Drag and drop cards between columns to update stage</div>
+                    </div>
+                  );
+                })()}
 
                 {/* TABLE VIEW */}
                 {leadsViewMode === "table" && !leadAnalyticsView && (
@@ -21691,7 +21764,7 @@ export default function AdminPanel() {
                                   </td>
                                   <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
                                     <select value={lead.status || "New"} onChange={e => { if (e.target.value === "Lost") setShowLossReason(lead.id); else updateLeadStatus(lead.id, e.target.value); }} style={{ padding: "4px 8px", borderRadius: 6, border: `1px solid ${sc.border}`, background: sc.bg, color: sc.color, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                                      <option value="New">New</option><option value="Contacted">Contacted</option><option value="Qualified">Qualified</option><option value="Converted">Converted</option><option value="Lost">Lost</option>
+                                      <option value="New">New</option><option value="Contacted">Contacted</option><option value="Qualified">Qualified</option><option value="Viewing Scheduled">Viewing Scheduled</option><option value="Offer Made">Offer Made</option><option value="Converted">Won / Converted</option><option value="Dormant">Dormant</option><option value="Lost">Lost</option>
                                     </select>
                                   </td>
                                   <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
@@ -21971,7 +22044,7 @@ export default function AdminPanel() {
                         </div>
                         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                           <select value={leadDrawer.status || "New"} onChange={e => { if (e.target.value === "Lost") setShowLossReason(leadDrawer.id); else updateLeadStatus(leadDrawer.id, e.target.value); }} style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${(statusColors[leadDrawer.status || "New"] || statusColors.New).border}`, background: (statusColors[leadDrawer.status || "New"] || statusColors.New).bg, color: (statusColors[leadDrawer.status || "New"] || statusColors.New).color, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="New">New</option><option value="Contacted">Contacted</option><option value="Qualified">Qualified</option><option value="Converted">Converted</option><option value="Lost">Lost</option>
+                            <option value="New">New</option><option value="Contacted">Contacted</option><option value="Qualified">Qualified</option><option value="Viewing Scheduled">Viewing Scheduled</option><option value="Offer Made">Offer Made</option><option value="Converted">Won / Converted</option><option value="Dormant">Dormant</option><option value="Lost">Lost</option>
                           </select>
                           {leadDrawer.phone && <a href={`https://wa.me/${leadDrawer.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${leadDrawer.name || ""}, following up on your interest in ${leadDrawer.project || "the property"}.`)}`} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 12px", borderRadius: 8, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>WhatsApp</a>}
                           <button type="button" onClick={() => setShowFollowUpModal(leadDrawer)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 12px", borderRadius: 8, border: `1px solid rgba(212,168,67,0.4)`, background: "rgba(212,168,67,0.08)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>Follow-Up</button>
