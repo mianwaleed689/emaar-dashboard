@@ -8,7 +8,9 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter, updateDoc } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
+// S30: Full 208-project Emaar database
+import { emaarProjects } from "./data_emaar_complete";
+import { emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
 import { damacProjects } from "./data_damac";
 import { sobhaProjects } from "./data_sobha";
 import { nakheelProjects } from "./data_nakheel";
