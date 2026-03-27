@@ -8601,14 +8601,6 @@ export default function EmaarDashboardV2() {
         );
       })()}
 
-                </div>{/* end right column */}
-              </div>{/* end two column grid */}
-            </div>{/* end main content */}
-          </div>
-        </div>
-        );
-      })()}
-
       {/* ─── COMPARE MODAL ─── */}
       {showCompare && compareList.length >= 2 && (
         <div role="dialog" aria-modal="true" aria-label="Project comparison" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowCompare(false)}>
