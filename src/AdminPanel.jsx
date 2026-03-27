@@ -9,6 +9,7 @@ import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswo
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
+import { T } from "./theme";
 import ProjectManager from "./ProjectManager";
 import { useI18n, LANGUAGES } from "./i18n";
 import AdminDataHealth from "./AdminDataHealth";
@@ -214,15 +215,7 @@ const sendResend = async (to, subject, bodyText) => {
 };
 
 /* ─── THEME (exact dashboard match) ─── */
-const T = {
-  bg: "#04090F", surface: "#0A1628", surfaceAlt: "#0E1D35", card: "#0D1B30",
-  gold: "#D4A843", goldLight: "#E8C96A", goldDim: "#B8912F", goldGlow: "rgba(212,168,67,0.12)",
-  teal: "#00BFA5", white: "#FFFFFF",
-  textPrimary: "#E2E8F0", textSecondary: "#94A3B8", textMuted: "#64748B",
-  border: "rgba(212,168,67,0.08)", borderHover: "rgba(212,168,67,0.2)",
-  red: "#EF4444", green: "#10B981", blue: "#3B82F6", purple: "#8B5CF6",
-  cyan: "#06B6D4", orange: "#F59E0B",
-};
+// S16: T theme imported from src/theme.js — see import above
 
 /* ─── ICONS (matching dashboard SVG style) ─── */
 const I = {

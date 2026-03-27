@@ -8,13 +8,16 @@ import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot } from "firebase/firestore";
 
-import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
+import { T } from "./theme";
+import { emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
 import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
 import { useI18n } from "./i18n";
 
 /* ─── DATA ALIASES (for backward compat) ─── */
 const financials = emaarFinancials;
+// S16: segments/risks/radarData use data.js as base fallback at module level
+// Inside JSX, use emaarLive?.emaarSegments etc for Firestore override
 const segments = emaarSegments;
 const risks = emaarRisks.map(r => ({ factor: r.factor, score: r.score, max: 150, color: r.color }));
 const yields = emaarYields.map(y => ({ label: y.unit, community: y.community, rent: y.rent/1000, price: y.price/1000, gross: y.gross, net: y.net, demand: y.demand === "Very High" ? "V.High" : y.demand === "Moderate-High" ? "High" : y.demand, visa: y.visa }));
@@ -2890,6 +2893,10 @@ export default function EmaarDashboardV2() {
               const creditRating   = E.creditRatingSP || "BBB+";
               const moodysRating   = E.creditRatingMoodys || "Baa1";
               const reportLabel    = E.latestReportLabel || "Annual Report FY2025";
+              // S16: emaarRisks, emaarSegments, radarData — Firestore first, data.js fallback
+              const liveRisks    = E.emaarRisks    || emaarRisks;
+              const liveSegments = E.emaarSegments || emaarSegments;
+              const liveRadar    = E.radarData     || radarData;
               // Dubai market — Firestore first, fallback constants
               const mktValue       = M.totalMarketValue  || "AED 682.5B";
               const mktTxns        = M.totalTransactions || "214,912";
@@ -3208,7 +3215,7 @@ export default function EmaarDashboardV2() {
               <Chart title="Revenue by Segment (AED B)">
                 <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
-                    <Pie data={segments} dataKey="revenue" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={52} paddingAngle={3} stroke="none">
+                    <Pie data={liveSegments} dataKey="revenue" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={52} paddingAngle={3} stroke="none">
                       {segments.map((s, i) => <Cell key={i} fill={s.color} />)}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
@@ -3259,7 +3266,7 @@ export default function EmaarDashboardV2() {
               <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
                 <Chart title="Performance Radar">
                   <ResponsiveContainer width="100%" height={260}>
-                    <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="75%">
+                    <RadarChart data={liveRadar} cx="50%" cy="50%" outerRadius="75%">
                       <PolarGrid stroke="rgba(255,255,255,0.06)" />
                       <PolarAngleAxis dataKey="metric" tick={{ fill: T.textSecondary, fontSize: 10 }} />
                       <PolarRadiusAxis tick={false} axisLine={false} />
@@ -6360,13 +6367,13 @@ export default function EmaarDashboardV2() {
             <ProGate isPro={isPro} message="Unlock Full Risk Analysis" onUpgrade={() => setShowUpgrade(true)}>
               <Chart title="Risk Score by Factor (Higher = More Risk)" style={{ marginTop: 20 }}>
                 <ResponsiveContainer width="100%" height={380}>
-                  <BarChart data={risks} layout="vertical">
+                  <BarChart data={(emaarLive?.emaarRisks || emaarRisks).map(r => ({ factor: r.factor, score: r.score, max: 150, color: r.color }))} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                     <XAxis type="number" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 140]} />
                     <YAxis type="category" dataKey="factor" tick={{ fill: T.textSecondary, fontSize: 11 }} width={120} axisLine={false} tickLine={false} />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar dataKey="score" name="Risk Score" radius={[0, 8, 8, 0]} barSize={22}>
-                      {risks.map((r, i) => <Cell key={i} fill={r.color} />)}
+                      {(emaarLive?.emaarRisks || emaarRisks).map((r, i) => <Cell key={i} fill={r.color} />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
