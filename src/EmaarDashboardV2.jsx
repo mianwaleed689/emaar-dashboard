@@ -1803,25 +1803,35 @@ export default function EmaarDashboardV2() {
     // ── AI Insights — generated fresh if not in cache (cache read now via onSnapshot) ──
     (async () => {
       try {
-        const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000; // S8.5 — 24h cache
         if (aiInsights?.length > 0) return; // already loaded by onSnapshot
         {
-          // Generate fresh insights via Claude API
+          // Generate fresh insights via Claude API — inject live Firestore data
           setInsightsLoading(true);
+          // Build live context from Firestore (fallback to verified constants)
+          const liveCtx = {
+            mktValue:   marketGlobal?.totalMarketValue  || "AED 682.5B",
+            txns:       marketGlobal?.totalTransactions || "214,912",
+            ppsf:       marketGlobal?.avgPricePsf       || "AED 1,689",
+            yoy:        marketGlobal?.yoyGrowthPct      || "+30.64%",
+            offPlan:    marketGlobal?.offPlanShare       || "62.6%",
+            emaarSales: emaarLive?.propertySales != null ? `AED ${emaarLive.propertySales}B` : "AED 80.4B",
+            backlog:    emaarLive?.backlog       != null ? `AED ${emaarLive.backlog}B`       : "AED 155B",
+          };
           const res = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               model: "claude-sonnet-4-20250514",
               max_tokens: 1000,
-              messages: [{ role: "user", content: `You are a Dubai real estate analyst. Generate exactly 5 sharp, data-driven market insights for Dubai property investors right now (${new Date().toLocaleDateString("en-AE", { month: "long", year: "numeric" })}). Use these verified 2025 facts: Dubai total market AED 682.5B, 214,912 transactions, Emaar FY2025 sales AED 80.4B (+16% YoY), avg yield city 6.9%, JVC yields 8-9%, EIBOR 3.47%, Downtown avg AED 2,800/sqft, DLD transfer fee 4%, off-plan 60%+ of market. Return ONLY a JSON array of 5 objects, no markdown, no preamble: [{"title":"...","insight":"...","tag":"Yield|Price|Risk|Macro|Opportunity","direction":"up|down|neutral"}]` }]
+              messages: [{ role: "user", content: `You are a Dubai real estate analyst. Generate exactly 5 sharp, data-driven market insights for Dubai property investors right now (${new Date().toLocaleDateString("en-AE", { month: "long", year: "numeric" })}). Use these verified live facts: Dubai total market ${liveCtx.mktValue}, ${liveCtx.txns} transactions, YoY growth ${liveCtx.yoy}, avg price/sqft ${liveCtx.ppsf}, off-plan share ${liveCtx.offPlan}, Emaar sales ${liveCtx.emaarSales}, Emaar backlog ${liveCtx.backlog}, avg yield city 6.9%, JVC yields 8-9%, Downtown avg AED 2,800/sqft, DLD transfer fee 4%. Return ONLY a JSON array of 5 objects, no markdown, no preamble: [{"title":"...","insight":"...","tag":"Yield|Price|Risk|Macro|Opportunity","direction":"up|down|neutral"}]` }]
             })
           });
           const apiData = await res.json();
           const text = apiData.content?.[0]?.text || "[]";
           const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
           setAiInsights(parsed);
-          // Cache for a week
+          // Cache for 24 hours (S8.5 — was 7 days)
           try { await setDoc(doc(db, "aiInsights", "latest"), { insights: parsed, generatedAt: Date.now() }); } catch(e) {}
           setInsightsLoading(false);
         }
@@ -2014,8 +2024,8 @@ export default function EmaarDashboardV2() {
     unsubs.push(onSnapshot(doc(db, "aiInsights", "latest"), (snap) => {
       if (!snap.exists()) return;
       const data = snap.data();
-      const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-      if (data.insights && data.generatedAt > oneWeekAgo) setAiInsights(data.insights);
+      const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+      if (data.insights && data.generatedAt > oneDayAgo) setAiInsights(data.insights);
     }));
 
     return () => unsubs.forEach(u => { try { u(); } catch {} });
@@ -3051,14 +3061,29 @@ export default function EmaarDashboardV2() {
 
           {/* ─── FINANCIALS TAB ─── */}
           {tab === "Financials" && <>
+            {/* S8.5 — Financials tab wired to Firestore developers/emaar with data.js fallback */}
+            {(() => {
+              const fy  = emaarFinancials[emaarFinancials.length - 1];
+              const E   = emaarLive || {};
+              const rev      = E.revenue      != null ? E.revenue      : fy.revenue;
+              const np       = E.netProfit    != null ? E.netProfit    : fy.netProfit;
+              const gm       = E.grossMargin  != null ? E.grossMargin  : fy.gm;
+              const nm       = E.netMargin    != null ? E.netMargin    : fy.nm;
+              const src      = E.latestReportLabel || "Emaar Annual Report 2025";
+              const baseRev  = emaarFinancials[0].revenue;
+              const baseNP   = emaarFinancials[0].netProfit;
+              const revCagr  = ((Math.pow(rev / baseRev, 1/5) - 1) * 100).toFixed(1);
+              const npCagr   = ((Math.pow(np  / baseNP,  1/5) - 1) * 100).toFixed(1);
+              return (
             <Section title="Financial Performance" sub="6-year trend · 2020–2025 · All figures in AED Billions">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                <KPI label="Revenue CAGR" value="27.2%" sub="2020-2025 · 5-year" delay={1} onClick={() => setSelectedKPI({ label: "Revenue CAGR", value: "27.2%", color: T.gold, description: "Compound Annual Growth Rate of revenue from AED 14.6B in 2020 to AED 49.6B in 2025 — one of the highest CAGRs among global real estate developers.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Revenue", value: "AED 14.6B", note: "Base year" }, { label: "2025 Revenue", value: "AED 49.6B", note: "+240% total growth" }, { label: "CAGR", value: "27.2%", note: "5-year compounded" }, { label: "vs GCC Average", value: "~8–10%", note: "Sector benchmark" }, { label: "YoY 2025", value: "+40%", note: "Strongest single year" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: 49.6 }] })} />
-                <KPI label="Profit CAGR" value="57.1%" sub="2020-2025 · 5-year" delay={2} onClick={() => setSelectedKPI({ label: "Profit CAGR", value: "57.1%", color: T.green, description: "Net profit grew from AED 2.6B in 2020 to AED 25.7B in 2025 — a 57.1% CAGR driven by margin expansion and operating leverage.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Net Profit", value: "AED 2.6B", note: "Base year" }, { label: "2025 Net Profit", value: "AED 25.7B", note: "+888% total growth" }, { label: "CAGR", value: "57.1%", note: "5-year compounded" }, { label: "Net Margin 2020", value: "17.8%", note: "Starting margin" }, { label: "Net Margin 2025", value: "51.8%", note: "+34pp expansion" }], trend: [{ y: "2020", v: 2.6 }, { y: "2021", v: 4.1 }, { y: "2022", v: 6.2 }, { y: "2023", v: 12.6 }, { y: "2024", v: 18.9 }, { y: "2025", v: 25.7 }] })} />
-                <KPI label="Gross Margin" value="57.5%" sub="Industry-leading" delay={3} onClick={() => setSelectedKPI({ label: "Gross Margin", value: "57.5%", color: T.teal, description: "Gross profit margin of 57.5% — significantly above the global real estate developer average of 25–35%. Driven by land cost advantage and premium brand pricing.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Gross Margin", value: "57.5%", note: "FY2025" }, { label: "Gross Profit", value: "AED 28.5B", note: "On AED 49.6B revenue" }, { label: "GCC Dev Avg", value: "~30–35%", note: "Industry benchmark" }, { label: "vs DAMAC", value: "~45%", note: "Nearest competitor" }, { label: "Land Cost Basis", value: "AED 5–15/sqft", note: "Historical acquisition" }], trend: [{ y: "2020", v: 42 }, { y: "2021", v: 45 }, { y: "2022", v: 50 }, { y: "2023", v: 54 }, { y: "2024", v: 56 }, { y: "2025", v: 57.5 }] })} />
-                <KPI label="Net Margin" value="35.5%" sub="Consistent expansion" delay={4} onClick={() => setSelectedKPI({ label: "Net Margin", value: "35.5%", color: T.blue, description: "Net profit margin after all costs including tax. Expanded from 17.8% in 2020 to 51.8% in 2025 on a pre-tax basis.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Net Margin FY2025", value: "51.8%", note: "Pre-tax" }, { label: "Net Margin FY2024", value: "53.4%", note: "Prior year" }, { label: "Net Margin FY2020", value: "17.8%", note: "5-year base" }, { label: "EBITDA Margin", value: "51.6%", note: "Operational efficiency" }, { label: "After-Tax Est.", value: "~35.5%", note: "Post UAE corp tax" }], trend: [{ y: "2020", v: 17.8 }, { y: "2021", v: 24.1 }, { y: "2022", v: 25.3 }, { y: "2023", v: 41.2 }, { y: "2024", v: 53.4 }, { y: "2025", v: 51.8 }] })} />
+                <KPI label="Revenue CAGR" value={`${revCagr}%`} sub="2020-2025 · 5-year" delay={1} onClick={() => setSelectedKPI({ label: "Revenue CAGR", value: `${revCagr}%`, color: T.gold, description: `Compound Annual Growth Rate of revenue from AED ${baseRev}B in 2020 to AED ${rev}B — one of the highest CAGRs among global real estate developers.`, source: src, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Revenue", value: `AED ${baseRev}B`, note: "Base year" }, { label: "Latest Revenue", value: `AED ${rev}B`, note: "+240% total growth" }, { label: "CAGR", value: `${revCagr}%`, note: "5-year compounded" }, { label: "vs GCC Average", value: "~8–10%", note: "Sector benchmark" }, { label: "YoY", value: "+40%", note: "Strongest single year" }], trend: emaarFinancials.map(f => ({ y: f.year, v: f.revenue })) })} />
+                <KPI label="Profit CAGR" value={`${npCagr}%`} sub="2020-2025 · 5-year" delay={2} onClick={() => setSelectedKPI({ label: "Profit CAGR", value: `${npCagr}%`, color: T.green, description: `Net profit grew from AED ${baseNP}B in 2020 to AED ${np}B — a ${npCagr}% CAGR driven by margin expansion and operating leverage.`, source: src, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Net Profit", value: `AED ${baseNP}B`, note: "Base year" }, { label: "Latest Net Profit", value: `AED ${np}B`, note: "+888% total growth" }, { label: "CAGR", value: `${npCagr}%`, note: "5-year compounded" }, { label: "Net Margin 2020", value: "17.8%", note: "Starting margin" }, { label: "Net Margin Latest", value: `${nm}%`, note: "Current" }], trend: emaarFinancials.map(f => ({ y: f.year, v: f.netProfit })) })} />
+                <KPI label="Gross Margin" value={`${gm}%`} sub="Industry-leading" delay={3} onClick={() => setSelectedKPI({ label: "Gross Margin", value: `${gm}%`, color: T.teal, description: `Gross profit margin of ${gm}% — significantly above the global real estate developer average of 25–35%.`, source: src, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Gross Margin", value: `${gm}%`, note: "Latest" }, { label: "Gross Profit", value: `AED ${(rev * gm / 100).toFixed(1)}B`, note: `On AED ${rev}B revenue` }, { label: "GCC Dev Avg", value: "~30–35%", note: "Industry benchmark" }, { label: "vs DAMAC", value: "~45%", note: "Nearest competitor" }, { label: "Land Cost Basis", value: "AED 5–15/sqft", note: "Historical acquisition" }], trend: emaarFinancials.map(f => ({ y: f.year, v: f.gm })) })} />
+                <KPI label="Net Margin" value={`${nm}%`} sub="Consistent expansion" delay={4} onClick={() => setSelectedKPI({ label: "Net Margin", value: `${nm}%`, color: T.blue, description: `Net profit margin after all costs including tax. Expanded from 17.8% in 2020 to ${nm}%.`, source: src, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Net Margin Latest", value: `${nm}%`, note: "Current" }, { label: "Net Margin 2024", value: "53.4%", note: "Prior year" }, { label: "Net Margin 2020", value: "17.8%", note: "5-year base" }, { label: "EBITDA Margin", value: "51.6%", note: "Operational efficiency" }, { label: "After-Tax Est.", value: `~${nm}%`, note: "Post UAE corp tax" }], trend: emaarFinancials.map(f => ({ y: f.year, v: f.nm })) })} />
               </div>
             </Section>
+              ); })()}
 
             <ProGate isPro={isPro} message="Unlock 6 Years of Financial Data" onUpgrade={() => setShowUpgrade(true)}>
             <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 20 }}>
@@ -3212,7 +3237,7 @@ export default function EmaarDashboardV2() {
           <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "Emaar Q4 2025 Earnings Release", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM Filing", url: "https://www.dfm.ae" }, { label: "GuruFocus", url: "https://www.gurufocus.com/term/overview/EMAAR.DU" }, { label: "Zawya", url: "https://www.zawya.com/en/company/financials/EMAAR-EMAAR" }]} />
             </Section>
             </ProGate>
-          </>}
+          </>} {/* end Financials tab — S8.5 Firestore wired */}
 
           {/* ─── PROJECTS TAB (48 Projects from Excel) ─── */}
           {tab === "Projects" && <>
@@ -4848,7 +4873,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
                     <div>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>DLD Transaction Volumes</div>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Dubai Land Department · FY2025 · 214,912 total transactions · AED 682.5B</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Dubai Land Department · {marketGlobal?.period || "FY2025"} · {marketGlobal?.totalTransactions || "214,912"} total transactions · {marketGlobal?.totalMarketValue || "AED 682.5B"}</div>
                     </div>
                     {(dldCommunity !== "All" || dldDeveloper !== "All" || dldType !== "All" || dldTxType !== "All") && (
                       <button type="button" onClick={() => { setDldCommunity("All"); setDldDeveloper("All"); setDldType("All"); setDldTxType("All"); }}
