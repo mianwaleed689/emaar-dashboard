@@ -2804,7 +2804,56 @@ export default function EmaarDashboardV2() {
 
         {/* Navigation */}
         <nav role="navigation" aria-label="Main navigation" style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 3, overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px", flexShrink: 0 }}>Emaar Properties</div>
+          {/* ─── S21: DEVELOPER PICKER ─── */}
+          <div style={{ padding: "0 12px 8px", flexShrink: 0 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Developer</div>
+            <select
+              value={selectedDeveloper}
+              onChange={e => setSelectedDeveloper(e.target.value)}
+              style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${selectedDeveloper !== "emaar" ? T.gold : T.border}`, borderRadius: 8, color: selectedDeveloper !== "emaar" ? T.gold : T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: selectedDeveloper !== "emaar" ? 700 : 400, outline: "none" }}
+            >
+              <optgroup label="T1 — Full Intelligence">
+                <option value="emaar">Emaar Properties</option>
+                <option value="damac">DAMAC Properties</option>
+                <option value="sobha">Sobha Realty</option>
+                <option value="nakheel">Nakheel</option>
+                <option value="binghatti">Binghatti</option>
+                <option value="meraas">Meraas</option>
+                <option value="aldar">Aldar Properties</option>
+                <option value="azizi">Azizi Developments</option>
+                <option value="danube">Danube Properties</option>
+              </optgroup>
+              <optgroup label="T2 — Standard">
+                <option value="ellington">Ellington Properties</option>
+                <option value="mag">MAG Property Dev</option>
+                <option value="tiger">Tiger Properties</option>
+                <option value="imtiaz">Imtiaz Developments</option>
+                <option value="selectgroup">Select Group</option>
+                <option value="omniyat">Omniyat</option>
+                <option value="deyaar">Deyaar Development</option>
+                <option value="samana">Samana Developers</option>
+                <option value="reportage">Reportage Properties</option>
+                <option value="dubaiprops">Dubai Properties</option>
+              </optgroup>
+              <optgroup label="T3 — Data Presence">
+                <option value="nshama">Nshama</option>
+                <option value="wasl">Wasl Properties</option>
+                <option value="arada">Arada</option>
+                <option value="darglobal">DAR Global</option>
+                <option value="vincitore">Vincitore</option>
+                <option value="condor">Condor Developers</option>
+              </optgroup>
+            </select>
+            {selectedDeveloper !== "emaar" && (
+              <div style={{ marginTop: 6, padding: "6px 10px", borderRadius: 6, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.gold}22`, fontSize: 10, color: T.textMuted }}>
+                {["damac","sobha","nakheel","binghatti","meraas","aldar","azizi","danube"].includes(selectedDeveloper)
+                  ? "⏳ Full module coming in S22–S30"
+                  : "📊 DLD data only — full module in S34+"}
+                <button type="button" onClick={() => setSelectedDeveloper("emaar")}
+                  style={{ marginLeft: 8, color: T.gold, background: "none", border: "none", cursor: "pointer", fontSize: 10, fontWeight: 700, padding: 0 }}>← Emaar</button>
+              </div>
+            )}
+          </div>
           <div role="tablist" aria-label="Dashboard sections" style={{ display: "contents" }}>
           {TABS.filter(tabItem => {
             const s = tabSettings[tabItem.key];
@@ -2985,6 +3034,31 @@ export default function EmaarDashboardV2() {
 
           {/* ─── OVERVIEW TAB ─── */}
           {tab === "Overview" && <>
+            {/* S21: Developer context banner — shown when non-Emaar selected */}
+            {selectedDeveloper !== "emaar" && (() => {
+              const devNames = { damac: "DAMAC Properties", sobha: "Sobha Realty", nakheel: "Nakheel", binghatti: "Binghatti", meraas: "Meraas", aldar: "Aldar Properties", azizi: "Azizi Developments", danube: "Danube Properties", ellington: "Ellington Properties", mag: "MAG Property Dev", tiger: "Tiger Properties", imtiaz: "Imtiaz Developments", selectgroup: "Select Group", omniyat: "Omniyat", deyaar: "Deyaar Development", samana: "Samana Developers", nshama: "Nshama", wasl: "Wasl Properties", arada: "Arada", darglobal: "DAR Global", vincitore: "Vincitore", condor: "Condor Developers", reportage: "Reportage Properties", dubaiprops: "Dubai Properties" };
+              const devName = devNames[selectedDeveloper] || selectedDeveloper;
+              const isT1 = ["damac","sobha","nakheel","binghatti","meraas","aldar","azizi","danube"].includes(selectedDeveloper);
+              return (
+                <div style={{ margin: "0 0 20px 0", padding: "16px 20px", borderRadius: 14, background: isT1 ? "rgba(212,168,67,0.06)" : "rgba(59,130,246,0.06)", border: `1px solid ${isT1 ? T.gold : T.blue}33`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                  <div>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: isT1 ? T.gold : T.blue }}>{devName}</div>
+                    <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>
+                      {isT1 ? "T1 Full Intelligence Module — coming in S22–S30" : "T2/T3 Developer — DLD data only · Full module in S34+"}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 8, background: isT1 ? "rgba(212,168,67,0.1)" : "rgba(59,130,246,0.1)", color: isT1 ? T.gold : T.blue, fontWeight: 700, border: `1px solid ${isT1 ? T.gold : T.blue}33` }}>
+                      {isT1 ? "T1 · Full Data Coming" : "T2/T3 · Limited Data"}
+                    </span>
+                    <button type="button" onClick={() => setSelectedDeveloper("emaar")}
+                      style={{ fontSize: 11, padding: "4px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}`, color: T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      ← Back to Emaar
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
             {/* Session 6 — live data helpers (Firestore → fallback to data.js) */}
             {(() => {
               const fy = emaarFinancials[emaarFinancials.length - 1]; // last year in data.js
@@ -3596,7 +3670,7 @@ export default function EmaarDashboardV2() {
 
           {/* ─── PROJECTS TAB (48 Projects from Excel) ─── */}
           {tab === "Projects" && <>
-            <Section title={`${activeProjects.length} Active Projects`} sub="Complete Emaar off-plan portfolio · 2026–2030 · Search & filter">
+            <Section title={selectedDeveloper === "emaar" ? `${activeProjects.length} Active Projects` : `${activeProjects.filter(p => (p.developerId || "emaar") === selectedDeveloper).length} Projects — ${selectedDeveloper.toUpperCase()}`} sub={selectedDeveloper === "emaar" ? "Complete Emaar off-plan portfolio · 2026–2030 · Search & filter" : "Filtered by selected developer · Switch developer in sidebar"}>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE.", source: "DXB Analytics", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "10", note: "Address, Vida, Palace" }], trend: null })} />
                 <KPI label="Communities" value="11" sub="DHE · DCH · EBF · GPC + 7 more" delay={2} />
