@@ -1,0 +1,42 @@
+# DXB Analytics — EIBOR Daily Cron
+# Runs every day at 11:30 AM UAE time (07:30 UTC)
+# Session 9 — .github/workflows/cron-eibor.yml
+
+name: EIBOR Daily Update
+
+on:
+  schedule:
+    - cron: "30 7 * * *"   # 07:30 UTC = 11:30 AM UAE (GST = UTC+4)
+  workflow_dispatch:         # Allow manual trigger from GitHub Actions UI
+
+jobs:
+  update-eibor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: |
+          cd scripts
+          npm install firebase-admin --save 2>/dev/null || true
+          cd ..
+          npm install firebase-admin --save-dev 2>/dev/null || true
+
+      - name: Write Firebase service account key
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > scripts/serviceAccountKey.json
+
+      - name: Run EIBOR cron
+        run: node scripts/cron-eibor.js
+
+      - name: Cleanup key
+        if: always()
+        run: rm -f scripts/serviceAccountKey.json
