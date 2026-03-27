@@ -2699,7 +2699,7 @@ export default function EmaarDashboardV2() {
           </button>
           <button type="button" onClick={() => setShowNotifications(v => !v)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: 8, cursor: "pointer", color: T.textSecondary, position: "relative" }} title="Notifications">
             {Icons.bell}
-            {(unreadCount + (isAdmin ? liveAdminAlerts.length : 0)) > 0 && (
+            {(unreadCount + (userTier === "admin" ? liveAdminAlerts.length : 0)) > 0 && (
               <span style={{ position: "absolute", top: 4, right: 4, width: 8, height: 8, borderRadius: "50%", background: liveAdminAlerts.length > 0 ? T.gold : T.red, border: `2px solid ${T.bg}` }} />
             )}
           </button>
