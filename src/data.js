@@ -1,8 +1,9 @@
 /* ─── DXB ANALYTICS — MASTER DATA FILE ─── */
 /* Source: Emaar THE BEAST Excel + DLD + DXBinteract + Yahoo Finance */
 
-// S16: T theme is now in src/theme.js — import directly from there
-// import { T } from "./theme"  ← use this in your components
+// S16: T theme lives in src/theme.js
+// Re-exported here for files that still import T from data.js (LandingPage, ProjectManager etc)
+export { T } from "./theme";
 
 /* ─── 48 EMAAR PROJECTS (from Excel) ─── */
 export const emaarProjects = [
