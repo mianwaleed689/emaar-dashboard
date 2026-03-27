@@ -11,6 +11,7 @@ import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, Cart
 import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
 import ProjectManager from "./ProjectManager";
 import { useI18n, LANGUAGES } from "./i18n";
+import AdminDataHealth from "./AdminDataHealth";
 
 /* =======================================================
    EMAIL CAMPAIGNS TAB
@@ -15145,6 +15146,7 @@ export default function AdminPanel() {
     { id: "cancellation", label: "Cancellations", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> },
     { id: "support", label: "Support Inbox", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> },
     { id: "tabcontrol", label: "Tab Control", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="18" height="4" rx="1"/><line x1="7" y1="5" x2="7" y2="5"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="7" y1="19" x2="7" y2="19"/></svg> },
+    { id: "data_health", label: "Data Health", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> },
   ];
 
   /* =======================================
@@ -26093,6 +26095,11 @@ export default function AdminPanel() {
 
 
           {tab === "eibor" && <EiborRatesPanel db={db} T={T} I={I} notify={notify} />}
+          {tab === "data_health" && (
+            <div style={{ padding: "28px 32px" }}>
+              <AdminDataHealth db={db} T={T} />
+            </div>
+          )}
 
         </div>
       </main>
