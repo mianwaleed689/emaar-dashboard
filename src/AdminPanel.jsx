@@ -9497,6 +9497,234 @@ const ProfileDrawerComponent = ({
     );
 };
 
+function AddUserModal({ showAddUser, setShowAddUser, addUserForm, setAddUserForm, addUserManually, addUserLoading, users, T, inputStyle, BILLING_TIERS, JOB_ROLES, notify }) {
+  if (!showAddUser) return null;
+  const Field = ({ label, children }) => <div><label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>{label}</label>{children}</div>;
+  const Btn = ({ onClick, color, children, disabled, style={} }) => <button type="button" onClick={onClick} disabled={disabled} style={{ padding: "10px 20px", borderRadius: 9, border: "none", background: color, color: "#0A1628", fontSize: 13, fontWeight: 700, cursor: disabled?"not-allowed":"pointer", fontFamily: "'Outfit',sans-serif", opacity: disabled?0.6:1, ...style }}>{children}</button>;
+  const BtnGhost = ({ onClick, children, style={} }) => <button type="button" onClick={onClick} style={{ padding: "10px 20px", borderRadius: 9, border: "1px solid rgba(212,168,67,0.3)", background: "transparent", color: "#94A3B8", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", ...style }}>{children}</button>;
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "60px 20px", overflowY: "auto" }} onClick={() => setShowAddUser(false)}>
+      <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth: 520, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22 }}><div><div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>Add New User</div><div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>Create a new account directly from admin</div></div><button type="button" onClick={() => setShowAddUser(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20, padding: 0 }}>×</button></div>
+      <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 18, fontSize: 12, color: "#93C5FD", lineHeight: 1.6 }}>
+         <strong>Note:</strong> Creating an account here uses Firebase client-side auth. The new user will receive a verification email. You will remain logged in as admin.
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        {[
+          { label: "Full Name *", key: "name", type: "text", placeholder: "John Smith", full: true },
+          { label: "Email Address *", key: "email", type: "email", placeholder: "john@company.com", full: true },
+          { label: "Password *", key: "password", type: "password", placeholder: "Min 6 characters", full: true },
+        ].map(f => (
+          <div key={f.key} style={{ gridColumn: f.full ? "1 / -1" : "auto" }}>
+            <Field label={f.label}>
+              <input type={f.type} placeholder={f.placeholder} value={addUserForm[f.key] || ""} onChange={e => setAddUserForm(p => ({ ...p, [f.key]: e.target.value }))} style={inputStyle} />
+            </Field>
+            {/* FIX #29: password validation */}
+            {f.key === "password" && addUserForm.password && addUserForm.password.length < 6 && (
+              <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>⚡ Password must be at least 6 characters</div>
+            )}
+          </div>
+        ))}
+        {/* Phone with 190+ country codes */}
+        <div style={{ gridColumn: "1/-1" }}>
+          <Field label="Phone / WhatsApp">
+            <div style={{ display: "flex", gap: 8 }}>
+              <select value={addUserForm.phoneCode || "+971"} onChange={e => setAddUserForm(p => ({...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum||"").replace(/\s/g,"")}))} style={{...inputStyle, width: 200, flexShrink: 0, cursor: "pointer"}}>
+                {[["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+244","🇦🇴 Angola"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+1","🇧🇸 Bahamas"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+1","🇧🇧 Barbados"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],["+229","🇧🇯 Benin"],["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+267","🇧🇼 Botswana"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],["+238","🇨🇻 Cape Verde"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+242","🇨🇬 Congo"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],["+1","🇩🇴 Dominican Republic"],["+593","🇪🇨 Ecuador"],["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+291","🇪🇷 Eritrea"],["+372","🇪🇪 Estonia"],["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea South"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],["+382","🇲🇪 Montenegro"],["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+227","🇳🇪 Niger"],["+234","🇳🇬 Nigeria"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+597","🇸🇷 Suriname"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+1","🇹🇹 Trinidad"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
+              </select>
+              <input type="tel" placeholder="50 123 4567" value={addUserForm.phoneNum || ""} onChange={e => { const num=e.target.value.replace(/[^\d\s]/g,""); setAddUserForm(p=>({...p,phoneNum:num,phone:(p.phoneCode||"+971")+num.replace(/\s/g,"")})); }} style={{...inputStyle,flex:1}} />
+            </div>
+          </Field>
+        </div>
+        {/* Country — 190+ countries with flags */}
+        <div>
+          <Field label="Country">
+            <select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({...p, country: e.target.value}))} style={{...inputStyle, cursor:"pointer", color: addUserForm.country?"#E2E8F0":"#64748B"}}>
+              <option value="">Select Country...</option>
+              {["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","🌍 Other"].sort().map(c => <option key={c} value={c.split(" ").slice(1).join(" ")}>{c}</option>)}
+            </select>
+          </Field>
+        </div>
+        <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
+        </select></Field></div>
+        <div style={{ gridColumn: "1 / -1" }}><Field label="Job Role"><select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          <option value="user">— No role assigned —</option>
+          {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+        </select></Field></div>
+        <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
+      </div>
+      {addUserForm.email && users.some(u => u.email && u.email.toLowerCase() === addUserForm.email.toLowerCase()) && (
+        <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 14 }}>⚠️</span>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>Email already exists</div>
+            <div style={{ fontSize: 11, color: T.textMuted }}>A user with this email is already registered.</div>
+          </div>
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+        <BtnGhost onClick={() => setShowAddUser(false)} style={{ flex: 1 }}>Cancel</BtnGhost>
+        <Btn onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} color={T.gold} style={{ flex: 2, color: T.bg }}>{addUserLoading ? "Creating..." : "Create User"}</Btn>
+      </div>
+      </div>
+    </div>
+  );
+}
+
+  /* ── BULK IMPORT MODAL ── */
+  const BulkImportModal = () => showBulkImport && (
+    <Modal onClose={() => { setShowBulkImport(false); setBulkImportData([]); }} maxWidth={700}>
+      <ModalHeader title="Bulk Import Users" sub="Upload a CSV file to import multiple users at once" onClose={() => { setShowBulkImport(false); setBulkImportData([]); }} />
+      <div style={{ background: "rgba(20,184,166,0.06)", border: "1px solid rgba(20,184,166,0.2)", borderRadius: 10, padding: "12px 16px", marginBottom: 18 }}>
+        <div style={{ fontSize: 12, color: T.teal, fontWeight: 600, marginBottom: 6 }}>CSV Format Required:</div>
+        <div style={{ fontSize: 11, color: T.textMuted, fontFamily: "monospace", background: "rgba(0,0,0,0.2)", padding: "8px 12px", borderRadius: 6 }}>
+          name,email,phone,tier,country<br/>
+          John Smith,john@email.com,+971501234567,pro,UAE<br/>
+          Jane Doe,jane@email.com,+971509876543,free,UK
+        </div>
+        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>
+          Valid tiers: free, pro_trial, pro, enterprise · Password will be auto-generated and emailed
+        </div>
+      </div>
+      
+      {bulkImportData.length === 0 ? (
+        <div style={{ border: `2px dashed ${T.border}`, borderRadius: 12, padding: "40px 20px", textAlign: "center", background: T.surfaceAlt }}>
+          <input type="file" accept=".csv" id="csvUpload" style={{ display: "none" }} onChange={e => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const text = ev.target?.result;
+              if (!text) return;
+              const lines = text.split("\n").filter(l => l.trim());
+              const headers = lines[0].toLowerCase().split(",").map(h => h.trim());
+              const parsed = [];
+              for (let i = 1; i < lines.length; i++) {
+                const vals = lines[i].split(",").map(v => v.trim().replace(/^"|"$/g, ""));
+                if (vals.length < 2) continue;
+                const row = {};
+                headers.forEach((h, idx) => { row[h] = vals[idx] || ""; });
+                if (row.email) parsed.push({ ...row, valid: row.email.includes("@"), imported: false });
+              }
+              setBulkImportData(parsed);
+            };
+            reader.readAsText(file);
+          }} />
+          <label htmlFor="csvUpload" style={{ cursor: "pointer" }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📄</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: T.white, marginBottom: 4 }}>Drop CSV file or click to upload</div>
+            <div style={{ fontSize: 12, color: T.textMuted }}>Supports .csv files up to 1000 rows</div>
+          </label>
+        </div>
+      ) : (
+        <>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{bulkImportData.length} users parsed</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <span style={{ fontSize: 11, color: T.green }}>{bulkImportData.filter(r => r.valid && !r.imported).length} valid</span>
+              <span style={{ fontSize: 11, color: T.red }}>{bulkImportData.filter(r => !r.valid).length} invalid</span>
+              <span style={{ fontSize: 11, color: T.teal }}>{bulkImportData.filter(r => r.imported).length} imported</span>
+            </div>
+          </div>
+          <div style={{ maxHeight: 280, overflowY: "auto", border: `1px solid ${T.border}`, borderRadius: 10 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+              <thead><tr style={{ background: T.surfaceAlt }}>
+                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Name</th>
+                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Email</th>
+                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Tier</th>
+                <th style={{ padding: "8px 10px", textAlign: "center", color: T.textMuted, fontWeight: 600 }}>Status</th>
+              </tr></thead>
+              <tbody>
+                {bulkImportData.map((row, i) => (
+                  <tr key={i} style={{ borderTop: `1px solid ${T.border}` }}>
+                    <td style={{ padding: "8px 10px", color: T.white }}>{row.name || "—"}</td>
+                    <td style={{ padding: "8px 10px", color: row.valid ? T.textSecondary : T.red }}>{row.email}</td>
+                    <td style={{ padding: "8px 10px" }}><span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: row.tier === "pro" ? `${T.gold}20` : row.tier === "enterprise" ? `${T.purple}20` : `${T.textMuted}20`, color: row.tier === "pro" ? T.gold : row.tier === "enterprise" ? T.purple : T.textMuted }}>{row.tier || "free"}</span></td>
+                    <td style={{ padding: "8px 10px", textAlign: "center" }}>{row.imported ? <span style={{ color: T.green }}>✔</span> : row.valid ? <span style={{ color: T.textMuted }}>—</span> : <span style={{ color: T.red }}></span>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+      
+      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+        <BtnGhost onClick={() => { setShowBulkImport(false); setBulkImportData([]); }} style={{ flex: 1 }}>Cancel</BtnGhost>
+        {bulkImportData.length > 0 && (
+          <BtnGhost onClick={() => setBulkImportData([])} style={{ flex: 1 }}>Clear</BtnGhost>
+        )}
+        <Btn 
+          onClick={async () => {
+            if (setBulkImportLoading) setBulkImportLoading(true);
+            const validRows = bulkImportData.filter(r => r.valid && !r.imported);
+            for (const row of validRows) {
+              try {
+                const uid = `imported_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+                await setDoc(doc(db, "users", uid), {
+                  uid, name: row.name || "", email: row.email, phone: row.phone || "",
+                  tier: row.tier || "free", country: row.country || "",
+                  createdAt: new Date().toISOString(), source: "bulk_import"
+                });
+                row.imported = true;
+                setBulkImportData([...bulkImportData]);
+              } catch(e) { console.error("Import error:", e); }
+            }
+            if (setBulkImportLoading) setBulkImportLoading(false);
+            notify(`Imported ${validRows.length} users`);
+            fetchUsers();
+          }} 
+          disabled={bulkImportLoading || bulkImportData.filter(r => r.valid && !r.imported).length === 0} 
+          color={T.teal} 
+          style={{ flex: 2 }}>
+          {bulkImportLoading ? "Importing..." : `Import ${bulkImportData.filter(r => r.valid && !r.imported).length} Users`}
+        </Btn>
+      </div>
+      </div>
+    </div>
+  );
+
+
+
+function EditUserModal({ editingUser, setEditingUser, editUserForm, setEditUserForm, saveEditUser, editUserLoading, T, inputStyle, BILLING_TIERS, JOB_ROLES }) {
+  if (!editingUser) return null;
+  const Field = ({ label, children }) => <div><label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 8 }}>{label}</label>{children}</div>;
+  const Btn = ({ onClick, color, children, disabled, style={} }) => <button type="button" onClick={onClick} disabled={disabled} style={{ padding: "10px 20px", borderRadius: 9, border: "none", background: color, color: "#0A1628", fontSize: 13, fontWeight: 700, cursor: disabled?"not-allowed":"pointer", fontFamily: "'Outfit',sans-serif", opacity: disabled?0.6:1, ...style }}>{children}</button>;
+  const BtnGhost = ({ onClick, children, style={} }) => <button type="button" onClick={onClick} style={{ padding: "10px 20px", borderRadius: 9, border: "1px solid rgba(212,168,67,0.3)", background: "transparent", color: "#94A3B8", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", ...style }}>{children}</button>;
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "60px 20px", overflowY: "auto" }} onClick={() => setEditingUser(null)}>
+      <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth: 520, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22 }}><div><div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>Edit User</div><div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{editingUser.email}</div></div><button type="button" onClick={() => setEditingUser(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 20, padding: 0 }}>×</button></div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div style={{ gridColumn: "1 / -1" }}><Field label="Full Name"><input type="text" placeholder="Full name" value={editUserForm.name || ""} onChange={e => setEditUserForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} /></Field></div>
+        <Field label="Phone"><input type="tel" placeholder="+971 50 000 0000" value={editUserForm.phone || ""} onChange={e => setEditUserForm(p => ({ ...p, phone: e.target.value }))} style={inputStyle} /></Field>
+        <Field label="Country"><select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          <option value="">Select Country...</option>
+          {["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","🌍 Other"].sort().map(c => <option key={c} value={c.split(" ").slice(1).join(" ")}>{c}</option>)}
+        </select></Field>
+        <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
+        </select></Field>
+        <Field label="Job Role"><select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
+          <option value="user">— No role assigned —</option>
+          {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+        </select></Field>
+        {/* FIX #8: normalize trial date to ISO format */}
+        <Field label="Trial End Date"><input type="date" value={editUserForm.trialEnd ? editUserForm.trialEnd.slice(0, 10) : ""} onChange={e => setEditUserForm(p => ({ ...p, trialEnd: e.target.value ? e.target.value + "T00:00:00.000Z" : "" }))} style={inputStyle} /></Field>
+        <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={editUserForm.notes || ""} onChange={e => setEditUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
+      </div>
+      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+        <BtnGhost onClick={() => setEditingUser(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
+        <Btn onClick={saveEditUser} disabled={editUserLoading} color={T.gold} style={{ flex: 2, color: T.bg }}>{editUserLoading ? "Saving..." : "Save Changes"}</Btn>
+      </div>
+      </div>
+    </div>
+  );
+}
+
+
+
 function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, suspendUser, sendResetEmail, extendTrial, openEditUser, saveEditUser, editingUser, setEditingUser, editUserForm, setEditUserForm, editUserLoading, showAddUser, setShowAddUser, addUserForm, setAddUserForm, addUserManually, addUserLoading, exportCSV, userSearch, setUserSearch, tierFilter, setTierFilter, notify, db, T, I, trialDaysLeft, timeSince, pendingOpenUid, setPendingOpenUid, onDrawerChange, auditLog, showBulkImport, setShowBulkImport, bulkImportData, setBulkImportData, bulkImportLoading, setBulkImportLoading }) {
 
   /* ─── STATE ─── */
@@ -10026,212 +10254,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   );
 
   /* FIX #14: Add User → Invite User (client SDK limitation explained) */
-  const AddUserModal = () => showAddUser && (
-    <Modal onClose={() => setShowAddUser(false)} maxWidth={520}>
-      <ModalHeader title="Add New User" sub="Create a new account directly from admin" onClose={() => setShowAddUser(false)} />
-      <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 18, fontSize: 12, color: "#93C5FD", lineHeight: 1.6 }}>
-         <strong>Note:</strong> Creating an account here uses Firebase client-side auth. The new user will receive a verification email. You will remain logged in as admin.
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        {[
-          { label: "Full Name *", key: "name", type: "text", placeholder: "John Smith", full: true },
-          { label: "Email Address *", key: "email", type: "email", placeholder: "john@company.com", full: true },
-          { label: "Password *", key: "password", type: "password", placeholder: "Min 6 characters", full: true },
-        ].map(f => (
-          <div key={f.key} style={{ gridColumn: f.full ? "1 / -1" : "auto" }}>
-            <Field label={f.label}>
-              <input type={f.type} placeholder={f.placeholder} value={addUserForm[f.key] || ""} onChange={e => setAddUserForm(p => ({ ...p, [f.key]: e.target.value }))} style={inputStyle} />
-            </Field>
-            {/* FIX #29: password validation */}
-            {f.key === "password" && addUserForm.password && addUserForm.password.length < 6 && (
-              <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>⚡ Password must be at least 6 characters</div>
-            )}
-          </div>
-        ))}
-        {/* Phone with 190+ country codes */}
-        <div style={{ gridColumn: "1/-1" }}>
-          <Field label="Phone / WhatsApp">
-            <div style={{ display: "flex", gap: 8 }}>
-              <select value={addUserForm.phoneCode || "+971"} onChange={e => setAddUserForm(p => ({...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum||"").replace(/\s/g,"")}))} style={{...inputStyle, width: 200, flexShrink: 0, cursor: "pointer"}}>
-                {[["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+244","🇦🇴 Angola"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+1","🇧🇸 Bahamas"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+1","🇧🇧 Barbados"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],["+229","🇧🇯 Benin"],["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+267","🇧🇼 Botswana"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],["+238","🇨🇻 Cape Verde"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+242","🇨🇬 Congo"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],["+1","🇩🇴 Dominican Republic"],["+593","🇪🇨 Ecuador"],["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+291","🇪🇷 Eritrea"],["+372","🇪🇪 Estonia"],["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea South"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],["+382","🇲🇪 Montenegro"],["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+227","🇳🇪 Niger"],["+234","🇳🇬 Nigeria"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+597","🇸🇷 Suriname"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+1","🇹🇹 Trinidad"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
-              </select>
-              <input type="tel" placeholder="50 123 4567" value={addUserForm.phoneNum || ""} onChange={e => { const num=e.target.value.replace(/[^\d\s]/g,""); setAddUserForm(p=>({...p,phoneNum:num,phone:(p.phoneCode||"+971")+num.replace(/\s/g,"")})); }} style={{...inputStyle,flex:1}} />
-            </div>
-          </Field>
-        </div>
-        {/* Country — 190+ countries with flags */}
-        <div>
-          <Field label="Country">
-            <select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({...p, country: e.target.value}))} style={{...inputStyle, cursor:"pointer", color: addUserForm.country?"#E2E8F0":"#64748B"}}>
-              <option value="">Select Country...</option>
-              {["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","🌍 Other"].sort().map(c => <option key={c} value={c.split(" ").slice(1).join(" ")}>{c}</option>)}
-            </select>
-          </Field>
-        </div>
-        <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
-        </select></Field></div>
-        <div style={{ gridColumn: "1 / -1" }}><Field label="Job Role"><select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="user">— No role assigned —</option>
-          {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-        </select></Field></div>
-        <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
-      </div>
-      {addUserForm.email && users.some(u => u.email && u.email.toLowerCase() === addUserForm.email.toLowerCase()) && (
-        <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 14 }}>⚠️</span>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>Email already exists</div>
-            <div style={{ fontSize: 11, color: T.textMuted }}>A user with this email is already registered.</div>
-          </div>
-        </div>
-      )}
-      <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-        <BtnGhost onClick={() => setShowAddUser(false)} style={{ flex: 1 }}>Cancel</BtnGhost>
-        <Btn onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} color={T.gold} style={{ flex: 2, color: T.bg }}>{addUserLoading ? "Creating..." : "Create User"}</Btn>
-      </div>
-    </Modal>
-  );
-
-  /* ── BULK IMPORT MODAL ── */
-  const BulkImportModal = () => showBulkImport && (
-    <Modal onClose={() => { setShowBulkImport(false); setBulkImportData([]); }} maxWidth={700}>
-      <ModalHeader title="Bulk Import Users" sub="Upload a CSV file to import multiple users at once" onClose={() => { setShowBulkImport(false); setBulkImportData([]); }} />
-      <div style={{ background: "rgba(20,184,166,0.06)", border: "1px solid rgba(20,184,166,0.2)", borderRadius: 10, padding: "12px 16px", marginBottom: 18 }}>
-        <div style={{ fontSize: 12, color: T.teal, fontWeight: 600, marginBottom: 6 }}>CSV Format Required:</div>
-        <div style={{ fontSize: 11, color: T.textMuted, fontFamily: "monospace", background: "rgba(0,0,0,0.2)", padding: "8px 12px", borderRadius: 6 }}>
-          name,email,phone,tier,country<br/>
-          John Smith,john@email.com,+971501234567,pro,UAE<br/>
-          Jane Doe,jane@email.com,+971509876543,free,UK
-        </div>
-        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>
-          Valid tiers: free, pro_trial, pro, enterprise · Password will be auto-generated and emailed
-        </div>
-      </div>
-      
-      {bulkImportData.length === 0 ? (
-        <div style={{ border: `2px dashed ${T.border}`, borderRadius: 12, padding: "40px 20px", textAlign: "center", background: T.surfaceAlt }}>
-          <input type="file" accept=".csv" id="csvUpload" style={{ display: "none" }} onChange={e => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-              const text = ev.target?.result;
-              if (!text) return;
-              const lines = text.split("\n").filter(l => l.trim());
-              const headers = lines[0].toLowerCase().split(",").map(h => h.trim());
-              const parsed = [];
-              for (let i = 1; i < lines.length; i++) {
-                const vals = lines[i].split(",").map(v => v.trim().replace(/^"|"$/g, ""));
-                if (vals.length < 2) continue;
-                const row = {};
-                headers.forEach((h, idx) => { row[h] = vals[idx] || ""; });
-                if (row.email) parsed.push({ ...row, valid: row.email.includes("@"), imported: false });
-              }
-              setBulkImportData(parsed);
-            };
-            reader.readAsText(file);
-          }} />
-          <label htmlFor="csvUpload" style={{ cursor: "pointer" }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>📄</div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: T.white, marginBottom: 4 }}>Drop CSV file or click to upload</div>
-            <div style={{ fontSize: 12, color: T.textMuted }}>Supports .csv files up to 1000 rows</div>
-          </label>
-        </div>
-      ) : (
-        <>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{bulkImportData.length} users parsed</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <span style={{ fontSize: 11, color: T.green }}>{bulkImportData.filter(r => r.valid && !r.imported).length} valid</span>
-              <span style={{ fontSize: 11, color: T.red }}>{bulkImportData.filter(r => !r.valid).length} invalid</span>
-              <span style={{ fontSize: 11, color: T.teal }}>{bulkImportData.filter(r => r.imported).length} imported</span>
-            </div>
-          </div>
-          <div style={{ maxHeight: 280, overflowY: "auto", border: `1px solid ${T.border}`, borderRadius: 10 }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-              <thead><tr style={{ background: T.surfaceAlt }}>
-                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Name</th>
-                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Email</th>
-                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Tier</th>
-                <th style={{ padding: "8px 10px", textAlign: "center", color: T.textMuted, fontWeight: 600 }}>Status</th>
-              </tr></thead>
-              <tbody>
-                {bulkImportData.map((row, i) => (
-                  <tr key={i} style={{ borderTop: `1px solid ${T.border}` }}>
-                    <td style={{ padding: "8px 10px", color: T.white }}>{row.name || "—"}</td>
-                    <td style={{ padding: "8px 10px", color: row.valid ? T.textSecondary : T.red }}>{row.email}</td>
-                    <td style={{ padding: "8px 10px" }}><span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: row.tier === "pro" ? `${T.gold}20` : row.tier === "enterprise" ? `${T.purple}20` : `${T.textMuted}20`, color: row.tier === "pro" ? T.gold : row.tier === "enterprise" ? T.purple : T.textMuted }}>{row.tier || "free"}</span></td>
-                    <td style={{ padding: "8px 10px", textAlign: "center" }}>{row.imported ? <span style={{ color: T.green }}>✔</span> : row.valid ? <span style={{ color: T.textMuted }}>—</span> : <span style={{ color: T.red }}></span>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-      
-      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-        <BtnGhost onClick={() => { setShowBulkImport(false); setBulkImportData([]); }} style={{ flex: 1 }}>Cancel</BtnGhost>
-        {bulkImportData.length > 0 && (
-          <BtnGhost onClick={() => setBulkImportData([])} style={{ flex: 1 }}>Clear</BtnGhost>
-        )}
-        <Btn 
-          onClick={async () => {
-            if (setBulkImportLoading) setBulkImportLoading(true);
-            const validRows = bulkImportData.filter(r => r.valid && !r.imported);
-            for (const row of validRows) {
-              try {
-                const uid = `imported_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-                await setDoc(doc(db, "users", uid), {
-                  uid, name: row.name || "", email: row.email, phone: row.phone || "",
-                  tier: row.tier || "free", country: row.country || "",
-                  createdAt: new Date().toISOString(), source: "bulk_import"
-                });
-                row.imported = true;
-                setBulkImportData([...bulkImportData]);
-              } catch(e) { console.error("Import error:", e); }
-            }
-            if (setBulkImportLoading) setBulkImportLoading(false);
-            notify(`Imported ${validRows.length} users`);
-            fetchUsers();
-          }} 
-          disabled={bulkImportLoading || bulkImportData.filter(r => r.valid && !r.imported).length === 0} 
-          color={T.teal} 
-          style={{ flex: 2 }}>
-          {bulkImportLoading ? "Importing..." : `Import ${bulkImportData.filter(r => r.valid && !r.imported).length} Users`}
-        </Btn>
-      </div>
-    </Modal>
-  );
-
-  const EditUserModal = () => editingUser && (
-    <Modal onClose={() => setEditingUser(null)} maxWidth={520}>
-      <ModalHeader title="Edit User" sub={editingUser.email} onClose={() => setEditingUser(null)} />
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <div style={{ gridColumn: "1 / -1" }}><Field label="Full Name"><input type="text" placeholder="Full name" value={editUserForm.name || ""} onChange={e => setEditUserForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} /></Field></div>
-        <Field label="Phone"><input type="tel" placeholder="+971 50 000 0000" value={editUserForm.phone || ""} onChange={e => setEditUserForm(p => ({ ...p, phone: e.target.value }))} style={inputStyle} /></Field>
-        <Field label="Country"><select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="">Select Country...</option>
-          {["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","🌍 Other"].sort().map(c => <option key={c} value={c.split(" ").slice(1).join(" ")}>{c}</option>)}
-        </select></Field>
-        <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
-        </select></Field>
-        <Field label="Job Role"><select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="user">— No role assigned —</option>
-          {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-        </select></Field>
-        {/* FIX #8: normalize trial date to ISO format */}
-        <Field label="Trial End Date"><input type="date" value={editUserForm.trialEnd ? editUserForm.trialEnd.slice(0, 10) : ""} onChange={e => setEditUserForm(p => ({ ...p, trialEnd: e.target.value ? e.target.value + "T00:00:00.000Z" : "" }))} style={inputStyle} /></Field>
-        <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={editUserForm.notes || ""} onChange={e => setEditUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
-      </div>
-      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-        <BtnGhost onClick={() => setEditingUser(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
-        <Btn onClick={saveEditUser} disabled={editUserLoading} color={T.gold} style={{ flex: 2, color: T.bg }}>{editUserLoading ? "Saving..." : "Save Changes"}</Btn>
-      </div>
-    </Modal>
-  );
 
   const NotifUserModal = () => notifUser && (
     <Modal onClose={() => setNotifUser(null)} maxWidth={440}>
@@ -10294,8 +10316,8 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <NoteModal />
       <TagsModal />
       {/* Render modal content directly to avoid remounting on re-render */}
-      {showAddUser ? AddUserModal() : null}
-      {editingUser ? EditUserModal() : null}
+      {showAddUser && <AddUserModal showAddUser={showAddUser} setShowAddUser={setShowAddUser} addUserForm={addUserForm} setAddUserForm={setAddUserForm} addUserManually={addUserManually} addUserLoading={addUserLoading} users={users} T={T} inputStyle={inputStyle} BILLING_TIERS={BILLING_TIERS} JOB_ROLES={JOB_ROLES} notify={notify} />}
+      {editingUser && <EditUserModal editingUser={editingUser} setEditingUser={setEditingUser} editUserForm={editUserForm} setEditUserForm={setEditUserForm} saveEditUser={saveEditUser} editUserLoading={editUserLoading} T={T} inputStyle={inputStyle} BILLING_TIERS={BILLING_TIERS} JOB_ROLES={JOB_ROLES} />}
       <NotifUserModal />
       <ProfileDrawerComponent
         drawerUser={drawerUser}
