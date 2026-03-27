@@ -2847,14 +2847,14 @@ export default function EmaarDashboardV2() {
                   };
                   const sections = {
                     "Overview": [
-                      ["KEY METRICS", [["Property Sales FY2025","AED 80.4B","+16% YoY · All-time record"],["Revenue FY2025","AED 49.6B","+40% YoY · USD 13.5B"],["Net Profit FY2025","AED 25.7B","+36% YoY · USD 7.0B"],["Backlog","AED 155B","3–4yr revenue visibility"],["Units Delivered","125,600+","Since 2002 · #1 GCC"]]],
+                      [`KEY METRICS`, [[`Property Sales ${reportLabel}`,fmtB(propertySales),"+16% YoY · All-time record"],[`Revenue ${reportLabel}`,fmtB(revenue),"+40% YoY · USD 13.5B"],[`Net Profit ${reportLabel}`,fmtB(netProfit),"+36% YoY · USD 7.0B"],["Backlog",fmtB(backlog),"3–4yr revenue visibility"],["Units Delivered","125,600+","Since 2002 · #1 GCC"]]],
                       ["FINANCIALS", [["Market Cap","AED 128.2B","~USD 34.9B"],["P/E Ratio","7.83×","Industry avg 15.5×"],["Dividend Yield","7.04%","AED 1.00/share"],["Debt/Equity","0.11×","Very low leverage"],["Credit Rating","BBB+ / Baa1","S&P / Moody's stable"]]]
                     ],
                     "Yields": [
                       ["RENTAL YIELD SUMMARY", [["City Average Gross Yield","6.9%","Dubai 2025"],["JVC — Highest Yield","8–9%","Best community for yield"],["Downtown Dubai","4–5%","Premium pricing, lower yield"],["Palm Jumeirah","4.5–5.5%","Ultra-luxury, lower yield"],["Dubai Hills Estate","5.5–6.5%","Family community premium"]]]
                     ],
                     "Market": [
-                      ["DUBAI MARKET 2025", [["Total Transactions","214,912","Record — 5th consecutive year"],["Total Market Value","AED 682.5B","All-time high"],["Avg Price/sqft","AED 1,689","2025 Dubai average"],["Off-Plan Share","60%+","Dominant market segment"],["YoY Growth","~22%","Transaction volume growth"]]]
+                      [`DUBAI MARKET ${mktPeriod}`, [["Total Transactions",mktTxns,"Record — 5th consecutive year"],["Total Market Value",mktValue,"All-time high"],["Avg Price/sqft",mktPpsf,"Dubai average"],["Off-Plan Share",mktOffPlan,"Dominant market segment"],["YoY Growth",mktYoY,"Value growth YoY"]]]
                     ]
                   };
                   const tabSections = sections[tabLabel] || sections["Overview"];
@@ -2930,7 +2930,7 @@ export default function EmaarDashboardV2() {
                     <span style={{ fontSize: 14 }}>📈</span>
                     <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Dubai Market Pulse</span>
                   </div>
-                  <span style={{ fontSize: 9, color: T.textMuted }}>FY 2025 · DLD Official</span>
+                  <span style={{ fontSize: 9, color: T.textMuted }}>{mktPeriod} · DLD Official</span>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   {[
@@ -2952,7 +2952,7 @@ export default function EmaarDashboardV2() {
                   ))}
                 </div>
                 <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.15)", fontSize: 10, color: T.textMuted }}>
-                  Source: Dubai Land Department FY2025 · DXBinteract · Knight Frank Dubai Report 2025
+                  Source: Dubai Land Department {mktPeriod} · DXBinteract · Knight Frank Dubai Report
                 </div>
               </div>
 
@@ -3006,11 +3006,11 @@ export default function EmaarDashboardV2() {
               // Fallback to static headlines if Firestore not yet populated
               const staticNews = [
                 { headline: "Dubai H1 2025 transactions hit AED 431B — up 25% year-on-year", source: "DLD Official", sourceUrl: "#", tag: "Market", color: T.green, date: "H1 2025", pinned: false },
-                { headline: "Off-plan sales account for 60%+ of all Dubai transactions in 2025", source: "DXBinteract", sourceUrl: "#", tag: "Off-Plan", color: T.blue, date: "FY 2025", pinned: false },
-                { headline: "Emaar records AED 80.4B in property sales — all-time record for any GCC developer", source: "Emaar IR", sourceUrl: "#", tag: "Emaar", color: T.gold, date: "FY 2025", pinned: false },
-                { headline: "Dubai average price per sqft reaches AED 1,689 — up 19.8% annually", source: "ValuStrat VPI", sourceUrl: "#", tag: "Prices", color: T.teal, date: "Dec 2025", pinned: false },
-                { headline: "110,000+ new investors entered Dubai property market in 2025, up 55% YoY", source: "DLD Press Release", sourceUrl: "#", tag: "Demand", color: T.purple, date: "FY 2025", pinned: false },
-                { headline: "EIBOR 3-month rate at 3.593% — mortgage affordability improves as Fed pivots", source: "UAE Central Bank", sourceUrl: "#", tag: "EIBOR", color: T.orange, date: "Mar 2026", pinned: false },
+                { headline: `Off-plan sales account for ${mktOffPlan} of all Dubai transactions`, source: "DXBinteract", sourceUrl: "#", tag: "Off-Plan", color: T.blue, date: mktPeriod, pinned: false },
+                { headline: `Emaar records ${fmtB(propertySales)} in property sales — all-time record for any GCC developer`, source: "Emaar IR", sourceUrl: "#", tag: "Emaar", color: T.gold, date: mktPeriod, pinned: false },
+                { headline: `Dubai average price per sqft reaches ${mktPpsf} — up ${marketGlobal?.avgPpsfYoy || "19.8%"} annually`, source: "ValuStrat VPI", sourceUrl: "#", tag: "Prices", color: T.teal, date: mktPeriod, pinned: false },
+                { headline: "110,000+ new investors entered Dubai property market, up 55% YoY", source: "DLD Press Release", sourceUrl: "#", tag: "Demand", color: T.purple, date: mktPeriod, pinned: false },
+                { headline: "EIBOR 3-month rate — mortgage affordability improves as Fed pivots", source: "UAE Central Bank", sourceUrl: "#", tag: "EIBOR", color: T.orange, date: "Live", pinned: false },
               ];
               // Use Firestore news if available, pinned items first
               const newsItems = liveNewsData.length > 0
@@ -3053,7 +3053,7 @@ export default function EmaarDashboardV2() {
             </div>
               ); })()}
 
-                        <Section title="Key Performance" sub="FY 2025 — All-Time Records Across Every Metric · Source: Emaar Annual Report 2025">
+                        <Section title="Key Performance" sub={`${mktPeriod} — All-Time Records Across Every Metric · Source: Emaar Annual Report`}>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 {emaarStockPrice && (
                   <div style={{ background: T.surface, border: `1px solid ${emaarStockPrice.up ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`, borderRadius: 14, padding: "14px 16px", cursor: "default", position: "relative", overflow: "hidden" }}
@@ -3127,7 +3127,7 @@ export default function EmaarDashboardV2() {
 
             <Section title="Company Strength" sub="Analyst consensus: STRONG BUY (12 of 12 analysts) · Source: Investing.com">
               <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <DataBadge source="Emaar Annual Report FY2025" date="Dec 2025" type="emaar" />
+                <DataBadge source={`Emaar Annual Report ${marketGlobal?.period || "FY2025"}`} date={emaarLive?.updatedAtUAE || "Feb 2026"} type="emaar" />
                 <DataBadge source="S&P / Fitch Ratings 2025" date="2025" type="manual" />
               </div>
               <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
@@ -3176,7 +3176,16 @@ export default function EmaarDashboardV2() {
               const revCagr  = ((Math.pow(rev / baseRev, 1/5) - 1) * 100).toFixed(1);
               const npCagr   = ((Math.pow(np  / baseNP,  1/5) - 1) * 100).toFixed(1);
               return (
-            <Section title="Financial Performance" sub="6-year trend · 2020–2025 · All figures in AED Billions">
+            <Section title="Financial Performance" sub={`6-year trend · 2020–${new Date().getFullYear()} · All figures in AED Billions`}>
+              {/* Freshness badge */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                {emaarLive ? (
+                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>● LIVE · Firestore</span>
+                ) : (
+                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC · data.js</span>
+                )}
+                {emaarLive?.updatedAtUAE && <span style={{ fontSize: 10, color: T.textMuted }}>Updated: {emaarLive.updatedAtUAE}</span>}
+              </div>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Revenue CAGR" value={`${revCagr}%`} sub="2020-2025 · 5-year" delay={1} onClick={() => setSelectedKPI({ label: "Revenue CAGR", value: `${revCagr}%`, color: T.gold, description: `Compound Annual Growth Rate of revenue from AED ${baseRev}B in 2020 to AED ${rev}B — one of the highest CAGRs among global real estate developers.`, source: src, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Revenue", value: `AED ${baseRev}B`, note: "Base year" }, { label: "Latest Revenue", value: `AED ${rev}B`, note: "+240% total growth" }, { label: "CAGR", value: `${revCagr}%`, note: "5-year compounded" }, { label: "vs GCC Average", value: "~8–10%", note: "Sector benchmark" }, { label: "YoY", value: "+40%", note: "Strongest single year" }], trend: emaarFinancials.map(f => ({ y: f.year, v: f.revenue })) })} />
                 <KPI label="Profit CAGR" value={`${npCagr}%`} sub="2020-2025 · 5-year" delay={2} onClick={() => setSelectedKPI({ label: "Profit CAGR", value: `${npCagr}%`, color: T.green, description: `Net profit grew from AED ${baseNP}B in 2020 to AED ${np}B — a ${npCagr}% CAGR driven by margin expansion and operating leverage.`, source: src, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Net Profit", value: `AED ${baseNP}B`, note: "Base year" }, { label: "Latest Net Profit", value: `AED ${np}B`, note: "+888% total growth" }, { label: "CAGR", value: `${npCagr}%`, note: "5-year compounded" }, { label: "Net Margin 2020", value: "17.8%", note: "Starting margin" }, { label: "Net Margin Latest", value: `${nm}%`, note: "Current" }], trend: emaarFinancials.map(f => ({ y: f.year, v: f.netProfit })) })} />
@@ -4852,7 +4861,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                     <div>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Developer Health Score</div>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>DFM · ADX · Annual Reports · DLD Data · FY2025</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>DFM · ADX · Annual Reports · DLD Data · {marketGlobal?.period || "FY2025"}</div>
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
                       {[["score","By Score"],["revenue","By Revenue"],["backlog","By Backlog"],["profit","By Profit"]].map(([v,l]) => (
@@ -4923,7 +4932,7 @@ export default function EmaarDashboardV2() {
                   ))}
                 </div>
                 <div style={{ fontSize: 11, color: T.textMuted, padding: "10px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
-                  📊 Source: Dubai Land Department official data FY2025 via DXB Interact and Gulf News (Jan 2026). Total Dubai market: 214,912 transactions · AED 682.5B · +30.6% value growth YoY. Quarterly splits are proportional estimates based on DLD full-year totals; Q4 weighted higher reflecting strongest quarter on record (AED 187.5B).
+                  📊 Source: Dubai Land Department official data {marketGlobal?.period || "FY2025"} via DXB Interact and Gulf News. Total Dubai market: {marketGlobal?.totalTransactions || "214,912"} transactions · {marketGlobal?.totalMarketValue || "AED 682.5B"} · {marketGlobal?.yoyGrowthPct || "+30.6%"} value growth YoY. Quarterly splits are proportional estimates based on DLD full-year totals; Q4 weighted higher reflecting strongest quarter on record.
                 </div>
               <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM / ADX", url: "https://www.dfm.ae" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "DLD FY2025", url: "https://dubailand.gov.ae" }, { label: "Gulf News — Developer Reports", url: "https://gulfnews.com/business/property" }]} />
               </div>
@@ -5055,7 +5064,7 @@ export default function EmaarDashboardV2() {
                 </div>
                 {/* Bar chart + table */}
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 16 }}>Transactions by Community — FY2025</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 16 }}>Transactions by Community — {marketGlobal?.period || "FY2025"}</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {sorted.map(d => {
                       const barW = (d.total / maxTotal) * 100;
@@ -5124,7 +5133,7 @@ export default function EmaarDashboardV2() {
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
                       <span style={{ fontSize: 14 }}>🌍</span>
                       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Buyer Nationality Breakdown</div>
-                      <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>DLD FY2025</span>
+                      <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>DLD {marketGlobal?.period || "FY2025"}</span>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {nationalityData.map((n, i) => (
@@ -5139,7 +5148,7 @@ export default function EmaarDashboardV2() {
                       ))}
                     </div>
                     <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, fontSize: 10, color: T.textMuted }}>
-                      Indians are the #1 buyers in Dubai (22%) followed by British (9%) and Russians (8%). Source: DLD FY2025
+                      Indians are the #1 buyers in Dubai (22%) followed by British (9%) and Russians (8%). Source: DLD {marketGlobal?.period || "FY2025"}
                     </div>
                   </div>
 
@@ -5148,7 +5157,7 @@ export default function EmaarDashboardV2() {
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
                       <span style={{ fontSize: 14 }}>🏗️</span>
                       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Developer Market Share</div>
-                      <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>By deals FY2025</span>
+                      <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>By deals {marketGlobal?.period || "FY2025"}</span>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {developerData.map((d, i) => (
@@ -5163,7 +5172,7 @@ export default function EmaarDashboardV2() {
                       ))}
                     </div>
                     <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, fontSize: 10, color: T.textMuted }}>
-                      Emaar leads with 13.2% market share (AED 98.5B). Top 8 developers = 37.9% of total market. Source: DXBinteract FY2025
+                      Emaar leads with 13.2% market share (AED 98.5B). Top 8 developers = 37.9% of total market. Source: DXBinteract {marketGlobal?.period || "FY2025"}
                     </div>
                   </div>
                 </div>
@@ -5192,7 +5201,12 @@ export default function EmaarDashboardV2() {
                 }))
               : developers;
             return <>
-            <Section title="Developer Rankings" sub="DXBinteract verified · fam Properties analysis · 2025">
+            <Section title="Developer Rankings" sub={`DXBinteract verified · fam Properties analysis · ${marketGlobal?.period || "FY2025"}`}>
+              {/* Freshness badge */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
+                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC · Verify quarterly</span>
+                {marketGlobal?.updatedAt && <span style={{ fontSize: 10, color: T.textMuted }}>Market data: {new Date(marketGlobal.updatedAt).toLocaleDateString("en-AE", { month: "short", year: "numeric" })}</span>}
+              </div>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Emaar % of Top 30" value="11.8%" sub="% of AED 682.5B Dubai market" delay={1} onClick={() => setSelectedKPI({ label: "Emaar % of Dubai Total", value: "11.8%", color: T.gold, description: "Emaar accounts for 22.6% of all sales among the top 30 Dubai developers — nearly 1 in 4 AED of premium real estate sold in Dubai.", source: "DXBinteract · fam Properties 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar FY2025 Sales", value: "AED 80.4B", note: "All-time record" }, { label: "Dubai Total Market", value: "AED 682.5B", note: "FY2025 DLD data" }, { label: "Emaar Share", value: "11.8%", note: "Of entire Dubai market" }, { label: "Rank", value: "#1", note: "By sales value" }, { label: "#2 DAMAC", value: "~AED 32B est.", note: "2.5× smaller" }], trend: null })} />
                 <KPI label="Lead vs #2" value="AED 48.4B" sub="2.5× larger than DAMAC (est.)" delay={2} onClick={() => setSelectedKPI({ label: "Lead vs #2", value: "AED 48.4B", color: T.teal, description: "Emaar leads #2 developer DAMAC by an estimated AED 48.4B in 2025 property sales — a 2.5× advantage. Gap has widened from ~AED 12B in 2023 to AED 48B+ in 2025.", source: "DXBinteract 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar Sales FY2025", value: "AED 80.4B", note: "Official Emaar press release" }, { label: "DAMAC Est. FY2025", value: "~AED 32B", note: "Went private, est." }, { label: "Sales Gap", value: "~AED 48.4B", note: "2.5× advantage" }, { label: "2023 Gap", value: "~AED 19B", note: "Gap widening fast" }, { label: "2024 Gap", value: "~AED 31B", note: "Emaar accelerating" }], trend: null })} />
@@ -5296,10 +5310,15 @@ export default function EmaarDashboardV2() {
           {tab === "Yields" && !isPro && <ProGateFullPage tabName="Yields" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Yields" && isPro && <>
             <ProGate isPro={isPro} message="Unlock Rental Yield Analysis" onUpgrade={() => setShowUpgrade(true)}>
-            <Section title="Rental Yield Analysis" sub="REIDIN Dec 2025 · DXB Interact · Engel & Völkers · DLD Rental Index">
-              <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <DataBadge source="REIDIN Dec 2025" date="Dec 2025" type="reidin" />
-                <DataBadge source="Dubai Land Department Rental Index" date="2025" type="dld" />
+            <Section title="Rental Yield Analysis" sub="Bayut RapidAPI · DXB Interact · Engel & Völkers · DLD Rental Index">
+              <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                {liveYields.length > 0 ? (
+                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>● LIVE · Bayut API</span>
+                ) : (
+                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC · data.js</span>
+                )}
+                <DataBadge source="REIDIN" date={marketGlobal?.updatedAt ? new Date(marketGlobal.updatedAt).toLocaleDateString("en-AE", { month: "short", year: "numeric" }) : "Recent"} type="reidin" />
+                <DataBadge source="Dubai Land Department Rental Index" date={marketGlobal?.period || "FY2025"} type="dld" />
               </div>
               <Chart title="Gross Yield by Community & Unit Type (%)" style={{ marginTop: 16 }}>
                 <ResponsiveContainer width="100%" height={320}>
@@ -6940,7 +6959,7 @@ export default function EmaarDashboardV2() {
           {tab === "Market" && <>
             <Section title="Dubai Real Estate — 2025" sub="Official DLD Data · 5th Consecutive Record Year">
               <div style={{ marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <DataBadge source="Dubai Land Department FY2025" date="Dec 2025" type="dld" />
+                <DataBadge source={`Dubai Land Department ${marketGlobal?.period || "FY2025"}`} date={marketGlobal?.updatedAt ? new Date(marketGlobal.updatedAt).toLocaleDateString("en-AE", { month: "short", year: "numeric" }) : "Jan 2026"} type="dld" />
                 <DataBadge source="REIDIN Price Index Dec 2025" date="Dec 2025" type="reidin" />
                 <DataBadge source="ValuStrat Q4 2025" date="Q4 2025" type="manual" />
               </div>
@@ -7222,7 +7241,7 @@ export default function EmaarDashboardV2() {
                 { y: "2014", v: 1250 }, { y: "2015", v: 1150 }, { y: "2016", v: 1050 },
                 { y: "2017", v: 1020 }, { y: "2018", v: 980 }, { y: "2019", v: 930 },
                 { y: "2020", v: 880 }, { y: "2021", v: 970 }, { y: "2022", v: 1150 },
-                { y: "2023", v: 1380 }, { y: "2024", v: 1560 }, { y: "2025", v: 1689 },
+                { y: "2023", v: 1380 }, { y: "2024", v: 1560 }, { y: "2025", v: marketGlobal?.avgPpsfNum || 1689 },
               ],
               "Downtown Dubai": [
                 { y: "2008", v: 3200 }, { y: "2009", v: 1800 }, { y: "2010", v: 1600 },
@@ -7280,7 +7299,7 @@ export default function EmaarDashboardV2() {
               { year: "2014", event: "Peak & Correction", type: "correction", desc: "Second boom peaks. Government cooling measures (double DLD fee to 4%, mortgage LTV caps) trigger 25% correction." },
               { year: "2020", event: "COVID-19 Dip", type: "crash", desc: "Pandemic causes 15–20% dip. Short-lived — UAE's COVID response and Golden Visa expansion drive rapid recovery." },
               { year: "2021", event: "New Bull Run Begins", type: "recovery", desc: "Record transactions. Millionaire migration accelerates. 56+ consecutive months of growth begins." },
-              { year: "2025", event: "Record Market", type: "peak", desc: "AED 682B market. 5th consecutive record year. 214,912 transactions. Prices at all-time highs in most communities." },
+              { year: "2025", event: "Record Market", type: "peak", desc: `${mktValue} market. 5th consecutive record year. ${mktTxns} transactions. Prices at all-time highs in most communities.` },
             ];
 
             const COLORS = { "Dubai Average": T.gold, "Downtown Dubai": "#8B5CF6", "Palm Jumeirah": "#3B82F6", "Dubai Hills Estate": "#10B981", "JVC": "#F59E0B", "Business Bay": "#EC4899", "Dubai Marina": "#06B6D4" };
@@ -7412,7 +7431,7 @@ export default function EmaarDashboardV2() {
                     {[
                       { cycle: "Cycle 1: 2008–2012", icon: "📉", color: T.red, title: "Crash & Recovery", stats: [{ l: "Peak (2008)", v: "AED 1,420/sqft" }, { l: "Trough (2010)", v: "AED 780/sqft" }, { l: "Drawdown", v: "-45%" }, { l: "Recovery", v: "3 years" }], insight: "GFC triggered Dubai's worst crash — overleveraged developers, stalled projects, and Nakheel's $16B debt restructuring. Recovery driven by fundamentals: no income tax, growing expat population, infrastructure completion." },
                       { cycle: "Cycle 2: 2012–2020", icon: "📊", color: T.gold, title: "Boom, Cooldown, Stability", stats: [{ l: "Peak (2014)", v: "AED 1,250/sqft" }, { l: "Trough (2020)", v: "AED 880/sqft" }, { l: "Drawdown", v: "-30%" }, { l: "Duration", v: "8 years" }], insight: "Government cooling measures (4% DLD, LTV caps) softened the boom. Gradual 25% correction until COVID. More orderly than 2008 — regulated market with escrow laws protecting off-plan buyers." },
-                      { cycle: "Cycle 3: 2020–2025+", icon: "🚀", color: T.green, title: "The Great Bull Run", stats: [{ l: "Trough (2020)", v: "AED 880/sqft" }, { l: "Current (2025)", v: "AED 1,689/sqft" }, { l: "Gain", v: "+92%" }, { l: "Duration", v: "5+ years" }], insight: "Longest bull run in Dubai history. Driven by: Golden Visa expansion, millionaire migration, limited new supply in premium zones, post-COVID safe haven demand, and AED-USD peg stability." },
+                      { cycle: "Cycle 3: 2020–Present", icon: "🚀", color: T.green, title: "The Great Bull Run", stats: [{ l: "Trough (2020)", v: "AED 880/sqft" }, { l: `Current (${marketGlobal?.period || "2025"})`, v: mktPpsf || "AED 1,689/sqft" }, { l: "Gain", v: "+92%" }, { l: "Duration", v: "5+ years" }], insight: "Longest bull run in Dubai history. Driven by: Golden Visa expansion, millionaire migration, limited new supply in premium zones, post-COVID safe haven demand, and AED-USD peg stability." },
                     ].map((cy, i) => (
                       <div key={i} style={{ background: T.card, border: `1px solid ${cy.color}33`, borderRadius: 14, padding: 20 }}>
                         <div style={{ fontSize: 22, marginBottom: 8 }}>{cy.icon}</div>
