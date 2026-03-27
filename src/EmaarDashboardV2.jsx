@@ -1,4 +1,4 @@
-
+﻿
 
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
@@ -6,14 +6,26 @@ import emailjs from "@emailjs/browser";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, Legend } from "recharts";
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, where } from "firebase/firestore";
 
-import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
+import { T } from "./theme";
+import { emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
+// S30: Full 208-project Emaar database replaces old 48-project list
+import { emaarProjects } from "./data_emaar_complete";
+import { damacProjects, damacFinancials, damacCommunities, damacYields, damacRisks, damacSegments, damacRadar, damacMegaProjects, damacIdentity, damacLive, damacBranded, damacFinancialHistory } from "./data_damac";
+import { sobhaProjects, sobhaCommunities, sobhaYields, sobhaRisks, sobhaSegments, sobhaRadar, sobhaMegaProjects, sobhaIdentity, sobhaLive, sobhaFinancialHistory } from "./data_sobha";
+import { nakheelProjects, nakheelCommunities, nakheelYields, nakheelRisks, nakheelSegments, nakheelRadar, nakheelMegaProjects, nakheelIdentity, nakheelLive, nakheelFinancialHistory } from "./data_nakheel";
+import { meraasProjects, meeraasC as meereasCommunities, meraasYields, meraasRisks, meraasSegments, meraasRadar, meeraasM as meereasMega, meraasIdentity, meraasLive, meraasFinancialHistory } from "./data_meraas";
+import { binghattiProjects, binghattiCommunities, binghattiYields, binghattiRisks, binghattiSegments, binghattiRadar, binghattiMegaProjects, binghattiIdentity, binghattiLive, binghattiFinancialHistory } from "./data_binghatti";
+import { aldarProjects, aldarCommunities, aldarYields, aldarRisks, aldarSegments, aldarRadar, aldarMegaProjects, aldarIdentity, aldarLive, aldarFinancialHistory } from "./data_aldar";
 import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
+import { useI18n } from "./i18n";
 
 /* ─── DATA ALIASES (for backward compat) ─── */
 const financials = emaarFinancials;
+// S16: segments/risks/radarData use data.js as base fallback at module level
+// Inside JSX, use emaarLive?.emaarSegments etc for Firestore override
 const segments = emaarSegments;
 const risks = emaarRisks.map(r => ({ factor: r.factor, score: r.score, max: 150, color: r.color }));
 const yields = emaarYields.map(y => ({ label: y.unit, community: y.community, rent: y.rent/1000, price: y.price/1000, gross: y.gross, net: y.net, demand: y.demand === "Very High" ? "V.High" : y.demand === "Moderate-High" ? "High" : y.demand, visa: y.visa }));
@@ -653,6 +665,8 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
       const cred = await createUserWithEmailAndPassword(auth, email, pass);
       const now = new Date();
       const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      // S17: Capture referral code from URL ?ref= param
+      const refCode = new URLSearchParams(window.location.search).get("ref") || "";
       await setDoc(doc(db, "users", cred.user.uid), {
         name: name.trim(), email,
         phone: phone.trim(), country: country.trim(),
@@ -661,7 +675,22 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         trialStart: now.toISOString(),
         trialEnd: trialEnd.toISOString(),
         role: "user", emailVerified: false, provider: "email",
+        ...(refCode ? { referredByCode: refCode } : {}),
       });
+      // S17: If referred, create a referral signup record in Firestore
+      if (refCode) {
+        try {
+          await setDoc(doc(db, "referrals", `${cred.user.uid}_signup`), {
+            refCode,
+            signupEmail: email,
+            signupUid:   cred.user.uid,
+            status:      "signup",
+            rewardGranted: false,
+            createdAt:   now.toISOString(),
+            source:      "organic_link",
+          });
+        } catch(e) {}
+      }
       try { await sendEmailVerification(cred.user); } catch(e) {}
       try {
         await emailjs.send("service_da7nshv", "template_gl1xqhy", {
@@ -976,7 +1005,17 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
 /* ─── UPGRADE MODAL ─── */
 const UpgradeModal = ({ show, onClose }) => {
   if (!show) return null;
-  const plans = [
+  const [livePlans, setLivePlans] = React.useState(null);
+
+  // S19: Load pricing from Firestore pricingPlans/current — fallback to hardcoded
+  React.useEffect(() => {
+    if (!show) return;
+    getDoc(doc(db, "pricingPlans", "current")).then(snap => {
+      if (snap.exists()) setLivePlans(snap.data().plans);
+    }).catch(() => {});
+  }, [show]);
+
+  const plans = livePlans || [
     { name: "Pro", price: "99", period: "month", features: ["48 Emaar projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →" },
     { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation ⏳", "API data access ⏳", "Custom dashboards ⏳", "Multi-user team accounts ⏳", "Developer-level raw data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Launching Q3 2026", cta: "Contact Sales →" },
   ];
@@ -1065,10 +1104,12 @@ function useFocusTrap(active) {
 }
 
 /* ─── COMMUNITY MAP TAB COMPONENT ─── */
-function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
+function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, selectedDeveloper, compareList = [], toggleCompare = () => {}, isPro = false, setShowUpgrade = () => {} }) {
   const [selectedProject, setSelectedProjectMap] = React.useState(null);
   const [filterComm, setFilterComm] = React.useState("All");
   const [filterYield, setFilterYield] = React.useState("All");
+  const [filterStatus, setFilterStatus] = React.useState("All"); // S8
+  const [filterTier, setFilterTier] = React.useState("All");     // S8
   const [mapLoaded, setMapLoaded] = React.useState(false);
   const [mapLayer, setMapLayer] = React.useState("yield"); // yield | ppsf | volume
   const heatLayersRef = React.useRef([]);
@@ -1119,6 +1160,48 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
     "Mudon":                { coords: [25.0200, 55.2500], ppsf: 1400, volume: 620,   yoy: 20, radius: 800  },
     "Grand Polo Club":      { coords: [24.8500, 55.4200], ppsf: 1800, volume: 420,   yoy: 25, radius: 900  },
   };
+
+  // ── Community polygon boundaries (approximate GeoJSON-style coords) ──────
+  const COMMUNITY_POLYGONS = {
+    "Dubai Hills Estate": [
+      [25.1020,55.2450],[25.1020,55.2720],[25.1200,55.2720],[25.1200,55.2450]
+    ],
+    "Dubai Creek Harbour": [
+      [25.1800,55.3250],[25.1800,55.3480],[25.1980,55.3480],[25.1980,55.3250]
+    ],
+    "Emaar Beachfront": [
+      [25.0720,55.1280],[25.0720,55.1420],[25.0860,55.1420],[25.0860,55.1280]
+    ],
+    "Downtown Dubai": [
+      [25.1880,55.2650],[25.1880,55.2840],[25.2060,55.2840],[25.2060,55.2650]
+    ],
+    "Business Bay": [
+      [25.1780,55.2560],[25.1780,55.2760],[25.1960,55.2760],[25.1960,55.2560]
+    ],
+    "Emaar South": [
+      [24.8850,55.1520],[24.8850,55.1780],[24.9120,55.1780],[24.9120,55.1520]
+    ],
+    "The Valley": [
+      [24.9880,55.4850],[24.9880,55.5150],[25.0120,55.5150],[25.0120,55.4850]
+    ],
+    "The Oasis": [
+      [25.0100,55.1700],[25.0100,55.1950],[25.0350,55.1950],[25.0350,55.1700]
+    ],
+    "Rashid Yachts & Marina": [
+      [25.2120,55.3000],[25.2120,55.3220],[25.2300,55.3220],[25.2300,55.3000]
+    ],
+    "Grand Polo Club": [
+      [24.8380,55.4080],[24.8380,55.4340],[24.8640,55.4340],[24.8640,55.4080]
+    ],
+    "Arabian Ranches 3": [
+      [25.0440,55.2600],[25.0440,55.2800],[25.0640,55.2800],[25.0640,55.2600]
+    ],
+    "Mudon": [
+      [25.0120,55.2400],[25.0120,55.2600],[25.0320,55.2600],[25.0320,55.2400]
+    ],
+  };
+
+  const polygonLayersRef = React.useRef([]);
 
   const getPPSFColor = (ppsf) => {
     if (ppsf >= 3500) return "#F59E0B"; // Ultra-premium
@@ -1175,10 +1258,13 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
 
   const communities = ["All", ...Array.from(new Set(activeProjects.map(p => p.community)))];
   const filteredProjects = activeProjects.filter(p => {
-    const commOk = filterComm === "All" || p.community === filterComm;
-    const y = getYield(p);
-    const yieldOk = filterYield === "All" || (filterYield === "8%+" && y >= 8) || (filterYield === "6-8%" && y >= 6 && y < 8) || (filterYield === "<6%" && y < 6);
-    return commOk && yieldOk;
+    const commOk   = filterComm   === "All" || p.community === filterComm;
+    const y        = getYield(p);
+    const yieldOk  = filterYield  === "All" || (filterYield === "8%+" && y >= 8) || (filterYield === "6-8%" && y >= 6 && y < 8) || (filterYield === "<6%" && y < 6);
+    const statusOk = filterStatus === "All" || p.status === filterStatus;                          // S8
+    const tierOk   = filterTier   === "All" || (p.tier || "").includes(filterTier);               // S8
+    const devOk    = !selectedDeveloper || selectedDeveloper === "all" || selectedDeveloper === "emaar" || (p.developerId || "emaar") === selectedDeveloper; // S8
+    return commOk && yieldOk && statusOk && tierOk && devOk;
   });
 
   // Load Leaflet dynamically
@@ -1254,7 +1340,36 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
     heatLayersRef.current.forEach(c => map.removeLayer(c));
     heatLayersRef.current = [];
 
-    // Add PPSF or Volume heat circles
+    // Clear old polygons
+    polygonLayersRef.current.forEach(p => map.removeLayer(p));
+    polygonLayersRef.current = [];
+
+    // Draw community polygons — always visible as boundaries
+    Object.entries(COMMUNITY_POLYGONS).forEach(([name, coords]) => {
+      const data = communityData[name];
+      if (!data) return;
+      const ppsfColor = getPPSFColor(data.ppsf);
+      const poly = L.polygon(coords, {
+        color:       ppsfColor,
+        fillColor:   ppsfColor,
+        fillOpacity: mapLayer === "ppsf" ? 0.18 : 0.06,
+        weight:      mapLayer === "ppsf" ? 2 : 1,
+        opacity:     mapLayer === "ppsf" ? 0.8 : 0.35,
+        dashArray:   mapLayer === "ppsf" ? null : "4 4",
+      }).addTo(map);
+      poly.bindTooltip(
+        `<div style="font-family:'Outfit',sans-serif;background:#0D1821;color:#fff;border:1px solid ${ppsfColor};border-radius:8px;padding:8px 12px;font-size:12px;">
+          <strong style="color:${ppsfColor}">${name}</strong><br/>
+          PPSF: <strong>AED ${data.ppsf.toLocaleString()}/sqft</strong><br/>
+          Volume: <strong>${data.volume.toLocaleString()} deals</strong><br/>
+          <span style="color:#94A3B8;font-size:10px">YoY: +${data.yoy}%</span>
+        </div>`,
+        { permanent: false, sticky: true, className: "dxb-tooltip" }
+      );
+      polygonLayersRef.current.push(poly);
+    });
+
+    // Add PPSF or Volume heat circles on top of polygons
     if (mapLayer === "ppsf" || mapLayer === "volume") {
       Object.entries(communityData).forEach(([name, data]) => {
         const color = mapLayer === "ppsf" ? getPPSFColor(data.ppsf) : getVolumeColor(data.volume);
@@ -1276,7 +1391,31 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
         heatLayersRef.current.push(circle);
       });
     }
-  }, [mapLoaded, filteredProjects.length, filterComm, filterYield, mapLayer]);
+    // Add yield heatmap circles when yield layer selected
+    if (mapLayer === "yield") {
+      Object.entries(communityData).forEach(([name, data]) => {
+        const yieldPct = liveCommunityROI?.[name]?.grossYield || data.yoy * 0.15 + 5.5;
+        const yColor = yieldPct >= 8 ? "#10B981" : yieldPct >= 6.5 ? "#D4A843" : yieldPct >= 5 ? "#3B82F6" : "#94A3B8";
+        const circle = L.circle(data.coords, {
+          radius:      data.radius * 0.6,
+          color:       yColor,
+          fillColor:   yColor,
+          fillOpacity: 0.12,
+          weight:      1.5,
+          opacity:     0.6,
+        }).addTo(map);
+        circle.bindTooltip(
+          `<div style="font-family:'Outfit',sans-serif;background:#0D1821;color:#fff;border:1px solid ${yColor};border-radius:8px;padding:8px 12px;font-size:12px;">
+            <strong style="color:${yColor}">${name}</strong><br/>
+            Gross Yield: <strong>${yieldPct.toFixed(1)}%</strong><br/>
+            <span style="color:#94A3B8;font-size:10px">PPSF: AED ${data.ppsf.toLocaleString()}/sqft</span>
+          </div>`,
+          { permanent: false, sticky: true, className: "dxb-tooltip" }
+        );
+        heatLayersRef.current.push(circle);
+      });
+    }
+  }, [mapLoaded, filteredProjects.length, filterComm, filterYield, filterStatus, filterTier, mapLayer]);
 
   // Cleanup on unmount
   React.useEffect(() => {
@@ -1285,6 +1424,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
+      polygonLayersRef.current = [];
     };
   }, []);
 
@@ -1332,6 +1472,14 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
         <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>FILTER:</div>
         <select value={filterComm} onChange={e => setFilterComm(e.target.value)} style={{ padding: "6px 12px", background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 8, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
           {communities.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        {/* S8 — Status filter */}
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ padding: "6px 12px", background: T.surfaceAlt, border: `1px solid ${filterStatus !== "All" ? T.teal : T.border}`, borderRadius: 8, color: filterStatus !== "All" ? T.teal : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: filterStatus !== "All" ? 700 : 400 }}>
+          {["All", "Under Construction", "Off-Plan"].map(s => <option key={s} value={s}>{s === "All" ? "All Status" : s}</option>)}
+        </select>
+        {/* S8 — Tier filter */}
+        <select value={filterTier} onChange={e => setFilterTier(e.target.value)} style={{ padding: "6px 12px", background: T.surfaceAlt, border: `1px solid ${filterTier !== "All" ? T.purple : T.border}`, borderRadius: 8, color: filterTier !== "All" ? T.purple : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: filterTier !== "All" ? 700 : 400 }}>
+          {["All", "Affordable", "Mid-Market", "Mid-Premium", "Premium", "Luxury", "Ultra-Luxury", "Luxury Branded", "Ultra-Lux Branded"].map(t => <option key={t} value={t}>{t === "All" ? "All Tiers" : t}</option>)}
         </select>
         <div style={{ display: "flex", gap: 6 }}>
           {["All", "8%+", "6-8%", "<6%"].map(f => (
@@ -1394,7 +1542,13 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
                   </div>
                 ))}
               </div>
-              <button type="button" onClick={() => setTab("Projects")} style={{ width: "100%", padding: "9px 0", background: "linear-gradient(135deg," + T.gold + ",#B8912F)", color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View Full Details →</button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" onClick={() => setTab("Projects")} style={{ flex: 1, padding: "9px 0", background: `linear-gradient(135deg,${T.gold},#B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View Full Details →</button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); isPro ? toggleCompare(selectedProject) : setShowUpgrade(true); }}
+                  style={{ padding: "9px 14px", background: compareList.find(x => x.id === selectedProject.id) ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${compareList.find(x => x.id === selectedProject.id) ? T.gold : T.border}`, borderRadius: 8, color: compareList.find(x => x.id === selectedProject.id) ? T.gold : T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, whiteSpace: "nowrap" }}>
+                  {compareList.find(x => x.id === selectedProject.id) ? "✓ Added" : "+ Compare"}
+                </button>
+              </div>
             </div>
           ) : (
             <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.border, padding: 16 }}>
@@ -1425,13 +1579,118 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
       </div>
 
       {/* Popup CSS */}
-      <style>{".dxb-popup .leaflet-popup-content-wrapper { background: #0D1821; border: 1px solid rgba(212,168,67,0.3); border-radius: 12px; padding: 0; box-shadow: 0 20px 60px rgba(0,0,0,0.6); } .dxb-popup .leaflet-popup-content { margin: 0; } .dxb-popup .leaflet-popup-tip { background: #0D1821; } .leaflet-container { background: #0D1821; }"}</style>
+      <style>{"  .dxb-popup .leaflet-popup-content-wrapper { background: #0D1821; border: 1px solid rgba(212,168,67,0.3); border-radius: 12px; padding: 0; box-shadow: 0 20px 60px rgba(0,0,0,0.6); } .dxb-popup .leaflet-popup-content { margin: 0; } .dxb-popup .leaflet-popup-tip { background: #0D1821; } .leaflet-container { background: #0D1821; } .dxb-tooltip { background: transparent !important; border: none !important; box-shadow: none !important; }"}</style>
+
+      {/* Community PPSF Summary Grid */}
+      <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>
+          Community Intelligence — PPSF · Volume · YoY Growth
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
+          {Object.entries(communityData).map(([name, data]) => {
+            const liveROI = liveCommunityROI?.[name] || liveCommunityROI?.[Object.keys(liveCommunityROI || {}).find(k => k.toLowerCase().includes(name.toLowerCase().split(" ")[0])) || ""] || {};
+            const livePpsf = liveROI.avgPpsf || data.ppsf;
+            const color = getPPSFColor(livePpsf);
+            return (
+              <div key={name} style={{ background: T.card, borderRadius: 10, padding: "10px 12px", border: `1px solid ${T.border}`, cursor: "pointer" }}
+                onClick={() => setFilterComm(filterComm === name ? "All" : name)}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: filterComm === name ? T.gold : T.white, marginBottom: 6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color }}>{livePpsf >= 1000 ? `AED ${livePpsf.toLocaleString()}` : `AED ${livePpsf}`}<span style={{ fontSize: 9, color: T.textMuted }}>/sqft</span></div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>{data.volume.toLocaleString()} deals/yr</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#10B981" }}>+{data.yoy}%</div>
+                    <div style={{ fontSize: 9, color: T.textMuted }}>YoY</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
 
 
 // ─── Tab Data Sources Footer ────────────────────────────────────────────────
+
+/* ─── S17: REFERRAL WIDGET — shown to logged-in users on Overview tab ─── */
+const ReferralWidget = ({ user, T, db }) => {
+  const [copied, setCopied] = React.useState(false);
+  const [rewards, setRewards] = React.useState(0);
+  const [conversions, setConversions] = React.useState(0);
+
+  // Generate referral code from user uid
+  const refCode = React.useMemo(() => {
+    if (!user?.uid) return "";
+    return btoa(user.uid).replace(/[^a-zA-Z0-9]/g, "").slice(0, 10).toUpperCase();
+  }, [user?.uid]);
+
+  const refLink = `https://emaar-dashboard.vercel.app?ref=${refCode}`;
+
+  // Load user's referral stats from Firestore
+  React.useEffect(() => {
+    if (!user?.uid || !db) return;
+    const unsub = onSnapshot(
+      query(collection(db, "referrals"), where("referrerUid", "==", user.uid)),
+      (snap) => {
+        const list = [];
+        snap.forEach(d => list.push(d.data()));
+        setConversions(list.filter(r => r.status === "converted").length);
+        setRewards(list.filter(r => r.rewardGranted).length);
+      },
+      () => {}
+    );
+    return () => unsub();
+  }, [user?.uid, db]);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(refLink).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  if (!refCode) return null;
+
+  return (
+    <div style={{ marginTop: 20, background: "linear-gradient(135deg, rgba(212,168,67,0.06), rgba(212,168,67,0.02))", border: `1px solid ${T.gold}33`, borderRadius: 16, padding: "18px 22px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 2 }}>🎁 Refer a friend — get 1 month free</div>
+          <div style={{ fontSize: 12, color: T.textMuted }}>Share your link. When they upgrade to Pro, you get a free month.</div>
+        </div>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          {conversions > 0 && (
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: T.green, fontFamily: "'Fraunces',serif" }}>{conversions}</div>
+              <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>Conversions</div>
+            </div>
+          )}
+          {rewards > 0 && (
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>{rewards}</div>
+              <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>Free Months</div>
+            </div>
+          )}
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 8, marginTop: 14, alignItems: "center" }}>
+        <div style={{ flex: 1, padding: "9px 14px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 12, color: T.teal, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {refLink}
+        </div>
+        <button type="button" onClick={handleCopy}
+          style={{ padding: "9px 18px", background: copied ? "rgba(16,185,129,0.15)" : T.goldGlow, border: `1px solid ${copied ? T.green : T.gold}`, borderRadius: 8, color: copied ? T.green : T.gold, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0, transition: "all 0.2s" }}>
+          {copied ? "✓ Copied!" : "Copy Link"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 /* ─── DATA BADGE — verified data stamp ─── */
 const DataBadge = ({ source, date, type = "dld" }) => {
   const cfg = {
@@ -1591,6 +1850,8 @@ function EiborAdminPanel({ db, T }) {
 }
 
 export default function EmaarDashboardV2() {
+  const { t: tr, lang, setLang, langInfo, LANGUAGES, dir } = useI18n();
+  // tr() is our translation function (avoiding conflict with 't' loop variable)
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState("");
   const [userName, setUserName] = useState("");
@@ -1694,6 +1955,8 @@ export default function EmaarDashboardV2() {
   const [projectTier, setProjectTier] = useState("All");
   const [projectHandover, setProjectHandover] = useState("All");
   const [projectPriceMax, setProjectPriceMax] = useState(20);
+  const [projectType, setProjectType] = useState("All");
+  const [projectSort, setProjectSort] = useState("default");
   const [liveProjects, setLiveProjects] = useState({});
   const [extraProjects, setExtraProjects] = useState([]);
   const [liveYields, setLiveYields] = useState([]);
@@ -1715,6 +1978,8 @@ export default function EmaarDashboardV2() {
   const [liveMarketData, setLiveMarketData] = useState([]);
   const [liveFinancials, setLiveFinancials] = useState([]);
   const [liveRisk, setLiveRisk] = useState([]);
+  const [liveNewsData, setLiveNewsData] = useState([]); // S10 — tabData/news
+  const [liveAdminAlerts, setLiveAdminAlerts] = useState([]); // S12 — adminAlerts
   const [liveBayutData, setLiveBayutData] = useState({});
   const [lastDataSync, setLastDataSync] = useState(null);
   const [allDevelopers, setAllDevelopers] = useState([]);
@@ -1723,6 +1988,30 @@ export default function EmaarDashboardV2() {
   const [tabSettings, setTabSettings] = useState({});
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
+  // Session 6 — Firestore live data for Overview tab
+  const [emaarLive, setEmaarLive] = useState(null);       // developers/emaar
+  const [damacLiveFS, setDamacLiveFS] = useState(null);   // developers/damac (Firestore)
+  const [sobhaLiveFS, setSobhaLiveFS] = useState(null);   // developers/sobha (Firestore)
+  const [nakheelLiveFS, setNakheelLiveFS] = useState(null); // developers/nakheel
+  const [meraasLiveFS, setMeraasLiveFS]   = useState(null); // developers/meraas
+  const [binghattiLiveFS, setBinghattiLiveFS] = useState(null); // developers/binghatti
+  const [aldarLiveFS, setAldarLiveFS]         = useState(null); // developers/aldar
+  const [marketGlobal, setMarketGlobal] = useState(null); // marketData/global
+
+  // S22–S28: Developer data resolver
+  const devData = React.useMemo(() => {
+    const resolvers = {
+      damac:    { identity:damacIdentity,    live:{...damacLive,    ...(damacLiveFS||{})},    financials:damacFinancialHistory,    communities:damacCommunities,    yields:damacYields,    risks:damacLiveFS?.damacRisks||damacRisks,        segments:damacLiveFS?.damacSegments||damacSegments,        radar:damacLiveFS?.damacRadar||damacRadar,           megaProjects:damacMegaProjects,    branded:damacBranded,  projects:damacProjects    },
+      sobha:    { identity:sobhaIdentity,    live:{...sobhaLive,    ...(sobhaLiveFS||{})},    financials:sobhaFinancialHistory,    communities:sobhaCommunities,    yields:sobhaYields,    risks:sobhaLiveFS?.sobhaRisks||sobhaRisks,        segments:sobhaLiveFS?.sobhaSegments||sobhaSegments,        radar:sobhaLiveFS?.sobhaRadar||sobhaRadar,           megaProjects:sobhaMegaProjects,    branded:[],            projects:sobhaProjects    },
+      nakheel:  { identity:nakheelIdentity,  live:{...nakheelLive,  ...(nakheelLiveFS||{})},  financials:nakheelFinancialHistory,  communities:nakheelCommunities,  yields:nakheelYields,  risks:nakheelLiveFS?.nakheelRisks||nakheelRisks,    segments:nakheelLiveFS?.nakheelSegments||nakheelSegments,  radar:nakheelLiveFS?.nakheelRadar||nakheelRadar,     megaProjects:nakheelMegaProjects,  branded:[],            projects:nakheelProjects  },
+      meraas:   { identity:meraasIdentity,   live:{...meraasLive,   ...(meraasLiveFS||{})},   financials:meraasFinancialHistory,   communities:meereasCommunities,  yields:meraasYields,   risks:meraasLiveFS?.meraasRisks||meraasRisks,       segments:meraasLiveFS?.meraasSegments||meraasSegments,     radar:meraasLiveFS?.meraasRadar||meraasRadar,        megaProjects:meereasMega,         branded:[],            projects:meraasProjects   },
+      binghatti:{ identity:binghattiIdentity,live:{...binghattiLive,...(binghattiLiveFS||{})},financials:binghattiFinancialHistory,communities:binghattiCommunities,yields:binghattiYields,risks:binghattiLiveFS?.binghattiRisks||binghattiRisks,segments:binghattiLiveFS?.binghattiSegments||binghattiSegments,radar:binghattiLiveFS?.binghattiRadar||binghattiRadar,megaProjects:binghattiMegaProjects,branded:[],           projects:binghattiProjects},
+      aldar:    { identity:aldarIdentity,    live:{...aldarLive,    ...(aldarLiveFS||{})},    financials:aldarFinancialHistory,    communities:aldarCommunities,    yields:aldarYields,    risks:aldarLiveFS?.aldarRisks||aldarRisks,          segments:aldarLiveFS?.aldarSegments||aldarSegments,        radar:aldarLiveFS?.aldarRadar||aldarRadar,           megaProjects:aldarMegaProjects,    branded:[],            projects:aldarProjects    },
+    };
+    if (resolvers[selectedDeveloper]) return { ...resolvers[selectedDeveloper], isT1:true, isLive:true };
+    return { identity:{id:"emaar",name:"Emaar Properties",founder:"Mohamed Alabbar",md:"Amit Jain",founded:1997}, live:emaarLive, financials:emaarFinancials, communities:emaarCommunities, yields:emaarYields, risks:emaarRisks, segments:emaarSegments, radar:radarData, megaProjects:megaProjects, branded:[], projects:emaarProjects, isT1:true, isLive:true };
+  }, [selectedDeveloper, emaarLive, damacLiveFS, sobhaLiveFS, nakheelLiveFS, meraasLiveFS, binghattiLiveFS, aldarLiveFS]);
+  const [overviewLoading, setOverviewLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [expandedMega, setExpandedMega] = useState(null);
@@ -1796,25 +2085,35 @@ export default function EmaarDashboardV2() {
     // ── AI Insights — generated fresh if not in cache (cache read now via onSnapshot) ──
     (async () => {
       try {
-        const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000; // S8.5 — 24h cache
         if (aiInsights?.length > 0) return; // already loaded by onSnapshot
         {
-          // Generate fresh insights via Claude API
+          // Generate fresh insights via Claude API — inject live Firestore data
           setInsightsLoading(true);
+          // Build live context from Firestore (fallback to verified constants)
+          const liveCtx = {
+            mktValue:   marketGlobal?.totalMarketValue  || "AED 682.5B",
+            txns:       marketGlobal?.totalTransactions || "214,912",
+            ppsf:       marketGlobal?.avgPricePsf       || "AED 1,689",
+            yoy:        marketGlobal?.yoyGrowthPct      || "+30.64%",
+            offPlan:    marketGlobal?.offPlanShare       || "62.6%",
+            emaarSales: emaarLive?.propertySales != null ? `AED ${emaarLive.propertySales}B` : "AED 80.4B",
+            backlog:    emaarLive?.backlog       != null ? `AED ${emaarLive.backlog}B`       : "AED 155B",
+          };
           const res = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               model: "claude-sonnet-4-20250514",
               max_tokens: 1000,
-              messages: [{ role: "user", content: `You are a Dubai real estate analyst. Generate exactly 5 sharp, data-driven market insights for Dubai property investors right now (${new Date().toLocaleDateString("en-AE", { month: "long", year: "numeric" })}). Use these verified 2025 facts: Dubai total market AED 682.5B, 214,912 transactions, Emaar FY2025 sales AED 80.4B (+16% YoY), avg yield city 6.9%, JVC yields 8-9%, EIBOR 3.47%, Downtown avg AED 2,800/sqft, DLD transfer fee 4%, off-plan 60%+ of market. Return ONLY a JSON array of 5 objects, no markdown, no preamble: [{"title":"...","insight":"...","tag":"Yield|Price|Risk|Macro|Opportunity","direction":"up|down|neutral"}]` }]
+              messages: [{ role: "user", content: `You are a Dubai real estate analyst. Generate exactly 5 sharp, data-driven market insights for Dubai property investors right now (${new Date().toLocaleDateString("en-AE", { month: "long", year: "numeric" })}). Use these verified live facts: Dubai total market ${liveCtx.mktValue}, ${liveCtx.txns} transactions, YoY growth ${liveCtx.yoy}, avg price/sqft ${liveCtx.ppsf}, off-plan share ${liveCtx.offPlan}, Emaar sales ${liveCtx.emaarSales}, Emaar backlog ${liveCtx.backlog}, avg yield city 6.9%, JVC yields 8-9%, Downtown avg AED 2,800/sqft, DLD transfer fee 4%. Return ONLY a JSON array of 5 objects, no markdown, no preamble: [{"title":"...","insight":"...","tag":"Yield|Price|Risk|Macro|Opportunity","direction":"up|down|neutral"}]` }]
             })
           });
           const apiData = await res.json();
           const text = apiData.content?.[0]?.text || "[]";
           const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
           setAiInsights(parsed);
-          // Cache for a week
+          // Cache for 24 hours (S8.5 — was 7 days)
           try { await setDoc(doc(db, "aiInsights", "latest"), { insights: parsed, generatedAt: Date.now() }); } catch(e) {}
           setInsightsLoading(false);
         }
@@ -1846,7 +2145,14 @@ export default function EmaarDashboardV2() {
   const emaarBaseNames = new Set(emaarProjects.map(p => (p.name || "").toLowerCase().trim()));
   const activeProjects = [
     // Always include all 48 curated Emaar projects with any live overrides
-    ...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }),
+    ...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects[p.id]; return ov ? { ...p, ...ov } : p; }),
+    // Include DAMAC projects (S22)
+    ...damacProjects,
+    ...sobhaProjects,
+    ...nakheelProjects,
+    ...meraasProjects,
+    ...binghattiProjects,
+    ...aldarProjects,
     // Include ALL extra projects from Firestore (radar + other developers)
     // Skip any that duplicate the 48 Emaar base projects by name
     ...extraProjects.filter(p => !emaarBaseNames.has((p.name || "").toLowerCase().trim()))
@@ -1898,7 +2204,7 @@ export default function EmaarDashboardV2() {
       const fsProjects = [];
       snap.forEach(d => {
         const data = { ...d.data(), id: d.id, fromFirestore: true };
-        if (data.developerId === "emaar" && baseIds.has(String(data.id?.toString().replace("emaar_", "")))) return;
+        if (data.developerId === "emaar" && (baseIds.has(String(data.id)) || baseIds.has(data.id?.toString().replace("emaar_","emaar-")))) return;
         if (data.developerId === "emaar" && baseNames.has((data.name || "").toLowerCase().trim())) return;
         if (!baseIds.has(String(data.id))) fsProjects.push(data);
       });
@@ -1923,6 +2229,43 @@ export default function EmaarDashboardV2() {
       const map = {};
       snap.forEach(d => { map[d.id] = { ...communityIntel[d.id], ...d.data() }; });
       setLiveCommunityIntel(map);
+    }));
+
+    // Session 6 — developers/emaar (Emaar financials from Firestore)
+    unsubs.push(onSnapshot(doc(db, "developers", "emaar"), (snap) => {
+      if (snap.exists()) setEmaarLive(snap.data());
+      setOverviewLoading(false);
+    }));
+
+    // S22 — developers/damac (DAMAC data from Firestore)
+    unsubs.push(onSnapshot(doc(db, "developers", "damac"), (snap) => {
+      if (snap.exists()) setDamacLiveFS(snap.data());
+    }));
+
+    // S25 — developers/sobha
+    unsubs.push(onSnapshot(doc(db, "developers", "sobha"), (snap) => {
+      if (snap.exists()) setSobhaLiveFS(snap.data());
+    }));
+    // S27 — developers/nakheel
+    unsubs.push(onSnapshot(doc(db, "developers", "nakheel"), (snap) => {
+      if (snap.exists()) setNakheelLiveFS(snap.data());
+    }));
+    // S27 — developers/meraas
+    unsubs.push(onSnapshot(doc(db, "developers", "meraas"), (snap) => {
+      if (snap.exists()) setMeraasLiveFS(snap.data());
+    }));
+    // S28 — developers/binghatti
+    unsubs.push(onSnapshot(doc(db, "developers", "binghatti"), (snap) => {
+      if (snap.exists()) setBinghattiLiveFS(snap.data());
+    }));
+    // S28 — developers/aldar
+    unsubs.push(onSnapshot(doc(db, "developers", "aldar"), (snap) => {
+      if (snap.exists()) setAldarLiveFS(snap.data());
+    }));
+
+    // Session 6 — marketData/global (Dubai market stats from Firestore)
+    unsubs.push(onSnapshot(doc(db, "marketData", "global"), (snap) => {
+      if (snap.exists()) setMarketGlobal(snap.data());
     }));
 
     // yieldData
@@ -1978,17 +2321,77 @@ export default function EmaarDashboardV2() {
       }));
     });
 
+    // S10 — tabData/news (written by cron-news.js daily)
+    unsubs.push(onSnapshot(doc(db, "tabData", "news"), (snap) => {
+      if (snap.exists() && snap.data().rows?.length > 0) {
+        setLiveNewsData(snap.data().rows);
+      }
+    }));
+
+    // S11 — tabData/yieldSummary (written by cron-yields.js weekly)
+    unsubs.push(onSnapshot(doc(db, "tabData", "yieldSummary"), (snap) => {
+      if (!snap.exists() || !snap.data().communities?.length) return;
+      const communities = snap.data().communities;
+      // Map to the shape the Yields tab chart expects
+      const mapped = [];
+      communities.forEach(c => {
+        const unitTypes = [
+          { key: "studio", label: "Studio", demand: "High" },
+          { key: "apt1",   label: "1BR Apt", demand: "V.High" },
+          { key: "apt2",   label: "2BR Apt", demand: "High" },
+          { key: "apt3",   label: "3BR Apt", demand: "Moderate" },
+        ];
+        unitTypes.forEach(u => {
+          const gross = c.yields?.[u.key];
+          const rent  = c.rents?.[u.key];
+          const price = c.salePrices?.[u.key];
+          if (gross != null) {
+            mapped.push({
+              label:     u.label,
+              community: c.community,
+              rent:      rent   ? rent   / 1000 : 0,
+              price:     price  ? price  / 1000 : 0,
+              gross,
+              net:       parseFloat((gross * 0.82).toFixed(2)), // ~18% costs
+              demand:    u.demand,
+              visa:      price >= 2000000 ? "Yes (≥2M)" : "Below 2M",
+              fromCron:  true,
+            });
+          }
+        });
+      });
+      if (mapped.length > 0) setLiveYields(mapped);
+    }));
+
+    // S12 — adminAlerts (written by cron-financials.js when new quarter detected)
+    unsubs.push(onSnapshot(collection(db, "adminAlerts"), (snap) => {
+      const alerts = [];
+      snap.forEach(d => alerts.push({ id: d.id, ...d.data() }));
+      const unread = alerts
+        .filter(a => !a.read)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setLiveAdminAlerts(unread);
+      if (unread.length > 0) console.log(`[S12] ${unread.length} unread admin alert(s)`);
+    }));
+
     // platformSettings/tabs (which tabs are on/off)
     unsubs.push(onSnapshot(doc(db, "platformSettings", "tabs"), (snap) => {
       if (snap.exists()) setTabSettings(snap.data());
     }));
 
-    // developers list
+    // S14 — developers collection (all 228 after seed-developers.js runs)
     unsubs.push(onSnapshot(collection(db, "developers"), (snap) => {
       if (!snap.size) return;
       const devs = [];
       snap.forEach(d => devs.push({ id: d.id, ...d.data() }));
-      devs.sort((a, b) => (a.phase || 1) - (b.phase || 1));
+      // Sort: T1 first, then T2, T3, registry — then by salesValue2025 desc
+      const tierOrder = { T1: 0, T2: 1, T3: 2, registry: 3 };
+      devs.sort((a, b) => {
+        const ta = tierOrder[a.tier] ?? 3;
+        const tb = tierOrder[b.tier] ?? 3;
+        if (ta !== tb) return ta - tb;
+        return (b.salesValue2025 || 0) - (a.salesValue2025 || 0);
+      });
       setAllDevelopers(devs);
     }));
 
@@ -1996,8 +2399,8 @@ export default function EmaarDashboardV2() {
     unsubs.push(onSnapshot(doc(db, "aiInsights", "latest"), (snap) => {
       if (!snap.exists()) return;
       const data = snap.data();
-      const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-      if (data.insights && data.generatedAt > oneWeekAgo) setAiInsights(data.insights);
+      const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+      if (data.insights && data.generatedAt > oneDayAgo) setAiInsights(data.insights);
     }));
 
     return () => unsubs.forEach(u => { try { u(); } catch {} });
@@ -2462,27 +2865,78 @@ export default function EmaarDashboardV2() {
 
         {/* Navigation */}
         <nav role="navigation" aria-label="Main navigation" style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 3, overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "0 16px 8px", flexShrink: 0 }}>Emaar Properties</div>
+          {/* ─── S21: DEVELOPER PICKER ─── */}
+          <div style={{ padding: "0 12px 8px", flexShrink: 0 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Developer</div>
+            <select
+              value={selectedDeveloper}
+              onChange={e => setSelectedDeveloper(e.target.value)}
+              style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${selectedDeveloper !== "emaar" ? T.gold : T.border}`, borderRadius: 8, color: selectedDeveloper !== "emaar" ? T.gold : T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: selectedDeveloper !== "emaar" ? 700 : 400, outline: "none" }}
+            >
+              <optgroup label="T1 — Full Intelligence">
+                <option value="emaar">Emaar Properties</option>
+                <option value="damac">DAMAC Properties</option>
+                <option value="sobha">Sobha Realty</option>
+                <option value="nakheel">Nakheel</option>
+                <option value="binghatti">Binghatti</option>
+                <option value="meraas">Meraas</option>
+                <option value="aldar">Aldar Properties</option>
+                <option value="azizi">Azizi Developments</option>
+                <option value="danube">Danube Properties</option>
+              </optgroup>
+              <optgroup label="T2 — Standard">
+                <option value="ellington">Ellington Properties</option>
+                <option value="mag">MAG Property Dev</option>
+                <option value="tiger">Tiger Properties</option>
+                <option value="imtiaz">Imtiaz Developments</option>
+                <option value="selectgroup">Select Group</option>
+                <option value="omniyat">Omniyat</option>
+                <option value="deyaar">Deyaar Development</option>
+                <option value="samana">Samana Developers</option>
+                <option value="reportage">Reportage Properties</option>
+                <option value="dubaiprops">Dubai Properties</option>
+              </optgroup>
+              <optgroup label="T3 — Data Presence">
+                <option value="nshama">Nshama</option>
+                <option value="wasl">Wasl Properties</option>
+                <option value="arada">Arada</option>
+                <option value="darglobal">DAR Global</option>
+                <option value="vincitore">Vincitore</option>
+                <option value="condor">Condor Developers</option>
+              </optgroup>
+            </select>
+            {selectedDeveloper !== "emaar" && (
+              <div style={{ marginTop: 6, padding: "6px 10px", borderRadius: 6, background: ["damac","sobha","nakheel","meraas","binghatti","aldar"].includes(selectedDeveloper) ? "rgba(16,185,129,0.06)" : "rgba(212,168,67,0.06)", border: `1px solid ${["damac","sobha","nakheel","meraas","binghatti","aldar"].includes(selectedDeveloper) ? T.green : T.gold}22`, fontSize: 10, color: T.textMuted }}>
+                {["damac","sobha","nakheel","meraas","binghatti","aldar"].includes(selectedDeveloper) ? "✅ Full Intelligence Module LIVE"
+                 : ["azizi","danube"].includes(selectedDeveloper)
+                 ? "⏳ Full module coming in S31–S33"
+                 : "📊 DLD data only — full module in S34+"}
+                <button type="button" onClick={() => setSelectedDeveloper("emaar")}
+                  style={{ marginLeft: 8, color: T.gold, background: "none", border: "none", cursor: "pointer", fontSize: 10, fontWeight: 700, padding: 0 }}>← Emaar</button>
+              </div>
+            )}
+          </div>
           <div role="tablist" aria-label="Dashboard sections" style={{ display: "contents" }}>
-          {TABS.filter(t => {
-            const s = tabSettings[t.key];
+          {TABS.filter(tabItem => {
+            const s = tabSettings[tabItem.key];
             if (s && s.visible === false) return false;
             return true;
-          }).map(t => {
-            const s = tabSettings[t.key] || {};
+          }).map(tabItem => {
+            const s = tabSettings[tabItem.key] || {};
             const minTier = s.minTier || "free";
             const tierOrder = { free: 0, pro: 1, enterprise: 2 };
             const userTierOrder = tierOrder[userTier] ?? (userTier === "admin" ? 3 : userTier === "pro_trial" ? 1 : 0);
             const isLocked = tierOrder[minTier] > userTierOrder && userTier !== "admin";
+            const tabLabel = tr ? tr("tabs", tabItem.key) : tabItem.key;
             return (
-              <button type="button" role="tab" aria-selected={tab === t.key} key={t.key}
-                className={`sidebar-btn ${tab === t.key ? "active" : ""}`}
-                onClick={() => isLocked ? setShowUpgrade(true) : handleTabChange(t.key)}
+              <button type="button" role="tab" aria-selected={tab === tabItem.key} key={tabItem.key}
+                className={`sidebar-btn ${tab === tabItem.key ? "active" : ""}`}
+                onClick={() => isLocked ? setShowUpgrade(true) : handleTabChange(tabItem.key)}
                 style={isLocked ? { opacity: 0.55 } : {}}
-                title={isLocked ? `Requires ${minTier} plan` : t.key}
+                title={isLocked ? `Requires ${minTier} plan` : tabLabel}
               >
-                {t.icon}
-                {t.key}
+                {tabItem.icon}
+                {tabLabel}
                 {isLocked && <span style={{ marginLeft: "auto", fontSize: 9, color: minTier === "enterprise" ? "#8B5CF6" : "#D4A843", fontWeight: 700, letterSpacing: 0.5 }}>{minTier === "enterprise" ? "ENT" : "PRO"}</span>}
               </button>
             );
@@ -2529,6 +2983,26 @@ export default function EmaarDashboardV2() {
               {Icons.logout}
             </button>
           </div>
+          {/* ── Language Switcher ── */}
+          {setLang && LANGUAGES && (
+            <div style={{ padding: "8px 12px", marginTop: 4 }}>
+              <div style={{ position: "relative" }}>
+                <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", display: "flex", alignItems: "center", gap: 6 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>{langInfo?.flag}</span>
+                </div>
+                <select
+                  value={lang}
+                  onChange={e => setLang(e.target.value)}
+                  style={{ width: "100%", padding: "8px 10px 8px 38px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", outline: "none", appearance: "none" }}
+                >
+                  {LANGUAGES.map(l => (
+                    <option key={l.code} value={l.code}>{l.flag} {l.nativeName}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -2573,7 +3047,9 @@ export default function EmaarDashboardV2() {
           </button>
           <button type="button" onClick={() => setShowNotifications(v => !v)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: 8, cursor: "pointer", color: T.textSecondary, position: "relative" }} title="Notifications">
             {Icons.bell}
-            {unreadCount > 0 && <span style={{ position: "absolute", top: 4, right: 4, width: 8, height: 8, borderRadius: "50%", background: T.red, border: `2px solid ${T.bg}` }} />}
+            {(unreadCount + (userTier === "admin" ? liveAdminAlerts.length : 0)) > 0 && (
+              <span style={{ position: "absolute", top: 4, right: 4, width: 8, height: 8, borderRadius: "50%", background: liveAdminAlerts.length > 0 ? T.gold : T.red, border: `2px solid ${T.bg}` }} />
+            )}
           </button>
         </div>
       </header>
@@ -2620,6 +3096,93 @@ export default function EmaarDashboardV2() {
 
           {/* ─── OVERVIEW TAB ─── */}
           {tab === "Overview" && <>
+            {/* S21/S22/S25: Developer context banner */}
+            {selectedDeveloper !== "emaar" && (() => {
+              const devNames = { damac:"DAMAC Properties", sobha:"Sobha Realty", nakheel:"Nakheel", binghatti:"Binghatti", meraas:"Meraas", aldar:"Aldar Properties", azizi:"Azizi Developments", danube:"Danube Properties", ellington:"Ellington Properties", mag:"MAG Property Dev", tiger:"Tiger Properties", imtiaz:"Imtiaz Developments", selectgroup:"Select Group", omniyat:"Omniyat", deyaar:"Deyaar Development", samana:"Samana Developers", nshama:"Nshama", wasl:"Wasl Properties", arada:"Arada", darglobal:"DAR Global", vincitore:"Vincitore", condor:"Condor Developers", reportage:"Reportage Properties", dubaiprops:"Dubai Properties" };
+              const devName = devNames[selectedDeveloper] || selectedDeveloper;
+              const isT1Live = ["damac","sobha","nakheel","meraas","binghatti","aldar"].includes(selectedDeveloper);
+              const isT1Pending = ["nakheel","binghatti","meraas","aldar","azizi","danube"].includes(selectedDeveloper);
+              const devColor = selectedDeveloper === "damac" ? "#C8A951" : selectedDeveloper === "sobha" ? "#8B5CF6" : isT1Pending ? T.gold : T.blue;
+              const d = devData?.live || {};
+              const devKpis = isT1Live ? [
+                { label:"FY2025 Sales",        value:`AED ${d.propertySales || (selectedDeveloper==="sobha"?30:36)}B`, sub:`USD ${d.propertySalesUSD || (selectedDeveloper==="sobha"?8.17:9.8)}B`, color:devColor },
+                { label:"Net Profit Est.",     value:`AED ${d.netProfit    || (selectedDeveloper==="sobha"?5.6:8.1)}B`, sub:"FY2025 estimate",  color:T.green  },
+                { label:"Units Delivered",     value:`${(d.unitsDelivered  || (selectedDeveloper==="sobha"?27000:50000)).toLocaleString()}+`, sub:"Total track record", color:T.teal },
+                { label:"Under Construction",  value:`${(d.underConstruction||(selectedDeveloper==="sobha"?26933:54000)).toLocaleString()}+`, sub:"Active pipeline",    color:T.blue },
+                { label:"Communities",         value:selectedDeveloper==="sobha"?"8":"7", sub:"Master communities",  color:T.purple },
+                { label:"Market Rank",         value:selectedDeveloper==="sobha"?"#3":"#1", sub:selectedDeveloper==="sobha"?"Dubai by volume":"Private Developer UAE", color:devColor },
+              ] : [];
+              return (
+                <div style={{ margin:"0 0 20px 0", padding:"20px 24px", borderRadius:14, background:`rgba(${selectedDeveloper==="sobha"?"139,92,246":selectedDeveloper==="damac"?"200,169,81":isT1Pending?"212,168,67":"59,130,246"},0.06)`, border:`1px solid ${devColor}33` }}>
+                  <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", flexWrap:"wrap", gap:12, marginBottom:isT1Live?16:0 }}>
+                    <div>
+                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:devColor }}>{devName}</div>
+                      <div style={{ fontSize:12, color:T.textMuted, marginTop:2 }}>
+                        {selectedDeveloper==="damac"     ? "T1 Full Intelligence · Founded 2002 · Hussain Sajwani · MD: Amira Sajwani · #1 Private Developer UAE"
+                         : selectedDeveloper==="sobha"    ? "T1 Full Intelligence · Founded 1976 · PNC Menon · Chairman: Ravi Menon · 100% Backward Integration"
+                         : selectedDeveloper==="nakheel"  ? "T1 Full Intelligence · Founded 2000 · Dubai Holding · Extended Dubai coastline 300km · Creator of Palm Jumeirah"
+                         : selectedDeveloper==="meraas"   ? "T1 Full Intelligence · Founded 2007 · Dubai Holding · 752M sqft land bank · Lifestyle destination pioneer"
+                         : selectedDeveloper==="binghatti"? "T1 Full Intelligence · Founded 2012 · Muhammad BinGhatti · ADX Listed · #1 Dubai by Units Sold"
+                         : selectedDeveloper==="aldar"    ? "T1 Full Intelligence · Founded 2004 · ADX Listed · Abu Dhabi's largest developer · AED 40.6B FY2025 sales"
+                         : isT1Pending ? "T1 Full Intelligence Module — coming soon" : "T2/T3 Developer — DLD data only"}
+                      </div>
+                    </div>
+                    <div style={{ display:"flex", gap:8, flexShrink:0 }}>
+                      {isT1Live && <span style={{ fontSize:11, padding:"4px 12px", borderRadius:8, background:`rgba(16,185,129,0.12)`, color:T.green, fontWeight:700, border:"1px solid rgba(16,185,129,0.2)" }}>T1 · LIVE DATA</span>}
+                      {!isT1Live && <span style={{ fontSize:11, padding:"4px 12px", borderRadius:8, background:`rgba(212,168,67,0.1)`, color:T.gold, fontWeight:700, border:`1px solid ${T.gold}33` }}>{isT1Pending?"T1 · Full Data Coming":"T2/T3 · Limited Data"}</span>}
+                      <button type="button" onClick={() => setSelectedDeveloper("emaar")} style={{ fontSize:11, padding:"4px 14px", borderRadius:8, background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.textMuted, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>← Back to Emaar</button>
+                    </div>
+                  </div>
+                  {isT1Live && (
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:10 }}>
+                      {devKpis.map(k => (
+                        <div key={k.label} style={{ padding:"10px 12px", borderRadius:10, background:T.surfaceAlt, border:`1px solid ${T.border}`, textAlign:"center" }}>
+                          <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, marginBottom:3 }}>{k.label}</div>
+                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:k.color }}>{k.value}</div>
+                          <div style={{ fontSize:9, color:T.textMuted, marginTop:2 }}>{k.sub}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+            {/* Session 6 — live data helpers (Firestore → fallback to data.js) */}
+            {(() => {
+              const T1_LIVE = ["damac","sobha","nakheel","meraas","binghatti","aldar"];
+              const _fhMap = { damac:damacFinancialHistory, sobha:sobhaFinancialHistory, nakheel:nakheelFinancialHistory, meraas:meraasFinancialHistory };
+              const _liveMap = { damac:{...damacLive,...(damacLiveFS||{})}, sobha:{...sobhaLive,...(sobhaLiveFS||{})}, nakheel:{...nakheelLive,...(nakheelLiveFS||{})}, meraas:{...meraasLive,...(meraasLiveFS||{})} };
+              const fy = T1_LIVE.includes(selectedDeveloper) ? _fhMap[selectedDeveloper][_fhMap[selectedDeveloper].length-1] : emaarFinancials[emaarFinancials.length - 1];
+              const E  = T1_LIVE.includes(selectedDeveloper) ? _liveMap[selectedDeveloper] : (emaarLive || {});
+              const M = marketGlobal || {};
+              const propertySales  = E.propertySales  != null ? E.propertySales  : fy.propertySales;
+              const revenue        = E.revenue        != null ? E.revenue        : fy.revenue;
+              const netProfit      = E.netProfit      != null ? E.netProfit      : fy.netProfit;
+              const ebitda         = E.ebitda         != null ? E.ebitda         : fy.ebitda;
+              const backlog        = T1_LIVE.includes(selectedDeveloper) ? null : (E.backlog != null ? E.backlog : fy.backlog);
+              const recurringRev   = T1_LIVE.includes(selectedDeveloper) ? null : (E.recurringRev != null ? E.recurringRev : (fy.recurringRev || 10.5));
+              const landBank       = T1_LIVE.includes(selectedDeveloper) ? null : (E.landBank != null ? E.landBank : (fy.landBank || 618));
+              const creditRating   = T1_LIVE.includes(selectedDeveloper) ? "Gov/Private" : (E.creditRatingSP || "BBB+");
+              const moodysRating   = T1_LIVE.includes(selectedDeveloper) ? "N/A" : (E.creditRatingMoodys || "Baa1");
+              const reportLabel    = T1_LIVE.includes(selectedDeveloper) ? "FY2025 DLD Data" : (E.latestReportLabel || "Annual Report FY2025");
+              const liveRisks    = devData?.risks    || (E.emaarRisks    || emaarRisks);
+              const liveSegments = devData?.segments || (E.emaarSegments || emaarSegments);
+              const liveRadar    = devData?.radar    || (E.radarData     || radarData);
+              // Dubai market — Firestore first, fallback constants
+              const mktValue       = M.totalMarketValue  || "AED 682.5B";
+              const mktTxns        = M.totalTransactions || "214,912";
+              const mktPpsf        = M.avgPricePsf       || "AED 1,689";
+              const mktYoY         = M.yoyGrowthPct      || "+30.64%";
+              const mktPeriod      = M.period            || "FY 2025";
+              const mktOffPlan     = M.offPlanShare       || "62.6%";
+              // Format helpers
+              const fmtB = (v) => `AED ${v}B`;
+              const freshnessBadge = emaarLive ? (
+                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>● LIVE</span>
+              ) : (
+                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC</span>
+              );
+              return (<>
             {/* ─── VERIFIED BAR ─── */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 4, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -2629,6 +3192,9 @@ export default function EmaarDashboardV2() {
                 <span style={{ fontSize: 11, color: T.textSecondary }}>Data verified <span style={{ color: T.gold, fontWeight: 600 }}>{new Date().toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}</span></span>
                 <span style={{ color: T.border }}>·</span>
                 <a href="https://www.emaar.com/en/investor-relations/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: T.teal, textDecoration: "none" }}>Emaar IR ↗</a>
+                <span style={{ color: T.border }}>·</span>
+                {freshnessBadge}
+                <span style={{ fontSize: 10, color: T.textMuted }}>{emaarLive ? `Firestore · ${reportLabel}` : "data.js fallback"}</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 10, color: T.textMuted }}>Click any card for breakdown & sources</span>
@@ -2685,14 +3251,14 @@ export default function EmaarDashboardV2() {
                   };
                   const sections = {
                     "Overview": [
-                      ["KEY METRICS", [["Property Sales FY2025","AED 80.4B","+16% YoY · All-time record"],["Revenue FY2025","AED 49.6B","+40% YoY · USD 13.5B"],["Net Profit FY2025","AED 25.7B","+36% YoY · USD 7.0B"],["Backlog","AED 155B","3–4yr revenue visibility"],["Units Delivered","125,600+","Since 2002 · #1 GCC"]]],
+                      [`KEY METRICS`, [[`Property Sales ${reportLabel}`,fmtB(propertySales),"+16% YoY · All-time record"],[`Revenue ${reportLabel}`,fmtB(revenue),"+40% YoY · USD 13.5B"],[`Net Profit ${reportLabel}`,fmtB(netProfit),"+36% YoY · USD 7.0B"],["Backlog",fmtB(backlog),"3–4yr revenue visibility"],["Units Delivered","125,600+","Since 2002 · #1 GCC"]]],
                       ["FINANCIALS", [["Market Cap","AED 128.2B","~USD 34.9B"],["P/E Ratio","7.83×","Industry avg 15.5×"],["Dividend Yield","7.04%","AED 1.00/share"],["Debt/Equity","0.11×","Very low leverage"],["Credit Rating","BBB+ / Baa1","S&P / Moody's stable"]]]
                     ],
                     "Yields": [
                       ["RENTAL YIELD SUMMARY", [["City Average Gross Yield","6.9%","Dubai 2025"],["JVC — Highest Yield","8–9%","Best community for yield"],["Downtown Dubai","4–5%","Premium pricing, lower yield"],["Palm Jumeirah","4.5–5.5%","Ultra-luxury, lower yield"],["Dubai Hills Estate","5.5–6.5%","Family community premium"]]]
                     ],
                     "Market": [
-                      ["DUBAI MARKET 2025", [["Total Transactions","214,912","Record — 5th consecutive year"],["Total Market Value","AED 682.5B","All-time high"],["Avg Price/sqft","AED 1,689","2025 Dubai average"],["Off-Plan Share","60%+","Dominant market segment"],["YoY Growth","~22%","Transaction volume growth"]]]
+                      [`DUBAI MARKET ${mktPeriod}`, [["Total Transactions",mktTxns,"Record — 5th consecutive year"],["Total Market Value",mktValue,"All-time high"],["Avg Price/sqft",mktPpsf,"Dubai average"],["Off-Plan Share",mktOffPlan,"Dominant market segment"],["YoY Growth",mktYoY,"Value growth YoY"]]]
                     ]
                   };
                   const tabSections = sections[tabLabel] || sections["Overview"];
@@ -2768,16 +3334,16 @@ export default function EmaarDashboardV2() {
                     <span style={{ fontSize: 14 }}>📈</span>
                     <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Dubai Market Pulse</span>
                   </div>
-                  <span style={{ fontSize: 9, color: T.textMuted }}>FY 2025 · DLD Official</span>
+                  <span style={{ fontSize: 9, color: T.textMuted }}>{mktPeriod} · DLD Official</span>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   {[
-                    { label: "Total Transactions", value: "214,912", change: "+36%", color: T.green, icon: "🏠" },
-                    { label: "Market Value", value: "AED 682.5B", change: "+31%", color: T.gold, icon: "💰" },
-                    { label: "Avg Price/sqft", value: "AED 1,689", change: "+19.8%", color: T.teal, icon: "📐" },
-                    { label: "Off-Plan Share", value: "60%+", change: "Dominant", color: T.blue, icon: "🏗️" },
-                    { label: "New Investors", value: "110,000+", change: "+55%", color: T.purple, icon: "👥" },
-                    { label: "Nationalities", value: "175+", change: "Global demand", color: T.orange, icon: "🌍" },
+                    { label: "Total Transactions", value: mktTxns,   change: mktYoY,   color: T.green,  icon: "🏠" },
+                    { label: "Market Value",        value: mktValue,  change: "+30.6%", color: T.gold,   icon: "💰" },
+                    { label: "Avg Price/sqft",      value: mktPpsf,   change: "+19.8%", color: T.teal,   icon: "📐" },
+                    { label: "Off-Plan Share",       value: mktOffPlan,change: "Dominant",color: T.blue,  icon: "🏗️" },
+                    { label: "New Investors",        value: "110,000+",change: "+55%",   color: T.purple, icon: "👥" },
+                    { label: "Nationalities",        value: "175+",    change: "Global demand", color: T.orange, icon: "🌍" },
                   ].map((item, i) => (
                     <div key={i} style={{ padding: "10px 12px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
@@ -2790,7 +3356,7 @@ export default function EmaarDashboardV2() {
                   ))}
                 </div>
                 <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.15)", fontSize: 10, color: T.textMuted }}>
-                  Source: Dubai Land Department FY2025 · DXBinteract · Knight Frank Dubai Report 2025
+                  Source: Dubai Land Department {mktPeriod} · DXBinteract · Knight Frank Dubai Report
                 </div>
               </div>
 
@@ -2838,38 +3404,68 @@ export default function EmaarDashboardV2() {
               </div>
             </div>
 
-            {/* ── LATEST DUBAI RE NEWS ── */}
+            {/* ── LATEST DUBAI RE NEWS — S10: live from Firestore tabData/news ── */}
+            {(() => {
+              // liveNewsData comes from tabData/news Firestore listener (set up below)
+              // Fallback to static headlines if Firestore not yet populated
+              const staticNews = [
+                { headline: "Dubai H1 2025 transactions hit AED 431B — up 25% year-on-year", source: "DLD Official", sourceUrl: "#", tag: "Market", color: T.green, date: "H1 2025", pinned: false },
+                { headline: `Off-plan sales account for ${mktOffPlan} of all Dubai transactions`, source: "DXBinteract", sourceUrl: "#", tag: "Off-Plan", color: T.blue, date: mktPeriod, pinned: false },
+                { headline: `Emaar records ${fmtB(propertySales)} in property sales — all-time record for any GCC developer`, source: "Emaar IR", sourceUrl: "#", tag: "Emaar", color: T.gold, date: mktPeriod, pinned: false },
+                { headline: `Dubai average price per sqft reaches ${mktPpsf} — up ${marketGlobal?.avgPpsfYoy || "19.8%"} annually`, source: "ValuStrat VPI", sourceUrl: "#", tag: "Prices", color: T.teal, date: mktPeriod, pinned: false },
+                { headline: "110,000+ new investors entered Dubai property market, up 55% YoY", source: "DLD Press Release", sourceUrl: "#", tag: "Demand", color: T.purple, date: mktPeriod, pinned: false },
+                { headline: "EIBOR 3-month rate — mortgage affordability improves as Fed pivots", source: "UAE Central Bank", sourceUrl: "#", tag: "EIBOR", color: T.orange, date: "Live", pinned: false },
+              ];
+              // Use Firestore news if available, pinned items first
+              const newsItems = liveNewsData.length > 0
+                ? [...liveNewsData].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
+                : staticNews;
+              const isLive = liveNewsData.length > 0;
+              return (
             <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 14 }}>📰</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Dubai RE Market Headlines</span>
-                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.1)", color: T.green, border: "1px solid rgba(16,185,129,0.2)" }}>Q1 2026</span>
+                  {isLive
+                    ? <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.1)", color: T.green, border: "1px solid rgba(16,185,129,0.2)" }}>● LIVE</span>
+                    : <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: T.gold, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC</span>
+                  }
                 </div>
-                <span style={{ fontSize: 9, color: T.textMuted }}>Curated from DLD · Gulf News · Zawya · Knight Frank</span>
+                <span style={{ fontSize: 9, color: T.textMuted }}>{isLive ? "Zawya · Gulf News · Arabian Business · The National · PropertyNews.ae" : "Curated from DLD · Gulf News · Zawya · Knight Frank"}</span>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
-                {[
-                  { headline: "Dubai H1 2025 transactions hit AED 431B — up 25% year-on-year", source: "DLD Official", tag: "Market", color: T.green, date: "H1 2025" },
-                  { headline: "Off-plan sales account for 60%+ of all Dubai transactions in 2025", source: "DXBinteract", tag: "Off-Plan", color: T.blue, date: "FY 2025" },
-                  { headline: "Emaar records AED 80.4B in property sales — all-time record for any GCC developer", source: "Emaar IR", tag: "Emaar", color: T.gold, date: "FY 2025" },
-                  { headline: "Dubai average price per sqft reaches AED 1,689 — up 19.8% annually", source: "ValuStrat VPI", tag: "Prices", color: T.teal, date: "Dec 2025" },
-                  { headline: "110,000+ new investors entered Dubai property market in 2025, up 55% YoY", source: "DLD Press Release", tag: "Demand", color: T.purple, date: "FY 2025" },
-                  { headline: "EIBOR 3-month rate at 3.593% — mortgage affordability improves as Fed pivots", source: "UAE Central Bank", tag: "EIBOR", color: T.orange, date: "Mar 2026" },
-                ].map((item, i) => (
-                  <div key={i} style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 8 }}>
+                {newsItems.map((item, i) => (
+                  <div key={i} style={{ padding: "12px 14px", background: item.pinned ? "rgba(212,168,67,0.06)" : T.surfaceAlt, borderRadius: 10, border: `1px solid ${item.pinned ? T.gold : T.border}`, display: "flex", flexDirection: "column", gap: 8 }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 6, background: `${item.color}15`, color: item.color, fontWeight: 700 }}>{item.tag}</span>
+                      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                        {item.pinned && <span style={{ fontSize: 8, color: T.gold }}>📌</span>}
+                        <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 6, background: `${item.color}15`, color: item.color, fontWeight: 700 }}>{item.tag}</span>
+                      </div>
                       <span style={{ fontSize: 9, color: T.textMuted }}>{item.date}</span>
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white, lineHeight: 1.4 }}>{item.headline}</div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white, lineHeight: 1.4 }}>
+                      {item.sourceUrl && item.sourceUrl !== "#"
+                        ? <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: T.white, textDecoration: "none" }} onMouseEnter={e => e.target.style.color = T.gold} onMouseLeave={e => e.target.style.color = T.white}>{item.headline}</a>
+                        : item.headline
+                      }
+                    </div>
                     <div style={{ fontSize: 10, color: T.textMuted }}>Source: {item.source}</div>
                   </div>
                 ))}
               </div>
             </div>
+              ); })()}
 
-                        <Section title="Key Performance" sub="FY 2025 — All-Time Records Across Every Metric · Source: Emaar Annual Report 2025">
+                        <Section title="Key Performance" sub={
+                          selectedDeveloper==="damac"     ? `FY2025 — Record AED 36B Sales · #1 Private Developer UAE · Source: DAMAC Official` :
+                          selectedDeveloper==="sobha"     ? `FY2025 — AED 30B Sales · +30% YoY · Source: Sobha Official` :
+                          selectedDeveloper==="nakheel"   ? `FY2025 — AED 24.6B Sales · Palm Jebel Ali + Dubai Islands · Source: DLD` :
+                          selectedDeveloper==="meraas"    ? `FY2025 — AED 20.9B Sales · Lifestyle Master Developer · Source: DLD` :
+                          selectedDeveloper==="binghatti" ? `FY2025 — AED 12.43B Revenue · +96% Net Profit · #1 Dubai by Units · Source: Binghatti IR` :
+                          selectedDeveloper==="aldar"     ? `FY2025 — AED 40.6B Group Sales · +36% Net Profit · #1 Abu Dhabi · Source: Aldar IR` :
+                          `${mktPeriod} — All-Time Records Across Every Metric · Source: Emaar Annual Report`
+                        }>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 {emaarStockPrice && (
                   <div style={{ background: T.surface, border: `1px solid ${emaarStockPrice.up ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`, borderRadius: 14, padding: "14px 16px", cursor: "default", position: "relative", overflow: "hidden" }}
@@ -2883,14 +3479,14 @@ export default function EmaarDashboardV2() {
                     <div style={{ fontSize: 11, color: emaarStockPrice.up ? T.green : "#EF4444", marginTop: 4 }}>{emaarStockPrice.up ? "▲" : "▼"} {Math.abs(emaarStockPrice.change)}% today · DFM</div>
                   </div>
                 )}
-                <KPI label="Property Sales" value="AED 80.4B" sub="+16% YoY · USD 21.9B" delay={1} onClick={() => setSelectedKPI({ label: "Property Sales", value: "AED 80.4B", color: T.gold, description: "Total off-plan and ready property sales contracted in FY2025. Includes UAE and international markets.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "FY2025 Sales", value: "AED 80.4B", note: "All-time record" }, { label: "FY2024 Sales", value: "AED 69.3B", note: "+16% YoY" }, { label: "FY2023 Sales", value: "AED 52.7B", note: "+31% YoY" }, { label: "Int'l Sales", value: "AED 9.3B", note: "+124% YoY" }, { label: "UAE Market Share", value: "~30%", note: "Largest by value" }, { label: "Units Booked", value: "12,000+", note: "FY2025 estimate" }], trend: [{ y: "2020", v: 21.5 }, { y: "2021", v: 26.2 }, { y: "2022", v: 33.5 }, { y: "2023", v: 52.7 }, { y: "2024", v: 69.3 }, { y: "2025", v: 80.4 }] })} />
-                <KPI label="Revenue" value="AED 49.6B" sub="+40% YoY · USD 13.5B" delay={2} onClick={() => setSelectedKPI({ label: "Revenue", value: "AED 49.6B", color: T.teal, description: "Total recognized revenue across property development, malls, hospitality, and international operations.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "UAE Dev Revenue", value: "AED 36.4B", note: "73% of total" }, { label: "Malls & Retail", value: "AED 6.3B", note: "+13% YoY" }, { label: "Hospitality", value: "AED 4.2B", note: "+12% YoY" }, { label: "International", value: "AED 2.6B", note: "+124% YoY" }, { label: "Revenue CAGR", value: "27.2%", note: "5-year 2020–2025" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: 49.6 }] })} />
-                <KPI label="Net Profit" value="AED 25.7B" sub="+36% YoY · USD 7.0B" delay={3} onClick={() => setSelectedKPI({ label: "Net Profit", value: "AED 25.7B", color: T.green, description: "Net profit before minority interest. Includes recurring revenue from Emaar Malls and hospitality.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Net Margin", value: "51.8%", note: "Industry-leading" }, { label: "EPS FY2025", value: "AED 2.00", note: "+31% YoY" }, { label: "Q4 2025 Profit", value: "AED 7.3B", note: "Strongest quarter" }, { label: "5yr Profit CAGR", value: "57.1%", note: "2020–2025" }, { label: "Tax Rate", value: "~9%", note: "UAE Corporate Tax" }], trend: [{ y: "2020", v: 2.6 }, { y: "2021", v: 4.1 }, { y: "2022", v: 6.2 }, { y: "2023", v: 12.6 }, { y: "2024", v: 18.9 }, { y: "2025", v: 25.7 }] })} />
-                <KPI label="EBITDA" value="AED 25.6B" sub="+33% YoY · USD 7.0B" delay={4} onClick={() => setSelectedKPI({ label: "EBITDA", value: "AED 25.6B", color: T.blue, description: "Earnings before interest, tax, depreciation & amortisation. Key operational profitability metric.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "EBITDA Margin", value: "51.6%", note: "5-year high" }, { label: "Recurring EBITDA", value: "AED 10.5B", note: "32% share" }, { label: "Dev EBITDA", value: "AED 15.1B", note: "Property segment" }, { label: "EV/EBITDA", value: "~5.0×", note: "Vs sector 9× avg" }, { label: "EBITDA CAGR", value: "44.5%", note: "2020–2025" }], trend: [{ y: "2020", v: 4.0 }, { y: "2021", v: 5.3 }, { y: "2022", v: 8.1 }, { y: "2023", v: 13.4 }, { y: "2024", v: 19.2 }, { y: "2025", v: 25.6 }] })} />
-                <KPI label="Backlog" value="AED 155B" sub="+39% YoY · 3-4yr visibility" delay={5} onClick={() => setSelectedKPI({ label: "Revenue Backlog", value: "AED 155B", color: T.purple, description: "Total contracted but unrecognized revenue. Provides 3–4 years of forward revenue visibility.", source: "Emaar Q4 2025 Results", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Backlog", value: "AED 155B", note: "+39% YoY record" }, { label: "FY2024 Backlog", value: "AED 111.5B", note: "Prior year" }, { label: "Coverage Ratio", value: "3–4 yrs", note: "Revenue visibility" }, { label: "UAE Backlog", value: "AED 140B+", note: "~90% of total" }, { label: "New Launches", value: "AED 85B+", note: "FY2025 new sales" }], trend: [{ y: "2020", v: 45 }, { y: "2021", v: 52 }, { y: "2022", v: 68 }, { y: "2023", v: 80 }, { y: "2024", v: 111.5 }, { y: "2025", v: 155 }] })} />
-                <KPI label="Recurring Rev" value="AED 10.5B" sub="+13% · 32% of EBITDA" delay={6} onClick={() => setSelectedKPI({ label: "Recurring Revenue", value: "AED 10.5B", color: T.cyan, description: "Stable income from Emaar Malls, hotels, serviced residences, and commercial leasing.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Malls Revenue", value: "AED 6.3B", note: "Dubai Mall + Fashion Ave" }, { label: "Hospitality", value: "AED 4.2B", note: "Hotels & serviced res." }, { label: "% of EBITDA", value: "32%", note: "Defensive income" }, { label: "Dubai Mall Footfall", value: "105M+", note: "Annual visitors" }, { label: "Occupancy", value: "95%+", note: "Malls occupancy rate" }], trend: [{ y: "2020", v: 5.8 }, { y: "2021", v: 6.8 }, { y: "2022", v: 7.9 }, { y: "2023", v: 8.6 }, { y: "2024", v: 9.3 }, { y: "2025", v: 10.5 }] })} />
-                <KPI label="Units Delivered" value="125,600+" sub="Since 2002 · #1 in GCC" delay={7} onClick={() => setSelectedKPI({ label: "Units Delivered", value: "125,600+", color: T.gold, description: "Total residential and commercial units delivered since inception in 2002. Largest track record in GCC.", source: "Emaar Corporate Profile 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Delivered", value: "125,600+", note: "Since 2002" }, { label: "FY2025 Deliveries", value: "~11,000", note: "Est. annual handovers" }, { label: "UAE Units", value: "~100,000+", note: "80% of total" }, { label: "On-Time Record", value: "95%+", note: "Delivery track record" }, { label: "GCC Rank", value: "#1", note: "By volume" }], trend: [{ y: "2020", v: 85000 }, { y: "2021", v: 95000 }, { y: "2022", v: 103000 }, { y: "2023", v: 110000 }, { y: "2024", v: 118000 }, { y: "2025", v: 125600 }] })} />
-                <KPI label="Land Bank" value="618M sqft" sub="344M UAE · AED 120B dev" delay={8} onClick={() => setSelectedKPI({ label: "Land Bank", value: "618M sqft", color: T.gold, description: "Total gross land area owned or controlled by Emaar for future development.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Land Bank", value: "618M sqft", note: "Gross area" }, { label: "UAE Land", value: "344M sqft", note: "56% of total" }, { label: "International", value: "274M sqft", note: "Egypt, India, KSA" }, { label: "Development Value", value: "AED 120B+", note: "Future GDV est." }, { label: "Dubai Hills Remaining", value: "~180M sqft", note: "Largest UAE plot" }], trend: [{ y: "2020", v: 480 }, { y: "2021", v: 510 }, { y: "2022", v: 535 }, { y: "2023", v: 570 }, { y: "2024", v: 595 }, { y: "2025", v: 618 }] })} />
+                <KPI label="Property Sales" value={fmtB(propertySales)} sub="+16% YoY · USD 21.9B" delay={1} onClick={() => setSelectedKPI({ label: "Property Sales", value: fmtB(propertySales), color: T.gold, description: "Total off-plan and ready property sales contracted in FY2025. Includes UAE and international markets.", source: reportLabel, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "FY2025 Sales", value: fmtB(propertySales), note: "All-time record" }, { label: "FY2024 Sales", value: "AED 69.3B", note: "+16% YoY" }, { label: "FY2023 Sales", value: "AED 52.7B", note: "+31% YoY" }, { label: "Int'l Sales", value: "AED 9.3B", note: "+124% YoY" }, { label: "UAE Market Share", value: "~30%", note: "Largest by value" }, { label: "Units Booked", value: "12,000+", note: "FY2025 estimate" }], trend: [{ y: "2020", v: 21.5 }, { y: "2021", v: 26.2 }, { y: "2022", v: 33.5 }, { y: "2023", v: 52.7 }, { y: "2024", v: 69.3 }, { y: "2025", v: propertySales }] })} />
+                <KPI label="Revenue" value={fmtB(revenue)} sub="+40% YoY · USD 13.5B" delay={2} onClick={() => setSelectedKPI({ label: "Revenue", value: fmtB(revenue), color: T.teal, description: "Total recognized revenue across property development, malls, hospitality, and international operations.", source: reportLabel, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "UAE Dev Revenue", value: "AED 36.4B", note: "73% of total" }, { label: "Malls & Retail", value: "AED 6.3B", note: "+13% YoY" }, { label: "Hospitality", value: "AED 4.2B", note: "+12% YoY" }, { label: "International", value: "AED 2.6B", note: "+124% YoY" }, { label: "Revenue CAGR", value: "27.2%", note: "5-year 2020–2025" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: revenue }] })} />
+                <KPI label="Net Profit" value={fmtB(netProfit)} sub="+36% YoY · USD 7.0B" delay={3} onClick={() => setSelectedKPI({ label: "Net Profit", value: fmtB(netProfit), color: T.green, description: "Net profit before minority interest. Includes recurring revenue from Emaar Malls and hospitality.", source: reportLabel, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Net Margin", value: "51.8%", note: "Industry-leading" }, { label: "EPS FY2025", value: "AED 2.00", note: "+31% YoY" }, { label: "Q4 2025 Profit", value: "AED 7.3B", note: "Strongest quarter" }, { label: "5yr Profit CAGR", value: "57.1%", note: "2020–2025" }, { label: "Tax Rate", value: "~9%", note: "UAE Corporate Tax" }], trend: [{ y: "2020", v: 2.6 }, { y: "2021", v: 4.1 }, { y: "2022", v: 6.2 }, { y: "2023", v: 12.6 }, { y: "2024", v: 18.9 }, { y: "2025", v: netProfit }] })} />
+                <KPI label="EBITDA" value={fmtB(ebitda)} sub="+33% YoY · USD 7.0B" delay={4} onClick={() => setSelectedKPI({ label: "EBITDA", value: fmtB(ebitda), color: T.blue, description: "Earnings before interest, tax, depreciation & amortisation. Key operational profitability metric.", source: reportLabel, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "EBITDA Margin", value: "51.6%", note: "5-year high" }, { label: "Recurring EBITDA", value: fmtB(recurringRev), note: "32% share" }, { label: "Dev EBITDA", value: "AED 15.1B", note: "Property segment" }, { label: "EV/EBITDA", value: "~5.0×", note: "Vs sector 9× avg" }, { label: "EBITDA CAGR", value: "44.5%", note: "2020–2025" }], trend: [{ y: "2020", v: 4.0 }, { y: "2021", v: 5.3 }, { y: "2022", v: 8.1 }, { y: "2023", v: 13.4 }, { y: "2024", v: 19.2 }, { y: "2025", v: ebitda }] })} />
+                <KPI label="Backlog" value={fmtB(backlog)} sub="+39% YoY · 3-4yr visibility" delay={5} onClick={() => setSelectedKPI({ label: "Revenue Backlog", value: fmtB(backlog), color: T.purple, description: "Total contracted but unrecognized revenue. Provides 3–4 years of forward revenue visibility.", source: reportLabel, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Backlog", value: fmtB(backlog), note: "+39% YoY record" }, { label: "FY2024 Backlog", value: "AED 111.5B", note: "Prior year" }, { label: "Coverage Ratio", value: "3–4 yrs", note: "Revenue visibility" }, { label: "UAE Backlog", value: "AED 140B+", note: "~90% of total" }, { label: "New Launches", value: "AED 85B+", note: "FY2025 new sales" }], trend: [{ y: "2020", v: 45 }, { y: "2021", v: 52 }, { y: "2022", v: 68 }, { y: "2023", v: 80 }, { y: "2024", v: 111.5 }, { y: "2025", v: backlog }] })} />
+                <KPI label="Recurring Rev" value={fmtB(recurringRev)} sub="+13% · 32% of EBITDA" delay={6} onClick={() => setSelectedKPI({ label: "Recurring Revenue", value: fmtB(recurringRev), color: T.cyan, description: "Stable income from Emaar Malls, hotels, serviced residences, and commercial leasing.", source: reportLabel, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Malls Revenue", value: "AED 6.3B", note: "Dubai Mall + Fashion Ave" }, { label: "Hospitality", value: "AED 4.2B", note: "Hotels & serviced res." }, { label: "% of EBITDA", value: "32%", note: "Defensive income" }, { label: "Dubai Mall Footfall", value: "105M+", note: "Annual visitors" }, { label: "Occupancy", value: "95%+", note: "Malls occupancy rate" }], trend: [{ y: "2020", v: 5.8 }, { y: "2021", v: 6.8 }, { y: "2022", v: 7.9 }, { y: "2023", v: 8.6 }, { y: "2024", v: 9.3 }, { y: "2025", v: recurringRev }] })} />
+                <KPI label="Units Delivered" value="125,600+" sub="Since 2002 · #1 in GCC" delay={7} onClick={() => setSelectedKPI({ label: "Units Delivered", value: "125,600+", color: T.gold, description: "Total residential and commercial units delivered since inception in 2002. Largest track record in GCC.", source: reportLabel, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Delivered", value: "125,600+", note: "Since 2002" }, { label: "FY2025 Deliveries", value: "~11,000", note: "Est. annual handovers" }, { label: "UAE Units", value: "~100,000+", note: "80% of total" }, { label: "On-Time Record", value: "95%+", note: "Delivery track record" }, { label: "GCC Rank", value: "#1", note: "By volume" }], trend: [{ y: "2020", v: 85000 }, { y: "2021", v: 95000 }, { y: "2022", v: 103000 }, { y: "2023", v: 110000 }, { y: "2024", v: 118000 }, { y: "2025", v: 125600 }] })} />
+                <KPI label="Land Bank" value={`${landBank}M sqft`} sub="344M UAE · AED 120B dev" delay={8} onClick={() => setSelectedKPI({ label: "Land Bank", value: `${landBank}M sqft`, color: T.gold, description: "Total gross land area owned or controlled by Emaar for future development.", source: reportLabel, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Land Bank", value: `${landBank}M sqft`, note: "Gross area" }, { label: "UAE Land", value: "344M sqft", note: "56% of total" }, { label: "International", value: "274M sqft", note: "Egypt, India, KSA" }, { label: "Development Value", value: "AED 120B+", note: "Future GDV est." }, { label: "Dubai Hills Remaining", value: "~180M sqft", note: "Largest UAE plot" }], trend: [{ y: "2020", v: 480 }, { y: "2021", v: 510 }, { y: "2022", v: 535 }, { y: "2023", v: 570 }, { y: "2024", v: 595 }, { y: "2025", v: landBank }] })} />
               </div>
             </Section>
 
@@ -2898,7 +3494,7 @@ export default function EmaarDashboardV2() {
               <Chart title="Revenue by Segment (AED B)">
                 <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
-                    <Pie data={segments} dataKey="revenue" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={52} paddingAngle={3} stroke="none">
+                    <Pie data={liveSegments} dataKey="revenue" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={52} paddingAngle={3} stroke="none">
                       {segments.map((s, i) => <Cell key={i} fill={s.color} />)}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
@@ -2943,13 +3539,13 @@ export default function EmaarDashboardV2() {
 
             <Section title="Company Strength" sub="Analyst consensus: STRONG BUY (12 of 12 analysts) · Source: Investing.com">
               <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <DataBadge source="Emaar Annual Report FY2025" date="Dec 2025" type="emaar" />
+                <DataBadge source={["damac","sobha","nakheel","meraas"].includes(selectedDeveloper) ? `${devData?.identity?.name || ""} · DLD Official Jan 2026` : `Emaar Annual Report ${marketGlobal?.period || "FY2025"}`} date={["damac","sobha","nakheel","meraas"].includes(selectedDeveloper) ? "Jan 2026" : (emaarLive?.updatedAtUAE || "Feb 2026")} type={["damac","sobha","nakheel","meraas"].includes(selectedDeveloper) ? "verified" : "emaar"} />
                 <DataBadge source="S&P / Fitch Ratings 2025" date="2025" type="manual" />
               </div>
               <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
                 <Chart title="Performance Radar">
                   <ResponsiveContainer width="100%" height={260}>
-                    <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="75%">
+                    <RadarChart data={liveRadar} cx="50%" cy="50%" outerRadius="75%">
                       <PolarGrid stroke="rgba(255,255,255,0.06)" />
                       <PolarAngleAxis dataKey="metric" tick={{ fill: T.textSecondary, fontSize: 10 }} />
                       <PolarRadiusAxis tick={false} axisLine={false} />
@@ -2972,19 +3568,48 @@ export default function EmaarDashboardV2() {
                 </div>
               </div>
           <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM: EMAAR.DU", url: "https://www.dfm.ae" }, { label: "TradingView", url: "https://www.tradingview.com/symbols/DFM-EMAAR/" }, { label: "Yahoo Finance", url: "https://finance.yahoo.com/quote/EMAAR.DU" }, { label: "S&P · Moody's · Fitch Ratings" }]} />
+
+              {/* ─── S17: REFERRAL WIDGET (shown to all logged-in users) ─── */}
+              {user && <ReferralWidget user={user} T={T} db={db} />}
+
             </Section>
+            </>); })()} {/* end Session 6 IIFE */}
           </>}
 
           {/* ─── FINANCIALS TAB ─── */}
           {tab === "Financials" && <>
-            <Section title="Financial Performance" sub="6-year trend · 2020–2025 · All figures in AED Billions">
+            {/* S8.5 — Financials tab wired to Firestore developers/emaar with data.js fallback */}
+            {(() => {
+              const fy  = emaarFinancials[emaarFinancials.length - 1];
+              const E   = emaarLive || {};
+              const rev      = E.revenue      != null ? E.revenue      : fy.revenue;
+              const np       = E.netProfit    != null ? E.netProfit    : fy.netProfit;
+              const gm       = E.grossMargin  != null ? E.grossMargin  : fy.gm;
+              const nm       = E.netMargin    != null ? E.netMargin    : fy.nm;
+              const src      = E.latestReportLabel || "Emaar Annual Report 2025";
+              const baseRev  = emaarFinancials[0].revenue;
+              const baseNP   = emaarFinancials[0].netProfit;
+              const revCagr  = ((Math.pow(rev / baseRev, 1/5) - 1) * 100).toFixed(1);
+              const npCagr   = ((Math.pow(np  / baseNP,  1/5) - 1) * 100).toFixed(1);
+              return (
+            <Section title="Financial Performance" sub={`6-year trend · 2020–${new Date().getFullYear()} · All figures in AED Billions`}>
+              {/* Freshness badge */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                {emaarLive ? (
+                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>● LIVE · Firestore</span>
+                ) : (
+                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC · data.js</span>
+                )}
+                {emaarLive?.updatedAtUAE && <span style={{ fontSize: 10, color: T.textMuted }}>Updated: {emaarLive.updatedAtUAE}</span>}
+              </div>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                <KPI label="Revenue CAGR" value="27.2%" sub="2020-2025 · 5-year" delay={1} onClick={() => setSelectedKPI({ label: "Revenue CAGR", value: "27.2%", color: T.gold, description: "Compound Annual Growth Rate of revenue from AED 14.6B in 2020 to AED 49.6B in 2025 — one of the highest CAGRs among global real estate developers.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Revenue", value: "AED 14.6B", note: "Base year" }, { label: "2025 Revenue", value: "AED 49.6B", note: "+240% total growth" }, { label: "CAGR", value: "27.2%", note: "5-year compounded" }, { label: "vs GCC Average", value: "~8–10%", note: "Sector benchmark" }, { label: "YoY 2025", value: "+40%", note: "Strongest single year" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: 49.6 }] })} />
-                <KPI label="Profit CAGR" value="57.1%" sub="2020-2025 · 5-year" delay={2} onClick={() => setSelectedKPI({ label: "Profit CAGR", value: "57.1%", color: T.green, description: "Net profit grew from AED 2.6B in 2020 to AED 25.7B in 2025 — a 57.1% CAGR driven by margin expansion and operating leverage.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Net Profit", value: "AED 2.6B", note: "Base year" }, { label: "2025 Net Profit", value: "AED 25.7B", note: "+888% total growth" }, { label: "CAGR", value: "57.1%", note: "5-year compounded" }, { label: "Net Margin 2020", value: "17.8%", note: "Starting margin" }, { label: "Net Margin 2025", value: "51.8%", note: "+34pp expansion" }], trend: [{ y: "2020", v: 2.6 }, { y: "2021", v: 4.1 }, { y: "2022", v: 6.2 }, { y: "2023", v: 12.6 }, { y: "2024", v: 18.9 }, { y: "2025", v: 25.7 }] })} />
-                <KPI label="Gross Margin" value="57.5%" sub="Industry-leading" delay={3} onClick={() => setSelectedKPI({ label: "Gross Margin", value: "57.5%", color: T.teal, description: "Gross profit margin of 57.5% — significantly above the global real estate developer average of 25–35%. Driven by land cost advantage and premium brand pricing.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Gross Margin", value: "57.5%", note: "FY2025" }, { label: "Gross Profit", value: "AED 28.5B", note: "On AED 49.6B revenue" }, { label: "GCC Dev Avg", value: "~30–35%", note: "Industry benchmark" }, { label: "vs DAMAC", value: "~45%", note: "Nearest competitor" }, { label: "Land Cost Basis", value: "AED 5–15/sqft", note: "Historical acquisition" }], trend: [{ y: "2020", v: 42 }, { y: "2021", v: 45 }, { y: "2022", v: 50 }, { y: "2023", v: 54 }, { y: "2024", v: 56 }, { y: "2025", v: 57.5 }] })} />
-                <KPI label="Net Margin" value="35.5%" sub="Consistent expansion" delay={4} onClick={() => setSelectedKPI({ label: "Net Margin", value: "35.5%", color: T.blue, description: "Net profit margin after all costs including tax. Expanded from 17.8% in 2020 to 51.8% in 2025 on a pre-tax basis.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Net Margin FY2025", value: "51.8%", note: "Pre-tax" }, { label: "Net Margin FY2024", value: "53.4%", note: "Prior year" }, { label: "Net Margin FY2020", value: "17.8%", note: "5-year base" }, { label: "EBITDA Margin", value: "51.6%", note: "Operational efficiency" }, { label: "After-Tax Est.", value: "~35.5%", note: "Post UAE corp tax" }], trend: [{ y: "2020", v: 17.8 }, { y: "2021", v: 24.1 }, { y: "2022", v: 25.3 }, { y: "2023", v: 41.2 }, { y: "2024", v: 53.4 }, { y: "2025", v: 51.8 }] })} />
+                <KPI label="Revenue CAGR" value={`${revCagr}%`} sub="2020-2025 · 5-year" delay={1} onClick={() => setSelectedKPI({ label: "Revenue CAGR", value: `${revCagr}%`, color: T.gold, description: `Compound Annual Growth Rate of revenue from AED ${baseRev}B in 2020 to AED ${rev}B — one of the highest CAGRs among global real estate developers.`, source: src, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Revenue", value: `AED ${baseRev}B`, note: "Base year" }, { label: "Latest Revenue", value: `AED ${rev}B`, note: "+240% total growth" }, { label: "CAGR", value: `${revCagr}%`, note: "5-year compounded" }, { label: "vs GCC Average", value: "~8–10%", note: "Sector benchmark" }, { label: "YoY", value: "+40%", note: "Strongest single year" }], trend: emaarFinancials.map(f => ({ y: f.year, v: f.revenue })) })} />
+                <KPI label="Profit CAGR" value={`${npCagr}%`} sub="2020-2025 · 5-year" delay={2} onClick={() => setSelectedKPI({ label: "Profit CAGR", value: `${npCagr}%`, color: T.green, description: `Net profit grew from AED ${baseNP}B in 2020 to AED ${np}B — a ${npCagr}% CAGR driven by margin expansion and operating leverage.`, source: src, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Net Profit", value: `AED ${baseNP}B`, note: "Base year" }, { label: "Latest Net Profit", value: `AED ${np}B`, note: "+888% total growth" }, { label: "CAGR", value: `${npCagr}%`, note: "5-year compounded" }, { label: "Net Margin 2020", value: "17.8%", note: "Starting margin" }, { label: "Net Margin Latest", value: `${nm}%`, note: "Current" }], trend: emaarFinancials.map(f => ({ y: f.year, v: f.netProfit })) })} />
+                <KPI label="Gross Margin" value={`${gm}%`} sub="Industry-leading" delay={3} onClick={() => setSelectedKPI({ label: "Gross Margin", value: `${gm}%`, color: T.teal, description: `Gross profit margin of ${gm}% — significantly above the global real estate developer average of 25–35%.`, source: src, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Gross Margin", value: `${gm}%`, note: "Latest" }, { label: "Gross Profit", value: `AED ${(rev * gm / 100).toFixed(1)}B`, note: `On AED ${rev}B revenue` }, { label: "GCC Dev Avg", value: "~30–35%", note: "Industry benchmark" }, { label: "vs DAMAC", value: "~45%", note: "Nearest competitor" }, { label: "Land Cost Basis", value: "AED 5–15/sqft", note: "Historical acquisition" }], trend: emaarFinancials.map(f => ({ y: f.year, v: f.gm })) })} />
+                <KPI label="Net Margin" value={`${nm}%`} sub="Consistent expansion" delay={4} onClick={() => setSelectedKPI({ label: "Net Margin", value: `${nm}%`, color: T.blue, description: `Net profit margin after all costs including tax. Expanded from 17.8% in 2020 to ${nm}%.`, source: src, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Net Margin Latest", value: `${nm}%`, note: "Current" }, { label: "Net Margin 2024", value: "53.4%", note: "Prior year" }, { label: "Net Margin 2020", value: "17.8%", note: "5-year base" }, { label: "EBITDA Margin", value: "51.6%", note: "Operational efficiency" }, { label: "After-Tax Est.", value: `~${nm}%`, note: "Post UAE corp tax" }], trend: emaarFinancials.map(f => ({ y: f.year, v: f.nm })) })} />
               </div>
             </Section>
+              ); })()}
 
             <ProGate isPro={isPro} message="Unlock 6 Years of Financial Data" onUpgrade={() => setShowUpgrade(true)}>
             <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 20 }}>
@@ -3138,14 +3763,14 @@ export default function EmaarDashboardV2() {
           <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "Emaar Q4 2025 Earnings Release", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM Filing", url: "https://www.dfm.ae" }, { label: "GuruFocus", url: "https://www.gurufocus.com/term/overview/EMAAR.DU" }, { label: "Zawya", url: "https://www.zawya.com/en/company/financials/EMAAR-EMAAR" }]} />
             </Section>
             </ProGate>
-          </>}
+          </>} {/* end Financials tab — S8.5 Firestore wired */}
 
           {/* ─── PROJECTS TAB (48 Projects from Excel) ─── */}
           {tab === "Projects" && <>
-            <Section title={`${activeProjects.length} Active Projects`} sub="Complete Emaar off-plan portfolio · 2026–2030 · Search & filter">
+            <Section title={selectedDeveloper === "emaar" ? `${activeProjects.length} Active Projects` : `${activeProjects.filter(p => (p.developerId || "emaar") === selectedDeveloper).length} Projects — ${selectedDeveloper.toUpperCase()}`} sub={selectedDeveloper === "emaar" ? "Complete Emaar off-plan portfolio · 2026–2030 · Search & filter" : "Filtered by selected developer · Switch developer in sidebar"}>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE.", source: "DXB Analytics", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "10", note: "Address, Vida, Palace" }], trend: null })} />
-                <KPI label="Communities" value="11" sub="DHE · DCH · EBF · GPC + 7 more" delay={2} />
+                <KPI label="Total Projects" value={activeProjects.length} sub={`${activeProjects.filter(p=>p.status?.includes("Under Construction")||p.status?.includes("Delivering")).length} under construction · ${activeProjects.filter(p=>p.status?.includes("Off")||p.status?.includes("off")).length} off-plan`} delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: String(activeProjects.length), color: T.gold, description: `${activeProjects.length} active Emaar projects across UAE.`, source: "DXB Analytics", sourceUrl: "#", items: [{ label: "Under Construction", value: String(activeProjects.filter(p=>p.status?.includes("Under Construction")).length), note: "Active building" }, { label: "Off-Plan", value: String(activeProjects.filter(p=>p.status?.includes("Off")||p.status?.includes("off")).length), note: "Pre-launch" }, { label: "Communities", value: String(new Set(activeProjects.map(p=>p.community)).size), note: "Master-planned" }, { label: "Branded", value: String(activeProjects.filter(p=>p.branded).length), note: "Address, Vida, Palace" }], trend: null })} />
+                <KPI label="Communities" value={String(new Set(activeProjects.filter(p=>(p.developerId||"emaar")===selectedDeveloper||selectedDeveloper==="emaar"&&!p.developerId).map(p=>p.community)).size)} sub="Master-planned communities" delay={2} />
                 <KPI label="Branded" value={`${activeProjects.filter(p=>p.branded).length}`} sub="Address · Vida · Palace · Bristol" delay={3} />
                 <KPI label="Avg Construction" value={`${Math.round(activeProjects.reduce((a,p)=>a+(p.construction||0),0)/activeProjects.length)}%`} sub="Weighted average progress" delay={4} />
               </div>
@@ -3163,14 +3788,22 @@ export default function EmaarDashboardV2() {
                   <input type='range' min={1} max={20} step={0.5} value={projectPriceMax} onChange={e => setProjectPriceMax(Number(e.target.value))} style={{ flex: 1, accentColor: T.gold, cursor: 'pointer' }} />
                   <span style={{ fontSize: 12, fontWeight: 700, color: T.gold, whiteSpace: 'nowrap', minWidth: 60 }}>{projectPriceMax >= 20 ? 'Any' : 'AED '+projectPriceMax+'M'}</span>
                 </div>
-                {(projectSearch || projectFilter !== 'All' || projectTier !== 'All' || projectHandover !== 'All' || projectPriceMax < 20) && (
-                  <button type='button' onClick={() => { setProjectSearch(''); setProjectFilter('All'); setProjectTier('All'); setProjectHandover('All'); setProjectPriceMax(20); }} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: T.red, fontSize: 12, cursor: 'pointer' }}>Clear Filters</button>
+                {(projectSearch || projectFilter !== 'All' || projectTier !== 'All' || projectHandover !== 'All' || projectPriceMax < 20 || projectType !== 'All' || projectSort !== 'default') && (
+                  <button type='button' onClick={() => { setProjectSearch(''); setProjectFilter('All'); setProjectTier('All'); setProjectHandover('All'); setProjectPriceMax(20); setProjectType('All'); setProjectSort('default'); }} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: T.red, fontSize: 12, cursor: 'pointer' }}>Clear Filters</button>
                 )}
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Area</span>
-                {['All','DHE','DCH','EBF','GPC','ES','TV','RYM','TO','BB','TH','Branded'].map(f => (
-                  <button type='button' key={f} onClick={() => setProjectFilter(f)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectFilter===f ? T.gold : T.border), background: projectFilter===f ? T.goldGlow : 'transparent', color: projectFilter===f ? T.gold : T.textSecondary, fontSize: 11, fontWeight: projectFilter===f ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{f}</button>
+                {/* Area filter chips — full community names, derived from actual projects */}
+                {(() => {
+                  const devProjects = selectedDeveloper === "emaar"
+                    ? activeProjects.filter(p => (p.developerId || "emaar") === "emaar")
+                    : activeProjects.filter(p => (p.developerId || "emaar") === selectedDeveloper);
+                  const communities = ["All", ...Array.from(new Set(devProjects.map(p => p.community).filter(Boolean))).sort(), "Branded"];
+                  return communities.map(f => (
+                    <button type='button' key={f} onClick={() => setProjectFilter(f)} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid '+(projectFilter===f ? T.gold : T.border), background: projectFilter===f ? T.goldGlow : 'transparent', color: projectFilter===f ? T.gold : T.textSecondary, fontSize: 11, fontWeight: projectFilter===f ? 700 : 400, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>{f}</button>
+                  ));
+                })()}
                 ))}
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -3185,6 +3818,28 @@ export default function EmaarDashboardV2() {
                   <button type='button' key={y} onClick={() => setProjectHandover(y)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectHandover===y ? T.purple : T.border), background: projectHandover===y ? 'rgba(139,92,246,0.1)' : 'transparent', color: projectHandover===y ? T.purple : T.textSecondary, fontSize: 11, fontWeight: projectHandover===y ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{y}</button>
                 ))}
               </div>
+              {/* S7 — Type filter + Sort */}
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Type</span>
+                  {['All','Apartments','Townhouses','Villas','Branded Res.'].map(t => (
+                    <button type='button' key={t} onClick={() => setProjectType(t)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectType===t ? T.cyan : T.border), background: projectType===t ? 'rgba(6,182,212,0.1)' : 'transparent', color: projectType===t ? T.cyan : T.textSecondary, fontSize: 11, fontWeight: projectType===t ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{t}</button>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+                  <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Sort</span>
+                  <select value={projectSort} onChange={e => setProjectSort(e.target.value)} style={{ padding: '7px 12px', background: T.surfaceAlt, border: `1px solid ${projectSort !== 'default' ? T.gold : T.border}`, borderRadius: 8, color: projectSort !== 'default' ? T.gold : T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: 'pointer', fontWeight: projectSort !== 'default' ? 700 : 400 }}>
+                    <option value="default">Default</option>
+                    <option value="price_asc">Price ↑</option>
+                    <option value="price_desc">Price ↓</option>
+                    <option value="ppsf_asc">PPSF ↑</option>
+                    <option value="ppsf_desc">PPSF ↓</option>
+                    <option value="handover_asc">Handover (earliest)</option>
+                    <option value="handover_desc">Handover (latest)</option>
+                    <option value="construction_desc">Construction % ↓</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
             {/* Project Cards */}
@@ -3193,11 +3848,24 @@ export default function EmaarDashboardV2() {
               {activeProjects
                 .filter(p => {
                   const matchSearch = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase());
-                  const matchFilter = projectFilter === "All" || p.district === projectFilter || (projectFilter === "Branded" && p.branded);
+                  const matchFilter = projectFilter === "All" || p.community === projectFilter || (projectFilter === "Branded" && p.branded);
                   const matchTier = projectTier === "All" || p.tier === projectTier;
                   const matchHandover = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover));
                   const matchPrice = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6;
-                  return matchSearch && matchFilter && matchTier && matchHandover && matchPrice;
+                  const matchType = projectType === "All" || (p.type || "").includes(projectType);
+                  return matchSearch && matchFilter && matchTier && matchHandover && matchPrice && matchType;
+                })
+                .sort((a, b) => {
+                  switch (projectSort) {
+                    case "price_asc":         return (a.price || 0) - (b.price || 0);
+                    case "price_desc":        return (b.price || 0) - (a.price || 0);
+                    case "ppsf_asc":          return (a.ppsf  || 0) - (b.ppsf  || 0);
+                    case "ppsf_desc":         return (b.ppsf  || 0) - (a.ppsf  || 0);
+                    case "handover_asc":      return (a.handover || "").localeCompare(b.handover || "");
+                    case "handover_desc":     return (b.handover || "").localeCompare(a.handover || "");
+                    case "construction_desc": return (b.construction || 0) - (a.construction || 0);
+                    default:                  return 0;
+                  }
                 })
                 .map((p, i) => {
                   const isLocked = !isPro && i >= 5;
@@ -3279,8 +3947,18 @@ export default function EmaarDashboardV2() {
                       ) : null; })()}
                     </div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PRICE/SQFT</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "TBD"}</span></div>
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>SIZE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.sizeFrom?.toLocaleString()} - {p.sizeTo?.toLocaleString()} sqft</span></div>
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TYPE</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.type} · {p.beds} BR</span></div>
+                    {/* Unit breakdown on card — show starting unit type + price */}
+                    {p.unitBreakdown?.length > 0 ? (
+                      <div style={{ gridColumn: "span 2" }}>
+                        <span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>FROM</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {(p.unitBreakdown[0].priceFrom/1000000).toFixed(2)}M</span>
+                        <span style={{ fontSize: 10, color: T.textMuted }}> · {p.unitBreakdown[0].type} · {p.unitBreakdown[0].sqftFrom?.toLocaleString()}–{p.unitBreakdown[0].sqftTo?.toLocaleString()} sqft</span>
+                        {p.unitBreakdown.length > 1 && <span style={{ fontSize: 10, color: T.textMuted }}> +{p.unitBreakdown.length - 1} more types</span>}
+                      </div>
+                    ) : (
+                      <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>SIZE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.sizeFrom?.toLocaleString()} – {p.sizeTo?.toLocaleString()} sqft</span></div>
+                    )}
+                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TYPE</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.type} · {p.beds}</span></div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PAYMENT</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.payment}</span></div>
                   </div>
                   {/* Unit Inventory */}
@@ -3303,10 +3981,10 @@ export default function EmaarDashboardV2() {
                   </div>
                   {/* Action Buttons */}
                   <div style={{ display: "flex", gap: 6, marginTop: 10 }} onClick={e => e.stopPropagation()}>
-                    <a href={`/project/${p.id}`} style={{ flex: 1, padding: "8px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.08))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedProject(p); }} style={{ flex: 1, padding: "8px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.08))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, textAlign: "center", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                       Full Details
-                    </a>
+                    </button>
                     <button type="button" onClick={(e) => { e.stopPropagation(); toggleWatchlist(p); }} style={{ padding: "8px 10px", background: watchlist.find(w => w.id === p.id) ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${watchlist.find(w => w.id === p.id) ? T.gold : T.border}`, borderRadius: 8, color: watchlist.find(w => w.id === p.id) ? T.gold : T.textMuted, fontSize: 14, cursor: "pointer" }} title={watchlist.find(w => w.id === p.id) ? "Remove from watchlist" : "Add to watchlist"}>
                       {watchlist.find(w => w.id === p.id) ? "★" : "☆"}
                     </button>
@@ -3320,7 +3998,7 @@ export default function EmaarDashboardV2() {
                   </div>{/* end padding wrapper */}
                 </div>
               );})}
-              {activeProjects.filter(p => { const ms = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase()); const mf = projectFilter === "All" || p.district === projectFilter || (projectFilter === "Branded" && p.branded); const mt = projectTier === "All" || p.tier === projectTier; const my = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover)); const mp = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6; return ms && mf && mt && my && mp; }).length === 0 && (
+              {activeProjects.filter(p => { const ms = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase()); const mf = projectFilter === "All" || p.community === projectFilter || (projectFilter === "Branded" && p.branded); const mt = projectTier === "All" || p.tier === projectTier; const my = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover)); const mp = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6; const mty = projectType === "All" || (p.type || "").includes(projectType); return ms && mf && mt && my && mp && mty; }).length === 0 && (
                 <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 20px" }}>
                   <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>🔍</div>
                   <div style={{ fontSize: 16, fontWeight: 600, color: T.white, marginBottom: 4 }}>No projects found</div>
@@ -3331,7 +4009,7 @@ export default function EmaarDashboardV2() {
             )}
 
             {/* Community Summary */}
-            <Section title="Communities Overview" sub="11 master-planned communities">
+            <Section title="Communities Overview" sub={`${new Set(activeProjects.map(p=>p.community)).size} master-planned communities`}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginTop: 16 }}>
                 {emaarCommunities.filter(c => c.name).map((c, i) => (
                   <div key={c.district} className="chart-box fade-up" style={{ animationDelay: `${i*0.05}s`, padding: 14, cursor: "pointer", transition: "border 0.2s" }} onClick={() => setSelectedCommunity(c.name)} title="Click for full community details">
@@ -4132,7 +4810,7 @@ export default function EmaarDashboardV2() {
 
             <Section title="Project Portfolio" sub="48 active projects · 10+ master communities · 2026–2030">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE — 18 under active construction and 30 in the off-plan/pre-launch phase across 10+ master communities.", source: "DXB Analytics Project Database", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned areas" }, { label: "Handover 2026", value: "7 projects", note: "Nearest deliveries" }, { label: "Handover 2029+", value: "26 projects", note: "Longest pipeline" }], trend: null })} />
+                <KPI label="Total Projects" value={activeProjects.length} sub={`${activeProjects.filter(p=>p.status?.includes("Under Construction")||p.status?.includes("Delivering")).length} under construction · ${activeProjects.filter(p=>p.status?.includes("Off") || p.status?.includes("off")).length} off-plan`} delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: String(activeProjects.length), color: T.gold, description: "48 active Emaar projects across UAE — 18 under active construction and 30 in the off-plan/pre-launch phase across 10+ master communities.", source: "DXB Analytics Project Database", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned areas" }, { label: "Handover 2026", value: "7 projects", note: "Nearest deliveries" }, { label: "Handover 2029+", value: "26 projects", note: "Longest pipeline" }], trend: null })} />
                 <KPI label="Branded Projects" value="10" sub="Address · Vida · Palace" delay={2} onClick={() => setSelectedKPI({ label: "Branded Projects", value: "10", color: T.teal, description: "10 branded residences under Emaar's luxury hospitality labels — Address, Vida, and Palace. Branded units command 25–40% price premium over standard Emaar projects.", source: "Emaar Properties Portfolio 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Address Brand", value: "5 projects", note: "Ultra-luxury tier" }, { label: "Vida Brand", value: "3 projects", note: "Lifestyle tier" }, { label: "Palace Brand", value: "2 projects", note: "Heritage luxury" }, { label: "Price Premium", value: "25–40%", note: "vs standard Emaar" }, { label: "Resale Premium", value: "Strong", note: "Brand demand maintained" }], trend: null })} />
                 <KPI label="Avg Starting Price" value="AED 2.76M" sub="Range: 1.2M – 13.8M" delay={3} onClick={() => setSelectedKPI({ label: "Avg Starting Price", value: "AED 2.76M", color: T.blue, description: "Average entry price across the active Emaar project portfolio. Range spans from AED 1.2M (Emaar South 1BR) to AED 13.8M (The Oasis ultra-luxury villas).", source: "DXB Analytics · Emaar Price List 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Avg Starting Price", value: "AED 2.76M", note: "Portfolio average" }, { label: "Min Price", value: "AED 1.2M", note: "Emaar South 1BR" }, { label: "Max Price", value: "AED 13.8M", note: "The Oasis villas" }, { label: "Studio Entry", value: "AED 900K+", note: "Select communities" }, { label: "Villa Entry", value: "AED 3.5M+", note: "Dubai Hills / Valley" }], trend: [{ y: "2021", v: 1.8 }, { y: "2022", v: 2.1 }, { y: "2023", v: 2.3 }, { y: "2024", v: 2.55 }, { y: "2025", v: 2.76 }] })} />
                 <KPI label="Avg Price/sqft" value="AED 2,570" sub="Across all tiers" delay={4} onClick={() => setSelectedKPI({ label: "Avg Price/sqft", value: "AED 2,570", color: T.purple, description: "Average price per square foot across all active Emaar launches. Premium branded projects push the average higher vs affordable communities.", source: "DXB Analytics · DLD 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Portfolio Avg", value: "AED 2,570/sqft", note: "All projects" }, { label: "Branded Avg", value: "AED 3,500+/sqft", note: "Address / Palace" }, { label: "Standard Avg", value: "AED 1,900/sqft", note: "Emaar South / Valley" }, { label: "Downtown", value: "AED 2,800+/sqft", note: "Prime location premium" }, { label: "Creek Harbour", value: "AED 2,400/sqft", note: "Waterfront" }], trend: [{ y: "2021", v: 1450 }, { y: "2022", v: 1750 }, { y: "2023", v: 2100 }, { y: "2024", v: 2350 }, { y: "2025", v: 2570 }] })} />
@@ -4617,7 +5295,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                     <div>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Developer Health Score</div>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>DFM · ADX · Annual Reports · DLD Data · FY2025</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>DFM · ADX · Annual Reports · DLD Data · {marketGlobal?.period || "FY2025"}</div>
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
                       {[["score","By Score"],["revenue","By Revenue"],["backlog","By Backlog"],["profit","By Profit"]].map(([v,l]) => (
@@ -4688,7 +5366,7 @@ export default function EmaarDashboardV2() {
                   ))}
                 </div>
                 <div style={{ fontSize: 11, color: T.textMuted, padding: "10px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
-                  📊 Source: Dubai Land Department official data FY2025 via DXB Interact and Gulf News (Jan 2026). Total Dubai market: 214,912 transactions · AED 682.5B · +30.6% value growth YoY. Quarterly splits are proportional estimates based on DLD full-year totals; Q4 weighted higher reflecting strongest quarter on record (AED 187.5B).
+                  📊 Source: Dubai Land Department official data {marketGlobal?.period || "FY2025"} via DXB Interact and Gulf News. Total Dubai market: {marketGlobal?.totalTransactions || "214,912"} transactions · {marketGlobal?.totalMarketValue || "AED 682.5B"} · {marketGlobal?.yoyGrowthPct || "+30.6%"} value growth YoY. Quarterly splits are proportional estimates based on DLD full-year totals; Q4 weighted higher reflecting strongest quarter on record.
                 </div>
               <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM / ADX", url: "https://www.dfm.ae" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "DLD FY2025", url: "https://dubailand.gov.ae" }, { label: "Gulf News — Developer Reports", url: "https://gulfnews.com/business/property" }]} />
               </div>
@@ -4774,7 +5452,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
                     <div>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>DLD Transaction Volumes</div>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Dubai Land Department · FY2025 · 214,912 total transactions · AED 682.5B</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Dubai Land Department · {marketGlobal?.period || "FY2025"} · {marketGlobal?.totalTransactions || "214,912"} total transactions · {marketGlobal?.totalMarketValue || "AED 682.5B"}</div>
                     </div>
                     {(dldCommunity !== "All" || dldDeveloper !== "All" || dldType !== "All" || dldTxType !== "All") && (
                       <button type="button" onClick={() => { setDldCommunity("All"); setDldDeveloper("All"); setDldType("All"); setDldTxType("All"); }}
@@ -4820,7 +5498,7 @@ export default function EmaarDashboardV2() {
                 </div>
                 {/* Bar chart + table */}
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 16 }}>Transactions by Community — FY2025</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 16 }}>Transactions by Community — {marketGlobal?.period || "FY2025"}</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {sorted.map(d => {
                       const barW = (d.total / maxTotal) * 100;
@@ -4889,7 +5567,7 @@ export default function EmaarDashboardV2() {
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
                       <span style={{ fontSize: 14 }}>🌍</span>
                       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Buyer Nationality Breakdown</div>
-                      <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>DLD FY2025</span>
+                      <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>DLD {marketGlobal?.period || "FY2025"}</span>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {nationalityData.map((n, i) => (
@@ -4904,7 +5582,7 @@ export default function EmaarDashboardV2() {
                       ))}
                     </div>
                     <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, fontSize: 10, color: T.textMuted }}>
-                      Indians are the #1 buyers in Dubai (22%) followed by British (9%) and Russians (8%). Source: DLD FY2025
+                      Indians are the #1 buyers in Dubai (22%) followed by British (9%) and Russians (8%). Source: DLD {marketGlobal?.period || "FY2025"}
                     </div>
                   </div>
 
@@ -4913,7 +5591,7 @@ export default function EmaarDashboardV2() {
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
                       <span style={{ fontSize: 14 }}>🏗️</span>
                       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Developer Market Share</div>
-                      <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>By deals FY2025</span>
+                      <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>By deals {marketGlobal?.period || "FY2025"}</span>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {developerData.map((d, i) => (
@@ -4928,7 +5606,7 @@ export default function EmaarDashboardV2() {
                       ))}
                     </div>
                     <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, fontSize: 10, color: T.textMuted }}>
-                      Emaar leads with 13.2% market share (AED 98.5B). Top 8 developers = 37.9% of total market. Source: DXBinteract FY2025
+                      Emaar leads with 13.2% market share (AED 98.5B). Top 8 developers = 37.9% of total market. Source: DXBinteract {marketGlobal?.period || "FY2025"}
                     </div>
                   </div>
                 </div>
@@ -4957,7 +5635,12 @@ export default function EmaarDashboardV2() {
                 }))
               : developers;
             return <>
-            <Section title="Developer Rankings" sub="DXBinteract verified · fam Properties analysis · 2025">
+            <Section title="Developer Rankings" sub={`DXBinteract verified · fam Properties analysis · ${marketGlobal?.period || "FY2025"}`}>
+              {/* Freshness badge */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
+                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC · Verify quarterly</span>
+                {marketGlobal?.updatedAt && <span style={{ fontSize: 10, color: T.textMuted }}>Market data: {new Date(marketGlobal.updatedAt).toLocaleDateString("en-AE", { month: "short", year: "numeric" })}</span>}
+              </div>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Emaar % of Top 30" value="11.8%" sub="% of AED 682.5B Dubai market" delay={1} onClick={() => setSelectedKPI({ label: "Emaar % of Dubai Total", value: "11.8%", color: T.gold, description: "Emaar accounts for 22.6% of all sales among the top 30 Dubai developers — nearly 1 in 4 AED of premium real estate sold in Dubai.", source: "DXBinteract · fam Properties 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar FY2025 Sales", value: "AED 80.4B", note: "All-time record" }, { label: "Dubai Total Market", value: "AED 682.5B", note: "FY2025 DLD data" }, { label: "Emaar Share", value: "11.8%", note: "Of entire Dubai market" }, { label: "Rank", value: "#1", note: "By sales value" }, { label: "#2 DAMAC", value: "~AED 32B est.", note: "2.5× smaller" }], trend: null })} />
                 <KPI label="Lead vs #2" value="AED 48.4B" sub="2.5× larger than DAMAC (est.)" delay={2} onClick={() => setSelectedKPI({ label: "Lead vs #2", value: "AED 48.4B", color: T.teal, description: "Emaar leads #2 developer DAMAC by an estimated AED 48.4B in 2025 property sales — a 2.5× advantage. Gap has widened from ~AED 12B in 2023 to AED 48B+ in 2025.", source: "DXBinteract 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar Sales FY2025", value: "AED 80.4B", note: "Official Emaar press release" }, { label: "DAMAC Est. FY2025", value: "~AED 32B", note: "Went private, est." }, { label: "Sales Gap", value: "~AED 48.4B", note: "2.5× advantage" }, { label: "2023 Gap", value: "~AED 19B", note: "Gap widening fast" }, { label: "2024 Gap", value: "~AED 31B", note: "Emaar accelerating" }], trend: null })} />
@@ -5061,10 +5744,15 @@ export default function EmaarDashboardV2() {
           {tab === "Yields" && !isPro && <ProGateFullPage tabName="Yields" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Yields" && isPro && <>
             <ProGate isPro={isPro} message="Unlock Rental Yield Analysis" onUpgrade={() => setShowUpgrade(true)}>
-            <Section title="Rental Yield Analysis" sub="REIDIN Dec 2025 · DXB Interact · Engel & Völkers · DLD Rental Index">
-              <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <DataBadge source="REIDIN Dec 2025" date="Dec 2025" type="reidin" />
-                <DataBadge source="Dubai Land Department Rental Index" date="2025" type="dld" />
+            <Section title="Rental Yield Analysis" sub="Bayut RapidAPI · DXB Interact · Engel & Völkers · DLD Rental Index">
+              <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                {liveYields.length > 0 ? (
+                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>● LIVE · Bayut API</span>
+                ) : (
+                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC · data.js</span>
+                )}
+                <DataBadge source="REIDIN" date={marketGlobal?.updatedAt ? new Date(marketGlobal.updatedAt).toLocaleDateString("en-AE", { month: "short", year: "numeric" }) : "Recent"} type="reidin" />
+                <DataBadge source="Dubai Land Department Rental Index" date={marketGlobal?.period || "FY2025"} type="dld" />
               </div>
               <Chart title="Gross Yield by Community & Unit Type (%)" style={{ marginTop: 16 }}>
                 <ResponsiveContainer width="100%" height={320}>
@@ -5302,15 +5990,27 @@ export default function EmaarDashboardV2() {
               const [liveEibor, setLiveEibor] = React.useState(EIBOR_RATES);
               const [eiborSource, setEiborSource] = React.useState("CBUAE · " + EIBOR_RATES.asOf);
               React.useEffect(() => {
-                // Load EIBOR from Firestore (set by Admin panel)
-                getDoc(doc(db, "tabData", "eiborRates"))
+                // Load EIBOR from Firestore — cron-eibor.js writes to marketData/eibor
+                getDoc(doc(db, "marketData", "eibor"))
                   .then(snap => {
                     if (snap.exists()) {
                       const e = snap.data();
-                      if (e["3m"] && e["3m"] > 1) {
-                        setLiveEibor(e);
-                        setEiborSource((e.source || "CBUAE") + " · " + (e.asOf || ""));
-                        setRate(parseFloat((e["3m"] + BANK_SPREAD).toFixed(2)));
+                      // cron writes: overnight, oneWeek, oneMonth, threeMonth, sixMonth, twelveMonth
+                      // map to mortgage tab format: on, 1w, 1m, 3m, 6m, 1y
+                      const mapped = {
+                        on:  e.overnight   || e.on  || EIBOR_RATES.on,
+                        "1w": e.oneWeek    || e["1w"] || EIBOR_RATES["1w"],
+                        "1m": e.oneMonth   || e["1m"] || EIBOR_RATES["1m"],
+                        "3m": e.threeMonth || e["3m"] || EIBOR_RATES["3m"],
+                        "6m": e.sixMonth   || e["6m"] || EIBOR_RATES["6m"],
+                        "1y": e.twelveMonth|| e["1y"] || EIBOR_RATES["1y"],
+                        asOf: e.updatedAtUAE || e.asOf || EIBOR_RATES.asOf,
+                        source: e.source || "CBUAE",
+                      };
+                      if (mapped["3m"] > 1) {
+                        setLiveEibor(mapped);
+                        setEiborSource((mapped.source || "CBUAE") + " · " + (mapped.asOf || ""));
+                        setRate(parseFloat((mapped["3m"] + BANK_SPREAD).toFixed(2)));
                       }
                     }
                   })
@@ -5641,7 +6341,7 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── MAP / COMMUNITIES TAB ─── */}
-          {tab === "Map" && <><CommunityMapTab activeProjects={activeProjects} liveCommunityROI={liveCommunityROI} setTab={setTab} /><TabSources sources={[{ label: "Google Maps API", url: "https://maps.google.com" }, { label: "Emaar Community Boundaries" }, { label: "DLD Zoning Data", url: "https://dubailand.gov.ae" }, { label: "OpenStreetMap", url: "https://www.openstreetmap.org" }]} /></>}
+          {tab === "Map" && <><CommunityMapTab activeProjects={activeProjects} liveCommunityROI={liveCommunityROI} setTab={setTab} selectedDeveloper={selectedDeveloper} compareList={compareList} toggleCompare={toggleCompare} isPro={isPro} setShowUpgrade={setShowUpgrade} /><TabSources sources={[{ label: "Google Maps API", url: "https://maps.google.com" }, { label: "Emaar Community Boundaries" }, { label: "DLD Zoning Data", url: "https://dubailand.gov.ae" }, { label: "OpenStreetMap", url: "https://www.openstreetmap.org" }]} /></>}
 
           {/* ─── LAUNCH CALENDAR TAB ─── */}
           {tab === "Launch Calendar" && (() => {
@@ -5968,13 +6668,13 @@ export default function EmaarDashboardV2() {
             <ProGate isPro={isPro} message="Unlock Full Risk Analysis" onUpgrade={() => setShowUpgrade(true)}>
               <Chart title="Risk Score by Factor (Higher = More Risk)" style={{ marginTop: 20 }}>
                 <ResponsiveContainer width="100%" height={380}>
-                  <BarChart data={risks} layout="vertical">
+                  <BarChart data={(emaarLive?.emaarRisks || emaarRisks).map(r => ({ factor: r.factor, score: r.score, max: 150, color: r.color }))} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                     <XAxis type="number" tick={{ fill: T.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 140]} />
                     <YAxis type="category" dataKey="factor" tick={{ fill: T.textSecondary, fontSize: 11 }} width={120} axisLine={false} tickLine={false} />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar dataKey="score" name="Risk Score" radius={[0, 8, 8, 0]} barSize={22}>
-                      {risks.map((r, i) => <Cell key={i} fill={r.color} />)}
+                      {(emaarLive?.emaarRisks || emaarRisks).map((r, i) => <Cell key={i} fill={r.color} />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -6693,7 +7393,7 @@ export default function EmaarDashboardV2() {
           {tab === "Market" && <>
             <Section title="Dubai Real Estate — 2025" sub="Official DLD Data · 5th Consecutive Record Year">
               <div style={{ marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <DataBadge source="Dubai Land Department FY2025" date="Dec 2025" type="dld" />
+                <DataBadge source={`Dubai Land Department ${marketGlobal?.period || "FY2025"}`} date={marketGlobal?.updatedAt ? new Date(marketGlobal.updatedAt).toLocaleDateString("en-AE", { month: "short", year: "numeric" }) : "Jan 2026"} type="dld" />
                 <DataBadge source="REIDIN Price Index Dec 2025" date="Dec 2025" type="reidin" />
                 <DataBadge source="ValuStrat Q4 2025" date="Q4 2025" type="manual" />
               </div>
@@ -6975,7 +7675,7 @@ export default function EmaarDashboardV2() {
                 { y: "2014", v: 1250 }, { y: "2015", v: 1150 }, { y: "2016", v: 1050 },
                 { y: "2017", v: 1020 }, { y: "2018", v: 980 }, { y: "2019", v: 930 },
                 { y: "2020", v: 880 }, { y: "2021", v: 970 }, { y: "2022", v: 1150 },
-                { y: "2023", v: 1380 }, { y: "2024", v: 1560 }, { y: "2025", v: 1689 },
+                { y: "2023", v: 1380 }, { y: "2024", v: 1560 }, { y: "2025", v: marketGlobal?.avgPpsfNum || 1689 },
               ],
               "Downtown Dubai": [
                 { y: "2008", v: 3200 }, { y: "2009", v: 1800 }, { y: "2010", v: 1600 },
@@ -7033,7 +7733,7 @@ export default function EmaarDashboardV2() {
               { year: "2014", event: "Peak & Correction", type: "correction", desc: "Second boom peaks. Government cooling measures (double DLD fee to 4%, mortgage LTV caps) trigger 25% correction." },
               { year: "2020", event: "COVID-19 Dip", type: "crash", desc: "Pandemic causes 15–20% dip. Short-lived — UAE's COVID response and Golden Visa expansion drive rapid recovery." },
               { year: "2021", event: "New Bull Run Begins", type: "recovery", desc: "Record transactions. Millionaire migration accelerates. 56+ consecutive months of growth begins." },
-              { year: "2025", event: "Record Market", type: "peak", desc: "AED 682B market. 5th consecutive record year. 214,912 transactions. Prices at all-time highs in most communities." },
+              { year: "2025", event: "Record Market", type: "peak", desc: `${mktValue} market. 5th consecutive record year. ${mktTxns} transactions. Prices at all-time highs in most communities.` },
             ];
 
             const COLORS = { "Dubai Average": T.gold, "Downtown Dubai": "#8B5CF6", "Palm Jumeirah": "#3B82F6", "Dubai Hills Estate": "#10B981", "JVC": "#F59E0B", "Business Bay": "#EC4899", "Dubai Marina": "#06B6D4" };
@@ -7165,7 +7865,7 @@ export default function EmaarDashboardV2() {
                     {[
                       { cycle: "Cycle 1: 2008–2012", icon: "📉", color: T.red, title: "Crash & Recovery", stats: [{ l: "Peak (2008)", v: "AED 1,420/sqft" }, { l: "Trough (2010)", v: "AED 780/sqft" }, { l: "Drawdown", v: "-45%" }, { l: "Recovery", v: "3 years" }], insight: "GFC triggered Dubai's worst crash — overleveraged developers, stalled projects, and Nakheel's $16B debt restructuring. Recovery driven by fundamentals: no income tax, growing expat population, infrastructure completion." },
                       { cycle: "Cycle 2: 2012–2020", icon: "📊", color: T.gold, title: "Boom, Cooldown, Stability", stats: [{ l: "Peak (2014)", v: "AED 1,250/sqft" }, { l: "Trough (2020)", v: "AED 880/sqft" }, { l: "Drawdown", v: "-30%" }, { l: "Duration", v: "8 years" }], insight: "Government cooling measures (4% DLD, LTV caps) softened the boom. Gradual 25% correction until COVID. More orderly than 2008 — regulated market with escrow laws protecting off-plan buyers." },
-                      { cycle: "Cycle 3: 2020–2025+", icon: "🚀", color: T.green, title: "The Great Bull Run", stats: [{ l: "Trough (2020)", v: "AED 880/sqft" }, { l: "Current (2025)", v: "AED 1,689/sqft" }, { l: "Gain", v: "+92%" }, { l: "Duration", v: "5+ years" }], insight: "Longest bull run in Dubai history. Driven by: Golden Visa expansion, millionaire migration, limited new supply in premium zones, post-COVID safe haven demand, and AED-USD peg stability." },
+                      { cycle: "Cycle 3: 2020–Present", icon: "🚀", color: T.green, title: "The Great Bull Run", stats: [{ l: "Trough (2020)", v: "AED 880/sqft" }, { l: `Current (${marketGlobal?.period || "2025"})`, v: mktPpsf || "AED 1,689/sqft" }, { l: "Gain", v: "+92%" }, { l: "Duration", v: "5+ years" }], insight: "Longest bull run in Dubai history. Driven by: Golden Visa expansion, millionaire migration, limited new supply in premium zones, post-COVID safe haven demand, and AED-USD peg stability." },
                     ].map((cy, i) => (
                       <div key={i} style={{ background: T.card, border: `1px solid ${cy.color}33`, borderRadius: 14, padding: 20 }}>
                         <div style={{ fontSize: 22, marginBottom: 8 }}>{cy.icon}</div>
@@ -7405,344 +8105,375 @@ export default function EmaarDashboardV2() {
         if (!_sp) { return null; }
         /* Use _sp below but keep variable name short */
         const selectedProject_ = _sp;
-        const ci = { ...(communityIntel[selectedProject_.community] || {}), ...(liveCommunityIntel[selectedProject_.community] || {}) };
+        const communityAliases = {
+          "Mina Rashid": "Rashid Yachts & Marina",
+          "Grand Polo Club & Resort": "Grand Polo Club",
+          "Creek Harbour": "Dubai Creek Harbour",
+          "Rashid Marina": "Rashid Yachts & Marina",
+        };
+        const ciKey = communityAliases[selectedProject_.community] || selectedProject_.community;
+        const ci = { ...(communityIntel[ciKey] || communityIntel[selectedProject_.community] || {}), ...(liveCommunityIntel[ciKey] || liveCommunityIntel[selectedProject_.community] || {}) };
         const ciExists = !!(ci.famousFor || ci.tagline);
+        const roiData = (liveCommunityROI && liveCommunityROI[ciKey]) || (liveCommunityROI && liveCommunityROI[selectedProject_.community]) || communityROI[ciKey] || communityROI[selectedProject_.community] || {};
+        const inv = selectedProject_.ratingOverride != null && selectedProject_.ratingOverride !== "" ? { score: parseFloat(selectedProject_.ratingOverride), color: parseFloat(selectedProject_.ratingOverride) >= 8 ? "#10B981" : parseFloat(selectedProject_.ratingOverride) >= 6 ? "#D4A843" : parseFloat(selectedProject_.ratingOverride) >= 4 ? "#F59E0B" : "#EF4444", label: parseFloat(selectedProject_.ratingOverride) >= 8 ? "Excellent" : parseFloat(selectedProject_.ratingOverride) >= 6 ? "Strong" : parseFloat(selectedProject_.ratingOverride) >= 4 ? "Good" : "Weak" } : getInvestmentScore(selectedProject_);
         return (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setSelectedProject(null)}>
-          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 820, maxHeight: "92vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-            {/* Close */}
-            <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-            
-            {/* Image */}
+        <div style={{ position: "fixed", inset: 0, background: "#04090F", zIndex: 2000, overflowY: "auto" }}>
+          <div style={{ width: "100%", minHeight: "100vh", position: "relative" }}>
+
+            {/* ── STICKY TOP NAV ── */}
+            <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(4,9,15,0.97)", backdropFilter: "blur(16px)", borderBottom: `1px solid ${T.border}`, padding: "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56 }}>
+              <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", color: T.textSecondary, cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "'Outfit', sans-serif", padding: "0" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+                Back to Projects
+              </button>
+              <div style={{ fontSize: 12, color: T.textMuted, fontWeight: 500 }}>{selectedProject_.community} · {selectedProject_.type}</div>
+              <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            </div>
+
+            {/* ── HERO IMAGE ── */}
             {selectedProject_.imageUrl && (
-              <div style={{ width: "100%", height: 200, overflow: "hidden", borderRadius: "16px 16px 0 0" }}>
+              <div style={{ width: "100%", height: 380, overflow: "hidden", position: "relative" }}>
                 <img src={selectedProject_.imageUrl} alt={selectedProject_.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.parentElement.style.display = "none"; }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 50%, #04090F 100%)" }} />
               </div>
             )}
 
-            <div style={{ padding: 24 }}>
-              {/* Header */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                    <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h2>
-                    {selectedProject_.emaarUrl && <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(212,168,67,0.08)", whiteSpace: "nowrap" }} title={`Official listing on ${getLinkDomain(selectedProject_.emaarUrl)}`}>SOURCE ↗</a>}
-                    <Link to={`/project/${selectedProject_.id}`} style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(0,191,165,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(0,191,165,0.08)", whiteSpace: "nowrap" }} title="Open full page">FULL PAGE ↗</Link>
+            {/* ── MAIN CONTENT ── */}
+            <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px 80px" }}>
+
+              {/* ── PROJECT HEADER ── */}
+              <div style={{ padding: selectedProject_.imageUrl ? "0 0 32px" : "40px 0 32px", borderBottom: `1px solid ${T.border}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+                      <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 36, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h1>
+                      {selectedProject_.branded && <span style={{ padding: "3px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", border: "1px solid rgba(212,168,67,0.3)", fontSize: 11, fontWeight: 700, color: T.gold }}>{selectedProject_.brand}</span>}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 14, color: T.textSecondary }}>{selectedProject_.community}</span>
+                      {selectedProject_.emaarUrl && <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 10, color: T.gold, textDecoration: "none", padding: "2px 7px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 4, fontWeight: 600 }}>{getLinkLabel(selectedProject_.emaarUrl)}</a>}
+                    </div>
+                    {(selectedProject_.tagline || (ci && ci.tagline)) && <p style={{ color: T.teal, fontSize: 12, marginTop: 6, fontStyle: "italic", margin: "8px 0 0" }}>{selectedProject_.tagline || ci.tagline}</p>}
                   </div>
-                  <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject_.community} · {selectedProject_.district} · {selectedProject_.type}</p>
-                  {(selectedProject_.tagline || (ci && ci.tagline)) && <p style={{ color: T.teal, fontSize: 11, marginTop: 2, fontStyle: "italic" }}>{selectedProject_.tagline || ci.tagline}</p>}
-                </div>
-                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                  {(selectedProject_.branded || (selectedProject_.brand && selectedProject_.brand !== '—')) && <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{selectedProject_.brand}</span>}
-                  <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: selectedProject_.status === "Completed" ? "rgba(16,185,129,0.15)" : selectedProject_.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: selectedProject_.status === "Completed" ? T.green : selectedProject_.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{selectedProject_.status}</span>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+                    <div style={{ padding: "5px 14px", borderRadius: 8, background: selectedProject_.status?.includes("Ready") ? "rgba(16,185,129,0.15)" : selectedProject_.status?.includes("Off") ? "rgba(96,165,250,0.15)" : "rgba(245,158,11,0.15)", border: `1px solid ${selectedProject_.status?.includes("Ready") ? "rgba(16,185,129,0.4)" : selectedProject_.status?.includes("Off") ? "rgba(96,165,250,0.4)" : "rgba(245,158,11,0.4)"}`, fontSize: 12, fontWeight: 700, color: selectedProject_.status?.includes("Ready") ? T.green : selectedProject_.status?.includes("Off") ? "#60A5FA" : "#F59E0B" }}>{selectedProject_.status}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 8, background: `${inv.color}15`, border: `1px solid ${inv.color}40` }}>
+                      <span style={{ fontSize: 20, fontWeight: 900, color: inv.color, fontFamily: "'Fraunces', serif" }}>{inv.score}</span>
+                      <span style={{ fontSize: 10, color: inv.color, fontWeight: 700 }}>/10 ★ {inv.label}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Construction */}
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontSize: 12, color: T.textMuted }}>Construction Progress</span>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: selectedProject_.construction >= 100 ? T.green : selectedProject_.construction >= 70 ? T.green : selectedProject_.construction >= 30 ? T.gold : T.blue }}>{selectedProject_.construction}%</span>
-                </div>
-                <div style={{ height: 8, borderRadius: 4, background: T.surfaceAlt, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${selectedProject_.construction}%`, borderRadius: 4, background: selectedProject_.construction >= 100 ? T.green : selectedProject_.construction >= 70 ? T.green : selectedProject_.construction >= 30 ? T.gold : T.blue }} />
-                </div>
-              </div>
+              {/* ── TWO COLUMN LAYOUT ── */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 32, marginTop: 32 }}>
 
-              {/* Details Grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
-                {[
-                  ["Starting From", selectedProject_.price ? `AED ${(selectedProject_.price/1000000).toFixed(1)}M` : selectedProject_.priceFrom ? `AED ${(Number(selectedProject_.priceFrom)/1000000).toFixed(1)}M` : "TBD"],
-                  ["Handover", selectedProject_.handover || "—"],
-                  ["Price/sqft", selectedProject_.ppsf ? `AED ${selectedProject_.ppsf.toLocaleString()}` : selectedProject_.pricePerSqft ? `AED ${Number(selectedProject_.pricePerSqft).toLocaleString()}` : "TBD"],
-                  ["Size Range", selectedProject_.sizeFrom ? `${selectedProject_.sizeFrom.toLocaleString()} - ${selectedProject_.sizeTo?.toLocaleString()} sqft` : selectedProject_.sizeRange || "—"],
-                  ["Bedrooms", selectedProject_.beds ? selectedProject_.beds + " BR" : "—"],
-                  ["Payment Plan", selectedProject_.payment || selectedProject_.paymentPlan || "—"],
-                ].map(([label, value], idx) => (
-                  <div key={idx} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
-                    <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{value}</div>
-                  </div>
-                ))}
-              </div>
+                {/* ── LEFT COLUMN ── */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
 
-              {/* Unit Inventory */}
-              {selectedProject_.units && (
-                <div style={{ marginBottom: 16 }}>
-                  <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Unit Inventory & Availability</h3>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 8 }}>
-                    {getUnitEntries(selectedProject_.units).map(([type, d]) => {
-                      const avail = d.total - d.sold;
-                      const pct = d.total > 0 ? (d.sold / d.total) * 100 : 0;
-                      return (
-                        <div key={type} style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
-                          <div style={{ fontSize: 12, fontWeight: 800, color: T.gold, textTransform: "uppercase", marginBottom: 4 }}>{type}</div>
-                          <div style={{ fontSize: 20, fontWeight: 900, fontFamily: "'Fraunces', serif", color: avail > 0 ? T.green : T.red }}>{avail}</div>
-                          <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4 }}>available of {d.total}</div>
-                          <div style={{ height: 4, borderRadius: 2, background: T.bg, overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${pct}%`, borderRadius: 2, background: pct >= 90 ? T.red : pct >= 60 ? T.gold : T.green }} />
-                          </div>
-                          <div style={{ fontSize: 8, color: T.textMuted, marginTop: 3 }}>{pct.toFixed(0)}% sold</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* ─── LOCATION INTELLIGENCE SECTION ─── */}
-              {ciExists && (
-                <ProGate isPro={isPro} message="Unlock Location Intelligence" onUpgrade={() => setShowUpgrade(true)}>
-                <>
-                  {/* Community Famous For */}
-                  <div style={{ marginBottom: 16, background: `linear-gradient(135deg, rgba(212,168,67,0.08), rgba(0,191,165,0.05))`, borderRadius: 12, padding: 14, border: `1px solid ${T.border}` }}>
-                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>⭐ Famous For</h3>
-                    <p style={{ fontSize: 12, color: T.textPrimary, lineHeight: 1.5, margin: 0 }}>{ci.famousFor}</p>
-                    <p style={{ fontSize: 10, color: T.textMuted, marginTop: 6, margin: 0 }}><span style={{ color: T.teal }}>Developer:</span> {ci.masterDev}</p>
-                    <p style={{ fontSize: 10, color: T.textMuted, marginTop: 3, margin: 0 }}><span style={{ color: T.teal }}>Lifestyle:</span> {ci.lifestyle}</p>
-                  </div>
-
-                  {/* Key Amenities */}
-                  <div style={{ marginBottom: 16 }}>
-                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>🏢 Key Amenities Nearby</h3>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                      {ci.keyAmenities.map((a, i) => (
-                        <div key={i} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10, borderLeft: `3px solid ${i === 0 ? T.blue : i === 1 ? T.red : i === 2 ? T.gold : T.teal}` }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: T.white, marginBottom: 4 }}>{a.icon} {a.label}</div>
-                          <div style={{ fontSize: 10, color: T.textSecondary, lineHeight: 1.4 }}>{a.items}</div>
+                  {/* Construction Progress */}
+                  <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 24 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: T.textSecondary, letterSpacing: 0.5, textTransform: "uppercase" }}>Construction Progress</span>
+                      <span style={{ fontSize: 24, fontWeight: 900, color: selectedProject_.construction >= 80 ? T.green : selectedProject_.construction >= 40 ? "#F59E0B" : T.teal, fontFamily: "'Fraunces', serif" }}>{selectedProject_.construction ?? 0}%</span>
+                    </div>
+                    <div style={{ height: 10, background: "rgba(255,255,255,0.06)", borderRadius: 5, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${selectedProject_.construction ?? 0}%`, background: selectedProject_.construction >= 80 ? "linear-gradient(90deg,#10B981,#34D399)" : selectedProject_.construction >= 40 ? "linear-gradient(90deg,#F59E0B,#FBBF24)" : "linear-gradient(90deg,#00BFA5,#4DD0E1)", borderRadius: 5, transition: "width 0.8s ease" }} />
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 20 }}>
+                      {[["HANDOVER", selectedProject_.handover || "—"], ["PAYMENT PLAN", selectedProject_.payment || selectedProject_.paymentPlan || "—"], ["CONSTRUCTION", selectedProject_.construction != null ? `${selectedProject_.construction}%` : "—"]].map(([label, value], idx) => (
+                        <div key={idx} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "14px 16px", textAlign: "center" }}>
+                          <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
+                          <div style={{ fontSize: 16, fontWeight: 800, color: T.white, fontFamily: "'Outfit', sans-serif" }}>{value}</div>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Distance Table */}
-                  <div style={{ marginBottom: 16 }}>
-                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>📍 Distance to Key Dubai Locations</h3>
-                    <div style={{ borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}` }}>
-                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                  {/* Unit Type Breakdown */}
+                  {selectedProject_.unitBreakdown && selectedProject_.unitBreakdown.length > 0 && (
+                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 24 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>Pricing by Unit Type</div>
+                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
                         <thead>
-                          <tr style={{ background: T.surfaceAlt }}>
-                            <th style={{ padding: "8px 10px", textAlign: "left", color: T.gold, fontWeight: 600, fontSize: 10 }}>Destination</th>
-                            <th style={{ padding: "8px 10px", textAlign: "center", color: T.gold, fontWeight: 600, fontSize: 10 }}>Distance</th>
-                            <th style={{ padding: "8px 10px", textAlign: "center", color: T.gold, fontWeight: 600, fontSize: 10 }}>Drive Time</th>
+                          <tr style={{ borderBottom: `2px solid ${T.border}` }}>
+                            {["Unit Type", "Size (sqft)", "Starting From", "Price / sqft"].map(h => (
+                              <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>{h}</th>
+                            ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {ci.distances.map((d, i) => (
-                            <tr key={i} style={{ borderTop: `1px solid ${T.border}`, background: i % 2 === 0 ? "transparent" : "rgba(14,29,53,0.3)" }}>
-                              <td style={{ padding: "7px 10px", color: T.textPrimary, fontWeight: d.dest.includes("Downtown") || d.dest.includes("Sheikh Zayed") ? 600 : 400 }}>{d.dest}</td>
-                              <td style={{ padding: "7px 10px", textAlign: "center", color: T.textSecondary }}>{d.km} km</td>
-                              <td style={{ padding: "7px 10px", textAlign: "center" }}>
-                                <span style={{ 
-                                  padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 700,
-                                  background: d.min <= 10 ? "rgba(16,185,129,0.15)" : d.min <= 20 ? "rgba(212,168,67,0.15)" : "rgba(59,130,246,0.12)",
-                                  color: d.min <= 10 ? T.green : d.min <= 20 ? T.gold : T.blue
-                                }}>
-                                  {d.min} min
-                                </span>
-                              </td>
+                          {selectedProject_.unitBreakdown.map((u, i) => (
+                            <tr key={i} style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.15s" }}>
+                              <td style={{ padding: "14px 12px", fontWeight: 700, color: T.white, fontSize: 15 }}>{u.type}</td>
+                              <td style={{ padding: "14px 12px", color: T.textSecondary, fontSize: 13 }}>{u.sqftFrom?.toLocaleString()} – {u.sqftTo?.toLocaleString()}</td>
+                              <td style={{ padding: "14px 12px", fontWeight: 800, color: T.gold, fontSize: 15, fontFamily: "'Fraunces', serif" }}>AED {u.priceFrom ? (u.priceFrom/1000000).toFixed(2)+"M" : "TBD"}</td>
+                              <td style={{ padding: "14px 12px", color: T.textSecondary, fontSize: 13 }}>{u.priceFrom && u.sqftFrom ? `AED ${Math.round(u.priceFrom/u.sqftFrom).toLocaleString()}` : "—"}</td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
-                    <p style={{ fontSize: 9, color: T.textMuted, marginTop: 6 }}>🛣️ <strong>Road Access:</strong> {ci.roads}</p>
+                  )}
+
+                  {/* Famous For */}
+                  {ciExists && (
+                    <div style={{ background: `linear-gradient(135deg, rgba(212,168,67,0.08), rgba(212,168,67,0.03))`, borderRadius: 16, border: `1px solid rgba(212,168,67,0.2)`, padding: 24 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                        <span style={{ fontSize: 16 }}>⭐</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Famous For</span>
+                      </div>
+                      <p style={{ fontSize: 13, color: T.textPrimary, lineHeight: 1.7, margin: 0 }}>{ci.famousFor}</p>
+                      {ci.masterDev && <p style={{ fontSize: 11, color: T.textMuted, marginTop: 10, margin: "10px 0 0" }}><span style={{ color: T.teal }}>Developer:</span> {ci.masterDev}</p>}
+                      {ci.lifestyle && <p style={{ fontSize: 11, color: T.textMuted, marginTop: 4, margin: "4px 0 0" }}><span style={{ color: T.teal }}>Lifestyle:</span> {ci.lifestyle}</p>}
+                    </div>
+                  )}
+
+                  {/* Key Amenities */}
+                  {ciExists && ci.keyAmenities && (
+                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 24 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                        <span style={{ fontSize: 16 }}>🏙️</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: T.white, letterSpacing: 1, textTransform: "uppercase" }}>Key Amenities Nearby</span>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                        {ci.keyAmenities.map((a, i) => (
+                          <div key={i} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "14px 16px", borderLeft: `3px solid ${[T.gold, T.teal, "#60A5FA", "#A78BFA"][i % 4]}` }}>
+                            <div style={{ fontWeight: 700, color: T.white, fontSize: 13, marginBottom: 6 }}>{a.icon} {a.label}</div>
+                            <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6 }}>{a.items}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Distance Table */}
+                  {ciExists && ci.distances && (
+                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 24 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                        <span style={{ fontSize: 16 }}>📍</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: T.white, letterSpacing: 1, textTransform: "uppercase" }}>Distance to Key Dubai Locations</span>
+                      </div>
+                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                        <thead>
+                          <tr style={{ borderBottom: `2px solid ${T.border}` }}>
+                            {["Destination", "Distance", "Drive Time"].map(h => (
+                              <th key={h} style={{ padding: "8px 12px", textAlign: h === "Destination" ? "left" : "center", fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 0.8, textTransform: "uppercase" }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {ci.distances.map((d, i) => (
+                            <tr key={i} style={{ borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
+                              <td style={{ padding: "12px", fontSize: 13, fontWeight: i < 3 ? 700 : 400, color: T.white }}>{d.dest}</td>
+                              <td style={{ padding: "12px", textAlign: "center", fontSize: 13, color: T.textSecondary }}>{d.km} km</td>
+                              <td style={{ padding: "12px", textAlign: "center" }}>
+                                <span style={{ padding: "4px 10px", borderRadius: 6, background: d.min <= 10 ? "rgba(16,185,129,0.2)" : d.min <= 20 ? "rgba(212,168,67,0.2)" : "rgba(96,165,250,0.2)", color: d.min <= 10 ? T.green : d.min <= 20 ? T.gold : "#60A5FA", fontSize: 11, fontWeight: 700 }}>{d.min} min</span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {ci.roads && <p style={{ fontSize: 10, color: T.textMuted, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${T.border}`, margin: "12px 0 0" }}>🛣️ <strong>Road Access:</strong> {ci.roads}</p>}
+                    </div>
+                  )}
+
+                  {/* ROI Estimate */}
+                  {(() => {
+                    const gross = roiData.grossYield ?? 6.0;
+                    const net = roiData.netYield ?? (gross * 0.78);
+                    const appreciation = roiData.appreciation5yr ?? 35;
+                    const annualYoy = roiData.annualYoy ?? 10;
+                    const estValue5yr = selectedProject_.price ? Math.round(selectedProject_.price * (1 + appreciation/100)) : 0;
+                    const annualRent = selectedProject_.price ? Math.round(selectedProject_.price * gross / 100) : 0;
+                    return (
+                      <div style={{ background: `linear-gradient(135deg, rgba(0,191,165,0.06), rgba(0,191,165,0.02))`, borderRadius: 16, border: `1px solid rgba(0,191,165,0.2)`, padding: 24 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: T.teal, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>ROI Estimate</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+                          {[["GROSS YIELD", `${gross.toFixed(1)}%`, T.green], ["NET YIELD", `${net.toFixed(1)}%`, T.teal], ["5-YR APPRECIATION", `+${appreciation}%`, T.gold], ["ANNUAL YOY", `+${annualYoy}%`, "#60A5FA"]].map(([label, value, color]) => (
+                            <div key={label} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "14px", textAlign: "center" }}>
+                              <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
+                              <div style={{ fontSize: 20, fontWeight: 900, color, fontFamily: "'Fraunces', serif" }}>{value}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                          {[["EST. 5-YR VALUE", estValue5yr ? `AED ${(estValue5yr/1000000).toFixed(2)}M` : "—", estValue5yr && selectedProject_.price ? `+AED ${((estValue5yr-selectedProject_.price)/1000000).toFixed(2)}M gain` : "", T.gold], ["EST. ANNUAL RENT", annualRent ? `AED ${annualRent.toLocaleString()}` : "—", "1BR estimate", T.teal], ["GOLDEN VISA", selectedProject_.price >= 2000000 ? "✓ Eligible" : "Below AED 2M", selectedProject_.price >= 2000000 ? "Eligible (≥AED 2M property value)" : "", selectedProject_.price >= 2000000 ? T.green : T.textMuted]].map(([label, value, sub, color]) => (
+                            <div key={label} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "14px" }}>
+                              <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
+                              <div style={{ fontSize: 15, fontWeight: 800, color, fontFamily: "'Fraunces', serif" }}>{value}</div>
+                              {sub && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>{sub}</div>}
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ marginTop: 10, fontSize: 10, color: T.textMuted }}>Risk: {roiData.risk || "Low-Medium"} · Occupancy: {roiData.occupancy || "92"}%</div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Interactive ROI Calculator */}
+                  {(() => {
+                    const [calcPrice, setCalcPrice] = React.useState(selectedProject_.price || 1750000);
+                    const [calcBeds, setCalcBeds] = React.useState("1BR");
+                    const [calcStrategy, setCalcStrategy] = React.useState("Long-Term");
+                    const [calcYears, setCalcYears] = React.useState(5);
+                    const roiD = (liveCommunityROI && liveCommunityROI[ciKey]) || (liveCommunityROI && liveCommunityROI[selectedProject_.community]) || communityROI[ciKey] || communityROI[selectedProject_.community] || {};
+                    const gross = roiD.grossYield ?? 6.0;
+                    const appreciation = roiD.appreciation5yr ?? 35;
+                    const annualAppRate = Math.pow(1 + appreciation/100, 1/5) - 1;
+                    const projectedValue = Math.round(calcPrice * Math.pow(1 + annualAppRate, calcYears));
+                    const capitalGain = projectedValue - calcPrice;
+                    const paymentStr = selectedProject_.payment || "80/20";
+                    const downPctMatch = paymentStr.match(/^(\d+)/);
+                    const downPct = downPctMatch ? parseInt(downPctMatch[1]) / 100 : 0.2;
+                    const downPayment = Math.round(calcPrice * downPct);
+                    const annualRentCalc = calcStrategy === "Short-Term Airbnb" ? Math.round(calcPrice * gross / 100 * 1.5) : Math.round(calcPrice * gross / 100);
+                    const totalRental = annualRentCalc * calcYears;
+                    const totalReturn = capitalGain + totalRental;
+                    const roiOnDown = downPayment > 0 ? ((totalReturn / downPayment) * 100).toFixed(1) : "—";
+                    const cashOnCash = downPayment > 0 ? ((annualRentCalc / downPayment) * 100).toFixed(1) : "—";
+                    const annualized = (((projectedValue + totalRental) / calcPrice) * 100 / calcYears - 100/calcYears).toFixed(1);
+                    const scPerSqft = 18;
+                    const sizeEst = selectedProject_.sizeFrom || 750;
+                    const annualSC = sizeEst * scPerSqft;
+                    const netYieldPct = ((annualRentCalc - annualSC) / calcPrice * 100).toFixed(1);
+                    return (
+                      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 24 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#60A5FA", letterSpacing: 1, textTransform: "uppercase", marginBottom: 20 }}>Interactive ROI Calculator</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+                          <div>
+                            <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, display: "block", marginBottom: 6, textTransform: "uppercase" }}>Purchase Price (AED)</label>
+                            <input type="number" value={calcPrice} onChange={e => setCalcPrice(Number(e.target.value))} style={{ width: "100%", padding: "10px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 14, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }} />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, display: "block", marginBottom: 6, textTransform: "uppercase" }}>Holding Period: {calcYears} Years</label>
+                            <input type="range" min={1} max={10} value={calcYears} onChange={e => setCalcYears(Number(e.target.value))} style={{ width: "100%", marginTop: 10, accentColor: T.teal }} />
+                          </div>
+                        </div>
+                        <div style={{ marginBottom: 16 }}>
+                          <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, marginBottom: 8, textTransform: "uppercase" }}>Bedrooms</div>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            {["1BR","2BR","3BR","TH/Villa"].map(b => (
+                              <button key={b} type="button" onClick={() => setCalcBeds(b)} style={{ padding: "7px 16px", borderRadius: 8, border: `1px solid ${calcBeds === b ? T.teal : T.border}`, background: calcBeds === b ? "rgba(0,191,165,0.15)" : T.surfaceAlt, color: calcBeds === b ? T.teal : T.textSecondary, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{b}</button>
+                            ))}
+                          </div>
+                        </div>
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, marginBottom: 8, textTransform: "uppercase" }}>Rental Strategy</div>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            {["Long-Term","Short-Term Airbnb","Flip at Handover"].map(s => (
+                              <button key={s} type="button" onClick={() => setCalcStrategy(s)} style={{ padding: "7px 16px", borderRadius: 8, border: `1px solid ${calcStrategy === s ? T.gold : T.border}`, background: calcStrategy === s ? "rgba(212,168,67,0.15)" : T.surfaceAlt, color: calcStrategy === s ? T.gold : T.textSecondary, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{s}</button>
+                            ))}
+                          </div>
+                        </div>
+                        <div style={{ background: T.surfaceAlt, borderRadius: 12, padding: 20 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.teal, letterSpacing: 1, marginBottom: 14, textTransform: "uppercase" }}>Results — {calcYears}-Year Projection</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
+                            {[["DOWN PAYMENT", `AED ${downPayment.toLocaleString()}`, T.white], ["PROJECTED VALUE", `AED ${(projectedValue/1000000).toFixed(2)}M`, T.gold], ["CAPITAL GAIN", `AED ${(capitalGain/1000000).toFixed(2)}M`, T.green]].map(([l,v,c]) => (
+                              <div key={l} style={{ background: "#04090F", borderRadius: 8, padding: "12px 14px" }}>
+                                <div style={{ fontSize: 8, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>{l}</div>
+                                <div style={{ fontSize: 15, fontWeight: 800, color: c, fontFamily: "'Fraunces', serif" }}>{v}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
+                            {[["TOTAL RENTAL INCOME", `AED ${(totalRental/1000000).toFixed(2)}M`, T.teal], ["TOTAL RETURN", `AED ${(totalReturn/1000000).toFixed(2)}M`, T.teal], ["ROI ON DOWN PAYMENT", `${roiOnDown}%`, "#60A5FA"]].map(([l,v,c]) => (
+                              <div key={l} style={{ background: "#04090F", borderRadius: 8, padding: "12px 14px" }}>
+                                <div style={{ fontSize: 8, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>{l}</div>
+                                <div style={{ fontSize: 15, fontWeight: 800, color: c, fontFamily: "'Fraunces', serif" }}>{v}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                            {[["CASH-ON-CASH RETURN", `${cashOnCash}%`, "Annual yield on down payment", T.green], ["ANNUALISED TOTAL RETURN", `${annualized}%`, "Per year (capital + rental)", T.gold]].map(([l,v,sub,c]) => (
+                              <div key={l} style={{ background: "#04090F", borderRadius: 8, padding: "14px 16px" }}>
+                                <div style={{ fontSize: 8, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>{l}</div>
+                                <div style={{ fontSize: 22, fontWeight: 900, color: c, fontFamily: "'Fraunces', serif" }}>{v}</div>
+                                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>{sub}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+                            {[["GROSS YIELD", `${gross.toFixed(1)}%`, T.teal], ["NET YIELD", `${netYieldPct}%`, T.green]].map(([l,v,c]) => (
+                              <div key={l} style={{ background: "#04090F", borderRadius: 8, padding: "12px 14px", textAlign: "center" }}>
+                                <div style={{ fontSize: 8, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>{l}</div>
+                                <div style={{ fontSize: 18, fontWeight: 900, color: c, fontFamily: "'Fraunces', serif" }}>{v}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ marginTop: 10, fontSize: 10, color: T.textMuted }}>Estimates based on community averages. Service charge: AED {scPerSqft}/sqft/yr. Not financial advice.</div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                </div>{/* end left column */}
+
+                {/* ── RIGHT COLUMN ── */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+                  {/* Quick Stats */}
+                  <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Project Details</div>
+                    {[
+                      ["From Price", selectedProject_.price ? `AED ${(selectedProject_.price/1000000).toFixed(2)}M` : "TBD"],
+                      ["Price / sqft", selectedProject_.ppsf ? `AED ${selectedProject_.ppsf.toLocaleString()}` : "—"],
+                      ["Size Range", selectedProject_.sizeFrom ? `${selectedProject_.sizeFrom.toLocaleString()} – ${selectedProject_.sizeTo?.toLocaleString()} sqft` : "—"],
+                      ["Bedrooms", selectedProject_.beds || selectedProject_.bed || "—"],
+                      ["Type", selectedProject_.type || "—"],
+                      ["Tier", selectedProject_.tier || "—"],
+                      ["Developer", "Emaar Properties"],
+                    ].map(([label, value]) => (
+                      <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>{label}</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: T.white, textAlign: "right", maxWidth: "55%" }}>{value}</span>
+                      </div>
+                    ))}
                   </div>
 
                   {/* Investment Quick Facts */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
-                    <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
-                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Est. Yield</div>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: T.green, fontFamily: "'Fraunces', serif" }}>{ci.avgYield}</div>
-                    </div>
-                    <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
-                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Golden Visa</div>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: ci.goldenVisa ? T.green : T.textMuted, fontFamily: "'Fraunces', serif" }}>{ci.goldenVisa ? "✓ Eligible" : "Below 2M"}</div>
-                    </div>
-                    <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
-                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Tier</div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{selectedProject_.tier}</div>
-                    </div>
-                  </div>
-                </>
-                </ProGate>
-              )}
-
-
-              {/* ROI Estimate */}
-              {(() => {
-                const _staticRoi = communityROI[selectedProject_.community] || {};
-                const _liveRoi = liveCommunityROI[selectedProject_.community] || {};
-                const roi = { ..._staticRoi, ..._liveRoi };
-                if (!roi || !roi.grossYield) return null;
-                const price = selectedProject_.price || 0;
-                /* Pick yield based on project type for accuracy */
-                const _type = (selectedProject_.type || '').toLowerCase();
-                const _isVilla = _type.includes('villa');
-                const _isTH = _type.includes('th') || _type.includes('townhouse');
-                const gross = _isVilla
-                  ? (roi.grossYield?.villa || roi.grossYield?.th || roi.grossYield?.apt1 || 0)
-                  : _isTH
-                    ? (roi.grossYield?.th || roi.grossYield?.villa || roi.grossYield?.apt1 || 0)
-                    : (roi.grossYield?.apt1 || roi.grossYield?.th || roi.grossYield?.villa || 0);
-                const net = _isVilla
-                  ? (roi.netYield?.villa || roi.netYield?.th || roi.netYield?.apt1 || 0)
-                  : _isTH
-                    ? (roi.netYield?.th || roi.netYield?.villa || roi.netYield?.apt1 || 0)
-                    : (roi.netYield?.apt1 || roi.netYield?.th || roi.netYield?.villa || 0);
-                const appr5 = roi.appreciation5yr || 0;
-                const projValue = price > 0 ? price * (1 + appr5/100) : 0;
-                const annualRent = roi.estRent?.apt1 || roi.estRent?.th || roi.estRent?.villa || 0;
-                return (
-                  <ProGate isPro={isPro} message="Unlock ROI Calculator" onUpgrade={() => setShowUpgrade(true)}>
-                  <div style={{ marginBottom: 16, background: "linear-gradient(135deg, rgba(16,185,129,0.06), rgba(212,168,67,0.04))", borderRadius: 12, padding: 16, border: "1px solid rgba(16,185,129,0.2)" }}>
-                    <h3 style={{ fontSize: 11, fontWeight: 700, color: T.green, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>ROI Estimate</h3>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 }}>
+                  {ciExists && (
+                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Investment Profile</div>
                       {[
-                        { label: "Gross Yield", value: gross + "%", color: T.green },
-                        { label: "Net Yield", value: net + "%", color: T.teal },
-                        { label: "5-Yr Appreciation", value: "+" + appr5 + "%", color: T.gold },
-                        { label: "Annual YoY", value: "+" + (roi.appreciationYoY || 0) + "%", color: T.blue },
-                      ].map((item, i) => (
-                        <div key={i} style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
-                          <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{item.label}</div>
-                          <div style={{ fontSize: 16, fontWeight: 800, color: item.color, fontFamily: "Fraunces, serif" }}>{item.value}</div>
+                        ["Est. Yield", ci.avgYield || "5.0–6.5%"],
+                        ["Golden Visa", ci.goldenVisa || selectedProject_.price >= 2000000 ? "✓ Eligible" : "—"],
+                        ["Tier", selectedProject_.tier || "—"],
+                        ["Investment Score", `${inv.score}/10 — ${inv.label}`],
+                      ].map(([label, value]) => (
+                        <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
+                          <span style={{ fontSize: 12, color: T.textMuted }}>{label}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: label === "Golden Visa" && (ci.goldenVisa || selectedProject_.price >= 2000000) ? T.green : label === "Investment Score" ? inv.color : T.white }}>{value}</span>
                         </div>
                       ))}
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                      {price > 0 && <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10 }}>
-                        <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Est. 5-Yr Value</div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {(projValue/1e6).toFixed(2)}M</div>
-                        <div style={{ fontSize: 9, color: T.green }}>+AED {((projValue-price)/1e6).toFixed(2)}M gain</div>
-                      </div>}
-                      {annualRent > 0 && <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10 }}>
-                        <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Est. Annual Rent</div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: T.teal }}>AED {annualRent.toLocaleString()}</div>
-                        <div style={{ fontSize: 9, color: T.textMuted }}>1BR estimate</div>
-                      </div>}
-                      <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10 }}>
-                        <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Golden Visa</div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: roi.goldenVisa ? T.green : T.textMuted }}>{roi.goldenVisa ? "Eligible" : "Not Eligible"}</div>
-                        <div style={{ fontSize: 9, color: T.textMuted }}>{roi.goldenVisaNote}</div>
-                      </div>
-                    </div>
-                    <div style={{ marginTop: 8, fontSize: 9, color: T.textMuted }}>Risk: <span style={{ color: roi.riskLevel === "Low" ? T.green : roi.riskLevel === "Medium" ? T.gold : T.red }}>{roi.riskLevel}</span> · Occupancy: {roi.occupancy ? roi.occupancy + "%" : "N/A"}</div>
-                  </div>
-                  </ProGate>
-                );
-              })()}
-
-
-              {/* ROI Calculator */}
-              {(() => {
-                const _sr2 = communityROI[selectedProject_.community] || {};
-                const _lr2 = liveCommunityROI[selectedProject_.community] || {};
-                const roi = { ..._sr2, ..._lr2 };
-                if (!roi || !roi.grossYield) return null;
-                return (
-                  <ProGate isPro={isPro} message="Unlock ROI Calculator" onUpgrade={() => setShowUpgrade(true)}>
-                  <RoiCalculator project={selectedProject_} roi={roi} T={T} />
-                  </ProGate>
-                );
-              })()}
-
-              {/* Price History */}
-              {(() => {
-                const ph = selectedProject_.priceHistory;
-                if (!ph || !Array.isArray(ph) || ph.length < 2) return null;
-                return (
-                  <div style={{ marginBottom: 16 }}>
-                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>📈 Price History</h3>
-                    <ResponsiveContainer width="100%" height={140}>
-                      <AreaChart data={ph}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                        <XAxis dataKey="date" tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000000).toFixed(1)}M`} />
-                        <Tooltip formatter={v => [`AED ${Number(v).toLocaleString()}`, "Price"]} contentStyle={{ background: T.surface, border: `1px solid ${T.gold}`, borderRadius: 8, fontSize: 11 }} />
-                        <Area type="monotone" dataKey="price" stroke={T.gold} fill="rgba(212,168,67,0.1)" strokeWidth={2} dot={{ r: 3, fill: T.gold }} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                );
-              })()}
-
-              {/* Project Documents & Media */}
-              {(selectedProject_.pdfBrochure || selectedProject_.pdfFloorPlan || selectedProject_.pdfPaymentPlan || selectedProject_.pdfFactSheet || selectedProject_.videoUrl || selectedProject_.externalLink || selectedProject_.imageUrl) && (
-                <div style={{ marginBottom: 16 }}>
-                  <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>📎 Documents & Media</h3>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {selectedProject_.pdfBrochure && (
-                      <a href={selectedProject_.pdfBrochure} target="_blank" rel="noreferrer"
-                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(212,168,67,0.1)", border: "1px solid rgba(212,168,67,0.3)", color: T.gold, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-                        📄 Brochure
-                      </a>
-                    )}
-                    {selectedProject_.pdfFloorPlan && (
-                      <a href={selectedProject_.pdfFloorPlan} target="_blank" rel="noreferrer"
-                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.3)", color: T.blue, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-                        🏠 Floor Plan
-                      </a>
-                    )}
-                    {selectedProject_.pdfPaymentPlan && (
-                      <a href={selectedProject_.pdfPaymentPlan} target="_blank" rel="noreferrer"
-                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", color: T.green, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-                        💳 Payment Plan
-                      </a>
-                    )}
-                    {selectedProject_.pdfFactSheet && (
-                      <a href={selectedProject_.pdfFactSheet} target="_blank" rel="noreferrer"
-                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(0,191,165,0.1)", border: "1px solid rgba(0,191,165,0.3)", color: T.teal, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-                        📊 Fact Sheet
-                      </a>
-                    )}
-                    {selectedProject_.externalLink && (
-                      <a href={selectedProject_.externalLink} target="_blank" rel="noreferrer"
-                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.3)", color: "#8B5CF6", fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-                        🌐 Visit Website
-                      </a>
-                    )}
-                  </div>
-                  {selectedProject_.videoUrl && (
-                    <div style={{ marginTop: 12, borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}` }}>
-                      <video controls style={{ width: "100%", maxHeight: 240, background: "#000", display: "block" }}>
-                        <source src={selectedProject_.videoUrl} />
-                      </video>
-                    </div>
                   )}
-                </div>
-              )}
 
-              {/* Project Tools */}
-              <div style={{ display: "flex", gap: 8 }}>
-                <a href={`/project/${selectedProject_.id}`}
-                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.18), rgba(212,168,67,0.08))", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 12, color: T.gold, fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.2 }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,168,67,0.28), rgba(212,168,67,0.15))"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(212,168,67,0.2)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,168,67,0.18), rgba(212,168,67,0.08))"; e.currentTarget.style.boxShadow = "none"; }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                  View Full Report
-                </a>
-                <button type="button" onClick={() => { const p = selectedProject_; const txt = `${p.name} | ${p.community} | AED ${p.price ? (p.price/1000000).toFixed(2)+"M" : "TBD"} | ${p.ppsf ? p.ppsf.toLocaleString()+" PPSF" : ""} | Handover: ${p.handover} | Payment: ${p.payment} | Status: ${p.status}`; navigator.clipboard?.writeText(txt).then(() => alert("✅ Project data copied to clipboard")).catch(() => alert(txt)); }}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "13px 16px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}
-                  title="Copy project data">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                  Copy
-                </button>
-              </div>
+                  {/* Action Buttons */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    <a href={`https://wa.me/971XXXXXXXXX?text=Hi, I'm interested in ${encodeURIComponent(selectedProject_.name)} in ${encodeURIComponent(selectedProject_.community)}. Price from AED ${selectedProject_.price ? (selectedProject_.price/1000000).toFixed(2)+'M' : 'TBD'}. Handover: ${selectedProject_.handover}.`}
+                      target="_blank" rel="noopener noreferrer"
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "15px 0", background: "linear-gradient(135deg, rgba(37,211,102,0.18), rgba(37,211,102,0.06))", border: "1px solid rgba(37,211,102,0.45)", borderRadius: 12, color: "#25D366", fontSize: 14, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                      WhatsApp Inquiry
+                    </a>
+                    {(selectedProject_.emaarUrl || selectedProject_.sourceUrl) && (
+                      <a href={selectedProject_.emaarUrl || selectedProject_.sourceUrl} target="_blank" rel="noopener noreferrer"
+                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.06))", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 12, color: T.gold, fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        Official Source ↗
+                      </a>
+                    )}
+                    <button type="button" onClick={() => { const p = selectedProject_; const txt = `${p.name} | ${p.community} | AED ${p.price ? (p.price/1000000).toFixed(2)+"M" : "TBD"} | ${p.ppsf ? "AED "+p.ppsf.toLocaleString()+" PPSF" : ""} | Handover: ${p.handover} | Payment: ${p.payment} | Status: ${p.status}`; navigator.clipboard?.writeText(txt).then(() => alert("✅ Copied")).catch(() => alert(txt)); }}
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, color: T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                      Copy Project Data
+                    </button>
+                  </div>
 
-              {/* ─── SOURCE LINK: Official Emaar listing ─── */}
-              {selectedProject_.emaarUrl && (
-                <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer"
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", marginTop: 8, padding: "13px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.06))", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 12, color: T.gold, fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.2 }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,168,67,0.22), rgba(212,168,67,0.12))"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(212,168,67,0.15)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.06))"; e.currentTarget.style.boxShadow = "none"; }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                  <span>View Official Listing on <strong>{getLinkDomain(selectedProject_.emaarUrl)}</strong> ↗</span>
-                </a>
-              )}
-
-              {/* ─── PDF REPORT BUTTON ─── */}
-              <button type="button" onClick={() => {
+                  {/* PDF Report */}
+                  {/* ─── PDF REPORT BUTTON ─── */}
+                  <button type="button" onClick={() => {
                 const p = selectedProject_;
                 const roiData = (liveCommunityROI && liveCommunityROI[p.community]) || communityROI[p.community] || {};
                 const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${p.name} — Investment Report</title>
@@ -7867,6 +8598,8 @@ export default function EmaarDashboardV2() {
             </div>
           </div>
         </div>
+        </div>
+        </div>
         );
       })()}
 
@@ -7924,10 +8657,10 @@ export default function EmaarDashboardV2() {
             {/* View Full Report for all compared projects */}
             <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
               {compareList.map(p => (
-                <a key={p.id} href={`/project/${p.id}`}
-                  style={{ flex: 1, padding: "10px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.07))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 10, color: T.gold, fontSize: 12, fontWeight: 700, textAlign: "center", textDecoration: "none" }}>
+                <button key={p.id} type="button" onClick={() => setSelectedProject(p)}
+                  style={{ flex: 1, padding: "10px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.07))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 10, color: T.gold, fontSize: 12, fontWeight: 700, textAlign: "center", cursor: "pointer" }}>
                   📄 {p.name.split(" ").slice(0,2).join(" ")}
-                </a>
+                </button>
               ))}
             </div>
             {/* View on Emaar for all compared projects */}
