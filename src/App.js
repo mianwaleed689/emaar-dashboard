@@ -11,9 +11,7 @@ import Terms from "./Terms";
 import Privacy from "./Privacy";
 import ErrorBoundary from "./ErrorBoundary";
 import NotFound from "./NotFound";
-import ProjectDetail from "./ProjectDetail";
 import { I18nProvider } from "./i18n";
-
 // ── Spinner shared ──
 const Spinner = () => (
   <div style={{ minHeight: "100vh", background: "#04090F", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -21,11 +19,9 @@ const Spinner = () => (
     <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
   </div>
 );
-
-// ── Admin guard — checks role === "admin" ──
+// ── Admin guard – checks role === "admin" ──
 function AuthGuard({ children }) {
   const [status, setStatus] = useState("loading");
-
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) { setStatus("denied"); return; }
@@ -39,27 +35,22 @@ function AuthGuard({ children }) {
     });
     return () => unsub();
   }, []);
-
   if (status === "loading") return <Spinner />;
   if (status === "denied") return <Navigate to="/" replace />;
   return children;
 }
-
-// ── Home route — landing page for guests, redirect to /dashboard if logged in ──
+// ── Home route – landing page for guests, redirect to /dashboard if logged in ──
 function HomeRoute() {
   const [status, setStatus] = useState("loading");
   const navigate = useNavigate();
-
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (firebaseUser) => {
       setStatus(firebaseUser ? "loggedin" : "guest");
     });
     return () => unsub();
   }, []);
-
   if (status === "loading") return <Spinner />;
   if (status === "loggedin") return <Navigate to="/dashboard" replace />;
-
   return (
     <LandingPage
       onLoginClick={() => navigate("/dashboard")}
@@ -67,7 +58,6 @@ function HomeRoute() {
     />
   );
 }
-
 function App() {
   return (
     <ErrorBoundary>
@@ -78,7 +68,8 @@ function App() {
             <Route path="/dashboard" element={<EmaarDashboardV2 />} />
             <Route path="/admin" element={<AuthGuard><AdminPanel /></AuthGuard>} />
             <Route path="/manage" element={<AuthGuard><ProjectManager /></AuthGuard>} />
-            <Route path="/project/:id" element={<ProjectDetail />} />
+            {/* /project/:id redirects to dashboard — project details open as modal inside dashboard */}
+            <Route path="/project/:id" element={<Navigate to="/dashboard" replace />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
@@ -88,5 +79,4 @@ function App() {
     </ErrorBoundary>
   );
 }
-
 export default App;
