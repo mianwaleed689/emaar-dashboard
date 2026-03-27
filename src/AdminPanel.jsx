@@ -9,6 +9,14 @@ import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswo
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter, updateDoc } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
+import { damacProjects } from "./data_damac";
+import { sobhaProjects } from "./data_sobha";
+import { nakheelProjects } from "./data_nakheel";
+import { meraasProjects } from "./data_meraas";
+import { binghattiProjects } from "./data_binghatti";
+import { aldarProjects } from "./data_aldar";
+// All projects combined — used for audit log project name lookups
+const allProjects = [...emaarProjects, ...damacProjects, ...sobhaProjects, ...nakheelProjects, ...meraasProjects, ...binghattiProjects, ...aldarProjects];
 import { T } from "./theme";
 import ProjectManager from "./ProjectManager";
 import { useI18n, LANGUAGES } from "./i18n";
@@ -12605,7 +12613,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
       const ip = l.ip || "";
       const u = users.find(u => u.uid === l.uid);
       const userStr = u ? (u.name || u.email || l.uid || "") : (l.uid || "");
-      const proj = emaarProjects.find(p => String(p.id) === String(l.projectId));
+      const proj = allProjects.find(p => String(p.id) === String(l.projectId));
       const detail = l.action === "tier_change" ? `${l.from} → ${l.to}`
         : l.action === "bulk_tier_change" ? `${(l.uids||[]).length} users → ${l.newTier}`
         : l.action?.includes("project") ? (proj?.name || l.projectId || "")
@@ -12641,7 +12649,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
     if (auditSearch) {
       const u = users.find(u => u.uid === l.uid || (l.uids || []).includes(u.uid));
       const s = auditSearch.toLowerCase();
-      const proj = emaarProjects.find(p => String(p.id) === String(l.projectId));
+      const proj = allProjects.find(p => String(p.id) === String(l.projectId));
       const diffStr = l.diff ? JSON.stringify(l.diff).toLowerCase() : "";
       const rateStr = l.rates ? JSON.stringify(l.rates).toLowerCase() : "";
       if (!(
@@ -12875,7 +12883,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
               const isProject = ["project_update","project_create"].includes(log.action);
               const affectedUser = (isTier) ? users.find(u => u.uid === log.uid) : null;
               const isClickable = isTier && affectedUser;
-              const projName = isProject ? (emaarProjects.find(p => String(p.id) === String(log.projectId))?.name || `Project ${log.projectId}`) : null;
+              const projName = isProject ? (allProjects.find(p => String(p.id) === String(log.projectId))?.name || `Project ${log.projectId}`) : null;
 
               return (
                 <div key={log.id || idx}
@@ -15879,7 +15887,7 @@ export default function AdminPanel() {
         Object.keys(clean).forEach(k => { if (k !== "updatedAt" && k !== "updatedBy" && clean[k] !== oldDoc[k]) diff[k] = { old: oldDoc[k] ?? "—", new: clean[k] }; });
         await logAudit(db, { action: "project_update", projectId, changes: clean, diff });
         // Save full version snapshot for rollback
-        const p = emaarProjects.find(x => String(x.id) === String(projectId));
+        const p = allProjects.find(x => String(x.id) === String(projectId));
         const versionId = String(projectId) + "_v_" + Date.now();
         await setDoc(doc(db, "projectVersions", versionId), {
           projectId: String(projectId),
@@ -15953,7 +15961,7 @@ export default function AdminPanel() {
     try {
       const timestamp = new Date().toISOString();
       for (const projectId of bulkSelected) {
-        const p = emaarProjects.find(x => String(x.id) === String(projectId));
+        const p = allProjects.find(x => String(x.id) === String(projectId));
         const merged = getMergedProject(p || { id: projectId });
         const oldPrice = merged.price || 0;
         const newPrice = changeType === 'percent' 
@@ -16374,7 +16382,7 @@ export default function AdminPanel() {
     if (data.lat && (Number(data.lat) < 24 || Number(data.lat) > 26)) { errors.push("Latitude should be ~25 for Dubai"); }
     if (data.lng && (Number(data.lng) < 54 || Number(data.lng) > 56)) { errors.push("Longitude should be ~55 for Dubai"); }
     // Check for duplicate ID
-    const existingProject = emaarProjects.find(p => String(p.id) === String(data.id));
+    const existingProject = allProjects.find(p => String(p.id) === String(data.id));
     const isUpdate = !!existingProject;
     return { data, errors, isUpdate, existingName: existingProject?.name };
   };
@@ -20423,7 +20431,7 @@ export default function AdminPanel() {
                         </button>
                       </div>
                     );
-                    const p = emaarProjects.find(x => x.id === editingProject);
+                    const p = allProjects.find(x => x.id === editingProject);
                     if (!p) return null;
                     const merged = getMergedProject(p);
                     const hasOverride = !!liveProjects[p.id];
@@ -20784,7 +20792,7 @@ export default function AdminPanel() {
                   {/* ── VERSION HISTORY MODAL ── */}
                   {viewingVersions && (() => {
                     const pid = viewingVersions;
-                    const p = emaarProjects.find(x => String(x.id) === pid) || { name: "Project " + pid, id: pid };
+                    const p = allProjects.find(x => String(x.id) === pid) || { name: "Project " + pid, id: pid };
                     const versions = projectVersions[pid] || null;
                     return (
                       <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setViewingVersions(null)}>
@@ -21744,7 +21752,7 @@ export default function AdminPanel() {
 
               {/* ─── PRICE HISTORY SUB-TAB ─── */}
               {dataSubTab === "pricehistory" && (() => {
-                const selectedProject = emaarProjects.find(p => String(p.id) === String(phSelId));
+                const selectedProject = allProjects.find(p => String(p.id) === String(phSelId));
                 const history         = phSelId ? (priceHistory[phSelId] || []) : [];
 
                 const loadHistory = async (id) => {
