@@ -2143,7 +2143,7 @@ export default function EmaarDashboardV2() {
   const emaarBaseNames = new Set(emaarProjects.map(p => (p.name || "").toLowerCase().trim()));
   const activeProjects = [
     // Always include all 48 curated Emaar projects with any live overrides
-    ...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }),
+    ...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects[p.id]; return ov ? { ...p, ...ov } : p; }),
     // Include DAMAC projects (S22)
     ...damacProjects,
     ...sobhaProjects,
@@ -3768,7 +3768,7 @@ export default function EmaarDashboardV2() {
             <Section title={selectedDeveloper === "emaar" ? `${activeProjects.length} Active Projects` : `${activeProjects.filter(p => (p.developerId || "emaar") === selectedDeveloper).length} Projects — ${selectedDeveloper.toUpperCase()}`} sub={selectedDeveloper === "emaar" ? "Complete Emaar off-plan portfolio · 2026–2030 · Search & filter" : "Filtered by selected developer · Switch developer in sidebar"}>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE.", source: "DXB Analytics", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "10", note: "Address, Vida, Palace" }], trend: null })} />
-                <KPI label="Communities" value="11" sub="DHE · DCH · EBF · GPC + 7 more" delay={2} />
+                <KPI label="Communities" value={String(new Set(activeProjects.filter(p=>(p.developerId||"emaar")===selectedDeveloper||selectedDeveloper==="emaar"&&!p.developerId).map(p=>p.community)).size)} sub="Master-planned communities" delay={2} />
                 <KPI label="Branded" value={`${activeProjects.filter(p=>p.branded).length}`} sub="Address · Vida · Palace · Bristol" delay={3} />
                 <KPI label="Avg Construction" value={`${Math.round(activeProjects.reduce((a,p)=>a+(p.construction||0),0)/activeProjects.length)}%`} sub="Weighted average progress" delay={4} />
               </div>
@@ -3792,8 +3792,16 @@ export default function EmaarDashboardV2() {
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Area</span>
-                {['All','DHE','DCH','EBF','GPC','ES','TV','RYM','TO','BB','TH','Branded'].map(f => (
-                  <button type='button' key={f} onClick={() => setProjectFilter(f)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectFilter===f ? T.gold : T.border), background: projectFilter===f ? T.goldGlow : 'transparent', color: projectFilter===f ? T.gold : T.textSecondary, fontSize: 11, fontWeight: projectFilter===f ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{f}</button>
+                {/* Area filter chips — full community names, derived from actual projects */}
+                {(() => {
+                  const devProjects = selectedDeveloper === "emaar"
+                    ? activeProjects.filter(p => (p.developerId || "emaar") === "emaar")
+                    : activeProjects.filter(p => (p.developerId || "emaar") === selectedDeveloper);
+                  const communities = ["All", ...Array.from(new Set(devProjects.map(p => p.community).filter(Boolean))).sort(), "Branded"];
+                  return communities.map(f => (
+                    <button type='button' key={f} onClick={() => setProjectFilter(f)} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid '+(projectFilter===f ? T.gold : T.border), background: projectFilter===f ? T.goldGlow : 'transparent', color: projectFilter===f ? T.gold : T.textSecondary, fontSize: 11, fontWeight: projectFilter===f ? 700 : 400, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>{f}</button>
+                  ));
+                })()}
                 ))}
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -3838,7 +3846,7 @@ export default function EmaarDashboardV2() {
               {activeProjects
                 .filter(p => {
                   const matchSearch = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase());
-                  const matchFilter = projectFilter === "All" || p.district === projectFilter || (projectFilter === "Branded" && p.branded);
+                  const matchFilter = projectFilter === "All" || p.community === projectFilter || (projectFilter === "Branded" && p.branded);
                   const matchTier = projectTier === "All" || p.tier === projectTier;
                   const matchHandover = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover));
                   const matchPrice = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6;
@@ -3937,8 +3945,18 @@ export default function EmaarDashboardV2() {
                       ) : null; })()}
                     </div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PRICE/SQFT</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "TBD"}</span></div>
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>SIZE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.sizeFrom?.toLocaleString()} - {p.sizeTo?.toLocaleString()} sqft</span></div>
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TYPE</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.type} · {p.beds} BR</span></div>
+                    {/* Unit breakdown on card — show starting unit type + price */}
+                    {p.unitBreakdown?.length > 0 ? (
+                      <div style={{ gridColumn: "span 2" }}>
+                        <span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>FROM</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {(p.unitBreakdown[0].priceFrom/1000000).toFixed(2)}M</span>
+                        <span style={{ fontSize: 10, color: T.textMuted }}> · {p.unitBreakdown[0].type} · {p.unitBreakdown[0].sqftFrom?.toLocaleString()}–{p.unitBreakdown[0].sqftTo?.toLocaleString()} sqft</span>
+                        {p.unitBreakdown.length > 1 && <span style={{ fontSize: 10, color: T.textMuted }}> +{p.unitBreakdown.length - 1} more types</span>}
+                      </div>
+                    ) : (
+                      <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>SIZE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.sizeFrom?.toLocaleString()} – {p.sizeTo?.toLocaleString()} sqft</span></div>
+                    )}
+                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TYPE</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.type} · {p.beds}</span></div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PAYMENT</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.payment}</span></div>
                   </div>
                   {/* Unit Inventory */}
@@ -3978,7 +3996,7 @@ export default function EmaarDashboardV2() {
                   </div>{/* end padding wrapper */}
                 </div>
               );})}
-              {activeProjects.filter(p => { const ms = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase()); const mf = projectFilter === "All" || p.district === projectFilter || (projectFilter === "Branded" && p.branded); const mt = projectTier === "All" || p.tier === projectTier; const my = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover)); const mp = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6; const mty = projectType === "All" || (p.type || "").includes(projectType); return ms && mf && mt && my && mp && mty; }).length === 0 && (
+              {activeProjects.filter(p => { const ms = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase()); const mf = projectFilter === "All" || p.community === projectFilter || (projectFilter === "Branded" && p.branded); const mt = projectTier === "All" || p.tier === projectTier; const my = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover)); const mp = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6; const mty = projectType === "All" || (p.type || "").includes(projectType); return ms && mf && mt && my && mp && mty; }).length === 0 && (
                 <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 20px" }}>
                   <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>🔍</div>
                   <div style={{ fontSize: 16, fontWeight: 600, color: T.white, marginBottom: 4 }}>No projects found</div>
@@ -8132,12 +8150,9 @@ export default function EmaarDashboardV2() {
               {/* Details Grid */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
                 {[
-                  ["Starting From", selectedProject_.price ? `AED ${(selectedProject_.price/1000000).toFixed(1)}M` : selectedProject_.priceFrom ? `AED ${(Number(selectedProject_.priceFrom)/1000000).toFixed(1)}M` : "TBD"],
                   ["Handover", selectedProject_.handover || "—"],
-                  ["Price/sqft", selectedProject_.ppsf ? `AED ${selectedProject_.ppsf.toLocaleString()}` : selectedProject_.pricePerSqft ? `AED ${Number(selectedProject_.pricePerSqft).toLocaleString()}` : "TBD"],
-                  ["Size Range", selectedProject_.sizeFrom ? `${selectedProject_.sizeFrom.toLocaleString()} - ${selectedProject_.sizeTo?.toLocaleString()} sqft` : selectedProject_.sizeRange || "—"],
-                  ["Bedrooms", selectedProject_.beds ? selectedProject_.beds + " BR" : "—"],
                   ["Payment Plan", selectedProject_.payment || selectedProject_.paymentPlan || "—"],
+                  ["Construction", selectedProject_.construction != null ? `${selectedProject_.construction}%` : "—"],
                 ].map(([label, value], idx) => (
                   <div key={idx} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
                     <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
@@ -8145,6 +8160,46 @@ export default function EmaarDashboardV2() {
                   </div>
                 ))}
               </div>
+
+              {/* Unit Type Breakdown Table — replaces confusing single price/size */}
+              {selectedProject_.unitBreakdown?.length > 0 ? (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Pricing by Unit Type</div>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ background: T.surfaceAlt }}>
+                        {["Unit Type", "Size (sqft)", "Starting From", "Price / sqft"].map(h => (
+                          <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, borderBottom: `1px solid ${T.border}` }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedProject_.unitBreakdown.map((u, i) => (
+                        <tr key={i} style={{ borderBottom: `1px solid ${T.border}`, background: i % 2 === 0 ? "transparent" : T.surfaceAlt + "44" }}>
+                          <td style={{ padding: "10px 12px", fontWeight: 700, color: T.white }}>{u.type}</td>
+                          <td style={{ padding: "10px 12px", color: T.textSecondary }}>{u.sqftFrom?.toLocaleString()} – {u.sqftTo?.toLocaleString()}</td>
+                          <td style={{ padding: "10px 12px", fontWeight: 700, color: T.gold }}>AED {(u.priceFrom / 1000000).toFixed(2)}M</td>
+                          <td style={{ padding: "10px 12px", color: T.textMuted }}>AED {u.sqftFrom ? Math.round(u.priceFrom / u.sqftFrom).toLocaleString() : "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+                  {[
+                    ["Starting From", selectedProject_.price ? `AED ${(selectedProject_.price/1000000).toFixed(2)}M` : "TBD"],
+                    ["Size Range", selectedProject_.sizeFrom ? `${selectedProject_.sizeFrom.toLocaleString()} – ${selectedProject_.sizeTo?.toLocaleString()} sqft` : "—"],
+                    ["Bedrooms", selectedProject_.beds || "—"],
+                    ["Price / sqft", selectedProject_.ppsf ? `AED ${selectedProject_.ppsf.toLocaleString()}` : "—"],
+                  ].map(([label, value], idx) => (
+                    <div key={idx} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
+                      <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{value}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Unit Inventory */}
               {selectedProject_.units && (
