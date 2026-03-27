@@ -8280,10 +8280,10 @@ export default function EmaarDashboardV2() {
 
                   {/* ROI Estimate */}
                   {(() => {
-                    const gross = roiData.grossYield ?? 6.0;
-                    const net = roiData.netYield ?? (gross * 0.78);
+                    const _gy = roiData.grossYield; const gross = typeof _gy === "object" && _gy !== null ? (_gy.apt1 ?? _gy.apt2 ?? 6.0) : (_gy ?? 6.0);
+                    const _ny = roiData.netYield; const net = typeof _ny === "object" && _ny !== null ? (_ny.apt1 ?? _ny.apt2 ?? gross * 0.78) : (_ny ?? gross * 0.78);
                     const appreciation = roiData.appreciation5yr ?? 35;
-                    const annualYoy = roiData.annualYoy ?? 10;
+                    const annualYoy = roiData.appreciationYoY ?? roiData.annualYoy ?? 10;
                     const estValue5yr = selectedProject_.price ? Math.round(selectedProject_.price * (1 + appreciation/100)) : 0;
                     const annualRent = selectedProject_.price ? Math.round(selectedProject_.price * gross / 100) : 0;
                     return (
@@ -8318,7 +8318,7 @@ export default function EmaarDashboardV2() {
                     const calcStrategy = "Long-Term";
                     const calcYears = 5;
                     const roiD = (liveCommunityROI && liveCommunityROI[ciKey]) || (liveCommunityROI && liveCommunityROI[selectedProject_.community]) || communityROI[ciKey] || communityROI[selectedProject_.community] || {};
-                    const gross = roiD.grossYield ?? 6.0;
+                    const _gy2 = roiD.grossYield; const gross = typeof _gy2 === "object" && _gy2 !== null ? (_gy2.apt1 ?? _gy2.apt2 ?? 6.0) : (_gy2 ?? 6.0);
                     const appreciation = roiD.appreciation5yr ?? 35;
                     const annualAppRate = Math.pow(1 + appreciation/100, 1/5) - 1;
                     const projectedValue = Math.round(calcPrice * Math.pow(1 + annualAppRate, calcYears));
