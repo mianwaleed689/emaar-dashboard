@@ -2081,12 +2081,19 @@ export default function EmaarDashboardV2() {
       if (snap.exists()) setTabSettings(snap.data());
     }));
 
-    // developers list
+    // S14 — developers collection (all 228 after seed-developers.js runs)
     unsubs.push(onSnapshot(collection(db, "developers"), (snap) => {
       if (!snap.size) return;
       const devs = [];
       snap.forEach(d => devs.push({ id: d.id, ...d.data() }));
-      devs.sort((a, b) => (a.phase || 1) - (b.phase || 1));
+      // Sort: T1 first, then T2, T3, registry — then by salesValue2025 desc
+      const tierOrder = { T1: 0, T2: 1, T3: 2, registry: 3 };
+      devs.sort((a, b) => {
+        const ta = tierOrder[a.tier] ?? 3;
+        const tb = tierOrder[b.tier] ?? 3;
+        if (ta !== tb) return ta - tb;
+        return (b.salesValue2025 || 0) - (a.salesValue2025 || 0);
+      });
       setAllDevelopers(devs);
     }));
 
