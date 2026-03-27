@@ -21469,7 +21469,14 @@ export default function AdminPanel() {
                 {(() => {
                   // Use ALL leads for dropdowns — not filtered — so options are always complete
                   const communities = [...new Set(leads.map(l => l.community).filter(Boolean).filter(c => c !== "nan" && c !== "NaN" && c.trim()))].sort();
-                  const nationalities = [...new Set(leads.map(l => l.nationality).filter(Boolean).filter(n => n.trim() && n !== "none" && n !== "Unknown" && n !== "nan" && n !== "null" && n !== "-"))].sort();
+                  const nationalities = [...new Set(leads.map(l => l.nationality).filter(Boolean).filter(n => n.trim() && n !== "none" && n !== "Unknown" && n !== "nan" && n !== "null" && n !== "-"))]
+                    .sort((a, b) => {
+                      const aHasFlag = /\p{Emoji_Presentation}/u.test(a[0]) || /\p{Regional_Indicator}/u.test(a[0]);
+                      const bHasFlag = /\p{Emoji_Presentation}/u.test(b[0]) || /\p{Regional_Indicator}/u.test(b[0]);
+                      if (aHasFlag && !bHasFlag) return -1;
+                      if (!aHasFlag && bHasFlag) return 1;
+                      return a.localeCompare(b);
+                    });
                   const developers = [...new Set(leads.map(l => l.developer).filter(Boolean))].sort();
                   const activeFiltersCount = [
                     leadFilter !== "all", leadSourceFilter !== "all", leadDateRange !== "all", leadSearch,
