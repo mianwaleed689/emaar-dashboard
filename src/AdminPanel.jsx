@@ -217,6 +217,126 @@ const sendResend = async (to, subject, bodyText) => {
 /* ─── THEME (exact dashboard match) ─── */
 // S16: T theme imported from src/theme.js — see import above
 
+/* ─── MARKET DATA EDITOR — S15 GAP FIX ─────────────────────────────────────
+   Admin form to update marketData/global in Firestore.
+   Covers: ValuStrat/Knight Frank figures, DLD totals, PPSF, YoY growth.
+   Renders below AdminDataHealth in the data_health tab.
+────────────────────────────────────────────────────────────────────────── */
+const MarketDataEditor = ({ db, T, notify }) => {
+  const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
+  const [form, setForm] = React.useState({
+    period:             "FY 2025",
+    totalMarketValue:   "AED 682.5B",
+    totalTransactions:  "214,912",
+    avgPricePsf:        "AED 1,689",
+    avgPpsfNum:         "1689",
+    yoyGrowthPct:       "+30.64%",
+    offPlanShare:       "62.6%",
+    avgPpsfYoy:         "19.8%",
+    cashBuyersPct:      "87%",
+    source:             "DLD Official + DXBinteract",
+    lastVerifiedBy:     "",
+  });
+
+  // Load current values from Firestore
+  React.useEffect(() => {
+    const load = async () => {
+      try {
+        const snap = await db.collection ? 
+          await db.collection("marketData").doc("global").get() :
+          await import("firebase/firestore").then(m => m.getDoc(m.doc(db, "marketData", "global")));
+        const data = snap.exists?.() ? snap.data() : snap.exists ? snap.data() : null;
+        if (data) setForm(prev => ({ ...prev, ...Object.fromEntries(Object.entries(data).filter(([k]) => k in prev)) }));
+      } catch(e) {} finally { setLoading(false); }
+    };
+    load();
+  }, [db]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        ...form,
+        avgPpsfNum: parseFloat(form.avgPpsfNum) || 1689,
+        updatedAt: new Date().toISOString(),
+        updatedAtUAE: new Date().toLocaleString("en-AE", { timeZone: "Asia/Dubai" }),
+        updatedBy: "admin",
+        source: form.source,
+      };
+      // Support both admin SDK style and client SDK style
+      if (db.collection) {
+        await db.collection("marketData").doc("global").set(payload, { merge: true });
+      } else {
+        const { doc, setDoc } = await import("firebase/firestore");
+        await setDoc(doc(db, "marketData", "global"), payload, { merge: true });
+      }
+      notify("✅ Market data updated — dashboard will refresh within 30 seconds", "success");
+    } catch(e) {
+      notify("❌ Save failed: " + e.message, "error");
+    } finally { setSaving(false); }
+  };
+
+  const Field = ({ label, field, placeholder, hint }) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</label>
+      <input
+        type="text"
+        value={form[field] || ""}
+        onChange={e => setForm(prev => ({ ...prev, [field]: e.target.value }))}
+        placeholder={placeholder}
+        style={{ padding: "9px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }}
+      />
+      {hint && <span style={{ fontSize: 10, color: T.textMuted }}>{hint}</span>}
+    </div>
+  );
+
+  if (loading) return null;
+
+  return (
+    <div style={{ marginTop: 32, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "24px 28px" }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: T.gold }}>Market Data Editor</div>
+          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Update marketData/global — ValuStrat · Knight Frank · DLD official figures</div>
+        </div>
+        <span style={{ fontSize: 9, padding: "3px 10px", borderRadius: 8, background: "rgba(212,168,67,0.1)", color: T.gold, fontWeight: 700, border: `1px solid ${T.border}` }}>ADMIN ONLY</span>
+      </div>
+
+      {/* Form grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 20 }}>
+        <Field label="Period Label" field="period" placeholder="FY 2025" hint="e.g. FY 2025, H1 2026" />
+        <Field label="Total Market Value" field="totalMarketValue" placeholder="AED 682.5B" hint="Shown on Overview + DLD tabs" />
+        <Field label="Total Transactions" field="totalTransactions" placeholder="214,912" hint="DLD annual transaction count" />
+        <Field label="Avg Price/sqft (display)" field="avgPricePsf" placeholder="AED 1,689" hint="With AED prefix + /sqft label" />
+        <Field label="Avg PPSF (number only)" field="avgPpsfNum" placeholder="1689" hint="Used in Price History chart" />
+        <Field label="YoY Value Growth" field="yoyGrowthPct" placeholder="+30.64%" hint="Market value growth YoY" />
+        <Field label="Off-Plan Share" field="offPlanShare" placeholder="62.6%" hint="% of transactions off-plan" />
+        <Field label="Avg PPSF YoY" field="avgPpsfYoy" placeholder="19.8%" hint="Price per sqft YoY growth" />
+        <Field label="Cash Buyers %" field="cashBuyersPct" placeholder="87%" hint="% of buyers paying cash" />
+        <Field label="Data Source" field="source" placeholder="DLD + DXBinteract + ValuStrat" hint="Attribution shown on dashboard" />
+        <Field label="Verified By" field="lastVerifiedBy" placeholder="Your name" hint="Internal audit trail" />
+      </div>
+
+      {/* Warning note */}
+      <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid rgba(212,168,67,0.15)`, fontSize: 12, color: T.textMuted, marginBottom: 16 }}>
+        ⚠️ These values appear on the Overview, DLD Volumes, Competitors, and Market tabs. Verify against DLD official data before saving. Changes take effect immediately for all users.
+      </div>
+
+      {/* Save button */}
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={saving}
+        style={{ padding: "12px 28px", background: saving ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: saving ? T.textMuted : T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: saving ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}
+      >
+        {saving ? "Saving..." : "💾 Save to Firestore"}
+      </button>
+    </div>
+  );
+};
+
 /* ─── ICONS (matching dashboard SVG style) ─── */
 const I = {
   overview: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>,
@@ -26091,6 +26211,9 @@ export default function AdminPanel() {
           {tab === "data_health" && (
             <div style={{ padding: "28px 32px" }}>
               <AdminDataHealth db={db} T={T} />
+
+              {/* ─── MARKET DATA EDITOR ─── */}
+              <MarketDataEditor db={db} T={T} notify={notify} />
             </div>
           )}
 
