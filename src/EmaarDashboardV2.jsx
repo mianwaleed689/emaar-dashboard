@@ -8105,394 +8105,375 @@ export default function EmaarDashboardV2() {
         if (!_sp) { return null; }
         /* Use _sp below but keep variable name short */
         const selectedProject_ = _sp;
-        // Community name alias map — bridges data_emaar_complete names to communityIntel keys
         const communityAliases = {
           "Mina Rashid": "Rashid Yachts & Marina",
           "Grand Polo Club & Resort": "Grand Polo Club",
-          "The Heights CW": "The Heights CW",
-          "Emaar Beachfront": "Emaar Beachfront",
-          "Emaar South": "Emaar South",
+          "Creek Harbour": "Dubai Creek Harbour",
+          "Rashid Marina": "Rashid Yachts & Marina",
         };
         const ciKey = communityAliases[selectedProject_.community] || selectedProject_.community;
         const ci = { ...(communityIntel[ciKey] || communityIntel[selectedProject_.community] || {}), ...(liveCommunityIntel[ciKey] || liveCommunityIntel[selectedProject_.community] || {}) };
         const ciExists = !!(ci.famousFor || ci.tagline);
+        const roiData = (liveCommunityROI && liveCommunityROI[ciKey]) || (liveCommunityROI && liveCommunityROI[selectedProject_.community]) || communityROI[ciKey] || communityROI[selectedProject_.community] || {};
+        const inv = selectedProject_.ratingOverride != null && selectedProject_.ratingOverride !== "" ? { score: parseFloat(selectedProject_.ratingOverride), color: parseFloat(selectedProject_.ratingOverride) >= 8 ? "#10B981" : parseFloat(selectedProject_.ratingOverride) >= 6 ? "#D4A843" : parseFloat(selectedProject_.ratingOverride) >= 4 ? "#F59E0B" : "#EF4444", label: parseFloat(selectedProject_.ratingOverride) >= 8 ? "Excellent" : parseFloat(selectedProject_.ratingOverride) >= 6 ? "Strong" : parseFloat(selectedProject_.ratingOverride) >= 4 ? "Good" : "Weak" } : getInvestmentScore(selectedProject_);
         return (
-        <div style={{ position: "fixed", inset: 0, background: "#04090F", zIndex: 2000, overflowY: "auto" }} onClick={() => setSelectedProject(null)}>
-          <div style={{ background: "#04090F", width: "100%", minHeight: "100vh", position: "relative" }} onClick={e => e.stopPropagation()}>
-            {/* ── TOP NAV BAR ── */}
-            <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(4,9,15,0.95)", backdropFilter: "blur(12px)", borderBottom: `1px solid ${T.border}`, padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", color: T.textSecondary, cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "'Outfit', sans-serif", padding: "6px 0" }}>
+        <div style={{ position: "fixed", inset: 0, background: "#04090F", zIndex: 2000, overflowY: "auto" }}>
+          <div style={{ width: "100%", minHeight: "100vh", position: "relative" }}>
+
+            {/* ── STICKY TOP NAV ── */}
+            <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(4,9,15,0.97)", backdropFilter: "blur(16px)", borderBottom: `1px solid ${T.border}`, padding: "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56 }}>
+              <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", color: T.textSecondary, cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "'Outfit', sans-serif", padding: "0" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
                 Back to Projects
               </button>
-              <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 500 }}>{selectedProject_.community} · {selectedProject_.type}</div>
+              <div style={{ fontSize: 12, color: T.textMuted, fontWeight: 500 }}>{selectedProject_.community} · {selectedProject_.type}</div>
               <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             </div>
 
-            {/* Image Hero */}
+            {/* ── HERO IMAGE ── */}
             {selectedProject_.imageUrl && (
-              <div style={{ width: "100%", height: 320, overflow: "hidden" }}>
+              <div style={{ width: "100%", height: 380, overflow: "hidden", position: "relative" }}>
                 <img src={selectedProject_.imageUrl} alt={selectedProject_.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.parentElement.style.display = "none"; }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 50%, #04090F 100%)" }} />
               </div>
             )}
 
-            <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 48px 80px" }}>
-              {/* Header */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                    <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 28, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h2>
-                    {selectedProject_.emaarUrl && <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(212,168,67,0.08)", whiteSpace: "nowrap" }} title={`Official listing on ${getLinkDomain(selectedProject_.emaarUrl)}`}>SOURCE ↗</a>}
-                    <span style={{ fontSize: 10, color: T.teal, padding: "3px 8px", border: "1px solid rgba(0,191,165,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(0,191,165,0.08)", whiteSpace: "nowrap" }}>FULL DETAIL ↓ SCROLL</span>
-                  </div>
-                  <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject_.community} · {selectedProject_.district} · {selectedProject_.type}</p>
-                  {(selectedProject_.tagline || (ci && ci.tagline)) && <p style={{ color: T.teal, fontSize: 11, marginTop: 2, fontStyle: "italic" }}>{selectedProject_.tagline || ci.tagline}</p>}
-                </div>
-                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                  {(selectedProject_.branded || (selectedProject_.brand && selectedProject_.brand !== '—')) && <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{selectedProject_.brand}</span>}
-                  <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: selectedProject_.status === "Completed" ? "rgba(16,185,129,0.15)" : selectedProject_.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: selectedProject_.status === "Completed" ? T.green : selectedProject_.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{selectedProject_.status}</span>
-                </div>
-              </div>
+            {/* ── MAIN CONTENT ── */}
+            <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px 80px" }}>
 
-              {/* Construction */}
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontSize: 12, color: T.textMuted }}>Construction Progress</span>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: selectedProject_.construction >= 100 ? T.green : selectedProject_.construction >= 70 ? T.green : selectedProject_.construction >= 30 ? T.gold : T.blue }}>{selectedProject_.construction}%</span>
-                </div>
-                <div style={{ height: 8, borderRadius: 4, background: T.surfaceAlt, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${selectedProject_.construction}%`, borderRadius: 4, background: selectedProject_.construction >= 100 ? T.green : selectedProject_.construction >= 70 ? T.green : selectedProject_.construction >= 30 ? T.gold : T.blue }} />
-                </div>
-              </div>
-
-              {/* Details Grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
-                {[
-                  ["Handover", selectedProject_.handover || "—"],
-                  ["Payment Plan", selectedProject_.payment || selectedProject_.paymentPlan || "—"],
-                  ["Construction", selectedProject_.construction != null ? `${selectedProject_.construction}%` : "—"],
-                ].map(([label, value], idx) => (
-                  <div key={idx} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
-                    <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{value}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Unit Type Breakdown Table — replaces confusing single price/size */}
-              {selectedProject_.unitBreakdown?.length > 0 ? (
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Pricing by Unit Type</div>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                    <thead>
-                      <tr style={{ background: T.surfaceAlt }}>
-                        {["Unit Type", "Size (sqft)", "Starting From", "Price / sqft"].map(h => (
-                          <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, borderBottom: `1px solid ${T.border}` }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedProject_.unitBreakdown.map((u, i) => (
-                        <tr key={i} style={{ borderBottom: `1px solid ${T.border}`, background: i % 2 === 0 ? "transparent" : T.surfaceAlt + "44" }}>
-                          <td style={{ padding: "10px 12px", fontWeight: 700, color: T.white }}>{u.type}</td>
-                          <td style={{ padding: "10px 12px", color: T.textSecondary }}>{u.sqftFrom?.toLocaleString()} – {u.sqftTo?.toLocaleString()}</td>
-                          <td style={{ padding: "10px 12px", fontWeight: 700, color: T.gold }}>AED {(u.priceFrom / 1000000).toFixed(2)}M</td>
-                          <td style={{ padding: "10px 12px", color: T.textMuted }}>AED {u.sqftFrom ? Math.round(u.priceFrom / u.sqftFrom).toLocaleString() : "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-                  {[
-                    ["Starting From", selectedProject_.price ? `AED ${(selectedProject_.price/1000000).toFixed(2)}M` : "TBD"],
-                    ["Size Range", selectedProject_.sizeFrom ? `${selectedProject_.sizeFrom.toLocaleString()} – ${selectedProject_.sizeTo?.toLocaleString()} sqft` : "—"],
-                    ["Bedrooms", selectedProject_.beds || "—"],
-                    ["Price / sqft", selectedProject_.ppsf ? `AED ${selectedProject_.ppsf.toLocaleString()}` : "—"],
-                  ].map(([label, value], idx) => (
-                    <div key={idx} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
-                      <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{value}</div>
+              {/* ── PROJECT HEADER ── */}
+              <div style={{ padding: selectedProject_.imageUrl ? "0 0 32px" : "40px 0 32px", borderBottom: `1px solid ${T.border}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+                      <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 36, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h1>
+                      {selectedProject_.branded && <span style={{ padding: "3px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", border: "1px solid rgba(212,168,67,0.3)", fontSize: 11, fontWeight: 700, color: T.gold }}>{selectedProject_.brand}</span>}
                     </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Unit Inventory */}
-              {selectedProject_.units && (
-                <div style={{ marginBottom: 16 }}>
-                  <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Unit Inventory & Availability</h3>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 8 }}>
-                    {getUnitEntries(selectedProject_.units).map(([type, d]) => {
-                      const avail = d.total - d.sold;
-                      const pct = d.total > 0 ? (d.sold / d.total) * 100 : 0;
-                      return (
-                        <div key={type} style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
-                          <div style={{ fontSize: 12, fontWeight: 800, color: T.gold, textTransform: "uppercase", marginBottom: 4 }}>{type}</div>
-                          <div style={{ fontSize: 20, fontWeight: 900, fontFamily: "'Fraunces', serif", color: avail > 0 ? T.green : T.red }}>{avail}</div>
-                          <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4 }}>available of {d.total}</div>
-                          <div style={{ height: 4, borderRadius: 2, background: T.bg, overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${pct}%`, borderRadius: 2, background: pct >= 90 ? T.red : pct >= 60 ? T.gold : T.green }} />
-                          </div>
-                          <div style={{ fontSize: 8, color: T.textMuted, marginTop: 3 }}>{pct.toFixed(0)}% sold</div>
-                        </div>
-                      );
-                    })}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 14, color: T.textSecondary }}>{selectedProject_.community}</span>
+                      {selectedProject_.emaarUrl && <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 10, color: T.gold, textDecoration: "none", padding: "2px 7px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 4, fontWeight: 600 }}>{getLinkLabel(selectedProject_.emaarUrl)}</a>}
+                    </div>
+                    {(selectedProject_.tagline || (ci && ci.tagline)) && <p style={{ color: T.teal, fontSize: 12, marginTop: 6, fontStyle: "italic", margin: "8px 0 0" }}>{selectedProject_.tagline || ci.tagline}</p>}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+                    <div style={{ padding: "5px 14px", borderRadius: 8, background: selectedProject_.status?.includes("Ready") ? "rgba(16,185,129,0.15)" : selectedProject_.status?.includes("Off") ? "rgba(96,165,250,0.15)" : "rgba(245,158,11,0.15)", border: `1px solid ${selectedProject_.status?.includes("Ready") ? "rgba(16,185,129,0.4)" : selectedProject_.status?.includes("Off") ? "rgba(96,165,250,0.4)" : "rgba(245,158,11,0.4)"}`, fontSize: 12, fontWeight: 700, color: selectedProject_.status?.includes("Ready") ? T.green : selectedProject_.status?.includes("Off") ? "#60A5FA" : "#F59E0B" }}>{selectedProject_.status}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 8, background: `${inv.color}15`, border: `1px solid ${inv.color}40` }}>
+                      <span style={{ fontSize: 20, fontWeight: 900, color: inv.color, fontFamily: "'Fraunces', serif" }}>{inv.score}</span>
+                      <span style={{ fontSize: 10, color: inv.color, fontWeight: 700 }}>/10 ★ {inv.label}</span>
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* ─── LOCATION INTELLIGENCE SECTION ─── */}
-              {ciExists && (
-                <ProGate isPro={isPro} message="Unlock Location Intelligence" onUpgrade={() => setShowUpgrade(true)}>
-                <>
-                  {/* Community Famous For */}
-                  <div style={{ marginBottom: 16, background: `linear-gradient(135deg, rgba(212,168,67,0.08), rgba(0,191,165,0.05))`, borderRadius: 12, padding: 14, border: `1px solid ${T.border}` }}>
-                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>⭐ Famous For</h3>
-                    <p style={{ fontSize: 12, color: T.textPrimary, lineHeight: 1.5, margin: 0 }}>{ci.famousFor}</p>
-                    <p style={{ fontSize: 10, color: T.textMuted, marginTop: 6, margin: 0 }}><span style={{ color: T.teal }}>Developer:</span> {ci.masterDev}</p>
-                    <p style={{ fontSize: 10, color: T.textMuted, marginTop: 3, margin: 0 }}><span style={{ color: T.teal }}>Lifestyle:</span> {ci.lifestyle}</p>
-                  </div>
+              {/* ── TWO COLUMN LAYOUT ── */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 32, marginTop: 32 }}>
 
-                  {/* Key Amenities */}
-                  <div style={{ marginBottom: 16 }}>
-                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>🏢 Key Amenities Nearby</h3>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                      {ci.keyAmenities.map((a, i) => (
-                        <div key={i} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10, borderLeft: `3px solid ${i === 0 ? T.blue : i === 1 ? T.red : i === 2 ? T.gold : T.teal}` }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: T.white, marginBottom: 4 }}>{a.icon} {a.label}</div>
-                          <div style={{ fontSize: 10, color: T.textSecondary, lineHeight: 1.4 }}>{a.items}</div>
+                {/* ── LEFT COLUMN ── */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+
+                  {/* Construction Progress */}
+                  <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 24 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: T.textSecondary, letterSpacing: 0.5, textTransform: "uppercase" }}>Construction Progress</span>
+                      <span style={{ fontSize: 24, fontWeight: 900, color: selectedProject_.construction >= 80 ? T.green : selectedProject_.construction >= 40 ? "#F59E0B" : T.teal, fontFamily: "'Fraunces', serif" }}>{selectedProject_.construction ?? 0}%</span>
+                    </div>
+                    <div style={{ height: 10, background: "rgba(255,255,255,0.06)", borderRadius: 5, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${selectedProject_.construction ?? 0}%`, background: selectedProject_.construction >= 80 ? "linear-gradient(90deg,#10B981,#34D399)" : selectedProject_.construction >= 40 ? "linear-gradient(90deg,#F59E0B,#FBBF24)" : "linear-gradient(90deg,#00BFA5,#4DD0E1)", borderRadius: 5, transition: "width 0.8s ease" }} />
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 20 }}>
+                      {[["HANDOVER", selectedProject_.handover || "—"], ["PAYMENT PLAN", selectedProject_.payment || selectedProject_.paymentPlan || "—"], ["CONSTRUCTION", selectedProject_.construction != null ? `${selectedProject_.construction}%` : "—"]].map(([label, value], idx) => (
+                        <div key={idx} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "14px 16px", textAlign: "center" }}>
+                          <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
+                          <div style={{ fontSize: 16, fontWeight: 800, color: T.white, fontFamily: "'Outfit', sans-serif" }}>{value}</div>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Distance Table */}
-                  <div style={{ marginBottom: 16 }}>
-                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>📍 Distance to Key Dubai Locations</h3>
-                    <div style={{ borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}` }}>
-                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                  {/* Unit Type Breakdown */}
+                  {selectedProject_.unitBreakdown && selectedProject_.unitBreakdown.length > 0 && (
+                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 24 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>Pricing by Unit Type</div>
+                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
                         <thead>
-                          <tr style={{ background: T.surfaceAlt }}>
-                            <th style={{ padding: "8px 10px", textAlign: "left", color: T.gold, fontWeight: 600, fontSize: 10 }}>Destination</th>
-                            <th style={{ padding: "8px 10px", textAlign: "center", color: T.gold, fontWeight: 600, fontSize: 10 }}>Distance</th>
-                            <th style={{ padding: "8px 10px", textAlign: "center", color: T.gold, fontWeight: 600, fontSize: 10 }}>Drive Time</th>
+                          <tr style={{ borderBottom: `2px solid ${T.border}` }}>
+                            {["Unit Type", "Size (sqft)", "Starting From", "Price / sqft"].map(h => (
+                              <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, textTransform: "uppercase" }}>{h}</th>
+                            ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {ci.distances.map((d, i) => (
-                            <tr key={i} style={{ borderTop: `1px solid ${T.border}`, background: i % 2 === 0 ? "transparent" : "rgba(14,29,53,0.3)" }}>
-                              <td style={{ padding: "7px 10px", color: T.textPrimary, fontWeight: d.dest.includes("Downtown") || d.dest.includes("Sheikh Zayed") ? 600 : 400 }}>{d.dest}</td>
-                              <td style={{ padding: "7px 10px", textAlign: "center", color: T.textSecondary }}>{d.km} km</td>
-                              <td style={{ padding: "7px 10px", textAlign: "center" }}>
-                                <span style={{ 
-                                  padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 700,
-                                  background: d.min <= 10 ? "rgba(16,185,129,0.15)" : d.min <= 20 ? "rgba(212,168,67,0.15)" : "rgba(59,130,246,0.12)",
-                                  color: d.min <= 10 ? T.green : d.min <= 20 ? T.gold : T.blue
-                                }}>
-                                  {d.min} min
-                                </span>
-                              </td>
+                          {selectedProject_.unitBreakdown.map((u, i) => (
+                            <tr key={i} style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.15s" }}>
+                              <td style={{ padding: "14px 12px", fontWeight: 700, color: T.white, fontSize: 15 }}>{u.type}</td>
+                              <td style={{ padding: "14px 12px", color: T.textSecondary, fontSize: 13 }}>{u.sqftFrom?.toLocaleString()} – {u.sqftTo?.toLocaleString()}</td>
+                              <td style={{ padding: "14px 12px", fontWeight: 800, color: T.gold, fontSize: 15, fontFamily: "'Fraunces', serif" }}>AED {u.priceFrom ? (u.priceFrom/1000000).toFixed(2)+"M" : "TBD"}</td>
+                              <td style={{ padding: "14px 12px", color: T.textSecondary, fontSize: 13 }}>{u.priceFrom && u.sqftFrom ? `AED ${Math.round(u.priceFrom/u.sqftFrom).toLocaleString()}` : "—"}</td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
-                    <p style={{ fontSize: 9, color: T.textMuted, marginTop: 6 }}>🛣️ <strong>Road Access:</strong> {ci.roads}</p>
+                  )}
+
+                  {/* Famous For */}
+                  {ciExists && (
+                    <div style={{ background: `linear-gradient(135deg, rgba(212,168,67,0.08), rgba(212,168,67,0.03))`, borderRadius: 16, border: `1px solid rgba(212,168,67,0.2)`, padding: 24 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                        <span style={{ fontSize: 16 }}>⭐</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Famous For</span>
+                      </div>
+                      <p style={{ fontSize: 13, color: T.textPrimary, lineHeight: 1.7, margin: 0 }}>{ci.famousFor}</p>
+                      {ci.masterDev && <p style={{ fontSize: 11, color: T.textMuted, marginTop: 10, margin: "10px 0 0" }}><span style={{ color: T.teal }}>Developer:</span> {ci.masterDev}</p>}
+                      {ci.lifestyle && <p style={{ fontSize: 11, color: T.textMuted, marginTop: 4, margin: "4px 0 0" }}><span style={{ color: T.teal }}>Lifestyle:</span> {ci.lifestyle}</p>}
+                    </div>
+                  )}
+
+                  {/* Key Amenities */}
+                  {ciExists && ci.keyAmenities && (
+                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 24 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                        <span style={{ fontSize: 16 }}>🏙️</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: T.white, letterSpacing: 1, textTransform: "uppercase" }}>Key Amenities Nearby</span>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                        {ci.keyAmenities.map((a, i) => (
+                          <div key={i} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "14px 16px", borderLeft: `3px solid ${[T.gold, T.teal, "#60A5FA", "#A78BFA"][i % 4]}` }}>
+                            <div style={{ fontWeight: 700, color: T.white, fontSize: 13, marginBottom: 6 }}>{a.icon} {a.label}</div>
+                            <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6 }}>{a.items}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Distance Table */}
+                  {ciExists && ci.distances && (
+                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 24 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                        <span style={{ fontSize: 16 }}>📍</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: T.white, letterSpacing: 1, textTransform: "uppercase" }}>Distance to Key Dubai Locations</span>
+                      </div>
+                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                        <thead>
+                          <tr style={{ borderBottom: `2px solid ${T.border}` }}>
+                            {["Destination", "Distance", "Drive Time"].map(h => (
+                              <th key={h} style={{ padding: "8px 12px", textAlign: h === "Destination" ? "left" : "center", fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 0.8, textTransform: "uppercase" }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {ci.distances.map((d, i) => (
+                            <tr key={i} style={{ borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
+                              <td style={{ padding: "12px", fontSize: 13, fontWeight: i < 3 ? 700 : 400, color: T.white }}>{d.dest}</td>
+                              <td style={{ padding: "12px", textAlign: "center", fontSize: 13, color: T.textSecondary }}>{d.km} km</td>
+                              <td style={{ padding: "12px", textAlign: "center" }}>
+                                <span style={{ padding: "4px 10px", borderRadius: 6, background: d.min <= 10 ? "rgba(16,185,129,0.2)" : d.min <= 20 ? "rgba(212,168,67,0.2)" : "rgba(96,165,250,0.2)", color: d.min <= 10 ? T.green : d.min <= 20 ? T.gold : "#60A5FA", fontSize: 11, fontWeight: 700 }}>{d.min} min</span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {ci.roads && <p style={{ fontSize: 10, color: T.textMuted, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${T.border}`, margin: "12px 0 0" }}>🛣️ <strong>Road Access:</strong> {ci.roads}</p>}
+                    </div>
+                  )}
+
+                  {/* ROI Estimate */}
+                  {(() => {
+                    const gross = roiData.grossYield ?? 6.0;
+                    const net = roiData.netYield ?? (gross * 0.78);
+                    const appreciation = roiData.appreciation5yr ?? 35;
+                    const annualYoy = roiData.annualYoy ?? 10;
+                    const estValue5yr = selectedProject_.price ? Math.round(selectedProject_.price * (1 + appreciation/100)) : 0;
+                    const annualRent = selectedProject_.price ? Math.round(selectedProject_.price * gross / 100) : 0;
+                    return (
+                      <div style={{ background: `linear-gradient(135deg, rgba(0,191,165,0.06), rgba(0,191,165,0.02))`, borderRadius: 16, border: `1px solid rgba(0,191,165,0.2)`, padding: 24 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: T.teal, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>ROI Estimate</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+                          {[["GROSS YIELD", `${gross.toFixed(1)}%`, T.green], ["NET YIELD", `${net.toFixed(1)}%`, T.teal], ["5-YR APPRECIATION", `+${appreciation}%`, T.gold], ["ANNUAL YOY", `+${annualYoy}%`, "#60A5FA"]].map(([label, value, color]) => (
+                            <div key={label} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "14px", textAlign: "center" }}>
+                              <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
+                              <div style={{ fontSize: 20, fontWeight: 900, color, fontFamily: "'Fraunces', serif" }}>{value}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                          {[["EST. 5-YR VALUE", estValue5yr ? `AED ${(estValue5yr/1000000).toFixed(2)}M` : "—", estValue5yr && selectedProject_.price ? `+AED ${((estValue5yr-selectedProject_.price)/1000000).toFixed(2)}M gain` : "", T.gold], ["EST. ANNUAL RENT", annualRent ? `AED ${annualRent.toLocaleString()}` : "—", "1BR estimate", T.teal], ["GOLDEN VISA", selectedProject_.price >= 2000000 ? "✓ Eligible" : "Below AED 2M", selectedProject_.price >= 2000000 ? "Eligible (≥AED 2M property value)" : "", selectedProject_.price >= 2000000 ? T.green : T.textMuted]].map(([label, value, sub, color]) => (
+                            <div key={label} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "14px" }}>
+                              <div style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
+                              <div style={{ fontSize: 15, fontWeight: 800, color, fontFamily: "'Fraunces', serif" }}>{value}</div>
+                              {sub && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>{sub}</div>}
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ marginTop: 10, fontSize: 10, color: T.textMuted }}>Risk: {roiData.risk || "Low-Medium"} · Occupancy: {roiData.occupancy || "92"}%</div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Interactive ROI Calculator */}
+                  {(() => {
+                    const [calcPrice, setCalcPrice] = React.useState(selectedProject_.price || 1750000);
+                    const [calcBeds, setCalcBeds] = React.useState("1BR");
+                    const [calcStrategy, setCalcStrategy] = React.useState("Long-Term");
+                    const [calcYears, setCalcYears] = React.useState(5);
+                    const roiD = (liveCommunityROI && liveCommunityROI[ciKey]) || (liveCommunityROI && liveCommunityROI[selectedProject_.community]) || communityROI[ciKey] || communityROI[selectedProject_.community] || {};
+                    const gross = roiD.grossYield ?? 6.0;
+                    const appreciation = roiD.appreciation5yr ?? 35;
+                    const annualAppRate = Math.pow(1 + appreciation/100, 1/5) - 1;
+                    const projectedValue = Math.round(calcPrice * Math.pow(1 + annualAppRate, calcYears));
+                    const capitalGain = projectedValue - calcPrice;
+                    const paymentStr = selectedProject_.payment || "80/20";
+                    const downPctMatch = paymentStr.match(/^(\d+)/);
+                    const downPct = downPctMatch ? parseInt(downPctMatch[1]) / 100 : 0.2;
+                    const downPayment = Math.round(calcPrice * downPct);
+                    const annualRentCalc = calcStrategy === "Short-Term Airbnb" ? Math.round(calcPrice * gross / 100 * 1.5) : Math.round(calcPrice * gross / 100);
+                    const totalRental = annualRentCalc * calcYears;
+                    const totalReturn = capitalGain + totalRental;
+                    const roiOnDown = downPayment > 0 ? ((totalReturn / downPayment) * 100).toFixed(1) : "—";
+                    const cashOnCash = downPayment > 0 ? ((annualRentCalc / downPayment) * 100).toFixed(1) : "—";
+                    const annualized = (((projectedValue + totalRental) / calcPrice) * 100 / calcYears - 100/calcYears).toFixed(1);
+                    const scPerSqft = 18;
+                    const sizeEst = selectedProject_.sizeFrom || 750;
+                    const annualSC = sizeEst * scPerSqft;
+                    const netYieldPct = ((annualRentCalc - annualSC) / calcPrice * 100).toFixed(1);
+                    return (
+                      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 24 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#60A5FA", letterSpacing: 1, textTransform: "uppercase", marginBottom: 20 }}>Interactive ROI Calculator</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+                          <div>
+                            <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, display: "block", marginBottom: 6, textTransform: "uppercase" }}>Purchase Price (AED)</label>
+                            <input type="number" value={calcPrice} onChange={e => setCalcPrice(Number(e.target.value))} style={{ width: "100%", padding: "10px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 14, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }} />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, display: "block", marginBottom: 6, textTransform: "uppercase" }}>Holding Period: {calcYears} Years</label>
+                            <input type="range" min={1} max={10} value={calcYears} onChange={e => setCalcYears(Number(e.target.value))} style={{ width: "100%", marginTop: 10, accentColor: T.teal }} />
+                          </div>
+                        </div>
+                        <div style={{ marginBottom: 16 }}>
+                          <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, marginBottom: 8, textTransform: "uppercase" }}>Bedrooms</div>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            {["1BR","2BR","3BR","TH/Villa"].map(b => (
+                              <button key={b} type="button" onClick={() => setCalcBeds(b)} style={{ padding: "7px 16px", borderRadius: 8, border: `1px solid ${calcBeds === b ? T.teal : T.border}`, background: calcBeds === b ? "rgba(0,191,165,0.15)" : T.surfaceAlt, color: calcBeds === b ? T.teal : T.textSecondary, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{b}</button>
+                            ))}
+                          </div>
+                        </div>
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, marginBottom: 8, textTransform: "uppercase" }}>Rental Strategy</div>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            {["Long-Term","Short-Term Airbnb","Flip at Handover"].map(s => (
+                              <button key={s} type="button" onClick={() => setCalcStrategy(s)} style={{ padding: "7px 16px", borderRadius: 8, border: `1px solid ${calcStrategy === s ? T.gold : T.border}`, background: calcStrategy === s ? "rgba(212,168,67,0.15)" : T.surfaceAlt, color: calcStrategy === s ? T.gold : T.textSecondary, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{s}</button>
+                            ))}
+                          </div>
+                        </div>
+                        <div style={{ background: T.surfaceAlt, borderRadius: 12, padding: 20 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.teal, letterSpacing: 1, marginBottom: 14, textTransform: "uppercase" }}>Results — {calcYears}-Year Projection</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
+                            {[["DOWN PAYMENT", `AED ${downPayment.toLocaleString()}`, T.white], ["PROJECTED VALUE", `AED ${(projectedValue/1000000).toFixed(2)}M`, T.gold], ["CAPITAL GAIN", `AED ${(capitalGain/1000000).toFixed(2)}M`, T.green]].map(([l,v,c]) => (
+                              <div key={l} style={{ background: "#04090F", borderRadius: 8, padding: "12px 14px" }}>
+                                <div style={{ fontSize: 8, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>{l}</div>
+                                <div style={{ fontSize: 15, fontWeight: 800, color: c, fontFamily: "'Fraunces', serif" }}>{v}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
+                            {[["TOTAL RENTAL INCOME", `AED ${(totalRental/1000000).toFixed(2)}M`, T.teal], ["TOTAL RETURN", `AED ${(totalReturn/1000000).toFixed(2)}M`, T.teal], ["ROI ON DOWN PAYMENT", `${roiOnDown}%`, "#60A5FA"]].map(([l,v,c]) => (
+                              <div key={l} style={{ background: "#04090F", borderRadius: 8, padding: "12px 14px" }}>
+                                <div style={{ fontSize: 8, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>{l}</div>
+                                <div style={{ fontSize: 15, fontWeight: 800, color: c, fontFamily: "'Fraunces', serif" }}>{v}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                            {[["CASH-ON-CASH RETURN", `${cashOnCash}%`, "Annual yield on down payment", T.green], ["ANNUALISED TOTAL RETURN", `${annualized}%`, "Per year (capital + rental)", T.gold]].map(([l,v,sub,c]) => (
+                              <div key={l} style={{ background: "#04090F", borderRadius: 8, padding: "14px 16px" }}>
+                                <div style={{ fontSize: 8, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>{l}</div>
+                                <div style={{ fontSize: 22, fontWeight: 900, color: c, fontFamily: "'Fraunces', serif" }}>{v}</div>
+                                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>{sub}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+                            {[["GROSS YIELD", `${gross.toFixed(1)}%`, T.teal], ["NET YIELD", `${netYieldPct}%`, T.green]].map(([l,v,c]) => (
+                              <div key={l} style={{ background: "#04090F", borderRadius: 8, padding: "12px 14px", textAlign: "center" }}>
+                                <div style={{ fontSize: 8, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>{l}</div>
+                                <div style={{ fontSize: 18, fontWeight: 900, color: c, fontFamily: "'Fraunces', serif" }}>{v}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ marginTop: 10, fontSize: 10, color: T.textMuted }}>Estimates based on community averages. Service charge: AED {scPerSqft}/sqft/yr. Not financial advice.</div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                </div>{/* end left column */}
+
+                {/* ── RIGHT COLUMN ── */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+                  {/* Quick Stats */}
+                  <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Project Details</div>
+                    {[
+                      ["From Price", selectedProject_.price ? `AED ${(selectedProject_.price/1000000).toFixed(2)}M` : "TBD"],
+                      ["Price / sqft", selectedProject_.ppsf ? `AED ${selectedProject_.ppsf.toLocaleString()}` : "—"],
+                      ["Size Range", selectedProject_.sizeFrom ? `${selectedProject_.sizeFrom.toLocaleString()} – ${selectedProject_.sizeTo?.toLocaleString()} sqft` : "—"],
+                      ["Bedrooms", selectedProject_.beds || selectedProject_.bed || "—"],
+                      ["Type", selectedProject_.type || "—"],
+                      ["Tier", selectedProject_.tier || "—"],
+                      ["Developer", "Emaar Properties"],
+                    ].map(([label, value]) => (
+                      <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>{label}</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: T.white, textAlign: "right", maxWidth: "55%" }}>{value}</span>
+                      </div>
+                    ))}
                   </div>
 
                   {/* Investment Quick Facts */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
-                    <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
-                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Est. Yield</div>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: T.green, fontFamily: "'Fraunces', serif" }}>{ci.avgYield}</div>
-                    </div>
-                    <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
-                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Golden Visa</div>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: ci.goldenVisa ? T.green : T.textMuted, fontFamily: "'Fraunces', serif" }}>{ci.goldenVisa ? "✓ Eligible" : "Below 2M"}</div>
-                    </div>
-                    <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
-                      <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Tier</div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{selectedProject_.tier}</div>
-                    </div>
-                  </div>
-                </>
-                </ProGate>
-              )}
-
-
-              {/* ROI Estimate */}
-              {(() => {
-                const _staticRoi = communityROI[selectedProject_.community] || {};
-                const _liveRoi = liveCommunityROI[selectedProject_.community] || {};
-                const roi = { ..._staticRoi, ..._liveRoi };
-                if (!roi || !roi.grossYield) return null;
-                const price = selectedProject_.price || 0;
-                /* Pick yield based on project type for accuracy */
-                const _type = (selectedProject_.type || '').toLowerCase();
-                const _isVilla = _type.includes('villa');
-                const _isTH = _type.includes('th') || _type.includes('townhouse');
-                const gross = _isVilla
-                  ? (roi.grossYield?.villa || roi.grossYield?.th || roi.grossYield?.apt1 || 0)
-                  : _isTH
-                    ? (roi.grossYield?.th || roi.grossYield?.villa || roi.grossYield?.apt1 || 0)
-                    : (roi.grossYield?.apt1 || roi.grossYield?.th || roi.grossYield?.villa || 0);
-                const net = _isVilla
-                  ? (roi.netYield?.villa || roi.netYield?.th || roi.netYield?.apt1 || 0)
-                  : _isTH
-                    ? (roi.netYield?.th || roi.netYield?.villa || roi.netYield?.apt1 || 0)
-                    : (roi.netYield?.apt1 || roi.netYield?.th || roi.netYield?.villa || 0);
-                const appr5 = roi.appreciation5yr || 0;
-                const projValue = price > 0 ? price * (1 + appr5/100) : 0;
-                const annualRent = roi.estRent?.apt1 || roi.estRent?.th || roi.estRent?.villa || 0;
-                return (
-                  <ProGate isPro={isPro} message="Unlock ROI Calculator" onUpgrade={() => setShowUpgrade(true)}>
-                  <div style={{ marginBottom: 16, background: "linear-gradient(135deg, rgba(16,185,129,0.06), rgba(212,168,67,0.04))", borderRadius: 12, padding: 16, border: "1px solid rgba(16,185,129,0.2)" }}>
-                    <h3 style={{ fontSize: 11, fontWeight: 700, color: T.green, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>ROI Estimate</h3>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 }}>
+                  {ciExists && (
+                    <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Investment Profile</div>
                       {[
-                        { label: "Gross Yield", value: gross + "%", color: T.green },
-                        { label: "Net Yield", value: net + "%", color: T.teal },
-                        { label: "5-Yr Appreciation", value: "+" + appr5 + "%", color: T.gold },
-                        { label: "Annual YoY", value: "+" + (roi.appreciationYoY || 0) + "%", color: T.blue },
-                      ].map((item, i) => (
-                        <div key={i} style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
-                          <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{item.label}</div>
-                          <div style={{ fontSize: 16, fontWeight: 800, color: item.color, fontFamily: "Fraunces, serif" }}>{item.value}</div>
+                        ["Est. Yield", ci.avgYield || "5.0–6.5%"],
+                        ["Golden Visa", ci.goldenVisa || selectedProject_.price >= 2000000 ? "✓ Eligible" : "—"],
+                        ["Tier", selectedProject_.tier || "—"],
+                        ["Investment Score", `${inv.score}/10 — ${inv.label}`],
+                      ].map(([label, value]) => (
+                        <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
+                          <span style={{ fontSize: 12, color: T.textMuted }}>{label}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: label === "Golden Visa" && (ci.goldenVisa || selectedProject_.price >= 2000000) ? T.green : label === "Investment Score" ? inv.color : T.white }}>{value}</span>
                         </div>
                       ))}
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                      {price > 0 && <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10 }}>
-                        <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Est. 5-Yr Value</div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {(projValue/1e6).toFixed(2)}M</div>
-                        <div style={{ fontSize: 9, color: T.green }}>+AED {((projValue-price)/1e6).toFixed(2)}M gain</div>
-                      </div>}
-                      {annualRent > 0 && <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10 }}>
-                        <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Est. Annual Rent</div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: T.teal }}>AED {annualRent.toLocaleString()}</div>
-                        <div style={{ fontSize: 9, color: T.textMuted }}>1BR estimate</div>
-                      </div>}
-                      <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10 }}>
-                        <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Golden Visa</div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: roi.goldenVisa ? T.green : T.textMuted }}>{roi.goldenVisa ? "Eligible" : "Not Eligible"}</div>
-                        <div style={{ fontSize: 9, color: T.textMuted }}>{roi.goldenVisaNote}</div>
-                      </div>
-                    </div>
-                    <div style={{ marginTop: 8, fontSize: 9, color: T.textMuted }}>Risk: <span style={{ color: roi.riskLevel === "Low" ? T.green : roi.riskLevel === "Medium" ? T.gold : T.red }}>{roi.riskLevel}</span> · Occupancy: {roi.occupancy ? roi.occupancy + "%" : "N/A"}</div>
-                  </div>
-                  </ProGate>
-                );
-              })()}
-
-
-              {/* ROI Calculator */}
-              {(() => {
-                const _sr2 = communityROI[selectedProject_.community] || {};
-                const _lr2 = liveCommunityROI[selectedProject_.community] || {};
-                const roi = { ..._sr2, ..._lr2 };
-                if (!roi || !roi.grossYield) return null;
-                return (
-                  <ProGate isPro={isPro} message="Unlock ROI Calculator" onUpgrade={() => setShowUpgrade(true)}>
-                  <RoiCalculator project={selectedProject_} roi={roi} T={T} />
-                  </ProGate>
-                );
-              })()}
-
-              {/* Price History */}
-              {(() => {
-                const ph = selectedProject_.priceHistory;
-                if (!ph || !Array.isArray(ph) || ph.length < 2) return null;
-                return (
-                  <div style={{ marginBottom: 16 }}>
-                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>📈 Price History</h3>
-                    <ResponsiveContainer width="100%" height={140}>
-                      <AreaChart data={ph}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                        <XAxis dataKey="date" tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fill: T.textMuted, fontSize: 9 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000000).toFixed(1)}M`} />
-                        <Tooltip formatter={v => [`AED ${Number(v).toLocaleString()}`, "Price"]} contentStyle={{ background: T.surface, border: `1px solid ${T.gold}`, borderRadius: 8, fontSize: 11 }} />
-                        <Area type="monotone" dataKey="price" stroke={T.gold} fill="rgba(212,168,67,0.1)" strokeWidth={2} dot={{ r: 3, fill: T.gold }} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                );
-              })()}
-
-              {/* Project Documents & Media */}
-              {(selectedProject_.pdfBrochure || selectedProject_.pdfFloorPlan || selectedProject_.pdfPaymentPlan || selectedProject_.pdfFactSheet || selectedProject_.videoUrl || selectedProject_.externalLink || selectedProject_.imageUrl) && (
-                <div style={{ marginBottom: 16 }}>
-                  <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>📎 Documents & Media</h3>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {selectedProject_.pdfBrochure && (
-                      <a href={selectedProject_.pdfBrochure} target="_blank" rel="noreferrer"
-                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(212,168,67,0.1)", border: "1px solid rgba(212,168,67,0.3)", color: T.gold, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-                        📄 Brochure
-                      </a>
-                    )}
-                    {selectedProject_.pdfFloorPlan && (
-                      <a href={selectedProject_.pdfFloorPlan} target="_blank" rel="noreferrer"
-                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.3)", color: T.blue, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-                        🏠 Floor Plan
-                      </a>
-                    )}
-                    {selectedProject_.pdfPaymentPlan && (
-                      <a href={selectedProject_.pdfPaymentPlan} target="_blank" rel="noreferrer"
-                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", color: T.green, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-                        💳 Payment Plan
-                      </a>
-                    )}
-                    {selectedProject_.pdfFactSheet && (
-                      <a href={selectedProject_.pdfFactSheet} target="_blank" rel="noreferrer"
-                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(0,191,165,0.1)", border: "1px solid rgba(0,191,165,0.3)", color: T.teal, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-                        📊 Fact Sheet
-                      </a>
-                    )}
-                    {selectedProject_.externalLink && (
-                      <a href={selectedProject_.externalLink} target="_blank" rel="noreferrer"
-                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.3)", color: "#8B5CF6", fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-                        🌐 Visit Website
-                      </a>
-                    )}
-                  </div>
-                  {selectedProject_.videoUrl && (
-                    <div style={{ marginTop: 12, borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}` }}>
-                      <video controls style={{ width: "100%", maxHeight: 240, background: "#000", display: "block" }}>
-                        <source src={selectedProject_.videoUrl} />
-                      </video>
-                    </div>
                   )}
-                </div>
-              )}
 
-              {/* ── ACTION BUTTONS ROW ── */}
-              <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
-                {/* WhatsApp */}
-                <a href={`https://wa.me/971XXXXXXXXX?text=Hi, I'm interested in ${encodeURIComponent(selectedProject_.name)} in ${encodeURIComponent(selectedProject_.community)}. Price from AED ${selectedProject_.price ? (selectedProject_.price/1000000).toFixed(2)+'M' : 'TBD'}. Handover: ${selectedProject_.handover}.`}
-                  target="_blank" rel="noopener noreferrer"
-                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "15px 0", background: "linear-gradient(135deg, rgba(37,211,102,0.18), rgba(37,211,102,0.06))", border: "1px solid rgba(37,211,102,0.45)", borderRadius: 12, color: "#25D366", fontSize: 14, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                  WhatsApp Inquiry
-                </a>
-                {/* Official Source */}
-                {(selectedProject_.emaarUrl || selectedProject_.sourceUrl) && (
-                  <a href={selectedProject_.emaarUrl || selectedProject_.sourceUrl} target="_blank" rel="noopener noreferrer"
-                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "15px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.06))", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 12, color: T.gold, fontSize: 14, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                    Official Source ↗
-                  </a>
-                )}
-                {/* Copy */}
-                <button type="button" onClick={() => { const p = selectedProject_; const txt = `${p.name} | ${p.community} | AED ${p.price ? (p.price/1000000).toFixed(2)+"M" : "TBD"} | Handover: ${p.handover} | Payment: ${p.payment}`; navigator.clipboard?.writeText(txt).then(() => alert("✅ Copied")).catch(() => alert(txt)); }}
-                  style={{ padding: "15px 20px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                  Copy
-                </button>
-              </div>
+                  {/* Action Buttons */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    <a href={`https://wa.me/971XXXXXXXXX?text=Hi, I'm interested in ${encodeURIComponent(selectedProject_.name)} in ${encodeURIComponent(selectedProject_.community)}. Price from AED ${selectedProject_.price ? (selectedProject_.price/1000000).toFixed(2)+'M' : 'TBD'}. Handover: ${selectedProject_.handover}.`}
+                      target="_blank" rel="noopener noreferrer"
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "15px 0", background: "linear-gradient(135deg, rgba(37,211,102,0.18), rgba(37,211,102,0.06))", border: "1px solid rgba(37,211,102,0.45)", borderRadius: 12, color: "#25D366", fontSize: 14, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                      WhatsApp Inquiry
+                    </a>
+                    {(selectedProject_.emaarUrl || selectedProject_.sourceUrl) && (
+                      <a href={selectedProject_.emaarUrl || selectedProject_.sourceUrl} target="_blank" rel="noopener noreferrer"
+                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.06))", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 12, color: T.gold, fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        Official Source ↗
+                      </a>
+                    )}
+                    <button type="button" onClick={() => { const p = selectedProject_; const txt = `${p.name} | ${p.community} | AED ${p.price ? (p.price/1000000).toFixed(2)+"M" : "TBD"} | ${p.ppsf ? "AED "+p.ppsf.toLocaleString()+" PPSF" : ""} | Handover: ${p.handover} | Payment: ${p.payment} | Status: ${p.status}`; navigator.clipboard?.writeText(txt).then(() => alert("✅ Copied")).catch(() => alert(txt)); }}
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, color: T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                      Copy Project Data
+                    </button>
+                  </div>
 
-              {/* ─── PDF REPORT BUTTON ─── */}
-              <button type="button" onClick={() => {
+                  {/* PDF Report */}
+                  {/* ─── PDF REPORT BUTTON ─── */}
+                  <button type="button" onClick={() => {
                 const p = selectedProject_;
                 const roiData = (liveCommunityROI && liveCommunityROI[p.community]) || communityROI[p.community] || {};
                 const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${p.name} — Investment Report</title>
@@ -8615,6 +8596,14 @@ export default function EmaarDashboardV2() {
                 Download Investment Report (PDF)
               </button>
             </div>
+          </div>
+        </div>
+        );
+      })()}
+
+                </div>{/* end right column */}
+              </div>{/* end two column grid */}
+            </div>{/* end main content */}
           </div>
         </div>
         );
