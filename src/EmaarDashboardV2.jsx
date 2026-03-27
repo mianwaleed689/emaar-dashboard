@@ -1726,6 +1726,10 @@ export default function EmaarDashboardV2() {
   const [tabSettings, setTabSettings] = useState({});
   const [liveCommunityROI, setLiveCommunityROI] = useState({});
   const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
+  // Session 6 — Firestore live data for Overview tab
+  const [emaarLive, setEmaarLive] = useState(null);       // developers/emaar
+  const [marketGlobal, setMarketGlobal] = useState(null); // marketData/global
+  const [overviewLoading, setOverviewLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [expandedMega, setExpandedMega] = useState(null);
@@ -1926,6 +1930,17 @@ export default function EmaarDashboardV2() {
       const map = {};
       snap.forEach(d => { map[d.id] = { ...communityIntel[d.id], ...d.data() }; });
       setLiveCommunityIntel(map);
+    }));
+
+    // Session 6 — developers/emaar (Emaar financials from Firestore)
+    unsubs.push(onSnapshot(doc(db, "developers", "emaar"), (snap) => {
+      if (snap.exists()) setEmaarLive(snap.data());
+      setOverviewLoading(false);
+    }));
+
+    // Session 6 — marketData/global (Dubai market stats from Firestore)
+    unsubs.push(onSnapshot(doc(db, "marketData", "global"), (snap) => {
+      if (snap.exists()) setMarketGlobal(snap.data());
     }));
 
     // yieldData
@@ -2644,6 +2659,37 @@ export default function EmaarDashboardV2() {
 
           {/* ─── OVERVIEW TAB ─── */}
           {tab === "Overview" && <>
+            {/* Session 6 — live data helpers (Firestore → fallback to data.js) */}
+            {(() => {
+              const fy = emaarFinancials[emaarFinancials.length - 1]; // last year in data.js
+              const E = emaarLive || {};
+              const M = marketGlobal || {};
+              // Emaar financials — Firestore first, data.js fallback
+              const propertySales  = E.propertySales  != null ? E.propertySales  : fy.propertySales;
+              const revenue        = E.revenue        != null ? E.revenue        : fy.revenue;
+              const netProfit      = E.netProfit      != null ? E.netProfit      : fy.netProfit;
+              const ebitda         = E.ebitda         != null ? E.ebitda         : fy.ebitda;
+              const backlog        = E.backlog        != null ? E.backlog        : fy.backlog;
+              const recurringRev   = E.recurringRev   != null ? E.recurringRev   : (fy.recurringRev || 10.5);
+              const landBank       = E.landBank       != null ? E.landBank       : (fy.landBank || 618);
+              const creditRating   = E.creditRatingSP || "BBB+";
+              const moodysRating   = E.creditRatingMoodys || "Baa1";
+              const reportLabel    = E.latestReportLabel || "Annual Report FY2025";
+              // Dubai market — Firestore first, fallback constants
+              const mktValue       = M.totalMarketValue  || "AED 682.5B";
+              const mktTxns        = M.totalTransactions || "214,912";
+              const mktPpsf        = M.avgPricePsf       || "AED 1,689";
+              const mktYoY         = M.yoyGrowthPct      || "+30.64%";
+              const mktPeriod      = M.period            || "FY 2025";
+              const mktOffPlan     = M.offPlanShare       || "62.6%";
+              // Format helpers
+              const fmtB = (v) => `AED ${v}B`;
+              const freshnessBadge = emaarLive ? (
+                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>● LIVE</span>
+              ) : (
+                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC</span>
+              );
+              return (<>
             {/* ─── VERIFIED BAR ─── */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 4, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -2653,6 +2699,9 @@ export default function EmaarDashboardV2() {
                 <span style={{ fontSize: 11, color: T.textSecondary }}>Data verified <span style={{ color: T.gold, fontWeight: 600 }}>{new Date().toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}</span></span>
                 <span style={{ color: T.border }}>·</span>
                 <a href="https://www.emaar.com/en/investor-relations/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: T.teal, textDecoration: "none" }}>Emaar IR ↗</a>
+                <span style={{ color: T.border }}>·</span>
+                {freshnessBadge}
+                <span style={{ fontSize: 10, color: T.textMuted }}>{emaarLive ? `Firestore · ${reportLabel}` : "data.js fallback"}</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 10, color: T.textMuted }}>Click any card for breakdown & sources</span>
@@ -2796,12 +2845,12 @@ export default function EmaarDashboardV2() {
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   {[
-                    { label: "Total Transactions", value: "214,912", change: "+36%", color: T.green, icon: "🏠" },
-                    { label: "Market Value", value: "AED 682.5B", change: "+31%", color: T.gold, icon: "💰" },
-                    { label: "Avg Price/sqft", value: "AED 1,689", change: "+19.8%", color: T.teal, icon: "📐" },
-                    { label: "Off-Plan Share", value: "60%+", change: "Dominant", color: T.blue, icon: "🏗️" },
-                    { label: "New Investors", value: "110,000+", change: "+55%", color: T.purple, icon: "👥" },
-                    { label: "Nationalities", value: "175+", change: "Global demand", color: T.orange, icon: "🌍" },
+                    { label: "Total Transactions", value: mktTxns,   change: mktYoY,   color: T.green,  icon: "🏠" },
+                    { label: "Market Value",        value: mktValue,  change: "+30.6%", color: T.gold,   icon: "💰" },
+                    { label: "Avg Price/sqft",      value: mktPpsf,   change: "+19.8%", color: T.teal,   icon: "📐" },
+                    { label: "Off-Plan Share",       value: mktOffPlan,change: "Dominant",color: T.blue,  icon: "🏗️" },
+                    { label: "New Investors",        value: "110,000+",change: "+55%",   color: T.purple, icon: "👥" },
+                    { label: "Nationalities",        value: "175+",    change: "Global demand", color: T.orange, icon: "🌍" },
                   ].map((item, i) => (
                     <div key={i} style={{ padding: "10px 12px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
@@ -2907,14 +2956,14 @@ export default function EmaarDashboardV2() {
                     <div style={{ fontSize: 11, color: emaarStockPrice.up ? T.green : "#EF4444", marginTop: 4 }}>{emaarStockPrice.up ? "▲" : "▼"} {Math.abs(emaarStockPrice.change)}% today · DFM</div>
                   </div>
                 )}
-                <KPI label="Property Sales" value="AED 80.4B" sub="+16% YoY · USD 21.9B" delay={1} onClick={() => setSelectedKPI({ label: "Property Sales", value: "AED 80.4B", color: T.gold, description: "Total off-plan and ready property sales contracted in FY2025. Includes UAE and international markets.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "FY2025 Sales", value: "AED 80.4B", note: "All-time record" }, { label: "FY2024 Sales", value: "AED 69.3B", note: "+16% YoY" }, { label: "FY2023 Sales", value: "AED 52.7B", note: "+31% YoY" }, { label: "Int'l Sales", value: "AED 9.3B", note: "+124% YoY" }, { label: "UAE Market Share", value: "~30%", note: "Largest by value" }, { label: "Units Booked", value: "12,000+", note: "FY2025 estimate" }], trend: [{ y: "2020", v: 21.5 }, { y: "2021", v: 26.2 }, { y: "2022", v: 33.5 }, { y: "2023", v: 52.7 }, { y: "2024", v: 69.3 }, { y: "2025", v: 80.4 }] })} />
-                <KPI label="Revenue" value="AED 49.6B" sub="+40% YoY · USD 13.5B" delay={2} onClick={() => setSelectedKPI({ label: "Revenue", value: "AED 49.6B", color: T.teal, description: "Total recognized revenue across property development, malls, hospitality, and international operations.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "UAE Dev Revenue", value: "AED 36.4B", note: "73% of total" }, { label: "Malls & Retail", value: "AED 6.3B", note: "+13% YoY" }, { label: "Hospitality", value: "AED 4.2B", note: "+12% YoY" }, { label: "International", value: "AED 2.6B", note: "+124% YoY" }, { label: "Revenue CAGR", value: "27.2%", note: "5-year 2020–2025" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: 49.6 }] })} />
-                <KPI label="Net Profit" value="AED 25.7B" sub="+36% YoY · USD 7.0B" delay={3} onClick={() => setSelectedKPI({ label: "Net Profit", value: "AED 25.7B", color: T.green, description: "Net profit before minority interest. Includes recurring revenue from Emaar Malls and hospitality.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Net Margin", value: "51.8%", note: "Industry-leading" }, { label: "EPS FY2025", value: "AED 2.00", note: "+31% YoY" }, { label: "Q4 2025 Profit", value: "AED 7.3B", note: "Strongest quarter" }, { label: "5yr Profit CAGR", value: "57.1%", note: "2020–2025" }, { label: "Tax Rate", value: "~9%", note: "UAE Corporate Tax" }], trend: [{ y: "2020", v: 2.6 }, { y: "2021", v: 4.1 }, { y: "2022", v: 6.2 }, { y: "2023", v: 12.6 }, { y: "2024", v: 18.9 }, { y: "2025", v: 25.7 }] })} />
-                <KPI label="EBITDA" value="AED 25.6B" sub="+33% YoY · USD 7.0B" delay={4} onClick={() => setSelectedKPI({ label: "EBITDA", value: "AED 25.6B", color: T.blue, description: "Earnings before interest, tax, depreciation & amortisation. Key operational profitability metric.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "EBITDA Margin", value: "51.6%", note: "5-year high" }, { label: "Recurring EBITDA", value: "AED 10.5B", note: "32% share" }, { label: "Dev EBITDA", value: "AED 15.1B", note: "Property segment" }, { label: "EV/EBITDA", value: "~5.0×", note: "Vs sector 9× avg" }, { label: "EBITDA CAGR", value: "44.5%", note: "2020–2025" }], trend: [{ y: "2020", v: 4.0 }, { y: "2021", v: 5.3 }, { y: "2022", v: 8.1 }, { y: "2023", v: 13.4 }, { y: "2024", v: 19.2 }, { y: "2025", v: 25.6 }] })} />
-                <KPI label="Backlog" value="AED 155B" sub="+39% YoY · 3-4yr visibility" delay={5} onClick={() => setSelectedKPI({ label: "Revenue Backlog", value: "AED 155B", color: T.purple, description: "Total contracted but unrecognized revenue. Provides 3–4 years of forward revenue visibility.", source: "Emaar Q4 2025 Results", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Backlog", value: "AED 155B", note: "+39% YoY record" }, { label: "FY2024 Backlog", value: "AED 111.5B", note: "Prior year" }, { label: "Coverage Ratio", value: "3–4 yrs", note: "Revenue visibility" }, { label: "UAE Backlog", value: "AED 140B+", note: "~90% of total" }, { label: "New Launches", value: "AED 85B+", note: "FY2025 new sales" }], trend: [{ y: "2020", v: 45 }, { y: "2021", v: 52 }, { y: "2022", v: 68 }, { y: "2023", v: 80 }, { y: "2024", v: 111.5 }, { y: "2025", v: 155 }] })} />
-                <KPI label="Recurring Rev" value="AED 10.5B" sub="+13% · 32% of EBITDA" delay={6} onClick={() => setSelectedKPI({ label: "Recurring Revenue", value: "AED 10.5B", color: T.cyan, description: "Stable income from Emaar Malls, hotels, serviced residences, and commercial leasing.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Malls Revenue", value: "AED 6.3B", note: "Dubai Mall + Fashion Ave" }, { label: "Hospitality", value: "AED 4.2B", note: "Hotels & serviced res." }, { label: "% of EBITDA", value: "32%", note: "Defensive income" }, { label: "Dubai Mall Footfall", value: "105M+", note: "Annual visitors" }, { label: "Occupancy", value: "95%+", note: "Malls occupancy rate" }], trend: [{ y: "2020", v: 5.8 }, { y: "2021", v: 6.8 }, { y: "2022", v: 7.9 }, { y: "2023", v: 8.6 }, { y: "2024", v: 9.3 }, { y: "2025", v: 10.5 }] })} />
-                <KPI label="Units Delivered" value="125,600+" sub="Since 2002 · #1 in GCC" delay={7} onClick={() => setSelectedKPI({ label: "Units Delivered", value: "125,600+", color: T.gold, description: "Total residential and commercial units delivered since inception in 2002. Largest track record in GCC.", source: "Emaar Corporate Profile 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Delivered", value: "125,600+", note: "Since 2002" }, { label: "FY2025 Deliveries", value: "~11,000", note: "Est. annual handovers" }, { label: "UAE Units", value: "~100,000+", note: "80% of total" }, { label: "On-Time Record", value: "95%+", note: "Delivery track record" }, { label: "GCC Rank", value: "#1", note: "By volume" }], trend: [{ y: "2020", v: 85000 }, { y: "2021", v: 95000 }, { y: "2022", v: 103000 }, { y: "2023", v: 110000 }, { y: "2024", v: 118000 }, { y: "2025", v: 125600 }] })} />
-                <KPI label="Land Bank" value="618M sqft" sub="344M UAE · AED 120B dev" delay={8} onClick={() => setSelectedKPI({ label: "Land Bank", value: "618M sqft", color: T.gold, description: "Total gross land area owned or controlled by Emaar for future development.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Land Bank", value: "618M sqft", note: "Gross area" }, { label: "UAE Land", value: "344M sqft", note: "56% of total" }, { label: "International", value: "274M sqft", note: "Egypt, India, KSA" }, { label: "Development Value", value: "AED 120B+", note: "Future GDV est." }, { label: "Dubai Hills Remaining", value: "~180M sqft", note: "Largest UAE plot" }], trend: [{ y: "2020", v: 480 }, { y: "2021", v: 510 }, { y: "2022", v: 535 }, { y: "2023", v: 570 }, { y: "2024", v: 595 }, { y: "2025", v: 618 }] })} />
+                <KPI label="Property Sales" value={fmtB(propertySales)} sub="+16% YoY · USD 21.9B" delay={1} onClick={() => setSelectedKPI({ label: "Property Sales", value: fmtB(propertySales), color: T.gold, description: "Total off-plan and ready property sales contracted in FY2025. Includes UAE and international markets.", source: reportLabel, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "FY2025 Sales", value: fmtB(propertySales), note: "All-time record" }, { label: "FY2024 Sales", value: "AED 69.3B", note: "+16% YoY" }, { label: "FY2023 Sales", value: "AED 52.7B", note: "+31% YoY" }, { label: "Int'l Sales", value: "AED 9.3B", note: "+124% YoY" }, { label: "UAE Market Share", value: "~30%", note: "Largest by value" }, { label: "Units Booked", value: "12,000+", note: "FY2025 estimate" }], trend: [{ y: "2020", v: 21.5 }, { y: "2021", v: 26.2 }, { y: "2022", v: 33.5 }, { y: "2023", v: 52.7 }, { y: "2024", v: 69.3 }, { y: "2025", v: propertySales }] })} />
+                <KPI label="Revenue" value={fmtB(revenue)} sub="+40% YoY · USD 13.5B" delay={2} onClick={() => setSelectedKPI({ label: "Revenue", value: fmtB(revenue), color: T.teal, description: "Total recognized revenue across property development, malls, hospitality, and international operations.", source: reportLabel, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "UAE Dev Revenue", value: "AED 36.4B", note: "73% of total" }, { label: "Malls & Retail", value: "AED 6.3B", note: "+13% YoY" }, { label: "Hospitality", value: "AED 4.2B", note: "+12% YoY" }, { label: "International", value: "AED 2.6B", note: "+124% YoY" }, { label: "Revenue CAGR", value: "27.2%", note: "5-year 2020–2025" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: revenue }] })} />
+                <KPI label="Net Profit" value={fmtB(netProfit)} sub="+36% YoY · USD 7.0B" delay={3} onClick={() => setSelectedKPI({ label: "Net Profit", value: fmtB(netProfit), color: T.green, description: "Net profit before minority interest. Includes recurring revenue from Emaar Malls and hospitality.", source: reportLabel, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Net Margin", value: "51.8%", note: "Industry-leading" }, { label: "EPS FY2025", value: "AED 2.00", note: "+31% YoY" }, { label: "Q4 2025 Profit", value: "AED 7.3B", note: "Strongest quarter" }, { label: "5yr Profit CAGR", value: "57.1%", note: "2020–2025" }, { label: "Tax Rate", value: "~9%", note: "UAE Corporate Tax" }], trend: [{ y: "2020", v: 2.6 }, { y: "2021", v: 4.1 }, { y: "2022", v: 6.2 }, { y: "2023", v: 12.6 }, { y: "2024", v: 18.9 }, { y: "2025", v: netProfit }] })} />
+                <KPI label="EBITDA" value={fmtB(ebitda)} sub="+33% YoY · USD 7.0B" delay={4} onClick={() => setSelectedKPI({ label: "EBITDA", value: fmtB(ebitda), color: T.blue, description: "Earnings before interest, tax, depreciation & amortisation. Key operational profitability metric.", source: reportLabel, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "EBITDA Margin", value: "51.6%", note: "5-year high" }, { label: "Recurring EBITDA", value: fmtB(recurringRev), note: "32% share" }, { label: "Dev EBITDA", value: "AED 15.1B", note: "Property segment" }, { label: "EV/EBITDA", value: "~5.0×", note: "Vs sector 9× avg" }, { label: "EBITDA CAGR", value: "44.5%", note: "2020–2025" }], trend: [{ y: "2020", v: 4.0 }, { y: "2021", v: 5.3 }, { y: "2022", v: 8.1 }, { y: "2023", v: 13.4 }, { y: "2024", v: 19.2 }, { y: "2025", v: ebitda }] })} />
+                <KPI label="Backlog" value={fmtB(backlog)} sub="+39% YoY · 3-4yr visibility" delay={5} onClick={() => setSelectedKPI({ label: "Revenue Backlog", value: fmtB(backlog), color: T.purple, description: "Total contracted but unrecognized revenue. Provides 3–4 years of forward revenue visibility.", source: reportLabel, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Backlog", value: fmtB(backlog), note: "+39% YoY record" }, { label: "FY2024 Backlog", value: "AED 111.5B", note: "Prior year" }, { label: "Coverage Ratio", value: "3–4 yrs", note: "Revenue visibility" }, { label: "UAE Backlog", value: "AED 140B+", note: "~90% of total" }, { label: "New Launches", value: "AED 85B+", note: "FY2025 new sales" }], trend: [{ y: "2020", v: 45 }, { y: "2021", v: 52 }, { y: "2022", v: 68 }, { y: "2023", v: 80 }, { y: "2024", v: 111.5 }, { y: "2025", v: backlog }] })} />
+                <KPI label="Recurring Rev" value={fmtB(recurringRev)} sub="+13% · 32% of EBITDA" delay={6} onClick={() => setSelectedKPI({ label: "Recurring Revenue", value: fmtB(recurringRev), color: T.cyan, description: "Stable income from Emaar Malls, hotels, serviced residences, and commercial leasing.", source: reportLabel, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Malls Revenue", value: "AED 6.3B", note: "Dubai Mall + Fashion Ave" }, { label: "Hospitality", value: "AED 4.2B", note: "Hotels & serviced res." }, { label: "% of EBITDA", value: "32%", note: "Defensive income" }, { label: "Dubai Mall Footfall", value: "105M+", note: "Annual visitors" }, { label: "Occupancy", value: "95%+", note: "Malls occupancy rate" }], trend: [{ y: "2020", v: 5.8 }, { y: "2021", v: 6.8 }, { y: "2022", v: 7.9 }, { y: "2023", v: 8.6 }, { y: "2024", v: 9.3 }, { y: "2025", v: recurringRev }] })} />
+                <KPI label="Units Delivered" value="125,600+" sub="Since 2002 · #1 in GCC" delay={7} onClick={() => setSelectedKPI({ label: "Units Delivered", value: "125,600+", color: T.gold, description: "Total residential and commercial units delivered since inception in 2002. Largest track record in GCC.", source: reportLabel, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Delivered", value: "125,600+", note: "Since 2002" }, { label: "FY2025 Deliveries", value: "~11,000", note: "Est. annual handovers" }, { label: "UAE Units", value: "~100,000+", note: "80% of total" }, { label: "On-Time Record", value: "95%+", note: "Delivery track record" }, { label: "GCC Rank", value: "#1", note: "By volume" }], trend: [{ y: "2020", v: 85000 }, { y: "2021", v: 95000 }, { y: "2022", v: 103000 }, { y: "2023", v: 110000 }, { y: "2024", v: 118000 }, { y: "2025", v: 125600 }] })} />
+                <KPI label="Land Bank" value={`${landBank}M sqft`} sub="344M UAE · AED 120B dev" delay={8} onClick={() => setSelectedKPI({ label: "Land Bank", value: `${landBank}M sqft`, color: T.gold, description: "Total gross land area owned or controlled by Emaar for future development.", source: reportLabel, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Land Bank", value: `${landBank}M sqft`, note: "Gross area" }, { label: "UAE Land", value: "344M sqft", note: "56% of total" }, { label: "International", value: "274M sqft", note: "Egypt, India, KSA" }, { label: "Development Value", value: "AED 120B+", note: "Future GDV est." }, { label: "Dubai Hills Remaining", value: "~180M sqft", note: "Largest UAE plot" }], trend: [{ y: "2020", v: 480 }, { y: "2021", v: 510 }, { y: "2022", v: 535 }, { y: "2023", v: 570 }, { y: "2024", v: 595 }, { y: "2025", v: landBank }] })} />
               </div>
             </Section>
 
@@ -2997,6 +3046,7 @@ export default function EmaarDashboardV2() {
               </div>
           <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM: EMAAR.DU", url: "https://www.dfm.ae" }, { label: "TradingView", url: "https://www.tradingview.com/symbols/DFM-EMAAR/" }, { label: "Yahoo Finance", url: "https://finance.yahoo.com/quote/EMAAR.DU" }, { label: "S&P · Moody's · Fitch Ratings" }]} />
             </Section>
+            </>); })()} {/* end Session 6 IIFE */}
           </>}
 
           {/* ─── FINANCIALS TAB ─── */}
