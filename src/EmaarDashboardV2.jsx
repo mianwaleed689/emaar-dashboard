@@ -1734,6 +1734,7 @@ export default function EmaarDashboardV2() {
   const [liveFinancials, setLiveFinancials] = useState([]);
   const [liveRisk, setLiveRisk] = useState([]);
   const [liveNewsData, setLiveNewsData] = useState([]); // S10 — tabData/news
+  const [liveAdminAlerts, setLiveAdminAlerts] = useState([]); // S12 — adminAlerts
   const [liveBayutData, setLiveBayutData] = useState({});
   const [lastDataSync, setLastDataSync] = useState(null);
   const [allDevelopers, setAllDevelopers] = useState([]);
@@ -2062,6 +2063,17 @@ export default function EmaarDashboardV2() {
         });
       });
       if (mapped.length > 0) setLiveYields(mapped);
+    }));
+
+    // S12 — adminAlerts (written by cron-financials.js when new quarter detected)
+    unsubs.push(onSnapshot(collection(db, "adminAlerts"), (snap) => {
+      const alerts = [];
+      snap.forEach(d => alerts.push({ id: d.id, ...d.data() }));
+      const unread = alerts
+        .filter(a => !a.read)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setLiveAdminAlerts(unread);
+      if (unread.length > 0) console.log(`[S12] ${unread.length} unread admin alert(s)`);
     }));
 
     // platformSettings/tabs (which tabs are on/off)
@@ -2680,7 +2692,9 @@ export default function EmaarDashboardV2() {
           </button>
           <button type="button" onClick={() => setShowNotifications(v => !v)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: 8, cursor: "pointer", color: T.textSecondary, position: "relative" }} title="Notifications">
             {Icons.bell}
-            {unreadCount > 0 && <span style={{ position: "absolute", top: 4, right: 4, width: 8, height: 8, borderRadius: "50%", background: T.red, border: `2px solid ${T.bg}` }} />}
+            {(unreadCount + (isAdmin ? liveAdminAlerts.length : 0)) > 0 && (
+              <span style={{ position: "absolute", top: 4, right: 4, width: 8, height: 8, borderRadius: "50%", background: liveAdminAlerts.length > 0 ? T.gold : T.red, border: `2px solid ${T.bg}` }} />
+            )}
           </button>
         </div>
       </header>
