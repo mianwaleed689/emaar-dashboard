@@ -2892,9 +2892,11 @@ export default function EmaarDashboardV2() {
               </optgroup>
             </select>
             {selectedDeveloper !== "emaar" && (
-              <div style={{ marginTop: 6, padding: "6px 10px", borderRadius: 6, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.gold}22`, fontSize: 10, color: T.textMuted }}>
-                {["damac","sobha","nakheel","binghatti","meraas","aldar","azizi","danube"].includes(selectedDeveloper)
-                  ? "⏳ Full module coming in S22–S30"
+              <div style={{ marginTop: 6, padding: "6px 10px", borderRadius: 6, background: selectedDeveloper === "damac" ? "rgba(16,185,129,0.06)" : "rgba(212,168,67,0.06)", border: `1px solid ${selectedDeveloper === "damac" ? T.green : T.gold}22`, fontSize: 10, color: T.textMuted }}>
+                {selectedDeveloper === "damac"
+                  ? "✅ Full Intelligence Module LIVE"
+                  : ["sobha","nakheel","binghatti","meraas","aldar","azizi","danube"].includes(selectedDeveloper)
+                  ? "⏳ Full module coming in S25–S30"
                   : "📊 DLD data only — full module in S34+"}
                 <button type="button" onClick={() => setSelectedDeveloper("emaar")}
                   style={{ marginLeft: 8, color: T.gold, background: "none", border: "none", cursor: "pointer", fontSize: 10, fontWeight: 700, padding: 0 }}>← Emaar</button>
@@ -3127,24 +3129,28 @@ export default function EmaarDashboardV2() {
             })()}
             {/* Session 6 — live data helpers (Firestore → fallback to data.js) */}
             {(() => {
-              const fy = emaarFinancials[emaarFinancials.length - 1]; // last year in data.js
-              const E = emaarLive || {};
+              const fy = selectedDeveloper === "damac"
+                ? damacFinancialHistory[damacFinancialHistory.length - 1]
+                : emaarFinancials[emaarFinancials.length - 1]; // last year in data.js
+              const E = selectedDeveloper === "damac"
+                ? { ...damacLive, ...(damacLiveFS || {}) }
+                : (emaarLive || {});
               const M = marketGlobal || {};
-              // Emaar financials — Firestore first, data.js fallback
+              // Financials — Firestore first, data.js fallback
               const propertySales  = E.propertySales  != null ? E.propertySales  : fy.propertySales;
               const revenue        = E.revenue        != null ? E.revenue        : fy.revenue;
               const netProfit      = E.netProfit      != null ? E.netProfit      : fy.netProfit;
               const ebitda         = E.ebitda         != null ? E.ebitda         : fy.ebitda;
-              const backlog        = E.backlog        != null ? E.backlog        : fy.backlog;
-              const recurringRev   = E.recurringRev   != null ? E.recurringRev   : (fy.recurringRev || 10.5);
-              const landBank       = E.landBank       != null ? E.landBank       : (fy.landBank || 618);
-              const creditRating   = E.creditRatingSP || "BBB+";
-              const moodysRating   = E.creditRatingMoodys || "Baa1";
-              const reportLabel    = E.latestReportLabel || "Annual Report FY2025";
-              // S16: emaarRisks, emaarSegments, radarData — Firestore first, data.js fallback
-              const liveRisks    = E.emaarRisks    || emaarRisks;
-              const liveSegments = E.emaarSegments || emaarSegments;
-              const liveRadar    = E.radarData     || radarData;
+              const backlog        = selectedDeveloper === "damac" ? null : (E.backlog != null ? E.backlog : fy.backlog);
+              const recurringRev   = selectedDeveloper === "damac" ? null : (E.recurringRev != null ? E.recurringRev : (fy.recurringRev || 10.5));
+              const landBank       = selectedDeveloper === "damac" ? null : (E.landBank != null ? E.landBank : (fy.landBank || 618));
+              const creditRating   = selectedDeveloper === "damac" ? "Private" : (E.creditRatingSP || "BBB+");
+              const moodysRating   = selectedDeveloper === "damac" ? "N/A" : (E.creditRatingMoodys || "Baa1");
+              const reportLabel    = selectedDeveloper === "damac" ? "FY2025 Sales Results" : (E.latestReportLabel || "Annual Report FY2025");
+              // S16: risks, segments, radarData — Firestore first, data.js fallback
+              const liveRisks    = selectedDeveloper === "damac" ? damacRisks    : (E.emaarRisks    || emaarRisks);
+              const liveSegments = selectedDeveloper === "damac" ? damacSegments : (E.emaarSegments || emaarSegments);
+              const liveRadar    = selectedDeveloper === "damac" ? damacRadar    : (E.radarData     || radarData);
               // Dubai market — Firestore first, fallback constants
               const mktValue       = M.totalMarketValue  || "AED 682.5B";
               const mktTxns        = M.totalTransactions || "214,912";
@@ -3434,7 +3440,7 @@ export default function EmaarDashboardV2() {
             </div>
               ); })()}
 
-                        <Section title="Key Performance" sub={`${mktPeriod} — All-Time Records Across Every Metric · Source: Emaar Annual Report`}>
+                        <Section title="Key Performance" sub={selectedDeveloper === "damac" ? `FY2025 — Record AED 36B Sales · #1 Private Developer UAE · Source: DAMAC Official` : `${mktPeriod} — All-Time Records Across Every Metric · Source: Emaar Annual Report`}>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 {emaarStockPrice && (
                   <div style={{ background: T.surface, border: `1px solid ${emaarStockPrice.up ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`, borderRadius: 14, padding: "14px 16px", cursor: "default", position: "relative", overflow: "hidden" }}
@@ -3508,7 +3514,7 @@ export default function EmaarDashboardV2() {
 
             <Section title="Company Strength" sub="Analyst consensus: STRONG BUY (12 of 12 analysts) · Source: Investing.com">
               <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <DataBadge source={`Emaar Annual Report ${marketGlobal?.period || "FY2025"}`} date={emaarLive?.updatedAtUAE || "Feb 2026"} type="emaar" />
+                <DataBadge source={selectedDeveloper === "damac" ? "DAMAC Official Press Release Jan 2026" : `Emaar Annual Report ${marketGlobal?.period || "FY2025"}`} date={selectedDeveloper === "damac" ? "Jan 2026" : (emaarLive?.updatedAtUAE || "Feb 2026")} type={selectedDeveloper === "damac" ? "verified" : "emaar"} />
                 <DataBadge source="S&P / Fitch Ratings 2025" date="2025" type="manual" />
               </div>
               <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
