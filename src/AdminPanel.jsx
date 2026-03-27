@@ -13675,7 +13675,28 @@ export default function AdminPanel() {
              d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     } catch { return false; }
   }).reduce((sum, u) => sum + (u.tier === "enterprise" ? 499 : 99), 0);
-  const netMRR = newMRRThisMonth - churnedMRR;
+
+  // ── EXPANSION — pro → enterprise upgrades this month ──
+  const expansionEvents = auditLog.filter(l =>
+    l.action === "tier_change" &&
+    l.from === "pro" && l.to === "enterprise"
+  );
+  const expansionThisMonth = expansionEvents.filter(l => {
+    try { const d = new Date(l.changedAt); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); } catch { return false; }
+  });
+  const expansionMRR = expansionThisMonth.length * (499 - 99); // delta = +400 per upgrade
+
+  // ── CONTRACTION — enterprise → pro downgrades this month ──
+  const contractionEvents = auditLog.filter(l =>
+    l.action === "tier_change" &&
+    l.from === "enterprise" && l.to === "pro"
+  );
+  const contractionThisMonth = contractionEvents.filter(l => {
+    try { const d = new Date(l.changedAt); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); } catch { return false; }
+  });
+  const contractionMRR = contractionThisMonth.length * (499 - 99); // delta = -400 per downgrade
+
+  const netMRR = newMRRThisMonth + expansionMRR - contractionMRR - churnedMRR;
 
   // ── PLATFORM HEALTH SCORE (0–100) ──
   // Based on: conversion rate, at-risk %, active rate, churn
@@ -15841,13 +15862,14 @@ export default function AdminPanel() {
                 {/* MRR Movement */}
                 <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.1s" }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 14 }}>MRR Movement</div>
-                  {[
-                    { label: "Starting MRR",  value: mrr - netMRR,        color: T.textSecondary, bar: null },
+                  {[\n                    { label: "Starting MRR",  value: mrr - netMRR,        color: T.textSecondary, bar: null },
                     { label: "New MRR",        value: newMRRThisMonth,     color: T.green,         bar: true },
+                    { label: "Expansion",      value: expansionMRR,        color: T.teal,          bar: true },
+                    { label: "Contraction",    value: -contractionMRR,     color: T.orange,        bar: true },
                     { label: "Churned MRR",    value: -churnedMRR,         color: T.red,           bar: true },
                     { label: "Net MRR",        value: netMRR,              color: netMRR >= 0 ? T.green : T.red, bar: null, bold: true },
                   ].map((row, i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none" }}>
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: i < 5 ? `1px solid ${T.border}` : "none" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         {row.bar && <div style={{ width: 3, height: 14, borderRadius: 2, background: row.color }} />}
                         {!row.bar && <div style={{ width: 3, height: 14 }} />}
@@ -16618,11 +16640,13 @@ export default function AdminPanel() {
                         <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 16 }}>MRR Movement — This Month</div>
                         {[
                           { label: "Starting MRR",  value: mrr - netMRR,       color: T.textSecondary },
-                          { label: "New MRR",        value: newMRRThisMonth,    color: T.green,  arrow: "←" },
-                          { label: "Churned MRR",    value: -churnedMRR,        color: T.red,    arrow: "↑" },
+                          { label: "New MRR",        value: newMRRThisMonth,    color: T.green,  arrow: "+" },
+                          { label: "Expansion MRR",  value: expansionMRR,       color: T.teal,   arrow: "↑", hide: expansionMRR === 0 },
+                          { label: "Contraction MRR",value: -contractionMRR,    color: T.orange, arrow: "↓", hide: contractionMRR === 0 },
+                          { label: "Churned MRR",    value: -churnedMRR,        color: T.red,    arrow: "−" },
                           { label: "Net MRR",        value: mrr,                color: netMRR >= 0 ? T.green : T.red, bold: true },
-                        ].map((row, i) => (
-                          <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none" }}>
+                        ].filter(row => !row.hide).map((row, i, arr) => (
+                          <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${T.border}` : "none" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                               {row.arrow && <span style={{ fontSize: 11, color: row.color, fontWeight: 700 }}>{row.arrow}</span>}
                               {!row.arrow && <div style={{ width: 11 }} />}
@@ -17127,10 +17151,12 @@ export default function AdminPanel() {
                     {(() => {
                       // ── NRR Calculation ──
                       // NRR = (Starting MRR + Expansion - Contraction - Churn) / Starting MRR × 100
+                      // This measures revenue retained + grown from existing customers only
                       const startMRR = mrr - netMRR;
-                      const nrr = startMRR > 0 ? Math.round(((mrr) / startMRR) * 100) : 100;
+                      const nrrNumerator = startMRR + expansionMRR - contractionMRR - churnedMRR;
+                      const nrr = startMRR > 0 ? Math.round((nrrNumerator / startMRR) * 100) : 100;
                       const nrrColor = nrr >= 100 ? T.green : nrr >= 85 ? T.gold : T.red;
-                      const nrrLabel = nrr >= 110 ? "World-class" : nrr >= 100 ? "Healthy" : nrr >= 90 ? "Needs attention" : "At risk";
+                      const nrrLabel = nrr >= 120 ? "World-class 🏆" : nrr >= 110 ? "Excellent" : nrr >= 100 ? "Healthy ✓" : nrr >= 90 ? "Needs attention" : "At risk ⚠️";
 
                       // ── CAC & LTV:CAC ──
                       // Estimated CAC = marketing spend / new customers (using AED 0 since no spend yet)
@@ -17140,12 +17166,12 @@ export default function AdminPanel() {
 
                       // ── MRR Waterfall data ──
                       const waterfallData = [
-                        { label: "Start MRR", value: startMRR, type: "base", color: T.textSecondary },
-                        { label: "New MRR", value: newMRRThisMonth, type: "positive", color: T.green },
-                        { label: "Expansion", value: 0, type: "positive", color: T.teal },
-                        { label: "Contraction", value: 0, type: "negative", color: T.orange },
-                        { label: "Churn", value: -churnedMRR, type: "negative", color: T.red },
-                        { label: "Net MRR", value: mrr, type: "result", color: netMRR >= 0 ? T.green : T.red },
+                        { label: "Start MRR",    value: startMRR,        type: "base",     color: T.textSecondary },
+                        { label: "New MRR",      value: newMRRThisMonth, type: "positive", color: T.green },
+                        { label: "Expansion",    value: expansionMRR,    type: "positive", color: T.teal },
+                        { label: "Contraction",  value: -contractionMRR, type: "negative", color: T.orange },
+                        { label: "Churn",        value: -churnedMRR,     type: "negative", color: T.red },
+                        { label: "Net MRR",      value: mrr,             type: "result",   color: netMRR >= 0 ? T.green : T.red },
                       ];
                       const maxWaterfall = Math.max(...waterfallData.map(d => Math.abs(d.value)), 1);
 
@@ -17260,8 +17286,11 @@ export default function AdminPanel() {
                             <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}`, fontSize: 11, color: T.textMuted, lineHeight: 1.7 }}>
                               <span style={{ color: T.white, fontWeight: 600 }}>Interpretation: </span>
                               {netMRR >= 0
-                                ? `Revenue grew by AED ${Math.abs(netMRR).toLocaleString()} this month. ${churnedMRR > 0 ? `Lost AED ${churnedMRR.toLocaleString()} from ${churnThisMonth.length} churn${churnThisMonth.length > 1 ? "s" : ""}.` : "Zero churn this month — excellent."}`
-                                : `Revenue declined by AED ${Math.abs(netMRR).toLocaleString()} this month. Churn exceeded new business by AED ${Math.abs(netMRR).toLocaleString()}.`}
+                                ? `Revenue grew by AED ${Math.abs(netMRR).toLocaleString()} this month.`
+                                : `Revenue declined by AED ${Math.abs(netMRR).toLocaleString()} this month.`}
+                              {expansionMRR > 0 && ` ${expansionThisMonth.length} upgrade${expansionThisMonth.length > 1 ? "s" : ""} added AED ${expansionMRR.toLocaleString()} expansion MRR.`}
+                              {contractionMRR > 0 && ` ${contractionThisMonth.length} downgrade${contractionThisMonth.length > 1 ? "s" : ""} removed AED ${contractionMRR.toLocaleString()}.`}
+                              {churnedMRR > 0 ? ` Lost AED ${churnedMRR.toLocaleString()} from ${churnThisMonth.length} churn${churnThisMonth.length > 1 ? "s" : ""}.` : " Zero churn this month — excellent."}
                               {" "}Benchmark: healthy SaaS targets NRR 100%+ and monthly churn below 3%.
                             </div>
                           </div>
@@ -17273,7 +17302,7 @@ export default function AdminPanel() {
                     {(() => {
                       // Build cohort retention from real user data
                       // Each cohort = users who signed up in that month
-                      // Retention = % still active (paid) in subsequent months
+                      // Retention = % still PAID (pro/enterprise) in subsequent months
                       const months = [];
                       for (let m = 5; m >= 0; m--) {
                         const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
@@ -17284,15 +17313,21 @@ export default function AdminPanel() {
                           const created = new Date(u.createdAt || 0);
                           return created >= d && created <= end;
                         });
-                        // For each subsequent month, check how many are still paid
-                        const retention = [100]; // Month 0 = 100%
+                        // Month 0 = % of cohort who converted to paid at any point
+                        const paidAtM0 = cohortUsers.filter(u => u.tier === "pro" || u.tier === "enterprise").length;
+                        const retention = [cohortUsers.length > 0 ? Math.round((paidAtM0 / cohortUsers.length) * 100) : 0];
+                        // Subsequent months = check tier at that point in time via auditLog
                         for (let r = 1; r <= m; r++) {
-                          const checkDate = new Date(d.getFullYear(), d.getMonth() + r, 1);
-                          const stillActive = cohortUsers.filter(u =>
-                            ["pro", "pro_trial", "enterprise"].includes(u.tier) ||
-                            (u.createdAt && new Date(u.createdAt) <= checkDate)
-                          ).length;
-                          const pct = cohortUsers.length > 0 ? Math.round((stillActive / cohortUsers.length) * 100) : 0;
+                          const checkDate = new Date(d.getFullYear(), d.getMonth() + r, 28); // end of that month
+                          const stillPaid = cohortUsers.filter(u => {
+                            // Find the user's tier at checkDate using auditLog
+                            const tierChanges = auditLog
+                              .filter(l => l.uid === u.uid && l.action === "tier_change" && new Date(l.changedAt) <= checkDate)
+                              .sort((a, b) => new Date(b.changedAt) - new Date(a.changedAt));
+                            const tierAtCheck = tierChanges.length > 0 ? tierChanges[0].to : u.tier;
+                            return tierAtCheck === "pro" || tierAtCheck === "enterprise";
+                          }).length;
+                          const pct = cohortUsers.length > 0 ? Math.round((stillPaid / cohortUsers.length) * 100) : 0;
                           retention.push(pct);
                         }
                         months.push({ label, size: cohortUsers.length, retention });
