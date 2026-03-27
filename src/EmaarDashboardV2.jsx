@@ -5537,15 +5537,27 @@ export default function EmaarDashboardV2() {
               const [liveEibor, setLiveEibor] = React.useState(EIBOR_RATES);
               const [eiborSource, setEiborSource] = React.useState("CBUAE · " + EIBOR_RATES.asOf);
               React.useEffect(() => {
-                // Load EIBOR from Firestore (set by Admin panel)
-                getDoc(doc(db, "tabData", "eiborRates"))
+                // Load EIBOR from Firestore — cron-eibor.js writes to marketData/eibor
+                getDoc(doc(db, "marketData", "eibor"))
                   .then(snap => {
                     if (snap.exists()) {
                       const e = snap.data();
-                      if (e["3m"] && e["3m"] > 1) {
-                        setLiveEibor(e);
-                        setEiborSource((e.source || "CBUAE") + " · " + (e.asOf || ""));
-                        setRate(parseFloat((e["3m"] + BANK_SPREAD).toFixed(2)));
+                      // cron writes: overnight, oneWeek, oneMonth, threeMonth, sixMonth, twelveMonth
+                      // map to mortgage tab format: on, 1w, 1m, 3m, 6m, 1y
+                      const mapped = {
+                        on:  e.overnight   || e.on  || EIBOR_RATES.on,
+                        "1w": e.oneWeek    || e["1w"] || EIBOR_RATES["1w"],
+                        "1m": e.oneMonth   || e["1m"] || EIBOR_RATES["1m"],
+                        "3m": e.threeMonth || e["3m"] || EIBOR_RATES["3m"],
+                        "6m": e.sixMonth   || e["6m"] || EIBOR_RATES["6m"],
+                        "1y": e.twelveMonth|| e["1y"] || EIBOR_RATES["1y"],
+                        asOf: e.updatedAtUAE || e.asOf || EIBOR_RATES.asOf,
+                        source: e.source || "CBUAE",
+                      };
+                      if (mapped["3m"] > 1) {
+                        setLiveEibor(mapped);
+                        setEiborSource((mapped.source || "CBUAE") + " · " + (mapped.asOf || ""));
+                        setRate(parseFloat((mapped["3m"] + BANK_SPREAD).toFixed(2)));
                       }
                     }
                   })
