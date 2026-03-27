@@ -997,7 +997,17 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
 /* ─── UPGRADE MODAL ─── */
 const UpgradeModal = ({ show, onClose }) => {
   if (!show) return null;
-  const plans = [
+  const [livePlans, setLivePlans] = React.useState(null);
+
+  // S19: Load pricing from Firestore pricingPlans/current — fallback to hardcoded
+  React.useEffect(() => {
+    if (!show) return;
+    getDoc(doc(db, "pricingPlans", "current")).then(snap => {
+      if (snap.exists()) setLivePlans(snap.data().plans);
+    }).catch(() => {});
+  }, [show]);
+
+  const plans = livePlans || [
     { name: "Pro", price: "99", period: "month", features: ["48 Emaar projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →" },
     { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation ⏳", "API data access ⏳", "Custom dashboards ⏳", "Multi-user team accounts ⏳", "Developer-level raw data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Launching Q3 2026", cta: "Contact Sales →" },
   ];
