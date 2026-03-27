@@ -16600,6 +16600,17 @@ export default function AdminPanel() {
 
                 return (
                   <>
+                    {/* REVENUE TAB GUIDE */}
+                    <TabHelp items={[
+                      { icon: "💰", title: "MRR & ARR", desc: "Monthly Recurring Revenue = sum of all active Pro (AED 99) + Enterprise (AED 499) subscriptions. ARR = MRR × 12. These are your core SaaS health metrics." },
+                      { icon: "📉", title: "Churn Rate", desc: "% of paying users who cancelled this month. Below 3% = healthy. Above 6% = needs urgent attention. Calculated from plan_cancelled events in the audit log." },
+                      { icon: "📊", title: "NRR (Net Revenue Retention)", desc: "Revenue retained + expanded from existing customers. 100%+ means you grow even without new signups. Built from real upgrade/downgrade/churn events." },
+                      { icon: "🌊", title: "MRR Waterfall", desc: "Visual breakdown of how MRR changed this month: new signups + upgrades - downgrades - churn = net movement. The most honest view of revenue health." },
+                      { icon: "🎯", title: "Trial Pipeline", desc: "Pro Trial users bucketed by days remaining. 1-2 days = urgent conversion opportunity. Use the Email button to send targeted conversion emails." },
+                      { icon: "🧩", title: "Cohort Retention", desc: "Shows what % of users who signed up in each month are still paying today. Click any cell to see exactly which users are retained. Benchmark: 40%+ at Month 3." },
+                      { icon: "🏆", title: "Revenue Milestones", desc: "Progress toward AED 1K → 5K → 10K → 50K → 100K MRR. Shows exactly how many more users you need at current ARPU to hit each milestone." },
+                    ]} />
+
                     {/* == SECTION 1 — REVENUE HEALTH TOPBAR == */}
                     <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, flexWrap: "wrap" }}>
                       <button type="button" onClick={() => { fetchUsers(); fetchAuditLog(); window._revenuePaymentsLoaded = false; notify("Revenue refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, marginRight: 8 }}>{I.refresh}</button>
@@ -16608,15 +16619,17 @@ export default function AdminPanel() {
                         <span style={{ fontSize: 12, fontWeight: 700, color: mrr > 0 ? T.green : T.textMuted }}>{mrr > 0 ? "Generating Revenue" : "Pre-Revenue"}</span>
                       </div>
                       {[
-                        { label: "MRR",        value: `AED ${mrr.toLocaleString()}`,  color: T.green },
-                        { label: "ARR",        value: `AED ${arr.toLocaleString()}`,  color: T.teal },
-                        { label: "Net MRR",    value: `${netMRR >= 0 ? "+" : ""}AED ${netMRR.toLocaleString()}`, color: netMRR >= 0 ? T.green : T.red },
-                        { label: "Churn Rate", value: `${churnRate}%`,               color: churnRate === 0 ? T.green : churnRate < 5 ? T.gold : T.red },
-                        { label: "ARPU",       value: `AED ${arpu}`,                 color: T.gold },
-                        mrrGrowthPct !== null ? { label: "MoM Growth", value: `${mrrGrowthPct >= 0 ? "+" : ""}${mrrGrowthPct}%`, color: mrrGrowthPct >= 0 ? T.green : T.red } : null,
+                        { label: "MRR",        value: `AED ${mrr.toLocaleString()}`,  color: T.green, tip: "Monthly Recurring Revenue — Pro users × AED 99 + Enterprise users × AED 499. The most important number in your business." },
+                        { label: "ARR",        value: `AED ${arr.toLocaleString()}`,  color: T.teal,  tip: "Annual Recurring Revenue = MRR × 12. Used for valuation (typically 8-12× ARR for early SaaS)." },
+                        { label: "Net MRR",    value: `${netMRR >= 0 ? "+" : ""}AED ${netMRR.toLocaleString()}`, color: netMRR >= 0 ? T.green : T.red, tip: "MRR change this month = New + Expansion - Contraction - Churn. Positive = growing. Negative = shrinking." },
+                        { label: "Churn Rate", value: `${churnRate}%`,               color: churnRate === 0 ? T.green : churnRate < 5 ? T.gold : T.red, tip: "% of paying users who cancelled this month.\n< 2% = Excellent\n2–5% = Healthy\n5–8% = Concerning\n> 8% = Critical — investigate immediately." },
+                        { label: "ARPU",       value: `AED ${arpu}`,                 color: T.gold, tip: "Average Revenue Per User = MRR ÷ paid users. Higher ARPU = less users needed to hit revenue targets." },
+                        mrrGrowthPct !== null ? { label: "MoM Growth", value: `${mrrGrowthPct >= 0 ? "+" : ""}${mrrGrowthPct}%`, color: mrrGrowthPct >= 0 ? T.green : T.red, tip: "Month-over-month MRR growth. Benchmark: early SaaS should target 10–20% monthly growth." } : null,
                       ].filter(Boolean).map((item, i) => (
                         <div key={i} style={{ display: "flex", flexDirection: "column", paddingRight: 14, borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
-                          <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
+                          <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "flex", alignItems: "center" }}>
+                            {item.label}{item.tip && <HelpTip text={item.tip} />}
+                          </span>
                           <span style={{ fontSize: 13, fontWeight: 800, color: item.color, fontFamily: "'Fraunces',serif" }}>{item.value}</span>
                         </div>
                       ))}
@@ -17193,13 +17206,19 @@ export default function AdminPanel() {
 
                       return (
                         <div style={{ marginBottom: 20 }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Advanced Revenue Intelligence</div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, display: "flex", alignItems: "center" }}>
+                            Advanced Revenue Intelligence
+                            <HelpTip text={"This section shows ChartMogul-level SaaS metrics.\n\n• NRR: Revenue retained from existing customers. 100%+ means you grow without new users.\n• Waterfall: Shows exactly where MRR came from and went this month.\n• Cohort: Shows what % of users who signed up in each month are still paying customers today."} />
+                          </div>
 
                           {/* NRR + Revenue Quality Row */}
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14, marginBottom: 16 }}>
                             {/* NRR */}
                             <div className="chart-box fade-up" style={{ padding: 20 }}>
-                              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Net Revenue Retention</div>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12, display: "flex", alignItems: "center" }}>
+                                Net Revenue Retention
+                                <HelpTip text={"NRR = (Start MRR + Expansion - Contraction - Churn) / Start MRR × 100\n\n• 120%+ = World-class (Slack, Snowflake level)\n• 100–120% = Healthy — growing from existing customers\n• 85–100% = Losing ground — churn > expansion\n• Below 85% = At risk — revenue shrinking"} />
+                              </div>
                               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 36, fontWeight: 900, color: nrrColor, marginBottom: 4 }}>{nrr}%</div>
                               <div style={{ fontSize: 11, color: nrrColor, fontWeight: 600, marginBottom: 12 }}>{nrrLabel}</div>
                               <div style={{ height: 4, borderRadius: 2, background: T.border, marginBottom: 8 }}>
@@ -17267,7 +17286,10 @@ export default function AdminPanel() {
 
                           {/* MRR Waterfall Chart */}
                           <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 0 }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>MRR Waterfall — This Month</div>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16, display: "flex", alignItems: "center" }}>
+                              MRR Waterfall — This Month
+                              <HelpTip text={"Shows exactly how your MRR changed this month:\n\n• Start MRR: Revenue at start of month\n• New MRR: Revenue from new paid signups\n• Expansion: Pro → Enterprise upgrades (+AED 400 each)\n• Contraction: Enterprise → Pro downgrades (-AED 400 each)\n• Churn: Revenue lost from cancellations\n• Net MRR: Final result"} />
+                            </div>
                             <div style={{ display: "flex", gap: 8, alignItems: "flex-end", height: 120 }}>
                               {waterfallData.map((item, i) => {
                                 const barH = maxWaterfall > 0 ? Math.max(4, Math.round((Math.abs(item.value) / maxWaterfall) * 100)) : 4;
@@ -17347,8 +17369,11 @@ export default function AdminPanel() {
                         <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px", marginBottom: 20 }}>
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                             <div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Cohort Retention Heatmap</div>
-                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Monthly cohorts — % of users still active each month after signup</div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Cohort Retention Heatmap</div>
+                                <HelpTip text={"Each row = users who signed up in that month.\nEach column = months after signup.\nCell value = % still paying (Pro/Enterprise) in that month.\n\nMonth 0 = % who converted from free to paid.\nMonth 1 = % still paying 1 month later.\n\nBenchmark: World-class SaaS = 40%+ at Month 3.\nClick any cell to see exactly which users were retained."} />
+                              </div>
+                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Monthly cohorts — % of users still paying each month after signup</div>
                             </div>
                             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                               {[["80%+", "rgba(16,185,129,0.7)"], ["60%+", "rgba(16,185,129,0.4)"], ["40%+", "rgba(212,168,67,0.5)"], ["20%+", "rgba(212,168,67,0.25)"], ["<20%", "rgba(239,68,68,0.2)"]].map(([label, color]) => (
@@ -20893,6 +20918,18 @@ export default function AdminPanel() {
 
             return (
               <>
+                {/* LEADS CRM GUIDE */}
+                <TabHelp items={[
+                  { icon: "📋", title: "Table View", desc: "See all leads in a sortable table. Click any row to open the lead drawer with full details, notes, and email history." },
+                  { icon: "🗂️", title: "Kanban View", desc: "Drag and drop leads between 8 stages: New → Contacted → Qualified → Viewing → Offer → Won → Dormant → Lost. Cards are sorted by score (Hot/Warm/Cold)." },
+                  { icon: "📊", title: "Analytics View", desc: "Full pipeline analytics — conversion funnel, source performance, lost reason analysis, lead score distribution, nationality breakdown, and hot leads list." },
+                  { icon: "🎯", title: "Lead Scoring", desc: "Every lead is scored 0–100 automatically based on: email (+20), phone (+20), budget (+15), project (+15), nationality (+10), notes (+10), recency (+20). Stage also boosts score — Offer Made = 85+, Won = 100." },
+                  { icon: "📅", title: "Follow-Up Reminders", desc: "Set a follow-up date on any lead. Overdue follow-ups appear as a red banner at the top. Due today shows as gold. Use the Kanban 'Overdue' button to jump straight to them." },
+                  { icon: "📤", title: "Bulk Actions", desc: "Tick the checkbox on multiple leads to bulk-update their stage, send a group email, or export selected leads to CSV." },
+                  { icon: "🔍", title: "Advanced Filters", desc: "Click 'Filters' to filter by community, nationality, budget range, lead score, property type, language, lead age, and 10+ more criteria." },
+                  { icon: "⬇️", title: "Export", desc: "Export filtered leads to CSV with all fields including score, follow-up date, and notes. Perfect for sharing with your team." },
+                ]} />
+
                 {/* REMINDER NOTIFICATION BANNERS */}
                 {stats.overdue > 0 && (
                   <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(239,68,68,0.08)", border: `1px solid rgba(239,68,68,0.3)`, marginBottom: 10 }}>
@@ -20927,16 +20964,18 @@ export default function AdminPanel() {
                   <button type="button" onClick={() => { localStorage.removeItem("dxb_leads_v3"); localStorage.removeItem("dxb_leads_v3_ts"); fetchLeads(true); notify("↺ Reloading all leads..."); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                   {[
                     { label: "Total", value: stats.total, color: T.gold },
-                    { label: "New", value: stats.new, color: "#3B82F6" },
-                    { label: "Hot", value: stats.hot, color: T.red },
-                    { label: "This Week", value: stats.thisWeek, color: T.teal },
-                    { label: "Win Rate", value: `${winRate}%`, color: T.green },
-                    { label: "Conversion", value: `${conversionRate}%`, color: T.purple },
-                    { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "-", color: T.orange },
-                    { label: "Days to Close", value: avgDaysToClose !== null ? `${avgDaysToClose}d` : "-", color: T.teal },
+                    { label: "New",          value: stats.new,       color: "#3B82F6", tip: "Leads that just came in and haven't been contacted yet." },
+                    { label: "Hot 🔥",        value: stats.hot,       color: T.red,     tip: "Leads scoring 70+ with email, phone, budget & project filled. Excludes dormant. These are ready to close." },
+                    { label: "This Week",    value: stats.thisWeek,  color: T.teal,    tip: "New leads added in the last 7 days." },
+                    { label: "Win Rate",     value: `${winRate}%`,   color: T.green,   tip: "Won ÷ (Won + Lost). Shows how often you close deals that reach the decision stage." },
+                    { label: "Conversion",   value: `${conversionRate}%`, color: T.purple, tip: "Total converted ÷ total leads. Includes all leads even ones that never progressed." },
+                    { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "-", color: T.orange, tip: "Average hours between lead creation and first contact. Under 1h = excellent. Over 24h = losing deals." },
+                    { label: "Days to Close",value: avgDaysToClose !== null ? `${avgDaysToClose}d` : "-", color: T.teal, tip: "Average days from lead creation to Won status. Benchmark: Dubai real estate avg is 14-45 days." },
                   ].map((item, i) => (
                     <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 16px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
-                      <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "flex", alignItems: "center" }}>
+                        {item.label}{item.tip && <HelpTip text={item.tip} />}
+                      </span>
                       <span style={{ fontSize: 17, fontWeight: 900, color: item.color, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>{item.value}</span>
                     </div>
                   ))}
@@ -20954,16 +20993,18 @@ export default function AdminPanel() {
                 {/* PIPELINE CARDS */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 10, marginBottom: 20 }}>
                   {[
-                    { id: "new",              label: "New",       count: stats.new,       color: "#3B82F6" },
-                    { id: "contacted",        label: "Contacted", count: stats.contacted, color: T.gold },
-                    { id: "qualified",        label: "Qualified", count: stats.qualified, color: "#8B5CF6" },
-                    { id: "viewing scheduled",label: "Viewing",   count: stats.viewing,   color: "#06B6D4" },
-                    { id: "offer made",       label: "Offer",     count: stats.offerMade, color: "#F97316" },
-                    { id: "converted",        label: "Won",       count: stats.converted, color: T.green },
-                    { id: "dormant",          label: "Dormant",   count: stats.dormant,   color: "#64748B" },
-                    { id: "lost",             label: "Lost",      count: stats.lost,      color: T.red },
+                    { id: "new",               label: "New",       count: stats.new,       color: "#3B82F6", tip: "Fresh leads not yet contacted. Priority: contact within 1 hour." },
+                    { id: "contacted",         label: "Contacted", count: stats.contacted, color: T.gold,    tip: "You've made first contact. Next step: qualify their budget, project interest and timeline." },
+                    { id: "qualified",         label: "Qualified", count: stats.qualified, color: "#8B5CF6", tip: "Budget and interest confirmed. Schedule a viewing or send project details." },
+                    { id: "viewing scheduled", label: "Viewing",   count: stats.viewing,   color: "#06B6D4", tip: "Viewing is booked. Prepare project brochure and ROI sheet before the meeting." },
+                    { id: "offer made",        label: "Offer",     count: stats.offerMade, color: "#F97316", tip: "Offer submitted. Follow up within 24 hours. Address objections quickly." },
+                    { id: "converted",         label: "Won",       count: stats.converted, color: T.green,   tip: "Deal closed. Lead converted to user in the system. Check win rate in Analytics." },
+                    { id: "dormant",           label: "Dormant",   count: stats.dormant,   color: "#64748B", tip: "Not responding or gone cold. Re-engage with a new project launch or price alert. Excluded from Hot Leads." },
+                    { id: "lost",              label: "Lost",      count: stats.lost,      color: T.red,     tip: "Deal lost. Loss reason is tracked in Analytics → Lost Reason Analysis. Learn from patterns." },
                   ].map(s => (
-                    <div key={s.id} onClick={() => setLeadFilter(leadFilter === s.id ? "all" : s.id)} className="fade-up" style={{ padding: "12px 14px", borderRadius: 10, cursor: "pointer", background: leadFilter === s.id ? `${s.color}15` : T.surface, border: `1px solid ${leadFilter === s.id ? s.color : T.border}`, transition: "all 0.15s" }}>
+                    <div key={s.id} onClick={() => setLeadFilter(leadFilter === s.id ? "all" : s.id)} className="fade-up"
+                      title={s.tip}
+                      style={{ padding: "12px 14px", borderRadius: 10, cursor: "pointer", background: leadFilter === s.id ? `${s.color}15` : T.surface, border: `1px solid ${leadFilter === s.id ? s.color : T.border}`, transition: "all 0.15s" }}>
                       <div style={{ fontSize: 9, fontWeight: 700, color: s.color, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{s.label}</div>
                       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: s.color }}>{s.count}</div>
                       <div style={{ marginTop: 6, height: 3, borderRadius: 2, background: T.border }}>
@@ -21115,16 +21156,18 @@ export default function AdminPanel() {
                       {/* ── ROW 1: KPI CARDS ───────────────────────────────── */}
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 16 }}>
                         {[
-                          { label: "Win Rate",       value: `${winRate}%`,                                                                            sub: `${stats.converted} of ${stats.converted + stats.lost} closed`,   color: T.green  },
-                          { label: "Days to Close",  value: avgDaysToClose !== null ? `${avgDaysToClose}d` : "—",                                     sub: "Lead → Converted avg",                                           color: T.blue   },
-                          { label: "Hot Leads",      value: stats.hot,                                                                                sub: "Score 70+ excl. dormant",                                        color: T.red    },
-                          { label: "Avg Budget",     value: avgBudget ? `AED ${(avgBudget/1e6).toFixed(1)}M` : "—",                                  sub: `${leads.filter(l=>l.budget).length} leads with budget`,          color: T.purple },
-                          { label: "Avg Response",   value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "—",                                    sub: "First contact speed",                                            color: T.orange },
-                          { label: "This Week",      value: stats.thisWeek,                                                                           sub: "New leads (7 days)",                                             color: T.teal   },
+                          { label: "Win Rate",       value: `${winRate}%`,                                                                            sub: `${stats.converted} of ${stats.converted + stats.lost} closed`,   color: T.green,  tip: "Won ÷ (Won + Lost). Only counts closed deals, not dormant/open leads. 30%+ is strong for Dubai real estate." },
+                          { label: "Days to Close",  value: avgDaysToClose !== null ? `${avgDaysToClose}d` : "—",                                     sub: "Lead → Converted avg",                                           color: T.blue,   tip: "Average days from lead creation to Won. Only counts leads with a convertedAt timestamp. Benchmark: 14–45 days for Dubai off-plan." },
+                          { label: "Hot Leads",      value: stats.hot,                                                                                sub: "Score 70+ excl. dormant",                                        color: T.red,    tip: "Leads scoring 70+ with full contact info and active status. Click the Hot Leads list below to see them all and open their drawer." },
+                          { label: "Avg Budget",     value: avgBudget ? `AED ${(avgBudget/1e6).toFixed(1)}M` : "—",                                  sub: `${leads.filter(l=>l.budget).length} leads with budget`,          color: T.purple, tip: "Average budget across all leads that have a budget entered. Helps you understand your typical buyer profile." },
+                          { label: "Avg Response",   value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "—",                                    sub: "First contact speed",                                            color: T.orange, tip: "Average hours between lead creation and first Contacted status. Under 1h = excellent. Studies show 5× better conversion when contacted within 5 minutes." },
+                          { label: "This Week",      value: stats.thisWeek,                                                                           sub: "New leads (7 days)",                                             color: T.teal,   tip: "New leads added in the last 7 days. Compare to previous weeks using the weekly trend chart below." },
                         ].map((k, i) => (
                           <div key={i} style={{ padding: "16px 14px", background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, position: "relative", overflow: "hidden" }}>
                             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: k.color, opacity: 0.7 }} />
-                            <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>{k.label}</div>
+                            <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6, display: "flex", alignItems: "center" }}>
+                              {k.label}{k.tip && <HelpTip text={k.tip} />}
+                            </div>
                             <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: k.color, lineHeight: 1 }}>{k.value}</div>
                             <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{k.sub}</div>
                           </div>
