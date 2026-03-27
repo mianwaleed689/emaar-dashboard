@@ -2029,6 +2029,41 @@ export default function EmaarDashboardV2() {
       }
     }));
 
+    // S11 — tabData/yieldSummary (written by cron-yields.js weekly)
+    unsubs.push(onSnapshot(doc(db, "tabData", "yieldSummary"), (snap) => {
+      if (!snap.exists() || !snap.data().communities?.length) return;
+      const communities = snap.data().communities;
+      // Map to the shape the Yields tab chart expects
+      const mapped = [];
+      communities.forEach(c => {
+        const unitTypes = [
+          { key: "studio", label: "Studio", demand: "High" },
+          { key: "apt1",   label: "1BR Apt", demand: "V.High" },
+          { key: "apt2",   label: "2BR Apt", demand: "High" },
+          { key: "apt3",   label: "3BR Apt", demand: "Moderate" },
+        ];
+        unitTypes.forEach(u => {
+          const gross = c.yields?.[u.key];
+          const rent  = c.rents?.[u.key];
+          const price = c.salePrices?.[u.key];
+          if (gross != null) {
+            mapped.push({
+              label:     u.label,
+              community: c.community,
+              rent:      rent   ? rent   / 1000 : 0,
+              price:     price  ? price  / 1000 : 0,
+              gross,
+              net:       parseFloat((gross * 0.82).toFixed(2)), // ~18% costs
+              demand:    u.demand,
+              visa:      price >= 2000000 ? "Yes (≥2M)" : "Below 2M",
+              fromCron:  true,
+            });
+          }
+        });
+      });
+      if (mapped.length > 0) setLiveYields(mapped);
+    }));
+
     // platformSettings/tabs (which tabs are on/off)
     unsubs.push(onSnapshot(doc(db, "platformSettings", "tabs"), (snap) => {
       if (snap.exists()) setTabSettings(snap.data());
