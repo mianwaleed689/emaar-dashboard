@@ -64,7 +64,22 @@ export const emaarFinancials = [
   { year:"2022", revenue:24.9, grossProfit:12.6, ebitda:9.8, netProfit:8.1, netProfitAttr:6.8, propertySales:30.7, backlog:41.5, recurringRev:7.5, intlSales:1.2, mallRev:4.2, hotelRev:3.3, mallOccupancy:96, dubaiMallFootfall:88, dividend:0.35, eps:0.77, unitsDelivered:65000, newLaunches:22, revenueUSD:6.8, netProfitUSD:1.9, gm:50.6, em:39.4, nm:27.3 },
   { year:"2023", revenue:26.7, grossProfit:16.9, ebitda:16.0, netProfit:15.1, netProfitAttr:11.6, propertySales:40.3, backlog:71.8, recurringRev:8.6, intlSales:2.9, mallRev:5.8, hotelRev:2.8, mallOccupancy:97, dubaiMallFootfall:105, dividend:0.50, eps:1.32, unitsDelivered:70000, newLaunches:27, revenueUSD:7.3, netProfitUSD:3.2, gm:63.3, em:59.9, nm:43.4 },
   { year:"2024", revenue:35.5, grossProfit:20.4, ebitda:19.3, netProfit:18.9, netProfitAttr:13.5, propertySales:69.5, backlog:111.5, recurringRev:9.3, intlSales:4.1, mallRev:5.6, hotelRev:3.7, mallOccupancy:98.5, dubaiMallFootfall:111, dividend:1.00, eps:1.53, unitsDelivered:75000, newLaunches:62, revenueUSD:9.7, netProfitUSD:3.7, gm:57.5, em:54.4, nm:38.0 },
-  { year:"2025", revenue:49.6, grossProfit:28.5, ebitda:25.6, netProfit:25.7, netProfitAttr:17.6, propertySales:80.4, backlog:155, recurringRev:10.5, intlSales:9.3, mallRev:6.3, hotelRev:4.2, mallOccupancy:98, dubaiMallFootfall:118, dividend:1.00, eps:2.00, unitsDelivered:125600, newLaunches:48, revenueUSD:13.5, netProfitUSD:4.8, gm:57.5, em:51.6, nm:35.5, landBank:618 },
+  { year:"2025", revenue:49.6, grossProfit:28.5, ebitda:25.6,
+    netProfitBeforeTax:25.7,  // AED 25.7B = net profit before minority interests (Emaar press release language)
+    netProfit:25.7,           // kept for backward compatibility — equals netProfitBeforeTax
+    netProfitAttr:17.6,       // AED 17.6B = attributable to Emaar shareholders (after minority interest)
+    propertySales:80.4, backlog:155, recurringRev:10.5, intlSales:9.3,
+    mallRev:6.3, hotelRev:4.2, mallOccupancy:98, dubaiMallFootfall:118,
+    dividend:1.00, eps:2.00,
+    unitsDeliveredCumulative:125600, // CUMULATIVE since 2002 — NOT annual. FY2025 annual deliveries ~7,000–8,000 units
+    unitsDelivered:125600,           // kept for backward compatibility — cumulative since inception
+    newLaunches:48,
+    revenueUSD:13.5, netProfitUSD:4.8, gm:57.5, em:51.6, nm:35.5, landBank:618,
+    creditRatingSP:"BBB+",           // S&P upgraded June 2025 (from BBB)
+    creditRatingMoodys:"Baa1",       // Moody's upgraded June 2025 (from Baa2)
+    creditRatingFitch:"BBB+",        // Fitch
+    creditRatingNote:"S&P and Moody's both upgraded Emaar in June 2025 — strongest ever ratings",
+  },
 ];
 
 /* ─── COMMUNITIES (from Excel PBI_Communities) ─── */

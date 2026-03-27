@@ -78,13 +78,13 @@ export const binghattiProjects = [
 ];
 
 export const binghattiRisks = [
-  { factor:"Rapid Scale — 17,000 Units/Year Pace",     level:4, likelihood:3, impact:4, score:48, mitigation:"Vertically integrated. Strong cash position AED 9B. ADX-listed with credit ratings BB-/Ba3.", assessment:"MODERATE", color:"#F59E0B" },
+  { factor:"Rapid Scale — 17,000 Units/Year Pace",     level:4, likelihood:3, impact:4, score:48, mitigation:"Vertically integrated. Strong cash AED 8.84B. Credit ratings BB- (Fitch) · Ba3 (Moody's) · RERA compliant.", assessment:"MODERATE", color:"#F59E0B" },
   { factor:"Affordable Segment Margin Pressure",        level:3, likelihood:3, impact:3, score:27, mitigation:"Portfolio diversification — ultra-luxury (Bugatti, Mercedes) offsets affordable margin compression.", assessment:"MODERATE", color:"#D4A843" },
   { factor:"Construction Delivery Risk (38K units)",    level:4, likelihood:3, impact:4, score:48, mitigation:"Track record 12,500+ delivered. 13 new projects FY2025 all on schedule. In-country contractor network.", assessment:"MODERATE", color:"#F59E0B" },
   { factor:"Branded Partnership Risk",                  level:2, likelihood:2, impact:4, score:16, mitigation:"Bugatti, Mercedes-Benz contracts signed. AED 550M penthouse sale validates ultra-luxury demand.", assessment:"LOW",      color:"#10B981" },
   { factor:"Market Concentration — Dubai Only",         level:3, likelihood:2, impact:3, score:18, mitigation:"80+ projects diversify across JVC, Business Bay, Downtown, Meydan, Science Park.", assessment:"LOW",      color:"#10B981" },
   { factor:"Currency Risk (AED Peg)",                   level:1, likelihood:1, impact:2, score:2,  mitigation:"USD peg stable.", assessment:"VERY LOW", color:"#10B981" },
-  { factor:"Regulatory Risk",                           level:1, likelihood:1, impact:2, score:2,  mitigation:"ADX-listed, fully RERA compliant.", assessment:"VERY LOW", color:"#10B981" },
+  { factor:"Regulatory Risk",                           level:1, likelihood:1, impact:2, score:2,  mitigation:"Privately held. Fully RERA compliant. DIFC-registered LLC.", assessment:"VERY LOW", color:"#10B981" },
 ];
 
 export const binghattiSegments = [
