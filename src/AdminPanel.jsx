@@ -20720,14 +20720,17 @@ export default function AdminPanel() {
               try {
                 const lead = leads.find(l => l.id === leadId);
                 const update = { status: newStatus, updatedAt: new Date().toISOString() };
-                if (newStatus === "Contacted" && !lead?.respondedAt) update.respondedAt = new Date().toISOString();
+                if (newStatus === "Contacted"         && !lead?.respondedAt)  update.respondedAt  = new Date().toISOString();
+                if (newStatus === "Viewing Scheduled" && !lead?.viewingAt)    update.viewingAt    = new Date().toISOString();
+                if (newStatus === "Offer Made"        && !lead?.offerAt)      update.offerAt      = new Date().toISOString();
+                if (newStatus === "Converted")                                update.convertedAt  = new Date().toISOString();
+                if (newStatus === "Dormant")                                  update.dormantAt    = new Date().toISOString();
                 if (newStatus === "Lost" && reason) update.lossReason = reason;
-                if (newStatus === "Converted") update.convertedAt = new Date().toISOString();
-                const activity = [...(lead?.activity || []), { type: "status_change", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Status changed to ${newStatus}${reason ? ` — ${reason}` : ""}` }];
+                const activity = [...(lead?.activity || []), { type: "status_change", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Stage: ${lead?.status || "New"} → ${newStatus}${reason ? ` — ${reason}` : ""}` }];
                 update.activity = activity;
                 await setDoc(doc(db, "leads", leadId), update, { merge: true });
-                await logAudit(db, { action: "lead_status_change", leadId, to: newStatus });
-                notify(`Status ${newStatus}`);
+                await logAudit(db, { action: "lead_status_change", leadId, from: lead?.status, to: newStatus });
+                notify(`✅ ${newStatus}`);
                 fetchLeads();
                 if (leadDrawer?.id === leadId) setLeadDrawer(prev => ({ ...prev, status: newStatus, ...update }));
               } catch (e) { notify("Error: " + e.message); }
@@ -20819,13 +20822,24 @@ export default function AdminPanel() {
             };
 
             const statusColors = {
-              New: { bg: "rgba(59,130,246,0.12)", color: "#3B82F6", border: "rgba(59,130,246,0.3)" },
-              Contacted: { bg: "rgba(212,168,67,0.12)", color: T.gold, border: "rgba(212,168,67,0.3)" },
-              Qualified: { bg: "rgba(139,92,246,0.12)", color: "#8B5CF6", border: "rgba(139,92,246,0.3)" },
-              Converted: { bg: "rgba(16,185,129,0.12)", color: T.green, border: "rgba(16,185,129,0.3)" },
-              Lost: { bg: "rgba(239,68,68,0.12)", color: T.red, border: "rgba(239,68,68,0.3)" },
+              New:               { bg: "rgba(59,130,246,0.12)",  color: "#3B82F6", border: "rgba(59,130,246,0.3)" },
+              Contacted:         { bg: "rgba(212,168,67,0.12)",  color: T.gold,    border: "rgba(212,168,67,0.3)" },
+              Qualified:         { bg: "rgba(139,92,246,0.12)",  color: "#8B5CF6", border: "rgba(139,92,246,0.3)" },
+              "Viewing Scheduled":{ bg: "rgba(6,182,212,0.12)",  color: "#06B6D4", border: "rgba(6,182,212,0.3)" },
+              "Offer Made":      { bg: "rgba(249,115,22,0.12)",  color: "#F97316", border: "rgba(249,115,22,0.3)" },
+              Converted:         { bg: "rgba(16,185,129,0.12)",  color: T.green,   border: "rgba(16,185,129,0.3)" },
+              Dormant:           { bg: "rgba(100,116,139,0.12)", color: "#64748B", border: "rgba(100,116,139,0.3)" },
+              Lost:              { bg: "rgba(239,68,68,0.12)",   color: T.red,     border: "rgba(239,68,68,0.3)" },
             };
-            const activityIcons = { created: "plus", status_change: "->", note: "N", email_sent: "@", followup_scheduled: "clock", call_logged: "tel" };
+            const activityIcons = {
+              created:            "✦",
+              status_change:      "→",
+              stage_changed:      "⇄",
+              note:               "💬",
+              email_sent:         "✉️",
+              followup_scheduled: "📅",
+              call_logged:        "📞",
+            };
             const emailTemplates = {
               followup: { subject: `Following up on ${leadDrawer?.project || "your inquiry"}`, body: `Hi ${leadDrawer?.name || "there"},\n\nI wanted to follow up on your interest in ${leadDrawer?.project || "one of our properties"}. Have you had a chance to review the details?\n\nI would love to arrange a viewing at your convenience.\n\nBest regards,\nDXB Analytics Team` },
               info: { subject: `Project Information - ${leadDrawer?.project || "DXB Analytics"}`, body: `Hi ${leadDrawer?.name || "there"},\n\nThank you for your inquiry about ${leadDrawer?.project || "our property"}.\n\nKey details:\n- Starting Price: [price]\n- Handover: [date]\n- Payment Plan: [plan]\n- Expected Yield: [yield]%\n\nWould you like to schedule a call?\n\nBest regards,\nDXB Analytics Team` },
@@ -20934,9 +20948,11 @@ export default function AdminPanel() {
 
                   // Conversion rate stage-to-stage
                   const stageConv = [
-                    { from: "New", to: "Contacted", rate: stats.new > 0 ? Math.round((stats.contacted / stats.new) * 100) : 0 },
-                    { from: "Contacted", to: "Qualified", rate: stats.contacted > 0 ? Math.round((stats.qualified / stats.contacted) * 100) : 0 },
-                    { from: "Qualified", to: "Converted", rate: stats.qualified > 0 ? Math.round((stats.converted / stats.qualified) * 100) : 0 },
+                    { from: "New",               to: "Contacted",         rate: stats.new > 0       ? Math.round((stats.contacted / stats.new) * 100) : 0 },
+                    { from: "Contacted",         to: "Qualified",         rate: stats.contacted > 0 ? Math.round((stats.qualified / stats.contacted) * 100) : 0 },
+                    { from: "Qualified",         to: "Viewing Scheduled", rate: stats.qualified > 0 ? Math.round((stats.viewing / stats.qualified) * 100) : 0 },
+                    { from: "Viewing Scheduled", to: "Offer Made",        rate: stats.viewing > 0   ? Math.round((stats.offerMade / stats.viewing) * 100) : 0 },
+                    { from: "Offer Made",        to: "Converted",         rate: stats.offerMade > 0 ? Math.round((stats.converted / stats.offerMade) * 100) : 0 },
                   ];
 
                   // Lost reason breakdown
@@ -21413,8 +21429,8 @@ export default function AdminPanel() {
                   <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: `rgba(59,130,246,0.08)`, border: `1px solid rgba(59,130,246,0.3)`, marginBottom: 16 }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: T.blue }}>{leadSelectedIds.length} selected</span>
                     <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
-                      {["Contacted", "Qualified", "Lost"].map(status => (
-                        <button key={status} type="button" onClick={() => bulkUpdateStatus(status)} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${statusColors[status]?.border}`, background: statusColors[status]?.bg, color: statusColors[status]?.color, cursor: "pointer", fontWeight: 600 }}>Set {status}</button>
+                      {["Contacted", "Qualified", "Viewing Scheduled", "Offer Made", "Converted", "Dormant", "Lost"].map(status => (
+                        <button key={status} type="button" onClick={() => bulkUpdateStatus(status)} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${statusColors[status]?.border}`, background: statusColors[status]?.bg, color: statusColors[status]?.color, cursor: "pointer", fontWeight: 600 }}>→ {status}</button>
                       ))}
                       <button type="button" onClick={() => {
                         const targets = leads.filter(l => leadSelectedIds.includes(l.id) && l.email);
@@ -21468,7 +21484,10 @@ export default function AdminPanel() {
                           <option value="new">🆕 New</option>
                           <option value="contacted">📞 Contacted</option>
                           <option value="qualified">⭐ Qualified</option>
-                          <option value="converted">✅ Converted</option>
+                          <option value="viewing scheduled">🏠 Viewing Scheduled</option>
+                          <option value="offer made">💰 Offer Made</option>
+                          <option value="converted">🏆 Won / Converted</option>
+                          <option value="dormant">💤 Dormant</option>
                           <option value="lost">❌ Lost</option>
                         </select>
                         <select value={leadSourceFilter} onChange={e => { setLeadSourceFilter(e.target.value); setLeadPage(1); }} style={sel}>
