@@ -11,6 +11,7 @@ import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnaps
 import { T } from "./theme";
 import { emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
 import { damacProjects, damacFinancials, damacCommunities, damacYields, damacRisks, damacSegments, damacRadar, damacMegaProjects, damacIdentity, damacLive, damacBranded, damacFinancialHistory } from "./data_damac";
+import { sobhaProjects, sobhaCommunities, sobhaYields, sobhaRisks, sobhaSegments, sobhaRadar, sobhaMegaProjects, sobhaIdentity, sobhaLive, sobhaFinancialHistory } from "./data_sobha";
 import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
 import { useI18n } from "./i18n";
@@ -1984,9 +1985,10 @@ export default function EmaarDashboardV2() {
   // Session 6 — Firestore live data for Overview tab
   const [emaarLive, setEmaarLive] = useState(null);       // developers/emaar
   const [damacLiveFS, setDamacLiveFS] = useState(null);   // developers/damac (Firestore)
+  const [sobhaLiveFS, setSobhaLiveFS] = useState(null);   // developers/sobha (Firestore)
   const [marketGlobal, setMarketGlobal] = useState(null); // marketData/global
 
-  // S22: Developer data resolver — returns correct data for selectedDeveloper
+  // S22/S25: Developer data resolver — returns correct data for selectedDeveloper
   const devData = React.useMemo(() => {
     if (selectedDeveloper === "damac") {
       const fs = damacLiveFS || {};
@@ -2002,8 +2004,24 @@ export default function EmaarDashboardV2() {
         megaProjects:damacMegaProjects,
         branded:    damacBranded,
         projects:   damacProjects,
-        isT1:       true,
-        isLive:     true,
+        isT1:       true, isLive: true,
+      };
+    }
+    if (selectedDeveloper === "sobha") {
+      const fs = sobhaLiveFS || {};
+      return {
+        identity:   sobhaIdentity,
+        live:       { ...sobhaLive, ...fs },
+        financials: sobhaFinancialHistory,
+        communities:sobhaCommunities,
+        yields:     sobhaYields,
+        risks:      fs.sobhaRisks    || sobhaRisks,
+        segments:   fs.sobhaSegments || sobhaSegments,
+        radar:      fs.sobhaRadar    || sobhaRadar,
+        megaProjects:sobhaMegaProjects,
+        branded:    [],
+        projects:   sobhaProjects,
+        isT1:       true, isLive: true,
       };
     }
     // Emaar (default)
@@ -2019,10 +2037,9 @@ export default function EmaarDashboardV2() {
       megaProjects:megaProjects,
       branded:    [],
       projects:   emaarProjects,
-      isT1:       true,
-      isLive:     true,
+      isT1:       true, isLive: true,
     };
-  }, [selectedDeveloper, emaarLive, damacLiveFS]);
+  }, [selectedDeveloper, emaarLive, damacLiveFS, sobhaLiveFS]);
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
@@ -2160,6 +2177,8 @@ export default function EmaarDashboardV2() {
     ...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }),
     // Include DAMAC projects (S22)
     ...damacProjects,
+    // Include Sobha projects (S25)
+    ...sobhaProjects,
     // Include ALL extra projects from Firestore (radar + other developers)
     // Skip any that duplicate the 48 Emaar base projects by name
     ...extraProjects.filter(p => !emaarBaseNames.has((p.name || "").toLowerCase().trim()))
@@ -2247,6 +2266,11 @@ export default function EmaarDashboardV2() {
     // S22 — developers/damac (DAMAC data from Firestore)
     unsubs.push(onSnapshot(doc(db, "developers", "damac"), (snap) => {
       if (snap.exists()) setDamacLiveFS(snap.data());
+    }));
+
+    // S25 — developers/sobha (Sobha data from Firestore)
+    unsubs.push(onSnapshot(doc(db, "developers", "sobha"), (snap) => {
+      if (snap.exists()) setSobhaLiveFS(snap.data());
     }));
 
     // Session 6 — marketData/global (Dubai market stats from Firestore)
@@ -2892,12 +2916,12 @@ export default function EmaarDashboardV2() {
               </optgroup>
             </select>
             {selectedDeveloper !== "emaar" && (
-              <div style={{ marginTop: 6, padding: "6px 10px", borderRadius: 6, background: selectedDeveloper === "damac" ? "rgba(16,185,129,0.06)" : "rgba(212,168,67,0.06)", border: `1px solid ${selectedDeveloper === "damac" ? T.green : T.gold}22`, fontSize: 10, color: T.textMuted }}>
-                {selectedDeveloper === "damac"
-                  ? "✅ Full Intelligence Module LIVE"
-                  : ["sobha","nakheel","binghatti","meraas","aldar","azizi","danube"].includes(selectedDeveloper)
-                  ? "⏳ Full module coming in S25–S30"
-                  : "📊 DLD data only — full module in S34+"}
+              <div style={{ marginTop: 6, padding: "6px 10px", borderRadius: 6, background: ["damac","sobha"].includes(selectedDeveloper) ? "rgba(16,185,129,0.06)" : "rgba(212,168,67,0.06)", border: `1px solid ${["damac","sobha"].includes(selectedDeveloper) ? T.green : T.gold}22`, fontSize: 10, color: T.textMuted }}>
+                {selectedDeveloper === "damac" ? "✅ Full Intelligence Module LIVE"
+                 : selectedDeveloper === "sobha" ? "✅ Full Intelligence Module LIVE"
+                 : ["nakheel","binghatti","meraas","aldar","azizi","danube"].includes(selectedDeveloper)
+                 ? "⏳ Full module coming in S27–S33"
+                 : "📊 DLD data only — full module in S34+"}
                 <button type="button" onClick={() => setSelectedDeveloper("emaar")}
                   style={{ marginLeft: 8, color: T.gold, background: "none", border: "none", cursor: "pointer", fontSize: 10, fontWeight: 700, padding: 0 }}>← Emaar</button>
               </div>
@@ -3083,43 +3107,46 @@ export default function EmaarDashboardV2() {
 
           {/* ─── OVERVIEW TAB ─── */}
           {tab === "Overview" && <>
-            {/* S21/S22: Developer context banner — shown when non-Emaar selected */}
+            {/* S21/S22/S25: Developer context banner */}
             {selectedDeveloper !== "emaar" && (() => {
-              const devNames = { damac: "DAMAC Properties", sobha: "Sobha Realty", nakheel: "Nakheel", binghatti: "Binghatti", meraas: "Meraas", aldar: "Aldar Properties", azizi: "Azizi Developments", danube: "Danube Properties", ellington: "Ellington Properties", mag: "MAG Property Dev", tiger: "Tiger Properties", imtiaz: "Imtiaz Developments", selectgroup: "Select Group", omniyat: "Omniyat", deyaar: "Deyaar Development", samana: "Samana Developers", nshama: "Nshama", wasl: "Wasl Properties", arada: "Arada", darglobal: "DAR Global", vincitore: "Vincitore", condor: "Condor Developers", reportage: "Reportage Properties", dubaiprops: "Dubai Properties" };
+              const devNames = { damac:"DAMAC Properties", sobha:"Sobha Realty", nakheel:"Nakheel", binghatti:"Binghatti", meraas:"Meraas", aldar:"Aldar Properties", azizi:"Azizi Developments", danube:"Danube Properties", ellington:"Ellington Properties", mag:"MAG Property Dev", tiger:"Tiger Properties", imtiaz:"Imtiaz Developments", selectgroup:"Select Group", omniyat:"Omniyat", deyaar:"Deyaar Development", samana:"Samana Developers", nshama:"Nshama", wasl:"Wasl Properties", arada:"Arada", darglobal:"DAR Global", vincitore:"Vincitore", condor:"Condor Developers", reportage:"Reportage Properties", dubaiprops:"Dubai Properties" };
               const devName = devNames[selectedDeveloper] || selectedDeveloper;
-              const isT1 = ["damac","sobha","nakheel","binghatti","meraas","aldar","azizi","danube"].includes(selectedDeveloper);
-              const isDamac = selectedDeveloper === "damac";
+              const isT1Live = ["damac","sobha"].includes(selectedDeveloper);
+              const isT1Pending = ["nakheel","binghatti","meraas","aldar","azizi","danube"].includes(selectedDeveloper);
+              const devColor = selectedDeveloper === "damac" ? "#C8A951" : selectedDeveloper === "sobha" ? "#8B5CF6" : isT1Pending ? T.gold : T.blue;
               const d = devData?.live || {};
+              const devKpis = isT1Live ? [
+                { label:"FY2025 Sales",        value:`AED ${d.propertySales || (selectedDeveloper==="sobha"?30:36)}B`, sub:`USD ${d.propertySalesUSD || (selectedDeveloper==="sobha"?8.17:9.8)}B`, color:devColor },
+                { label:"Net Profit Est.",     value:`AED ${d.netProfit    || (selectedDeveloper==="sobha"?5.6:8.1)}B`, sub:"FY2025 estimate",  color:T.green  },
+                { label:"Units Delivered",     value:`${(d.unitsDelivered  || (selectedDeveloper==="sobha"?27000:50000)).toLocaleString()}+`, sub:"Total track record", color:T.teal },
+                { label:"Under Construction",  value:`${(d.underConstruction||(selectedDeveloper==="sobha"?26933:54000)).toLocaleString()}+`, sub:"Active pipeline",    color:T.blue },
+                { label:"Communities",         value:selectedDeveloper==="sobha"?"8":"7", sub:"Master communities",  color:T.purple },
+                { label:"Market Rank",         value:selectedDeveloper==="sobha"?"#3":"#1", sub:selectedDeveloper==="sobha"?"Dubai by volume":"Private Developer UAE", color:devColor },
+              ] : [];
               return (
-                <div style={{ margin: "0 0 20px 0", padding: "20px 24px", borderRadius: 14, background: isDamac ? "rgba(200,169,81,0.06)" : isT1 ? "rgba(212,168,67,0.06)" : "rgba(59,130,246,0.06)", border: `1px solid ${isDamac ? "#C8A951" : isT1 ? T.gold : T.blue}33` }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: isDamac ? 16 : 0 }}>
+                <div style={{ margin:"0 0 20px 0", padding:"20px 24px", borderRadius:14, background:`rgba(${selectedDeveloper==="sobha"?"139,92,246":selectedDeveloper==="damac"?"200,169,81":isT1Pending?"212,168,67":"59,130,246"},0.06)`, border:`1px solid ${devColor}33` }}>
+                  <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", flexWrap:"wrap", gap:12, marginBottom:isT1Live?16:0 }}>
                     <div>
-                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: isDamac ? "#C8A951" : isT1 ? T.gold : T.blue }}>{devName}</div>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>
-                        {isDamac ? "T1 Full Intelligence · Founded 2002 · Hussain Sajwani · MD: Amira Sajwani · #1 Private Developer UAE" : isT1 ? "T1 Full Intelligence Module — coming soon" : "T2/T3 Developer — DLD data only · Full module in S34+"}
+                      <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:800, color:devColor }}>{devName}</div>
+                      <div style={{ fontSize:12, color:T.textMuted, marginTop:2 }}>
+                        {selectedDeveloper==="damac" ? "T1 Full Intelligence · Founded 2002 · Hussain Sajwani · MD: Amira Sajwani · #1 Private Developer UAE"
+                         : selectedDeveloper==="sobha" ? "T1 Full Intelligence · Founded 1976 · PNC Menon · Chairman: Ravi Menon · 100% Backward Integration"
+                         : isT1Pending ? "T1 Full Intelligence Module — coming soon" : "T2/T3 Developer — DLD data only"}
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                      {isDamac && <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 8, background: "rgba(200,169,81,0.12)", color: "#C8A951", fontWeight: 700, border: "1px solid #C8A95133" }}>T1 · LIVE DATA</span>}
-                      {!isDamac && <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 8, background: isT1 ? "rgba(212,168,67,0.1)" : "rgba(59,130,246,0.1)", color: isT1 ? T.gold : T.blue, fontWeight: 700, border: `1px solid ${isT1 ? T.gold : T.blue}33` }}>{isT1 ? "T1 · Full Data Coming" : "T2/T3 · Limited Data"}</span>}
-                      <button type="button" onClick={() => setSelectedDeveloper("emaar")} style={{ fontSize: 11, padding: "4px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}`, color: T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>← Back to Emaar</button>
+                    <div style={{ display:"flex", gap:8, flexShrink:0 }}>
+                      {isT1Live && <span style={{ fontSize:11, padding:"4px 12px", borderRadius:8, background:`rgba(16,185,129,0.12)`, color:T.green, fontWeight:700, border:"1px solid rgba(16,185,129,0.2)" }}>T1 · LIVE DATA</span>}
+                      {!isT1Live && <span style={{ fontSize:11, padding:"4px 12px", borderRadius:8, background:`rgba(212,168,67,0.1)`, color:T.gold, fontWeight:700, border:`1px solid ${T.gold}33` }}>{isT1Pending?"T1 · Full Data Coming":"T2/T3 · Limited Data"}</span>}
+                      <button type="button" onClick={() => setSelectedDeveloper("emaar")} style={{ fontSize:11, padding:"4px 14px", borderRadius:8, background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.textMuted, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>← Back to Emaar</button>
                     </div>
                   </div>
-                  {/* DAMAC live KPIs */}
-                  {isDamac && (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 10 }}>
-                      {[
-                        { label: "FY2025 Sales",       value: `AED ${d.propertySales || 36}B`,  sub: `USD ${d.propertySalesUSD || 9.8}B`, color: "#C8A951" },
-                        { label: "Net Profit Est.",    value: `AED ${d.netProfit || 8.1}B`,      sub: "FY2025 estimate",                   color: T.green   },
-                        { label: "Units Delivered",    value: `${(d.unitsDelivered||50000).toLocaleString()}+`, sub: "Since 2002",         color: T.teal    },
-                        { label: "Under Construction", value: `${(d.underConstruction||54000).toLocaleString()}+`, sub: "Active pipeline",  color: T.blue    },
-                        { label: "Communities",        value: "7", sub: "Master communities",                                              color: T.purple  },
-                        { label: "Market Rank",        value: "#1", sub: "Private Developer UAE",                                         color: "#C8A951" },
-                      ].map(k => (
-                        <div key={k.label} style={{ padding: "10px 12px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}`, textAlign: "center" }}>
-                          <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>{k.label}</div>
-                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: k.color }}>{k.value}</div>
-                          <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>{k.sub}</div>
+                  {isT1Live && (
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:10 }}>
+                      {devKpis.map(k => (
+                        <div key={k.label} style={{ padding:"10px 12px", borderRadius:10, background:T.surfaceAlt, border:`1px solid ${T.border}`, textAlign:"center" }}>
+                          <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, marginBottom:3 }}>{k.label}</div>
+                          <div style={{ fontFamily:"'Fraunces',serif", fontSize:16, fontWeight:800, color:k.color }}>{k.value}</div>
+                          <div style={{ fontSize:9, color:T.textMuted, marginTop:2 }}>{k.sub}</div>
                         </div>
                       ))}
                     </div>
@@ -3131,26 +3158,28 @@ export default function EmaarDashboardV2() {
             {(() => {
               const fy = selectedDeveloper === "damac"
                 ? damacFinancialHistory[damacFinancialHistory.length - 1]
-                : emaarFinancials[emaarFinancials.length - 1]; // last year in data.js
+                : selectedDeveloper === "sobha"
+                ? sobhaFinancialHistory[sobhaFinancialHistory.length - 1]
+                : emaarFinancials[emaarFinancials.length - 1];
               const E = selectedDeveloper === "damac"
                 ? { ...damacLive, ...(damacLiveFS || {}) }
+                : selectedDeveloper === "sobha"
+                ? { ...sobhaLive, ...(sobhaLiveFS || {}) }
                 : (emaarLive || {});
               const M = marketGlobal || {};
-              // Financials — Firestore first, data.js fallback
               const propertySales  = E.propertySales  != null ? E.propertySales  : fy.propertySales;
               const revenue        = E.revenue        != null ? E.revenue        : fy.revenue;
               const netProfit      = E.netProfit      != null ? E.netProfit      : fy.netProfit;
               const ebitda         = E.ebitda         != null ? E.ebitda         : fy.ebitda;
-              const backlog        = selectedDeveloper === "damac" ? null : (E.backlog != null ? E.backlog : fy.backlog);
-              const recurringRev   = selectedDeveloper === "damac" ? null : (E.recurringRev != null ? E.recurringRev : (fy.recurringRev || 10.5));
-              const landBank       = selectedDeveloper === "damac" ? null : (E.landBank != null ? E.landBank : (fy.landBank || 618));
-              const creditRating   = selectedDeveloper === "damac" ? "Private" : (E.creditRatingSP || "BBB+");
-              const moodysRating   = selectedDeveloper === "damac" ? "N/A" : (E.creditRatingMoodys || "Baa1");
-              const reportLabel    = selectedDeveloper === "damac" ? "FY2025 Sales Results" : (E.latestReportLabel || "Annual Report FY2025");
-              // S16: risks, segments, radarData — Firestore first, data.js fallback
-              const liveRisks    = selectedDeveloper === "damac" ? damacRisks    : (E.emaarRisks    || emaarRisks);
-              const liveSegments = selectedDeveloper === "damac" ? damacSegments : (E.emaarSegments || emaarSegments);
-              const liveRadar    = selectedDeveloper === "damac" ? damacRadar    : (E.radarData     || radarData);
+              const backlog        = ["damac","sobha"].includes(selectedDeveloper) ? null : (E.backlog != null ? E.backlog : fy.backlog);
+              const recurringRev   = ["damac","sobha"].includes(selectedDeveloper) ? null : (E.recurringRev != null ? E.recurringRev : (fy.recurringRev || 10.5));
+              const landBank       = ["damac","sobha"].includes(selectedDeveloper) ? null : (E.landBank != null ? E.landBank : (fy.landBank || 618));
+              const creditRating   = ["damac","sobha"].includes(selectedDeveloper) ? "Private" : (E.creditRatingSP || "BBB+");
+              const moodysRating   = ["damac","sobha"].includes(selectedDeveloper) ? "N/A" : (E.creditRatingMoodys || "Baa1");
+              const reportLabel    = selectedDeveloper === "damac" ? "FY2025 Sales Results" : selectedDeveloper === "sobha" ? "FY2025 Sales Results" : (E.latestReportLabel || "Annual Report FY2025");
+              const liveRisks    = selectedDeveloper === "damac" ? damacRisks : selectedDeveloper === "sobha" ? sobhaRisks : (E.emaarRisks || emaarRisks);
+              const liveSegments = selectedDeveloper === "damac" ? damacSegments : selectedDeveloper === "sobha" ? sobhaSegments : (E.emaarSegments || emaarSegments);
+              const liveRadar    = selectedDeveloper === "damac" ? damacRadar : selectedDeveloper === "sobha" ? sobhaRadar : (E.radarData || radarData);
               // Dubai market — Firestore first, fallback constants
               const mktValue       = M.totalMarketValue  || "AED 682.5B";
               const mktTxns        = M.totalTransactions || "214,912";
@@ -3440,7 +3469,7 @@ export default function EmaarDashboardV2() {
             </div>
               ); })()}
 
-                        <Section title="Key Performance" sub={selectedDeveloper === "damac" ? `FY2025 — Record AED 36B Sales · #1 Private Developer UAE · Source: DAMAC Official` : `${mktPeriod} — All-Time Records Across Every Metric · Source: Emaar Annual Report`}>
+                        <Section title="Key Performance" sub={selectedDeveloper === "damac" ? `FY2025 — Record AED 36B Sales · #1 Private Developer UAE · Source: DAMAC Official` : selectedDeveloper === "sobha" ? `FY2025 — AED 30B Sales · +30% YoY · #3 Dubai Developer · Source: Sobha Official` : `${mktPeriod} — All-Time Records Across Every Metric · Source: Emaar Annual Report`}>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 {emaarStockPrice && (
                   <div style={{ background: T.surface, border: `1px solid ${emaarStockPrice.up ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`, borderRadius: 14, padding: "14px 16px", cursor: "default", position: "relative", overflow: "hidden" }}
@@ -3514,7 +3543,7 @@ export default function EmaarDashboardV2() {
 
             <Section title="Company Strength" sub="Analyst consensus: STRONG BUY (12 of 12 analysts) · Source: Investing.com">
               <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <DataBadge source={selectedDeveloper === "damac" ? "DAMAC Official Press Release Jan 2026" : `Emaar Annual Report ${marketGlobal?.period || "FY2025"}`} date={selectedDeveloper === "damac" ? "Jan 2026" : (emaarLive?.updatedAtUAE || "Feb 2026")} type={selectedDeveloper === "damac" ? "verified" : "emaar"} />
+                <DataBadge source={selectedDeveloper === "damac" ? "DAMAC Official Press Release Jan 2026" : selectedDeveloper === "sobha" ? "Sobha Realty Official Press Release Jan 2026" : `Emaar Annual Report ${marketGlobal?.period || "FY2025"}`} date={selectedDeveloper === "damac" ? "Jan 2026" : selectedDeveloper === "sobha" ? "Jan 2026" : (emaarLive?.updatedAtUAE || "Feb 2026")} type={["damac","sobha"].includes(selectedDeveloper) ? "verified" : "emaar"} />
                 <DataBadge source="S&P / Fitch Ratings 2025" date="2025" type="manual" />
               </div>
               <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
