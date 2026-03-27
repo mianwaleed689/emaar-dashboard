@@ -8108,24 +8108,31 @@ export default function EmaarDashboardV2() {
         const ci = { ...(communityIntel[selectedProject_.community] || {}), ...(liveCommunityIntel[selectedProject_.community] || {}) };
         const ciExists = !!(ci.famousFor || ci.tagline);
         return (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setSelectedProject(null)}>
-          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 820, maxHeight: "92vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-            {/* Close */}
-            <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-            
-            {/* Image */}
+        <div style={{ position: "fixed", inset: 0, background: T.bg, zIndex: 2000, overflowY: "auto" }} onClick={() => setSelectedProject(null)}>
+          <div style={{ background: T.bg, width: "100%", maxWidth: 1100, margin: "0 auto", minHeight: "100vh", padding: "0 0 60px 0", position: "relative" }} onClick={e => e.stopPropagation()}>
+            {/* ── TOP NAV BAR ── */}
+            <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(4,9,15,0.95)", backdropFilter: "blur(12px)", borderBottom: `1px solid ${T.border}`, padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", color: T.textSecondary, cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "'Outfit', sans-serif", padding: "6px 0" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+                Back to Projects
+              </button>
+              <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 500 }}>{selectedProject_.community} · {selectedProject_.type}</div>
+              <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            </div>
+
+            {/* Image Hero */}
             {selectedProject_.imageUrl && (
-              <div style={{ width: "100%", height: 200, overflow: "hidden", borderRadius: "16px 16px 0 0" }}>
+              <div style={{ width: "100%", height: 320, overflow: "hidden" }}>
                 <img src={selectedProject_.imageUrl} alt={selectedProject_.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.parentElement.style.display = "none"; }} />
               </div>
             )}
 
-            <div style={{ padding: 24 }}>
+            <div style={{ padding: "32px 40px" }}>
               {/* Header */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                    <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h2>
+                    <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 32, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h2>
                     {selectedProject_.emaarUrl && <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(212,168,67,0.08)", whiteSpace: "nowrap" }} title={`Official listing on ${getLinkDomain(selectedProject_.emaarUrl)}`}>SOURCE ↗</a>}
                     <span style={{ fontSize: 10, color: T.teal, padding: "3px 8px", border: "1px solid rgba(0,191,165,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(0,191,165,0.08)", whiteSpace: "nowrap" }}>FULL DETAIL ↓ SCROLL</span>
                   </div>
