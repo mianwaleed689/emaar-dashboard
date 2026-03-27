@@ -6,9 +6,15 @@
 
 export const binghattiIdentity = {
   id: "binghatti", name: "Binghatti", legalName: "Binghatti Holding Ltd",
-  founded: 2012, chairman: "Muhammad BinGhatti",
+  founded: 2008,  // Founded 2008 by Dr. Hussain BinGhatti — NOT 2012
+  founder: "Dr. Hussain BinGhatti",
+  chairman: "Muhammad BinGhatti",  // Chairman and brand face
+  ceo: "Katralnada BinGhatti",     // CEO & MD per FY2025 financial results
   hq: "Business Bay, Dubai, UAE",
-  type: "Public (ADX listed)", listed: true, exchange: "ADX",
+  type: "Private",   // PRIVATE company — NOT listed on ADX or any exchange
+  listed: false,     // Company is NOT listed — only sukuk/bonds are listed
+  exchange: null,    // No equity exchange listing
+  sukukListed: "Nasdaq Dubai + London Stock Exchange (bonds only — not equity)",
   creditRating: "BB- (Fitch) · Ba3 (Moody's)",
   tier: "T1", segment: "Affordable → Ultra-Luxury",
   color: "#3B82F6", website: "https://www.binghatti.com",
@@ -28,24 +34,24 @@ export const binghattiFinancialHistory = [
 export const binghattiLive = {
   propertySales:    26.0,   // AED Billion FY2025 (DLD rank #3 by value)
   propertySalesUSD: 7.1,
-  revenue:          12.43,  // AED Billion FY2025 AUDITED
-  netProfit:        3.58,   // AED Billion +96% YoY
-  ebitda:           5.2,
-  grossProfit:      5.0,    // +89% YoY
-  grossMargin:      40,     // %
+  revenue:          12.43,  // AED Billion FY2025 AUDITED (+96% YoY)
+  netProfit:        3.58,   // AED Billion +96% YoY AUDITED
+  ebitda:           4.40,   // AED Billion FY2025 AUDITED (+84% YoY) — NOT 5.2
+  grossProfit:      5.43,   // AED Billion FY2025 AUDITED (+89% YoY) — NOT 5.0
+  grossMargin:      44,     // % FY2025
   netMargin:        29,     // %
   unitsDelivered:   12500,  // since inception
   unitsSold2025:    17000,  // Dubai's #1 by units
   underConstruction:38000,
   revenueBacklog:   14000,  // AED million at Q3 2025
   portfolioGDV:     100000, // AED million — "nearly AED 100B"
-  totalAssets:      22000,  // AED million
-  cash:             9000,   // AED million year-end 2025
-  projects2025:     80,     // "over 80 projects"
+  totalAssets:      24370,  // AED million FY2025 AUDITED — NOT 22000 (that was FY2024)
+  cash:             8840,   // AED million FY2025 AUDITED — NOT 9000
+  projects2025:     90,     // "over 90 projects" per FY2025 press release — NOT 80
   rank:             "#3 Dubai by Sales Value · #1 by Units Sold",
   latestReportLabel:"FY2025 Annual Results",
   latestReportDate: "February 2026",
-  source:           "Binghatti Official · Gulf News · Arabian Business · Zawya",
+  source:           "Binghatti Official FY2025 Audited Results · Gulf News · Arabian Business · Zawya",
   updatedAt:        "2026-03-27",
 };
 

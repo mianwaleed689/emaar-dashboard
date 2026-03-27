@@ -319,16 +319,18 @@ export const dubaiLandmarks = [
 
 /* ─── TOP 10 DEVELOPERS (from Excel PBI_Developers) ─── */
 export const topDevelopers = [
-  { rank:1, name:"Emaar Properties", sales:65.8, salesUSD:17.9, units:13149, delivered:7318, underConst:51032, segment:"Full Spectrum", confidence:"VERIFIED", share:9.64, color:"#D4A843" },
-  { rank:2, name:"DAMAC Properties", sales:35.9, salesUSD:9.8, units:15393, delivered:2113, underConst:46554, segment:"Mid-Premium → Ultra-Lux", confidence:"VERIFIED", share:5.26, color:"#00BFA5" },
-  { rank:3, name:"Binghatti", sales:26.0, salesUSD:7.1, units:17061, delivered:4093, underConst:38000, segment:"Affordable → Mid-Premium", confidence:"VERIFIED", share:3.81, color:"#3B82F6" },
-  { rank:4, name:"Nakheel", sales:24.6, salesUSD:6.7, units:4160, delivered:1522, underConst:15000, segment:"Waterfront", confidence:"VERIFIED", share:3.60, color:"#10B981" },
-  { rank:5, name:"Sobha Realty", sales:22.4, salesUSD:6.1, units:9698, delivered:2260, underConst:26933, segment:"Premium → Ultra-Lux", confidence:"VERIFIED", share:3.28, color:"#8B5CF6" },
-  { rank:6, name:"Meraas", sales:20.9, salesUSD:5.7, units:2385, delivered:1913, underConst:12000, segment:"Premium Lifestyle", confidence:"VERIFIED", share:3.06, color:"#F59E0B" },
-  { rank:7, name:"Omniyat", sales:11.0, salesUSD:3.0, units:1656, delivered:800, underConst:4500, segment:"Ultra-Luxury", confidence:"VERIFIED", share:1.61, color:"#FF7043" },
-  { rank:8, name:"Aldar", sales:9.9, salesUSD:2.7, units:1732, delivered:1200, underConst:18000, segment:"Abu Dhabi + Dubai", confidence:"VERIFIED", share:1.45, color:"#42A5F5" },
-  { rank:9, name:"H&H Development", sales:8.1, salesUSD:2.2, units:1200, delivered:600, underConst:8000, segment:"Mid-Premium", confidence:"VERIFIED", share:1.19, color:"#AB47BC" },
-  { rank:10, name:"Danube Properties", sales:7.0, salesUSD:1.9, units:4089, delivered:1757, underConst:22000, segment:"Affordable", confidence:"VERIFIED", share:1.03, color:"#7E95AD" },
+  // NOTE: sales = FY2025 Group Total Sales (AED Billion). DLD-registered Dubai-only transactions
+  // are a different metric and will show lower numbers in DLD data tools.
+  { rank:1, name:"Emaar Properties",  sales:80.4, salesUSD:21.9, units:13149, delivered:123500, underConst:51032, segment:"Full Spectrum",            confidence:"VERIFIED", share:11.77, color:"#D4A843", note:"AED 80.4B = Group total incl. international. Dubai DLD registrations: AED 65.8B" },
+  { rank:2, name:"Aldar Properties",  sales:40.6, salesUSD:11.1, units:1732,  delivered:1200,   underConst:18000, segment:"Abu Dhabi + Dubai",         confidence:"VERIFIED", share:5.95,  color:"#06B6D4", note:"AED 40.6B group · AED 35.5B UAE · ADX listed · #1 Abu Dhabi" },
+  { rank:3, name:"DAMAC Properties",  sales:36.0, salesUSD:9.8,  units:15393, delivered:2113,   underConst:54000, segment:"Mid-Premium → Ultra-Lux",   confidence:"VERIFIED", share:5.27,  color:"#00BFA5", note:"#1 Private Developer UAE & ME · Guinness World Record" },
+  { rank:4, name:"Sobha Realty",      sales:30.0, salesUSD:8.17, units:9698,  delivered:2260,   underConst:26933, segment:"Premium → Ultra-Lux",       confidence:"VERIFIED", share:4.39,  color:"#8B5CF6", note:"+30% YoY · AED 8B UAQ sales · 100% backward integration" },
+  { rank:5, name:"Binghatti",         sales:26.0, salesUSD:7.1,  units:17061, delivered:12500,  underConst:38000, segment:"Affordable → Ultra-Luxury", confidence:"VERIFIED", share:3.81,  color:"#3B82F6", note:"#1 Dubai by units sold (17,000) · Private company · Sukuk listed Nasdaq Dubai" },
+  { rank:6, name:"Nakheel",           sales:24.6, salesUSD:6.7,  units:4160,  delivered:1522,   underConst:15000, segment:"Waterfront",                 confidence:"VERIFIED", share:3.60,  color:"#10B981", note:"Dubai Holding · Palm Jebel Ali · Dubai Islands" },
+  { rank:7, name:"Meraas",            sales:20.9, salesUSD:5.7,  units:2385,  delivered:1913,   underConst:12000, segment:"Premium Lifestyle",           confidence:"VERIFIED", share:3.06,  color:"#F59E0B", note:"Dubai Holding · Bluewaters · Bvlgari · City Walk" },
+  { rank:8, name:"Danube Properties", sales:7.0,  salesUSD:1.9,  units:4089,  delivered:1757,   underConst:22000, segment:"Affordable",                 confidence:"VERIFIED", share:1.03,  color:"#7E95AD", note:"Highest ROI focus · AED 7B FY2025" },
+  { rank:9, name:"Omniyat",           sales:11.0, salesUSD:3.0,  units:1656,  delivered:800,    underConst:4500,  segment:"Ultra-Luxury",               confidence:"VERIFIED", share:1.61,  color:"#FF7043", note:"T2 developer · Ultra-luxury specialist" },
+  { rank:10, name:"H&H Development",  sales:8.1,  salesUSD:2.2,  units:1200,  delivered:600,    underConst:8000,  segment:"Mid-Premium",                confidence:"VERIFIED", share:1.19,  color:"#AB47BC", note:"Premium mid-market" },
 ];
 
 /* ─── RISK MATRIX (from Excel PBI_Risks) ─── */

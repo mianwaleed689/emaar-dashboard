@@ -27,17 +27,19 @@ export const aldarFinancialHistory = [
 
 export const aldarLive = {
   propertySales:    40.6,   // AED Billion FY2025 GROUP RECORD
-  propertySalesUAE: 35.5,   // AED Billion UAE only
+  propertySalesUAE: 35.5,   // AED Billion UAE only (+25% YoY)
   propertySalesUSD: 11.1,
   revenue:          33.8,   // AED Billion +47% YoY AUDITED
-  netProfit:        8.8,    // AED Billion +36% YoY AUDITED
+  netProfit:        8.8,    // AED Billion AFTER tax +36% YoY AUDITED
+  netProfitBeforeTax: 10.0, // AED Billion BEFORE tax (UAE DMTT 15% applied FY2025)
+  taxNote:          "UAE Domestic Minimum Top-up Tax (DMTT) 15% applied Jan 2025. Effective rate 11.35%. Pre-tax: AED 10.0B, Post-tax: AED 8.8B.",
   ebitda:           11.2,   // AED Billion +46% YoY
-  backlog:          71700,  // AED million RECORD
+  backlog:          71700,  // AED million RECORD — provides 2-3yr revenue visibility
   uaeBacklog:       61000,  // AED million
   aum:              49000,  // AED million — assets under management
   projectMgmtBacklog: 94800,// AED million
   internationalSales: 5100, // AED million
-  intlBuyerPct:     77,     // % of UAE sales
+  intlBuyerPct:     77,     // % of UAE sales from overseas + expat buyers
   rank:             "#1 Abu Dhabi · #2 UAE by Sales Value",
   ticker:           "ALDAR.AE",
   creditRating:     "Investment Grade — ADX listed",
