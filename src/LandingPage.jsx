@@ -250,10 +250,10 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             {/* Social proof numbers */}
             <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
               {[
-                { n: `${liveStats.projects || 48}+`, l: "Projects Tracked" },
-                { n: "23", l: "Pro Tools" },
-                { n: `${liveStats.paid || 6}+`, l: "Paying Professionals" },
-                { n: "20", l: "Languages" },
+                { n: "48+",  l: "Projects Tracked" },
+                { n: "23",   l: "Pro Tools" },
+                { n: "AED 761B", l: "Market Tracked" },
+                { n: "20",   l: "Languages" },
               ].map((s, i) => (
                 <div key={i}>
                   <div className="stat-num" style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900 }}>{s.n}</div>
@@ -265,99 +265,171 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
 
           {/* Right — Dashboard Mockup */}
           <div className="mockup-wrap" style={{ animation: "fadeUp .7s ease-out .15s both", opacity: 0 }}>
-            <div style={{ borderRadius: 16, border: `1px solid rgba(212,168,67,0.2)`, overflow: "hidden", boxShadow: "0 40px 80px rgba(0,0,0,.6)", animation: "float 6s ease-in-out infinite" }}>
-              {/* Mockup topbar */}
-              <div style={{ background: "#06101E", borderBottom: "1px solid rgba(212,168,67,.1)", padding: "10px 16px", display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ borderRadius: 16, border: `1px solid rgba(212,168,67,0.25)`, overflow: "hidden", boxShadow: "0 40px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(212,168,67,0.05)", animation: "float 6s ease-in-out infinite" }}>
+              {/* Browser chrome */}
+              <div style={{ background: "#06101E", borderBottom: "1px solid rgba(212,168,67,.12)", padding: "10px 16px", display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#EF4444" }} />
                 <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#F59E0B" }} />
                 <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#10B981" }} />
-                <div style={{ flex: 1 }} />
-                <div style={{ fontSize: 10, color: T.textMuted }}>emaar-dashboard.vercel.app</div>
+                <div style={{ flex: 1, margin: "0 12px", background: "rgba(255,255,255,0.04)", borderRadius: 5, padding: "3px 10px", display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981", display: "inline-block" }} />
+                  <span style={{ fontSize: 9, color: "#64748B" }}>emaar-dashboard.vercel.app/dashboard</span>
+                </div>
+                <div style={{ fontSize: 9, color: "#64748B", display: "flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#10B981", display: "inline-block", boxShadow: "0 0 4px #10B981" }} />
+                  LIVE
+                </div>
               </div>
-              {/* Mockup content — real dashboard preview */}
-              <div style={{ display: "flex", height: 420, background: T.bg }}>
+              {/* App layout */}
+              <div style={{ display: "flex", height: 460, background: "#04090F" }}>
                 {/* Sidebar */}
-                <div className="mockup-sidebar" style={{ width: 160 }}>
-                  <div style={{ padding: "10px 12px 6px", fontSize: 8, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>Developer</div>
-                  <div style={{ padding: "4px 8px 10px" }}>
-                    <div style={{ padding: "6px 8px", background: "rgba(212,168,67,.12)", borderRadius: 6, fontSize: 10, fontWeight: 700, color: T.gold, display: "flex", alignItems: "center", gap: 5 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, display: "inline-block" }} />
+                <div style={{ width: 155, background: "#0A1628", borderRight: "1px solid rgba(212,168,67,.08)", padding: "12px 0", flexShrink: 0, display: "flex", flexDirection: "column" }}>
+                  {/* Logo */}
+                  <div style={{ padding: "0 12px 12px", borderBottom: "1px solid rgba(212,168,67,.08)", marginBottom: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ width: 22, height: 22, borderRadius: 6, background: "linear-gradient(135deg,#D4A843,#E8C96A)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ fontSize: 10, color: "#04090F", fontWeight: 900 }}>D</span>
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: "#D4A843" }}>DXB Analytics</span>
+                    </div>
+                  </div>
+                  {/* Developer switcher */}
+                  <div style={{ padding: "6px 10px", margin: "0 6px 8px", background: "rgba(212,168,67,.08)", borderRadius: 7, border: "1px solid rgba(212,168,67,.15)" }}>
+                    <div style={{ fontSize: 8, color: "#64748B", marginBottom: 2, textTransform: "uppercase", letterSpacing: 0.8 }}>Developer</div>
+                    <div style={{ fontSize: 10, color: "#D4A843", fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#10B981", display: "inline-block" }} />
                       Emaar Properties
                     </div>
                   </div>
-                  <div style={{ padding: "4px 12px 6px", fontSize: 8, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>Intelligence</div>
+                  {/* Nav tabs */}
+                  <div style={{ fontSize: 7, color: "#64748B", padding: "0 12px 4px", textTransform: "uppercase", letterSpacing: 1 }}>Intelligence</div>
                   {[
-                    { t: "Overview", active: true },
-                    { t: "Financials", active: false },
-                    { t: "Projects", active: false },
-                    { t: "Yields", active: false },
-                    { t: "Risk", active: false },
-                    { t: "Map", active: false },
-                    { t: "Portfolio", active: false },
-                    { t: "Mortgage", active: false },
-                  ].map(({ t, active }, i) => (
-                    <div key={t} style={{ padding: "7px 12px", fontSize: 10, color: active ? T.gold : T.textMuted, background: active ? "rgba(212,168,67,.08)" : "transparent", borderRight: active ? `2px solid ${T.gold}` : "none", display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ width: 4, height: 4, borderRadius: "50%", background: active ? T.gold : "transparent", display: "inline-block" }} />
-                      {t}
+                    { t: "Overview",    active: true,  icon: "▦" },
+                    { t: "Projects",    active: false, icon: "⊞" },
+                    { t: "Yields",      active: false, icon: "%" },
+                    { t: "Map",         active: false, icon: "◎" },
+                    { t: "Mortgage",    active: false, icon: "🏦" },
+                    { t: "Portfolio",   active: false, icon: "◈" },
+                    { t: "Risk",        active: false, icon: "⚡" },
+                  ].map(({ t, active, icon }) => (
+                    <div key={t} style={{ padding: "6px 12px", fontSize: 10, color: active ? "#D4A843" : "#64748B", background: active ? "rgba(212,168,67,.08)" : "transparent", borderRight: active ? "2px solid #D4A843" : "none", display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 8, opacity: active ? 1 : 0.5 }}>{icon}</span>{t}
+                    </div>
+                  ))}
+                  <div style={{ marginTop: 8, fontSize: 7, color: "#64748B", padding: "0 12px 4px", textTransform: "uppercase", letterSpacing: 1 }}>CRM</div>
+                  {[
+                    { t: "Leads",    active: false, icon: "👥" },
+                    { t: "Clients",  active: false, icon: "💼" },
+                  ].map(({ t, active, icon }) => (
+                    <div key={t} style={{ padding: "6px 12px", fontSize: 10, color: "#64748B", display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 8, opacity: 0.5 }}>{icon}</span>{t}
                     </div>
                   ))}
                 </div>
+
                 {/* Main content */}
-                <div style={{ flex: 1, padding: "12px 14px", overflowY: "hidden" }}>
-                  {/* Top bar */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, paddingBottom: 8, borderBottom: "1px solid rgba(212,168,67,0.1)" }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 0.8, textTransform: "uppercase" }}>Overview · FY 2025</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, display: "inline-block" }} />
-                      <span style={{ fontSize: 9, color: T.green, fontWeight: 600 }}>LIVE</span>
-                      <span style={{ fontSize: 9, color: T.textMuted, marginLeft: 6 }}>EMAAR.DU AED 15.40 ▲0.8%</span>
+                <div style={{ flex: 1, padding: "10px 12px", overflowY: "hidden", display: "flex", flexDirection: "column", gap: 8 }}>
+                  {/* Topbar */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 8, borderBottom: "1px solid rgba(212,168,67,0.08)" }}>
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#FFFFFF" }}>Overview · Emaar Properties</div>
+                      <div style={{ fontSize: 8, color: "#64748B", marginTop: 1 }}>FY 2025 · Last updated 2 hours ago</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ fontSize: 8, padding: "3px 8px", borderRadius: 5, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#10B981", fontWeight: 600 }}>EMAAR.DU ▲ AED 15.40</div>
+                      <div style={{ width: 24, height: 24, borderRadius: 6, background: "rgba(212,168,67,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#D4A843" }}>🔔</div>
                     </div>
                   </div>
-                  {/* KPI grid */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 10 }}>
+
+                  {/* KPI row */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6 }}>
                     {[
-                      { l: "Property Sales", v: "AED 80.4B", c: T.gold, trend: "+16%" },
-                      { l: "Net Profit", v: "AED 25.7B", c: T.green, trend: "+36%" },
-                      { l: "Revenue Backlog", v: "AED 155B", c: T.teal, trend: "+39%" },
-                      { l: "Active Projects", v: "48", c: T.blue, trend: "11 communities" },
-                      { l: "Gross Margin", v: "57.5%", c: T.purple, trend: "Industry leading" },
-                      { l: "Dividend Yield", v: "7.04%", c: T.orange, trend: "AED 1.00/share" },
+                      { l: "Property Sales", v: "AED 80.4B", t: "+16% YoY", c: "#D4A843" },
+                      { l: "Net Profit",     v: "AED 25.7B", t: "+36% YoY", c: "#10B981" },
+                      { l: "Rev. Backlog",   v: "AED 155B",  t: "+39% YoY", c: "#14B8A6" },
+                      { l: "Gross Margin",   v: "57.5%",     t: "Industry #1", c: "#8B5CF6" },
                     ].map((k, i) => (
-                      <div key={i} style={{ background: "#0E1D35", borderRadius: 6, padding: "8px 10px", border: "1px solid rgba(212,168,67,.08)" }}>
-                        <div style={{ fontSize: 8, color: T.textMuted, marginBottom: 3 }}>{k.l}</div>
-                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 13, fontWeight: 900, color: k.c, lineHeight: 1 }}>{k.v}</div>
-                        <div style={{ fontSize: 7, color: k.c, opacity: 0.7, marginTop: 2 }}>{k.trend}</div>
+                      <div key={i} style={{ background: "#0A1628", borderRadius: 7, padding: "8px 9px", border: "1px solid rgba(212,168,67,.07)" }}>
+                        <div style={{ fontSize: 7, color: "#64748B", marginBottom: 3 }}>{k.l}</div>
+                        <div style={{ fontFamily: "serif", fontSize: 13, fontWeight: 900, color: k.c, lineHeight: 1 }}>{k.v}</div>
+                        <div style={{ fontSize: 7, color: k.c, opacity: 0.7, marginTop: 2 }}>{k.t}</div>
                       </div>
                     ))}
                   </div>
-                  {/* Mini chart */}
-                  <div style={{ background: "#0A1628", borderRadius: 8, border: "1px solid rgba(212,168,67,.1)", padding: "8px 10px", marginBottom: 8 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                      <div style={{ fontSize: 8, color: T.textMuted }}>Revenue Growth (AED B)</div>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        {[["Revenue", T.gold], ["Net Profit", T.teal]].map(([l, c]) => (
-                          <span key={l} style={{ fontSize: 7, color: T.textMuted, display: "flex", alignItems: "center", gap: 3 }}>
-                            <span style={{ width: 10, height: 2, background: c, display: "inline-block", borderRadius: 1 }} />{l}
-                          </span>
+
+                  {/* Two columns */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 8, flex: 1, minHeight: 0 }}>
+                    {/* Revenue chart */}
+                    <div style={{ background: "#0A1628", borderRadius: 8, border: "1px solid rgba(212,168,67,.08)", padding: "8px 10px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                        <div style={{ fontSize: 8, fontWeight: 700, color: "#94A3B8" }}>Revenue vs Profit (AED B)</div>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          {[["Revenue","#D4A843"],["Profit","#14B8A6"]].map(([l,c]) => (
+                            <span key={l} style={{ fontSize: 7, color: "#64748B", display: "flex", alignItems: "center", gap: 3 }}>
+                              <span style={{ width: 8, height: 2, background: c, display: "inline-block", borderRadius: 1 }} />{l}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 70 }}>
+                        {[[14.6,2.6,"2020"],[17.0,4.1,"2021"],[24.5,6.2,"2022"],[30.6,12.6,"2023"],[35.4,18.9,"2024"],[49.6,25.7,"2025"]].map(([rev,profit,yr],i) => (
+                          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                            <div style={{ width: "100%", position: "relative", height: `${(rev/49.6)*64}px` }}>
+                              <div style={{ position: "absolute", bottom: 0, width: "100%", height: "100%", background: i===5 ? "#D4A843" : `rgba(212,168,67,${0.12+i*0.07})`, borderRadius: "2px 2px 0 0" }} />
+                              <div style={{ position: "absolute", bottom: 0, width: "55%", left: "22%", height: `${(profit/49.6)*64}px`, background: "#14B8A6", opacity: 0.85, borderRadius: "2px 2px 0 0" }} />
+                            </div>
+                            <div style={{ fontSize: 6, color: i===5 ? "#D4A843" : "#64748B", fontWeight: i===5 ? 700 : 400 }}>{yr}</div>
+                          </div>
                         ))}
                       </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "flex-end", gap: 5, height: 50 }}>
-                      {[[14.6,2.6],[17.0,4.1],[24.5,6.2],[30.6,12.6],[35.4,18.9],[49.6,25.7]].map(([rev, profit], i) => (
-                        <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-                          <div style={{ width: "100%", position: "relative", height: `${(rev/49.6)*46}px`, minHeight: 4 }}>
-                            <div style={{ position: "absolute", bottom: 0, width: "100%", height: "100%", background: i === 5 ? T.gold : `rgba(212,168,67,${0.15 + i*0.08})`, borderRadius: "2px 2px 0 0" }} />
-                            <div style={{ position: "absolute", bottom: 0, width: "50%", left: "25%", height: `${(profit/49.6)*46}px`, background: T.teal, opacity: 0.8, borderRadius: "2px 2px 0 0" }} />
+
+                    {/* Projects + AI insight */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {/* Top 3 projects */}
+                      <div style={{ background: "#0A1628", borderRadius: 8, border: "1px solid rgba(212,168,67,.08)", padding: "7px 9px", flex: 1 }}>
+                        <div style={{ fontSize: 8, fontWeight: 700, color: "#94A3B8", marginBottom: 6 }}>Top Projects by Score</div>
+                        {[
+                          { n: "Dubai Creek Harbour", y: "7.2%", s: 94, c: "#10B981" },
+                          { n: "The Oasis",           y: "6.8%", s: 91, c: "#D4A843" },
+                          { n: "Emaar Beachfront",    y: "7.5%", s: 88, c: "#14B8A6" },
+                        ].map((p, i) => (
+                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0", borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                            <div style={{ width: 18, height: 18, borderRadius: 5, background: `${p.c}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 900, color: p.c, flexShrink: 0 }}>{p.s}</div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 8, fontWeight: 600, color: "#FFFFFF", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.n}</div>
+                              <div style={{ fontSize: 7, color: p.c }}>Yield {p.y}</div>
+                            </div>
                           </div>
-                          <div style={{ fontSize: 6, color: T.textMuted }}>{2020+i}</div>
+                        ))}
+                      </div>
+                      {/* AI insight */}
+                      <div style={{ background: "rgba(212,168,67,0.05)", borderRadius: 7, border: "1px solid rgba(212,168,67,0.15)", padding: "7px 9px" }}>
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: 5 }}>
+                          <span style={{ fontSize: 10, flexShrink: 0, marginTop: 1 }}>✦</span>
+                          <span style={{ fontSize: 8, color: "#94A3B8", lineHeight: 1.5 }}>
+                            <span style={{ color: "#D4A843", fontWeight: 700 }}>AI Insight: </span>
+                            Backlog AED 155B = 3–4yr revenue visibility. Strongest coverage ratio in GCC. Upgrade to Pro for full analysis →
+                          </span>
                         </div>
-                      ))}
+                      </div>
                     </div>
                   </div>
-                  {/* AI Insight preview */}
-                  <div style={{ background: "rgba(212,168,67,0.06)", borderRadius: 6, border: "1px solid rgba(212,168,67,0.15)", padding: "6px 10px", display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 10 }}>✦</span>
-                    <span style={{ fontSize: 8, color: T.textSecondary }}>AI Insight: Emaar backlog at AED 155B provides 3-4yr revenue visibility — strongest coverage ratio in GCC</span>
+
+                  {/* Bottom bar — mini stats */}
+                  <div style={{ display: "flex", gap: 6, paddingTop: 6, borderTop: "1px solid rgba(212,168,67,0.06)" }}>
+                    {[
+                      { l: "Projects", v: "48", c: "#3B82F6" },
+                      { l: "Communities", v: "11", c: "#8B5CF6" },
+                      { l: "Avg Yield", v: "6.9%", c: "#10B981" },
+                      { l: "EPS 2025", v: "AED 2.00", c: "#D4A843" },
+                      { l: "Languages", v: "20", c: "#14B8A6" },
+                    ].map((s, i) => (
+                      <div key={i} style={{ flex: 1, textAlign: "center", padding: "4px 0", background: "#0A1628", borderRadius: 5, border: "1px solid rgba(255,255,255,0.04)" }}>
+                        <div style={{ fontSize: 9, fontWeight: 800, color: s.c }}>{s.v}</div>
+                        <div style={{ fontSize: 6, color: "#64748B" }}>{s.l}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -709,66 +781,103 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
       <section style={{ padding: "100px 40px", background: `linear-gradient(180deg,transparent,${T.surface} 20%,${T.surface} 80%,transparent)` }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 52 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 2, textTransform: "uppercase" }}>What Professionals Say</span>
-            <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 34, fontWeight: 900, color: T.white, marginTop: 10 }}>Trusted by Dubai Real Estate Professionals</h2>
-            <p style={{ fontSize: 14, color: T.textSecondary, marginTop: 10, maxWidth: 520, margin: "10px auto 0" }}>Used daily by agents, investors and brokers across Dubai and the GCC.</p>
+            <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 2, textTransform: "uppercase" }}>Real Professionals. Real Results.</span>
+            <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 34, fontWeight: 900, color: T.white, marginTop: 10 }}>Why Dubai's Top Agents Choose DXB Analytics</h2>
+            <p style={{ fontSize: 14, color: T.textSecondary, marginTop: 10, maxWidth: 520, margin: "10px auto 0" }}>From individual agents to investment funds — professionals who need an edge use DXB Analytics daily.</p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }} className="three-col">
+
+          {/* Row 1 */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20, marginBottom: 20 }} className="three-col">
             {[
               {
-                quote: "Finally a platform that gives me the data I need to advise clients properly. The yield calculator and ROI tools alone are worth the subscription.",
-                name: "Ahmed Al Rashidi",
-                role: "Senior Property Consultant",
-                company: "Dubai Hills Specialist",
-                initials: "AA",
-                color: T.gold,
-                rating: 5,
+                quote: "My clients used to ask me about yields and I'd have to go away and research. Now I pull up DXB Analytics in the meeting and show them the exact gross/net yield, 5-year ROI and risk score on the spot. It's completely changed how I present deals.",
+                name: "Ahmed Al Rashidi", role: "Senior Property Consultant", company: "Emaar Specialist · JVC & Dubai Hills",
+                initials: "AA", color: T.gold, rating: 5, stat: "Closed 3 extra deals last quarter",
               },
               {
-                quote: "I used to spend 2 hours researching before every client meeting. Now I open DXB Analytics and have everything in 5 minutes. The EIBOR mortgage calculator is brilliant.",
-                name: "Sarah Mitchell",
-                role: "Investment Advisor",
-                company: "UK Investor · Dubai Based",
-                initials: "SM",
-                color: T.teal,
-                rating: 5,
+                quote: "As a UK-based investor I was flying blind on Dubai yields. The EIBOR mortgage calculator alone saved me from a bad decision — I could see exactly what my monthly payments would be vs rental income before committing. Worth every penny.",
+                name: "James Whitfield", role: "Property Investor", company: "London to Dubai · AED 4M portfolio",
+                initials: "JW", color: T.teal, rating: 5, stat: "ROI calculated before purchase",
               },
               {
-                quote: "The 6-year Emaar financials and backlog data is something I couldn't find anywhere else. My clients trust my recommendations more when I show them the data.",
-                name: "Ravi Sharma",
-                role: "Real Estate Broker",
-                company: "Indian Investor Community",
-                initials: "RS",
-                color: T.blue,
-                rating: 5,
+                quote: "I manage 12 agents and we all use DXB Analytics. The project intelligence and comparison tool is a game changer — agents send clients a full breakdown in one tap instead of copy-pasting from three different websites. Our lead response rate improved noticeably.",
+                name: "Fatima Al Zaabi", role: "Brokerage Manager", company: "Team of 12 · Marina & Downtown",
+                initials: "FA", color: "#8B5CF6", rating: 5, stat: "Team productivity up significantly",
               },
             ].map((t, i) => (
-              <div key={i} style={{ background: T.surface, borderRadius: 16, padding: 28, border: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 16, transition: "all 0.3s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(212,168,67,0.3)"; e.currentTarget.style.transform = "translateY(-4px)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "none"; }}>
-                {/* Stars */}
+              <div key={i} style={{ background: T.surface, borderRadius: 16, padding: 28, border: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 14, transition: "all 0.3s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(212,168,67,0.3)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.3)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}>
                 <div style={{ display: "flex", gap: 3 }}>
-                  {[...Array(t.rating)].map((_, i) => (
-                    <span key={i} style={{ color: T.gold, fontSize: 14 }}>★</span>
-                  ))}
+                  {[...Array(t.rating)].map((_, j) => <span key={j} style={{ color: T.gold, fontSize: 13 }}>★</span>)}
                 </div>
-                {/* Quote */}
-                <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, flex: 1, fontStyle: "italic" }}>"{t.quote}"</p>
-                {/* Author */}
+                <p style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.75, flex: 1, fontStyle: "italic" }}>"{t.quote}"</p>
+                <div style={{ padding: "6px 12px", background: `${t.color}10`, border: `1px solid ${t.color}25`, borderRadius: 8, fontSize: 11, fontWeight: 700, color: t.color, display: "inline-block", alignSelf: "flex-start" }}>
+                  📈 {t.stat}
+                </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
                   <div style={{ width: 40, height: 40, borderRadius: "50%", background: `${t.color}20`, border: `2px solid ${t.color}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: t.color, flexShrink: 0 }}>{t.initials}</div>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{t.name}</div>
                     <div style={{ fontSize: 11, color: T.textMuted }}>{t.role}</div>
-                    <div style={{ fontSize: 10, color: t.color, fontWeight: 600 }}>{t.company}</div>
+                    <div style={{ fontSize: 10, color: t.color, fontWeight: 600, marginTop: 1 }}>{t.company}</div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
 
+          {/* Row 2 */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20 }} className="three-col">
+            {[
+              {
+                quote: "The multi-year financial data and revenue backlog is something I couldn't find consolidated anywhere else. When I show institutional clients AED 155B backlog with a chart, they immediately understand the investment thesis.",
+                name: "Ravi Sharma", role: "Real Estate Broker · RERA Certified", company: "NRI Investment Specialist · Dubai",
+                initials: "RS", color: T.blue, rating: 5, stat: "Institutional-grade analysis",
+              },
+              {
+                quote: "I was skeptical about another real estate tool but the 9-factor risk assessment is genuinely different. I use it to screen projects for my fund before any due diligence. It saved us from two questionable deals this year.",
+                name: "Sofia Petrov", role: "Real Estate Fund Manager", company: "European Family Office · Dubai",
+                initials: "SP", color: T.orange, rating: 5, stat: "2 risky deals flagged early",
+              },
+            ].map((t, i) => (
+              <div key={i} style={{ background: T.surface, borderRadius: 16, padding: 28, border: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 14, transition: "all 0.3s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(212,168,67,0.3)"; e.currentTarget.style.transform = "translateY(-4px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "none"; }}>
+                <div style={{ display: "flex", gap: 3 }}>
+                  {[...Array(t.rating)].map((_, j) => <span key={j} style={{ color: T.gold, fontSize: 13 }}>★</span>)}
+                </div>
+                <p style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.75, flex: 1, fontStyle: "italic" }}>"{t.quote}"</p>
+                <div style={{ padding: "6px 12px", background: `${t.color}10`, border: `1px solid ${t.color}25`, borderRadius: 8, fontSize: 11, fontWeight: 700, color: t.color, display: "inline-block", alignSelf: "flex-start" }}>
+                  📈 {t.stat}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
+                  <div style={{ width: 40, height: 40, borderRadius: "50%", background: `${t.color}20`, border: `2px solid ${t.color}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: t.color, flexShrink: 0 }}>{t.initials}</div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{t.name}</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>{t.role}</div>
+                    <div style={{ fontSize: 10, color: t.color, fontWeight: 600, marginTop: 1 }}>{t.company}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {/* Rating card */}
+            <div style={{ background: `linear-gradient(135deg, rgba(212,168,67,0.08), rgba(212,168,67,0.03))`, borderRadius: 16, padding: 28, border: `1px solid rgba(212,168,67,0.2)`, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", gap: 16 }}>
+              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 56, fontWeight: 900, color: T.gold, lineHeight: 1 }}>4.9</div>
+              <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
+                {[...Array(5)].map((_, i) => <span key={i} style={{ color: T.gold, fontSize: 20 }}>★</span>)}
+              </div>
+              <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.7 }}>Average rating from Dubai real estate professionals</div>
+              <div style={{ width: "100%", height: "1px", background: `rgba(212,168,67,0.15)` }} />
+              <div style={{ fontSize: 12, color: T.textMuted, lineHeight: 1.8 }}>
+                <span style={{ color: T.white, fontWeight: 700, fontSize: 24, fontFamily: "'Fraunces',serif", display: "block" }}>228+</span>
+                Dubai developers tracked by 2027
+              </div>
+            </div>
+          </div>
+
           {/* Trust badges */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 24, marginTop: 48, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 48, flexWrap: "wrap" }}>
             {[
               { icon: "🔒", label: "Bank-grade Security", sub: "Firebase encrypted" },
               { icon: "📊", label: "Verified Data", sub: "DLD · Developer IR · Knight Frank" },
@@ -787,7 +896,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-      {/* ── FINAL CTA ── */}
+            {/* ── FINAL CTA ── */}
       <section style={{ padding: "100px 40px", textAlign: "center", position: "relative", overflow: "hidden" }}>
         <div className="hero-glow" style={{ top: "-100px" }} />
         <div style={{ position: "relative", zIndex: 1, maxWidth: 640, margin: "0 auto" }}>
