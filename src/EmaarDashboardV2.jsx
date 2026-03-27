@@ -3804,6 +3804,7 @@ export default function EmaarDashboardV2() {
                     <button type='button' key={f} onClick={() => setProjectFilter(f)} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid '+(projectFilter===f ? T.gold : T.border), background: projectFilter===f ? T.goldGlow : 'transparent', color: projectFilter===f ? T.gold : T.textSecondary, fontSize: 11, fontWeight: projectFilter===f ? 700 : 400, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>{f}</button>
                   ));
                 })()}
+                ))}
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Tier</span>
