@@ -1123,7 +1123,47 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, selectedDev
     "Grand Polo Club":      { coords: [24.8500, 55.4200], ppsf: 1800, volume: 420,   yoy: 25, radius: 900  },
   };
 
-  const getPPSFColor = (ppsf) => {
+  // ── Community polygon boundaries (approximate GeoJSON-style coords) ──────
+  const COMMUNITY_POLYGONS = {
+    "Dubai Hills Estate": [
+      [25.1020,55.2450],[25.1020,55.2720],[25.1200,55.2720],[25.1200,55.2450]
+    ],
+    "Dubai Creek Harbour": [
+      [25.1800,55.3250],[25.1800,55.3480],[25.1980,55.3480],[25.1980,55.3250]
+    ],
+    "Emaar Beachfront": [
+      [25.0720,55.1280],[25.0720,55.1420],[25.0860,55.1420],[25.0860,55.1280]
+    ],
+    "Downtown Dubai": [
+      [25.1880,55.2650],[25.1880,55.2840],[25.2060,55.2840],[25.2060,55.2650]
+    ],
+    "Business Bay": [
+      [25.1780,55.2560],[25.1780,55.2760],[25.1960,55.2760],[25.1960,55.2560]
+    ],
+    "Emaar South": [
+      [24.8850,55.1520],[24.8850,55.1780],[24.9120,55.1780],[24.9120,55.1520]
+    ],
+    "The Valley": [
+      [24.9880,55.4850],[24.9880,55.5150],[25.0120,55.5150],[25.0120,55.4850]
+    ],
+    "The Oasis": [
+      [25.0100,55.1700],[25.0100,55.1950],[25.0350,55.1950],[25.0350,55.1700]
+    ],
+    "Rashid Yachts & Marina": [
+      [25.2120,55.3000],[25.2120,55.3220],[25.2300,55.3220],[25.2300,55.3000]
+    ],
+    "Grand Polo Club": [
+      [24.8380,55.4080],[24.8380,55.4340],[24.8640,55.4340],[24.8640,55.4080]
+    ],
+    "Arabian Ranches 3": [
+      [25.0440,55.2600],[25.0440,55.2800],[25.0640,55.2800],[25.0640,55.2600]
+    ],
+    "Mudon": [
+      [25.0120,55.2400],[25.0120,55.2600],[25.0320,55.2600],[25.0320,55.2400]
+    ],
+  };
+
+  const polygonLayersRef = React.useRef([]);
     if (ppsf >= 3500) return "#F59E0B"; // Ultra-premium
     if (ppsf >= 2500) return "#D4A843"; // Luxury
     if (ppsf >= 1800) return "#14B8A6"; // Premium
@@ -1260,7 +1300,36 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, selectedDev
     heatLayersRef.current.forEach(c => map.removeLayer(c));
     heatLayersRef.current = [];
 
-    // Add PPSF or Volume heat circles
+    // Clear old polygons
+    polygonLayersRef.current.forEach(p => map.removeLayer(p));
+    polygonLayersRef.current = [];
+
+    // Draw community polygons — always visible as boundaries
+    Object.entries(COMMUNITY_POLYGONS).forEach(([name, coords]) => {
+      const data = communityData[name];
+      if (!data) return;
+      const ppsfColor = getPPSFColor(data.ppsf);
+      const poly = L.polygon(coords, {
+        color:       ppsfColor,
+        fillColor:   ppsfColor,
+        fillOpacity: mapLayer === "ppsf" ? 0.18 : 0.06,
+        weight:      mapLayer === "ppsf" ? 2 : 1,
+        opacity:     mapLayer === "ppsf" ? 0.8 : 0.35,
+        dashArray:   mapLayer === "ppsf" ? null : "4 4",
+      }).addTo(map);
+      poly.bindTooltip(
+        `<div style="font-family:'Outfit',sans-serif;background:#0D1821;color:#fff;border:1px solid ${ppsfColor};border-radius:8px;padding:8px 12px;font-size:12px;">
+          <strong style="color:${ppsfColor}">${name}</strong><br/>
+          PPSF: <strong>AED ${data.ppsf.toLocaleString()}/sqft</strong><br/>
+          Volume: <strong>${data.volume.toLocaleString()} deals</strong><br/>
+          <span style="color:#94A3B8;font-size:10px">YoY: +${data.yoy}%</span>
+        </div>`,
+        { permanent: false, sticky: true, className: "dxb-tooltip" }
+      );
+      polygonLayersRef.current.push(poly);
+    });
+
+    // Add PPSF or Volume heat circles on top of polygons
     if (mapLayer === "ppsf" || mapLayer === "volume") {
       Object.entries(communityData).forEach(([name, data]) => {
         const color = mapLayer === "ppsf" ? getPPSFColor(data.ppsf) : getVolumeColor(data.volume);
@@ -1282,7 +1351,31 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, selectedDev
         heatLayersRef.current.push(circle);
       });
     }
-  }, [mapLoaded, filteredProjects.length, filterComm, filterYield, mapLayer]);
+    // Add yield heatmap circles when yield layer selected
+    if (mapLayer === "yield") {
+      Object.entries(communityData).forEach(([name, data]) => {
+        const yieldPct = liveCommunityROI?.[name]?.grossYield || data.yoy * 0.15 + 5.5;
+        const yColor = yieldPct >= 8 ? "#10B981" : yieldPct >= 6.5 ? "#D4A843" : yieldPct >= 5 ? "#3B82F6" : "#94A3B8";
+        const circle = L.circle(data.coords, {
+          radius:      data.radius * 0.6,
+          color:       yColor,
+          fillColor:   yColor,
+          fillOpacity: 0.12,
+          weight:      1.5,
+          opacity:     0.6,
+        }).addTo(map);
+        circle.bindTooltip(
+          `<div style="font-family:'Outfit',sans-serif;background:#0D1821;color:#fff;border:1px solid ${yColor};border-radius:8px;padding:8px 12px;font-size:12px;">
+            <strong style="color:${yColor}">${name}</strong><br/>
+            Gross Yield: <strong>${yieldPct.toFixed(1)}%</strong><br/>
+            <span style="color:#94A3B8;font-size:10px">PPSF: AED ${data.ppsf.toLocaleString()}/sqft</span>
+          </div>`,
+          { permanent: false, sticky: true, className: "dxb-tooltip" }
+        );
+        heatLayersRef.current.push(circle);
+      });
+    }
+  }, [mapLoaded, filteredProjects.length, filterComm, filterYield, filterStatus, filterTier, mapLayer]);
 
   // Cleanup on unmount
   React.useEffect(() => {
@@ -1291,6 +1384,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, selectedDev
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
+      polygonLayersRef.current = [];
     };
   }, []);
 
@@ -1439,7 +1533,37 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, selectedDev
       </div>
 
       {/* Popup CSS */}
-      <style>{".dxb-popup .leaflet-popup-content-wrapper { background: #0D1821; border: 1px solid rgba(212,168,67,0.3); border-radius: 12px; padding: 0; box-shadow: 0 20px 60px rgba(0,0,0,0.6); } .dxb-popup .leaflet-popup-content { margin: 0; } .dxb-popup .leaflet-popup-tip { background: #0D1821; } .leaflet-container { background: #0D1821; }"}</style>
+      <style>{"  .dxb-popup .leaflet-popup-content-wrapper { background: #0D1821; border: 1px solid rgba(212,168,67,0.3); border-radius: 12px; padding: 0; box-shadow: 0 20px 60px rgba(0,0,0,0.6); } .dxb-popup .leaflet-popup-content { margin: 0; } .dxb-popup .leaflet-popup-tip { background: #0D1821; } .leaflet-container { background: #0D1821; } .dxb-tooltip { background: transparent !important; border: none !important; box-shadow: none !important; }"}</style>
+
+      {/* Community PPSF Summary Grid */}
+      <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>
+          Community Intelligence — PPSF · Volume · YoY Growth
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
+          {Object.entries(communityData).map(([name, data]) => {
+            const liveROI = liveCommunityROI?.[name] || liveCommunityROI?.[Object.keys(liveCommunityROI || {}).find(k => k.toLowerCase().includes(name.toLowerCase().split(" ")[0])) || ""] || {};
+            const livePpsf = liveROI.avgPpsf || data.ppsf;
+            const color = getPPSFColor(livePpsf);
+            return (
+              <div key={name} style={{ background: T.card, borderRadius: 10, padding: "10px 12px", border: `1px solid ${T.border}`, cursor: "pointer" }}
+                onClick={() => setFilterComm(filterComm === name ? "All" : name)}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: filterComm === name ? T.gold : T.white, marginBottom: 6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color }}>{livePpsf >= 1000 ? `AED ${livePpsf.toLocaleString()}` : `AED ${livePpsf}`}<span style={{ fontSize: 9, color: T.textMuted }}>/sqft</span></div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>{data.volume.toLocaleString()} deals/yr</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#10B981" }}>+{data.yoy}%</div>
+                    <div style={{ fontSize: 9, color: T.textMuted }}>YoY</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
