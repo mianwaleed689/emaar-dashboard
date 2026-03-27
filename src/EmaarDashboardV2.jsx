@@ -1066,10 +1066,12 @@ function useFocusTrap(active) {
 }
 
 /* ─── COMMUNITY MAP TAB COMPONENT ─── */
-function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
+function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, selectedDeveloper }) {
   const [selectedProject, setSelectedProjectMap] = React.useState(null);
   const [filterComm, setFilterComm] = React.useState("All");
   const [filterYield, setFilterYield] = React.useState("All");
+  const [filterStatus, setFilterStatus] = React.useState("All"); // S8
+  const [filterTier, setFilterTier] = React.useState("All");     // S8
   const [mapLoaded, setMapLoaded] = React.useState(false);
   const [mapLayer, setMapLayer] = React.useState("yield"); // yield | ppsf | volume
   const heatLayersRef = React.useRef([]);
@@ -1176,10 +1178,13 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
 
   const communities = ["All", ...Array.from(new Set(activeProjects.map(p => p.community)))];
   const filteredProjects = activeProjects.filter(p => {
-    const commOk = filterComm === "All" || p.community === filterComm;
-    const y = getYield(p);
-    const yieldOk = filterYield === "All" || (filterYield === "8%+" && y >= 8) || (filterYield === "6-8%" && y >= 6 && y < 8) || (filterYield === "<6%" && y < 6);
-    return commOk && yieldOk;
+    const commOk   = filterComm   === "All" || p.community === filterComm;
+    const y        = getYield(p);
+    const yieldOk  = filterYield  === "All" || (filterYield === "8%+" && y >= 8) || (filterYield === "6-8%" && y >= 6 && y < 8) || (filterYield === "<6%" && y < 6);
+    const statusOk = filterStatus === "All" || p.status === filterStatus;                          // S8
+    const tierOk   = filterTier   === "All" || (p.tier || "").includes(filterTier);               // S8
+    const devOk    = !selectedDeveloper || selectedDeveloper === "all" || selectedDeveloper === "emaar" || (p.developerId || "emaar") === selectedDeveloper; // S8
+    return commOk && yieldOk && statusOk && tierOk && devOk;
   });
 
   // Load Leaflet dynamically
@@ -1333,6 +1338,14 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
         <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>FILTER:</div>
         <select value={filterComm} onChange={e => setFilterComm(e.target.value)} style={{ padding: "6px 12px", background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 8, color: T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
           {communities.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        {/* S8 — Status filter */}
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ padding: "6px 12px", background: T.surfaceAlt, border: `1px solid ${filterStatus !== "All" ? T.teal : T.border}`, borderRadius: 8, color: filterStatus !== "All" ? T.teal : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: filterStatus !== "All" ? 700 : 400 }}>
+          {["All", "Under Construction", "Off-Plan"].map(s => <option key={s} value={s}>{s === "All" ? "All Status" : s}</option>)}
+        </select>
+        {/* S8 — Tier filter */}
+        <select value={filterTier} onChange={e => setFilterTier(e.target.value)} style={{ padding: "6px 12px", background: T.surfaceAlt, border: `1px solid ${filterTier !== "All" ? T.purple : T.border}`, borderRadius: 8, color: filterTier !== "All" ? T.purple : T.white, fontSize: 11, fontFamily: "'Outfit',sans-serif", cursor: "pointer", fontWeight: filterTier !== "All" ? 700 : 400 }}>
+          {["All", "Affordable", "Mid-Market", "Mid-Premium", "Premium", "Luxury", "Ultra-Luxury", "Luxury Branded", "Ultra-Lux Branded"].map(t => <option key={t} value={t}>{t === "All" ? "All Tiers" : t}</option>)}
         </select>
         <div style={{ display: "flex", gap: 6 }}>
           {["All", "8%+", "6-8%", "<6%"].map(f => (
@@ -1697,6 +1710,8 @@ export default function EmaarDashboardV2() {
   const [projectTier, setProjectTier] = useState("All");
   const [projectHandover, setProjectHandover] = useState("All");
   const [projectPriceMax, setProjectPriceMax] = useState(20);
+  const [projectType, setProjectType] = useState("All");
+  const [projectSort, setProjectSort] = useState("default");
   const [liveProjects, setLiveProjects] = useState({});
   const [extraProjects, setExtraProjects] = useState([]);
   const [liveYields, setLiveYields] = useState([]);
@@ -3262,8 +3277,8 @@ export default function EmaarDashboardV2() {
                   <input type='range' min={1} max={20} step={0.5} value={projectPriceMax} onChange={e => setProjectPriceMax(Number(e.target.value))} style={{ flex: 1, accentColor: T.gold, cursor: 'pointer' }} />
                   <span style={{ fontSize: 12, fontWeight: 700, color: T.gold, whiteSpace: 'nowrap', minWidth: 60 }}>{projectPriceMax >= 20 ? 'Any' : 'AED '+projectPriceMax+'M'}</span>
                 </div>
-                {(projectSearch || projectFilter !== 'All' || projectTier !== 'All' || projectHandover !== 'All' || projectPriceMax < 20) && (
-                  <button type='button' onClick={() => { setProjectSearch(''); setProjectFilter('All'); setProjectTier('All'); setProjectHandover('All'); setProjectPriceMax(20); }} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: T.red, fontSize: 12, cursor: 'pointer' }}>Clear Filters</button>
+                {(projectSearch || projectFilter !== 'All' || projectTier !== 'All' || projectHandover !== 'All' || projectPriceMax < 20 || projectType !== 'All' || projectSort !== 'default') && (
+                  <button type='button' onClick={() => { setProjectSearch(''); setProjectFilter('All'); setProjectTier('All'); setProjectHandover('All'); setProjectPriceMax(20); setProjectType('All'); setProjectSort('default'); }} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: T.red, fontSize: 12, cursor: 'pointer' }}>Clear Filters</button>
                 )}
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -3284,6 +3299,28 @@ export default function EmaarDashboardV2() {
                   <button type='button' key={y} onClick={() => setProjectHandover(y)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectHandover===y ? T.purple : T.border), background: projectHandover===y ? 'rgba(139,92,246,0.1)' : 'transparent', color: projectHandover===y ? T.purple : T.textSecondary, fontSize: 11, fontWeight: projectHandover===y ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{y}</button>
                 ))}
               </div>
+              {/* S7 — Type filter + Sort */}
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Type</span>
+                  {['All','Apartments','Townhouses','Villas','Branded Res.'].map(t => (
+                    <button type='button' key={t} onClick={() => setProjectType(t)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+(projectType===t ? T.cyan : T.border), background: projectType===t ? 'rgba(6,182,212,0.1)' : 'transparent', color: projectType===t ? T.cyan : T.textSecondary, fontSize: 11, fontWeight: projectType===t ? 600 : 400, cursor: 'pointer', transition: 'all 0.2s' }}>{t}</button>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+                  <span style={{ fontSize: 10, color: T.textMuted, letterSpacing: 1, textTransform: 'uppercase' }}>Sort</span>
+                  <select value={projectSort} onChange={e => setProjectSort(e.target.value)} style={{ padding: '7px 12px', background: T.surfaceAlt, border: `1px solid ${projectSort !== 'default' ? T.gold : T.border}`, borderRadius: 8, color: projectSort !== 'default' ? T.gold : T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: 'pointer', fontWeight: projectSort !== 'default' ? 700 : 400 }}>
+                    <option value="default">Default</option>
+                    <option value="price_asc">Price ↑</option>
+                    <option value="price_desc">Price ↓</option>
+                    <option value="ppsf_asc">PPSF ↑</option>
+                    <option value="ppsf_desc">PPSF ↓</option>
+                    <option value="handover_asc">Handover (earliest)</option>
+                    <option value="handover_desc">Handover (latest)</option>
+                    <option value="construction_desc">Construction % ↓</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
             {/* Project Cards */}
@@ -3296,7 +3333,20 @@ export default function EmaarDashboardV2() {
                   const matchTier = projectTier === "All" || p.tier === projectTier;
                   const matchHandover = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover));
                   const matchPrice = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6;
-                  return matchSearch && matchFilter && matchTier && matchHandover && matchPrice;
+                  const matchType = projectType === "All" || (p.type || "").includes(projectType);
+                  return matchSearch && matchFilter && matchTier && matchHandover && matchPrice && matchType;
+                })
+                .sort((a, b) => {
+                  switch (projectSort) {
+                    case "price_asc":         return (a.price || 0) - (b.price || 0);
+                    case "price_desc":        return (b.price || 0) - (a.price || 0);
+                    case "ppsf_asc":          return (a.ppsf  || 0) - (b.ppsf  || 0);
+                    case "ppsf_desc":         return (b.ppsf  || 0) - (a.ppsf  || 0);
+                    case "handover_asc":      return (a.handover || "").localeCompare(b.handover || "");
+                    case "handover_desc":     return (b.handover || "").localeCompare(a.handover || "");
+                    case "construction_desc": return (b.construction || 0) - (a.construction || 0);
+                    default:                  return 0;
+                  }
                 })
                 .map((p, i) => {
                   const isLocked = !isPro && i >= 5;
@@ -3419,7 +3469,7 @@ export default function EmaarDashboardV2() {
                   </div>{/* end padding wrapper */}
                 </div>
               );})}
-              {activeProjects.filter(p => { const ms = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase()); const mf = projectFilter === "All" || p.district === projectFilter || (projectFilter === "Branded" && p.branded); const mt = projectTier === "All" || p.tier === projectTier; const my = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover)); const mp = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6; return ms && mf && mt && my && mp; }).length === 0 && (
+              {activeProjects.filter(p => { const ms = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase()); const mf = projectFilter === "All" || p.district === projectFilter || (projectFilter === "Branded" && p.branded); const mt = projectTier === "All" || p.tier === projectTier; const my = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover)); const mp = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6; const mty = projectType === "All" || (p.type || "").includes(projectType); return ms && mf && mt && my && mp && mty; }).length === 0 && (
                 <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 20px" }}>
                   <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>🔍</div>
                   <div style={{ fontSize: 16, fontWeight: 600, color: T.white, marginBottom: 4 }}>No projects found</div>
@@ -5740,7 +5790,7 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── MAP / COMMUNITIES TAB ─── */}
-          {tab === "Map" && <><CommunityMapTab activeProjects={activeProjects} liveCommunityROI={liveCommunityROI} setTab={setTab} /><TabSources sources={[{ label: "Google Maps API", url: "https://maps.google.com" }, { label: "Emaar Community Boundaries" }, { label: "DLD Zoning Data", url: "https://dubailand.gov.ae" }, { label: "OpenStreetMap", url: "https://www.openstreetmap.org" }]} /></>}
+          {tab === "Map" && <><CommunityMapTab activeProjects={activeProjects} liveCommunityROI={liveCommunityROI} setTab={setTab} selectedDeveloper={selectedDeveloper} /><TabSources sources={[{ label: "Google Maps API", url: "https://maps.google.com" }, { label: "Emaar Community Boundaries" }, { label: "DLD Zoning Data", url: "https://dubailand.gov.ae" }, { label: "OpenStreetMap", url: "https://www.openstreetmap.org" }]} /></>}
 
           {/* ─── LAUNCH CALENDAR TAB ─── */}
           {tab === "Launch Calendar" && (() => {
