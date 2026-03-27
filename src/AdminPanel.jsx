@@ -6,7 +6,7 @@ import { getAuth } from "firebase/auth";
 import emailjs from "@emailjs/browser";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter, updateDoc } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
 import { T } from "./theme";
@@ -236,31 +236,27 @@ const ReferralTab = ({ db, T, notify, users, adminUser }) => {
 
   // Load all referrals from Firestore
   React.useEffect(() => {
-    const { collection, onSnapshot, query, orderBy } = require ? {} : {};
-    let unsub;
-    const load = async () => {
-      try {
-        const { collection: col, onSnapshot: snap, query: q, orderBy: ob, limit: lim } = await import("firebase/firestore");
-        unsub = snap(q(col(db, "referrals"), ob("createdAt", "desc"), lim(200)), (s) => {
-          const list = [];
-          s.forEach(d => list.push({ id: d.id, ...d.data() }));
-          setReferrals(list);
-          setStats({
-            totalReferrals:    list.length,
-            totalConversions:  list.filter(r => r.status === "converted").length,
-            totalRewardMonths: list.filter(r => r.rewardGranted).length,
-          });
-          setLoading(false);
+    const unsub = onSnapshot(
+      query(collection(db, "referrals"), orderBy("createdAt", "desc"), limit(200)),
+      (s) => {
+        const list = [];
+        s.forEach(d => list.push({ id: d.id, ...d.data() }));
+        setReferrals(list);
+        setStats({
+          totalReferrals:    list.length,
+          totalConversions:  list.filter(r => r.status === "converted").length,
+          totalRewardMonths: list.filter(r => r.rewardGranted).length,
         });
-      } catch(e) { setLoading(false); }
-    };
-    load();
-    return () => unsub?.();
+        setLoading(false);
+      },
+      () => setLoading(false)
+    );
+    return () => unsub();
   }, [db]);
 
   // Generate referral link for a user
   const getReferralLink = (user) => {
-    const code = user.referralCode || btoa(user.uid || user.id || user.email).replace(/[^a-zA-Z0-9]/g, "").slice(0, 10).toUpperCase();
+    const code = btoa(user.uid || user.id || user.email).replace(/[^a-zA-Z0-9]/g, "").slice(0, 10).toUpperCase();
     return `${BASE_URL}?ref=${code}`;
   };
 
@@ -268,30 +264,24 @@ const ReferralTab = ({ db, T, notify, users, adminUser }) => {
   const grantReward = async (referral) => {
     setGrantLoading(true);
     try {
-      const { doc, updateDoc, addDoc, collection, serverTimestamp } = await import("firebase/firestore");
-      // Mark referral as rewarded
       await updateDoc(doc(db, "referrals", referral.id), {
         rewardGranted: true,
         rewardGrantedAt: new Date().toISOString(),
         rewardGrantedBy: adminUser?.email,
       });
-      // Extend referrer's subscription by 1 month
       if (referral.referrerUid) {
-        const userRef = doc(db, "users", referral.referrerUid);
-        const { getDoc } = await import("firebase/firestore");
-        const userSnap = await getDoc(userRef);
+        const userSnap = await getDoc(doc(db, "users", referral.referrerUid));
         if (userSnap.exists()) {
           const userData = userSnap.data();
           const currentExpiry = userData.subscriptionExpiry ? new Date(userData.subscriptionExpiry) : new Date();
           const newExpiry = new Date(currentExpiry);
           newExpiry.setMonth(newExpiry.getMonth() + 1);
-          await updateDoc(userRef, {
+          await updateDoc(doc(db, "users", referral.referrerUid), {
             subscriptionExpiry: newExpiry.toISOString(),
             referralRewardsEarned: (userData.referralRewardsEarned || 0) + 1,
           });
         }
       }
-      // Log admin action
       await addDoc(collection(db, "adminAlerts"), {
         message: `🎁 Referral reward granted: ${referral.referrerEmail} gets 1 month free`,
         type: "referral_reward", severity: "info", read: false,
@@ -306,7 +296,6 @@ const ReferralTab = ({ db, T, notify, users, adminUser }) => {
   // Create manual referral record
   const createReferral = async (referrerUser, convertedEmail) => {
     try {
-      const { addDoc, collection } = await import("firebase/firestore");
       await addDoc(collection(db, "referrals"), {
         referrerUid:   referrerUser.uid || referrerUser.id,
         referrerEmail: referrerUser.email,
@@ -563,10 +552,8 @@ const MarketDataEditor = ({ db, T, notify }) => {
   React.useEffect(() => {
     const load = async () => {
       try {
-        const snap = await db.collection ? 
-          await db.collection("marketData").doc("global").get() :
-          await import("firebase/firestore").then(m => m.getDoc(m.doc(db, "marketData", "global")));
-        const data = snap.exists?.() ? snap.data() : snap.exists ? snap.data() : null;
+        const snap = await getDoc(doc(db, "marketData", "global"));
+        const data = snap.exists() ? snap.data() : null;
         if (data) setForm(prev => ({ ...prev, ...Object.fromEntries(Object.entries(data).filter(([k]) => k in prev)) }));
       } catch(e) {} finally { setLoading(false); }
     };
@@ -584,13 +571,7 @@ const MarketDataEditor = ({ db, T, notify }) => {
         updatedBy: "admin",
         source: form.source,
       };
-      // Support both admin SDK style and client SDK style
-      if (db.collection) {
-        await db.collection("marketData").doc("global").set(payload, { merge: true });
-      } else {
-        const { doc, setDoc } = await import("firebase/firestore");
-        await setDoc(doc(db, "marketData", "global"), payload, { merge: true });
-      }
+      await setDoc(doc(db, "marketData", "global"), payload, { merge: true });
       notify("✅ Market data updated — dashboard will refresh within 30 seconds", "success");
     } catch(e) {
       notify("❌ Save failed: " + e.message, "error");

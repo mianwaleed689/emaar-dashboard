@@ -6,7 +6,7 @@ import emailjs from "@emailjs/browser";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, Legend } from "recharts";
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, where } from "firebase/firestore";
 
 import { T } from "./theme";
 import { emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
@@ -1616,23 +1616,17 @@ const ReferralWidget = ({ user, T, db }) => {
   // Load user's referral stats from Firestore
   React.useEffect(() => {
     if (!user?.uid || !db) return;
-    let unsub;
-    const load = async () => {
-      try {
-        const { collection, query, where, onSnapshot } = await import("firebase/firestore");
-        unsub = onSnapshot(
-          query(collection(db, "referrals"), where("referrerUid", "==", user.uid)),
-          (snap) => {
-            const list = [];
-            snap.forEach(d => list.push(d.data()));
-            setConversions(list.filter(r => r.status === "converted").length);
-            setRewards(list.filter(r => r.rewardGranted).length);
-          }
-        );
-      } catch(e) {}
-    };
-    load();
-    return () => unsub?.();
+    const unsub = onSnapshot(
+      query(collection(db, "referrals"), where("referrerUid", "==", user.uid)),
+      (snap) => {
+        const list = [];
+        snap.forEach(d => list.push(d.data()));
+        setConversions(list.filter(r => r.status === "converted").length);
+        setRewards(list.filter(r => r.rewardGranted).length);
+      },
+      () => {}
+    );
+    return () => unsub();
   }, [user?.uid, db]);
 
   const handleCopy = () => {
