@@ -4,6 +4,10 @@
     {
       "path": "/api/cron-eibor",
       "schedule": "30 7 * * *"
+    },
+    {
+      "path": "/api/cron-news",
+      "schedule": "30 2 * * *"
     }
   ]
 }

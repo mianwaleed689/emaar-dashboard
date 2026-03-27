@@ -1733,6 +1733,7 @@ export default function EmaarDashboardV2() {
   const [liveMarketData, setLiveMarketData] = useState([]);
   const [liveFinancials, setLiveFinancials] = useState([]);
   const [liveRisk, setLiveRisk] = useState([]);
+  const [liveNewsData, setLiveNewsData] = useState([]); // S10 — tabData/news
   const [liveBayutData, setLiveBayutData] = useState({});
   const [lastDataSync, setLastDataSync] = useState(null);
   const [allDevelopers, setAllDevelopers] = useState([]);
@@ -2020,6 +2021,13 @@ export default function EmaarDashboardV2() {
         if (snap.exists() && snap.data().rows?.length > 0) setter(snap.data().rows);
       }));
     });
+
+    // S10 — tabData/news (written by cron-news.js daily)
+    unsubs.push(onSnapshot(doc(db, "tabData", "news"), (snap) => {
+      if (snap.exists() && snap.data().rows?.length > 0) {
+        setLiveNewsData(snap.data().rows);
+      }
+    }));
 
     // platformSettings/tabs (which tabs are on/off)
     unsubs.push(onSnapshot(doc(db, "platformSettings", "tabs"), (snap) => {
@@ -2936,36 +2944,58 @@ export default function EmaarDashboardV2() {
               </div>
             </div>
 
-            {/* ── LATEST DUBAI RE NEWS ── */}
+            {/* ── LATEST DUBAI RE NEWS — S10: live from Firestore tabData/news ── */}
+            {(() => {
+              // liveNewsData comes from tabData/news Firestore listener (set up below)
+              // Fallback to static headlines if Firestore not yet populated
+              const staticNews = [
+                { headline: "Dubai H1 2025 transactions hit AED 431B — up 25% year-on-year", source: "DLD Official", sourceUrl: "#", tag: "Market", color: T.green, date: "H1 2025", pinned: false },
+                { headline: "Off-plan sales account for 60%+ of all Dubai transactions in 2025", source: "DXBinteract", sourceUrl: "#", tag: "Off-Plan", color: T.blue, date: "FY 2025", pinned: false },
+                { headline: "Emaar records AED 80.4B in property sales — all-time record for any GCC developer", source: "Emaar IR", sourceUrl: "#", tag: "Emaar", color: T.gold, date: "FY 2025", pinned: false },
+                { headline: "Dubai average price per sqft reaches AED 1,689 — up 19.8% annually", source: "ValuStrat VPI", sourceUrl: "#", tag: "Prices", color: T.teal, date: "Dec 2025", pinned: false },
+                { headline: "110,000+ new investors entered Dubai property market in 2025, up 55% YoY", source: "DLD Press Release", sourceUrl: "#", tag: "Demand", color: T.purple, date: "FY 2025", pinned: false },
+                { headline: "EIBOR 3-month rate at 3.593% — mortgage affordability improves as Fed pivots", source: "UAE Central Bank", sourceUrl: "#", tag: "EIBOR", color: T.orange, date: "Mar 2026", pinned: false },
+              ];
+              // Use Firestore news if available, pinned items first
+              const newsItems = liveNewsData.length > 0
+                ? [...liveNewsData].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
+                : staticNews;
+              const isLive = liveNewsData.length > 0;
+              return (
             <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 14 }}>📰</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Dubai RE Market Headlines</span>
-                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.1)", color: T.green, border: "1px solid rgba(16,185,129,0.2)" }}>Q1 2026</span>
+                  {isLive
+                    ? <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.1)", color: T.green, border: "1px solid rgba(16,185,129,0.2)" }}>● LIVE</span>
+                    : <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: T.gold, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC</span>
+                  }
                 </div>
-                <span style={{ fontSize: 9, color: T.textMuted }}>Curated from DLD · Gulf News · Zawya · Knight Frank</span>
+                <span style={{ fontSize: 9, color: T.textMuted }}>{isLive ? "Zawya · Gulf News · Arabian Business · The National · PropertyNews.ae" : "Curated from DLD · Gulf News · Zawya · Knight Frank"}</span>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
-                {[
-                  { headline: "Dubai H1 2025 transactions hit AED 431B — up 25% year-on-year", source: "DLD Official", tag: "Market", color: T.green, date: "H1 2025" },
-                  { headline: "Off-plan sales account for 60%+ of all Dubai transactions in 2025", source: "DXBinteract", tag: "Off-Plan", color: T.blue, date: "FY 2025" },
-                  { headline: "Emaar records AED 80.4B in property sales — all-time record for any GCC developer", source: "Emaar IR", tag: "Emaar", color: T.gold, date: "FY 2025" },
-                  { headline: "Dubai average price per sqft reaches AED 1,689 — up 19.8% annually", source: "ValuStrat VPI", tag: "Prices", color: T.teal, date: "Dec 2025" },
-                  { headline: "110,000+ new investors entered Dubai property market in 2025, up 55% YoY", source: "DLD Press Release", tag: "Demand", color: T.purple, date: "FY 2025" },
-                  { headline: "EIBOR 3-month rate at 3.593% — mortgage affordability improves as Fed pivots", source: "UAE Central Bank", tag: "EIBOR", color: T.orange, date: "Mar 2026" },
-                ].map((item, i) => (
-                  <div key={i} style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 8 }}>
+                {newsItems.map((item, i) => (
+                  <div key={i} style={{ padding: "12px 14px", background: item.pinned ? "rgba(212,168,67,0.06)" : T.surfaceAlt, borderRadius: 10, border: `1px solid ${item.pinned ? T.gold : T.border}`, display: "flex", flexDirection: "column", gap: 8 }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 6, background: `${item.color}15`, color: item.color, fontWeight: 700 }}>{item.tag}</span>
+                      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                        {item.pinned && <span style={{ fontSize: 8, color: T.gold }}>📌</span>}
+                        <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 6, background: `${item.color}15`, color: item.color, fontWeight: 700 }}>{item.tag}</span>
+                      </div>
                       <span style={{ fontSize: 9, color: T.textMuted }}>{item.date}</span>
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white, lineHeight: 1.4 }}>{item.headline}</div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white, lineHeight: 1.4 }}>
+                      {item.sourceUrl && item.sourceUrl !== "#"
+                        ? <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: T.white, textDecoration: "none" }} onMouseEnter={e => e.target.style.color = T.gold} onMouseLeave={e => e.target.style.color = T.white}>{item.headline}</a>
+                        : item.headline
+                      }
+                    </div>
                     <div style={{ fontSize: 10, color: T.textMuted }}>Source: {item.source}</div>
                   </div>
                 ))}
               </div>
             </div>
+              ); })()}
 
                         <Section title="Key Performance" sub="FY 2025 — All-Time Records Across Every Metric · Source: Emaar Annual Report 2025">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
