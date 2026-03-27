@@ -657,6 +657,8 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
       const cred = await createUserWithEmailAndPassword(auth, email, pass);
       const now = new Date();
       const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      // S17: Capture referral code from URL ?ref= param
+      const refCode = new URLSearchParams(window.location.search).get("ref") || "";
       await setDoc(doc(db, "users", cred.user.uid), {
         name: name.trim(), email,
         phone: phone.trim(), country: country.trim(),
@@ -665,7 +667,22 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         trialStart: now.toISOString(),
         trialEnd: trialEnd.toISOString(),
         role: "user", emailVerified: false, provider: "email",
+        ...(refCode ? { referredByCode: refCode } : {}),
       });
+      // S17: If referred, create a referral signup record in Firestore
+      if (refCode) {
+        try {
+          await setDoc(doc(db, "referrals", `${cred.user.uid}_signup`), {
+            refCode,
+            signupEmail: email,
+            signupUid:   cred.user.uid,
+            status:      "signup",
+            rewardGranted: false,
+            createdAt:   now.toISOString(),
+            source:      "organic_link",
+          });
+        } catch(e) {}
+      }
       try { await sendEmailVerification(cred.user); } catch(e) {}
       try {
         await emailjs.send("service_da7nshv", "template_gl1xqhy", {
@@ -1069,7 +1086,7 @@ function useFocusTrap(active) {
 }
 
 /* ─── COMMUNITY MAP TAB COMPONENT ─── */
-function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, selectedDeveloper }) {
+function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, selectedDeveloper, compareList = [], toggleCompare = () => {}, isPro = false, setShowUpgrade = () => {} }) {
   const [selectedProject, setSelectedProjectMap] = React.useState(null);
   const [filterComm, setFilterComm] = React.useState("All");
   const [filterYield, setFilterYield] = React.useState("All");
@@ -1507,7 +1524,13 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, selectedDev
                   </div>
                 ))}
               </div>
-              <button type="button" onClick={() => setTab("Projects")} style={{ width: "100%", padding: "9px 0", background: "linear-gradient(135deg," + T.gold + ",#B8912F)", color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View Full Details →</button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" onClick={() => setTab("Projects")} style={{ flex: 1, padding: "9px 0", background: `linear-gradient(135deg,${T.gold},#B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View Full Details →</button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); isPro ? toggleCompare(selectedProject) : setShowUpgrade(true); }}
+                  style={{ padding: "9px 14px", background: compareList.find(x => x.id === selectedProject.id) ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${compareList.find(x => x.id === selectedProject.id) ? T.gold : T.border}`, borderRadius: 8, color: compareList.find(x => x.id === selectedProject.id) ? T.gold : T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, whiteSpace: "nowrap" }}>
+                  {compareList.find(x => x.id === selectedProject.id) ? "✓ Added" : "+ Compare"}
+                </button>
+              </div>
             </div>
           ) : (
             <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.border, padding: 16 }}>
@@ -1575,6 +1598,87 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, selectedDev
 
 
 // ─── Tab Data Sources Footer ────────────────────────────────────────────────
+
+/* ─── S17: REFERRAL WIDGET — shown to logged-in users on Overview tab ─── */
+const ReferralWidget = ({ user, T, db }) => {
+  const [copied, setCopied] = React.useState(false);
+  const [rewards, setRewards] = React.useState(0);
+  const [conversions, setConversions] = React.useState(0);
+
+  // Generate referral code from user uid
+  const refCode = React.useMemo(() => {
+    if (!user?.uid) return "";
+    return btoa(user.uid).replace(/[^a-zA-Z0-9]/g, "").slice(0, 10).toUpperCase();
+  }, [user?.uid]);
+
+  const refLink = `https://emaar-dashboard.vercel.app?ref=${refCode}`;
+
+  // Load user's referral stats from Firestore
+  React.useEffect(() => {
+    if (!user?.uid || !db) return;
+    let unsub;
+    const load = async () => {
+      try {
+        const { collection, query, where, onSnapshot } = await import("firebase/firestore");
+        unsub = onSnapshot(
+          query(collection(db, "referrals"), where("referrerUid", "==", user.uid)),
+          (snap) => {
+            const list = [];
+            snap.forEach(d => list.push(d.data()));
+            setConversions(list.filter(r => r.status === "converted").length);
+            setRewards(list.filter(r => r.rewardGranted).length);
+          }
+        );
+      } catch(e) {}
+    };
+    load();
+    return () => unsub?.();
+  }, [user?.uid, db]);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(refLink).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  if (!refCode) return null;
+
+  return (
+    <div style={{ marginTop: 20, background: "linear-gradient(135deg, rgba(212,168,67,0.06), rgba(212,168,67,0.02))", border: `1px solid ${T.gold}33`, borderRadius: 16, padding: "18px 22px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 2 }}>🎁 Refer a friend — get 1 month free</div>
+          <div style={{ fontSize: 12, color: T.textMuted }}>Share your link. When they upgrade to Pro, you get a free month.</div>
+        </div>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          {conversions > 0 && (
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: T.green, fontFamily: "'Fraunces',serif" }}>{conversions}</div>
+              <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>Conversions</div>
+            </div>
+          )}
+          {rewards > 0 && (
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>{rewards}</div>
+              <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase" }}>Free Months</div>
+            </div>
+          )}
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 8, marginTop: 14, alignItems: "center" }}>
+        <div style={{ flex: 1, padding: "9px 14px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 12, color: T.teal, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {refLink}
+        </div>
+        <button type="button" onClick={handleCopy}
+          style={{ padding: "9px 18px", background: copied ? "rgba(16,185,129,0.15)" : T.goldGlow, border: `1px solid ${copied ? T.green : T.gold}`, borderRadius: 8, color: copied ? T.green : T.gold, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0, transition: "all 0.2s" }}>
+          {copied ? "✓ Copied!" : "Copy Link"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 /* ─── DATA BADGE — verified data stamp ─── */
 const DataBadge = ({ source, date, type = "dld" }) => {
   const cfg = {
@@ -3289,6 +3393,10 @@ export default function EmaarDashboardV2() {
                 </div>
               </div>
           <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM: EMAAR.DU", url: "https://www.dfm.ae" }, { label: "TradingView", url: "https://www.tradingview.com/symbols/DFM-EMAAR/" }, { label: "Yahoo Finance", url: "https://finance.yahoo.com/quote/EMAAR.DU" }, { label: "S&P · Moody's · Fitch Ratings" }]} />
+
+              {/* ─── S17: REFERRAL WIDGET (shown to all logged-in users) ─── */}
+              {user && <ReferralWidget user={user} T={T} db={db} />}
+
             </Section>
             </>); })()} {/* end Session 6 IIFE */}
           </>}
@@ -6040,7 +6148,7 @@ export default function EmaarDashboardV2() {
           })()}
 
           {/* ─── MAP / COMMUNITIES TAB ─── */}
-          {tab === "Map" && <><CommunityMapTab activeProjects={activeProjects} liveCommunityROI={liveCommunityROI} setTab={setTab} selectedDeveloper={selectedDeveloper} /><TabSources sources={[{ label: "Google Maps API", url: "https://maps.google.com" }, { label: "Emaar Community Boundaries" }, { label: "DLD Zoning Data", url: "https://dubailand.gov.ae" }, { label: "OpenStreetMap", url: "https://www.openstreetmap.org" }]} /></>}
+          {tab === "Map" && <><CommunityMapTab activeProjects={activeProjects} liveCommunityROI={liveCommunityROI} setTab={setTab} selectedDeveloper={selectedDeveloper} compareList={compareList} toggleCompare={toggleCompare} isPro={isPro} setShowUpgrade={setShowUpgrade} /><TabSources sources={[{ label: "Google Maps API", url: "https://maps.google.com" }, { label: "Emaar Community Boundaries" }, { label: "DLD Zoning Data", url: "https://dubailand.gov.ae" }, { label: "OpenStreetMap", url: "https://www.openstreetmap.org" }]} /></>}
 
           {/* ─── LAUNCH CALENDAR TAB ─── */}
           {tab === "Launch Calendar" && (() => {
