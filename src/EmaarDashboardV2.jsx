@@ -8343,18 +8343,18 @@ export default function EmaarDashboardV2() {
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
                           <div>
                             <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, display: "block", marginBottom: 6, textTransform: "uppercase" }}>Purchase Price (AED)</label>
-                            <input type="number" value={calcPrice} onChange={e => setCalcPrice(Number(e.target.value))} style={{ width: "100%", padding: "10px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 14, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }} />
+                            <input type="number" value={calcPrice} style={{ width: "100%", padding: "10px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 14, fontFamily: "'Outfit', sans-serif", outline: "none", boxSizing: "border-box" }} />
                           </div>
                           <div>
                             <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, display: "block", marginBottom: 6, textTransform: "uppercase" }}>Holding Period: {calcYears} Years</label>
-                            <input type="range" min={1} max={10} value={calcYears} onChange={e => setCalcYears(Number(e.target.value))} style={{ width: "100%", marginTop: 10, accentColor: T.teal }} />
+                            <input type="range" min={1} max={10} value={calcYears} style={{ width: "100%", marginTop: 10, accentColor: T.teal }} />
                           </div>
                         </div>
                         <div style={{ marginBottom: 16 }}>
                           <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, marginBottom: 8, textTransform: "uppercase" }}>Bedrooms</div>
                           <div style={{ display: "flex", gap: 8 }}>
                             {["1BR","2BR","3BR","TH/Villa"].map(b => (
-                              <button key={b} type="button" onClick={() => setCalcBeds(b)} style={{ padding: "7px 16px", borderRadius: 8, border: `1px solid ${calcBeds === b ? T.teal : T.border}`, background: calcBeds === b ? "rgba(0,191,165,0.15)" : T.surfaceAlt, color: calcBeds === b ? T.teal : T.textSecondary, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{b}</button>
+                              <button key={b} type="button" onClick={() => {}} style={{ padding: "7px 16px", borderRadius: 8, border: `1px solid ${calcBeds === b ? T.teal : T.border}`, background: calcBeds === b ? "rgba(0,191,165,0.15)" : T.surfaceAlt, color: calcBeds === b ? T.teal : T.textSecondary, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{b}</button>
                             ))}
                           </div>
                         </div>
@@ -8362,7 +8362,7 @@ export default function EmaarDashboardV2() {
                           <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 0.8, marginBottom: 8, textTransform: "uppercase" }}>Rental Strategy</div>
                           <div style={{ display: "flex", gap: 8 }}>
                             {["Long-Term","Short-Term Airbnb","Flip at Handover"].map(s => (
-                              <button key={s} type="button" onClick={() => setCalcStrategy(s)} style={{ padding: "7px 16px", borderRadius: 8, border: `1px solid ${calcStrategy === s ? T.gold : T.border}`, background: calcStrategy === s ? "rgba(212,168,67,0.15)" : T.surfaceAlt, color: calcStrategy === s ? T.gold : T.textSecondary, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{s}</button>
+                              <button key={s} type="button" onClick={() => {}} style={{ padding: "7px 16px", borderRadius: 8, border: `1px solid ${calcStrategy === s ? T.gold : T.border}`, background: calcStrategy === s ? "rgba(212,168,67,0.15)" : T.surfaceAlt, color: calcStrategy === s ? T.gold : T.textSecondary, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{s}</button>
                             ))}
                           </div>
                         </div>
