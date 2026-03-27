@@ -21644,7 +21644,10 @@ export default function AdminPanel() {
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Access Tier</label>
                           <select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))}
                             style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
+                            <option value="free">Free</option>
+                            <option value="pro_trial">Pro Trial</option>
+                            <option value="pro">Pro · AED 99</option>
+                            <option value="enterprise">Enterprise · AED 499</option>
                           </select>
                         </div>
                         <div>
@@ -21652,7 +21655,14 @@ export default function AdminPanel() {
                           <select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))}
                             style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
                             <option value="user">— No role —</option>
-                            {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                            <option value="agent">Real Estate Agent</option>
+                            <option value="sales_manager">Sales Manager</option>
+                            <option value="broker">Broker</option>
+                            <option value="property_manager">Property Manager</option>
+                            <option value="investor">Investor</option>
+                            <option value="developer">Developer</option>
+                            <option value="staff">Platform Staff</option>
+                            <option value="admin">Admin</option>
                           </select>
                         </div>
                         <div>
@@ -21721,7 +21731,10 @@ export default function AdminPanel() {
                           <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Access Tier</label>
                           <select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))}
                             style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
+                            <option value="free">Free</option>
+                            <option value="pro_trial">Pro Trial</option>
+                            <option value="pro">Pro · AED 99</option>
+                            <option value="enterprise">Enterprise · AED 499</option>
                           </select>
                         </div>
                         <div>
@@ -21729,7 +21742,14 @@ export default function AdminPanel() {
                           <select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))}
                             style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
                             <option value="user">— No role —</option>
-                            {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                            <option value="agent">Real Estate Agent</option>
+                            <option value="sales_manager">Sales Manager</option>
+                            <option value="broker">Broker</option>
+                            <option value="property_manager">Property Manager</option>
+                            <option value="investor">Investor</option>
+                            <option value="developer">Developer</option>
+                            <option value="staff">Platform Staff</option>
+                            <option value="admin">Admin</option>
                           </select>
                         </div>
                         <div>
