@@ -12,9 +12,9 @@ import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCo
 import ProjectManager from "./ProjectManager";
 import { useI18n, LANGUAGES } from "./i18n";
 
-/* ═══════════════════════════════════════════════════════
+/* =======================================================
    EMAIL CAMPAIGNS TAB
-   ═══════════════════════════════════════════════════════ */
+   ======================================================= */
 function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchLeads }) {
   const [campaigns, setCampaigns]       = React.useState([]);
   const [showCreate, setShowCreate]     = React.useState(false);
@@ -185,10 +185,10 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ===============================================================
    DXB ANALYTICS — ADMIN PANEL
    Matching dashboard design DNA: sidebar nav, KPI cards, sections
-   ═══════════════════════════════════════════════════════════════ */
+   =============================================================== */
 
 /* ─── RESEND EMAIL HELPER ─── */
 const RESEND_KEY = "re_FGZe2ET2_9pDv9iEV2MUTQXg1QHJeV3fs";
@@ -500,7 +500,7 @@ const TabHelp = ({ items }) => {
   );
 };
 
-/* ═══════════════════════════════════════════════════════════════════
+/* ===================================================================
    SUPPORT TAB COMPONENT — TAB 14
    Ticket system, conversation threads, SLA tracking, response templates
    Collections: supportTickets, ticketPresence
@@ -508,7 +508,7 @@ const TabHelp = ({ items }) => {
    PHASE 1: Internal Notes, Tags, Assignment
    PHASE 1B: Collision Detection, Attachments, @Mentions
    PHASE 2: Merge Tickets, Link Related, Custom Fields
-═══════════════════════════════════════════════════════════════════ */
+=================================================================== */
 // Pre-computed constants — outside components to prevent re-render on keystroke
 const PHONE_CODES_LIST = [["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+244","🇦🇴 Angola"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+1","🇧🇸 Bahamas"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+1","🇧🇧 Barbados"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],["+229","🇧🇯 Benin"],["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+267","🇧🇼 Botswana"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],["+238","🇨🇻 Cape Verde"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+242","🇨🇬 Congo"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],["+1","🇩🇴 Dominican Republic"],["+593","🇪🇨 Ecuador"],["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+291","🇪🇷 Eritrea"],["+372","🇪🇪 Estonia"],["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea South"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],["+382","🇲🇪 Montenegro"],["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+227","🇳🇪 Niger"],["+234","🇳🇬 Nigeria"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+597","🇸🇷 Suriname"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+1","🇹🇹 Trinidad"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1]));
 const COUNTRY_LIST = ["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","🌍 Other"].sort();
@@ -7442,10 +7442,10 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   );
 }
 /* ─── NOTIFICATIONS TAB COMPONENT ─── */
-/* ════════════════════════════════════════
+/* ========================================
    TAB 12: NOTIFICATIONS — PRO LEVEL
    Broadcast, Schedule, Email, Analytics
-════════════════════════════════════════ */
+======================================== */
 function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   const [notifSubTab, setNotifSubTab] = React.useState("compose");
   const [notifForm, setNotifForm] = React.useState({ title: "", message: "", icon: "🔔", type: "info", link: "" });
@@ -8163,10 +8163,10 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
 }
 
 
-/* ═══════════════════════════════════════════════════════════════════
+/* ===================================================================
    TAB 11: EMAIL DIGEST COMPONENT — PRO LEVEL
    Schedule, preview, send, track. EmailJS bulk send.
-═══════════════════════════════════════════════════════════════════ */
+=================================================================== */
 function DigestTab({ users, db, notify, adminUser, T, I }) {
   const [digestSubTab, setDigestSubTab] = useState("compose");
   const [sending, setSending] = useState(false);
@@ -8756,7 +8756,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* ═══ KPI TOPBAR ═══ */}
+      {/* === KPI TOPBAR === */}
       <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, overflow: "hidden" }}>
         <button type="button" onClick={fetchEibor} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: "rgba(212,168,67,0.06)", border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I?.refresh || "\u21BB"}</button>
         {[
@@ -8776,7 +8776,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       </div>
 
-      {/* ═══ COMPARISON PANEL ═══ */}
+      {/* === COMPARISON PANEL === */}
       {eiborCompareMode && compareData && (
         <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.blue}40`, borderRadius: 14, padding: "16px 20px" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: T.blue, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>Historical Comparison</div>
@@ -8814,7 +8814,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
-      {/* ═══ RATE ALERT ═══ */}
+      {/* === RATE ALERT === */}
       {rateAlert && (
         <div className="fade-up" style={{ padding: "14px 20px", borderRadius: 12, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontSize: 18 }}>⚡</span>
@@ -8825,7 +8825,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
-      {/* ═══ CURRENT RATES + COMPARISON ═══ */}
+      {/* === CURRENT RATES + COMPARISON === */}
       {eiborCurrent && (
         <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -8861,7 +8861,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
-      {/* ═══ RATE HISTORY CHART (12-month SVG) ═══ */}
+      {/* === RATE HISTORY CHART (12-month SVG) === */}
       {eiborHistory.length > 1 && (
         <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -8955,7 +8955,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
-      {/* ═══ MORTGAGE CALCULATOR ═══ */}
+      {/* === MORTGAGE CALCULATOR === */}
       <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 16 }}>Mortgage Impact Calculator</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
@@ -9001,7 +9001,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       </div>
 
-      {/* ═══ UPDATE FORM ═══ */}
+      {/* === UPDATE FORM === */}
       <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Update Rates</div>
@@ -9031,7 +9031,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       </div>
 
-      {/* ═══ UPDATE HISTORY ═══ */}
+      {/* === UPDATE HISTORY === */}
       <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, overflow: "hidden" }}>
         <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Update History</div>
@@ -9081,10 +9081,10 @@ function EiborRatesPanel({ db, T, I, notify }) {
 
 
 
-/* ══════════════════════════════════════════════════════
+/* ======================================================
    USERS TAB COMPONENT — Professional SaaS User Management
    Full rebuild: all 36 audit issues resolved
-══════════════════════════════════════════════════════ */
+====================================================== */
 
 /* ─── PROFILE DRAWER (top-level component — stable reference, portal to root) ─── */
 const EditIcon = () => (
@@ -9923,9 +9923,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </div>
   );
 
-  /* ══════════════════════════════════════════════
+  /* ==============================================
      MODALS
-  ══════════════════════════════════════════════ */
+  ============================================== */
 
   const DeleteConfirmModal = () => confirmDelete && (
     <Modal onClose={() => setConfirmDelete(null)} maxWidth={420}>
@@ -10277,13 +10277,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </Modal>
   );
 
-  /* ══════════════════════════════════════════════
+  /* ==============================================
      PROFILE DRAWER — rebuilt for professional SaaS quality
-  ══════════════════════════════════════════════ */
+  ============================================== */
 
-    /* ══════════════════════════════════════════════
+    /* ==============================================
      LOADING SKELETON — FIX #30
-  ══════════════════════════════════════════════ */
+  ============================================== */
   const SkeletonRow = () => (
     <div style={{ display: "grid", gridTemplateColumns: "36px 28px minmax(160px,2fr) minmax(150px,1.5fr) 100px 110px 75px 75px 140px", gap: 6, padding: "12px 16px", borderBottom: `1px solid ${T.border}`, alignItems: "center" }}>
       {[36,28,160,150,100,110,75,75,140].map((w,i) => (
@@ -10292,9 +10292,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </div>
   );
 
-  /* ══════════════════════════════════════════════
+  /* ==============================================
      MAIN RENDER
-  ══════════════════════════════════════════════ */
+  ============================================== */
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
 
@@ -10368,7 +10368,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
       )}
 
-      {/* ══ HEADER ══ */}
+      {/* == HEADER == */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.white, margin: 0 }}>User Management</h2>
@@ -10396,7 +10396,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
       </div>
 
-      {/* ══ KPI CARDS — FIX #1, #2, #18 ══ */}
+      {/* == KPI CARDS — FIX #1, #2, #18 == */}
       <div className="users-kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10, marginBottom: 16 }}>
         {[
           { label: "Total",        value: total,          color: T.white,     sub: "All accounts",    border: T.border,         filter: "All",      tip: "Show all users" },
@@ -10420,7 +10420,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         ))}
       </div>
 
-      {/* ══ CONVERSION FUNNEL — FIX #16 (removed duplicate MRR), #26 ══ */}
+      {/* == CONVERSION FUNNEL — FIX #16 (removed duplicate MRR), #26 == */}
       <div style={{ background: T.surfaceAlt, borderRadius: 14, padding: "16px 20px", border: `1px solid ${T.border}`, marginBottom: 18 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Conversion Funnel</div>
@@ -10445,7 +10445,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
       </div>
 
-      {/* ══ SAVED VIEWS ══ */}
+      {/* == SAVED VIEWS == */}
       <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginRight: 4 }}>Quick Views:</span>
         {[
@@ -10469,7 +10469,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
       </div>
 
-      {/* ══ SEARCH + FILTERS — FIX #32 (active sort badge) ══ */}
+      {/* == SEARCH + FILTERS — FIX #32 (active sort badge) == */}
       <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ position: "relative", flex: "1 1 280px", maxWidth: 360 }}>
           <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</span>
@@ -10606,7 +10606,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </Modal>
       )}
 
-      {/* ══ DESKTOP TABLE ══ */}
+      {/* == DESKTOP TABLE == */}
       <div className="users-table-desktop" style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
         {/* Header */}
         <div style={{ display: "grid", gridTemplateColumns: "36px 28px 2fr 1.6fr 110px 115px 85px 85px 145px", gap: 6, padding: "10px 16px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt, alignItems: "center" }}>
@@ -10743,7 +10743,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         })}
       </div>
 
-      {/* ══ MOBILE CARD VIEW — FIX #22: Edit, Tags, Suspend added ══ */}
+      {/* == MOBILE CARD VIEW — FIX #22: Edit, Tags, Suspend added == */}
       <div className="users-table-mobile" style={{ flexDirection: "column", gap: 10 }}>
         {pagedUsers.length === 0 ? (
           <div style={{ textAlign: "center", padding: "40px 20px", background: T.surface, borderRadius: 16, border: `1px solid ${T.border}` }}>
@@ -10794,7 +10794,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         })}
       </div>
 
-      {/* ══ PAGINATION — FIX #4 ══ */}
+      {/* == PAGINATION — FIX #4 == */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, padding: "0 2px", flexWrap: "wrap", gap: 10 }}>
         {/* FIX #4: handle 0 results gracefully */}
         <span style={{ fontSize: 11, color: T.textMuted }}>
@@ -10829,13 +10829,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   );
 }
 
-/* ═══════════════════════════════════════════════════════
+/* =======================================================
    CENTRAL AUDIT INFRASTRUCTURE
    - getAdminIP()   : cached IP fetch from ipify
    - _webhookUrl    : module-level webhook target (set from Firestore)
    - logAudit()     : single write point for ALL audit events
    - checkAlerts()  : suspicious-activity email trigger
-   ═══════════════════════════════════════════════════════ */
+   ======================================================= */
 
 let _cachedIP = null;
 async function getAdminIP() {
@@ -13587,10 +13587,10 @@ export default function AdminPanel() {
   };
 
   /* ─── USER STATS ─── */
-  /* ══════════════════════════════════════════════
+  /* ==============================================
      DATA FOUNDATION — Single source of truth
      All calculations derived here once, used everywhere
-  ══════════════════════════════════════════════ */
+  ============================================== */
 
   // Single now reference — all time comparisons use this exact moment
   const now = new Date();
@@ -13944,9 +13944,9 @@ export default function AdminPanel() {
     notify("Columns reset to default");
   };
   
-  // ═══════════════════════════════════════
+  // =======================================
   // DATA QUALITY SCORE SYSTEM
-  // ═══════════════════════════════════════
+  // =======================================
   
   // Quality weights for each field (total = 100)
   const QUALITY_WEIGHTS = {
@@ -14014,9 +14014,9 @@ export default function AdminPanel() {
     };
   };
   
-  // ═══════════════════════════════════════
+  // =======================================
   // DATA INTELLIGENCE & AUTOMATION
-  // ═══════════════════════════════════════
+  // =======================================
   
   // Calculate data staleness for a project
   const calculateStaleness = (project) => {
@@ -15147,9 +15147,9 @@ export default function AdminPanel() {
     { id: "tabcontrol", label: "Tab Control", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="18" height="4" rx="1"/><line x1="7" y1="5" x2="7" y2="5"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="7" y1="19" x2="7" y2="19"/></svg> },
   ];
 
-  /* ═══════════════════════════════════════
+  /* =======================================
      RENDER
-     ═══════════════════════════════════════ */
+     ======================================= */
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit',sans-serif", color: T.textPrimary }}>
       <style>{css}</style>
@@ -15306,13 +15306,13 @@ export default function AdminPanel() {
 
         <div style={{ padding: "28px 28px 60px" }}>
 
-          {/* ═══════════════════════════════════════
+          {/* =======================================
              OVERVIEW TAB
-             ═══════════════════════════════════════ */}
+             ======================================= */}
           {tab === "overview" && (
             <>
 
-              {/* ══ OVERVIEW TOPBAR — health + alerts + actions in one row ══ */}
+              {/* == OVERVIEW TOPBAR — health + alerts + actions in one row == */}
               {(() => {
                 const urgentAlerts = [
                   stats.atRisk > 0 && { key: "atrisk", color: T.red, icon: "", label: `${stats.atRisk} at risk`, action: () => {
@@ -15369,7 +15369,7 @@ export default function AdminPanel() {
                   </div>
                 );
               })()}
-              {/* ══ STEP 3 — KPI CARDS WITH TRENDS ══ */}
+              {/* == STEP 3 — KPI CARDS WITH TRENDS == */}
               <div style={{ marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                   <div style={{ borderLeft: `3px solid ${T.gold}`, paddingLeft: 14 }}>
@@ -15559,7 +15559,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* ══ STEP 4 — THREE CHARTS ══ */}
+              {/* == STEP 4 — THREE CHARTS == */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Growth & Distribution</div>
 
               {/* Row 1: Signup Timeline (wide) + Tier Donut (narrow) */}
@@ -15640,7 +15640,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* ══ STEP 5 — CROSS-PLATFORM ACTIVITY FEED ══ */}
+              {/* == STEP 5 — CROSS-PLATFORM ACTIVITY FEED == */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Live Activity</div>
               <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
@@ -15700,7 +15700,7 @@ export default function AdminPanel() {
                 )}
               </div>
 
-              {/* ══ USER INTELLIGENCE + GEO ══ */}
+              {/* == USER INTELLIGENCE + GEO == */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>User Intelligence</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 24 }} className="charts-row-overview">
 
@@ -15855,14 +15855,15 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* ══ STEP 7 — CHURN & RETENTION PANEL ══ */}
+              {/* == STEP 7 — CHURN & RETENTION PANEL == */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Churn & Retention</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 24 }} className="charts-row-overview">
 
                 {/* MRR Movement */}
                 <div className="chart-box fade-up" style={{ padding: 20, animationDelay: "0.1s" }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 14 }}>MRR Movement</div>
-                  {[\n                    { label: "Starting MRR",  value: mrr - netMRR,        color: T.textSecondary, bar: null },
+                  {[
+                    { label: "Starting MRR",  value: mrr - netMRR,        color: T.textSecondary, bar: null },
                     { label: "New MRR",        value: newMRRThisMonth,     color: T.green,         bar: true },
                     { label: "Expansion",      value: expansionMRR,        color: T.teal,          bar: true },
                     { label: "Contraction",    value: -contractionMRR,     color: T.orange,        bar: true },
@@ -15940,7 +15941,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* ══ ARPU TREND ══ */}
+              {/* == ARPU TREND == */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Revenue Trend</div>
               <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 24 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
@@ -16093,7 +16094,7 @@ export default function AdminPanel() {
                 })()}
               </div>
 
-              {/* ══ TRIAL EXPIRY + CONVERSION FUNNEL ══ */}
+              {/* == TRIAL EXPIRY + CONVERSION FUNNEL == */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Trial Pipeline</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }} className="charts-row-overview">
 
@@ -16188,9 +16189,9 @@ export default function AdminPanel() {
             </>
           )}
 
-          {/* ═══════════════════════════════════════
+          {/* =======================================
              USERS TAB
-             ═══════════════════════════════════════ */}
+             ======================================= */}
           {tab === "users" && <UsersTab users={users} filteredUsers={filteredUsers} fetchUsers={fetchUsers} changeTier={changeTier} deleteUser={deleteUser} suspendUser={suspendUser} sendResetEmail={sendResetEmail} extendTrial={extendTrial} openEditUser={openEditUser} saveEditUser={saveEditUser} editingUser={editingUser} setEditingUser={setEditingUser} editUserForm={editUserForm} setEditUserForm={setEditUserForm} editUserLoading={editUserLoading} showAddUser={showAddUser} setShowAddUser={setShowAddUser} addUserForm={addUserForm} setAddUserForm={setAddUserForm} addUserManually={addUserManually} addUserLoading={addUserLoading} exportCSV={exportCSV} userSearch={userSearch} setUserSearch={setUserSearch} tierFilter={tierFilter} setTierFilter={setTierFilter} notify={notify} db={db} T={T} I={I} trialDaysLeft={trialDaysLeft} timeSince={timeSince} pendingOpenUid={pendingOpenUid} setPendingOpenUid={setPendingOpenUid} onDrawerChange={setDrawerOpen} auditLog={auditLog} showBulkImport={showBulkImport} setShowBulkImport={setShowBulkImport} bulkImportData={bulkImportData} setBulkImportData={setBulkImportData} bulkImportLoading={bulkImportLoading} setBulkImportLoading={setBulkImportLoading} />}
 
           
@@ -16223,7 +16224,7 @@ export default function AdminPanel() {
 
                   return (
                     <>
-                      {/* ══ STATS TOPBAR ══ */}
+                      {/* == STATS TOPBAR == */}
                       <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 24, overflow: "hidden" }}>
                         <button type="button" onClick={fetchAuditLog} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "10px 14px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 18px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
@@ -16256,7 +16257,7 @@ export default function AdminPanel() {
                         </div>
                       </div>
 
-                      {/* ══ 30-DAY ACTIVITY CHART ══ */}
+                      {/* == 30-DAY ACTIVITY CHART == */}
                       <div className="chart-box fade-up" style={{ marginBottom: 24, padding: "16px 20px 12px" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                           <div>
@@ -16282,19 +16283,19 @@ export default function AdminPanel() {
                         </div>
                       </div>
 
-                      {/* ══ SECTION LABEL ══ */}
+                      {/* == SECTION LABEL == */}
                       <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 12 }}>Data Update Calendar</div>
 
-                      {/* ══ CALENDAR + CHECKLIST ══ */}
+                      {/* == CALENDAR + CHECKLIST == */}
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
                         <DataCalendar T={T} now={now} />
                         <UpdateChecklist T={T} />
                       </div>
 
-                      {/* ══ SECTION LABEL ══ */}
+                      {/* == SECTION LABEL == */}
                       <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 12 }}>Action History</div>
 
-                      {/* ══ AUDIT LOG TABLE ══ */}
+                      {/* == AUDIT LOG TABLE == */}
                       <AuditLogTable
                         auditLog={auditLog}
                         users={users}
@@ -16305,7 +16306,7 @@ export default function AdminPanel() {
                         T={T}
                       />
 
-                      {/* ══ AUDIT SETTINGS PANEL ══ */}
+                      {/* == AUDIT SETTINGS PANEL == */}
                       <div style={{ marginTop: 28 }}>
                         <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 14 }}>Audit Settings & Integrations</div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
@@ -16383,7 +16384,7 @@ export default function AdminPanel() {
                         </div>
                       </div>
 
-                      {/* ══ REST API PANEL ══ */}
+                      {/* == REST API PANEL == */}
                       <div style={{ marginTop: 20 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                           <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5 }}>REST API</div>
@@ -16599,7 +16600,7 @@ export default function AdminPanel() {
 
                 return (
                   <>
-                    {/* ══ SECTION 1 — REVENUE HEALTH TOPBAR ══ */}
+                    {/* == SECTION 1 — REVENUE HEALTH TOPBAR == */}
                     <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, flexWrap: "wrap" }}>
                       <button type="button" onClick={() => { fetchUsers(); fetchAuditLog(); window._revenuePaymentsLoaded = false; notify("Revenue refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, marginRight: 8 }}>{I.refresh}</button>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 14, borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
@@ -16631,7 +16632,7 @@ export default function AdminPanel() {
                       )}
                     </div>
 
-                    {/* ══ SECTION 2 — MRR MOVEMENT + BREAKDOWN + LTV ══ */}
+                    {/* == SECTION 2 — MRR MOVEMENT + BREAKDOWN + LTV == */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Revenue Breakdown</div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 20 }} className="charts-row-overview">
 
@@ -16720,7 +16721,7 @@ export default function AdminPanel() {
                       </div>
                     </div>
 
-                    {/* ══ SECTION 3 — MRR HISTORY + FORECAST ══ */}
+                    {/* == SECTION 3 — MRR HISTORY + FORECAST == */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>MRR History & Forecast</div>
                     <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 20 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
@@ -16758,7 +16759,7 @@ export default function AdminPanel() {
                       </ResponsiveContainer>
                     </div>
 
-                    {/* ══ SECTION 4 — TRIAL PIPELINE + CONVERSION FUNNEL ══ */}
+                    {/* == SECTION 4 — TRIAL PIPELINE + CONVERSION FUNNEL == */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Trial Pipeline</div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }} className="charts-row-overview">
 
@@ -16846,7 +16847,7 @@ export default function AdminPanel() {
                       </div>
                     </div>
 
-                    {/* ══ SECTION 5 — PAYING USERS TABLE ══ */}
+                    {/* == SECTION 5 — PAYING USERS TABLE == */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Paying Customers</div>
                     <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 20 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
@@ -16928,7 +16929,7 @@ export default function AdminPanel() {
                       )}
                     </div>
 
-                    {/* ══ SECTION 6 — REVENUE MILESTONES ══ */}
+                    {/* == SECTION 6 — REVENUE MILESTONES == */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Revenue Milestones</div>
                     <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 20 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
@@ -16963,7 +16964,7 @@ export default function AdminPanel() {
                       </div>
                     </div>
 
-                    {/* ══ STAGE 2 DIVIDER ══ */}
+                    {/* == STAGE 2 DIVIDER == */}
                     <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "10px 0 20px" }}>
                       <div style={{ flex: 1, height: 1, background: T.border }} />
                       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 20, background: `${T.gold}10`, border: `1px solid ${T.gold}30` }}>
@@ -16973,7 +16974,7 @@ export default function AdminPanel() {
                       <div style={{ flex: 1, height: 1, background: T.border }} />
                     </div>
 
-                    {/* ══ SECTION 7 — PAYMENT EVENTS LOG ══ */}
+                    {/* == SECTION 7 — PAYMENT EVENTS LOG == */}
                     {(() => {
                       // Read from payments collection — empty until Paddle webhook is live
                       const payments = (window._revenuePayments || []);
@@ -17037,7 +17038,7 @@ export default function AdminPanel() {
                       );
                     })()}
 
-                    {/* ══ SECTION 8 — FAILED PAYMENTS ══ */}
+                    {/* == SECTION 8 — FAILED PAYMENTS == */}
                     {(() => {
                       const failedPayments = []; // Will read from payments where type === "payment_failed"
                       const hasFailed = failedPayments.length > 0;
@@ -17103,7 +17104,7 @@ export default function AdminPanel() {
                       );
                     })()}
 
-                    {/* ══ SECTION 9 — REAL REVENUE BY MONTH (PADDLE) ══ */}
+                    {/* == SECTION 9 — REAL REVENUE BY MONTH (PADDLE) == */}
                     {(() => {
                       const paddleRevenue = []; // Will read from payments collection grouped by month
                       const hasPaddleRevenue = paddleRevenue.length > 0;
@@ -17147,7 +17148,7 @@ export default function AdminPanel() {
                       );
                     })()}
 
-                    {/* ══ SECTION 10 — NRR + WATERFALL + LTV:CAC (ChartMogul-level) ══ */}
+                    {/* == SECTION 10 — NRR + WATERFALL + LTV:CAC (ChartMogul-level) == */}
                     {(() => {
                       // ── NRR Calculation ──
                       // NRR = (Starting MRR + Expansion - Contraction - Churn) / Starting MRR × 100
@@ -17298,7 +17299,7 @@ export default function AdminPanel() {
                       );
                     })()}
 
-                    {/* ══ SECTION 11 — COHORT RETENTION HEATMAP (ChartMogul-level) ══ */}
+                    {/* == SECTION 11 — COHORT RETENTION HEATMAP (ChartMogul-level) == */}
                     {(() => {
                       // Build cohort retention from real user data
                       // Each cohort = users who signed up in that month
@@ -17405,14 +17406,14 @@ export default function AdminPanel() {
                 );
               })()}
 
-          {/* ═══════════════════════════════════════
+          {/* =======================================
              DATA MANAGER TAB (Bloomberg-Level Design)
-             ═══════════════════════════════════════ */}
+             ======================================= */}
           {tab === "data" && (
             <>
-              {/* ═══════════════════════════════════════
+              {/* =======================================
                  CSV IMPORT PRO MODAL
-                 ═══════════════════════════════════════ */}
+                 ======================================= */}
               {showDataImport && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => importProgress.status !== "importing" && resetImport()}>
                   <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 20, width: "100%", maxWidth: 900, maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", animation: "slideUp 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
@@ -17862,9 +17863,9 @@ export default function AdminPanel() {
                     { icon: "[🗙]", title: "Linked Records", desc: "When editing a project, see community stats and quickly jump to related projects." },
                     { icon: "[b]", title: "Bulk Actions", desc: "Select multiple projects with checkboxes. Export, update prices, or delete in bulk." },
                   ]} />
-                  {/* ══════════════════════════════════════
+                  {/* ======================================
                      ADVANCED FILTER PRO SYSTEM
-                     ══════════════════════════════════════ */}
+                     ====================================== */}
                   
                   {/* Saved Filter Views Pills - Always visible */}
                   <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
@@ -18233,9 +18234,9 @@ export default function AdminPanel() {
                     </div>
                   )}
                   
-                  {/* ══════════════════════════════════════
+                  {/* ======================================
                      DATA QUALITY SCORE PANEL
-                     ══════════════════════════════════════ */}
+                     ====================================== */}
                   {(() => {
                     const quality = calculateOverallQuality();
                     if (!quality) return null;
@@ -18371,9 +18372,9 @@ export default function AdminPanel() {
                     );
                   })()}
                   
-                  {/* ══════════════════════════════════════
+                  {/* ======================================
                      DATA INTELLIGENCE PANEL
-                     ══════════════════════════════════════ */}
+                     ====================================== */}
                   {(() => {
                     const intel = calculateDataIntel();
                     if (!intel) return null;
@@ -18568,9 +18569,9 @@ export default function AdminPanel() {
                     );
                   })()}
                   
-                  {/* ══════════════════════════════════════
+                  {/* ======================================
                      DUPLICATES REVIEW MODAL
-                     ══════════════════════════════════════ */}
+                     ====================================== */}
                   {showDuplicatesModal && (() => {
                     const duplicates = findDuplicates();
                     return (
@@ -19152,9 +19153,9 @@ export default function AdminPanel() {
                             );
                           })()}
                         
-                        {/* ═══════════════════════════════════════
+                        {/* =======================================
                            LINKED RECORDS PANEL
-                           ═══════════════════════════════════════ */}
+                           ======================================= */}
                         {(() => {
                           const communityName = p.community;
                           const communityProjects = emaarProjects.filter(proj => proj.community === communityName && proj.id !== p.id);
@@ -19632,9 +19633,9 @@ export default function AdminPanel() {
                 </Section>
               )}
 
-              {/* ═══════════════════════════════════════
+              {/* =======================================
                  UNIFIED COMMUNITIES EDITOR (ROI + INTEL)
-                 ═══════════════════════════════════════ */}
+                 ======================================= */}
               {dataSubTab === "communities" && (() => {
                 const communities = Object.keys(defaultCommunityROI);
                 const activeKey = editingCommunity || communities[0];
@@ -19679,9 +19680,9 @@ export default function AdminPanel() {
                 return (
                   <div style={{ position: "fixed", top: 60, left: 240, right: 0, bottom: 0, display: "flex", zIndex: 50, background: "#04090F" }}>
 
-                    {/* ══════════════════════════════
+                    {/* ==============================
                         LEFT NAV — Community List
-                    ══════════════════════════════ */}
+                    ============================== */}
                     <div style={{ width: 280, flexShrink: 0, background: "#060D1A", borderRight: "1px solid rgba(212,168,67,0.1)", display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
 
                       {/* Back Button */}
@@ -19738,9 +19739,9 @@ export default function AdminPanel() {
                       </div>
                     </div>
 
-                    {/* ══════════════════════════════
+                    {/* ==============================
                         RIGHT — Combined Editor
-                    ══════════════════════════════ */}
+                    ============================== */}
                     <div style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100%", scrollbarWidth: "thin" }}>
 
                       {/* Hero Banner */}
@@ -19776,7 +19777,7 @@ export default function AdminPanel() {
                       {/* Editor Content */}
                       <div style={{ padding: "28px 36px" }}>
 
-                        {/* ══════ INVESTMENT DATA SECTION ══════ */}
+                        {/* ====== INVESTMENT DATA SECTION ====== */}
                         <div style={{ marginBottom: 32, padding: 24, background: "rgba(212,168,67,0.03)", border: "1px solid rgba(212,168,67,0.12)", borderRadius: 14 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
                             <div style={{ width: 4, height: 24, background: "#D4A843", borderRadius: 2 }} />
@@ -19877,7 +19878,7 @@ export default function AdminPanel() {
                           </div>
                         </div>
 
-                        {/* ══════ LIFESTYLE DATA SECTION ══════ */}
+                        {/* ====== LIFESTYLE DATA SECTION ====== */}
                         <div style={{ padding: 24, background: "rgba(0,191,165,0.03)", border: "1px solid rgba(0,191,165,0.12)", borderRadius: 14 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
                             <div style={{ width: 4, height: 24, background: "#00BFA5", borderRadius: 2 }} />
@@ -19982,9 +19983,9 @@ export default function AdminPanel() {
                           </div>
                         </div>
                         
-                        {/* ═══════════════════════════════════════
+                        {/* =======================================
                            LINKED PROJECTS PANEL
-                           ═══════════════════════════════════════ */}
+                           ======================================= */}
                         {(() => {
                           const communityProjects = emaarProjects.filter(p => p.community === activeKey);
                           
@@ -20507,16 +20508,16 @@ export default function AdminPanel() {
 
               {dataSubTab === "developers" && <DeveloperManager db={db} T={T} notify={notify} adminUser={adminUser} Section={Section} />}
 
-              {/* ═══ LIVE DATA SYNC ═══ */}
+              {/* === LIVE DATA SYNC === */}
               {dataSubTab === "livedata" && <LiveDataSync db={db} T={T} notify={notify} />}
               {dataSubTab === "launchradar" && <LaunchRadar db={db} T={T} notify={notify} />}
 
             </>
           )}
 
-          {/* ═══════════════════════════════════════
+          {/* =======================================
              LEADS TAB
-             ═══════════════════════════════════════ */}
+             ======================================= */}
           {tab === "leads" && (() => {
             /* ─── LEADS CRM — WORLD CLASS (Session 1) ─── */
             const now = new Date();
@@ -20972,10 +20973,10 @@ export default function AdminPanel() {
                   ))}
                 </div>
 
-                {/* ═══════════════════════════════════════════════════════════
+                {/* ===========================================================
                     SESSION 2 — FULL PIPELINE ANALYTICS DASHBOARD
                     Funnel · Source · Lost Reasons · Score · Nationality · Trend
-                ═══════════════════════════════════════════════════════════ */}
+                =========================================================== */}
                 {leadAnalyticsView && (() => {
                   // ── Pre-compute everything once ──────────────────────────
                   const pipelineStages = [
@@ -22335,15 +22336,15 @@ export default function AdminPanel() {
             );
           })()}
 
-          {/* ═══════════════════════════════════════
+          {/* =======================================
              NOTIFICATIONS TAB
-             ═══════════════════════════════════════ */}
+             ======================================= */}
           {tab === "notifications" && <NotificationsTab T={T} notify={notify} adminUser={adminUser} I={I} users={users} db={db} />}
           {tab === "campaigns" && <EmailCampaignsTab T={T} db={db} notify={notify} adminUser={adminUser} leads={leads} leadsTotal={leads.length} fetchLeads={fetchLeads} />}
 
-          {/* ═══════════════════════════════════════
+          {/* =======================================
              VERIFICATION TAB (Binance-style KYC)
-             ═══════════════════════════════════════ */}
+             ======================================= */}
           {tab === "verification" && (() => {
             /* ─── KYC VERIFICATION TAB ─── */
             const todayStart = new Date(); todayStart.setHours(0,0,0,0);
@@ -22386,7 +22387,7 @@ export default function AdminPanel() {
             const getUserContext = (uid) => users.find(u => u.uid === uid || u.id === uid);
 
             return <>
-              {/* ═══ KPI TOPBAR ═══ */}
+              {/* === KPI TOPBAR === */}
               <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, overflow: "hidden" }}>
                 <button type="button" onClick={() => { fetchVerifications(); notify("Refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                 {[
@@ -22403,7 +22404,7 @@ export default function AdminPanel() {
                 ))}
               </div>
 
-              {/* ═══ VERIFICATION LEVELS ═══ */}
+              {/* === VERIFICATION LEVELS === */}
               <div className="fade-up" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
                 {[
                   { level: "Basic", id: "basic", color: T.blue, icon: "1", desc: "Email verified", features: ["Email confirmation", "Basic profile", "Limited access"] },
@@ -22428,7 +22429,7 @@ export default function AdminPanel() {
                 ))}
               </div>
 
-              {/* ═══ SUB-TABS: Queue | History ═══ */}
+              {/* === SUB-TABS: Queue | History === */}
               <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
                 {[
                   { id: "queue", label: `Review Queue (${vPending.length})` },
@@ -22439,7 +22440,7 @@ export default function AdminPanel() {
                 ))}
               </div>
 
-              {/* ═══ FILTERS + BATCH MODE ═══ */}
+              {/* === FILTERS + BATCH MODE === */}
               <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
                 {(verifySubTab === "history" ? ["all", "approved", "rejected"] : ["all", "pending"]).map(f => (
                   <button key={f} type="button" onClick={() => setVerifyFilter(f)}
@@ -22478,7 +22479,7 @@ export default function AdminPanel() {
                   style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", width: 200 }} />
               </div>
 
-              {/* ═══ VERIFICATION TABLE ═══ */}
+              {/* === VERIFICATION TABLE === */}
               <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
                 {filtered.length === 0 ? (
                   <div style={{ textAlign: "center", padding: 60 }}>
@@ -22576,7 +22577,7 @@ export default function AdminPanel() {
                 )}
               </div>
 
-              {/* ═══ REVIEW DRAWER ═══ */}
+              {/* === REVIEW DRAWER === */}
               {reviewingUser && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 8000 }} onClick={() => { setReviewingUser(null); setRejectReason(""); }}>
                   <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "100%", maxWidth: 540, background: T.surface, borderLeft: `1px solid ${T.gold}30`, display: "flex", flexDirection: "column", animation: "slideIn 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
@@ -22703,19 +22704,19 @@ export default function AdminPanel() {
             </>;
           })()}
 
-          {/* ═══════════════════════════════════════
+          {/* =======================================
              ANALYTICS TAB
-             ═══════════════════════════════════════ */}
+             ======================================= */}
           {/* ─── EMAIL DIGEST TAB ─── */}
           {tab === "digest" && <DigestTab users={users} db={db} notify={notify} adminUser={adminUser} T={T} I={I} />}
 
 
           {tab === "analytics" && (() => {
-            /* ═══════════════════════════════════════════════════════════════════
+            /* ===================================================================
                TAB 10: ANALYTICS — PRO LEVEL
                Mixpanel + Amplitude + ChartMogul + Baremetrics
                Date range filtering, MRR charts, cohort drill-downs, export
-            ═══════════════════════════════════════════════════════════════════ */
+            =================================================================== */
             
             // Date range calculation
             const rangeMap = { "7d": 7, "30d": 30, "90d": 90, "all": 9999 };
@@ -22985,7 +22986,7 @@ export default function AdminPanel() {
 
             return (
             <>
-              {/* ═══ HEADER BAR: Date Range + Export ═══ */}
+              {/* === HEADER BAR: Date Range + Export === */}
               <div className="fade-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Analytics</div>
@@ -23024,7 +23025,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* ═══ REAL-TIME ANALYTICS PANEL (Phase 1A) ═══ */}
+              {/* === REAL-TIME ANALYTICS PANEL (Phase 1A) === */}
               <div className="fade-up" style={{ background: `linear-gradient(135deg, ${T.surface} 0%, ${T.card} 100%)`, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20, marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -23158,7 +23159,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* ═══ ENGAGEMENT ANALYTICS PANEL (Phase 2A) ═══ */}
+              {/* === ENGAGEMENT ANALYTICS PANEL (Phase 2A) === */}
               {(() => {
                 // Calculate Engagement Score (0-100)
                 const engagementScore = (() => {
@@ -23371,7 +23372,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ═══ KPI ROW WITH SPARKLINES + DELTAS ═══ */}
+              {/* === KPI ROW WITH SPARKLINES + DELTAS === */}
               <div className="fade-up" style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 20 }}>
                 {[
                   { label: "DAU", value: dau, delta: dauDelta, color: T.green, spark: dailySignups },
@@ -23401,7 +23402,7 @@ export default function AdminPanel() {
                 ))}
               </div>
 
-              {/* ═══ USER LIFECYCLE ANALYTICS (Phase 2B) ═══ */}
+              {/* === USER LIFECYCLE ANALYTICS (Phase 2B) === */}
               {(() => {
                 const now = new Date();
                 const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -23627,7 +23628,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ═══ ADVANCED FUNNELS & DROP-OFF ANALYSIS (Phase 2C) ═══ */}
+              {/* === ADVANCED FUNNELS & DROP-OFF ANALYSIS (Phase 2C) === */}
               {(() => {
                 // Define funnel stages with user data
                 const funnelStages = [
@@ -23864,7 +23865,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ═══ SEGMENT BUILDER (Phase 3A) ═══ */}
+              {/* === SEGMENT BUILDER (Phase 3A) === */}
               {(() => {
                 const now = new Date();
                 const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -24170,7 +24171,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ═══ SCHEDULED REPORTS & EXPORT CENTER (Phase 3B) ═══ */}
+              {/* === SCHEDULED REPORTS & EXPORT CENTER (Phase 3B) === */}
               {(() => {
                 const metricOptions = [
                   { key: "dau", label: "Daily Active Users", icon: "\uD83D\uDC64" },
@@ -24472,7 +24473,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ═══ AI INSIGHTS & ANOMALY DETECTION (Phase 3C) ═══ */}
+              {/* === AI INSIGHTS & ANOMALY DETECTION (Phase 3C) === */}
               {(() => {
                 const now = new Date();
                 
@@ -24737,7 +24738,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ═══ HEALTH SCORE DASHBOARD & CORRELATIONS (Phase 3C-2) ═══ */}
+              {/* === HEALTH SCORE DASHBOARD & CORRELATIONS (Phase 3C-2) === */}
               {(() => {
                 // Calculate Health Score Components (0-100 each)
                 const healthComponents = {
@@ -24992,7 +24993,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ═══ FORECASTING & GOAL TRACKING (Phase 3C-3 Final) ═══ */}
+              {/* === FORECASTING & GOAL TRACKING (Phase 3C-3 Final) === */}
               {(() => {
                 // Generate forecast data based on current trends
                 const generateForecast = (current, growthRate, months = 6) => {
@@ -25293,7 +25294,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* ═══ ROW 1: MRR Chart + User Growth + Funnel ═══ */}
+              {/* === ROW 1: MRR Chart + User Growth + Funnel === */}
               <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 0.8fr", gap: 16, marginBottom: 20 }}>
                 <Chart title="MRR History" sub="Monthly Recurring Revenue trend">
                   <ResponsiveContainer width="100%" height={200}>
@@ -25359,7 +25360,7 @@ export default function AdminPanel() {
                 </Chart>
               </div>
 
-              {/* ═══ COHORT RETENTION HEATMAP (Clickable) ═══ */}
+              {/* === COHORT RETENTION HEATMAP (Clickable) === */}
               <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px", marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <div>
@@ -25427,7 +25428,7 @@ export default function AdminPanel() {
                 )}
               </div>
 
-              {/* ═══ ROW 3: Geographic + Tier Movement + Churn ═══ */}
+              {/* === ROW 3: Geographic + Tier Movement + Churn === */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
                 <Chart title="Signups by Country" sub={`Top 10 · ${analyticsRange}`}>
                   {geoData.length === 0 ? (
@@ -25495,7 +25496,7 @@ export default function AdminPanel() {
                 </Chart>
               </div>
 
-              {/* ═══ ROW 4: Feature Usage + Top Users + Sources ═══ */}
+              {/* === ROW 4: Feature Usage + Top Users + Sources === */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
                 <Chart title="Feature Usage" sub="Top admin actions">
                   {featureUsage.length === 0 ? (
@@ -25561,7 +25562,7 @@ export default function AdminPanel() {
                 </Chart>
               </div>
 
-              {/* ═══ MILESTONES ═══ */}
+              {/* === MILESTONES === */}
               <Section title="Growth Milestones" sub="Track progress towards key business goals">
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
                   {[
@@ -25596,9 +25597,9 @@ export default function AdminPanel() {
             );
           })()}
 
-          {/* ═══════════════════════════════════════
+          {/* =======================================
              CANCELLATION INSIGHTS TAB
-             ═══════════════════════════════════════ */}
+             ======================================= */}
           {tab === "cancellation" && (() => {
             /* Real Firestore cancellations collection */
             if (!window._cancelLoaded) {
@@ -25734,11 +25735,11 @@ export default function AdminPanel() {
           {tab === "support" && <SupportTab T={T} I={I} db={db} notify={notify} adminUser={adminUser} users={users} setTab={setTab} setPendingOpenUid={setPendingOpenUid} />}
 
           {tab === "tabcontrol" && (() => {
-            /* ═══════════════════════════════════════════════════════════════════
+            /* ===================================================================
                TAB 9: TAB CONTROL — PRO LEVEL
                LaunchDarkly + Statsig + Flagsmith inspired feature flags
                Search, badges, descriptions, usage stats, bulk actions
-            ═══════════════════════════════════════════════════════════════════ */
+            =================================================================== */
 
             const ALL_TABS = [
               { id: "Overview", category: "Core", desc: "Dashboard home with key metrics" },
@@ -25828,7 +25829,7 @@ export default function AdminPanel() {
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-                {/* ═══ HEADER WITH SEARCH ═══ */}
+                {/* === HEADER WITH SEARCH === */}
                 <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                     <div>
@@ -25854,7 +25855,7 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* ═══ PREVIEW MODE ═══ */}
+                {/* === PREVIEW MODE === */}
                 <div className="fade-up" style={{ background: previewTier ? `${TIER_COLORS[previewTier]}10` : T.surface, borderRadius: 14, border: `1px solid ${previewTier ? TIER_COLORS[previewTier] + "40" : T.border}`, padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={previewTier ? TIER_COLORS[previewTier] : T.textMuted} strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/></svg>
@@ -25895,7 +25896,7 @@ export default function AdminPanel() {
                   </div>
                 )}
 
-                {/* ═══ BULK ACTIONS ═══ */}
+                {/* === BULK ACTIONS === */}
                 <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "14px 20px" }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Bulk Actions</div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -25913,7 +25914,7 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* ═══ TAB LIST BY CATEGORY ═══ */}
+                {/* === TAB LIST BY CATEGORY === */}
                 <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
                   <div style={{ padding: "12px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>All Tabs ({filteredTabs.length})</div>
@@ -25971,7 +25972,7 @@ export default function AdminPanel() {
                   )}
                 </div>
 
-                {/* ═══ SELECTED TAB CONFIG ═══ */}
+                {/* === SELECTED TAB CONFIG === */}
                 {selectedTabControl && (
                   <div className="fade-up" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.gold}40`, padding: "16px 20px" }}>
@@ -26097,9 +26098,9 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* ═══════════════════════════════════════
+      {/* =======================================
          BULK PRICE UPDATE MODAL
-         ═══════════════════════════════════════ */}
+         ======================================= */}
       {showBulkModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 420, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
