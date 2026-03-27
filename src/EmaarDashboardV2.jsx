@@ -10,6 +10,7 @@ import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnaps
 
 import { T } from "./theme";
 import { emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDevelopers, emaarRisks, dubaiMarket, dubaiSalesHistory, roiPhases, emaarSegments, radarData, megaProjects, communityIntel, communityROI } from "./data";
+import { damacProjects, damacFinancials, damacCommunities, damacYields, damacRisks, damacSegments, damacRadar, damacMegaProjects, damacIdentity, damacLive, damacBranded, damacFinancialHistory } from "./data_damac";
 import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
 import { useI18n } from "./i18n";
@@ -1982,7 +1983,46 @@ export default function EmaarDashboardV2() {
   const [liveCommunityIntel, setLiveCommunityIntel] = useState({});
   // Session 6 — Firestore live data for Overview tab
   const [emaarLive, setEmaarLive] = useState(null);       // developers/emaar
+  const [damacLiveFS, setDamacLiveFS] = useState(null);   // developers/damac (Firestore)
   const [marketGlobal, setMarketGlobal] = useState(null); // marketData/global
+
+  // S22: Developer data resolver — returns correct data for selectedDeveloper
+  const devData = React.useMemo(() => {
+    if (selectedDeveloper === "damac") {
+      const fs = damacLiveFS || {};
+      return {
+        identity:   damacIdentity,
+        live:       { ...damacLive, ...fs },
+        financials: damacFinancialHistory,
+        communities:damacCommunities,
+        yields:     damacYields,
+        risks:      fs.damacRisks     || damacRisks,
+        segments:   fs.damacSegments  || damacSegments,
+        radar:      fs.damacRadar     || damacRadar,
+        megaProjects:damacMegaProjects,
+        branded:    damacBranded,
+        projects:   damacProjects,
+        isT1:       true,
+        isLive:     true,
+      };
+    }
+    // Emaar (default)
+    return {
+      identity:   { id:"emaar", name:"Emaar Properties", founder:"Mohamed Alabbar", md:"Amit Jain", founded:1997 },
+      live:       emaarLive,
+      financials: emaarFinancials,
+      communities:emaarCommunities,
+      yields:     emaarYields,
+      risks:      emaarRisks,
+      segments:   emaarSegments,
+      radar:      radarData,
+      megaProjects:megaProjects,
+      branded:    [],
+      projects:   emaarProjects,
+      isT1:       true,
+      isLive:     true,
+    };
+  }, [selectedDeveloper, emaarLive, damacLiveFS]);
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
@@ -2118,6 +2158,8 @@ export default function EmaarDashboardV2() {
   const activeProjects = [
     // Always include all 48 curated Emaar projects with any live overrides
     ...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects["project_"+p.id]; return ov ? { ...p, ...ov } : p; }),
+    // Include DAMAC projects (S22)
+    ...damacProjects,
     // Include ALL extra projects from Firestore (radar + other developers)
     // Skip any that duplicate the 48 Emaar base projects by name
     ...extraProjects.filter(p => !emaarBaseNames.has((p.name || "").toLowerCase().trim()))
@@ -2200,6 +2242,11 @@ export default function EmaarDashboardV2() {
     unsubs.push(onSnapshot(doc(db, "developers", "emaar"), (snap) => {
       if (snap.exists()) setEmaarLive(snap.data());
       setOverviewLoading(false);
+    }));
+
+    // S22 — developers/damac (DAMAC data from Firestore)
+    unsubs.push(onSnapshot(doc(db, "developers", "damac"), (snap) => {
+      if (snap.exists()) setDamacLiveFS(snap.data());
     }));
 
     // Session 6 — marketData/global (Dubai market stats from Firestore)
@@ -3034,28 +3081,47 @@ export default function EmaarDashboardV2() {
 
           {/* ─── OVERVIEW TAB ─── */}
           {tab === "Overview" && <>
-            {/* S21: Developer context banner — shown when non-Emaar selected */}
+            {/* S21/S22: Developer context banner — shown when non-Emaar selected */}
             {selectedDeveloper !== "emaar" && (() => {
               const devNames = { damac: "DAMAC Properties", sobha: "Sobha Realty", nakheel: "Nakheel", binghatti: "Binghatti", meraas: "Meraas", aldar: "Aldar Properties", azizi: "Azizi Developments", danube: "Danube Properties", ellington: "Ellington Properties", mag: "MAG Property Dev", tiger: "Tiger Properties", imtiaz: "Imtiaz Developments", selectgroup: "Select Group", omniyat: "Omniyat", deyaar: "Deyaar Development", samana: "Samana Developers", nshama: "Nshama", wasl: "Wasl Properties", arada: "Arada", darglobal: "DAR Global", vincitore: "Vincitore", condor: "Condor Developers", reportage: "Reportage Properties", dubaiprops: "Dubai Properties" };
               const devName = devNames[selectedDeveloper] || selectedDeveloper;
               const isT1 = ["damac","sobha","nakheel","binghatti","meraas","aldar","azizi","danube"].includes(selectedDeveloper);
+              const isDamac = selectedDeveloper === "damac";
+              const d = devData?.live || {};
               return (
-                <div style={{ margin: "0 0 20px 0", padding: "16px 20px", borderRadius: 14, background: isT1 ? "rgba(212,168,67,0.06)" : "rgba(59,130,246,0.06)", border: `1px solid ${isT1 ? T.gold : T.blue}33`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-                  <div>
-                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: isT1 ? T.gold : T.blue }}>{devName}</div>
-                    <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>
-                      {isT1 ? "T1 Full Intelligence Module — coming in S22–S30" : "T2/T3 Developer — DLD data only · Full module in S34+"}
+                <div style={{ margin: "0 0 20px 0", padding: "20px 24px", borderRadius: 14, background: isDamac ? "rgba(200,169,81,0.06)" : isT1 ? "rgba(212,168,67,0.06)" : "rgba(59,130,246,0.06)", border: `1px solid ${isDamac ? "#C8A951" : isT1 ? T.gold : T.blue}33` }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: isDamac ? 16 : 0 }}>
+                    <div>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: isDamac ? "#C8A951" : isT1 ? T.gold : T.blue }}>{devName}</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>
+                        {isDamac ? "T1 Full Intelligence · Founded 2002 · Hussain Sajwani · MD: Amira Sajwani · #1 Private Developer UAE" : isT1 ? "T1 Full Intelligence Module — coming soon" : "T2/T3 Developer — DLD data only · Full module in S34+"}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                      {isDamac && <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 8, background: "rgba(200,169,81,0.12)", color: "#C8A951", fontWeight: 700, border: "1px solid #C8A95133" }}>T1 · LIVE DATA</span>}
+                      {!isDamac && <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 8, background: isT1 ? "rgba(212,168,67,0.1)" : "rgba(59,130,246,0.1)", color: isT1 ? T.gold : T.blue, fontWeight: 700, border: `1px solid ${isT1 ? T.gold : T.blue}33` }}>{isT1 ? "T1 · Full Data Coming" : "T2/T3 · Limited Data"}</span>}
+                      <button type="button" onClick={() => setSelectedDeveloper("emaar")} style={{ fontSize: 11, padding: "4px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}`, color: T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>← Back to Emaar</button>
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 8, background: isT1 ? "rgba(212,168,67,0.1)" : "rgba(59,130,246,0.1)", color: isT1 ? T.gold : T.blue, fontWeight: 700, border: `1px solid ${isT1 ? T.gold : T.blue}33` }}>
-                      {isT1 ? "T1 · Full Data Coming" : "T2/T3 · Limited Data"}
-                    </span>
-                    <button type="button" onClick={() => setSelectedDeveloper("emaar")}
-                      style={{ fontSize: 11, padding: "4px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}`, color: T.textMuted, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                      ← Back to Emaar
-                    </button>
-                  </div>
+                  {/* DAMAC live KPIs */}
+                  {isDamac && (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 10 }}>
+                      {[
+                        { label: "FY2025 Sales",       value: `AED ${d.propertySales || 36}B`,  sub: `USD ${d.propertySalesUSD || 9.8}B`, color: "#C8A951" },
+                        { label: "Net Profit Est.",    value: `AED ${d.netProfit || 8.1}B`,      sub: "FY2025 estimate",                   color: T.green   },
+                        { label: "Units Delivered",    value: `${(d.unitsDelivered||50000).toLocaleString()}+`, sub: "Since 2002",         color: T.teal    },
+                        { label: "Under Construction", value: `${(d.underConstruction||54000).toLocaleString()}+`, sub: "Active pipeline",  color: T.blue    },
+                        { label: "Communities",        value: "7", sub: "Master communities",                                              color: T.purple  },
+                        { label: "Market Rank",        value: "#1", sub: "Private Developer UAE",                                         color: "#C8A951" },
+                      ].map(k => (
+                        <div key={k.label} style={{ padding: "10px 12px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}`, textAlign: "center" }}>
+                          <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>{k.label}</div>
+                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: k.color }}>{k.value}</div>
+                          <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>{k.sub}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })()}
