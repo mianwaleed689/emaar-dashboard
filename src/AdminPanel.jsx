@@ -20539,7 +20539,7 @@ export default function AdminPanel() {
               thisWeek: leads.filter(l => new Date(l.createdAt) >= weekAgo).length,
               overdue: leads.filter(l => isOverdue(l) && l.status !== "Converted" && l.status !== "Lost").length,
               dueToday: leads.filter(l => isDueToday(l) && l.status !== "Converted" && l.status !== "Lost").length,
-              hot: leads.filter(l => scoreLead(l) >= 70).length,
+              hot: leads.filter(l => scoreLead(l) >= 70 && l.status !== "Converted" && l.status !== "Lost" && l.status !== "Dormant").length,
             };
             const conversionRate = stats.total > 0 ? Math.round((stats.converted / stats.total) * 100) : 0;
             const avgResponseHrs = (() => {
@@ -20553,11 +20553,19 @@ export default function AdminPanel() {
             const winRate = stats.converted + stats.lost > 0 ? Math.round((stats.converted / (stats.converted + stats.lost)) * 100) : 0;
             const sourceBreakdown = leads.reduce((acc, l) => {
               const s = l.source || "Manual";
-              if (!acc[s]) acc[s] = { total: 0, converted: 0 };
+              if (!acc[s]) acc[s] = { total: 0, converted: 0, viewing: 0, offerMade: 0, totalBudget: 0 };
               acc[s].total++;
-              if (l.status === "Converted") acc[s].converted++;
+              if (l.status === "Converted")         acc[s].converted++;
+              if (l.status === "Viewing Scheduled") acc[s].viewing++;
+              if (l.status === "Offer Made")        acc[s].offerMade++;
+              if (l.budget) acc[s].totalBudget += parseFloat(l.budget) || 0;
               return acc;
             }, {});
+            const avgBudget = (() => {
+              const withBudget = leads.filter(l => l.budget && parseFloat(l.budget) > 0);
+              if (withBudget.length === 0) return null;
+              return Math.round(withBudget.reduce((s, l) => s + parseFloat(l.budget), 0) / withBudget.length);
+            })();
             const avgDaysToClose = (() => {
               const closed = leads.filter(l => l.status === "Converted" && l.createdAt && l.convertedAt);
               if (closed.length === 0) return null;
@@ -20948,11 +20956,11 @@ export default function AdminPanel() {
 
                   // Conversion rate stage-to-stage
                   const stageConv = [
-                    { from: "New",               to: "Contacted",         rate: stats.new > 0       ? Math.round((stats.contacted / stats.new) * 100) : 0 },
-                    { from: "Contacted",         to: "Qualified",         rate: stats.contacted > 0 ? Math.round((stats.qualified / stats.contacted) * 100) : 0 },
-                    { from: "Qualified",         to: "Viewing Scheduled", rate: stats.qualified > 0 ? Math.round((stats.viewing / stats.qualified) * 100) : 0 },
-                    { from: "Viewing Scheduled", to: "Offer Made",        rate: stats.viewing > 0   ? Math.round((stats.offerMade / stats.viewing) * 100) : 0 },
-                    { from: "Offer Made",        to: "Converted",         rate: stats.offerMade > 0 ? Math.round((stats.converted / stats.offerMade) * 100) : 0 },
+                    { from: "New",      to: "Contacted", rate: stats.new > 0       ? Math.round((stats.contacted / stats.new) * 100) : 0 },
+                    { from: "Contact",  to: "Qualified", rate: stats.contacted > 0 ? Math.round((stats.qualified / stats.contacted) * 100) : 0 },
+                    { from: "Qualif.",  to: "Viewing",   rate: stats.qualified > 0 ? Math.round((stats.viewing / stats.qualified) * 100) : 0 },
+                    { from: "Viewing",  to: "Offer",     rate: stats.viewing > 0   ? Math.round((stats.offerMade / stats.viewing) * 100) : 0 },
+                    { from: "Offer",    to: "Won",       rate: stats.offerMade > 0 ? Math.round((stats.converted / stats.offerMade) * 100) : 0 },
                   ];
 
                   // Lost reason breakdown
@@ -21073,8 +21081,8 @@ export default function AdminPanel() {
                         {[
                           { label: "Win Rate",       value: `${winRate}%`,                                                                            sub: `${stats.converted} of ${stats.converted + stats.lost} closed`,   color: T.green  },
                           { label: "Days to Close",  value: avgDaysToClose !== null ? `${avgDaysToClose}d` : "—",                                     sub: "Lead → Converted avg",                                           color: T.blue   },
-                          { label: "Hot Leads",      value: stats.hot,                                                                                sub: "Score 70+ ready to close",                                       color: T.red    },
-                          { label: "Pipeline Value", value: `AED ${(totalPipelineVal/1e6).toFixed(1)}M`,                                             sub: "Total budget across all leads",                                  color: T.gold   },
+                          { label: "Hot Leads",      value: stats.hot,                                                                                sub: "Score 70+ excl. dormant",                                        color: T.red    },
+                          { label: "Avg Budget",     value: avgBudget ? `AED ${(avgBudget/1e6).toFixed(1)}M` : "—",                                  sub: `${leads.filter(l=>l.budget).length} leads with budget`,          color: T.purple },
                           { label: "Avg Response",   value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "—",                                    sub: "First contact speed",                                            color: T.orange },
                           { label: "This Week",      value: stats.thisWeek,                                                                           sub: "New leads (7 days)",                                             color: T.teal   },
                         ].map((k, i) => (
@@ -21159,29 +21167,41 @@ export default function AdminPanel() {
                         {/* SOURCE PERFORMANCE */}
                         <div style={S.card}>
                           <div style={S.label}>Conversion Rate by Source</div>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                             {sourceList.length === 0 && <div style={{ fontSize: 11, color: T.textMuted }}>No source data yet.</div>}
                             {sourceList.map(([source, data]) => {
                               const wr = data.total > 0 ? Math.round((data.converted / data.total) * 100) : 0;
                               const barW = Math.round((data.total / sourceMax) * 100);
                               const col = wr >= 50 ? T.green : wr >= 25 ? T.gold : T.red;
+                              const avgBud = data.totalBudget > 0 && data.total > 0 ? Math.round(data.totalBudget / data.total) : 0;
                               return (
                                 <div key={source}>
-                                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                                     <span style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary }}>{source}</span>
-                                    <div style={{ display: "flex", gap: 10 }}>
+                                    <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                                       <span style={{ fontSize: 10, color: T.textMuted }}>{data.total} leads</span>
+                                      {avgBud > 0 && <span style={{ fontSize: 9, color: T.purple }}>~AED {(avgBud/1e6).toFixed(1)}M avg</span>}
                                       <span style={{ fontSize: 11, fontWeight: 800, color: col, minWidth: 36, textAlign: "right" }}>{wr}%</span>
                                     </div>
                                   </div>
-                                  <div style={{ height: 6, background: T.surfaceAlt, borderRadius: 3, overflow: "hidden" }}>
-                                    <div style={{ height: "100%", width: `${barW}%`, background: T.border, borderRadius: 3, position: "relative" }}>
-                                      <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${wr}%`, background: col, borderRadius: 3 }} />
-                                    </div>
+                                  <div style={{ height: 8, background: T.surfaceAlt, borderRadius: 4, overflow: "hidden", position: "relative" }}>
+                                    <div style={{ height: "100%", width: `${barW}%`, background: T.border, borderRadius: 4 }} />
+                                    <div style={{ position: "absolute", top: 0, left: 0, height: "100%", width: `${barW > 0 ? Math.round((data.viewing + data.offerMade) / data.total * barW) : 0}%`, background: `${T.teal}60`, borderRadius: 4 }} />
+                                    <div style={{ position: "absolute", top: 0, left: 0, height: "100%", width: `${barW > 0 ? Math.round((data.converted / data.total) * barW) : 0}%`, background: col, borderRadius: 4 }} />
+                                  </div>
+                                  <div style={{ display: "flex", gap: 8, marginTop: 3, fontSize: 9, color: T.textMuted }}>
+                                    {data.viewing > 0   && <span style={{ color: T.teal }}>🏠 {data.viewing} viewing</span>}
+                                    {data.offerMade > 0 && <span style={{ color: "#F97316" }}>💰 {data.offerMade} offer</span>}
+                                    {data.converted > 0 && <span style={{ color: T.green }}>🏆 {data.converted} won</span>}
                                   </div>
                                 </div>
                               );
                             })}
+                          </div>
+                          <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${T.border}`, fontSize: 9, color: T.textMuted, display: "flex", gap: 14 }}>
+                            <span>■ <span style={{ color: T.green }}>Won</span></span>
+                            <span>■ <span style={{ color: T.teal }}>Viewing + Offer</span></span>
+                            <span>■ <span style={{ color: T.border }}>Total volume</span></span>
                           </div>
                         </div>
 
@@ -21393,12 +21413,13 @@ export default function AdminPanel() {
                           ) : (
                             <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 220, overflowY: "auto" }}>
                               {leads
-                                .filter(l => scoreLead(l) >= 70 && l.status !== "Converted" && l.status !== "Lost")
+                                .filter(l => scoreLead(l) >= 70 && l.status !== "Converted" && l.status !== "Lost" && l.status !== "Dormant")
                                 .sort((a, b) => scoreLead(b) - scoreLead(a))
                                 .slice(0, 10)
                                 .map((lead, i) => {
                                   const score = scoreLead(lead);
                                   const scoreCol = score >= 90 ? T.green : score >= 70 ? T.gold : T.orange;
+                                  const sc = statusColors[lead.status || "New"] || statusColors.New;
                                   return (
                                     <div key={lead.id} onClick={() => setLeadDrawer(lead)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: T.surfaceAlt, borderRadius: 8, cursor: "pointer", border: `1px solid ${T.border}`, transition: "border-color 0.15s" }}
                                       onMouseEnter={e => e.currentTarget.style.borderColor = T.gold}
@@ -21409,8 +21430,8 @@ export default function AdminPanel() {
                                         <div style={{ fontSize: 10, color: T.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.project || lead.community || "No project"} · {lead.nationality || "—"}</div>
                                       </div>
                                       <div style={{ textAlign: "right", flexShrink: 0 }}>
-                                        <div style={{ fontSize: 10, fontWeight: 700, color: lead.status === "Qualified" ? "#8B5CF6" : T.gold }}>{lead.status || "New"}</div>
-                                        {lead.budget && <div style={{ fontSize: 9, color: T.textMuted }}>AED {parseFloat(lead.budget).toLocaleString()}</div>}
+                                        <div style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: sc.bg, color: sc.color }}>{lead.status || "New"}</div>
+                                        {lead.budget && <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>AED {parseFloat(lead.budget).toLocaleString()}</div>}
                                       </div>
                                     </div>
                                   );
