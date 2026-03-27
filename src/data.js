@@ -318,29 +318,29 @@ export const dubaiLandmarks = [
 
 /* ─── TOP 10 DEVELOPERS (from Excel PBI_Developers) ─── */
 export const topDevelopers = [
-  { rank:1, name:"Emaar Properties", sales:65.8, salesUSD:17.9, units:13149, delivered:7318, underConst:51032, segment:"Full Spectrum", confidence:"VERIFIED", share:9.64, color:T.gold },
-  { rank:2, name:"DAMAC Properties", sales:35.9, salesUSD:9.8, units:15393, delivered:2113, underConst:46554, segment:"Mid-Premium → Ultra-Lux", confidence:"VERIFIED", share:5.26, color:T.teal },
-  { rank:3, name:"Binghatti", sales:26.0, salesUSD:7.1, units:17061, delivered:4093, underConst:38000, segment:"Affordable → Mid-Premium", confidence:"VERIFIED", share:3.81, color:T.blue },
-  { rank:4, name:"Nakheel", sales:24.6, salesUSD:6.7, units:4160, delivered:1522, underConst:15000, segment:"Waterfront", confidence:"VERIFIED", share:3.60, color:T.green },
-  { rank:5, name:"Sobha Realty", sales:22.4, salesUSD:6.1, units:9698, delivered:2260, underConst:26933, segment:"Premium → Ultra-Lux", confidence:"VERIFIED", share:3.28, color:T.purple },
-  { rank:6, name:"Meraas", sales:20.9, salesUSD:5.7, units:2385, delivered:1913, underConst:12000, segment:"Premium Lifestyle", confidence:"VERIFIED", share:3.06, color:T.orange },
+  { rank:1, name:"Emaar Properties", sales:65.8, salesUSD:17.9, units:13149, delivered:7318, underConst:51032, segment:"Full Spectrum", confidence:"VERIFIED", share:9.64, color:"#D4A843" },
+  { rank:2, name:"DAMAC Properties", sales:35.9, salesUSD:9.8, units:15393, delivered:2113, underConst:46554, segment:"Mid-Premium → Ultra-Lux", confidence:"VERIFIED", share:5.26, color:"#00BFA5" },
+  { rank:3, name:"Binghatti", sales:26.0, salesUSD:7.1, units:17061, delivered:4093, underConst:38000, segment:"Affordable → Mid-Premium", confidence:"VERIFIED", share:3.81, color:"#3B82F6" },
+  { rank:4, name:"Nakheel", sales:24.6, salesUSD:6.7, units:4160, delivered:1522, underConst:15000, segment:"Waterfront", confidence:"VERIFIED", share:3.60, color:"#10B981" },
+  { rank:5, name:"Sobha Realty", sales:22.4, salesUSD:6.1, units:9698, delivered:2260, underConst:26933, segment:"Premium → Ultra-Lux", confidence:"VERIFIED", share:3.28, color:"#8B5CF6" },
+  { rank:6, name:"Meraas", sales:20.9, salesUSD:5.7, units:2385, delivered:1913, underConst:12000, segment:"Premium Lifestyle", confidence:"VERIFIED", share:3.06, color:"#F59E0B" },
   { rank:7, name:"Omniyat", sales:11.0, salesUSD:3.0, units:1656, delivered:800, underConst:4500, segment:"Ultra-Luxury", confidence:"VERIFIED", share:1.61, color:"#FF7043" },
   { rank:8, name:"Aldar", sales:9.9, salesUSD:2.7, units:1732, delivered:1200, underConst:18000, segment:"Abu Dhabi + Dubai", confidence:"VERIFIED", share:1.45, color:"#42A5F5" },
   { rank:9, name:"H&H Development", sales:8.1, salesUSD:2.2, units:1200, delivered:600, underConst:8000, segment:"Mid-Premium", confidence:"VERIFIED", share:1.19, color:"#AB47BC" },
-  { rank:10, name:"Danube Properties", sales:7.0, salesUSD:1.9, units:4089, delivered:1757, underConst:22000, segment:"Affordable", confidence:"VERIFIED", share:1.03, color:T.textMuted },
+  { rank:10, name:"Danube Properties", sales:7.0, salesUSD:1.9, units:4089, delivered:1757, underConst:22000, segment:"Affordable", confidence:"VERIFIED", share:1.03, color:"#7E95AD" },
 ];
 
 /* ─── RISK MATRIX (from Excel PBI_Risks) ─── */
 export const emaarRisks = [
-  { factor:"Premium Pricing Risk", level:5, likelihood:5, impact:5, score:125, mitigation:"Off-plan payment plans (80/20); branded residences justify premium", assessment:"HIGH", color:T.red },
-  { factor:"Market Cycle Correction", level:4, likelihood:5, impact:5, score:100, mitigation:"Diversified revenue; 35% recurring from malls/hotels", assessment:"ELEVATED", color:T.orange },
-  { factor:"Supply Competition", level:4, likelihood:5, impact:3, score:60, mitigation:"Brand premium 20-40%; 79K track record; master communities", assessment:"ELEVATED", color:T.orange },
-  { factor:"Geographic Concentration", level:3, likelihood:3, impact:5, score:45, mitigation:"Expanding to Saudi, Egypt, India; +124% intl sales YoY", assessment:"MODERATE", color:T.gold },
-  { factor:"Interest Rate Sensitivity", level:2, likelihood:2, impact:2, score:8, mitigation:"87% cash buyers; no floating debt exposure", assessment:"LOW", color:T.teal },
-  { factor:"Execution / Delivery", level:1, likelihood:1, impact:2, score:2, mitigation:"23-year record; 79,000+ units completed on schedule", assessment:"VERY LOW", color:T.green },
-  { factor:"Regulatory Changes", level:1, likelihood:1, impact:2, score:2, mitigation:"DLD/RERA framework; transparent governance", assessment:"VERY LOW", color:T.green },
-  { factor:"Currency (AED Peg)", level:1, likelihood:1, impact:2, score:2, mitigation:"USD peg since 1997; zero FX risk for USD investors", assessment:"VERY LOW", color:T.green },
-  { factor:"Liquidity / Exit Risk", level:1, likelihood:1, impact:1, score:1, mitigation:"DFM-listed; AED 150B+ market cap; deep secondary market", assessment:"VERY LOW", color:T.green },
+  { factor:"Premium Pricing Risk", level:5, likelihood:5, impact:5, score:125, mitigation:"Off-plan payment plans (80/20); branded residences justify premium", assessment:"HIGH", color:"#EF4444" },
+  { factor:"Market Cycle Correction", level:4, likelihood:5, impact:5, score:100, mitigation:"Diversified revenue; 35% recurring from malls/hotels", assessment:"ELEVATED", color:"#F59E0B" },
+  { factor:"Supply Competition", level:4, likelihood:5, impact:3, score:60, mitigation:"Brand premium 20-40%; 79K track record; master communities", assessment:"ELEVATED", color:"#F59E0B" },
+  { factor:"Geographic Concentration", level:3, likelihood:3, impact:5, score:45, mitigation:"Expanding to Saudi, Egypt, India; +124% intl sales YoY", assessment:"MODERATE", color:"#D4A843" },
+  { factor:"Interest Rate Sensitivity", level:2, likelihood:2, impact:2, score:8, mitigation:"87% cash buyers; no floating debt exposure", assessment:"LOW", color:"#00BFA5" },
+  { factor:"Execution / Delivery", level:1, likelihood:1, impact:2, score:2, mitigation:"23-year record; 79,000+ units completed on schedule", assessment:"VERY LOW", color:"#10B981" },
+  { factor:"Regulatory Changes", level:1, likelihood:1, impact:2, score:2, mitigation:"DLD/RERA framework; transparent governance", assessment:"VERY LOW", color:"#10B981" },
+  { factor:"Currency (AED Peg)", level:1, likelihood:1, impact:2, score:2, mitigation:"USD peg since 1997; zero FX risk for USD investors", assessment:"VERY LOW", color:"#10B981" },
+  { factor:"Liquidity / Exit Risk", level:1, likelihood:1, impact:1, score:1, mitigation:"DFM-listed; AED 150B+ market cap; deep secondary market", assessment:"VERY LOW", color:"#10B981" },
 ];
 
 /* ─── DUBAI MARKET 2025 (from Excel PBI_DubaiMarket) ─── */
@@ -372,10 +372,10 @@ export const roiPhases = [
 
 /* ─── SEGMENTS ─── */
 export const emaarSegments = [
-  { name:"UAE Property Dev", revenue:36.4, growth:"44%", color:T.gold },
-  { name:"Malls & Retail", revenue:6.3, growth:"13%", color:T.teal },
-  { name:"Hospitality", revenue:4.2, growth:"12%", color:T.cyan },
-  { name:"International", revenue:2.6, growth:"124%", color:T.green },
+  { name:"UAE Property Dev", revenue:36.4, growth:"44%", color:"#D4A843" },
+  { name:"Malls & Retail", revenue:6.3, growth:"13%", color:"#00BFA5" },
+  { name:"Hospitality", revenue:4.2, growth:"12%", color:"#06B6D4" },
+  { name:"International", revenue:2.6, growth:"124%", color:"#10B981" },
 ];
 
 /* ─── RADAR DATA ─── */
