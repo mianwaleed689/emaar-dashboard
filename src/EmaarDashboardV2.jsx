@@ -1164,6 +1164,8 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, selectedDev
   };
 
   const polygonLayersRef = React.useRef([]);
+
+  const getPPSFColor = (ppsf) => {
     if (ppsf >= 3500) return "#F59E0B"; // Ultra-premium
     if (ppsf >= 2500) return "#D4A843"; // Luxury
     if (ppsf >= 1800) return "#14B8A6"; // Premium
