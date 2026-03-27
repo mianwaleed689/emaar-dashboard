@@ -4,6 +4,8 @@
 // S16: T theme lives in src/theme.js — single source of truth
 // Re-exported here for files that still import T from data.js (LandingPage, ProjectManager etc)
 // IRON RULE: NEVER remove this export
+// S30: import T for internal use (topDevelopers, emaarRisks use T.color)
+import { T } from "./theme";
 export { T } from "./theme";
 
 /* ─── 48 EMAAR PROJECTS (from Excel) ─── */
