@@ -8108,8 +8108,8 @@ export default function EmaarDashboardV2() {
         const ci = { ...(communityIntel[selectedProject_.community] || {}), ...(liveCommunityIntel[selectedProject_.community] || {}) };
         const ciExists = !!(ci.famousFor || ci.tagline);
         return (
-        <div style={{ position: "fixed", inset: 0, background: T.bg, zIndex: 2000, overflowY: "auto" }} onClick={() => setSelectedProject(null)}>
-          <div style={{ background: T.bg, width: "100%", maxWidth: 1100, margin: "0 auto", minHeight: "100vh", padding: "0 0 60px 0", position: "relative" }} onClick={e => e.stopPropagation()}>
+        <div style={{ position: "fixed", inset: 0, background: "#04090F", zIndex: 2000, overflowY: "auto" }} onClick={() => setSelectedProject(null)}>
+          <div style={{ background: "#04090F", width: "100%", minHeight: "100vh", position: "relative" }} onClick={e => e.stopPropagation()}>
             {/* ── TOP NAV BAR ── */}
             <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(4,9,15,0.95)", backdropFilter: "blur(12px)", borderBottom: `1px solid ${T.border}`, padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", color: T.textSecondary, cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "'Outfit', sans-serif", padding: "6px 0" }}>
@@ -8127,12 +8127,12 @@ export default function EmaarDashboardV2() {
               </div>
             )}
 
-            <div style={{ padding: "32px 40px" }}>
+            <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 48px 80px" }}>
               {/* Header */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                    <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 32, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h2>
+                    <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 28, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h2>
                     {selectedProject_.emaarUrl && <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(212,168,67,0.08)", whiteSpace: "nowrap" }} title={`Official listing on ${getLinkDomain(selectedProject_.emaarUrl)}`}>SOURCE ↗</a>}
                     <span style={{ fontSize: 10, color: T.teal, padding: "3px 8px", border: "1px solid rgba(0,191,165,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(0,191,165,0.08)", whiteSpace: "nowrap" }}>FULL DETAIL ↓ SCROLL</span>
                   </div>
@@ -8457,36 +8457,29 @@ export default function EmaarDashboardV2() {
                 </div>
               )}
 
-              {/* Project Tools */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {/* WhatsApp Inquiry */}
+              {/* ── ACTION BUTTONS ROW ── */}
+              <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+                {/* WhatsApp */}
                 <a href={`https://wa.me/971XXXXXXXXX?text=Hi, I'm interested in ${encodeURIComponent(selectedProject_.name)} in ${encodeURIComponent(selectedProject_.community)}. Price from AED ${selectedProject_.price ? (selectedProject_.price/1000000).toFixed(2)+'M' : 'TBD'}. Handover: ${selectedProject_.handover}.`}
                   target="_blank" rel="noopener noreferrer"
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0", background: "linear-gradient(135deg, rgba(37,211,102,0.2), rgba(37,211,102,0.08))", border: "1px solid rgba(37,211,102,0.5)", borderRadius: 12, color: "#25D366", fontSize: 14, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}
-                  onMouseEnter={e => e.currentTarget.style.background = "linear-gradient(135deg, rgba(37,211,102,0.3), rgba(37,211,102,0.15))"}
-                  onMouseLeave={e => e.currentTarget.style.background = "linear-gradient(135deg, rgba(37,211,102,0.2), rgba(37,211,102,0.08))"}>
+                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "15px 0", background: "linear-gradient(135deg, rgba(37,211,102,0.18), rgba(37,211,102,0.06))", border: "1px solid rgba(37,211,102,0.45)", borderRadius: 12, color: "#25D366", fontSize: 14, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                   WhatsApp Inquiry
                 </a>
-                <div style={{ display: "flex", gap: 8 }}>
-                  {/* Official Source Link */}
-                  {selectedProject_.emaarUrl && (
-                    <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer"
-                      style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.06))", border: "1px solid rgba(212,168,67,0.35)", borderRadius: 12, color: T.gold, fontSize: 12, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}
-                      onMouseEnter={e => e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,168,67,0.25), rgba(212,168,67,0.12))"}
-                      onMouseLeave={e => e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.06))"}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                      Official Source ↗
-                    </a>
-                  )}
-                  {/* Copy Data */}
-                  <button type="button" onClick={() => { const p = selectedProject_; const txt = `${p.name} | ${p.community} | AED ${p.price ? (p.price/1000000).toFixed(2)+"M" : "TBD"} | ${p.ppsf ? p.ppsf.toLocaleString()+" PPSF" : ""} | Handover: ${p.handover} | Payment: ${p.payment} | Status: ${p.status}`; navigator.clipboard?.writeText(txt).then(() => alert("✅ Copied")).catch(() => alert(txt)); }}
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 16px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, color: T.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}
-                    title="Copy project data">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    Copy
-                  </button>
-                </div>
+                {/* Official Source */}
+                {(selectedProject_.emaarUrl || selectedProject_.sourceUrl) && (
+                  <a href={selectedProject_.emaarUrl || selectedProject_.sourceUrl} target="_blank" rel="noopener noreferrer"
+                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "15px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.06))", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 12, color: T.gold, fontSize: 14, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    Official Source ↗
+                  </a>
+                )}
+                {/* Copy */}
+                <button type="button" onClick={() => { const p = selectedProject_; const txt = `${p.name} | ${p.community} | AED ${p.price ? (p.price/1000000).toFixed(2)+"M" : "TBD"} | Handover: ${p.handover} | Payment: ${p.payment}`; navigator.clipboard?.writeText(txt).then(() => alert("✅ Copied")).catch(() => alert(txt)); }}
+                  style={{ padding: "15px 20px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  Copy
+                </button>
               </div>
 
               {/* ─── PDF REPORT BUTTON ─── */}
