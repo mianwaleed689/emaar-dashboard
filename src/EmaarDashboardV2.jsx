@@ -8105,7 +8105,16 @@ export default function EmaarDashboardV2() {
         if (!_sp) { return null; }
         /* Use _sp below but keep variable name short */
         const selectedProject_ = _sp;
-        const ci = { ...(communityIntel[selectedProject_.community] || {}), ...(liveCommunityIntel[selectedProject_.community] || {}) };
+        // Community name alias map — bridges data_emaar_complete names to communityIntel keys
+        const communityAliases = {
+          "Mina Rashid": "Rashid Yachts & Marina",
+          "Grand Polo Club & Resort": "Grand Polo Club",
+          "The Heights CW": "The Heights CW",
+          "Emaar Beachfront": "Emaar Beachfront",
+          "Emaar South": "Emaar South",
+        };
+        const ciKey = communityAliases[selectedProject_.community] || selectedProject_.community;
+        const ci = { ...(communityIntel[ciKey] || communityIntel[selectedProject_.community] || {}), ...(liveCommunityIntel[ciKey] || liveCommunityIntel[selectedProject_.community] || {}) };
         const ciExists = !!(ci.famousFor || ci.tagline);
         return (
         <div style={{ position: "fixed", inset: 0, background: "#04090F", zIndex: 2000, overflowY: "auto" }} onClick={() => setSelectedProject(null)}>
