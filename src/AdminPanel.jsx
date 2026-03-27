@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+﻿import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ReactDOM from "react-dom";
 import { auth, db, storage, firebaseConfig } from "./firebase";
 import { initializeApp, deleteApp } from "firebase/app";
@@ -9880,15 +9880,17 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   const focusIn  = e => e.target.style.borderColor = T.gold;
   const focusOut = e => e.target.style.borderColor = "rgba(212,168,67,0.15)";
 
-  const Modal = ({ children, maxWidth = 500, onClose }) => (
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const Modal     = useMemo(() => ({ children, maxWidth = 500, onClose }) => (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 20px", overflowY: "auto" }} onClick={onClose}>
       <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
         {children}
       </div>
     </div>
-  );
+  ), []); // eslint-disable-line
 
-  const ModalHeader = ({ title, sub, onClose }) => (
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const ModalHeader = useMemo(() => ({ title, sub, onClose }) => (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22 }}>
       <div>
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{title}</div>
@@ -9896,21 +9898,24 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       </div>
       <button type="button" onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}></button>
     </div>
-  );
+  ), []); // eslint-disable-line
 
-  const Field = ({ label, children, hint }) => (
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const Field = useMemo(() => ({ label, children, hint }) => (
     <div>
       <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>{label}{hint && <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0, marginLeft: 6 }}>{hint}</span>}</label>
       {children}
     </div>
-  );
+  ), []); // eslint-disable-line
 
-  const Btn      = ({ onClick, color, children, disabled, style = {} }) => (
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const Btn = useMemo(() => ({ onClick, color, children, disabled, style = {} }) => (
     <button type="button" onClick={onClick} disabled={disabled} style={{ padding: "10px 20px", borderRadius: 9, border: "none", background: color, color: "#fff", fontSize: 13, fontWeight: 700, cursor: disabled ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: disabled ? 0.6 : 1, ...style }}>{children}</button>
-  );
-  const BtnGhost = ({ onClick, children, style = {} }) => (
+  ), []); // eslint-disable-line
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const BtnGhost = useMemo(() => ({ onClick, children, style = {} }) => (
     <button type="button" onClick={onClick} style={{ padding: "10px 20px", borderRadius: 9, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", ...style }}>{children}</button>
-  );
+  ), []); // eslint-disable-line
   const ColHeader = ({ label, field }) => (
     <div style={{ display: "flex", alignItems: "center", gap: 4, cursor: field ? "pointer" : "default", userSelect: "none" }} onClick={() => field && handleSort(field)}>
       <span style={{ fontSize: 9, fontWeight: 700, color: sortField === field ? T.gold : T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>{label}</span>
