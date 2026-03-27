@@ -21602,176 +21602,6 @@ export default function AdminPanel() {
 
                 {/* ADD LEAD MODAL */}
 
-                {/* ── ADD USER MODAL ── same pattern as Add Lead ── */}
-                {showAddUser && (
-                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowAddUser(false)}>
-                    <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 16, width: "95%", maxWidth: 540, padding: 28, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>+ Add New User</h3>
-                        <button type="button" onClick={() => setShowAddUser(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>
-                      </div>
-                      <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: "#93C5FD" }}>
-                        <strong>Note:</strong> The new user will receive a verification email. You will remain logged in as admin.
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                        {[
-                          { key: "name",     label: "Full Name *",      placeholder: "John Smith",         full: true },
-                          { key: "email",    label: "Email Address *",  placeholder: "john@company.com",   full: true, type: "email" },
-                          { key: "password", label: "Password *",       placeholder: "Min 6 characters",   full: true, type: "password" },
-                        ].map(f => (
-                          <div key={f.key} style={{ gridColumn: f.full ? "1/-1" : "auto" }}>
-                            <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
-                            <input type={f.type || "text"} placeholder={f.placeholder} value={addUserForm[f.key] || ""} onChange={e => setAddUserForm(p => ({ ...p, [f.key]: e.target.value }))}
-                              style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                            {f.key === "password" && addUserForm.password && addUserForm.password.length < 6 && (
-                              <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>⚡ Min 6 characters</div>
-                            )}
-                          </div>
-                        ))}
-                        <div style={{ gridColumn: "1/-1" }}>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone / WhatsApp</label>
-                          <div style={{ display: "flex", gap: 8 }}>
-                            <select value={addUserForm.phoneCode || "+971"} onChange={e => setAddUserForm(p => ({ ...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum || "").replace(/\s/g, "") }))}
-                              style={{ width: 180, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
-                              {[["+971","🇦🇪 UAE"],["+91","🇮🇳 India"],["+92","🇵🇰 Pakistan"],["+44","🇬🇧 UK"],["+1","🇺🇸 USA"],["+966","🇸🇦 Saudi Arabia"],["+974","🇶🇦 Qatar"],["+965","🇰🇼 Kuwait"],["+968","🇴🇲 Oman"],["+973","🇧🇭 Bahrain"],["+20","🇪🇬 Egypt"],["+962","🇯🇴 Jordan"],["+961","🇱🇧 Lebanon"],["+963","🇸🇾 Syria"],["+964","🇮🇶 Iraq"],["+98","🇮🇷 Iran"],["+880","🇧🇩 Bangladesh"],["+94","🇱🇰 Sri Lanka"],["+977","🇳🇵 Nepal"],["+63","🇵🇭 Philippines"],["+234","🇳🇬 Nigeria"],["+254","🇰🇪 Kenya"],["+27","🇿🇦 South Africa"],["+33","🇫🇷 France"],["+49","🇩🇪 Germany"],["+39","🇮🇹 Italy"],["+34","🇪🇸 Spain"],["+7","🇷🇺 Russia"],["+86","🇨🇳 China"],["+81","🇯🇵 Japan"],["+82","🇰🇷 Korea"],["+55","🇧🇷 Brazil"],["+52","🇲🇽 Mexico"],["+61","🇦🇺 Australia"],["+64","🇳🇿 NZ"],["+31","🇳🇱 Netherlands"],["+46","🇸🇪 Sweden"],["+47","🇳🇴 Norway"],["+45","🇩🇰 Denmark"],["+358","🇫🇮 Finland"],["+41","🇨🇭 Switzerland"],["+43","🇦🇹 Austria"],["+32","🇧🇪 Belgium"],["+48","🇵🇱 Poland"],["+90","🇹🇷 Turkey"],["+30","🇬🇷 Greece"],["+351","🇵🇹 Portugal"],["+353","🇮🇪 Ireland"],["+420","🇨🇿 Czech"],["+36","🇭🇺 Hungary"],["+40","🇷🇴 Romania"],["+380","🇺🇦 Ukraine"],["+375","🇧🇾 Belarus"],["+7","🇰🇿 Kazakhstan"],["+994","🇦🇿 Azerbaijan"],["+374","🇦🇲 Armenia"],["+995","🇬🇪 Georgia"],["+998","🇺🇿 Uzbekistan"],["+992","🇹🇯 Tajikistan"],["+993","🇹🇲 Turkmenistan"],["+996","🇰🇬 Kyrgyzstan"],["+60","🇲🇾 Malaysia"],["+65","🇸🇬 Singapore"],["+66","🇹🇭 Thailand"],["+84","🇻🇳 Vietnam"],["+62","🇮🇩 Indonesia"],["+95","🇲🇲 Myanmar"],["+855","🇰🇭 Cambodia"],["+856","🇱🇦 Laos"],["+93","🇦🇫 Afghanistan"],["+213","🇩🇿 Algeria"],["+216","🇹🇳 Tunisia"],["+212","🇲🇦 Morocco"],["+218","🇱🇾 Libya"],["+249","🇸🇩 Sudan"],["+251","🇪🇹 Ethiopia"],["+255","🇹🇿 Tanzania"],["+256","🇺🇬 Uganda"],["+233","🇬🇭 Ghana"],["+225","🇨🇮 Ivory Coast"],["+237","🇨🇲 Cameroon"],["+243","🇨🇩 DR Congo"],["+221","🇸🇳 Senegal"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"],["+57","🇨🇴 Colombia"],["+54","🇦🇷 Argentina"],["+56","🇨🇱 Chile"],["+51","🇵🇪 Peru"],["+58","🇻🇪 Venezuela"],["+593","🇪🇨 Ecuador"],["+502","🇬🇹 Guatemala"],["+506","🇨🇷 Costa Rica"],["+507","🇵🇦 Panama"]].sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
-                            </select>
-                            <input type="tel" placeholder="50 123 4567" value={addUserForm.phoneNum || ""}
-                              onChange={e => { const num = e.target.value.replace(/[^\d\s]/g,""); setAddUserForm(p => ({ ...p, phoneNum: num, phone: (p.phoneCode||"+971") + num.replace(/\s/g,"") })); }}
-                              style={{ flex: 1, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
-                          </div>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Access Tier</label>
-                          <select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="free">Free</option>
-                            <option value="pro_trial">Pro Trial</option>
-                            <option value="pro">Pro · AED 99</option>
-                            <option value="enterprise">Enterprise · AED 499</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Job Role</label>
-                          <select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="user">— No role —</option>
-                            <option value="agent">Real Estate Agent</option>
-                            <option value="sales_manager">Sales Manager</option>
-                            <option value="broker">Broker</option>
-                            <option value="property_manager">Property Manager</option>
-                            <option value="investor">Investor</option>
-                            <option value="developer">Developer</option>
-                            <option value="staff">Platform Staff</option>
-                            <option value="admin">Admin</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Country</label>
-                          <select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({ ...p, country: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: addUserForm.country ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="">Select country...</option>
-                            {["🇦🇪 UAE","🇸🇦 Saudi Arabia","🇶🇦 Qatar","🇰🇼 Kuwait","🇴🇲 Oman","🇧🇭 Bahrain","🇮🇳 India","🇵🇰 Pakistan","🇧🇩 Bangladesh","🇱🇰 Sri Lanka","🇳🇵 Nepal","🇵🇭 Philippines","🇪🇬 Egypt","🇯🇴 Jordan","🇱🇧 Lebanon","🇸🇾 Syria","🇮🇶 Iraq","🇮🇷 Iran","🇬🇧 United Kingdom","🇺🇸 United States","🇦🇺 Australia","🇨🇦 Canada","🇫🇷 France","🇩🇪 Germany","🇷🇺 Russia","🇨🇳 China","🇯🇵 Japan","🇰🇷 Korea","🇳🇬 Nigeria","🇰🇪 Kenya","🇿🇦 South Africa","🇪🇹 Ethiopia","🇹🇿 Tanzania","🇺🇬 Uganda","🇬🇭 Ghana","🇲🇦 Morocco","🇹🇳 Tunisia","🇩🇿 Algeria","🇱🇾 Libya","🇸🇩 Sudan","🇹🇷 Turkey","🇺🇦 Ukraine","🇵🇱 Poland","🇷🇴 Romania","🇳🇱 Netherlands","🇧🇪 Belgium","🇨🇭 Switzerland","🇦🇹 Austria","🇸🇪 Sweden","🇳🇴 Norway","🇩🇰 Denmark","🇫🇮 Finland","🇵🇹 Portugal","🇬🇷 Greece","🇨🇿 Czech","🇭🇺 Hungary","🇲🇾 Malaysia","🇸🇬 Singapore","🇹🇭 Thailand","🇮🇩 Indonesia","🇻🇳 Vietnam","🇧🇷 Brazil","🇦🇷 Argentina","🇨🇴 Colombia","🇲🇽 Mexico","🇨🇱 Chile","🇳🇿 New Zealand","🌍 Other"].sort().map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Trial End Date</label>
-                          <input type="date" value={addUserForm.trialEnd || ""} onChange={e => setAddUserForm(p => ({ ...p, trialEnd: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
-                        </div>
-                        <div style={{ gridColumn: "1/-1" }}>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Admin Notes</label>
-                          <textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} rows={3}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
-                        </div>
-                      </div>
-                      {addUserForm.email && users.some(u => u.email && u.email.toLowerCase() === addUserForm.email.toLowerCase()) && (
-                        <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", fontSize: 12, color: "#F59E0B" }}>
-                          ⚠️ A user with this email already exists.
-                        </div>
-                      )}
-                      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-                        <button type="button" onClick={() => setShowAddUser(false)} style={{ flex: 1, padding: "11px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
-                        <button type="button" onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} style={{ flex: 2, padding: "11px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8860B)`, color: T.bg, fontWeight: 700, cursor: addUserLoading ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: addUserLoading ? 0.6 : 1 }}>
-                          {addUserLoading ? "Creating..." : "Create User"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* ── EDIT USER MODAL ── same pattern as Add Lead ── */}
-                {editingUser && (
-                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setEditingUser(null)}>
-                    <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 16, width: "95%", maxWidth: 540, padding: 28, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>Edit User</h3>
-                        <button type="button" onClick={() => setEditingUser(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>
-                      </div>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>{editingUser.email}</div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                        <div style={{ gridColumn: "1/-1" }}>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Full Name</label>
-                          <input type="text" placeholder="Full name" value={editUserForm.name || ""} onChange={e => setEditUserForm(p => ({ ...p, name: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone</label>
-                          <input type="tel" placeholder="+971 50 000 0000" value={editUserForm.phone || ""} onChange={e => setEditUserForm(p => ({ ...p, phone: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Country</label>
-                          <select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: editUserForm.country ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="">Select country...</option>
-                            {["🇦🇪 UAE","🇸🇦 Saudi Arabia","🇶🇦 Qatar","🇰🇼 Kuwait","🇴🇲 Oman","🇧🇭 Bahrain","🇮🇳 India","🇵🇰 Pakistan","🇧🇩 Bangladesh","🇱🇰 Sri Lanka","🇳🇵 Nepal","🇵🇭 Philippines","🇪🇬 Egypt","🇯🇴 Jordan","🇱🇧 Lebanon","🇸🇾 Syria","🇮🇶 Iraq","🇮🇷 Iran","🇬🇧 United Kingdom","🇺🇸 United States","🇦🇺 Australia","🇨🇦 Canada","🇫🇷 France","🇩🇪 Germany","🇷🇺 Russia","🇨🇳 China","🇯🇵 Japan","🇰🇷 Korea","🇳🇬 Nigeria","🇰🇪 Kenya","🇿🇦 South Africa","🇪🇹 Ethiopia","🇹🇿 Tanzania","🇺🇬 Uganda","🇬🇭 Ghana","🇲🇦 Morocco","🇹🇳 Tunisia","🇩🇿 Algeria","🇱🇾 Libya","🇸🇩 Sudan","🇹🇷 Turkey","🇺🇦 Ukraine","🇵🇱 Poland","🇷🇴 Romania","🇳🇱 Netherlands","🇧🇪 Belgium","🇨🇭 Switzerland","🇦🇹 Austria","🇸🇪 Sweden","🇳🇴 Norway","🇩🇰 Denmark","🇫🇮 Finland","🇵🇹 Portugal","🇬🇷 Greece","🇨🇿 Czech","🇭🇺 Hungary","🇲🇾 Malaysia","🇸🇬 Singapore","🇹🇭 Thailand","🇮🇩 Indonesia","🇻🇳 Vietnam","🇧🇷 Brazil","🇦🇷 Argentina","🇨🇴 Colombia","🇲🇽 Mexico","🇨🇱 Chile","🇳🇿 New Zealand","🌍 Other"].sort().map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Access Tier</label>
-                          <select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="free">Free</option>
-                            <option value="pro_trial">Pro Trial</option>
-                            <option value="pro">Pro · AED 99</option>
-                            <option value="enterprise">Enterprise · AED 499</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Job Role</label>
-                          <select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="user">— No role —</option>
-                            <option value="agent">Real Estate Agent</option>
-                            <option value="sales_manager">Sales Manager</option>
-                            <option value="broker">Broker</option>
-                            <option value="property_manager">Property Manager</option>
-                            <option value="investor">Investor</option>
-                            <option value="developer">Developer</option>
-                            <option value="staff">Platform Staff</option>
-                            <option value="admin">Admin</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Trial End Date</label>
-                          <input type="date" value={editUserForm.trialEnd ? editUserForm.trialEnd.slice(0,10) : ""} onChange={e => setEditUserForm(p => ({ ...p, trialEnd: e.target.value ? e.target.value + "T00:00:00.000Z" : "" }))}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
-                        </div>
-                        <div style={{ gridColumn: "1/-1" }}>
-                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Admin Notes</label>
-                          <textarea placeholder="Internal notes..." value={editUserForm.notes || ""} onChange={e => setEditUserForm(p => ({ ...p, notes: e.target.value }))} rows={3}
-                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-                        <button type="button" onClick={() => setEditingUser(null)} style={{ flex: 1, padding: "11px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
-                        <button type="button" onClick={saveEditUser} disabled={editUserLoading} style={{ flex: 2, padding: "11px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8860B)`, color: T.bg, fontWeight: 700, cursor: editUserLoading ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: editUserLoading ? 0.6 : 1 }}>
-                          {editUserLoading ? "Saving..." : "Save Changes"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {showAddLead && (
                   <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowAddLead(false)}>
@@ -25845,6 +25675,180 @@ export default function AdminPanel() {
 
 
           {tab === "eibor" && <EiborRatesPanel db={db} T={T} I={I} notify={notify} />}
+
+          {/* ── ADD USER MODAL (top-level) ── */}
+{/* ── ADD USER MODAL ── same pattern as Add Lead ── */}
+{showAddUser && (
+  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowAddUser(false)}>
+    <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 16, width: "95%", maxWidth: 540, padding: 28, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>+ Add New User</h3>
+        <button type="button" onClick={() => setShowAddUser(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>
+      </div>
+      <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: "#93C5FD" }}>
+        <strong>Note:</strong> The new user will receive a verification email. You will remain logged in as admin.
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        {[
+          { key: "name",     label: "Full Name *",      placeholder: "John Smith",         full: true },
+          { key: "email",    label: "Email Address *",  placeholder: "john@company.com",   full: true, type: "email" },
+          { key: "password", label: "Password *",       placeholder: "Min 6 characters",   full: true, type: "password" },
+        ].map(f => (
+          <div key={f.key} style={{ gridColumn: f.full ? "1/-1" : "auto" }}>
+            <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+            <input type={f.type || "text"} placeholder={f.placeholder} value={addUserForm[f.key] || ""} onChange={e => setAddUserForm(p => ({ ...p, [f.key]: e.target.value }))}
+              style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+            {f.key === "password" && addUserForm.password && addUserForm.password.length < 6 && (
+              <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>⚡ Min 6 characters</div>
+            )}
+          </div>
+        ))}
+        <div style={{ gridColumn: "1/-1" }}>
+          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone / WhatsApp</label>
+          <div style={{ display: "flex", gap: 8 }}>
+            <select value={addUserForm.phoneCode || "+971"} onChange={e => setAddUserForm(p => ({ ...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum || "").replace(/\s/g, "") }))}
+              style={{ width: 180, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
+              {[["+971","🇦🇪 UAE"],["+91","🇮🇳 India"],["+92","🇵🇰 Pakistan"],["+44","🇬🇧 UK"],["+1","🇺🇸 USA"],["+966","🇸🇦 Saudi Arabia"],["+974","🇶🇦 Qatar"],["+965","🇰🇼 Kuwait"],["+968","🇴🇲 Oman"],["+973","🇧🇭 Bahrain"],["+20","🇪🇬 Egypt"],["+962","🇯🇴 Jordan"],["+961","🇱🇧 Lebanon"],["+963","🇸🇾 Syria"],["+964","🇮🇶 Iraq"],["+98","🇮🇷 Iran"],["+880","🇧🇩 Bangladesh"],["+94","🇱🇰 Sri Lanka"],["+977","🇳🇵 Nepal"],["+63","🇵🇭 Philippines"],["+234","🇳🇬 Nigeria"],["+254","🇰🇪 Kenya"],["+27","🇿🇦 South Africa"],["+33","🇫🇷 France"],["+49","🇩🇪 Germany"],["+39","🇮🇹 Italy"],["+34","🇪🇸 Spain"],["+7","🇷🇺 Russia"],["+86","🇨🇳 China"],["+81","🇯🇵 Japan"],["+82","🇰🇷 Korea"],["+55","🇧🇷 Brazil"],["+52","🇲🇽 Mexico"],["+61","🇦🇺 Australia"],["+64","🇳🇿 NZ"],["+31","🇳🇱 Netherlands"],["+46","🇸🇪 Sweden"],["+47","🇳🇴 Norway"],["+45","🇩🇰 Denmark"],["+358","🇫🇮 Finland"],["+41","🇨🇭 Switzerland"],["+43","🇦🇹 Austria"],["+32","🇧🇪 Belgium"],["+48","🇵🇱 Poland"],["+90","🇹🇷 Turkey"],["+30","🇬🇷 Greece"],["+351","🇵🇹 Portugal"],["+353","🇮🇪 Ireland"],["+420","🇨🇿 Czech"],["+36","🇭🇺 Hungary"],["+40","🇷🇴 Romania"],["+380","🇺🇦 Ukraine"],["+375","🇧🇾 Belarus"],["+7","🇰🇿 Kazakhstan"],["+994","🇦🇿 Azerbaijan"],["+374","🇦🇲 Armenia"],["+995","🇬🇪 Georgia"],["+998","🇺🇿 Uzbekistan"],["+992","🇹🇯 Tajikistan"],["+993","🇹🇲 Turkmenistan"],["+996","🇰🇬 Kyrgyzstan"],["+60","🇲🇾 Malaysia"],["+65","🇸🇬 Singapore"],["+66","🇹🇭 Thailand"],["+84","🇻🇳 Vietnam"],["+62","🇮🇩 Indonesia"],["+95","🇲🇲 Myanmar"],["+855","🇰🇭 Cambodia"],["+856","🇱🇦 Laos"],["+93","🇦🇫 Afghanistan"],["+213","🇩🇿 Algeria"],["+216","🇹🇳 Tunisia"],["+212","🇲🇦 Morocco"],["+218","🇱🇾 Libya"],["+249","🇸🇩 Sudan"],["+251","🇪🇹 Ethiopia"],["+255","🇹🇿 Tanzania"],["+256","🇺🇬 Uganda"],["+233","🇬🇭 Ghana"],["+225","🇨🇮 Ivory Coast"],["+237","🇨🇲 Cameroon"],["+243","🇨🇩 DR Congo"],["+221","🇸🇳 Senegal"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"],["+57","🇨🇴 Colombia"],["+54","🇦🇷 Argentina"],["+56","🇨🇱 Chile"],["+51","🇵🇪 Peru"],["+58","🇻🇪 Venezuela"],["+593","🇪🇨 Ecuador"],["+502","🇬🇹 Guatemala"],["+506","🇨🇷 Costa Rica"],["+507","🇵🇦 Panama"]].sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
+            </select>
+            <input type="tel" placeholder="50 123 4567" value={addUserForm.phoneNum || ""}
+              onChange={e => { const num = e.target.value.replace(/[^\d\s]/g,""); setAddUserForm(p => ({ ...p, phoneNum: num, phone: (p.phoneCode||"+971") + num.replace(/\s/g,"") })); }}
+              style={{ flex: 1, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
+          </div>
+        </div>
+        <div>
+          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Access Tier</label>
+          <select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))}
+            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+            <option value="free">Free</option>
+            <option value="pro_trial">Pro Trial</option>
+            <option value="pro">Pro · AED 99</option>
+            <option value="enterprise">Enterprise · AED 499</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Job Role</label>
+          <select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))}
+            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+            <option value="user">— No role —</option>
+            <option value="agent">Real Estate Agent</option>
+            <option value="sales_manager">Sales Manager</option>
+            <option value="broker">Broker</option>
+            <option value="property_manager">Property Manager</option>
+            <option value="investor">Investor</option>
+            <option value="developer">Developer</option>
+            <option value="staff">Platform Staff</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Country</label>
+          <select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({ ...p, country: e.target.value }))}
+            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: addUserForm.country ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+            <option value="">Select country...</option>
+            {["🇦🇪 UAE","🇸🇦 Saudi Arabia","🇶🇦 Qatar","🇰🇼 Kuwait","🇴🇲 Oman","🇧🇭 Bahrain","🇮🇳 India","🇵🇰 Pakistan","🇧🇩 Bangladesh","🇱🇰 Sri Lanka","🇳🇵 Nepal","🇵🇭 Philippines","🇪🇬 Egypt","🇯🇴 Jordan","🇱🇧 Lebanon","🇸🇾 Syria","🇮🇶 Iraq","🇮🇷 Iran","🇬🇧 United Kingdom","🇺🇸 United States","🇦🇺 Australia","🇨🇦 Canada","🇫🇷 France","🇩🇪 Germany","🇷🇺 Russia","🇨🇳 China","🇯🇵 Japan","🇰🇷 Korea","🇳🇬 Nigeria","🇰🇪 Kenya","🇿🇦 South Africa","🇪🇹 Ethiopia","🇹🇿 Tanzania","🇺🇬 Uganda","🇬🇭 Ghana","🇲🇦 Morocco","🇹🇳 Tunisia","🇩🇿 Algeria","🇱🇾 Libya","🇸🇩 Sudan","🇹🇷 Turkey","🇺🇦 Ukraine","🇵🇱 Poland","🇷🇴 Romania","🇳🇱 Netherlands","🇧🇪 Belgium","🇨🇭 Switzerland","🇦🇹 Austria","🇸🇪 Sweden","🇳🇴 Norway","🇩🇰 Denmark","🇫🇮 Finland","🇵🇹 Portugal","🇬🇷 Greece","🇨🇿 Czech","🇭🇺 Hungary","🇲🇾 Malaysia","🇸🇬 Singapore","🇹🇭 Thailand","🇮🇩 Indonesia","🇻🇳 Vietnam","🇧🇷 Brazil","🇦🇷 Argentina","🇨🇴 Colombia","🇲🇽 Mexico","🇨🇱 Chile","🇳🇿 New Zealand","🌍 Other"].sort().map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Trial End Date</label>
+          <input type="date" value={addUserForm.trialEnd || ""} onChange={e => setAddUserForm(p => ({ ...p, trialEnd: e.target.value }))}
+            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
+        </div>
+        <div style={{ gridColumn: "1/-1" }}>
+          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Admin Notes</label>
+          <textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} rows={3}
+            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
+        </div>
+      </div>
+      {addUserForm.email && users.some(u => u.email && u.email.toLowerCase() === addUserForm.email.toLowerCase()) && (
+        <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", fontSize: 12, color: "#F59E0B" }}>
+          ⚠️ A user with this email already exists.
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+        <button type="button" onClick={() => setShowAddUser(false)} style={{ flex: 1, padding: "11px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+        <button type="button" onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} style={{ flex: 2, padding: "11px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8860B)`, color: T.bg, fontWeight: 700, cursor: addUserLoading ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: addUserLoading ? 0.6 : 1 }}>
+          {addUserLoading ? "Creating..." : "Create User"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* ── EDIT USER MODAL ── same pattern as Add Lead ── */}
+{editingUser && (
+  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setEditingUser(null)}>
+    <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 16, width: "95%", maxWidth: 540, padding: 28, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>Edit User</h3>
+        <button type="button" onClick={() => setEditingUser(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>
+      </div>
+      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>{editingUser.email}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div style={{ gridColumn: "1/-1" }}>
+          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Full Name</label>
+          <input type="text" placeholder="Full name" value={editUserForm.name || ""} onChange={e => setEditUserForm(p => ({ ...p, name: e.target.value }))}
+            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+        </div>
+        <div>
+          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone</label>
+          <input type="tel" placeholder="+971 50 000 0000" value={editUserForm.phone || ""} onChange={e => setEditUserForm(p => ({ ...p, phone: e.target.value }))}
+            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+        </div>
+        <div>
+          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Country</label>
+          <select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))}
+            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: editUserForm.country ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+            <option value="">Select country...</option>
+            {["🇦🇪 UAE","🇸🇦 Saudi Arabia","🇶🇦 Qatar","🇰🇼 Kuwait","🇴🇲 Oman","🇧🇭 Bahrain","🇮🇳 India","🇵🇰 Pakistan","🇧🇩 Bangladesh","🇱🇰 Sri Lanka","🇳🇵 Nepal","🇵🇭 Philippines","🇪🇬 Egypt","🇯🇴 Jordan","🇱🇧 Lebanon","🇸🇾 Syria","🇮🇶 Iraq","🇮🇷 Iran","🇬🇧 United Kingdom","🇺🇸 United States","🇦🇺 Australia","🇨🇦 Canada","🇫🇷 France","🇩🇪 Germany","🇷🇺 Russia","🇨🇳 China","🇯🇵 Japan","🇰🇷 Korea","🇳🇬 Nigeria","🇰🇪 Kenya","🇿🇦 South Africa","🇪🇹 Ethiopia","🇹🇿 Tanzania","🇺🇬 Uganda","🇬🇭 Ghana","🇲🇦 Morocco","🇹🇳 Tunisia","🇩🇿 Algeria","🇱🇾 Libya","🇸🇩 Sudan","🇹🇷 Turkey","🇺🇦 Ukraine","🇵🇱 Poland","🇷🇴 Romania","🇳🇱 Netherlands","🇧🇪 Belgium","🇨🇭 Switzerland","🇦🇹 Austria","🇸🇪 Sweden","🇳🇴 Norway","🇩🇰 Denmark","🇫🇮 Finland","🇵🇹 Portugal","🇬🇷 Greece","🇨🇿 Czech","🇭🇺 Hungary","🇲🇾 Malaysia","🇸🇬 Singapore","🇹🇭 Thailand","🇮🇩 Indonesia","🇻🇳 Vietnam","🇧🇷 Brazil","🇦🇷 Argentina","🇨🇴 Colombia","🇲🇽 Mexico","🇨🇱 Chile","🇳🇿 New Zealand","🌍 Other"].sort().map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Access Tier</label>
+          <select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))}
+            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+            <option value="free">Free</option>
+            <option value="pro_trial">Pro Trial</option>
+            <option value="pro">Pro · AED 99</option>
+            <option value="enterprise">Enterprise · AED 499</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Job Role</label>
+          <select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))}
+            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+            <option value="user">— No role —</option>
+            <option value="agent">Real Estate Agent</option>
+            <option value="sales_manager">Sales Manager</option>
+            <option value="broker">Broker</option>
+            <option value="property_manager">Property Manager</option>
+            <option value="investor">Investor</option>
+            <option value="developer">Developer</option>
+            <option value="staff">Platform Staff</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Trial End Date</label>
+          <input type="date" value={editUserForm.trialEnd ? editUserForm.trialEnd.slice(0,10) : ""} onChange={e => setEditUserForm(p => ({ ...p, trialEnd: e.target.value ? e.target.value + "T00:00:00.000Z" : "" }))}
+            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
+        </div>
+        <div style={{ gridColumn: "1/-1" }}>
+          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Admin Notes</label>
+          <textarea placeholder="Internal notes..." value={editUserForm.notes || ""} onChange={e => setEditUserForm(p => ({ ...p, notes: e.target.value }))} rows={3}
+            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+        <button type="button" onClick={() => setEditingUser(null)} style={{ flex: 1, padding: "11px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+        <button type="button" onClick={saveEditUser} disabled={editUserLoading} style={{ flex: 2, padding: "11px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8860B)`, color: T.bg, fontWeight: 700, cursor: editUserLoading ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: editUserLoading ? 0.6 : 1 }}>
+          {editUserLoading ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
 
         </div>
       </main>
