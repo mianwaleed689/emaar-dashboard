@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
@@ -71,7 +71,7 @@ function App() {
   return (
     <ErrorBoundary>
       <I18nProvider>
-        <BrowserRouter>
+        <HashRouter>
           <Routes>
             <Route path="/" element={<HomeRoute />} />
             <Route path="/dashboard" element={<EmaarDashboardV2 />} />
@@ -83,7 +83,7 @@ function App() {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
+        </HashRouter>
       </I18nProvider>
     </ErrorBoundary>
   );

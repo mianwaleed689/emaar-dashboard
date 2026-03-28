@@ -1950,15 +1950,6 @@ export default function EmaarDashboardV2() {
 
   // Set page title
   useEffect(() => { document.title = "DXB Analytics — Dubai Real Estate Intelligence Platform"; }, []);
-
-  // Auto-open project modal when navigated from /project/:id link
-  useEffect(() => {
-    const openId = location?.state?.openProjectId;
-    if (openId && activeProjects.length > 0) {
-      const proj = activeProjects.find(p => String(p.id) === String(openId) || p.id === openId);
-      if (proj) { setSelectedProject(proj); setTab("Projects"); }
-    }
-  }, [location?.state?.openProjectId, activeProjects.length]); // eslint-disable-line
   const [projectSearch, setProjectSearch] = useState("");
   const [projectFilter, setProjectFilter] = useState("All");
   const [projectTier, setProjectTier] = useState("All");
@@ -2023,7 +2014,6 @@ export default function EmaarDashboardV2() {
   const [overviewLoading, setOverviewLoading] = useState(true);
   const location = useLocation();
   const [selectedProject, setSelectedProject] = useState(null);
-  const [pdTab, setPdTab] = useState("overview");
   const [pdSendModal, setPdSendModal] = useState(false);
   const [pdCopiedLink, setPdCopiedLink] = useState(false);
   const [pdCalcPrice, setPdCalcPrice] = useState(1750000);
@@ -2174,6 +2164,16 @@ export default function EmaarDashboardV2() {
     // Skip any that duplicate the 48 Emaar base projects by name
     ...extraProjects.filter(p => !emaarBaseNames.has((p.name || "").toLowerCase().trim()))
   ];
+
+  // Auto-open project modal when navigated from /project/:id link
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const openId = location?.state?.openProjectId;
+    if (openId && activeProjects.length > 0) {
+      const proj = activeProjects.find(p => String(p.id) === String(openId) || p.id === openId);
+      if (proj) { setSelectedProject(proj); setTab("Projects"); }
+    }
+  }, [location?.state?.openProjectId, activeProjects.length]);
 
   // Normalize units from either Object ({studio:{total,sold}}) or Array ([{type,available,total}]) format
   const getUnitEntries = (units) => {
