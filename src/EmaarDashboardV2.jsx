@@ -5,7 +5,7 @@ import { Link, useLocation } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, Legend } from "recharts";
 import { auth, db } from "./firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, where } from "firebase/firestore";
 
 import { T } from "./theme";
@@ -582,10 +582,10 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
 
   const switchMode = (m) => { setMode(m); setError(""); setPass(""); setConfirmPass(""); };
 
-  const handleGoogleSignIn = async () => {
-    setGoogleLoading(true); setError("");
-    try {
-      const result = await signInWithRedirect(auth, googleProvider);
+  // Handle redirect result on page load
+  React.useEffect(() => {
+    getRedirectResult(auth).then(async (result) => {
+      if (!result) return;
       const u = result.user;
       const snap = await getDoc(doc(db, "users", u.uid));
       if (!snap.exists()) {
@@ -614,8 +614,15 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         } catch(e) {}
       }
       onLogin(u.email);
+    }).catch(() => {});
+  }, []);
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true); setError("");
+    try {
+      await signInWithRedirect(auth, googleProvider);
     } catch (err) {
-      if (err.code !== "auth/popup-closed-by-user") setError("Google sign-in failed. Please try again.");
+      setError("Google sign-in failed. Please try again.");
     }
     setGoogleLoading(false);
   };
@@ -2446,10 +2453,21 @@ export default function EmaarDashboardV2() {
     return () => unsubs.forEach(u => { try { u(); } catch {} });
   }, [isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Handle Google redirect result at top level
+  useEffect(() => {
+    getRedirectResult(auth).then((result) => {
+      if (result?.user) {
+        setShowLogin(false);
+        setIsLoggedIn(true);
+      }
+    }).catch(() => {});
+  }, []);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setIsLoggedIn(true);
+        setShowLogin(false);
         setUser(firebaseUser.email || "");
         // Fetch user profile from Firestore
         try {
