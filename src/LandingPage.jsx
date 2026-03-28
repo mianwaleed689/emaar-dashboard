@@ -1,4 +1,4 @@
-/* eslint-disable */
+﻿/* eslint-disable */
 /* ─── DXB ANALYTICS — LANDING PAGE v3.0 ───────────────────────────────────
    Research-backed redesign:
    • Outcome-focused headline under 8 words
@@ -134,7 +134,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
       solution: "Get verified yields, risk scores, and ROI projections",
       wins: ["Compare 3 projects side-by-side in 30 seconds", "See real DLD transaction data, not marketing brochures", "Calculate exact ROI — long-term, Airbnb, or flip strategy"],
       stat: "Verify any project in 30 seconds",
-      icon: "📐",
+      icon: "~",
     },
     brokerage: {
       label: "Brokerage / Agency",
@@ -142,22 +142,22 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
       solution: "One platform for your entire team — from AED 499/mo",
       wins: ["Standardize how your team researches properties", "Share professional reports that impress clients", "Track market shifts before your competitors do"],
       stat: "From AED 499/mo for your whole team",
-      icon: "🏢",
+      icon: "#",
     },
   };
 
   const tools = [
-    { icon: "🏠", label: "Overview" }, { icon: "📊", label: "Financials" },
-    { icon: "🏗️", label: "Projects" }, { icon: "📅", label: "Handover" },
+    { icon: "#", label: "Overview" }, { icon: "📊", label: "Financials" },
+    { icon: "%", label: "Projects" }, { icon: "cal", label: "Handover" },
     { icon: "🚀", label: "Launch Cal." }, { icon: "🗺️", label: "Map" },
     { icon: "🏘️", label: "Neighbourhoods" }, { icon: "📈", label: "Yields" },
-    { icon: "🏆", label: "Competitors" }, { icon: "💰", label: "ROI Calc" },
+    { icon: "🏆", label: "Competitors" }, { icon: "$", label: "ROI Calc" },
     { icon: "🔄", label: "Flip Calc" }, { icon: "🏦", label: "Mortgage" },
     { icon: "🛡️", label: "Risk" }, { icon: "📉", label: "Price History" },
-    { icon: "📋", label: "DLD Volumes" }, { icon: "🌍", label: "Currency" },
+    { icon: "📋", label: "DLD Volumes" }, { icon: "*", label: "Currency" },
     { icon: "⭐", label: "Inv. Score" }, { icon: "🏅", label: "Golden Visa" },
     { icon: "🌇", label: "STR vs LTR" }, { icon: "💼", label: "Portfolio" },
-    { icon: "🏢", label: "Srvc Charges" }, { icon: "🔍", label: "DXB Estimate" },
+    { icon: "#", label: "Srvc Charges" }, { icon: "🔍", label: "DXB Estimate" },
     { icon: "📈", label: "Market" },
   ];
 
@@ -318,7 +318,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                   ))}
                   <div style={{ marginTop: 8, fontSize: 7, color: "#64748B", padding: "0 12px 4px", textTransform: "uppercase", letterSpacing: 1 }}>CRM</div>
                   {[
-                    { t: "Leads",    active: false, icon: "👥" },
+                    { t: "Leads",    active: false, icon: "@" },
                     { t: "Clients",  active: false, icon: "💼" },
                   ].map(({ t, active, icon }) => (
                     <div key={t} style={{ padding: "6px 12px", fontSize: 10, color: "#64748B", display: "flex", alignItems: "center", gap: 6 }}>
@@ -551,8 +551,8 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           <div className="features-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
             {[
               { icon: "📊", title: "Developer Financials", desc: "Multi-year revenue, profit, backlog, EPS — sourced directly from official annual reports." },
-              { icon: "🏗️", title: "Project Intelligence", desc: "Every active project: price/sqft, payment plan, construction %, handover timeline." },
-              { icon: "💰", title: "Yield & ROI Calculator", desc: "Gross/net yields by community. Calculate returns for long-term, Airbnb, or flip." },
+              { icon: "%", title: "Project Intelligence", desc: "Every active project: price/sqft, payment plan, construction %, handover timeline." },
+              { icon: "$", title: "Yield & ROI Calculator", desc: "Gross/net yields by community. Calculate returns for long-term, Airbnb, or flip." },
               { icon: "⚖️", title: "3-Project Comparison", desc: "Side-by-side on price, yield, handover, payment plan — share via WhatsApp in one tap." },
               { icon: "🛡️", title: "Risk Assessment", desc: "9-factor risk matrix: market, regulatory, liquidity, construction, interest rate." },
               { icon: "🏅", title: "Golden Visa Finder", desc: "Automatically flag AED 2M+ projects eligible for 10-year UAE Golden Visa." },
@@ -881,7 +881,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             {[
               { icon: "🔒", label: "Bank-grade Security", sub: "Firebase encrypted" },
               { icon: "📊", label: "Verified Data", sub: "DLD · Developer IR · Knight Frank" },
-              { icon: "🌍", label: "20 Languages", sub: "Including Arabic & Urdu" },
+              { icon: "*", label: "20 Languages", sub: "Including Arabic & Urdu" },
               { icon: "⚡", label: "Real-time Updates", sub: "Live market data" },
             ].map((badge, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 20px", borderRadius: 12, background: T.surface, border: `1px solid ${T.border}` }}>
@@ -955,4 +955,5 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
     </div>
   );
 }
+
 

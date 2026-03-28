@@ -299,7 +299,7 @@ const MarketIntelligenceTab = ({ db, T, notify, users }) => {
     { name: "EIBOR Rates",       key: "eibor",       icon: "📈", schedule: "Daily 11:30AM UAE", lastUpdate: eiborData?.updatedAt,    status: eiborData ? "live" : "no_data",    value: eiborData ? `3M: ${eiborData.threeMonth || eiborData["3m"] || "—"}%` : "—" },
     { name: "Market Data",       key: "global",      icon: "🏙️", schedule: "Admin updated",     lastUpdate: marketGlobal?.updatedAt, status: marketGlobal ? "live" : "no_data", value: marketGlobal ? marketGlobal.totalMarketValue || "—" : "—" },
     { name: "DLD Transactions",  key: "dld",         icon: "📋", schedule: "Daily 7AM UAE",     lastUpdate: marketGlobal?.dldUpdatedAt, status: marketGlobal?.lastDLDFetchDate ? "live" : "pending", value: marketGlobal?.lastDLDTxnCount ? `${marketGlobal.lastDLDTxnCount} txns` : "Pending API keys" },
-    { name: "Developer Registry",key: "developers",  icon: "🏗️", schedule: "One-time seeded",   lastUpdate: developers[0]?.seededAt, status: developers.length > 0 ? "live" : "no_data", value: `${developers.length} developers` },
+    { name: "Developer Registry",key: "developers",  icon: "%", schedule: "One-time seeded",   lastUpdate: developers[0]?.seededAt, status: developers.length > 0 ? "live" : "no_data", value: `${developers.length} developers` },
   ];
 
   const statusColor = (s) => s === "live" ? T.green : s === "pending" ? T.orange : T.textMuted;
@@ -433,7 +433,7 @@ const MarketIntelligenceTab = ({ db, T, notify, users }) => {
 
       {/* Market Pulse KPIs */}
       <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>🌍 Dubai Market Pulse</div>
+        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>* Dubai Market Pulse</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 10 }}>
           {[
             { label: "Market Value", value: marketGlobal?.totalMarketValue || "AED 682.5B", color: T.gold },
@@ -457,7 +457,7 @@ const MarketIntelligenceTab = ({ db, T, notify, users }) => {
 
         {/* DLD Anomaly Alerts */}
         <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>⚠️ Transaction Anomalies & Alerts</div>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>! Transaction Anomalies & Alerts</div>
           <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>Price spikes, financial updates, system events</div>
           {loading ? (
             <div style={{ color: T.textMuted, fontSize: 12 }}>Loading...</div>
@@ -488,7 +488,7 @@ const MarketIntelligenceTab = ({ db, T, notify, users }) => {
 
         {/* Developer Registry — Launch Alerts */}
         <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>🏗️ Developer Registry — {developers.length} Registered</div>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>% Developer Registry — {developers.length} Registered</div>
           <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>Latest developer registrations · DLD seeded data</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 300, overflowY: "auto" }}>
             {developers.slice(0, 12).map((d, i) => (
@@ -760,7 +760,7 @@ const PricingPlansTab = ({ db, T, notify }) => {
 
       {/* Warning */}
       <div style={{ padding: "10px 16px", borderRadius: 8, background: "rgba(239,68,68,0.06)", border: `1px solid rgba(239,68,68,0.15)`, fontSize: 12, color: T.textMuted }}>
-        ⚠️ Price changes take effect immediately for <strong style={{ color: T.white }}>new subscribers only</strong>. Existing paying users keep their current price until they cancel and resubscribe. Update Stripe prices separately if changing billing amounts.
+        ! Price changes take effect immediately for <strong style={{ color: T.white }}>new subscribers only</strong>. Existing paying users keep their current price until they cancel and resubscribe. Update Stripe prices separately if changing billing amounts.
       </div>
 
       {/* Plan selector */}
@@ -847,7 +847,7 @@ const PricingPlansTab = ({ db, T, notify }) => {
             </div>
           ))}
         </div>
-        <div style={{ marginTop: 12, fontSize: 11, color: T.textMuted }}>💡 This preview matches exactly what users see in the upgrade modal. Save to publish changes instantly.</div>
+        <div style={{ marginTop: 12, fontSize: 11, color: T.textMuted }}>i This preview matches exactly what users see in the upgrade modal. Save to publish changes instantly.</div>
       </div>
 
     </div>
@@ -1058,7 +1058,7 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           {failedPayments.length > 0 && (
             <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 8, background: "rgba(239,68,68,0.12)", color: T.red, fontWeight: 700, border: `1px solid rgba(239,68,68,0.2)` }}>
-              ⚠️ {failedPayments.length} Failed Payment{failedPayments.length > 1 ? "s" : ""}
+              ! {failedPayments.length} Failed Payment{failedPayments.length > 1 ? "s" : ""}
             </span>
           )}
           {upcomingRenewals.length > 0 && (
@@ -1082,7 +1082,7 @@ const BillingTab = ({ db, T, notify, users, adminUser }) => {
         <SubTab id="overview"  label="📊 Revenue Overview" />
         <SubTab id="payments"  label="💳 Payment History" />
         <SubTab id="renewals"  label={`🔔 Renewals (${upcomingRenewals.length})`} />
-        <SubTab id="churn"     label={`⚠️ Churn Risk (${churnRisk.length})`} />
+        <SubTab id="churn"     label={`! Churn Risk (${churnRisk.length})`} />
       </div>
 
       {/* ── OVERVIEW TAB ── */}
@@ -1700,7 +1700,7 @@ const MarketDataEditor = ({ db, T, notify }) => {
 
       {/* Warning note */}
       <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid rgba(212,168,67,0.15)`, fontSize: 12, color: T.textMuted, marginBottom: 16 }}>
-        ⚠️ These values appear on the Overview, DLD Volumes, Competitors, and Market tabs. Verify against DLD official data before saving. Changes take effect immediately for all users.
+        ! These values appear on the Overview, DLD Volumes, Competitors, and Market tabs. Verify against DLD official data before saving. Changes take effect immediately for all users.
       </div>
 
       {/* Save button */}
@@ -2004,7 +2004,7 @@ const TabHelp = ({ items }) => {
 =================================================================== */
 // Pre-computed constants — outside components to prevent re-render on keystroke
 const PHONE_CODES_LIST = [["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+244","🇦🇴 Angola"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+1","🇧🇸 Bahamas"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+1","🇧🇧 Barbados"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],["+229","🇧🇯 Benin"],["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+267","🇧🇼 Botswana"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],["+238","🇨🇻 Cape Verde"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+242","🇨🇬 Congo"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],["+1","🇩🇴 Dominican Republic"],["+593","🇪🇨 Ecuador"],["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+291","🇪🇷 Eritrea"],["+372","🇪🇪 Estonia"],["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea South"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],["+382","🇲🇪 Montenegro"],["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+227","🇳🇪 Niger"],["+234","🇳🇬 Nigeria"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+597","🇸🇷 Suriname"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+1","🇹🇹 Trinidad"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1]));
-const COUNTRY_LIST = ["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","🌍 Other"].sort();
+const COUNTRY_LIST = ["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","* Other"].sort();
 
 
 function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpenUid }) {
@@ -7710,7 +7710,7 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
                     <div key={field.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <span style={{ fontSize: 18 }}>
-                          {field.type === "dropdown" ? "📋" : field.type === "date" ? "📀" : field.type === "number" ? "🗓" : field.type === "checkbox" ? "⚠️" : "•"}
+                          {field.type === "dropdown" ? "📋" : field.type === "date" ? "📀" : field.type === "number" ? "🗓" : field.type === "checkbox" ? "!" : "•"}
                         </span>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 600, color: T.white, display: "flex", alignItems: "center", gap: 6 }}>
@@ -8965,7 +8965,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   const [emailTargetTier, setEmailTargetTier] = React.useState("pro");
   const [scheduledNotifs, setScheduledNotifs] = React.useState([]);
 
-  const ICONS = ["🔔", "📣", "🎯", "⚠️", "🏆", "🌟", "📈", "🔇", "✅", "📊", "🔑", "🎁"];
+  const ICONS = ["🔔", "📣", "🎯", "!", "🏆", "🌟", "📈", "🔇", "✅", "📊", "🔑", "🎁"];
   const TYPES = [
     { id: "info",    label: "Info",    color: T.blue   || "#3B82F6" },
     { id: "success", label: "Success", color: T.green  || "#10B981" },
@@ -9435,7 +9435,7 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
                   style={{ width: "100%", padding: "10px 12px", background: surfAlt, border: `1px solid ${border}`, borderRadius: 8, color: white, fontSize: 12, resize: "vertical", lineHeight: 1.6, boxSizing: "border-box" }} />
               </div>
               <div style={{ padding: "10px 14px", background: `${orange}15`, borderRadius: 8, border: `1px solid ${orange}40`, marginBottom: 14 }}>
-                <div style={{ fontSize: 10, color: orange, fontWeight: 600 }}>⚠️ Note: Using EmailJS — max ~200 emails/month on free plan. Upgrade at emailjs.com for higher volume.</div>
+                <div style={{ fontSize: 10, color: orange, fontWeight: 600 }}>! Note: Using EmailJS — max ~200 emails/month on free plan. Upgrade at emailjs.com for higher volume.</div>
               </div>
               <button type="button" onClick={sendEmail} disabled={emailSending}
                 style={{ width: "100%", padding: "14px", background: emailSending ? surfAlt : `linear-gradient(135deg,${blue},${purple})`, border: "none", borderRadius: 10, color: white, fontSize: 14, fontWeight: 700, cursor: emailSending ? "not-allowed" : "pointer" }}>
@@ -11562,7 +11562,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           <Field label="Country">
             <select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({...p, country: e.target.value}))} style={{...inputStyle, cursor:"pointer", color: addUserForm.country?"#E2E8F0":"#64748B"}}>
               <option value="">Select Country...</option>
-              {["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","🌍 Other"].sort().map(c => <option key={c} value={c.split(" ").slice(1).join(" ")}>{c}</option>)}
+              {["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","* Other"].sort().map(c => <option key={c} value={c.split(" ").slice(1).join(" ")}>{c}</option>)}
             </select>
           </Field>
         </div>
@@ -11577,7 +11577,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       </div>
       {addUserForm.email && users.some(u => u.email && u.email.toLowerCase() === addUserForm.email.toLowerCase()) && (
         <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 14 }}>⚠️</span>
+          <span style={{ fontSize: 14 }}>!</span>
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>Email already exists</div>
             <div style={{ fontSize: 11, color: T.textMuted }}>A user with this email is already registered.</div>
@@ -11718,7 +11718,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
           </Field></div>
         <Field label="Country"><select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           <option value="">Select Country...</option>
-          {["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","🌍 Other"].sort().map(c => <option key={c} value={c.split(" ").slice(1).join(" ")}>{c}</option>)}
+          {["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","* Other"].sort().map(c => <option key={c} value={c.split(" ").slice(1).join(" ")}>{c}</option>)}
         </select></Field>
         <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
           {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
@@ -13095,7 +13095,7 @@ function FinancialsEditor({ db, T, notify, adminUser, Section }) {
   return (
     <Section title="Financials Editor" sub="Update Emaar financial data — changes go live on dashboard immediately">
       <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
-        💡 Edit figures below when Emaar releases new quarterly or annual results. All values in AED Billions unless noted.
+        i Edit figures below when Emaar releases new quarterly or annual results. All values in AED Billions unless noted.
       </div>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
@@ -13180,7 +13180,7 @@ function RiskEditor({ db, T, notify, adminUser, Section }) {
   return (
     <Section title="Risk Factor Editor" sub="Update the 9-factor risk matrix shown on the Risk tab">
       <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.15)", marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
-        💡 Score is out of 10 (10 = lowest risk). Trend: improving / stable / worsening. Changes save to Firestore and update the Risk tab live.
+        i Score is out of 10 (10 = lowest risk). Trend: improving / stable / worsening. Changes save to Firestore and update the Risk tab live.
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {riskRows.map((row, i) => (
@@ -13270,7 +13270,7 @@ function MarketEditor({ db, T, notify, adminUser, Section }) {
   return (
     <Section title="Market Data Editor" sub="Update market stats shown on the Market tab — saves to Firestore">
       <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(59,130,246,0.05)", border: "1px solid rgba(59,130,246,0.15)", marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
-        💡 Update these figures when new DLD, REIDIN, or Knight Frank reports are released.
+        i Update these figures when new DLD, REIDIN, or Knight Frank reports are released.
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr 1fr 40px", gap: 8, padding: "6px 10px" }}>
@@ -13541,7 +13541,7 @@ function LaunchRadar({ db, T, notify }) {
       {/* ── SOURCE STATUS BAR ─────────────────────────────────────── */}
       <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
         {[
-          { label: "Bayut.com", count: scanStats?.bayut, icon: "🏠", color: T.gold, desc: "Live listings API" },
+          { label: "Bayut.com", count: scanStats?.bayut, icon: "#", color: T.gold, desc: "Live listings API" },
           { label: "PropertyFinder.ae", count: scanStats?.pf, icon: "🔍", color: T.blue, desc: "New projects API" },
           { label: "Dubai Pulse / DLD", count: scanStats?.dld, icon: "🏛️", color: T.green, desc: "Registered transactions" },
           { label: "Verified Database", count: getKnownLaunches().length, icon: "✓", color: T.teal, desc: "30 researched projects" },
@@ -13979,7 +13979,7 @@ function LiveDataSync({ db, T, notify }) {
       {/* ── DATA SOURCES ─────────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10, marginBottom: 20 }}>
         {[
-          { icon: "🏠", label: "Bayut.com", sub: "Live PPSF per community", status: liveCount > 0 ? "live" : "pending", note: "via Vercel API" },
+          { icon: "#", label: "Bayut.com", sub: "Live PPSF per community", status: liveCount > 0 ? "live" : "pending", note: "via Vercel API" },
           { icon: "🏛️", label: "Dubai Pulse / DLD", sub: "Official transaction data", status: "available", note: "Free CSV" },
           { icon: "📊", label: "Q1 2026 Benchmarks", sub: "DXBInteract + ValuStrat", status: "active", note: "Always available" },
           { icon: "⚡", label: "Vercel API Route", sub: "api/sync-market-data.js", status: "deploy", note: "Enables live Bayut" },
@@ -14104,7 +14104,7 @@ function DeveloperManager({ db, T, notify, adminUser, Section }) {
   return (
     <Section title="Developer Manager" sub="Manage all developers on the platform — activate to show in dashboard">
       <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, marginBottom: 20, fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
-        💡 Set a developer to <strong style={{ color: T.green }}>Active</strong> to show it in the dashboard developer selector. Projects with that developer's ID will automatically appear. The platform supports 228+ developers.
+        i Set a developer to <strong style={{ color: T.green }}>Active</strong> to show it in the dashboard developer selector. Projects with that developer's ID will automatically appear. The platform supports 228+ developers.
       </div>
 
       {/* Active Developers */}
@@ -18101,7 +18101,7 @@ export default function AdminPanel() {
                   <>
                     {/* REVENUE TAB GUIDE */}
                     <TabHelp items={[
-                      { icon: "💰", title: "MRR & ARR", desc: "Monthly Recurring Revenue = sum of all active Pro (AED 99) + Enterprise (AED 499) subscriptions. ARR = MRR × 12. These are your core SaaS health metrics." },
+                      { icon: "$", title: "MRR & ARR", desc: "Monthly Recurring Revenue = sum of all active Pro (AED 99) + Enterprise (AED 499) subscriptions. ARR = MRR × 12. These are your core SaaS health metrics." },
                       { icon: "📉", title: "Churn Rate", desc: "% of paying users who cancelled this month. Below 3% = healthy. Above 6% = needs urgent attention. Calculated from plan_cancelled events in the audit log." },
                       { icon: "📊", title: "NRR (Net Revenue Retention)", desc: "Revenue retained + expanded from existing customers. 100%+ means you grow even without new signups. Built from real upgrade/downgrade/churn events." },
                       { icon: "🌊", title: "MRR Waterfall", desc: "Visual breakdown of how MRR changed this month: new signups + upgrades - downgrades - churn = net movement. The most honest view of revenue health." },
@@ -18669,7 +18669,7 @@ export default function AdminPanel() {
                       const nrrNumerator = startMRR + expansionMRR - contractionMRR - churnedMRR;
                       const nrr = startMRR > 0 ? Math.round((nrrNumerator / startMRR) * 100) : 100;
                       const nrrColor = nrr >= 100 ? T.green : nrr >= 85 ? T.gold : T.red;
-                      const nrrLabel = nrr >= 120 ? "World-class 🏆" : nrr >= 110 ? "Excellent" : nrr >= 100 ? "Healthy ✓" : nrr >= 90 ? "Needs attention" : "At risk ⚠️";
+                      const nrrLabel = nrr >= 120 ? "World-class 🏆" : nrr >= 110 ? "Excellent" : nrr >= 100 ? "Healthy ✓" : nrr >= 90 ? "Needs attention" : "At risk !";
 
                       // ── CAC & LTV:CAC ──
                       // Estimated CAC = marketing spend / new customers (using AED 0 since no spend yet)
@@ -19352,10 +19352,10 @@ export default function AdminPanel() {
 
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10, marginBottom: overdue.length + dueThisQ.length + construction100.length > 0 ? 14 : 0 }}>
                           {[
-                            { label: "⚠️ Overdue — needs status update", items: overdue, color: T.red, action: "Mark as Delivered" },
-                            { label: "📅 Due this quarter", items: dueThisQ, color: T.gold, action: "Confirm handover date" },
+                            { label: "! Overdue — needs status update", items: overdue, color: T.red, action: "Mark as Delivered" },
+                            { label: "cal Due this quarter", items: dueThisQ, color: T.gold, action: "Confirm handover date" },
                             { label: "🔜 Due next quarter", items: dueNextQ, color: T.teal, action: "Prepare handover" },
-                            { label: "🏗️ Construction 100% — not marked done", items: construction100, color: "#8B5CF6", action: "Update status" },
+                            { label: "% Construction 100% — not marked done", items: construction100, color: "#8B5CF6", action: "Update status" },
                           ].filter(g => g.items.length > 0).map((group, gi) => (
                             <div key={gi} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "10px 12px", border: `1px solid ${group.color}30` }}>
                               <div style={{ fontSize: 11, color: group.color, fontWeight: 700, marginBottom: 6 }}>{group.label}</div>
@@ -19373,7 +19373,7 @@ export default function AdminPanel() {
 
                         {overdue.length > 0 && (
                           <div style={{ fontSize: 11, color: T.textMuted, padding: "8px 10px", background: "rgba(239,68,68,0.05)", borderRadius: 8, border: "1px solid rgba(239,68,68,0.15)" }}>
-                            💡 <strong style={{ color: T.red }}>Action required:</strong> {overdue.length} project{overdue.length > 1 ? "s are" : " is"} past handover date but still showing "Under Construction". Update their status to <strong>"Delivered"</strong> in the table below so users see accurate information.
+                            i <strong style={{ color: T.red }}>Action required:</strong> {overdue.length} project{overdue.length > 1 ? "s are" : " is"} past handover date but still showing "Under Construction". Update their status to <strong>"Delivered"</strong> in the table below so users see accurate information.
                           </div>
                         )}
                       </div>
@@ -20263,7 +20263,7 @@ export default function AdminPanel() {
 
                         {/* ── SECTION: Pricing & Size ── */}
                         <div style={{ marginBottom: 20 }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>💰 Pricing & Size</div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>$ Pricing & Size</div>
                           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                             {[
                               { key: "price", label: "Price (AED) *", placeholder: "e.g. 2500000" },
@@ -20287,7 +20287,7 @@ export default function AdminPanel() {
 
                         {/* ── SECTION: Timeline & Payment ── */}
                         <div style={{ marginBottom: 20 }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>📅 Timeline & Payment</div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, paddingBottom: 6, borderBottom: `1px solid ${T.border}` }}>cal Timeline & Payment</div>
                           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                             {[
                               { key: "handover", label: "Handover", placeholder: "e.g. Q4 2027" },
@@ -20353,7 +20353,7 @@ export default function AdminPanel() {
                               </div>
                             ))}
                           </div>
-                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>💡 Right-click on Google Maps → "What's here?" to get coordinates</div>
+                          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>i Right-click on Google Maps → "What's here?" to get coordinates</div>
                         </div>
 
                         {/* ── SECTION: Media ── */}
@@ -20423,7 +20423,7 @@ export default function AdminPanel() {
                         {/* Duplicate name warning */}
                         {projectForm.name && emaarProjects.some(p => p.name?.toLowerCase() === projectForm.name?.toLowerCase()) && (
                           <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", fontSize: 11, color: "#EF4444" }}>
-                            ⚠️ A project named "{projectForm.name}" already exists in data.js. This will create a duplicate entry.
+                            ! A project named "{projectForm.name}" already exists in data.js. This will create a duplicate entry.
                           </div>
                         )}
 
@@ -22216,7 +22216,7 @@ export default function AdminPanel() {
               "🇺🇬 Ugandan","🇺🇦 Ukrainian","🇦🇪 Emirati","🇬🇧 British","🇺🇸 American","🇺🇾 Uruguayan","🇺🇿 Uzbek",
               "🇻🇪 Venezuelan","🇻🇳 Vietnamese",
               "🇾🇪 Yemeni",
-              "🇿🇲 Zambian","🇿🇼 Zimbabwean","🌍 Other"
+              "🇿🇲 Zambian","🇿🇼 Zimbabwean","* Other"
             ].sort();
 
             // ── Duplicate detection ───────────────────────────────────────
@@ -22405,7 +22405,7 @@ export default function AdminPanel() {
               stage_changed:      "⇄",
               note:               "💬",
               email_sent:         "✉️",
-              followup_scheduled: "📅",
+              followup_scheduled: "cal",
               call_logged:        "📞",
             };
             const emailTemplates = {
@@ -22423,7 +22423,7 @@ export default function AdminPanel() {
                   { icon: "🗂️", title: "Kanban View", desc: "Drag and drop leads between 8 stages: New → Contacted → Qualified → Viewing → Offer → Won → Dormant → Lost. Cards are sorted by score (Hot/Warm/Cold)." },
                   { icon: "📊", title: "Analytics View", desc: "Full pipeline analytics — conversion funnel, source performance, lost reason analysis, lead score distribution, nationality breakdown, and hot leads list." },
                   { icon: "🎯", title: "Lead Scoring", desc: "Every lead is scored 0–100 automatically based on: email (+20), phone (+20), budget (+15), project (+15), nationality (+10), notes (+10), recency (+20). Stage also boosts score — Offer Made = 85+, Won = 100." },
-                  { icon: "📅", title: "Follow-Up Reminders", desc: "Set a follow-up date on any lead. Overdue follow-ups appear as a red banner at the top. Due today shows as gold. Use the Kanban 'Overdue' button to jump straight to them." },
+                  { icon: "cal", title: "Follow-Up Reminders", desc: "Set a follow-up date on any lead. Overdue follow-ups appear as a red banner at the top. Due today shows as gold. Use the Kanban 'Overdue' button to jump straight to them." },
                   { icon: "📤", title: "Bulk Actions", desc: "Tick the checkbox on multiple leads to bulk-update their stage, send a group email, or export selected leads to CSV." },
                   { icon: "🔍", title: "Advanced Filters", desc: "Click 'Filters' to filter by community, nationality, budget range, lead score, property type, language, lead age, and 10+ more criteria." },
                   { icon: "⬇️", title: "Export", desc: "Export filtered leads to CSV with all fields including score, follow-up date, and notes. Perfect for sharing with your team." },
@@ -22432,7 +22432,7 @@ export default function AdminPanel() {
                 {/* REMINDER NOTIFICATION BANNERS */}
                 {stats.overdue > 0 && (
                   <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(239,68,68,0.08)", border: `1px solid rgba(239,68,68,0.3)`, marginBottom: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(239,68,68,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>⚠️</div>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(239,68,68,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>!</div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: T.red }}>{stats.overdue} overdue follow-up{stats.overdue > 1 ? "s" : ""}</div>
                       <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>
@@ -22446,7 +22446,7 @@ export default function AdminPanel() {
                 )}
                 {stats.dueToday > 0 && (
                   <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(212,168,67,0.08)", border: `1px solid rgba(212,168,67,0.3)`, marginBottom: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(212,168,67,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>📅</div>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(212,168,67,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>cal</div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{stats.dueToday} follow-up{stats.dueToday > 1 ? "s" : ""} due today</div>
                       <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>
@@ -22768,8 +22768,8 @@ export default function AdminPanel() {
                                     <div style={{ position: "absolute", top: 0, left: 0, height: "100%", width: `${barW > 0 ? Math.round((data.converted / data.total) * barW) : 0}%`, background: col, borderRadius: 4 }} />
                                   </div>
                                   <div style={{ display: "flex", gap: 8, marginTop: 3, fontSize: 9, color: T.textMuted }}>
-                                    {data.viewing > 0   && <span style={{ color: T.teal }}>🏠 {data.viewing} viewing</span>}
-                                    {data.offerMade > 0 && <span style={{ color: "#F97316" }}>💰 {data.offerMade} offer</span>}
+                                    {data.viewing > 0   && <span style={{ color: T.teal }}># {data.viewing} viewing</span>}
+                                    {data.offerMade > 0 && <span style={{ color: "#F97316" }}>$ {data.offerMade} offer</span>}
                                     {data.converted > 0 && <span style={{ color: T.green }}>🏆 {data.converted} won</span>}
                                   </div>
                                 </div>
@@ -23090,8 +23090,8 @@ export default function AdminPanel() {
                           <option value="new">🆕 New</option>
                           <option value="contacted">📞 Contacted</option>
                           <option value="qualified">⭐ Qualified</option>
-                          <option value="viewing scheduled">🏠 Viewing Scheduled</option>
-                          <option value="offer made">💰 Offer Made</option>
+                          <option value="viewing scheduled"># Viewing Scheduled</option>
+                          <option value="offer made">$ Offer Made</option>
                           <option value="converted">🏆 Won / Converted</option>
                           <option value="dormant">💤 Dormant</option>
                           <option value="lost">❌ Lost</option>
@@ -23101,11 +23101,11 @@ export default function AdminPanel() {
                           {sources.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                         <select value={leadDateRange} onChange={e => { setLeadDateRange(e.target.value); setLeadPage(1); }} style={sel}>
-                          <option value="all">📅 All Time</option>
+                          <option value="all">cal All Time</option>
                           <option value="today">Today</option>
                           <option value="week">This Week</option>
                           <option value="month">This Month</option>
-                          <option value="overdue">⚠️ Overdue</option>
+                          <option value="overdue">! Overdue</option>
                           <option value="today_followup">🔔 Due Today</option>
                         </select>
                         <button type="button" onClick={() => setShowLeadFilters(p => !p)}
@@ -23198,7 +23198,7 @@ export default function AdminPanel() {
                             {toggleBtn(lfUnreachable, () => { setLfUnreachable(p=>!p); setLeadPage(1); }, "🚫 Unreachable")}
                             {toggleBtn(lfDupPhone, () => { setLfDupPhone(p=>!p); setLeadPage(1); }, "📞 Dup Phone")}
                             {toggleBtn(lfDupEmail, () => { setLfDupEmail(p=>!p); setLeadPage(1); }, "📧 Dup Email")}
-                            {toggleBtn(lfShortPhone, () => { setLfShortPhone(p=>!p); setLeadPage(1); }, "⚠️ Short Phone")}
+                            {toggleBtn(lfShortPhone, () => { setLfShortPhone(p=>!p); setLeadPage(1); }, "! Short Phone")}
                           </div>
                         </div>
                       )}
@@ -23212,8 +23212,8 @@ export default function AdminPanel() {
                     { id: "New",                label: "New",               color: "#3B82F6", icon: "🆕" },
                     { id: "Contacted",          label: "Contacted",         color: T.gold,    icon: "📞" },
                     { id: "Qualified",          label: "Qualified",         color: "#8B5CF6", icon: "✅" },
-                    { id: "Viewing Scheduled",  label: "Viewing",           color: "#06B6D4", icon: "🏠" },
-                    { id: "Offer Made",         label: "Offer Made",        color: "#F97316", icon: "💰" },
+                    { id: "Viewing Scheduled",  label: "Viewing",           color: "#06B6D4", icon: "#" },
+                    { id: "Offer Made",         label: "Offer Made",        color: "#F97316", icon: "$" },
                     { id: "Converted",          label: "Won",               color: T.green,   icon: "🏆" },
                     { id: "Dormant",            label: "Dormant",           color: "#64748B", icon: "💤" },
                     { id: "Lost",               label: "Lost",              color: T.red,     icon: "❌" },
@@ -23299,7 +23299,7 @@ export default function AdminPanel() {
                                       {lead.budget && <div style={{ fontSize: 9, color: T.green }}>AED {parseFloat(lead.budget).toLocaleString()}</div>}
                                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 5 }}>
                                         <span style={{ fontSize: 8, color: overdue ? T.red : dueToday ? T.gold : T.textMuted, fontWeight: overdue || dueToday ? 700 : 400 }}>
-                                          {overdue ? "⚠️ OVERDUE" : dueToday ? "📅 Today" : lead.createdAt ? timeSince(new Date(lead.createdAt)) : "-"}
+                                          {overdue ? "! OVERDUE" : dueToday ? "cal Today" : lead.createdAt ? timeSince(new Date(lead.createdAt)) : "-"}
                                         </span>
                                         <div style={{ display: "flex", gap: 3 }}>
                                           {(lead.notes || []).length > 0 && <span style={{ fontSize: 8, padding: "1px 4px", borderRadius: 3, background: "rgba(20,184,166,0.2)", color: T.teal }}>{lead.notes.length}💬</span>}
@@ -23314,7 +23314,7 @@ export default function AdminPanel() {
                           );
                         })}
                       </div>
-                      <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted, textAlign: "center" }}>💡 Drag and drop cards between columns to update stage</div>
+                      <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted, textAlign: "center" }}>i Drag and drop cards between columns to update stage</div>
                     </div>
                   );
                 })()}
@@ -23565,7 +23565,7 @@ export default function AdminPanel() {
                         {/* Duplicate email warning */}
                         {addLeadForm.email && leads.some(l => l.email && l.email.toLowerCase() === addLeadForm.email.toLowerCase()) && (
                           <div style={{ gridColumn: "1/-1", padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{ fontSize: 14 }}>⚠️</span>
+                            <span style={{ fontSize: 14 }}>!</span>
                             <div>
                               <div style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B" }}>Duplicate Email Detected</div>
                               <div style={{ fontSize: 10, color: T.textMuted }}>A lead with this email already exists. Check for duplicates before saving.</div>
@@ -23747,7 +23747,7 @@ export default function AdminPanel() {
                               if (dupes.length === 0) return null;
                               return (
                                 <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)" }}>
-                                  <div style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B", marginBottom: 4 }}>⚠️ {dupes.length} Duplicate{dupes.length > 1 ? "s" : ""} Found</div>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B", marginBottom: 4 }}>! {dupes.length} Duplicate{dupes.length > 1 ? "s" : ""} Found</div>
                                   <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 6 }}>Same email or phone exists in other leads:</div>
                                   {dupes.slice(0, 3).map((d, i) => (
                                     <div key={i} style={{ fontSize: 10, color: T.textSecondary, marginBottom: 2 }}>
@@ -27197,7 +27197,7 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
                     <div style={{ fontSize: 18, fontWeight: 700, color: T.green, marginBottom: 8 }}>No Cancellations Yet</div>
                     <div style={{ fontSize: 13, color: T.textMuted, lineHeight: 1.6, maxWidth: 400, margin: "0 auto" }}>When users cancel their subscription via the profile modal, their exit survey responses will appear here automatically.</div>
-                    {atRiskUsers.length > 0 && <div style={{ marginTop: 20, padding: "12px 20px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, display: "inline-block", fontSize: 12, color: T.textSecondary }}>⚠️ At-risk paid users with no login in 14+ days: <strong style={{ color: T.orange }}>{atRiskUsers.length}</strong></div>}
+                    {atRiskUsers.length > 0 && <div style={{ marginTop: 20, padding: "12px 20px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, display: "inline-block", fontSize: 12, color: T.textSecondary }}>! At-risk paid users with no login in 14+ days: <strong style={{ color: T.orange }}>{atRiskUsers.length}</strong></div>}
                   </div>
                 ) : (<>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
@@ -27257,7 +27257,7 @@ export default function AdminPanel() {
                 {/* At-risk users */}
                 {atRiskUsers.length > 0 && (
                   <div style={{ background: T.surface, borderRadius: 14, border: "1px solid rgba(245,158,11,0.3)", padding: 20 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: T.orange, marginBottom: 4 }}>⚠️ At-Risk Users ({atRiskUsers.length})</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: T.orange, marginBottom: 4 }}>! At-Risk Users ({atRiskUsers.length})</div>
                     <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>Paid users with no login in 14+ days</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {atRiskUsers.slice(0, 5).map((u, i) => (
@@ -27729,5 +27729,6 @@ export default function AdminPanel() {
 // STABLE_RECOVERY_0945_PPSF_FIXED
 // BEAST_UI_UPGRADE_1005_MAR24
 // BEAST_BADGE_GLOBAL_1012_MAR24
+
 
 
