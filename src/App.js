@@ -50,8 +50,8 @@ function HomeRoute() {
   if (status === "loggedin") return <Navigate to="/dashboard" replace />;
   return (
     <LandingPage
-      onLoginClick={() => navigate("/dashboard")}
-      onSignUpClick={() => navigate("/dashboard")}
+      onLoginClick={() => navigate("/dashboard?auth=login")}
+      onSignUpClick={() => navigate("/dashboard?auth=signup")}
     />
   );
 }
@@ -84,3 +84,4 @@ function App() {
   );
 }
 export default App;
+
