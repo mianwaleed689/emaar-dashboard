@@ -8241,7 +8241,20 @@ export default function EmaarDashboardV2() {
                     <button type="button" onClick={handleCopyLink} style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, fontFamily:"'Outfit',sans-serif" }}>
                       {copiedLink ? "✓ Copied!" : "Copy Link"}
                     </button>
-                    <a href={`https://wa.me/?text=${encodeURIComponent(`Hi, I'm interested in ${sp.name} in ${sp.community}. Price from AED ${price?(price/1e6).toFixed(2)+"M":"TBD"}. Handover: ${sp.handover}. Payment: ${sp.payment||"—"}.`)}`} target="_blank" rel="noopener noreferrer" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, textDecoration:"none", fontFamily:"'Outfit',sans-serif" }}>WhatsApp</a>
+                    <a href={`https://wa.me/?text=${encodeURIComponent(
+`Hi,
+
+I'd like to share an investment opportunity I found for you through DXB Analytics:
+
+🏙️ *${sp.name}*
+📍 ${sp.community}${sp.district ? ` · ${sp.district}` : ""} · ${sp.type}${sp.beds ? ` · ${sp.beds} BR` : ""}
+💰 From AED ${price ? (price/1e6).toFixed(2)+"M" : "TBD"}${sp.ppsf ? ` · AED ${sp.ppsf.toLocaleString()}/sqft` : ""}
+📅 Handover: ${sp.handover || "—"} · Payment: ${sp.payment || "—"}
+📈 Est. Yield: ${gross ? gross.toFixed(1)+"%" : "—"} · 5-yr Appreciation: +${appreciation || 35}%${goldenVisa ? "\n🏅 Golden Visa Eligible (≥ AED 2M)" : ""}
+
+Let me know if you'd like more details or to arrange a viewing.
+
+_Powered by DXB Analytics — Dubai Real Estate Intelligence_`)}`} target="_blank" rel="noopener noreferrer" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, textDecoration:"none", fontFamily:"'Outfit',sans-serif" }}>WhatsApp</a>
                     <div style={{ flex:1 }} />
                     {(sp.emaarUrl||sp.sourceUrl) && <a href={sp.emaarUrl||sp.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, textDecoration:"none", fontFamily:"'Outfit',sans-serif" }}>View on {(sp.emaarUrl||"").includes("emaar.com")?"Emaar.com":"Source"} ↗</a>}
                   </div>
@@ -8523,8 +8536,8 @@ export default function EmaarDashboardV2() {
 
                   {/* SEND TO CLIENT MODAL */}
                   {sendModal && (() => {
-                    const subject = `${sp.name} — Investment Opportunity | DXB Analytics`;
-                    const body = `Hi,\n\nI wanted to share an exciting investment opportunity with you:\n\n🏙️ Project: ${sp.name}\n📍 Community: ${sp.community}\n🏠 Type: ${sp.type}${sp.beds?" | "+sp.beds+" BR":""}\n💰 Starting From: AED ${price?(price/1e6).toFixed(2)+"M":"TBD"}\n📅 Handover: ${sp.handover||"—"}\n💳 Payment Plan: ${sp.payment||"—"}\n📈 Est. Gross Yield: ${gross.toFixed(1)}%\n📊 5-Year Appreciation: +${appreciation}%\n${goldenVisa?"✅ Golden Visa Eligible\n":""}\nPowered by DXB Analytics — Dubai's Real Estate Intelligence Platform.\n\nBest regards`;
+                    const subject = `Investment Opportunity: ${sp.name} — ${sp.community} | From AED ${price?(price/1e6).toFixed(2)+"M":"TBD"}`;
+                    const body = `Hi,\n\nI hope you're doing well. I wanted to share an investment opportunity I've identified for you through DXB Analytics:\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n🏙️  ${sp.name}\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📍 Location:       ${sp.community}${sp.district?` · ${sp.district}`:""}\n🏠 Type:           ${sp.type}${sp.beds?" · "+sp.beds+" BR":""}\n💰 Starting From:  AED ${price?(price/1e6).toFixed(2)+"M":"TBD"}${sp.ppsf?`  (AED ${sp.ppsf.toLocaleString()}/sqft)`:""}\n📅 Handover:       ${sp.handover||"—"}\n💳 Payment Plan:   ${sp.payment||"—"}\n📈 Est. Yield:     ${gross?gross.toFixed(1)+"%":"—"}\n📊 5-yr Growth:    +${appreciation||35}%${goldenVisa?"\n🏅 Golden Visa:    Eligible (≥ AED 2M)":""}\n\nThis project offers strong fundamentals with ${sp.community} being one of Dubai's most sought-after communities.\n\nI'd be happy to arrange a site visit or provide further details. Let me know if you'd like to explore this opportunity.\n\nBest regards,\n\n_Powered by DXB Analytics — Dubai Real Estate Intelligence Platform_\nhttps://emaar-dashboard.vercel.app`;
                     const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                     return (
                       <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.82)", zIndex:3000, display:"flex", alignItems:"center", justifyContent:"center", padding:20, backdropFilter:"blur(6px)" }} onClick={() => setSendModal(false)}>
