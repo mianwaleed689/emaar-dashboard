@@ -34,11 +34,11 @@ const communityProjects = emaarCommunities.filter(c => c.name).map(c => ({ name:
 
 /* --- LINK LABEL HELPER --- */
 const getLinkLabel = (url) => {
-  if (!url) return "View ?";
-  if (url.includes("propertyfinder.ae")) return "PropertyFinder ?";
-  if (url.includes("bayut.com")) return "Bayut ?";
-  if (url.includes("properties.emaar.com") || url.includes("emaar.com")) return "Emaar ?";
-  return "View ?";
+  if (!url) return "View ↗";
+  if (url.includes("propertyfinder.ae")) return "PropertyFinder ↗";
+  if (url.includes("bayut.com")) return "Bayut ↗";
+  if (url.includes("properties.emaar.com") || url.includes("emaar.com")) return "Emaar ↗";
+  return "View ↗";
 };
 const getLinkDomain = (url) => {
   if (!url) return "Listing";
@@ -357,14 +357,14 @@ const css = `
 
     /* Tables - horizontal scroll with hint arrow */
     .table-scroll { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
-    .table-scroll::after { content: "swipe ?"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
+    .table-scroll::after { content: "swipe →"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
     .table-scroll table { min-width: 560px; }
 
     /* Compare bar */
     .compare-bar { padding: 10px 14px !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
     .compare-bar > div { justify-content: center; flex-wrap: wrap; }
 
-    /* Mortgage calculator 2-col ? 1-col */
+    /* Mortgage calculator 2-col → 1-col */
     .mortgage-grid { grid-template-columns: 1fr !important; }
 
     /* AI Insights full width cards */
@@ -2961,7 +2961,7 @@ export default function EmaarDashboardV2() {
               <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Admin</div>
               <button type="button" className="sidebar-btn" onClick={() => window.location.href = "/admin"} style={{ background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.05))", border: "1px solid rgba(212,168,67,0.3)" }}>
                 {Icons.admin}
-                Admin Console ?
+                Admin Console ↗
               </button>
             </>
           )}
@@ -3299,7 +3299,7 @@ export default function EmaarDashboardV2() {
                 }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}
                 onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.2)"}
                 onMouseLeave={e => e.currentTarget.style.background = "rgba(212,168,67,0.1)"}>
-                  ? Export PDF
+                  ⬇ Export PDF
                 </button>
               </div>
             </div>
@@ -3354,7 +3354,7 @@ export default function EmaarDashboardV2() {
                     { label: "Total Transactions", value: mktTxns,   change: mktYoY,   color: T.green,  icon: "" },
                     { label: "Market Value",        value: mktValue,  change: "+30.6%", color: T.gold,   icon: "" },
                     { label: "Avg Price/sqft",      value: mktPpsf,   change: "+19.8%", color: T.teal,   icon: "" },
-                    { label: "Off-Plan Share",       value: mktOffPlan,change: "Dominant",color: T.blue,  icon: "???" },
+                    { label: "Off-Plan Share",       value: mktOffPlan,change: "Dominant",color: T.blue,  icon: "📊" },
                     { label: "New Investors",        value: "110,000+",change: "+55%",   color: T.purple, icon: "" },
                     { label: "Nationalities",        value: "175+",    change: "Global demand", color: T.orange, icon: "" },
                   ].map((item, i) => (
@@ -3377,7 +3377,7 @@ export default function EmaarDashboardV2() {
               <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>???</span>
+                    <span style={{ fontSize: 14 }}>📊</span>
                     <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Community PPSF Tracker</span>
                   </div>
                   <span style={{ fontSize: 9, color: T.textMuted }}>AED/sqft - 2025</span>
@@ -5603,7 +5603,7 @@ export default function EmaarDashboardV2() {
                   {/* Developer Market Share */}
                   <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                      <span style={{ fontSize: 14 }}>???</span>
+                      <span style={{ fontSize: 14 }}>📊</span>
                       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Developer Market Share</div>
                       <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>By deals {marketGlobal?.period || "FY2025"}</span>
                     </div>
@@ -5878,16 +5878,16 @@ export default function EmaarDashboardV2() {
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {[
-                    { city: "Dubai (JVC)", yield: 8.5, flag: "????", note: "Best affordable", color: T.green },
-                    { city: "Dubai (Avg)", yield: 6.9, flag: "????", note: "City average", color: T.gold },
-                    { city: "Istanbul", yield: 6.1, flag: "????", note: "Growing market", color: T.teal },
-                    { city: "Bangkok", yield: 5.8, flag: "????", note: "SE Asia hub", color: T.blue },
-                    { city: "Kuala Lumpur", yield: 5.5, flag: "????", note: "Regional", color: T.blue },
-                    { city: "New York", yield: 4.2, flag: "????", note: "Global benchmark", color: T.textSecondary },
-                    { city: "Paris", yield: 3.8, flag: "????", note: "Regulated market", color: T.textSecondary },
-                    { city: "Singapore", yield: 3.5, flag: "????", note: "Cooling measures", color: T.textSecondary },
-                    { city: "London", yield: 3.2, flag: "????", note: "High entry costs", color: T.textSecondary },
-                    { city: "Hong Kong", yield: 2.8, flag: "????", note: "Luxury segment", color: T.red },
+                    { city: "Dubai (JVC)", yield: 8.5, flag: "📊?", note: "Best affordable", color: T.green },
+                    { city: "Dubai (Avg)", yield: 6.9, flag: "📊?", note: "City average", color: T.gold },
+                    { city: "Istanbul", yield: 6.1, flag: "📊?", note: "Growing market", color: T.teal },
+                    { city: "Bangkok", yield: 5.8, flag: "📊?", note: "SE Asia hub", color: T.blue },
+                    { city: "Kuala Lumpur", yield: 5.5, flag: "📊?", note: "Regional", color: T.blue },
+                    { city: "New York", yield: 4.2, flag: "📊?", note: "Global benchmark", color: T.textSecondary },
+                    { city: "Paris", yield: 3.8, flag: "📊?", note: "Regulated market", color: T.textSecondary },
+                    { city: "Singapore", yield: 3.5, flag: "📊?", note: "Cooling measures", color: T.textSecondary },
+                    { city: "London", yield: 3.2, flag: "📊?", note: "High entry costs", color: T.textSecondary },
+                    { city: "Hong Kong", yield: 2.8, flag: "📊?", note: "Luxury segment", color: T.red },
                   ].map((c, i) => {
                     const isDubai = c.city.includes("Dubai");
                     return (
@@ -5919,8 +5919,8 @@ export default function EmaarDashboardV2() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
                 {[
                   { type: "Studio", gross: 7.8, net: 6.1, avgRent: 52000, avgPrice: 670000, color: T.green, icon: "" },
-                  { type: "1 Bedroom", gross: 7.1, net: 5.5, avgRent: 78000, avgPrice: 1100000, color: T.teal, icon: "???" },
-                  { type: "2 Bedroom", gross: 6.4, net: 4.9, avgRent: 112000, avgPrice: 1750000, color: T.gold, icon: "??????" },
+                  { type: "1 Bedroom", gross: 7.1, net: 5.5, avgRent: 78000, avgPrice: 1100000, color: T.teal, icon: "📊" },
+                  { type: "2 Bedroom", gross: 6.4, net: 4.9, avgRent: 112000, avgPrice: 1750000, color: T.gold, icon: "📊📊" },
                   { type: "3 Bedroom", gross: 5.8, net: 4.4, avgRent: 155000, avgPrice: 2670000, color: T.blue, icon: "" },
                   { type: "Villa / TH", gross: 5.0, net: 3.8, avgRent: 210000, avgPrice: 4200000, color: T.purple, icon: "" },
                 ].map((u, i) => (
@@ -6328,7 +6328,7 @@ export default function EmaarDashboardV2() {
                           { label: "Max Monthly Payment", value: fmt(Math.max(maxMonthlyPayment, 0)), color: T.gold, icon: "" },
                           { label: "Max Loan Amount", value: fmtM(Math.max(maxLoan, 0)), color: T.teal, icon: "" },
                           { label: "Down Payment Needed", value: fmtM(downNeeded), color: T.blue, icon: "" },
-                          { label: "Total Cash Required", value: fmtM(totalCash), color: T.purple, icon: "???" },
+                          { label: "Total Cash Required", value: fmtM(totalCash), color: T.purple, icon: "📊" },
                         ].map((item, i) => (
                           <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: T.surface, border: `1px solid ${T.border}` }}>
                             <span style={{ fontSize: 20 }}>{item.icon}</span>
@@ -6400,7 +6400,7 @@ export default function EmaarDashboardV2() {
                     <div key={status} style={{ background: T.surface, borderRadius: 16, border: `1px solid ${statusColors[status]}30`, overflow: "hidden" }}>
                       <div style={{ padding: "14px 20px", background: `${statusColors[status]}08`, borderBottom: `1px solid ${statusColors[status]}20`, display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ width: 8, height: 8, borderRadius: "50%", background: statusColors[status], flexShrink: 0 }} />
-                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 800, color: statusColors[status] }}>{statusLabels[status].replace(/[???????] /, "")}</div>
+                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 800, color: statusColors[status] }}>{statusLabels[status].replace(/[📊📊?] /, "")}</div>
                         <div style={{ fontSize: 11, color: T.textMuted, marginLeft: "auto" }}>{items.length} project{items.length !== 1 ? "s" : ""}</div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 0 }}>
@@ -6909,7 +6909,7 @@ export default function EmaarDashboardV2() {
 
               const benefits = [
                 { icon: "?", title: "10-Year Residency", desc: "Live, work and study in UAE. Renewable indefinitely." },
-                { icon: "????????", title: "Sponsor Your Family", desc: "Spouse, children of any age, and parents included." },
+                { icon: "📊📊??", title: "Sponsor Your Family", desc: "Spouse, children of any age, and parents included." },
                 { icon: "", title: "No Sponsor Needed", desc: "Full independence - no employer or local sponsor required." },
                 { icon: "", title: "UAE Bank Accounts", desc: "Open accounts, get credit cards, build UAE credit history." },
                 { icon: "", title: "Travel Freely", desc: "Re-enter UAE after 6+ months abroad without visa reset." },
@@ -6993,7 +6993,7 @@ export default function EmaarDashboardV2() {
                       {/* Result card */}
                       <div style={{ background: eligible ? "linear-gradient(135deg,rgba(16,185,129,0.1),rgba(16,185,129,0.04))" : "linear-gradient(135deg,rgba(239,68,68,0.1),rgba(239,68,68,0.04))", borderRadius: 14, border: "1px solid " + (eligible ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"), padding: 20 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                          <div style={{ fontSize: 28 }}>{isAlreadyResident ? "????" : eligible ? "?" : "?"}</div>
+                          <div style={{ fontSize: 28 }}>{isAlreadyResident ? "📊?" : eligible ? "?" : "?"}</div>
                           <div>
                             <div style={{ fontSize: 15, fontWeight: 700, color: isAlreadyResident ? T.gold : eligible ? T.green : "#EF4444" }}>
                               {isAlreadyResident ? "You Already Have UAE Residency" : eligible ? "You Qualify for the Golden Visa!" : "Not Eligible Yet"}
@@ -7489,7 +7489,7 @@ export default function EmaarDashboardV2() {
 
               // 2. Supply Risk - inverted (low risk = high score) (0-15pts)
               const sScore = c.supplyRisk <= 4 ? 15 : c.supplyRisk <= 6 ? 10 : c.supplyRisk <= 8 ? 5 : 2;
-              pts += sScore; factors.push({ label: "Supply Risk", score: sScore, max: 15, val: c.supplyRisk <= 4 ? "Low" : c.supplyRisk <= 6 ? "Medium" : "High", icon: "???" });
+              pts += sScore; factors.push({ label: "Supply Risk", score: sScore, max: 15, val: c.supplyRisk <= 4 ? "Low" : c.supplyRisk <= 6 ? "Medium" : "High", icon: "📊" });
 
               // 3. Price Momentum (0-15pts)
               const mScore = c.momentum >= 9 ? 15 : c.momentum >= 7 ? 10 : c.momentum >= 5 ? 6 : 3;
@@ -7505,7 +7505,7 @@ export default function EmaarDashboardV2() {
 
               // 6. STR Potential (0-15pts)
               const strScore = c.strPotential >= 9 ? 15 : c.strPotential >= 7 ? 10 : c.strPotential >= 5 ? 6 : 3;
-              pts += strScore; factors.push({ label: "STR Potential", score: strScore, max: 15, val: c.strPotential + "/10", icon: "???" });
+              pts += strScore; factors.push({ label: "STR Potential", score: strScore, max: 15, val: c.strPotential + "/10", icon: "📊" });
 
               // 7. Developer Quality (0-10pts)
               const devScore = c.devQuality >= 9 ? 10 : c.devQuality >= 7 ? 7 : 4;
@@ -7645,11 +7645,11 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12, marginTop: 16 }}>
                     {[
                       { icon: "", label: "Gross Yield", weight: "20pts", desc: "Higher yield = higher score. 8%+ = full marks. Based on DLD/REIDIN data." },
-                      { icon: "???", label: "Supply Risk", weight: "15pts", desc: "Inverted - low pipeline risk scores highest. Based on REIDIN supply data." },
+                      { icon: "📊", label: "Supply Risk", weight: "15pts", desc: "Inverted - low pipeline risk scores highest. Based on REIDIN supply data." },
                       { icon: "", label: "Price Momentum", weight: "15pts", desc: "YoY price growth trajectory. Based on Property Monitor DPI." },
                       { icon: "", label: "Demand Score", weight: "15pts", desc: "Transaction volume + search interest + rental absorption rate." },
                       { icon: "", label: "Golden Visa", weight: "10pts", desc: "Properties = AED 2M qualify for 10yr UAE Golden Visa - drives demand." },
-                      { icon: "???", label: "STR Potential", weight: "15pts", desc: "Short-term rental income potential based on Airbnb/Booking.com data." },
+                      { icon: "📊", label: "STR Potential", weight: "15pts", desc: "Short-term rental income potential based on Airbnb/Booking.com data." },
                       { icon: "", label: "Developer Quality", weight: "10pts", desc: "Delivery track record, S&P rating, escrow compliance, and backlog health." },
                     ].map((m, i) => (
                       <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16 }}>
@@ -8253,7 +8253,7 @@ export default function EmaarDashboardV2() {
 
 I'd like to share an investment opportunity I found for you through DXB Analytics:
 
-??? *${sp.name}*
+📊 *${sp.name}*
 ?? ${sp.community}${sp.district ? ` - ${sp.district}` : ""} - ${sp.type}${sp.beds ? ` - ${sp.beds} BR` : ""}
 ?? From AED ${price ? (price/1e6).toFixed(2)+"M" : "TBD"}${sp.ppsf ? ` - AED ${sp.ppsf.toLocaleString()}/sqft` : ""}
 ?? Handover: ${sp.handover || "-"} - Payment: ${sp.payment || "-"}
@@ -9263,7 +9263,7 @@ _Powered by DXB Analytics - Dubai Real Estate Intelligence_`)}`} target="_blank"
       {showOnboarding && (() => {
         const steps = [
           {
-            icon: "???",
+            icon: "📊",
             title: `Welcome to DXB Analytics, ${userName || "Investor"}!`,
             body: "You now have access to Dubai's most comprehensive real estate intelligence platform. Let us show you around in 30 seconds.",
             cta: "Let's Go ?"
