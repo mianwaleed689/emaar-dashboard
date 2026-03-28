@@ -8437,13 +8437,13 @@ export default function EmaarDashboardV2() {
                       <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Investment Profile</div>
                       {[
                         ["Est. Yield", ci.avgYield || "5.0–6.5%"],
-                        ["Golden Visa", ci.goldenVisa || selectedProject_.price >= 2000000 ? "✓ Eligible" : "—"],
+                        ["Golden Visa", selectedProject_.price >= 2000000 ? "✓ Eligible" : "✗ Not Eligible"],
                         ["Tier", selectedProject_.tier || "—"],
                         ["Investment Score", `${inv.score}/10 — ${inv.label}`],
                       ].map(([label, value]) => (
                         <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
                           <span style={{ fontSize: 12, color: T.textMuted }}>{label}</span>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: label === "Golden Visa" && (ci.goldenVisa || selectedProject_.price >= 2000000) ? T.green : label === "Investment Score" ? inv.color : T.white }}>{value}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: label === "Golden Visa" ? (selectedProject_.price >= 2000000 ? T.green : T.red) : label === "Investment Score" ? inv.color : T.white }}>{value}</span>
                         </div>
                       ))}
                     </div>
