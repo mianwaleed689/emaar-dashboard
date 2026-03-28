@@ -2016,6 +2016,10 @@ export default function EmaarDashboardV2() {
   const [pdTab, setPdTab] = useState("overview");
   const [pdSendModal, setPdSendModal] = useState(false);
   const [pdCopiedLink, setPdCopiedLink] = useState(false);
+  const [pdCalcPrice, setPdCalcPrice] = useState(1750000);
+  const [pdCalcYears, setPdCalcYears] = useState(5);
+  const [pdCalcBeds, setPdCalcBeds] = useState("1BR");
+  const [pdCalcStrategy, setPdCalcStrategy] = useState("Long-Term");
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [expandedMega, setExpandedMega] = useState(null);
   const [compareList, setCompareList] = useState([]);
@@ -8187,7 +8191,7 @@ export default function EmaarDashboardV2() {
                 </div>
               );
               return (
-                <div style={{ maxWidth:"100%", margin:"0 auto", padding:"24px 40px 60px" }}>
+                <div style={{ maxWidth:900, margin:"0 auto", padding:"24px 32px 60px" }}>
 
                   {/* HERO SECTION */}
                   <div style={{ display:"grid", gridTemplateColumns:"1fr auto", gap:20, alignItems:"flex-start", marginBottom:20 }}>
@@ -8401,19 +8405,22 @@ export default function EmaarDashboardV2() {
 
                   {/* ROI CALCULATOR TAB */}
                   {pdTab === "roi" && (() => {
-                    const calcPrice = price || 1750000;
+                    const calcPrice = pdCalcPrice || price || 1750000;
+                    const calcYears = pdCalcYears;
+                    const calcBeds = pdCalcBeds;
+                    const calcStrategy = pdCalcStrategy;
                     const roiD = roiData;
                     const _gy2 = roiD.grossYield; const g2 = typeof _gy2==="object"&&_gy2!==null?(_gy2.apt1??_gy2.apt2??6.0):(_gy2??6.0);
                     const appr2 = roiD.appreciation5yr ?? 35;
-                    const annualAppRate = Math.pow(1 + appr2/100, 1/5) - 1;
-                    const calcYears = 5;
+                    const annualAppRate = Math.pow(1 + appr2/100, 1/calcYears) - 1;
                     const projectedValue = Math.round(calcPrice * Math.pow(1 + annualAppRate, calcYears));
                     const capitalGain = projectedValue - calcPrice;
                     const payStr = sp.payment || "80/20";
                     const downPctM = payStr.match(/^(\d+)/);
                     const downPct = downPctM ? parseInt(downPctM[1])/100 : 0.2;
                     const downPayment = Math.round(calcPrice * downPct);
-                    const annualRentCalc = Math.round(calcPrice * g2/100);
+                    const stratMultiplier = calcStrategy === "Short-Term Airbnb" ? 1.5 : calcStrategy === "Flip at Handover" ? 0 : 1;
+                    const annualRentCalc = Math.round(calcPrice * g2/100 * stratMultiplier);
                     const totalRental = annualRentCalc * calcYears;
                     const totalReturn = capitalGain + totalRental;
                     const roiOnDown = downPayment > 0 ? ((totalReturn/downPayment)*100).toFixed(1) : "—";
@@ -8453,7 +8460,34 @@ export default function EmaarDashboardV2() {
                         </div>
                         {/* Interactive Calculator */}
                         <div style={{ background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, padding:18 }}>
-                          <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:1.5, textTransform:"uppercase", marginBottom:16 }}>Interactive ROI Calculator</div>
+                          <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:1.5, textTransform:"uppercase", marginBottom:18 }}>Interactive ROI Calculator</div>
+                          {/* Inputs */}
+                          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20, marginBottom:16 }}>
+                            <div>
+                              <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.8, display:"block", marginBottom:6, textTransform:"uppercase" }}>Purchase Price (AED)</label>
+                              <input type="number" value={calcPrice} onChange={e => setPdCalcPrice(Number(e.target.value)||1750000)} style={{ width:"100%", padding:"10px 14px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:10, color:T.white, fontSize:14, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.8, display:"block", marginBottom:6, textTransform:"uppercase" }}>Holding Period: {calcYears} Years</label>
+                              <input type="range" min={1} max={10} value={calcYears} onChange={e => setPdCalcYears(Number(e.target.value))} style={{ width:"100%", marginTop:10, accentColor:T.teal }} />
+                            </div>
+                          </div>
+                          <div style={{ marginBottom:14 }}>
+                            <div style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.8, marginBottom:8, textTransform:"uppercase" }}>Bedrooms</div>
+                            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                              {["1BR","2BR","3BR","TH/Villa"].map(b => (
+                                <button key={b} type="button" onClick={() => setPdCalcBeds(b)} style={{ padding:"7px 16px", borderRadius:8, border:`1px solid ${calcBeds===b?T.teal:T.border}`, background:calcBeds===b?"rgba(0,191,165,0.15)":T.surfaceAlt, color:calcBeds===b?T.teal:T.textSecondary, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", outline:"none" }}>{b}</button>
+                              ))}
+                            </div>
+                          </div>
+                          <div style={{ marginBottom:20 }}>
+                            <div style={{ fontSize:10, color:T.textMuted, fontWeight:700, letterSpacing:0.8, marginBottom:8, textTransform:"uppercase" }}>Rental Strategy</div>
+                            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                              {["Long-Term","Short-Term Airbnb","Flip at Handover"].map(s => (
+                                <button key={s} type="button" onClick={() => setPdCalcStrategy(s)} style={{ padding:"7px 14px", borderRadius:8, border:`1px solid ${calcStrategy===s?T.gold:T.border}`, background:calcStrategy===s?"rgba(212,168,67,0.15)":T.surfaceAlt, color:calcStrategy===s?T.gold:T.textSecondary, fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", outline:"none" }}>{s}</button>
+                              ))}
+                            </div>
+                          </div>
                           <div style={{ background:T.surfaceAlt, borderRadius:12, padding:20 }}>
                             <div style={{ fontSize:11, fontWeight:700, color:T.teal, letterSpacing:1, marginBottom:14, textTransform:"uppercase" }}>Results — {calcYears}-Year Projection</div>
                             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:10 }}>
