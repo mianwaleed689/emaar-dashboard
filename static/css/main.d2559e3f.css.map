@@ -1,0 +1,1 @@
+{"version":3,"file":"static/css/main.d2559e3f.css","mappings":"AAAA,EAA2B,qBAAsB,CAA7C,QAAS,CAAE,SAAoC,CACnD,KAAO,kBAAqB","sources":["index.css"],"sourcesContent":["* { margin: 0; padding: 0; box-sizing: border-box; }\nbody { background: #04090F; }"],"names":[],"sourceRoot":""}
