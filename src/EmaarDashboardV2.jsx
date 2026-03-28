@@ -8187,7 +8187,7 @@ export default function EmaarDashboardV2() {
                 </div>
               );
               return (
-                <div style={{ maxWidth:1060, margin:"0 auto", padding:"24px 28px 60px" }}>
+                <div style={{ maxWidth:"100%", margin:"0 auto", padding:"24px 40px 60px" }}>
 
                   {/* HERO SECTION */}
                   <div style={{ display:"grid", gridTemplateColumns:"1fr auto", gap:20, alignItems:"flex-start", marginBottom:20 }}>
