@@ -8132,38 +8132,400 @@ export default function EmaarDashboardV2() {
 
             {/* ── HERO IMAGE ── */}
             {selectedProject_.imageUrl && (
-              <div style={{ width: "100%", height: 380, overflow: "hidden", position: "relative" }}>
+              <div style={{ width: "100%", height: 260, overflow: "hidden", position: "relative" }}>
                 <img src={selectedProject_.imageUrl} alt={selectedProject_.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.parentElement.style.display = "none"; }} />
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 50%, #04090F 100%)" }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, #04090F 100%)" }} />
               </div>
             )}
 
-            {/* ── MAIN CONTENT ── */}
-            <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px 80px" }}>
-
-              {/* ── PROJECT HEADER ── */}
-              <div style={{ padding: selectedProject_.imageUrl ? "0 0 32px" : "40px 0 32px", borderBottom: `1px solid ${T.border}` }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
-                      <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 36, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h1>
-                      {selectedProject_.branded && <span style={{ padding: "3px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", border: "1px solid rgba(212,168,67,0.3)", fontSize: 11, fontWeight: 700, color: T.gold }}>{selectedProject_.brand}</span>}
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 14, color: T.textSecondary }}>{selectedProject_.community}</span>
-                      {selectedProject_.emaarUrl && <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 10, color: T.gold, textDecoration: "none", padding: "2px 7px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 4, fontWeight: 600 }}>{getLinkLabel(selectedProject_.emaarUrl)}</a>}
-                    </div>
-                    {(selectedProject_.tagline || (ci && ci.tagline)) && <p style={{ color: T.teal, fontSize: 12, marginTop: 6, fontStyle: "italic", margin: "8px 0 0" }}>{selectedProject_.tagline || ci.tagline}</p>}
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-                    <div style={{ padding: "5px 14px", borderRadius: 8, background: selectedProject_.status?.includes("Ready") ? "rgba(16,185,129,0.15)" : selectedProject_.status?.includes("Off") ? "rgba(96,165,250,0.15)" : "rgba(245,158,11,0.15)", border: `1px solid ${selectedProject_.status?.includes("Ready") ? "rgba(16,185,129,0.4)" : selectedProject_.status?.includes("Off") ? "rgba(96,165,250,0.4)" : "rgba(245,158,11,0.4)"}`, fontSize: 12, fontWeight: 700, color: selectedProject_.status?.includes("Ready") ? T.green : selectedProject_.status?.includes("Off") ? "#60A5FA" : "#F59E0B" }}>{selectedProject_.status}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 8, background: `${inv.color}15`, border: `1px solid ${inv.color}40` }}>
-                      <span style={{ fontSize: 20, fontWeight: 900, color: inv.color, fontFamily: "'Fraunces', serif" }}>{inv.score}</span>
-                      <span style={{ fontSize: 10, color: inv.color, fontWeight: 700 }}>/10 ★ {inv.label}</span>
-                    </div>
-                  </div>
+            {/* ── MAIN CONTENT — NEW TABBED DESIGN ── */}
+            {(() => {
+              const sp = selectedProject_;
+              const price = sp.price || 0;
+              const constr = sp.construction ?? 0;
+              const constrColor = constr >= 80 ? T.green : constr >= 40 ? "#F59E0B" : T.teal;
+              const _gy = roiData.grossYield;
+              const gross = typeof _gy === "object" && _gy !== null ? (_gy.apt1 ?? _gy.apt2 ?? 6.0) : (_gy ?? 6.0);
+              const _ny = roiData.netYield;
+              const net = typeof _ny === "object" && _ny !== null ? (_ny.apt1 ?? _ny.apt2 ?? gross * 0.78) : (_ny ?? gross * 0.78);
+              const appreciation = roiData.appreciation5yr ?? 35;
+              const annualYoy = roiData.appreciationYoY ?? roiData.annualYoy ?? 10;
+              const estValue5yr = price ? Math.round(price * (1 + appreciation / 100)) : 0;
+              const annualRent = price ? Math.round(price * gross / 100) : 0;
+              const goldenVisa = price >= 2000000;
+              const [pdTab, setPdTab] = React.useState("overview");
+              const [sendModal, setSendModal] = React.useState(false);
+              const [copiedLink, setCopiedLink] = React.useState(false);
+              const cd = (() => {
+                if (!sp.handover) return null;
+                const match = sp.handover.match(/Q([1-4])\s+(\d{4})/);
+                if (!match) return null;
+                const q = parseInt(match[1]); const year = parseInt(match[2]);
+                const qEndMonth = [2,5,8,11]; const qEndDay = [31,30,30,31];
+                const target = new Date(year, qEndMonth[q-1], qEndDay[q-1]);
+                const diffMs = target - new Date();
+                if (diffMs <= 0) return { label: "Delivered", color: T.green };
+                const diffDays = Math.ceil(diffMs / (1000*60*60*24));
+                const diffMonths = Math.round(diffMs / (1000*60*60*24*30.44));
+                if (diffDays <= 90) return { label: diffDays + "d left", color: "#EF4444" };
+                if (diffMonths <= 6) return { label: diffMonths + "mo left", color: "#F59E0B" };
+                if (diffMonths <= 18) return { label: diffMonths + "mo left", color: T.gold };
+                return { label: (diffMonths/12).toFixed(1) + "yr left", color: T.textMuted };
+              })();
+              const handleCopyLink = () => {
+                navigator.clipboard.writeText(window.location.origin + "/project/" + sp.id).then(() => { setCopiedLink(true); setTimeout(() => setCopiedLink(false), 2000); });
+              };
+              const ROW = ({ label, value, color }) => (
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"9px 0", borderBottom:`1px solid #0F1E35`, fontSize:13 }}>
+                  <span style={{ color:"#64748B" }}>{label}</span>
+                  <span style={{ fontWeight:600, color:color||T.white }}>{value}</span>
                 </div>
-              </div>
+              );
+              return (
+                <div style={{ maxWidth:1060, margin:"0 auto", padding:"24px 28px 60px" }}>
+
+                  {/* HERO SECTION */}
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr auto", gap:20, alignItems:"flex-start", marginBottom:20 }}>
+                    <div>
+                      <div style={{ display:"flex", flexWrap:"wrap", gap:7, marginBottom:10 }}>
+                        {sp.status && <span style={{ fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:6, background:sp.status.includes("Construction")?"rgba(16,185,129,0.1)":"rgba(59,130,246,0.1)", color:sp.status.includes("Construction")?T.green:"#60A5FA", border:`1px solid ${sp.status.includes("Construction")?T.green:"#60A5FA"}33` }}>{sp.status}</span>}
+                        {goldenVisa && <span style={{ fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:6, background:"rgba(16,185,129,0.1)", color:T.green, border:`1px solid ${T.green}33` }}>Golden Visa Eligible</span>}
+                        {sp.branded && sp.brand && <span style={{ fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:6, background:"rgba(212,168,67,0.1)", color:T.gold, border:`1px solid ${T.gold}33` }}>{sp.brand}</span>}
+                        {sp.tier && <span style={{ fontSize:11, fontWeight:600, padding:"4px 12px", borderRadius:6, background:"rgba(100,116,139,0.08)", color:T.textMuted, border:"1px solid #1E293B" }}>{sp.tier}</span>}
+                      </div>
+                      <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:36, fontWeight:900, color:T.white, lineHeight:1.1, marginBottom:6 }}>{sp.name}</h1>
+                      {(sp.tagline || ci?.tagline) && <p style={{ color:T.teal, fontSize:13, fontStyle:"italic", marginBottom:6 }}>{sp.tagline || ci.tagline}</p>}
+                      <p style={{ color:T.textMuted, fontSize:13 }}>{sp.community} · {sp.type}{sp.beds ? ` · ${sp.beds} BR` : ""}</p>
+                    </div>
+                    {/* CONSTRUCTION CARD */}
+                    <div style={{ background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, padding:"18px 22px", minWidth:210 }}>
+                      <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:1.5, textTransform:"uppercase", marginBottom:10 }}>Construction Progress</div>
+                      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
+                        <div style={{ flex:1, height:6, borderRadius:3, background:"#1E293B", overflow:"hidden" }}>
+                          <div style={{ height:"100%", width:`${constr}%`, borderRadius:3, background:constrColor, transition:"width 0.8s" }} />
+                        </div>
+                        <span style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:constrColor }}>{constr}%</span>
+                      </div>
+                      <div style={{ height:1, background:"#1E293B", marginBottom:12 }} />
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                        <div>
+                          <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, marginBottom:3 }}>Handover</div>
+                          <div style={{ fontSize:14, fontWeight:700, color:T.white }}>{sp.handover||"—"}</div>
+                          {cd && <div style={{ fontSize:10, fontWeight:700, color:cd.color, marginTop:2 }}>{cd.label}</div>}
+                        </div>
+                        <div>
+                          <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, marginBottom:3 }}>Payment</div>
+                          <div style={{ fontSize:14, fontWeight:700, color:T.teal }}>{sp.payment||sp.paymentPlan||"—"}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ACTION BAR */}
+                  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:20, padding:"13px 16px", background:"#0C1A2E", border:"1px solid #2A3A50", borderRadius:12, flexWrap:"wrap" }}>
+                    <span style={{ fontSize:11, color:"#94A3B8", marginRight:4 }}>Share:</span>
+                    <button type="button" onClick={() => setSendModal(true)} style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 20px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, fontFamily:"'Outfit',sans-serif" }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                      Send to Client
+                    </button>
+                    <button type="button" onClick={handleCopyLink} style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, fontFamily:"'Outfit',sans-serif" }}>
+                      {copiedLink ? "✓ Copied!" : "Copy Link"}
+                    </button>
+                    <a href={`https://wa.me/971XXXXXXXXX?text=Hi, I'm interested in ${encodeURIComponent(sp.name)} in ${encodeURIComponent(sp.community)}. Price from ${price?(price/1e6).toFixed(2)+"M AED":"TBD"}. Handover: ${sp.handover}.`} target="_blank" rel="noopener noreferrer" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, textDecoration:"none", fontFamily:"'Outfit',sans-serif" }}>WhatsApp</a>
+                    <div style={{ flex:1 }} />
+                    {(sp.emaarUrl||sp.sourceUrl) && <a href={sp.emaarUrl||sp.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, textDecoration:"none", fontFamily:"'Outfit',sans-serif" }}>View on {(sp.emaarUrl||"").includes("emaar.com")?"Emaar.com":"Source"} ↗</a>}
+                  </div>
+
+                  {/* TABS */}
+                  <div style={{ borderBottom:"1px solid #1E293B", marginBottom:22, display:"flex", gap:6, overflowX:"auto" }}>
+                    {[["overview","Overview"],["pricing","Pricing"],["location","Location"],["roi","ROI Calculator"]].map(([id,label]) => (
+                      <button key={id} type="button" onClick={() => setPdTab(id)} style={{ padding:"8px 20px", background:pdTab===id?"#D4A843":"transparent", color:pdTab===id?"#04090F":"#64748B", border:pdTab===id?"2px solid #D4A843":"2px solid #1E293B", borderRadius:8, fontSize:13, fontWeight:pdTab===id?700:600, cursor:"pointer", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, marginBottom:8, fontFamily:"'Outfit',sans-serif" }}>{label}</button>
+                    ))}
+                  </div>
+
+                  {/* OVERVIEW TAB */}
+                  {pdTab === "overview" && (
+                    <div>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:14 }}>
+                        {/* Project Details */}
+                        <div style={{ background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, padding:18 }}>
+                          <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:1.5, textTransform:"uppercase", marginBottom:14 }}>Project Details</div>
+                          <ROW label="From Price" value={price?`AED ${(price/1e6).toFixed(2)}M`:"TBD"} color={T.gold} />
+                          <ROW label="Price / sqft" value={sp.ppsf?`AED ${sp.ppsf.toLocaleString()}`:"—"} />
+                          <ROW label="Size Range" value={sp.sizeFrom?`${sp.sizeFrom.toLocaleString()} – ${sp.sizeTo?.toLocaleString()} sqft`:"—"} />
+                          <ROW label="Bedrooms" value={sp.beds?sp.beds+" BR":"—"} />
+                          <ROW label="Type" value={sp.type||"—"} />
+                          <ROW label="Payment Plan" value={sp.payment||sp.paymentPlan||"—"} color={T.teal} />
+                          <ROW label="Tier" value={sp.tier||"—"} />
+                          <ROW label="Developer" value={sp.developer||"Emaar Properties"} />
+                        </div>
+                        {/* Investment Profile */}
+                        <div style={{ background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, padding:18 }}>
+                          <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:1.5, textTransform:"uppercase", marginBottom:14 }}>Investment Profile</div>
+                          <ROW label="Est. Gross Yield" value={`${gross.toFixed(1)}%`} color={T.green} />
+                          <ROW label="Net Yield" value={`${net.toFixed(1)}%`} color={T.teal} />
+                          <ROW label="5-yr Appreciation" value={`+${appreciation}%`} color={T.green} />
+                          <ROW label="Annual YoY" value={`+${annualYoy}%`} color={T.green} />
+                          <ROW label="Golden Visa" value={goldenVisa?"✓ Eligible":"✗ Not Eligible"} color={goldenVisa?T.green:"#EF4444"} />
+                          <ROW label="Risk Level" value={roiData.risk||"Low-Medium"} color={T.gold} />
+                          <ROW label="Occupancy" value={roiData.occupancy?(roiData.occupancy+"%"):"—"} />
+                          <ROW label="Investment Score" value={`${inv.score}/10 — ${inv.label}`} color={inv.color} />
+                        </div>
+                      </div>
+                      {/* Famous For */}
+                      {ciExists && ci.famousFor && (
+                        <div style={{ background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, padding:18, marginBottom:14 }}>
+                          <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:1.5, textTransform:"uppercase", marginBottom:14 }}>Famous For</div>
+                          <p style={{ fontSize:13, color:T.textSecondary, lineHeight:1.8, marginBottom:ci.masterDev||ci.lifestyle?10:0 }}>{ci.famousFor}</p>
+                          {ci.masterDev && <div style={{ fontSize:12, color:T.textMuted }}><span style={{ color:T.teal }}>Developer:</span> {ci.masterDev}</div>}
+                          {ci.lifestyle  && <div style={{ fontSize:12, color:T.textMuted, marginTop:4 }}><span style={{ color:T.teal }}>Lifestyle:</span> {ci.lifestyle}</div>}
+                        </div>
+                      )}
+                      {/* Similar Projects */}
+                      <div style={{ background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, padding:18 }}>
+                        <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:1.5, textTransform:"uppercase", marginBottom:14 }}>More in {sp.community}</div>
+                        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))", gap:8 }}>
+                          {activeProjects.filter(p => p.community === sp.community && p.id !== sp.id).slice(0,6).map(p => (
+                            <div key={p.id} onClick={() => setSelectedProject(p)} style={{ background:"#111827", border:"1px solid #1E293B", borderRadius:9, padding:"11px 13px", cursor:"pointer" }}>
+                              <div style={{ fontSize:12, fontWeight:600, color:T.white, marginBottom:3 }}>{p.name}</div>
+                              <div style={{ fontSize:13, color:T.gold, fontWeight:700, marginBottom:2 }}>{p.price?`AED ${(p.price/1e6).toFixed(2)}M`:"—"}</div>
+                              <div style={{ fontSize:10, color:T.textMuted }}>{p.handover} · {p.status}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* PRICING TAB */}
+                  {pdTab === "pricing" && (
+                    <div>
+                      <div style={{ background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, padding:18, marginBottom:14 }}>
+                        <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:1.5, textTransform:"uppercase", marginBottom:14 }}>Construction & Payment</div>
+                        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16 }}>
+                          <div style={{ flex:1, height:8, borderRadius:4, background:"#111827", overflow:"hidden" }}>
+                            <div style={{ height:"100%", width:`${constr}%`, borderRadius:4, background:constrColor }} />
+                          </div>
+                          <span style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:constrColor }}>{constr}%</span>
+                        </div>
+                        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
+                          {[["HANDOVER",sp.handover||"—",T.white],["PAYMENT PLAN",sp.payment||sp.paymentPlan||"—",T.teal],["CONSTRUCTION",constr+"%",constrColor]].map(([l,v,c],i) => (
+                            <div key={i} style={{ background:"#111827", borderRadius:9, padding:13, textAlign:"center" }}>
+                              <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:5, fontWeight:700 }}>{l}</div>
+                              <div style={{ fontFamily:"'Fraunces',serif", fontSize:17, fontWeight:900, color:c }}>{v}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Unit breakdown */}
+                      <div style={{ background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, padding:18 }}>
+                        <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:1.5, textTransform:"uppercase", marginBottom:14 }}>Pricing by Unit Type</div>
+                        <div style={{ borderRadius:9, overflow:"hidden", border:"1px solid #1E293B" }}>
+                          <div style={{ display:"grid", gridTemplateColumns:"1fr 1.2fr 1.3fr 1.1fr", padding:"9px 14px", background:"#111827", fontSize:9, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase" }}>
+                            <span>Unit Type</span><span>Size (sqft)</span><span>Starting From</span><span>Price / sqft</span>
+                          </div>
+                          {sp.unitBreakdown && sp.unitBreakdown.length > 0
+                            ? sp.unitBreakdown.map((u,i) => (
+                              <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 1.2fr 1.3fr 1.1fr", padding:"12px 14px", borderTop:"1px solid #0F1E35", background:i%2===0?"transparent":"rgba(14,29,53,0.4)", fontSize:13 }}>
+                                <span style={{ fontWeight:700, color:T.white }}>{u.type}</span>
+                                <span style={{ color:"#94A3B8" }}>{u.sqftFrom?.toLocaleString()} – {u.sqftTo?.toLocaleString()}</span>
+                                <span style={{ fontWeight:800, color:T.gold }}>{u.priceFrom?`AED ${(u.priceFrom/1e6).toFixed(2)}M`:"—"}</span>
+                                <span style={{ color:T.textMuted }}>{u.priceFrom&&u.sqftFrom?`AED ${Math.round(u.priceFrom/u.sqftFrom).toLocaleString()}`:"—"}</span>
+                              </div>
+                            ))
+                            : (sp.beds||"1-3").split("-").map((b,i) => {
+                              const basePrice = price * (1 + i * 0.6);
+                              return (
+                                <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 1.2fr 1.3fr 1.1fr", padding:"12px 14px", borderTop:"1px solid #0F1E35", background:i%2===0?"transparent":"rgba(14,29,53,0.4)", fontSize:13 }}>
+                                  <span style={{ fontWeight:700, color:T.white }}>{b.trim()} BR</span>
+                                  <span style={{ color:"#94A3B8" }}>{sp.sizeFrom?sp.sizeFrom.toLocaleString():"—"} – {sp.sizeTo?sp.sizeTo.toLocaleString():"—"}</span>
+                                  <span style={{ fontWeight:800, color:T.gold }}>{basePrice?`AED ${(basePrice/1e6).toFixed(2)}M`:"—"}</span>
+                                  <span style={{ color:T.textMuted }}>{sp.ppsf?`AED ${sp.ppsf.toLocaleString()}`:"—"}</span>
+                                </div>
+                              );
+                            })
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* LOCATION TAB */}
+                  {pdTab === "location" && (
+                    <div>
+                      {ciExists && ci.keyAmenities && (
+                        <div style={{ background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, padding:18, marginBottom:14 }}>
+                          <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:1.5, textTransform:"uppercase", marginBottom:14 }}>Key Amenities Nearby</div>
+                          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                            {ci.keyAmenities.map((a,i) => (
+                              <div key={i} style={{ background:"#0E1D35", borderRadius:9, padding:13, borderLeft:`3px solid ${[T.blue||"#3B82F6","#EF4444",T.gold,T.teal][i%4]}` }}>
+                                <div style={{ fontSize:12, fontWeight:700, color:T.white, marginBottom:4 }}>{a.label}</div>
+                                <div style={{ fontSize:11, color:"#94A3B8", lineHeight:1.5 }}>{a.items}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {ciExists && ci.distances && (
+                        <div style={{ background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, padding:18 }}>
+                          <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:1.5, textTransform:"uppercase", marginBottom:14 }}>Distance to Key Dubai Locations</div>
+                          <div style={{ borderRadius:9, overflow:"hidden", border:"1px solid #1E293B" }}>
+                            <div style={{ display:"grid", gridTemplateColumns:"1fr 80px 90px", padding:"9px 14px", background:"#111827", fontSize:9, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase" }}>
+                              <span>Destination</span><span style={{ textAlign:"center" }}>Distance</span><span style={{ textAlign:"center" }}>Drive</span>
+                            </div>
+                            {ci.distances.map((d,i) => (
+                              <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 80px 90px", padding:"11px 14px", borderTop:"1px solid #0F1E35", background:i%2===0?"transparent":"#0A1628", fontSize:12, alignItems:"center" }}>
+                                <span style={{ color:T.white, fontWeight:500 }}>{d.dest}</span>
+                                <span style={{ textAlign:"center", color:T.textMuted }}>{d.km} km</span>
+                                <span style={{ textAlign:"center" }}>
+                                  <span style={{ padding:"3px 10px", borderRadius:5, fontSize:11, fontWeight:700, background:d.min<=10?"rgba(16,185,129,0.12)":d.min<=20?"rgba(212,168,67,0.12)":"rgba(59,130,246,0.12)", color:d.min<=10?T.green:d.min<=20?T.gold:"#3B82F6" }}>{d.min} min</span>
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          {ci.roads && <p style={{ fontSize:11, color:T.textMuted, marginTop:10 }}>Road Access: {ci.roads}</p>}
+                        </div>
+                      )}
+                      {!ciExists && (
+                        <div style={{ background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, padding:40, textAlign:"center" }}>
+                          <div style={{ fontSize:14, color:T.textMuted }}>Location data not available for this community yet.</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ROI CALCULATOR TAB */}
+                  {pdTab === "roi" && (() => {
+                    const calcPrice = price || 1750000;
+                    const roiD = roiData;
+                    const _gy2 = roiD.grossYield; const g2 = typeof _gy2==="object"&&_gy2!==null?(_gy2.apt1??_gy2.apt2??6.0):(_gy2??6.0);
+                    const appr2 = roiD.appreciation5yr ?? 35;
+                    const annualAppRate = Math.pow(1 + appr2/100, 1/5) - 1;
+                    const calcYears = 5;
+                    const projectedValue = Math.round(calcPrice * Math.pow(1 + annualAppRate, calcYears));
+                    const capitalGain = projectedValue - calcPrice;
+                    const payStr = sp.payment || "80/20";
+                    const downPctM = payStr.match(/^(\d+)/);
+                    const downPct = downPctM ? parseInt(downPctM[1])/100 : 0.2;
+                    const downPayment = Math.round(calcPrice * downPct);
+                    const annualRentCalc = Math.round(calcPrice * g2/100);
+                    const totalRental = annualRentCalc * calcYears;
+                    const totalReturn = capitalGain + totalRental;
+                    const roiOnDown = downPayment > 0 ? ((totalReturn/downPayment)*100).toFixed(1) : "—";
+                    const cashOnCash = downPayment > 0 ? ((annualRentCalc/downPayment)*100).toFixed(1) : "—";
+                    const annualized = (((projectedValue + totalRental) / calcPrice) * 100 / calcYears - 100/calcYears).toFixed(1);
+                    const scPerSqft = 18;
+                    const sizeEst = sp.sizeFrom || 750;
+                    const annualSC = sizeEst * scPerSqft;
+                    const netYieldPct = ((annualRentCalc - annualSC) / calcPrice * 100).toFixed(1);
+                    return (
+                      <div>
+                        {/* ROI KPIs */}
+                        <div style={{ background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, padding:18, marginBottom:14 }}>
+                          <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:1.5, textTransform:"uppercase", marginBottom:14 }}>ROI Estimate</div>
+                          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:12 }}>
+                            {[["Gross Yield",`${gross.toFixed(1)}%`,T.green],["Net Yield",`${net.toFixed(1)}%`,T.teal],["5-yr Appreciation",`+${appreciation}%`,T.gold],["Annual YoY",`+${annualYoy}%`,"#3B82F6"]].map(([l,v,c],i) => (
+                              <div key={i} style={{ background:"#111827", borderRadius:9, padding:13, textAlign:"center" }}>
+                                <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, marginBottom:5, fontWeight:700 }}>{l}</div>
+                                <div style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:c }}>{v}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
+                            {[
+                              ["Est. 5-yr Value", estValue5yr?`AED ${(estValue5yr/1e6).toFixed(2)}M`:"—", T.gold, estValue5yr&&price?`+AED ${((estValue5yr-price)/1e6).toFixed(2)}M gain`:null],
+                              ["Est. Annual Rent", annualRent?`AED ${annualRent.toLocaleString()}`:"—", T.teal, "1BR estimate"],
+                              ["Golden Visa", goldenVisa?"✓ Eligible":"✗ Not Eligible", goldenVisa?T.green:"#EF4444", goldenVisa?"Min. AED 2M met":"Below AED 2M"],
+                            ].map(([l,v,c,sub],i) => (
+                              <div key={i} style={{ background:"#111827", borderRadius:9, padding:13, textAlign:"center" }}>
+                                <div style={{ fontSize:9, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5, marginBottom:5, fontWeight:700 }}>{l}</div>
+                                <div style={{ fontFamily:"'Fraunces',serif", fontSize:15, fontWeight:900, color:c }}>{v}</div>
+                                {sub && <div style={{ fontSize:10, color:c==="T.textMuted"?T.textMuted:T.textMuted, marginTop:3 }}>{sub}</div>}
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ marginTop:10, fontSize:11, color:T.textMuted }}>Risk: {roiData.risk||"Low-Medium"} · Occupancy: {roiData.occupancy||"92"}%</div>
+                        </div>
+                        {/* Interactive Calculator */}
+                        <div style={{ background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, padding:18 }}>
+                          <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:1.5, textTransform:"uppercase", marginBottom:16 }}>Interactive ROI Calculator</div>
+                          <div style={{ background:T.surfaceAlt, borderRadius:12, padding:20 }}>
+                            <div style={{ fontSize:11, fontWeight:700, color:T.teal, letterSpacing:1, marginBottom:14, textTransform:"uppercase" }}>Results — {calcYears}-Year Projection</div>
+                            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:10 }}>
+                              {[["DOWN PAYMENT",`AED ${downPayment.toLocaleString()}`,T.white],["PROJECTED VALUE",`AED ${(projectedValue/1e6).toFixed(2)}M`,T.gold],["CAPITAL GAIN",`AED ${(capitalGain/1e6).toFixed(2)}M`,T.green]].map(([l,v,c]) => (
+                                <div key={l} style={{ background:"#04090F", borderRadius:8, padding:"12px 14px" }}>
+                                  <div style={{ fontSize:8, color:T.textMuted, fontWeight:700, letterSpacing:0.8, textTransform:"uppercase", marginBottom:4 }}>{l}</div>
+                                  <div style={{ fontSize:15, fontWeight:800, color:c, fontFamily:"'Fraunces',serif" }}>{v}</div>
+                                </div>
+                              ))}
+                            </div>
+                            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginBottom:10 }}>
+                              {[["TOTAL RENTAL",`AED ${(totalRental/1e6).toFixed(2)}M`,T.teal],["TOTAL RETURN",`AED ${(totalReturn/1e6).toFixed(2)}M`,T.teal],["ROI ON DOWN",`${roiOnDown}%`,"#3B82F6"]].map(([l,v,c]) => (
+                                <div key={l} style={{ background:"#04090F", borderRadius:8, padding:"12px 14px" }}>
+                                  <div style={{ fontSize:8, color:T.textMuted, fontWeight:700, letterSpacing:0.8, textTransform:"uppercase", marginBottom:4 }}>{l}</div>
+                                  <div style={{ fontSize:15, fontWeight:800, color:c, fontFamily:"'Fraunces',serif" }}>{v}</div>
+                                </div>
+                              ))}
+                            </div>
+                            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:10 }}>
+                              {[["CASH-ON-CASH",`${cashOnCash}%`,T.green],["ANNUALISED",`${annualized}%`,T.gold],["GROSS YIELD",`${g2.toFixed(1)}%`,T.teal],["NET YIELD",`${netYieldPct}%`,T.green]].map(([l,v,c]) => (
+                                <div key={l} style={{ background:"#04090F", borderRadius:8, padding:"12px 14px", textAlign:"center" }}>
+                                  <div style={{ fontSize:8, color:T.textMuted, fontWeight:700, letterSpacing:0.8, textTransform:"uppercase", marginBottom:4 }}>{l}</div>
+                                  <div style={{ fontSize:18, fontWeight:900, color:c, fontFamily:"'Fraunces',serif" }}>{v}</div>
+                                </div>
+                              ))}
+                            </div>
+                            <div style={{ marginTop:10, fontSize:10, color:T.textMuted }}>Estimates based on community averages. Service charge: AED {scPerSqft}/sqft/yr. Not financial advice.</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* SEND TO CLIENT MODAL */}
+                  {sendModal && (() => {
+                    const subject = `${sp.name} — Investment Opportunity | DXB Analytics`;
+                    const body = `Hi,\n\nI wanted to share an exciting investment opportunity with you:\n\n🏙️ Project: ${sp.name}\n📍 Community: ${sp.community}\n🏠 Type: ${sp.type}${sp.beds?" | "+sp.beds+" BR":""}\n💰 Starting From: AED ${price?(price/1e6).toFixed(2)+"M":"TBD"}\n📅 Handover: ${sp.handover||"—"}\n💳 Payment Plan: ${sp.payment||"—"}\n📈 Est. Gross Yield: ${gross.toFixed(1)}%\n📊 5-Year Appreciation: +${appreciation}%\n${goldenVisa?"✅ Golden Visa Eligible\n":""}\nPowered by DXB Analytics — Dubai's Real Estate Intelligence Platform.\n\nBest regards`;
+                    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                    return (
+                      <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.82)", zIndex:3000, display:"flex", alignItems:"center", justifyContent:"center", padding:20, backdropFilter:"blur(6px)" }} onClick={() => setSendModal(false)}>
+                        <div style={{ background:"#0A1628", border:"1.5px solid #D4A843", borderRadius:18, padding:32, width:"100%", maxWidth:520 }} onClick={e => e.stopPropagation()}>
+                          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20 }}>
+                            <div>
+                              <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:800, color:T.white, marginBottom:3 }}>Send to Client</div>
+                              <div style={{ fontSize:12, color:T.textMuted }}>{sp.name} · {sp.community}</div>
+                            </div>
+                            <button type="button" onClick={() => setSendModal(false)} style={{ width:32, height:32, borderRadius:8, border:"1px solid #1E293B", background:"#111827", color:T.textMuted, cursor:"pointer", fontSize:18, display:"flex", alignItems:"center", justifyContent:"center" }}>×</button>
+                          </div>
+                          <div style={{ background:T.bg, borderRadius:10, border:"1px solid #1E293B", padding:16, marginBottom:20, maxHeight:220, overflowY:"auto" }}>
+                            <div style={{ fontSize:10, fontWeight:700, color:T.gold, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Email Preview</div>
+                            <div style={{ fontSize:11, color:T.textMuted, marginBottom:6 }}><span style={{ color:T.textSecondary, fontWeight:600 }}>Subject: </span>{subject}</div>
+                            <pre style={{ fontSize:11, color:T.textSecondary, lineHeight:1.7, whiteSpace:"pre-wrap", fontFamily:"'Outfit',sans-serif" }}>{body}</pre>
+                          </div>
+                          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                            <a href={mailtoLink} style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:13, borderRadius:10, background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", fontWeight:800, fontSize:14, textDecoration:"none", fontFamily:"'Outfit',sans-serif" }}>
+                              Open in Email Client
+                            </a>
+                            <button type="button" onClick={() => { navigator.clipboard.writeText(body); }} style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:11, borderRadius:10, background:"transparent", border:"2px solid #D4A843", color:"#D4A843", fontWeight:600, fontSize:13, cursor:"pointer", fontFamily:"'Outfit',sans-serif", outline:"none" }}>
+                              Copy Email Text
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* DISCLAIMER */}
+                  <div style={{ marginTop:24, padding:14, borderRadius:10, background:T.surface, border:`1px solid ${T.border}`, fontSize:10, color:T.textMuted, lineHeight:1.7 }}>
+                    <strong style={{ color:T.textSecondary }}>Disclaimer:</strong> Prices, handover dates, and payment plans are estimates based on publicly available data. DXB Analytics is not a licensed real estate brokerage. Always verify with the developer before making financial decisions.
+                  </div>
+
+                </div>
+              );
+            })()}
+        </div>
+        </div>
+        );
 
               {/* ── TWO COLUMN LAYOUT ── */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 32, marginTop: 32 }}>
