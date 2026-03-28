@@ -8240,7 +8240,7 @@ export default function EmaarDashboardV2() {
                     <button type="button" onClick={handleCopyLink} style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, fontFamily:"'Outfit',sans-serif" }}>
                       {copiedLink ? "✓ Copied!" : "Copy Link"}
                     </button>
-                    <a href={`https://wa.me/971XXXXXXXXX?text=Hi, I'm interested in ${encodeURIComponent(sp.name)} in ${encodeURIComponent(sp.community)}. Price from ${price?(price/1e6).toFixed(2)+"M AED":"TBD"}. Handover: ${sp.handover}.`} target="_blank" rel="noopener noreferrer" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, textDecoration:"none", fontFamily:"'Outfit',sans-serif" }}>WhatsApp</a>
+                    <a href={`https://wa.me/?text=${encodeURIComponent(`Hi, I'm interested in ${sp.name} in ${sp.community}. Price from AED ${price?(price/1e6).toFixed(2)+"M":"TBD"}. Handover: ${sp.handover}. Payment: ${sp.payment||"—"}.`)}`} target="_blank" rel="noopener noreferrer" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, textDecoration:"none", fontFamily:"'Outfit',sans-serif" }}>WhatsApp</a>
                     <div style={{ flex:1 }} />
                     {(sp.emaarUrl||sp.sourceUrl) && <a href={sp.emaarUrl||sp.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"10px 18px", background:"#D4A843", color:"#04090F", border:"2px solid #D4A843", borderRadius:9, fontSize:13, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, textDecoration:"none", fontFamily:"'Outfit',sans-serif" }}>View on {(sp.emaarUrl||"").includes("emaar.com")?"Emaar.com":"Source"} ↗</a>}
                   </div>
@@ -8278,7 +8278,6 @@ export default function EmaarDashboardV2() {
                           <ROW label="Golden Visa" value={goldenVisa?"✓ Eligible":"✗ Not Eligible"} color={goldenVisa?T.green:"#EF4444"} />
                           <ROW label="Risk Level" value={roiData.risk||"Low-Medium"} color={T.gold} />
                           <ROW label="Occupancy" value={roiData.occupancy?(roiData.occupancy+"%"):"—"} />
-                          <ROW label="Investment Score" value={`${inv.score}/10 — ${inv.label}`} color={inv.color} />
                         </div>
                       </div>
                       {/* Famous For */}
