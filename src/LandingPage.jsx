@@ -13,14 +13,7 @@ import React, { useState, useEffect } from "react";
 import { db } from "./firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { useI18n } from "./i18n";
-
-const T = {
-  bg: "#04090F", surface: "#0A1628", surfaceAlt: "#0E1D35", card: "#0D1B30",
-  gold: "#D4A843", goldLight: "#E8C96A", goldGlow: "rgba(212,168,67,0.12)",
-  goldMuted: "rgba(212,168,67,0.08)", teal: "#00BFA5", white: "#FFFFFF",
-  textPrimary: "#E2E8F0", textSecondary: "#94A3B8", textMuted: "#64748B",
-  border: "rgba(212,168,67,0.12)", red: "#EF4444", green: "#10B981", blue: "#3B82F6",
-};
+import { T } from "./theme";
 
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&display=swap');
@@ -91,7 +84,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
   const [billingAnnual, setBillingAnnual] = useState(false);
   const [activeRole, setActiveRole] = useState("agent");
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [liveStats, setLiveStats] = useState({ users: 7, paid: 6, mrr: 2194, projects: 48, communities: 13 });
+  const [liveStats, setLiveStats] = useState({ users: 0, paid: 0, mrr: 0, projects: 208, communities: 13 });
 
   // Live stats from Firestore — updates in real time as users sign up
   useEffect(() => {
