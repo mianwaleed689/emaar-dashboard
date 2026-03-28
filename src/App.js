@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { HashRouter, Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
@@ -12,14 +12,12 @@ import Privacy from "./Privacy";
 import ErrorBoundary from "./ErrorBoundary";
 import NotFound from "./NotFound";
 import { I18nProvider } from "./i18n";
-// ── Spinner shared ──
 const Spinner = () => (
   <div style={{ minHeight: "100vh", background: "#04090F", display: "flex", alignItems: "center", justifyContent: "center" }}>
     <div style={{ width: 24, height: 24, border: "2px solid rgba(212,168,67,0.3)", borderTopColor: "#D4A843", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
     <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
   </div>
 );
-// ── Admin guard – checks role === "admin" ──
 function AuthGuard({ children }) {
   const [status, setStatus] = useState("loading");
   useEffect(() => {
@@ -39,7 +37,6 @@ function AuthGuard({ children }) {
   if (status === "denied") return <Navigate to="/" replace />;
   return children;
 }
-// ── Home route – landing page for guests, redirect to /dashboard if logged in ──
 function HomeRoute() {
   const [status, setStatus] = useState("loading");
   const navigate = useNavigate();
@@ -58,7 +55,6 @@ function HomeRoute() {
     />
   );
 }
-// ── Project redirect — opens dashboard with project modal auto-triggered ──
 function ProjectRedirect() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -71,19 +67,18 @@ function App() {
   return (
     <ErrorBoundary>
       <I18nProvider>
-        <HashRouter>
+        <BrowserRouter>
           <Routes>
             <Route path="/" element={<HomeRoute />} />
             <Route path="/dashboard" element={<EmaarDashboardV2 />} />
             <Route path="/admin" element={<AuthGuard><AdminPanel /></AuthGuard>} />
             <Route path="/manage" element={<AuthGuard><ProjectManager /></AuthGuard>} />
-            {/* /project/:id — redirect to dashboard with project ID in state so modal auto-opens */}
             <Route path="/project/:id" element={<ProjectRedirect />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </HashRouter>
+        </BrowserRouter>
       </I18nProvider>
     </ErrorBoundary>
   );
