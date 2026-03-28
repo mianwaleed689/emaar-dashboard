@@ -34,11 +34,11 @@ const communityProjects = emaarCommunities.filter(c => c.name).map(c => ({ name:
 
 /* --- LINK LABEL HELPER --- */
 const getLinkLabel = (url) => {
-  if (!url) return "View ?";
-  if (url.includes("propertyfinder.ae")) return "PropertyFinder ?";
-  if (url.includes("bayut.com")) return "Bayut ?";
-  if (url.includes("properties.emaar.com") || url.includes("emaar.com")) return "Emaar ?";
-  return "View ?";
+  if (!url) return "View ↗";
+  if (url.includes("propertyfinder.ae")) return "PropertyFinder ↗";
+  if (url.includes("bayut.com")) return "Bayut ↗";
+  if (url.includes("properties.emaar.com") || url.includes("emaar.com")) return "Emaar ↗";
+  return "View ↗";
 };
 const getLinkDomain = (url) => {
   if (!url) return "Listing";
@@ -357,14 +357,14 @@ const css = `
 
     /* Tables - horizontal scroll with hint arrow */
     .table-scroll { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
-    .table-scroll::after { content: "swipe ?"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
+    .table-scroll::after { content: "swipe →"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
     .table-scroll table { min-width: 560px; }
 
     /* Compare bar */
     .compare-bar { padding: 10px 14px !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
     .compare-bar > div { justify-content: center; flex-wrap: wrap; }
 
-    /* Mortgage calculator 2-col ? 1-col */
+    /* Mortgage calculator 2-col → 1-col */
     .mortgage-grid { grid-template-columns: 1fr !important; }
 
     /* AI Insights full width cards */
@@ -2961,7 +2961,7 @@ export default function EmaarDashboardV2() {
               <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Admin</div>
               <button type="button" className="sidebar-btn" onClick={() => window.location.href = "/admin"} style={{ background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.05))", border: "1px solid rgba(212,168,67,0.3)" }}>
                 {Icons.admin}
-                Admin Console ?
+                Admin Console ↗
               </button>
             </>
           )}
@@ -3191,7 +3191,7 @@ export default function EmaarDashboardV2() {
               // Format helpers
               const fmtB = (v) => `AED ${v}B`;
               const freshnessBadge = emaarLive ? (
-                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>? LIVE</span>
+                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>🟢 LIVE</span>
               ) : (
                 <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC</span>
               );
@@ -3299,7 +3299,7 @@ export default function EmaarDashboardV2() {
                 }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}
                 onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.2)"}
                 onMouseLeave={e => e.currentTarget.style.background = "rgba(212,168,67,0.1)"}>
-                  ? Export PDF
+                  ⬇ Export PDF
                 </button>
               </div>
             </div>
@@ -3441,7 +3441,7 @@ export default function EmaarDashboardV2() {
                   <span style={{ fontSize: 14 }}>??</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Dubai RE Market Headlines</span>
                   {isLive
-                    ? <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.1)", color: T.green, border: "1px solid rgba(16,185,129,0.2)" }}>? LIVE</span>
+                    ? <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.1)", color: T.green, border: "1px solid rgba(16,185,129,0.2)" }}>🟢 LIVE</span>
                     : <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: T.gold, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC</span>
                   }
                 </div>
@@ -3609,7 +3609,7 @@ export default function EmaarDashboardV2() {
               {/* Freshness badge */}
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 {emaarLive ? (
-                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>? LIVE - Firestore</span>
+                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>🟢 LIVE - Firestore</span>
                 ) : (
                   <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC - data.js</span>
                 )}
@@ -5761,7 +5761,7 @@ export default function EmaarDashboardV2() {
             <Section title="Rental Yield Analysis" sub="Bayut RapidAPI - DXB Interact - Engel & V-lkers - DLD Rental Index">
               <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                 {liveYields.length > 0 ? (
-                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>? LIVE - Bayut API</span>
+                  <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.12)", color: "#10B981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>🟢 LIVE - Bayut API</span>
                 ) : (
                   <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC - data.js</span>
                 )}
