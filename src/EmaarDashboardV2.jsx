@@ -2013,6 +2013,9 @@ export default function EmaarDashboardV2() {
   }, [selectedDeveloper, emaarLive, damacLiveFS, sobhaLiveFS, nakheelLiveFS, meraasLiveFS, binghattiLiveFS, aldarLiveFS]);
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [pdTab, setPdTab] = useState("overview");
+  const [pdSendModal, setPdSendModal] = useState(false);
+  const [pdCopiedLink, setPdCopiedLink] = useState(false);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [expandedMega, setExpandedMega] = useState(null);
   const [compareList, setCompareList] = useState([]);
@@ -2677,7 +2680,7 @@ export default function EmaarDashboardV2() {
         else if (showUpgrade) setShowUpgrade(false);
         else if (showNotifications) setShowNotifications(false);
         else if (showWatchlist) setShowWatchlist(false);
-        else if (selectedProject) setSelectedProject(null);
+        else if (selectedProject) { setSelectedProject(null); setPdTab("overview"); setPdSendModal(false); }
         else if (showCompare) setShowCompare(false);
         else if (selectedKPI) setSelectedKPI(null);
       }
@@ -8062,7 +8065,7 @@ export default function EmaarDashboardV2() {
                     <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 10 }}>PROJECTS IN {selectedCommunity.toUpperCase()} ({commProjects.length})</div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
                       {commProjects.map((p, pi) => (
-                        <div key={pi} style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, cursor: "pointer" }} onClick={() => { const proj = activeProjects.find(x => x.id === p.id) || p; setBreadcrumb([{ label: selectedCommunity, action: () => { setSelectedProject(null); setBreadcrumb([]); } }]); setSelectedCommunity(null); setSelectedProject(proj); }}>
+                        <div key={pi} style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, cursor: "pointer" }} onClick={() => { const proj = activeProjects.find(x => x.id === p.id) || p; setBreadcrumb([{ label: selectedCommunity, action: () => { setSelectedProject(null); setBreadcrumb([]); setPdTab("overview"); setPdSendModal(false); } }]); setSelectedCommunity(null); setSelectedProject(proj); }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
                             <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{p.name}</span>
                             {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 8, color: T.gold, textDecoration: "none", padding: "1px 4px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 3, fontWeight: 700 }}>↗</a>}
@@ -8122,12 +8125,12 @@ export default function EmaarDashboardV2() {
 
             {/* ── STICKY TOP NAV ── */}
             <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(4,9,15,0.97)", backdropFilter: "blur(16px)", borderBottom: `1px solid ${T.border}`, padding: "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56 }}>
-              <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", color: T.textSecondary, cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "'Outfit', sans-serif", padding: "0" }}>
+              <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); setPdTab("overview"); setPdSendModal(false); }} style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", color: T.textSecondary, cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "'Outfit', sans-serif", padding: "0" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
                 Back to Projects
               </button>
               <div style={{ fontSize: 12, color: T.textMuted, fontWeight: 500 }}>{selectedProject_.community} · {selectedProject_.type}</div>
-              <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); setPdTab("overview"); setPdSendModal(false); }} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             </div>
 
             {/* ── HERO IMAGE ── */}
@@ -8153,9 +8156,11 @@ export default function EmaarDashboardV2() {
               const estValue5yr = price ? Math.round(price * (1 + appreciation / 100)) : 0;
               const annualRent = price ? Math.round(price * gross / 100) : 0;
               const goldenVisa = price >= 2000000;
-              const [pdTab, setPdTab] = React.useState("overview");
-              const [sendModal, setSendModal] = React.useState(false);
-              const [copiedLink, setCopiedLink] = React.useState(false);
+              // Tab state — uses top-level useState (hooks must not be inside IIFE)
+              const sendModal = pdSendModal;
+              const setSendModal = setPdSendModal;
+              const copiedLink = pdCopiedLink;
+              const setCopiedLink = setPdCopiedLink;
               const cd = (() => {
                 if (!sp.handover) return null;
                 const match = sp.handover.match(/Q([1-4])\s+(\d{4})/);
