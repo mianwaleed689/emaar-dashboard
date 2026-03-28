@@ -1,7 +1,7 @@
 ﻿
 
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import emailjs from "@emailjs/browser";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, Legend } from "recharts";
 import { auth, db } from "./firebase";
@@ -1950,6 +1950,15 @@ export default function EmaarDashboardV2() {
 
   // Set page title
   useEffect(() => { document.title = "DXB Analytics — Dubai Real Estate Intelligence Platform"; }, []);
+
+  // Auto-open project modal when navigated from /project/:id link
+  useEffect(() => {
+    const openId = location?.state?.openProjectId;
+    if (openId && activeProjects.length > 0) {
+      const proj = activeProjects.find(p => String(p.id) === String(openId) || p.id === openId);
+      if (proj) { setSelectedProject(proj); setTab("Projects"); }
+    }
+  }, [location?.state?.openProjectId, activeProjects.length]); // eslint-disable-line
   const [projectSearch, setProjectSearch] = useState("");
   const [projectFilter, setProjectFilter] = useState("All");
   const [projectTier, setProjectTier] = useState("All");
@@ -2012,6 +2021,7 @@ export default function EmaarDashboardV2() {
     return { identity:{id:"emaar",name:"Emaar Properties",founder:"Mohamed Alabbar",md:"Amit Jain",founded:1997}, live:emaarLive, financials:emaarFinancials, communities:emaarCommunities, yields:emaarYields, risks:emaarRisks, segments:emaarSegments, radar:radarData, megaProjects:megaProjects, branded:[], projects:emaarProjects, isT1:true, isLive:true };
   }, [selectedDeveloper, emaarLive, damacLiveFS, sobhaLiveFS, nakheelLiveFS, meraasLiveFS, binghattiLiveFS, aldarLiveFS]);
   const [overviewLoading, setOverviewLoading] = useState(true);
+  const location = useLocation();
   const [selectedProject, setSelectedProject] = useState(null);
   const [pdTab, setPdTab] = useState("overview");
   const [pdSendModal, setPdSendModal] = useState(false);
@@ -8536,8 +8546,9 @@ _Powered by DXB Analytics — Dubai Real Estate Intelligence_`)}`} target="_blan
 
                   {/* SEND TO CLIENT MODAL */}
                   {sendModal && (() => {
-                    const subject = `Investment Opportunity: ${sp.name} — ${sp.community} | From AED ${price?(price/1e6).toFixed(2)+"M":"TBD"}`;
-                    const body = `Hi,\n\nI hope you're doing well. I wanted to share an investment opportunity I've identified for you through DXB Analytics:\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n🏙️  ${sp.name}\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📍 Location:       ${sp.community}${sp.district?` · ${sp.district}`:""}\n🏠 Type:           ${sp.type}${sp.beds?" · "+sp.beds+" BR":""}\n💰 Starting From:  AED ${price?(price/1e6).toFixed(2)+"M":"TBD"}${sp.ppsf?`  (AED ${sp.ppsf.toLocaleString()}/sqft)`:""}\n📅 Handover:       ${sp.handover||"—"}\n💳 Payment Plan:   ${sp.payment||"—"}\n📈 Est. Yield:     ${gross?gross.toFixed(1)+"%":"—"}\n📊 5-yr Growth:    +${appreciation||35}%${goldenVisa?"\n🏅 Golden Visa:    Eligible (≥ AED 2M)":""}\n\nThis project offers strong fundamentals with ${sp.community} being one of Dubai's most sought-after communities.\n\nI'd be happy to arrange a site visit or provide further details. Let me know if you'd like to explore this opportunity.\n\nBest regards,\n\n_Powered by DXB Analytics — Dubai Real Estate Intelligence Platform_\nhttps://emaar-dashboard.vercel.app`;
+                    const subject = `${sp.name} | ${sp.community} | From AED ${price?(price/1e6).toFixed(2)+"M":"TBD"} | Investment Brief`;
+                    const famousFor = ci?.famousFor || "";
+                    const body = `Dear Client,\n\nI hope this message finds you well.\n\nI am pleased to present the following off-plan investment opportunity that aligns with your investment profile:\n\nPROJECT BRIEF\n─────────────────────────────────────\nProject:        ${sp.name}\nDeveloper:      ${sp.developer || "Emaar Properties"}\nLocation:       ${sp.community}${sp.district ? `, ${sp.district}` : ""}, Dubai\nProperty Type:  ${sp.type}${sp.beds ? ` | ${sp.beds} BR` : ""}\nStarting Price: AED ${price ? (price/1e6).toFixed(2)+"M" : "TBD"}${sp.ppsf ? ` (AED ${sp.ppsf.toLocaleString()}/sqft)` : ""}\nSize Range:     ${sp.sizeFrom ? sp.sizeFrom.toLocaleString()+" – "+(sp.sizeTo||"").toLocaleString()+" sqft" : "—"}\nPayment Plan:   ${sp.payment || sp.paymentPlan || "—"}\nHandover:       ${sp.handover || "—"}\nStatus:         ${sp.status || "Off-Plan"}\n\nINVESTMENT HIGHLIGHTS\n─────────────────────────────────────\nEst. Gross Yield:      ${gross ? gross.toFixed(1)+"% p.a." : "—"}\n5-Year Appreciation:   +${appreciation || 35}%\nRisk Profile:          ${roiData?.risk || "Low-Medium"}\nOccupancy Rate:        ${roiData?.occupancy || "92"}%${goldenVisa ? "\nGolden Visa:           Eligible (Property ≥ AED 2M)" : ""}\n${famousFor ? "\nCOMMUNITY OVERVIEW\n─────────────────────────────────────\n"+famousFor+"\n" : ""}\nI would be delighted to arrange a viewing, provide floor plans, or walk you through the payment structure at your convenience.\n\nPlease feel free to reach out should you have any questions.\n\nWarm regards,\n\n─────────────────────────────────────\nPowered by DXB Analytics\nDubai Real Estate Intelligence Platform\nhttps://emaar-dashboard.vercel.app\n─────────────────────────────────────`;
                     const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                     return (
                       <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.82)", zIndex:3000, display:"flex", alignItems:"center", justifyContent:"center", padding:20, backdropFilter:"blur(6px)" }} onClick={() => setSendModal(false)}>
