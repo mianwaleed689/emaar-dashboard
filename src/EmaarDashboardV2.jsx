@@ -8171,10 +8171,11 @@ export default function EmaarDashboardV2() {
               const estValue5yr = price ? Math.round(price * (1 + appreciation / 100)) : 0;
               const annualRent = price ? Math.round(price * gross / 100) : 0;
               const goldenVisa = price >= 2000000;
-              // Tab state — uses top-level useState (hooks must not be inside IIFE)
+              // Tab state — aliases for top-level useState (hooks must not be inside IIFE)
               const sendModal = pdSendModal;
               const setSendModal = setPdSendModal;
               const copiedLink = pdCopiedLink;
+              const setCopiedLink = setPdCopiedLink;
               const setCopiedLink = setPdCopiedLink;
               const cd = (() => {
                 if (!sp.handover) return null;
