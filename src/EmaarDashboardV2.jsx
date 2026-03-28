@@ -8176,7 +8176,6 @@ export default function EmaarDashboardV2() {
               const setSendModal = setPdSendModal;
               const copiedLink = pdCopiedLink;
               const setCopiedLink = setPdCopiedLink;
-              const setCopiedLink = setPdCopiedLink;
               const cd = (() => {
                 if (!sp.handover) return null;
                 const match = sp.handover.match(/Q([1-4])\s+(\d{4})/);
