@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useMemo } from "react";
+﻿import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { auth, db, storage, firebaseConfig } from "./firebase";
 import { initializeApp, deleteApp } from "firebase/app";
@@ -6,27 +6,15 @@ import { getAuth } from "firebase/auth";
 import emailjs from "@emailjs/browser";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter, updateDoc } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, where, addDoc, startAfter } from "firebase/firestore";
 import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-// S30: Full 208-project Emaar database
-import { emaarProjects } from "./data_emaar_complete";
-import { emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
-import { damacProjects } from "./data_damac";
-import { sobhaProjects } from "./data_sobha";
-import { nakheelProjects } from "./data_nakheel";
-import { meraasProjects } from "./data_meraas";
-import { binghattiProjects } from "./data_binghatti";
-import { aldarProjects } from "./data_aldar";
-// All projects combined — used for audit log project name lookups
-const allProjects = [...emaarProjects, ...damacProjects, ...sobhaProjects, ...nakheelProjects, ...meraasProjects, ...binghattiProjects, ...aldarProjects];
-import { T } from "./theme";
+import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
 import ProjectManager from "./ProjectManager";
 import { useI18n, LANGUAGES } from "./i18n";
-import AdminDataHealth from "./AdminDataHealth";
 
-/* =======================================================
+/* ═══════════════════════════════════════════════════════
    EMAIL CAMPAIGNS TAB
-   ======================================================= */
+   ═══════════════════════════════════════════════════════ */
 function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchLeads }) {
   const [campaigns, setCampaigns]       = React.useState([]);
   const [showCreate, setShowCreate]     = React.useState(false);
@@ -167,7 +155,7 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:14 }}>
               <div><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Target</label><select value={form.targetFilter} onChange={e=>setForm(p=>({...p,targetFilter:e.target.value,targetCommunity:"",targetStatus:""}))} style={{...inputStyle,cursor:"pointer"}}><option value="all">All leads with email</option><option value="community">By Community</option><option value="status">By Status</option></select></div>
               <div>{form.targetFilter==="community"&&<><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Community</label><select value={form.targetCommunity} onChange={e=>setForm(p=>({...p,targetCommunity:e.target.value}))} style={{...inputStyle,cursor:"pointer"}}><option value="">Select...</option>{communities.map(c=><option key={c} value={c}>{c}</option>)}</select></>}
-              {form.targetFilter==="status"&&<><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Status</label><select value={form.targetStatus} onChange={e=>setForm(p=>({...p,targetStatus:e.target.value}))} style={{...inputStyle,cursor:"pointer"}}><option value="">Select...</option>{["New","Contacted","Qualified","Viewing Scheduled","Offer Made","Converted","Dormant","Lost"].map(s=><option key={s} value={s}>{s}</option>)}</select></>}
+              {form.targetFilter==="status"&&<><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:6 }}>Status</label><select value={form.targetStatus} onChange={e=>setForm(p=>({...p,targetStatus:e.target.value}))} style={{...inputStyle,cursor:"pointer"}}><option value="">Select...</option>{["New","Contacted","Qualified","Converted","Lost"].map(s=><option key={s} value={s}>{s}</option>)}</select></>}
               {form.targetFilter==="all"&&<div style={{ padding:"12px", background:"rgba(16,185,129,0.06)", borderRadius:8, border:"1px solid rgba(16,185,129,0.2)", marginTop:20 }}><div style={{ fontSize:12, fontWeight:700, color:T.green }}>{targetLeads.length.toLocaleString()} leads targeted</div></div>}</div>
             </div>
             <div style={{ marginBottom:14 }}><label style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, display:"block", marginBottom:8 }}>Templates</label><div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>{TEMPLATES.map(t=><button key={t.id} type="button" onClick={()=>setForm(p=>({...p,template:t.id,subject:t.subject,body:t.body}))} style={{ fontSize:11, padding:"5px 10px", borderRadius:7, border:`1px solid ${form.template===t.id?T.gold:T.border}`, background:form.template===t.id?"rgba(212,168,67,0.1)":T.surfaceAlt, color:form.template===t.id?T.gold:T.textSecondary, cursor:"pointer" }}>{t.label}</button>)}</div></div>
@@ -197,10 +185,10 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
   );
 }
 
-/* ===============================================================
+/* ═══════════════════════════════════════════════════════════════
    DXB ANALYTICS — ADMIN PANEL
    Matching dashboard design DNA: sidebar nav, KPI cards, sections
-   =============================================================== */
+   ═══════════════════════════════════════════════════════════════ */
 
 /* ─── RESEND EMAIL HELPER ─── */
 const RESEND_KEY = "re_FGZe2ET2_9pDv9iEV2MUTQXg1QHJeV3fs";
@@ -225,1495 +213,14 @@ const sendResend = async (to, subject, bodyText) => {
 };
 
 /* ─── THEME (exact dashboard match) ─── */
-// S16: T theme imported from src/theme.js — see import above
-
-/* ─── S20: MARKET INTELLIGENCE TAB ──────────────────────────────────────────
-   The admin's Bloomberg Terminal view:
-   - All data feed statuses (live from Firestore)
-   - Latest DLD transaction anomalies (adminAlerts)
-   - EIBOR trend last 30 days (eiborHistory)
-   - Top community by transaction volume (communityData)
-   - Developer launch alerts (new DLD project registrations)
-────────────────────────────────────────────────────────────────────────── */
-const MarketIntelligenceTab = ({ db, T, notify, users }) => {
-  const [marketGlobal, setMarketGlobal] = React.useState(null);
-  const [eiborData,    setEiborData]    = React.useState(null);
-  const [eiborHistory, setEiborHistory] = React.useState([]);
-  const [alerts,       setAlerts]       = React.useState([]);
-  const [communities,  setCommunities]  = React.useState([]);
-  const [developers,   setDevelopers]   = React.useState([]);
-  const [loading,      setLoading]      = React.useState(true);
-
-  // Load all data
-  React.useEffect(() => {
-    const unsubs = [];
-
-    // marketData/global
-    unsubs.push(onSnapshot(doc(db, "marketData", "global"), snap => {
-      if (snap.exists()) setMarketGlobal(snap.data());
-    }));
-
-    // marketData/eibor
-    unsubs.push(onSnapshot(doc(db, "marketData", "eibor"), snap => {
-      if (snap.exists()) setEiborData(snap.data());
-    }));
-
-    // eiborHistory — last 30 days
-    getDocs(query(collection(db, "eiborHistory"), orderBy("fetchedAt", "desc"), limit(30))).then(snap => {
-      const list = [];
-      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-      setEiborHistory(list.reverse());
-    }).catch(() => {});
-
-    // adminAlerts — last 20
-    unsubs.push(onSnapshot(
-      query(collection(db, "adminAlerts"), orderBy("createdAt", "desc"), limit(20)),
-      snap => {
-        const list = [];
-        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-        setAlerts(list);
-        setLoading(false);
-      },
-      () => setLoading(false)
-    ));
-
-    // communityData — all communities
-    getDocs(collection(db, "communityData")).then(snap => {
-      const list = [];
-      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-      setCommunities(list.sort((a, b) => (b.transactionCount30d || 0) - (a.transactionCount30d || 0)));
-    }).catch(() => {});
-
-    // developers — for launch alerts
-    getDocs(query(collection(db, "developers"), orderBy("seededAt", "desc"), limit(20))).then(snap => {
-      const list = [];
-      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-      setDevelopers(list);
-    }).catch(() => {});
-
-    return () => unsubs.forEach(u => u());
-  }, [db]);
-
-  // Data feed statuses
-  const FEEDS = [
-    { name: "EIBOR Rates",       key: "eibor",       icon: "📈", schedule: "Daily 11:30AM UAE", lastUpdate: eiborData?.updatedAt,    status: eiborData ? "live" : "no_data",    value: eiborData ? `3M: ${eiborData.threeMonth || eiborData["3m"] || "—"}%` : "—" },
-    { name: "Market Data",       key: "global",      icon: "🏙️", schedule: "Admin updated",     lastUpdate: marketGlobal?.updatedAt, status: marketGlobal ? "live" : "no_data", value: marketGlobal ? marketGlobal.totalMarketValue || "—" : "—" },
-    { name: "DLD Transactions",  key: "dld",         icon: "📋", schedule: "Daily 7AM UAE",     lastUpdate: marketGlobal?.dldUpdatedAt, status: marketGlobal?.lastDLDFetchDate ? "live" : "pending", value: marketGlobal?.lastDLDTxnCount ? `${marketGlobal.lastDLDTxnCount} txns` : "Pending API keys" },
-    { name: "Developer Registry",key: "developers",  icon: "🏗️", schedule: "One-time seeded",   lastUpdate: developers[0]?.seededAt, status: developers.length > 0 ? "live" : "no_data", value: `${developers.length} developers` },
-  ];
-
-  const statusColor = (s) => s === "live" ? T.green : s === "pending" ? T.orange : T.textMuted;
-  const statusLabel = (s) => s === "live" ? "LIVE" : s === "pending" ? "PENDING" : "NO DATA";
-
-  // Anomaly alerts
-  const anomalyAlerts = alerts.filter(a => a.type === "price_anomaly" || a.type === "financial_update" || a.type === "referral_reward" || a.type === "payment_retry");
-  const launchAlerts  = alerts.filter(a => a.type === "developer_launch" || a.message?.toLowerCase().includes("new") || a.message?.toLowerCase().includes("launch"));
-
-  // EIBOR mini chart
-  const eiborMax = Math.max(...eiborHistory.map(h => parseFloat(h["3m"] || h.threeMonth || 0)), 5);
-  const eiborMin = Math.min(...eiborHistory.map(h => parseFloat(h["3m"] || h.threeMonth || 100)), 3);
-
-  const now = new Date();
-  const timeSince = (iso) => {
-    if (!iso) return "Never";
-    const d = (now - new Date(iso)) / 1000;
-    if (d < 60) return `${Math.round(d)}s ago`;
-    if (d < 3600) return `${Math.round(d/60)}m ago`;
-    if (d < 86400) return `${Math.round(d/3600)}h ago`;
-    return `${Math.round(d/86400)}d ago`;
-  };
-
-  return (
-    <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 20 }}>
-
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.gold, marginBottom: 4 }}>Market Intelligence</h2>
-          <p style={{ color: T.textMuted, fontSize: 13 }}>Admin Bloomberg Terminal — live data feeds · DLD anomalies · EIBOR trend · Developer alerts</p>
-        </div>
-        <div style={{ fontSize: 12, color: T.green, fontWeight: 700, padding: "4px 12px", borderRadius: 8, background: "rgba(16,185,129,0.1)", border: `1px solid rgba(16,185,129,0.2)` }}>
-          ● LIVE · {new Date().toLocaleString("en-AE", { timeZone: "Asia/Dubai", hour: "2-digit", minute: "2-digit" })} UAE
-        </div>
-      </div>
-
-      {/* Data Feed Statuses */}
-      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>📡 Data Feed Status</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
-          {FEEDS.map(f => (
-            <div key={f.key} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${statusColor(f.status)}22` }}>
-              <span style={{ fontSize: 20 }}>{f.icon}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{f.name}</span>
-                  <span style={{ fontSize: 9, fontWeight: 700, color: statusColor(f.status), padding: "1px 7px", borderRadius: 5, background: statusColor(f.status) + "15", border: `1px solid ${statusColor(f.status)}33` }}>{statusLabel(f.status)}</span>
-                </div>
-                <div style={{ fontSize: 11, color: T.textMuted }}>Schedule: {f.schedule} · Last: {timeSince(f.lastUpdate)}</div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: statusColor(f.status), marginTop: 2 }}>{f.value}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Main grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-
-        {/* EIBOR Trend */}
-        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>📈 EIBOR Trend — Last 30 Days</div>
-          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>3-Month rate · UAE Central Bank</div>
-
-          {/* Current rates */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 16 }}>
-            {[
-              { label: "Overnight", key: "overnight" },
-              { label: "1 Month",   key: "oneMonth" },
-              { label: "3 Month",   key: "threeMonth" },
-              { label: "12 Month",  key: "twelveMonth" },
-            ].map(r => (
-              <div key={r.key} style={{ textAlign: "center", padding: "8px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
-                <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 3 }}>{r.label}</div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>{eiborData?.[r.key] || eiborData?.[r.key.replace("Month","m").replace("oneM","1m").replace("threeM","3m").replace("twelveM","12m").replace("overnight","on")] || "—"}%</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Mini line chart */}
-          {eiborHistory.length > 0 ? (
-            <div style={{ height: 80, display: "flex", alignItems: "flex-end", gap: 3, padding: "8px 0" }}>
-              {eiborHistory.slice(-20).map((h, i) => {
-                const val = parseFloat(h["3m"] || h.threeMonth || 0);
-                const range = eiborMax - eiborMin || 1;
-                const height = Math.max(((val - eiborMin) / range) * 60 + 10, 4);
-                return (
-                  <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-                    <div style={{ width: "80%", height: `${height}px`, background: `linear-gradient(180deg,${T.gold},${T.gold}66)`, borderRadius: "2px 2px 0 0" }} title={`${val}%`} />
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: T.textMuted, fontSize: 12, background: T.surfaceAlt, borderRadius: 8 }}>
-              EIBOR history will populate after first cron run
-            </div>
-          )}
-          {eiborData?.asOf && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>As of: {eiborData.asOf} · Source: UAE Central Bank</div>}
-        </div>
-
-        {/* Top Communities by Volume */}
-        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>🏙️ Top Communities — Transaction Volume</div>
-          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>30-day rolling count · DLD data</div>
-          {communities.length === 0 ? (
-            <div style={{ color: T.textMuted, fontSize: 12, textAlign: "center", padding: "20px 0" }}>
-              Community data will populate when DLD API keys are active
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {communities.slice(0, 8).map((c, i) => {
-                const maxVol = communities[0]?.transactionCount30d || 1;
-                const pct = ((c.transactionCount30d || 0) / maxVol) * 100;
-                return (
-                  <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 20, fontSize: 11, color: i === 0 ? T.gold : T.textMuted, fontWeight: i === 0 ? 700 : 400, flexShrink: 0 }}>#{i+1}</div>
-                    <div style={{ width: 130, fontSize: 11, color: T.white, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.areaName || c.id}</div>
-                    <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.border, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${pct}%`, background: i === 0 ? T.gold : T.teal, borderRadius: 3 }} />
-                    </div>
-                    <div style={{ width: 60, textAlign: "right", fontSize: 11, fontWeight: 600, color: i === 0 ? T.gold : T.textSecondary, flexShrink: 0 }}>{(c.transactionCount30d || 0).toLocaleString()}</div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Market Pulse KPIs */}
-      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>🌍 Dubai Market Pulse</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 10 }}>
-          {[
-            { label: "Market Value", value: marketGlobal?.totalMarketValue || "AED 682.5B", color: T.gold },
-            { label: "Transactions", value: marketGlobal?.totalTransactions || "214,912", color: T.green },
-            { label: "Avg PPSF", value: marketGlobal?.avgPricePsf || "AED 1,689", color: T.teal },
-            { label: "YoY Growth", value: marketGlobal?.yoyGrowthPct || "+30.6%", color: T.blue },
-            { label: "Off-Plan %", value: marketGlobal?.offPlanShare || "62.6%", color: T.purple },
-            { label: "EIBOR 3M", value: eiborData?.threeMonth ? `${eiborData.threeMonth}%` : "3.64%", color: T.orange },
-          ].map(k => (
-            <div key={k.label} style={{ textAlign: "center", padding: "12px 8px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{k.label}</div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: k.color, fontFamily: "'Fraunces',serif" }}>{k.value}</div>
-            </div>
-          ))}
-        </div>
-        {marketGlobal?.updatedAt && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 10 }}>Last updated: {timeSince(marketGlobal.updatedAt)} · by {marketGlobal.updatedBy || "admin"}</div>}
-      </div>
-
-      {/* Alerts + Developer Registry */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-
-        {/* DLD Anomaly Alerts */}
-        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>⚠️ Transaction Anomalies & Alerts</div>
-          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>Price spikes, financial updates, system events</div>
-          {loading ? (
-            <div style={{ color: T.textMuted, fontSize: 12 }}>Loading...</div>
-          ) : alerts.length === 0 ? (
-            <div style={{ color: T.textMuted, fontSize: 12, textAlign: "center", padding: "20px 0" }}>
-              <div style={{ fontSize: 24, marginBottom: 6 }}>✅</div>
-              No anomalies detected
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 300, overflowY: "auto" }}>
-              {alerts.map(a => {
-                const isAnomaly = a.type === "price_anomaly";
-                const isFinancial = a.type === "financial_update";
-                const color = isAnomaly ? T.red : isFinancial ? T.green : T.gold;
-                return (
-                  <div key={a.id} style={{ padding: "10px 12px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${color}22` }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                      <div style={{ fontSize: 12, color: T.white, flex: 1 }}>{a.message}</div>
-                      <div style={{ fontSize: 9, color: T.textMuted, flexShrink: 0 }}>{timeSince(a.createdAt)}</div>
-                    </div>
-                    <div style={{ fontSize: 10, color: color, marginTop: 3, fontWeight: 600 }}>{a.type?.replace(/_/g, " ").toUpperCase()} · {a.severity?.toUpperCase() || "INFO"}</div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Developer Registry — Launch Alerts */}
-        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>🏗️ Developer Registry — {developers.length} Registered</div>
-          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>Latest developer registrations · DLD seeded data</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 300, overflowY: "auto" }}>
-            {developers.slice(0, 12).map((d, i) => (
-              <div key={d.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
-                <div style={{ width: 28, height: 28, borderRadius: "50%", background: d.color || T.gold, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
-                  {(d.name || "D")[0]}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</div>
-                  <div style={{ fontSize: 10, color: T.textMuted }}>{d.tier} · {d.projects || 0} projects · AED {d.salesValue2025 || 0}B sales</div>
-                </div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: d.tier === "T1" ? T.gold : d.tier === "T2" ? T.teal : T.textMuted, flexShrink: 0 }}>{d.tier}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ marginTop: 10, fontSize: 11, color: T.textMuted }}>T1: {developers.filter(d=>d.tier==="T1").length} · T2: {developers.filter(d=>d.tier==="T2").length} · T3: {developers.filter(d=>d.tier==="T3").length}</div>
-        </div>
-      </div>
-
-    </div>
-  );
-};
-
-/* ─── S19: REVENUE FORECASTING TAB ──────────────────────────────────────────
-   MRR forecast model · Churn-adjusted ARR · Growth scenario modelling
-────────────────────────────────────────────────────────────────────────── */
-const ForecastingTab = ({ db, T, notify, users }) => {
-  const [growthRate, setGrowthRate] = React.useState(10); // % monthly growth
-  const [churnRate,  setChurnRate]  = React.useState(5);  // % monthly churn
-  const [months,     setMonths]     = React.useState(12); // forecast horizon
-
-  const PRICES = { pro: 99, enterprise: 499 };
-  const now = new Date();
-
-  // Current MRR
-  const currentMRR = React.useMemo(() => {
-    const pro = users.filter(u => u.tier === "pro").length;
-    const ent = users.filter(u => u.tier === "enterprise").length;
-    return (pro * PRICES.pro) + (ent * PRICES.enterprise);
-  }, [users]);
-
-  const currentPaid = users.filter(u => u.tier === "pro" || u.tier === "enterprise").length;
-  const currentARR  = currentMRR * 12;
-
-  // Forecast model: MRR(t) = MRR(0) × (1 + growth - churn)^t
-  const netGrowth = (growthRate - churnRate) / 100;
-
-  const forecast = React.useMemo(() => {
-    const data = [];
-    for (let m = 0; m <= months; m++) {
-      const d = new Date(now.getFullYear(), now.getMonth() + m, 1);
-      const mrr = Math.round(currentMRR * Math.pow(1 + netGrowth, m));
-      const arr = mrr * 12;
-      const users_est = Math.round(currentPaid * Math.pow(1 + netGrowth, m));
-      data.push({
-        label: m === 0 ? "Now" : d.toLocaleDateString("en-AE", { month: "short", year: "2-digit" }),
-        mrr: Math.max(mrr, 0),
-        arr: Math.max(arr, 0),
-        users: Math.max(users_est, 0),
-        month: m,
-      });
-    }
-    return data;
-  }, [currentMRR, currentPaid, netGrowth, months]);
-
-  const finalMRR  = forecast[forecast.length - 1]?.mrr || 0;
-  const finalARR  = finalMRR * 12;
-  const mrrGrowth = currentMRR > 0 ? Math.round(((finalMRR - currentMRR) / currentMRR) * 100) : 0;
-  const maxMRR    = Math.max(...forecast.map(f => f.mrr), 1);
-
-  // Scenarios
-  const scenarios = [
-    { label: "Conservative", growth: 5,  churn: 8,  color: T.orange },
-    { label: "Base Case",    growth: 10, churn: 5,  color: T.gold   },
-    { label: "Optimistic",   growth: 20, churn: 3,  color: T.green  },
-  ].map(s => ({
-    ...s,
-    mrrIn12: Math.round(currentMRR * Math.pow(1 + (s.growth - s.churn) / 100, 12)),
-    arrIn12: Math.round(currentMRR * Math.pow(1 + (s.growth - s.churn) / 100, 12) * 12),
-  }));
-
-  const Slider = ({ label, value, setValue, min, max, color, unit = "%" }) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <label style={{ fontSize: 12, color: T.textSecondary, fontWeight: 600 }}>{label}</label>
-        <span style={{ fontSize: 14, fontWeight: 800, color, fontFamily: "'Fraunces',serif" }}>{value}{unit}</span>
-      </div>
-      <input type="range" min={min} max={max} value={value} onChange={e => setValue(Number(e.target.value))}
-        style={{ width: "100%", accentColor: color, cursor: "pointer" }} />
-    </div>
-  );
-
-  return (
-    <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 24 }}>
-
-      {/* Header */}
-      <div>
-        <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.gold, marginBottom: 4 }}>Revenue Forecasting</h2>
-        <p style={{ color: T.textMuted, fontSize: 13 }}>MRR growth model · Churn-adjusted ARR · Scenario analysis</p>
-      </div>
-
-      {/* Current state KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
-        {[
-          { label: "Current MRR", value: `AED ${currentMRR.toLocaleString()}`, color: T.gold },
-          { label: "Current ARR", value: `AED ${currentARR.toLocaleString()}`, color: T.teal },
-          { label: "Paying Users", value: currentPaid, color: T.green },
-          { label: "ARPU", value: currentPaid > 0 ? `AED ${Math.round(currentMRR/currentPaid)}` : "—", color: T.blue },
-        ].map(k => (
-          <div key={k.label} style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
-            <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>{k.label}</div>
-            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: k.color }}>{k.value}</div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20 }}>
-
-        {/* Controls */}
-        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white }}>Model Parameters</div>
-          <Slider label="Monthly Growth Rate" value={growthRate} setValue={setGrowthRate} min={0} max={50} color={T.green} />
-          <Slider label="Monthly Churn Rate" value={churnRate} setValue={setChurnRate} min={0} max={30} color={T.red} />
-          <Slider label="Forecast Horizon" value={months} setValue={setMonths} min={3} max={36} color={T.gold} unit=" mo" />
-
-          <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 16 }}>
-            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8 }}>Net Monthly Growth: <span style={{ color: netGrowth >= 0 ? T.green : T.red, fontWeight: 700 }}>{netGrowth >= 0 ? "+" : ""}{(netGrowth * 100).toFixed(1)}%</span></div>
-            <div style={{ fontSize: 11, color: T.textMuted }}>Projected MRR in {months}mo: <span style={{ color: T.gold, fontWeight: 700 }}>AED {finalMRR.toLocaleString()}</span></div>
-            <div style={{ fontSize: 11, color: T.textMuted }}>Projected ARR: <span style={{ color: T.gold, fontWeight: 700 }}>AED {finalARR.toLocaleString()}</span></div>
-            <div style={{ fontSize: 11, color: T.textMuted }}>MRR Growth: <span style={{ color: mrrGrowth >= 0 ? T.green : T.red, fontWeight: 700 }}>{mrrGrowth >= 0 ? "+" : ""}{mrrGrowth}%</span></div>
-          </div>
-        </div>
-
-        {/* Chart */}
-        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 16 }}>MRR Forecast — {months} Month Projection</div>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 180, marginBottom: 8 }}>
-            {forecast.filter((_, i) => i % Math.max(1, Math.floor(months/12)) === 0 || i === forecast.length - 1).map((f, i, arr) => {
-              const h = Math.max((f.mrr / maxMRR) * 160, 4);
-              const isNow = f.month === 0;
-              return (
-                <div key={f.label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, minWidth: 0 }}>
-                  <div style={{ fontSize: 9, color: T.textMuted, textAlign: "center" }}>AED {(f.mrr/1000).toFixed(0)}K</div>
-                  <div style={{ width: "80%", height: h, background: isNow ? T.blue : `linear-gradient(180deg,${T.gold},${T.gold}88)`, borderRadius: "3px 3px 0 0", transition: "height 0.4s" }} title={`${f.label}: AED ${f.mrr.toLocaleString()}`} />
-                  <div style={{ fontSize: 9, color: isNow ? T.blue : T.textMuted, fontWeight: isNow ? 700 : 400, textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{f.label}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Scenarios */}
-      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>12-Month Scenario Analysis</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
-          {scenarios.map(s => (
-            <div key={s.label} style={{ padding: "16px 18px", borderRadius: 12, background: T.surfaceAlt, border: `1px solid ${s.color}33` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: s.color, marginBottom: 8 }}>{s.label}</div>
-              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 10 }}>Growth: +{s.growth}% · Churn: {s.churn}% · Net: {s.growth - s.churn > 0 ? "+" : ""}{s.growth - s.churn}%</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: s.color, fontFamily: "'Fraunces',serif" }}>AED {s.mrrIn12.toLocaleString()}</div>
-              <div style={{ fontSize: 11, color: T.textMuted }}>MRR in 12 months</div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: T.textSecondary, marginTop: 6 }}>ARR: AED {s.arrIn12.toLocaleString()}</div>
-              <div style={{ marginTop: 8, height: 4, borderRadius: 2, background: T.border, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${Math.min((s.mrrIn12 / Math.max(...scenarios.map(x => x.mrrIn12))) * 100, 100)}%`, background: s.color, borderRadius: 2 }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Churn Impact */}
-      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>Churn Impact Analysis</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
-          {[2, 5, 10, 15].map(ch => {
-            const mrrAt12 = Math.round(currentMRR * Math.pow(1 + (growthRate - ch) / 100, 12));
-            return (
-              <div key={ch} style={{ padding: "12px 14px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${ch <= 3 ? T.green : ch <= 7 ? T.gold : ch <= 12 ? T.orange : T.red}33`, textAlign: "center" }}>
-                <div style={{ fontSize: 18, fontWeight: 800, color: ch <= 3 ? T.green : ch <= 7 ? T.gold : ch <= 12 ? T.orange : T.red, fontFamily: "'Fraunces',serif" }}>{ch}%</div>
-                <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 8 }}>Churn Rate</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>AED {mrrAt12.toLocaleString()}</div>
-                <div style={{ fontSize: 10, color: T.textMuted }}>MRR @ 12mo</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-    </div>
-  );
-};
-
-/* ─── S19: PRICING PLANS EDITOR ──────────────────────────────────────────────
-   Admin edits plan prices/features → saves to Firestore pricingPlans/current
-   Dashboard upgrade modal + landing page read from Firestore automatically
-   No code deploy needed for price changes
-────────────────────────────────────────────────────────────────────────── */
-const PricingPlansTab = ({ db, T, notify }) => {
-  const DEFAULT_PLANS = [
-    { name: "Pro", price: "99", period: "month", features: ["48 Emaar projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →", stripeId: "" },
-    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation ⏳", "API data access ⏳", "Custom dashboards ⏳", "Multi-user team accounts ⏳", "Developer-level raw data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Launching Q3 2026", cta: "Contact Sales →", stripeId: "" },
-  ];
-
-  const [plans, setPlans]       = React.useState(DEFAULT_PLANS);
-  const [loading, setLoading]   = React.useState(true);
-  const [saving, setSaving]     = React.useState(false);
-  const [lastSaved, setLastSaved] = React.useState(null);
-  const [editIdx, setEditIdx]   = React.useState(0); // which plan is being edited
-
-  // Load from Firestore
-  React.useEffect(() => {
-    getDoc(doc(db, "pricingPlans", "current")).then(snap => {
-      if (snap.exists() && snap.data().plans) setPlans(snap.data().plans);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, [db]);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await setDoc(doc(db, "pricingPlans", "current"), {
-        plans,
-        updatedAt: new Date().toISOString(),
-        updatedBy: "admin",
-      });
-      setLastSaved(new Date().toLocaleString("en-AE", { timeZone: "Asia/Dubai" }));
-      notify("✅ Pricing plans saved — upgrade modal and landing page updated instantly", "success");
-    } catch(e) {
-      notify("❌ Save failed: " + e.message, "error");
-    } finally { setSaving(false); }
-  };
-
-  const updatePlan = (idx, field, value) => {
-    setPlans(prev => prev.map((p, i) => i === idx ? { ...p, [field]: value } : p));
-  };
-
-  const updateFeature = (planIdx, featIdx, value) => {
-    setPlans(prev => prev.map((p, i) => i === planIdx ? { ...p, features: p.features.map((f, j) => j === featIdx ? value : f) } : p));
-  };
-
-  const addFeature = (planIdx) => {
-    setPlans(prev => prev.map((p, i) => i === planIdx ? { ...p, features: [...p.features, "New feature"] } : p));
-  };
-
-  const removeFeature = (planIdx, featIdx) => {
-    setPlans(prev => prev.map((p, i) => i === planIdx ? { ...p, features: p.features.filter((_, j) => j !== featIdx) } : p));
-  };
-
-  if (loading) return <div style={{ padding: 40, color: T.textMuted }}>Loading pricing plans...</div>;
-
-  return (
-    <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 24 }}>
-
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.gold, marginBottom: 4 }}>Pricing Plan Editor</h2>
-          <p style={{ color: T.textMuted, fontSize: 13 }}>Changes save to Firestore instantly — upgrade modal + landing page update automatically. No code deploy needed.</p>
-        </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          {lastSaved && <span style={{ fontSize: 11, color: T.green }}>✅ Saved {lastSaved}</span>}
-          <button type="button" onClick={handleSave} disabled={saving}
-            style={{ padding: "10px 24px", background: saving ? T.surfaceAlt : `linear-gradient(135deg,${T.gold},#B8912F)`, color: saving ? T.textMuted : T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: saving ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
-            {saving ? "Saving..." : "💾 Save & Publish"}
-          </button>
-        </div>
-      </div>
-
-      {/* Warning */}
-      <div style={{ padding: "10px 16px", borderRadius: 8, background: "rgba(239,68,68,0.06)", border: `1px solid rgba(239,68,68,0.15)`, fontSize: 12, color: T.textMuted }}>
-        ⚠️ Price changes take effect immediately for <strong style={{ color: T.white }}>new subscribers only</strong>. Existing paying users keep their current price until they cancel and resubscribe. Update Stripe prices separately if changing billing amounts.
-      </div>
-
-      {/* Plan selector */}
-      <div style={{ display: "flex", gap: 8 }}>
-        {plans.map((p, i) => (
-          <button key={i} type="button" onClick={() => setEditIdx(i)}
-            style={{ padding: "8px 20px", borderRadius: 8, border: `1px solid ${editIdx === i ? T.gold : T.border}`, background: editIdx === i ? "rgba(212,168,67,0.1)" : T.surfaceAlt, color: editIdx === i ? T.gold : T.textMuted, fontSize: 13, fontWeight: editIdx === i ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-            {p.name} — AED {p.price}/mo
-          </button>
-        ))}
-      </div>
-
-      {/* Plan editor */}
-      {plans[editIdx] && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-
-          {/* Left — edit form */}
-          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
-            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white }}>Edit {plans[editIdx].name} Plan</div>
-
-            {[
-              { label: "Plan Name", field: "name", type: "text" },
-              { label: "Price (AED/month)", field: "price", type: "number" },
-              { label: "CTA Button Text", field: "cta", type: "text" },
-              { label: "Note (shown below price)", field: "note", type: "text", placeholder: "Optional note" },
-              { label: "Stripe Price ID", field: "stripeId", type: "text", placeholder: "price_xxx (from Stripe dashboard)" },
-            ].map(f => (
-              <div key={f.field} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>{f.label}</label>
-                <input type={f.type} value={plans[editIdx][f.field] || ""} placeholder={f.placeholder || ""}
-                  onChange={e => updatePlan(editIdx, f.field, e.target.value)}
-                  style={{ padding: "9px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-              </div>
-            ))}
-
-            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-              <input type="checkbox" checked={plans[editIdx].popular || false} onChange={e => updatePlan(editIdx, "popular", e.target.checked)}
-                style={{ width: 16, height: 16, accentColor: T.gold }} />
-              <span style={{ fontSize: 13, color: T.textSecondary }}>Mark as "Most Popular"</span>
-            </label>
-          </div>
-
-          {/* Right — features editor */}
-          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white }}>Features ({plans[editIdx].features?.length || 0})</div>
-              <button type="button" onClick={() => addFeature(editIdx)}
-                style={{ padding: "6px 14px", background: "rgba(16,185,129,0.1)", border: `1px solid ${T.green}44`, borderRadius: 8, color: T.green, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                + Add Feature
-              </button>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 380, overflowY: "auto" }}>
-              {(plans[editIdx].features || []).map((feat, j) => (
-                <div key={j} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <input type="text" value={feat} onChange={e => updateFeature(editIdx, j, e.target.value)}
-                    style={{ flex: 1, padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
-                  <button type="button" onClick={() => removeFeature(editIdx, j)}
-                    style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(239,68,68,0.1)", border: `1px solid ${T.red}33`, borderRadius: 6, color: T.red, cursor: "pointer", fontSize: 14, flexShrink: 0 }}>
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-      )}
-
-      {/* Live preview */}
-      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>Live Preview — Upgrade Modal</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-          {plans.map((p, i) => (
-            <div key={i} style={{ padding: "20px", borderRadius: 14, background: T.surfaceAlt, border: `2px solid ${p.popular ? T.gold : T.border}`, position: "relative" }}>
-              {p.popular && <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: T.gold, color: T.bg, fontSize: 9, fontWeight: 800, padding: "2px 12px", borderRadius: 10, whiteSpace: "nowrap" }}>MOST POPULAR</div>}
-              <div style={{ fontSize: 16, fontWeight: 800, color: T.white, marginBottom: 4 }}>{p.name}</div>
-              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: p.popular ? T.gold : T.white }}>AED {p.price}<span style={{ fontSize: 13, color: T.textMuted, fontFamily: "'Outfit',sans-serif", fontWeight: 400 }}>/mo</span></div>
-              {p.note && <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 8 }}>{p.note}</div>}
-              <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 4 }}>
-                {(p.features || []).slice(0, 5).map((f, j) => <div key={j} style={{ fontSize: 11, color: T.textSecondary }}>✓ {f}</div>)}
-                {(p.features || []).length > 5 && <div style={{ fontSize: 11, color: T.textMuted }}>+{p.features.length - 5} more...</div>}
-              </div>
-              <div style={{ marginTop: 12, padding: "8px 0", background: p.popular ? T.gold : T.surfaceAlt, borderRadius: 8, textAlign: "center", fontSize: 12, fontWeight: 700, color: p.popular ? T.bg : T.textMuted, border: p.popular ? "none" : `1px solid ${T.border}` }}>{p.cta}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{ marginTop: 12, fontSize: 11, color: T.textMuted }}>💡 This preview matches exactly what users see in the upgrade modal. Save to publish changes instantly.</div>
-      </div>
-
-    </div>
-  );
-};
-
-/* ─── S18: BILLING & INVOICE ENGINE ─────────────────────────────────────────
-   Admin tab "billing":
-   - Per-user billing history from Firestore payments collection
-   - Invoice PDF generation per payment
-   - Failed payment handling + retry logic
-   - Upcoming renewal alerts (users expiring in 7 days)
-   - Revenue breakdown by plan (free/pro/enterprise)
-   - MRR chart with 3-month projections
-   - Churn predictor (inactive users nearing billing cycle end)
-────────────────────────────────────────────────────────────────────────── */
-const BillingTab = ({ db, T, notify, users, adminUser }) => {
-  const [payments, setPayments]       = React.useState([]);
-  const [loading, setLoading]         = React.useState(true);
-  const [selectedUser, setSelectedUser] = React.useState(null);
-  const [retryLoading, setRetryLoading] = React.useState(null);
-  const [tab, setBillingTab]          = React.useState("overview"); // overview | payments | renewals | churn
-
-  // Tier pricing
-  const PRICES = { pro: 99, enterprise: 499, pro_trial: 0, free: 0 };
-
-  // Load payments from Firestore
-  React.useEffect(() => {
-    const unsub = onSnapshot(
-      query(collection(db, "payments"), orderBy("createdAt", "desc"), limit(500)),
-      (snap) => {
-        const list = [];
-        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-        setPayments(list);
-        setLoading(false);
-      },
-      () => setLoading(false)
-    );
-    return () => unsub();
-  }, [db]);
-
-  // Computed stats
-  const now = new Date();
-
-  const mrr = React.useMemo(() => {
-    const pro = users.filter(u => u.tier === "pro").length;
-    const ent = users.filter(u => u.tier === "enterprise").length;
-    return (pro * PRICES.pro) + (ent * PRICES.enterprise);
-  }, [users]);
-
-  const arr = mrr * 12;
-
-  // Revenue breakdown
-  const breakdown = React.useMemo(() => {
-    const pro  = users.filter(u => u.tier === "pro").length;
-    const ent  = users.filter(u => u.tier === "enterprise").length;
-    const trial = users.filter(u => u.tier === "pro_trial").length;
-    const free = users.filter(u => u.tier === "free" || !u.tier).length;
-    return { pro, ent, trial, free,
-      proRev: pro * PRICES.pro,
-      entRev: ent * PRICES.enterprise,
-    };
-  }, [users]);
-
-  // MRR projection — last 6 months + 3 projected
-  const mrrHistory = React.useMemo(() => {
-    const months = [];
-    for (let m = 5; m >= 0; m--) {
-      const d   = new Date(now.getFullYear(), now.getMonth() - m, 1);
-      const lbl = d.toLocaleDateString("en-AE", { month: "short", year: "2-digit" });
-      // Estimate from payments that month
-      const monthPayments = payments.filter(p => {
-        const pd = new Date(p.createdAt || 0);
-        return pd.getMonth() === d.getMonth() && pd.getFullYear() === d.getFullYear() && p.status === "succeeded";
-      });
-      const rev = monthPayments.reduce((s, p) => s + (p.amount || 0), 0) || (m === 0 ? mrr : 0);
-      months.push({ label: lbl, mrr: rev, actual: true });
-    }
-    const lastMRR    = months[months.length - 1]?.mrr || mrr;
-    const prevMRR    = months[months.length - 2]?.mrr || mrr * 0.9;
-    const growthRate = prevMRR > 0 ? Math.min(Math.max((lastMRR - prevMRR) / prevMRR, -0.1), 0.3) : 0.1;
-    for (let f = 1; f <= 3; f++) {
-      const d   = new Date(now.getFullYear(), now.getMonth() + f, 1);
-      months.push({ label: d.toLocaleDateString("en-AE", { month: "short", year: "2-digit" }), projected: Math.round(lastMRR * Math.pow(1 + growthRate, f)), actual: false });
-    }
-    return months;
-  }, [payments, mrr]);
-
-  // Upcoming renewals — users whose subscription expires in 7 days
-  const upcomingRenewals = React.useMemo(() => {
-    return users.filter(u => {
-      if (!u.subscriptionExpiry || u.tier === "free") return false;
-      const exp  = new Date(u.subscriptionExpiry);
-      const diff = (exp - now) / (1000 * 60 * 60 * 24);
-      return diff >= 0 && diff <= 7;
-    }).map(u => ({
-      ...u,
-      daysUntilRenewal: Math.ceil((new Date(u.subscriptionExpiry) - now) / (1000 * 60 * 60 * 24)),
-      renewalAmount: PRICES[u.tier] || 0,
-    })).sort((a, b) => a.daysUntilRenewal - b.daysUntilRenewal);
-  }, [users]);
-
-  // Failed payments
-  const failedPayments = React.useMemo(() =>
-    payments.filter(p => p.status === "failed" || p.status === "requires_payment_method"),
-    [payments]
-  );
-
-  // Churn predictor — paid users inactive 14+ days + expiring soon
-  const churnRisk = React.useMemo(() => {
-    return users.filter(u => {
-      if (u.tier === "free" || u.tier === "pro_trial") return false;
-      const lastSeen   = u.lastLoginAt ? new Date(u.lastLoginAt) : new Date(u.createdAt || 0);
-      const daysSince  = (now - lastSeen) / (1000 * 60 * 60 * 24);
-      const hasExpiry  = u.subscriptionExpiry;
-      const daysToExp  = hasExpiry ? (new Date(u.subscriptionExpiry) - now) / (1000 * 60 * 60 * 24) : 999;
-      return daysSince >= 14 && daysToExp <= 30;
-    }).map(u => ({
-      ...u,
-      daysSinceActive: Math.floor((now - new Date(u.lastLoginAt || u.createdAt || 0)) / (1000 * 60 * 60 * 24)),
-      daysToExpiry:    u.subscriptionExpiry ? Math.ceil((new Date(u.subscriptionExpiry) - now) / (1000 * 60 * 60 * 24)) : null,
-      riskScore:       Math.min(100, Math.floor(((now - new Date(u.lastLoginAt || u.createdAt || 0)) / (1000 * 60 * 60 * 24)) * 3)),
-    })).sort((a, b) => b.riskScore - a.riskScore);
-  }, [users]);
-
-  // Generate invoice PDF (HTML print)
-  const generateInvoice = (payment, user) => {
-    const inv = {
-      invoiceNo:   `INV-${payment.id?.slice(-8).toUpperCase() || "000000"}`,
-      date:        payment.createdAt ? new Date(payment.createdAt).toLocaleDateString("en-AE") : "—",
-      dueDate:     payment.createdAt ? new Date(new Date(payment.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-AE") : "—",
-      customer:    user?.email || payment.userEmail || "—",
-      plan:        payment.plan || payment.tier || "Pro",
-      amount:      payment.amount || PRICES[payment.tier] || 99,
-      status:      payment.status || "succeeded",
-      stripeId:    payment.stripePaymentId || payment.stripeId || "—",
-    };
-    const html = `<!DOCTYPE html><html><head><title>${inv.invoiceNo}</title>
-    <style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;color:#1E293B}
-    .header{border-bottom:3px solid #D4A843;padding-bottom:20px;margin-bottom:30px;display:flex;justify-content:space-between}
-    .logo{font-size:24px;font-weight:900;color:#D4A843}.sub{color:#64748B;font-size:12px}
-    .inv-no{font-size:18px;font-weight:700;color:#D4A843}.badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:${inv.status==="succeeded"?"#D1FAE5":"#FEE2E2"};color:${inv.status==="succeeded"?"#065F46":"#991B1B"}}
-    table{width:100%;border-collapse:collapse;margin:20px 0}th{background:#F8FAFC;padding:10px;text-align:left;border-bottom:2px solid #E2E8F0;font-size:13px}
-    td{padding:12px 10px;border-bottom:1px solid #E2E8F0;font-size:14px}.total{font-size:20px;font-weight:900;color:#D4A843}
-    .footer{margin-top:40px;padding-top:20px;border-top:1px solid #E2E8F0;color:#94A3B8;font-size:11px;text-align:center}
-    @media print{body{margin:0}}</style></head><body>
-    <div class="header"><div><div class="logo">DXB Analytics</div><div class="sub">The Address Holding · Dubai, UAE<br>info@theaddressholding.ae</div></div>
-    <div style="text-align:right"><div class="inv-no">${inv.invoiceNo}</div><div class="sub">Date: ${inv.date}<br>Due: ${inv.dueDate}</div><div style="margin-top:8px"><span class="badge">${inv.status==="succeeded"?"PAID":"FAILED"}</span></div></div></div>
-    <div><strong>Bill To:</strong><br>${inv.customer}<br><span style="color:#64748B;font-size:13px">Stripe ID: ${inv.stripeId}</span></div>
-    <table><thead><tr><th>Description</th><th>Period</th><th>Amount (AED)</th></tr></thead><tbody>
-    <tr><td>DXB Analytics ${inv.plan} Plan</td><td>Monthly subscription</td><td>AED ${inv.amount}</td></tr>
-    </tbody></table>
-    <div style="text-align:right;margin:20px 0"><div style="color:#64748B;font-size:13px">Subtotal: AED ${inv.amount}</div>
-    <div style="color:#64748B;font-size:13px">VAT (0%): AED 0</div>
-    <div class="total">Total: AED ${inv.amount}</div></div>
-    <div class="footer">DXB Analytics · Dubai Real Estate Intelligence · emaar-dashboard.vercel.app<br>For billing inquiries: info@theaddressholding.ae</div>
-    </body></html>`;
-    const w = window.open("", "_blank");
-    w.document.write(html);
-    w.document.close();
-    setTimeout(() => w.print(), 500);
-  };
-
-  // Retry failed payment — mark as retry_requested in Firestore
-  const retryPayment = async (payment) => {
-    setRetryLoading(payment.id);
-    try {
-      await updateDoc(doc(db, "payments", payment.id), {
-        retryRequested: true,
-        retryRequestedAt: new Date().toISOString(),
-        retryRequestedBy: adminUser?.email,
-      });
-      await addDoc(collection(db, "adminAlerts"), {
-        message: `🔄 Payment retry requested for ${payment.userEmail || "user"} — AED ${payment.amount || 0}`,
-        type: "payment_retry", severity: "warning", read: false,
-        createdAt: new Date().toISOString(), source: "admin/billing",
-      });
-      notify("✅ Retry flagged — contact user to update payment method", "success");
-    } catch(e) {
-      notify("❌ " + e.message, "error");
-    } finally { setRetryLoading(null); }
-  };
-
-  const KpiCard = ({ label, value, sub, color }) => (
-    <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
-      <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>{label}</div>
-      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: color || T.gold }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{sub}</div>}
-    </div>
-  );
-
-  const SubTab = ({ id, label }) => (
-    <button type="button" onClick={() => setBillingTab(id)}
-      style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${tab === id ? T.gold : T.border}`, background: tab === id ? "rgba(212,168,67,0.1)" : "transparent", color: tab === id ? T.gold : T.textMuted, fontSize: 12, fontWeight: tab === id ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-      {label}
-    </button>
-  );
-
-  return (
-    <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 24 }}>
-
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.gold, marginBottom: 4 }}>Billing & Invoices</h2>
-          <p style={{ color: T.textMuted, fontSize: 13 }}>Payment history · Invoice engine · Renewal alerts · Churn predictor</p>
-        </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {failedPayments.length > 0 && (
-            <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 8, background: "rgba(239,68,68,0.12)", color: T.red, fontWeight: 700, border: `1px solid rgba(239,68,68,0.2)` }}>
-              ⚠️ {failedPayments.length} Failed Payment{failedPayments.length > 1 ? "s" : ""}
-            </span>
-          )}
-          {upcomingRenewals.length > 0 && (
-            <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 8, background: "rgba(212,168,67,0.1)", color: T.gold, fontWeight: 700, border: `1px solid ${T.gold}33` }}>
-              🔔 {upcomingRenewals.length} Renewal{upcomingRenewals.length > 1 ? "s" : ""} due
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* KPI Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-        <KpiCard label="Monthly Recurring Revenue" value={`AED ${mrr.toLocaleString()}`} color={T.gold} sub={`AED ${arr.toLocaleString()} ARR`} />
-        <KpiCard label="Paying Users" value={breakdown.pro + breakdown.ent} color={T.green} sub={`${breakdown.pro} Pro · ${breakdown.ent} Enterprise`} />
-        <KpiCard label="Failed Payments" value={failedPayments.length} color={failedPayments.length > 0 ? T.red : T.green} sub={failedPayments.length > 0 ? "Requires attention" : "All clear"} />
-        <KpiCard label="Churn Risk" value={churnRisk.length} color={churnRisk.length > 0 ? T.orange : T.green} sub="Inactive + expiring soon" />
-      </div>
-
-      {/* Sub-tabs */}
-      <div style={{ display: "flex", gap: 8 }}>
-        <SubTab id="overview"  label="📊 Revenue Overview" />
-        <SubTab id="payments"  label="💳 Payment History" />
-        <SubTab id="renewals"  label={`🔔 Renewals (${upcomingRenewals.length})`} />
-        <SubTab id="churn"     label={`⚠️ Churn Risk (${churnRisk.length})`} />
-      </div>
-
-      {/* ── OVERVIEW TAB ── */}
-      {tab === "overview" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-
-          {/* MRR Chart */}
-          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 16 }}>MRR Trend + 3-Month Projection</div>
-            <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 160 }}>
-              {mrrHistory.map((m, i) => {
-                const val    = m.actual ? m.mrr : m.projected;
-                const maxVal = Math.max(...mrrHistory.map(x => x.actual ? x.mrr : x.projected || 0), 1);
-                const h      = Math.max((val / maxVal) * 130, 4);
-                const color  = m.actual ? T.gold : "rgba(212,168,67,0.35)";
-                return (
-                  <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                    <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600 }}>AED {(val/1000).toFixed(0)}K</div>
-                    <div style={{ width: "100%", height: h, background: color, borderRadius: "4px 4px 0 0", border: m.actual ? "none" : `1px dashed ${T.gold}55` }} title={`${m.label}: AED ${val}`} />
-                    <div style={{ fontSize: 10, color: m.actual ? T.textSecondary : T.textMuted, fontWeight: m.actual ? 600 : 400 }}>{m.label}</div>
-                    {!m.actual && <div style={{ fontSize: 9, color: T.textMuted }}>proj.</div>}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Revenue breakdown by plan */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>Revenue by Plan</div>
-              {[
-                { label: "Enterprise", users: breakdown.ent,   rev: breakdown.entRev, color: T.purple, price: 499 },
-                { label: "Pro",        users: breakdown.pro,   rev: breakdown.proRev, color: T.gold,   price: 99  },
-                { label: "Trial",      users: breakdown.trial, rev: 0,                color: T.blue,   price: 0   },
-                { label: "Free",       users: breakdown.free,  rev: 0,                color: T.textMuted, price: 0 },
-              ].map(p => (
-                <div key={p.label} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
-                  <div style={{ flex: 1, fontSize: 13, color: T.white }}>{p.label}</div>
-                  <div style={{ fontSize: 12, color: T.textMuted }}>{p.users} users</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: p.color, width: 90, textAlign: "right" }}>
-                    {p.rev > 0 ? `AED ${p.rev.toLocaleString()}` : "—"}
-                  </div>
-                </div>
-              ))}
-              <div style={{ borderTop: `1px solid ${T.border}`, marginTop: 12, paddingTop: 12, display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Total MRR</span>
-                <span style={{ fontSize: 15, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>AED {mrr.toLocaleString()}</span>
-              </div>
-            </div>
-
-            <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>Key Metrics</div>
-              {[
-                { label: "Annual Recurring Revenue", value: `AED ${arr.toLocaleString()}`, color: T.gold },
-                { label: "Avg Revenue Per User", value: breakdown.pro + breakdown.ent > 0 ? `AED ${Math.round(mrr / (breakdown.pro + breakdown.ent))}` : "—", color: T.teal },
-                { label: "Trial → Paid Conv. Rate", value: users.filter(u => u.tier === "pro_trial").length > 0 ? `${Math.round((breakdown.pro / (breakdown.pro + users.filter(u=>u.tier==="pro_trial").length)) * 100)}%` : "—", color: T.green },
-                { label: "Paying User %", value: users.length > 0 ? `${Math.round(((breakdown.pro + breakdown.ent) / users.length) * 100)}%` : "—", color: T.blue },
-                { label: "Failed Payments", value: `${failedPayments.length}`, color: failedPayments.length > 0 ? T.red : T.green },
-                { label: "Churn Risk Users", value: `${churnRisk.length}`, color: churnRisk.length > 0 ? T.orange : T.green },
-              ].map(m => (
-                <div key={m.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: `1px solid ${T.border}` }}>
-                  <span style={{ fontSize: 12, color: T.textSecondary }}>{m.label}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: m.color }}>{m.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── PAYMENT HISTORY TAB ── */}
-      {tab === "payments" && (
-        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Payment History</div>
-            <div style={{ fontSize: 12, color: T.textMuted }}>{payments.length} records · Firestore payments collection</div>
-          </div>
-          {loading ? (
-            <div style={{ color: T.textMuted, fontSize: 13, padding: "20px 0" }}>Loading payments...</div>
-          ) : payments.length === 0 ? (
-            <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: "40px 0" }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>💳</div>
-              <div>No payment records yet</div>
-              <div style={{ fontSize: 11, marginTop: 4 }}>Payments appear here when written to Firestore <code style={{ color: T.teal }}>payments/</code> collection by your Stripe webhook</div>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 500, overflowY: "auto" }}>
-              {/* Header row */}
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr", gap: 8, padding: "8px 12px", fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, borderBottom: `1px solid ${T.border}` }}>
-                <div>User</div><div>Amount</div><div>Plan</div><div>Status</div><div>Date</div><div>Actions</div>
-              </div>
-              {payments.map(p => {
-                const statusColor = p.status === "succeeded" ? T.green : p.status === "failed" ? T.red : T.orange;
-                const user = users.find(u => u.uid === p.userId || u.email === p.userEmail);
-                return (
-                  <div key={p.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr", gap: 8, padding: "10px 12px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${p.status === "failed" ? T.red + "33" : T.border}`, alignItems: "center" }}>
-                    <div style={{ fontSize: 12, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.userEmail || user?.email || "—"}</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {p.amount || PRICES[p.tier] || "—"}</div>
-                    <div style={{ fontSize: 11, color: T.textSecondary }}>{p.plan || p.tier || "Pro"}</div>
-                    <div><span style={{ fontSize: 10, fontWeight: 700, color: statusColor, padding: "2px 8px", borderRadius: 6, background: statusColor + "12", border: `1px solid ${statusColor}33` }}>{p.status || "—"}</span></div>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>{p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-AE") : "—"}</div>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <button type="button" onClick={() => generateInvoice(p, user)}
-                        style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}44`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
-                        PDF
-                      </button>
-                      {p.status === "failed" && (
-                        <button type="button" onClick={() => retryPayment(p)} disabled={retryLoading === p.id}
-                          style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(239,68,68,0.1)", border: `1px solid ${T.red}44`, color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
-                          {retryLoading === p.id ? "..." : "Retry"}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── RENEWALS TAB ── */}
-      {tab === "renewals" && (
-        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 4 }}>Upcoming Renewals — Next 7 Days</div>
-          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Users whose subscription expires within 7 days — reach out proactively to reduce churn</div>
-          {upcomingRenewals.length === 0 ? (
-            <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: "40px 0" }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
-              No renewals due in the next 7 days
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {upcomingRenewals.map(u => (
-                <div key={u.uid} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${u.daysUntilRenewal <= 2 ? T.red + "44" : T.border}` }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg,${T.gold},#B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: T.bg, flexShrink: 0 }}>
-                    {(u.name || u.email || "U")[0].toUpperCase()}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.email}</div>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>{u.tier} · Expires {new Date(u.subscriptionExpiry).toLocaleDateString("en-AE")}</div>
-                  </div>
-                  <div style={{ textAlign: "center", flexShrink: 0 }}>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: u.daysUntilRenewal <= 2 ? T.red : T.gold, fontFamily: "'Fraunces',serif" }}>{u.daysUntilRenewal}d</div>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>until renewal</div>
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: T.green, flexShrink: 0 }}>AED {u.renewalAmount}</div>
-                  <button type="button"
-                    onClick={() => { notify(`📧 Send renewal reminder to ${u.email}`, "info"); }}
-                    style={{ padding: "7px 14px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}44`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
-                    Remind
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── CHURN RISK TAB ── */}
-      {tab === "churn" && (
-        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 4 }}>Churn Risk Predictor</div>
-          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Paid users inactive 14+ days AND subscription expiring within 30 days — highest churn probability</div>
-          {churnRisk.length === 0 ? (
-            <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: "40px 0" }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
-              No high-risk churn users detected
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {churnRisk.map(u => (
-                <div key={u.uid} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${u.riskScore >= 80 ? T.red + "44" : u.riskScore >= 50 ? T.orange + "44" : T.border}` }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: u.riskScore >= 80 ? T.red : u.riskScore >= 50 ? T.orange : T.gold, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
-                    {(u.name || u.email || "U")[0].toUpperCase()}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.email}</div>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>{u.tier} · Last active {u.daysSinceActive}d ago · Expires in {u.daysToExpiry}d</div>
-                  </div>
-                  {/* Risk score bar */}
-                  <div style={{ width: 100, flexShrink: 0 }}>
-                    <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 3 }}>Risk: {u.riskScore}%</div>
-                    <div style={{ height: 6, borderRadius: 3, background: T.border, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${u.riskScore}%`, background: u.riskScore >= 80 ? T.red : u.riskScore >= 50 ? T.orange : T.gold, borderRadius: 3 }} />
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                    <button type="button"
-                      onClick={() => notify(`📧 Win-back email queued for ${u.email}`, "info")}
-                      style={{ padding: "7px 14px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}44`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                      Win-back
-                    </button>
-                    <button type="button"
-                      onClick={() => notify(`🎁 1 week extension offered to ${u.email}`, "success")}
-                      style={{ padding: "7px 14px", background: "rgba(16,185,129,0.1)", border: `1px solid ${T.green}44`, borderRadius: 8, color: T.green, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                      Extend
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-    </div>
-  );
-};
-
-/* ─── S17: REFERRAL PROGRAM ─────────────────────────────────────────────────
-   Admin tab "referral":
-   - Referral link generator per user
-   - Track clicks → signups → conversions
-   - Referrer gets 1 month free per paid conversion
-   - Referral leaderboard
-   - Firestore referrals collection
-   - Email trigger on successful referral
-────────────────────────────────────────────────────────────────────────── */
-const ReferralTab = ({ db, T, notify, users, adminUser }) => {
-  const [referrals, setReferrals] = React.useState([]);
-  const [loading, setLoading]     = React.useState(true);
-  const [selectedUser, setSelectedUser] = React.useState(null);
-  const [grantLoading, setGrantLoading] = React.useState(false);
-  const [stats, setStats] = React.useState({ totalReferrals: 0, totalConversions: 0, totalRewardMonths: 0 });
-  const BASE_URL = "https://emaar-dashboard.vercel.app";
-
-  // Load all referrals from Firestore
-  React.useEffect(() => {
-    const unsub = onSnapshot(
-      query(collection(db, "referrals"), orderBy("createdAt", "desc"), limit(200)),
-      (s) => {
-        const list = [];
-        s.forEach(d => list.push({ id: d.id, ...d.data() }));
-        setReferrals(list);
-        setStats({
-          totalReferrals:    list.length,
-          totalConversions:  list.filter(r => r.status === "converted").length,
-          totalRewardMonths: list.filter(r => r.rewardGranted).length,
-        });
-        setLoading(false);
-      },
-      () => setLoading(false)
-    );
-    return () => unsub();
-  }, [db]);
-
-  // Generate referral link for a user
-  const getReferralLink = (user) => {
-    const code = btoa(user.uid || user.id || user.email).replace(/[^a-zA-Z0-9]/g, "").slice(0, 10).toUpperCase();
-    return `${BASE_URL}?ref=${code}`;
-  };
-
-  // Grant 1 month free to referrer
-  const grantReward = async (referral) => {
-    setGrantLoading(true);
-    try {
-      await updateDoc(doc(db, "referrals", referral.id), {
-        rewardGranted: true,
-        rewardGrantedAt: new Date().toISOString(),
-        rewardGrantedBy: adminUser?.email,
-      });
-      if (referral.referrerUid) {
-        const userSnap = await getDoc(doc(db, "users", referral.referrerUid));
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          const currentExpiry = userData.subscriptionExpiry ? new Date(userData.subscriptionExpiry) : new Date();
-          const newExpiry = new Date(currentExpiry);
-          newExpiry.setMonth(newExpiry.getMonth() + 1);
-          await updateDoc(doc(db, "users", referral.referrerUid), {
-            subscriptionExpiry: newExpiry.toISOString(),
-            referralRewardsEarned: (userData.referralRewardsEarned || 0) + 1,
-          });
-        }
-      }
-      await addDoc(collection(db, "adminAlerts"), {
-        message: `🎁 Referral reward granted: ${referral.referrerEmail} gets 1 month free`,
-        type: "referral_reward", severity: "info", read: false,
-        createdAt: new Date().toISOString(), source: "admin/referral",
-      });
-      notify("✅ 1 month free granted to " + (referral.referrerEmail || "referrer"), "success");
-    } catch(e) {
-      notify("❌ Failed: " + e.message, "error");
-    } finally { setGrantLoading(false); }
-  };
-
-  // Create manual referral record
-  const createReferral = async (referrerUser, convertedEmail) => {
-    try {
-      await addDoc(collection(db, "referrals"), {
-        referrerUid:   referrerUser.uid || referrerUser.id,
-        referrerEmail: referrerUser.email,
-        referrerName:  referrerUser.name || referrerUser.email?.split("@")[0],
-        convertedEmail,
-        status:        "converted",
-        rewardGranted: false,
-        createdAt:     new Date().toISOString(),
-        source:        "admin_manual",
-      });
-      notify("✅ Referral conversion recorded", "success");
-    } catch(e) {
-      notify("❌ " + e.message, "error");
-    }
-  };
-
-  // Leaderboard — group by referrer
-  const leaderboard = React.useMemo(() => {
-    const map = {};
-    referrals.forEach(r => {
-      const key = r.referrerEmail || r.referrerUid || "unknown";
-      if (!map[key]) map[key] = { email: r.referrerEmail, name: r.referrerName, clicks: 0, signups: 0, conversions: 0, rewards: 0 };
-      map[key].clicks      += r.clicks || 0;
-      map[key].signups     += r.signups || 0;
-      if (r.status === "converted") map[key].conversions++;
-      if (r.rewardGranted) map[key].rewards++;
-    });
-    return Object.values(map).sort((a, b) => b.conversions - a.conversions).slice(0, 10);
-  }, [referrals]);
-
-  const Card = ({ label, value, color, sub }) => (
-    <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
-      <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>{label}</div>
-      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 800, color: color || T.gold }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{sub}</div>}
-    </div>
-  );
-
-  return (
-    <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 24 }}>
-
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.gold, marginBottom: 4 }}>Referral Program</h2>
-          <p style={{ color: T.textMuted, fontSize: 13 }}>Users share their link → friend signs up → converts to paid → referrer gets 1 month free</p>
-        </div>
-        <div style={{ fontSize: 9, padding: "4px 12px", borderRadius: 8, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 700, border: `1px solid rgba(16,185,129,0.2)` }}>● LIVE · Firestore</div>
-      </div>
-
-      {/* KPI Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-        <Card label="Total Referrals" value={stats.totalReferrals} color={T.blue} sub="All time" />
-        <Card label="Conversions" value={stats.totalConversions} color={T.green} sub="Paid upgrades" />
-        <Card label="Rewards Granted" value={stats.totalRewardMonths} color={T.gold} sub="Free months given" />
-        <Card label="Conversion Rate" value={stats.totalReferrals > 0 ? Math.round((stats.totalConversions / stats.totalReferrals) * 100) + "%" : "—"} color={T.teal} sub="Referral → paid" />
-      </div>
-
-      {/* User Referral Link Generator */}
-      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 14 }}>Generate Referral Link for User</div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <select
-            value={selectedUser?.uid || ""}
-            onChange={e => setSelectedUser(users.find(u => (u.uid || u.id) === e.target.value) || null)}
-            style={{ flex: 1, minWidth: 220, padding: "10px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}
-          >
-            <option value="">— Select a user —</option>
-            {users.filter(u => u.email).map(u => (
-              <option key={u.uid || u.id} value={u.uid || u.id}>{u.email} ({u.tier || "free"})</option>
-            ))}
-          </select>
-          {selectedUser && (
-            <div style={{ flex: 2, display: "flex", alignItems: "center", gap: 8, background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.gold}33`, padding: "10px 14px" }}>
-              <span style={{ fontSize: 12, color: T.textMuted, flexShrink: 0 }}>Link:</span>
-              <span style={{ fontSize: 12, color: T.teal, flex: 1, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{getReferralLink(selectedUser)}</span>
-              <button type="button"
-                onClick={() => { navigator.clipboard.writeText(getReferralLink(selectedUser)); notify("✅ Copied to clipboard", "success"); }}
-                style={{ padding: "6px 14px", background: T.goldGlow, border: `1px solid ${T.gold}`, borderRadius: 6, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
-                Copy
-              </button>
-            </div>
-          )}
-        </div>
-        {selectedUser && (
-          <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(16,185,129,0.06)", border: `1px solid rgba(16,185,129,0.15)`, fontSize: 12, color: T.textMuted }}>
-            Referral code: <span style={{ color: T.green, fontWeight: 700, fontFamily: "monospace" }}>
-              {btoa(selectedUser.uid || selectedUser.id || selectedUser.email).replace(/[^a-zA-Z0-9]/g, "").slice(0, 10).toUpperCase()}
-            </span>
-            &nbsp;·&nbsp; Rewards earned so far: <span style={{ color: T.gold, fontWeight: 700 }}>{selectedUser.referralRewardsEarned || 0} month(s) free</span>
-          </div>
-        )}
-      </div>
-
-      {/* Leaderboard + Recent referrals side by side */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-
-        {/* Referral Leaderboard */}
-        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 14 }}>🏆 Referral Leaderboard</div>
-          {loading ? (
-            <div style={{ color: T.textMuted, fontSize: 13 }}>Loading...</div>
-          ) : leaderboard.length === 0 ? (
-            <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: "20px 0" }}>No referrals yet — share referral links with your users to get started</div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {leaderboard.map((r, i) => (
-                <div key={r.email} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, background: i === 0 ? "rgba(212,168,67,0.06)" : T.surfaceAlt, border: `1px solid ${i === 0 ? T.gold + "33" : T.border}` }}>
-                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: i === 0 ? `linear-gradient(135deg,${T.gold},#B8912F)` : T.surface, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: i === 0 ? T.bg : T.textMuted, flexShrink: 0 }}>
-                    {i + 1}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name || r.email}</div>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>{r.email}</div>
-                  </div>
-                  <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: T.green }}>{r.conversions} paid</div>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>{r.rewards} rewarded</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Recent Referral Activity */}
-        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 14 }}>Recent Referral Activity</div>
-          {loading ? (
-            <div style={{ color: T.textMuted, fontSize: 13 }}>Loading...</div>
-          ) : referrals.length === 0 ? (
-            <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: "20px 0" }}>No referral activity yet</div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 340, overflowY: "auto" }}>
-              {referrals.slice(0, 20).map(r => {
-                const statusColor = r.status === "converted" ? T.green : r.status === "signup" ? T.blue : T.textMuted;
-                const statusLabel = r.status === "converted" ? "Converted ✓" : r.status === "signup" ? "Signed Up" : "Clicked";
-                return (
-                  <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {r.referrerEmail || "Unknown"} → {r.convertedEmail || r.signupEmail || "—"}
-                      </div>
-                      <div style={{ fontSize: 10, color: T.textMuted }}>{r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-AE") : "—"}</div>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: statusColor, padding: "2px 8px", borderRadius: 6, background: statusColor + "12", border: `1px solid ${statusColor}33` }}>{statusLabel}</span>
-                      {r.status === "converted" && !r.rewardGranted && (
-                        <button type="button" onClick={() => grantReward(r)} disabled={grantLoading}
-                          style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}`, color: T.gold, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                          Grant Month
-                        </button>
-                      )}
-                      {r.rewardGranted && <span style={{ fontSize: 10, color: T.green }}>🎁 Rewarded</span>}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Manual conversion logger */}
-      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 4 }}>Log Manual Conversion</div>
-        <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>When a referral converts via Stripe or manually — log it here to trigger the reward</div>
-        <ManualConversionForm users={users} T={T} onSubmit={createReferral} notify={notify} />
-      </div>
-
-      {/* How it works */}
-      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 14 }}>How the Referral Program Works</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-          {[
-            ["1. Share", "User copies their referral link from their dashboard widget and shares it", T.blue],
-            ["2. Click", "Friend clicks the link — a referral record is created in Firestore automatically", T.teal],
-            ["3. Convert", "Friend signs up and upgrades to Pro — status updates to 'converted'", T.green],
-            ["4. Reward", "Admin clicks 'Grant Month' — referrer gets 1 month free added to their subscription", T.gold],
-          ].map(([step, desc, color]) => (
-            <div key={step} style={{ padding: "14px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${color}33` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color, marginBottom: 6 }}>{step}</div>
-              <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>{desc}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-    </div>
-  );
-};
-
-/* ─── Manual Conversion Form ────────────────────────────────────────────── */
-const ManualConversionForm = ({ users, T, onSubmit, notify }) => {
-  const [referrer, setReferrer] = React.useState("");
-  const [convertedEmail, setConvertedEmail] = React.useState("");
-  const [submitting, setSubmitting] = React.useState(false);
-
-  const handleSubmit = async () => {
-    if (!referrer || !convertedEmail) { notify("Select referrer and enter converted email", "error"); return; }
-    setSubmitting(true);
-    const user = users.find(u => (u.uid || u.id) === referrer);
-    if (user) await onSubmit(user, convertedEmail);
-    setReferrer(""); setConvertedEmail("");
-    setSubmitting(false);
-  };
-
-  return (
-    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 200 }}>
-        <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase" }}>Referrer (who shared the link)</label>
-        <select value={referrer} onChange={e => setReferrer(e.target.value)}
-          style={{ padding: "10px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
-          <option value="">— Select referrer —</option>
-          {users.filter(u => u.email).map(u => <option key={u.uid || u.id} value={u.uid || u.id}>{u.email}</option>)}
-        </select>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 200 }}>
-        <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase" }}>Converted User Email</label>
-        <input type="email" value={convertedEmail} onChange={e => setConvertedEmail(e.target.value)} placeholder="newuser@email.com"
-          style={{ padding: "10px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
-      </div>
-      <button type="button" onClick={handleSubmit} disabled={submitting}
-        style={{ padding: "10px 24px", background: `linear-gradient(135deg,${T.green},#059669)`, color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: submitting ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: submitting ? 0.7 : 1 }}>
-        {submitting ? "Saving..." : "Log Conversion"}
-      </button>
-    </div>
-  );
-};
-
-/* ─── MARKET DATA EDITOR — S15 GAP FIX ─────────────────────────────────────
-   Admin form to update marketData/global in Firestore.
-   Covers: ValuStrat/Knight Frank figures, DLD totals, PPSF, YoY growth.
-   Renders below AdminDataHealth in the data_health tab.
-────────────────────────────────────────────────────────────────────────── */
-const MarketDataEditor = ({ db, T, notify }) => {
-  const [loading, setLoading] = React.useState(true);
-  const [saving, setSaving] = React.useState(false);
-  const [form, setForm] = React.useState({
-    period:             "FY 2025",
-    totalMarketValue:   "AED 682.5B",
-    totalTransactions:  "214,912",
-    avgPricePsf:        "AED 1,689",
-    avgPpsfNum:         "1689",
-    yoyGrowthPct:       "+30.64%",
-    offPlanShare:       "62.6%",
-    avgPpsfYoy:         "19.8%",
-    cashBuyersPct:      "87%",
-    source:             "DLD Official + DXBinteract",
-    lastVerifiedBy:     "",
-  });
-
-  // Load current values from Firestore
-  React.useEffect(() => {
-    const load = async () => {
-      try {
-        const snap = await getDoc(doc(db, "marketData", "global"));
-        const data = snap.exists() ? snap.data() : null;
-        if (data) setForm(prev => ({ ...prev, ...Object.fromEntries(Object.entries(data).filter(([k]) => k in prev)) }));
-      } catch(e) {} finally { setLoading(false); }
-    };
-    load();
-  }, [db]);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const payload = {
-        ...form,
-        avgPpsfNum: parseFloat(form.avgPpsfNum) || 1689,
-        updatedAt: new Date().toISOString(),
-        updatedAtUAE: new Date().toLocaleString("en-AE", { timeZone: "Asia/Dubai" }),
-        updatedBy: "admin",
-        source: form.source,
-      };
-      await setDoc(doc(db, "marketData", "global"), payload, { merge: true });
-      notify("✅ Market data updated — dashboard will refresh within 30 seconds", "success");
-    } catch(e) {
-      notify("❌ Save failed: " + e.message, "error");
-    } finally { setSaving(false); }
-  };
-
-  const Field = ({ label, field, placeholder, hint }) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</label>
-      <input
-        type="text"
-        value={form[field] || ""}
-        onChange={e => setForm(prev => ({ ...prev, [field]: e.target.value }))}
-        placeholder={placeholder}
-        style={{ padding: "9px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }}
-      />
-      {hint && <span style={{ fontSize: 10, color: T.textMuted }}>{hint}</span>}
-    </div>
-  );
-
-  if (loading) return null;
-
-  return (
-    <div style={{ marginTop: 32, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "24px 28px" }}>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <div>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: T.gold }}>Market Data Editor</div>
-          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Update marketData/global — ValuStrat · Knight Frank · DLD official figures</div>
-        </div>
-        <span style={{ fontSize: 9, padding: "3px 10px", borderRadius: 8, background: "rgba(212,168,67,0.1)", color: T.gold, fontWeight: 700, border: `1px solid ${T.border}` }}>ADMIN ONLY</span>
-      </div>
-
-      {/* Form grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 20 }}>
-        <Field label="Period Label" field="period" placeholder="FY 2025" hint="e.g. FY 2025, H1 2026" />
-        <Field label="Total Market Value" field="totalMarketValue" placeholder="AED 682.5B" hint="Shown on Overview + DLD tabs" />
-        <Field label="Total Transactions" field="totalTransactions" placeholder="214,912" hint="DLD annual transaction count" />
-        <Field label="Avg Price/sqft (display)" field="avgPricePsf" placeholder="AED 1,689" hint="With AED prefix + /sqft label" />
-        <Field label="Avg PPSF (number only)" field="avgPpsfNum" placeholder="1689" hint="Used in Price History chart" />
-        <Field label="YoY Value Growth" field="yoyGrowthPct" placeholder="+30.64%" hint="Market value growth YoY" />
-        <Field label="Off-Plan Share" field="offPlanShare" placeholder="62.6%" hint="% of transactions off-plan" />
-        <Field label="Avg PPSF YoY" field="avgPpsfYoy" placeholder="19.8%" hint="Price per sqft YoY growth" />
-        <Field label="Cash Buyers %" field="cashBuyersPct" placeholder="87%" hint="% of buyers paying cash" />
-        <Field label="Data Source" field="source" placeholder="DLD + DXBinteract + ValuStrat" hint="Attribution shown on dashboard" />
-        <Field label="Verified By" field="lastVerifiedBy" placeholder="Your name" hint="Internal audit trail" />
-      </div>
-
-      {/* Warning note */}
-      <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid rgba(212,168,67,0.15)`, fontSize: 12, color: T.textMuted, marginBottom: 16 }}>
-        ⚠️ These values appear on the Overview, DLD Volumes, Competitors, and Market tabs. Verify against DLD official data before saving. Changes take effect immediately for all users.
-      </div>
-
-      {/* Save button */}
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={saving}
-        style={{ padding: "12px 28px", background: saving ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: saving ? T.textMuted : T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: saving ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}
-      >
-        {saving ? "Saving..." : "💾 Save to Firestore"}
-      </button>
-    </div>
-  );
+const T = {
+  bg: "#04090F", surface: "#0A1628", surfaceAlt: "#0E1D35", card: "#0D1B30",
+  gold: "#D4A843", goldLight: "#E8C96A", goldDim: "#B8912F", goldGlow: "rgba(212,168,67,0.12)",
+  teal: "#00BFA5", white: "#FFFFFF",
+  textPrimary: "#E2E8F0", textSecondary: "#94A3B8", textMuted: "#64748B",
+  border: "rgba(212,168,67,0.08)", borderHover: "rgba(212,168,67,0.2)",
+  red: "#EF4444", green: "#10B981", blue: "#3B82F6", purple: "#8B5CF6",
+  cyan: "#06B6D4", orange: "#F59E0B",
 };
 
 /* ─── ICONS (matching dashboard SVG style) ─── */
@@ -1993,7 +500,7 @@ const TabHelp = ({ items }) => {
   );
 };
 
-/* ===================================================================
+/* ═══════════════════════════════════════════════════════════════════
    SUPPORT TAB COMPONENT — TAB 14
    Ticket system, conversation threads, SLA tracking, response templates
    Collections: supportTickets, ticketPresence
@@ -2001,7 +508,7 @@ const TabHelp = ({ items }) => {
    PHASE 1: Internal Notes, Tags, Assignment
    PHASE 1B: Collision Detection, Attachments, @Mentions
    PHASE 2: Merge Tickets, Link Related, Custom Fields
-=================================================================== */
+═══════════════════════════════════════════════════════════════════ */
 // Pre-computed constants — outside components to prevent re-render on keystroke
 const PHONE_CODES_LIST = [["+93","🇦🇫 Afghanistan"],["+355","🇦🇱 Albania"],["+213","🇩🇿 Algeria"],["+244","🇦🇴 Angola"],["+54","🇦🇷 Argentina"],["+374","🇦🇲 Armenia"],["+61","🇦🇺 Australia"],["+43","🇦🇹 Austria"],["+994","🇦🇿 Azerbaijan"],["+1","🇧🇸 Bahamas"],["+973","🇧🇭 Bahrain"],["+880","🇧🇩 Bangladesh"],["+1","🇧🇧 Barbados"],["+375","🇧🇾 Belarus"],["+32","🇧🇪 Belgium"],["+501","🇧🇿 Belize"],["+229","🇧🇯 Benin"],["+975","🇧🇹 Bhutan"],["+591","🇧🇴 Bolivia"],["+387","🇧🇦 Bosnia"],["+267","🇧🇼 Botswana"],["+55","🇧🇷 Brazil"],["+673","🇧🇳 Brunei"],["+359","🇧🇬 Bulgaria"],["+226","🇧🇫 Burkina Faso"],["+257","🇧🇮 Burundi"],["+238","🇨🇻 Cape Verde"],["+855","🇰🇭 Cambodia"],["+237","🇨🇲 Cameroon"],["+1","🇨🇦 Canada"],["+235","🇹🇩 Chad"],["+56","🇨🇱 Chile"],["+86","🇨🇳 China"],["+57","🇨🇴 Colombia"],["+242","🇨🇬 Congo"],["+506","🇨🇷 Costa Rica"],["+385","🇭🇷 Croatia"],["+53","🇨🇺 Cuba"],["+357","🇨🇾 Cyprus"],["+420","🇨🇿 Czech Republic"],["+45","🇩🇰 Denmark"],["+253","🇩🇯 Djibouti"],["+1","🇩🇴 Dominican Republic"],["+593","🇪🇨 Ecuador"],["+20","🇪🇬 Egypt"],["+503","🇸🇻 El Salvador"],["+291","🇪🇷 Eritrea"],["+372","🇪🇪 Estonia"],["+251","🇪🇹 Ethiopia"],["+679","🇫🇯 Fiji"],["+358","🇫🇮 Finland"],["+33","🇫🇷 France"],["+241","🇬🇦 Gabon"],["+220","🇬🇲 Gambia"],["+995","🇬🇪 Georgia"],["+49","🇩🇪 Germany"],["+233","🇬🇭 Ghana"],["+30","🇬🇷 Greece"],["+502","🇬🇹 Guatemala"],["+224","🇬🇳 Guinea"],["+592","🇬🇾 Guyana"],["+509","🇭🇹 Haiti"],["+504","🇭🇳 Honduras"],["+36","🇭🇺 Hungary"],["+354","🇮🇸 Iceland"],["+91","🇮🇳 India"],["+62","🇮🇩 Indonesia"],["+98","🇮🇷 Iran"],["+964","🇮🇶 Iraq"],["+353","🇮🇪 Ireland"],["+972","🇮🇱 Israel"],["+39","🇮🇹 Italy"],["+1","🇯🇲 Jamaica"],["+81","🇯🇵 Japan"],["+962","🇯🇴 Jordan"],["+7","🇰🇿 Kazakhstan"],["+254","🇰🇪 Kenya"],["+82","🇰🇷 Korea South"],["+965","🇰🇼 Kuwait"],["+996","🇰🇬 Kyrgyzstan"],["+856","🇱🇦 Laos"],["+371","🇱🇻 Latvia"],["+961","🇱🇧 Lebanon"],["+231","🇱🇷 Liberia"],["+218","🇱🇾 Libya"],["+370","🇱🇹 Lithuania"],["+352","🇱🇺 Luxembourg"],["+261","🇲🇬 Madagascar"],["+265","🇲🇼 Malawi"],["+60","🇲🇾 Malaysia"],["+960","🇲🇻 Maldives"],["+223","🇲🇱 Mali"],["+356","🇲🇹 Malta"],["+222","🇲🇷 Mauritania"],["+230","🇲🇺 Mauritius"],["+52","🇲🇽 Mexico"],["+373","🇲🇩 Moldova"],["+976","🇲🇳 Mongolia"],["+382","🇲🇪 Montenegro"],["+212","🇲🇦 Morocco"],["+258","🇲🇿 Mozambique"],["+264","🇳🇦 Namibia"],["+977","🇳🇵 Nepal"],["+31","🇳🇱 Netherlands"],["+64","🇳🇿 New Zealand"],["+505","🇳🇮 Nicaragua"],["+227","🇳🇪 Niger"],["+234","🇳🇬 Nigeria"],["+47","🇳🇴 Norway"],["+968","🇴🇲 Oman"],["+92","🇵🇰 Pakistan"],["+970","🇵🇸 Palestine"],["+507","🇵🇦 Panama"],["+595","🇵🇾 Paraguay"],["+51","🇵🇪 Peru"],["+63","🇵🇭 Philippines"],["+48","🇵🇱 Poland"],["+351","🇵🇹 Portugal"],["+974","🇶🇦 Qatar"],["+40","🇷🇴 Romania"],["+7","🇷🇺 Russia"],["+250","🇷🇼 Rwanda"],["+966","🇸🇦 Saudi Arabia"],["+221","🇸🇳 Senegal"],["+381","🇷🇸 Serbia"],["+65","🇸🇬 Singapore"],["+421","🇸🇰 Slovakia"],["+386","🇸🇮 Slovenia"],["+252","🇸🇴 Somalia"],["+27","🇿🇦 South Africa"],["+211","🇸🇸 South Sudan"],["+34","🇪🇸 Spain"],["+94","🇱🇰 Sri Lanka"],["+249","🇸🇩 Sudan"],["+597","🇸🇷 Suriname"],["+46","🇸🇪 Sweden"],["+41","🇨🇭 Switzerland"],["+963","🇸🇾 Syria"],["+886","🇹🇼 Taiwan"],["+992","🇹🇯 Tajikistan"],["+255","🇹🇿 Tanzania"],["+66","🇹🇭 Thailand"],["+228","🇹🇬 Togo"],["+1","🇹🇹 Trinidad"],["+216","🇹🇳 Tunisia"],["+90","🇹🇷 Turkey"],["+993","🇹🇲 Turkmenistan"],["+256","🇺🇬 Uganda"],["+380","🇺🇦 Ukraine"],["+971","🇦🇪 UAE"],["+44","🇬🇧 United Kingdom"],["+1","🇺🇸 United States"],["+598","🇺🇾 Uruguay"],["+998","🇺🇿 Uzbekistan"],["+58","🇻🇪 Venezuela"],["+84","🇻🇳 Vietnam"],["+967","🇾🇪 Yemen"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"]].sort((a,b)=>a[1].localeCompare(b[1]));
 const COUNTRY_LIST = ["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","🌍 Other"].sort();
@@ -8935,10 +7442,10 @@ function SupportTab({ T, I, db, notify, adminUser, users, setTab, setPendingOpen
   );
 }
 /* ─── NOTIFICATIONS TAB COMPONENT ─── */
-/* ========================================
+/* ════════════════════════════════════════
    TAB 12: NOTIFICATIONS — PRO LEVEL
    Broadcast, Schedule, Email, Analytics
-======================================== */
+════════════════════════════════════════ */
 function NotificationsTab({ T, notify, adminUser, I, users, db }) {
   const [notifSubTab, setNotifSubTab] = React.useState("compose");
   const [notifForm, setNotifForm] = React.useState({ title: "", message: "", icon: "🔔", type: "info", link: "" });
@@ -9656,10 +8163,10 @@ function NotificationsTab({ T, notify, adminUser, I, users, db }) {
 }
 
 
-/* ===================================================================
+/* ═══════════════════════════════════════════════════════════════════
    TAB 11: EMAIL DIGEST COMPONENT — PRO LEVEL
    Schedule, preview, send, track. EmailJS bulk send.
-=================================================================== */
+═══════════════════════════════════════════════════════════════════ */
 function DigestTab({ users, db, notify, adminUser, T, I }) {
   const [digestSubTab, setDigestSubTab] = useState("compose");
   const [sending, setSending] = useState(false);
@@ -10249,7 +8756,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* === KPI TOPBAR === */}
+      {/* ═══ KPI TOPBAR ═══ */}
       <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, overflow: "hidden" }}>
         <button type="button" onClick={fetchEibor} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: "rgba(212,168,67,0.06)", border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I?.refresh || "\u21BB"}</button>
         {[
@@ -10269,7 +8776,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       </div>
 
-      {/* === COMPARISON PANEL === */}
+      {/* ═══ COMPARISON PANEL ═══ */}
       {eiborCompareMode && compareData && (
         <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.blue}40`, borderRadius: 14, padding: "16px 20px" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: T.blue, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>Historical Comparison</div>
@@ -10307,7 +8814,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
-      {/* === RATE ALERT === */}
+      {/* ═══ RATE ALERT ═══ */}
       {rateAlert && (
         <div className="fade-up" style={{ padding: "14px 20px", borderRadius: 12, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontSize: 18 }}>⚡</span>
@@ -10318,7 +8825,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
-      {/* === CURRENT RATES + COMPARISON === */}
+      {/* ═══ CURRENT RATES + COMPARISON ═══ */}
       {eiborCurrent && (
         <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -10354,7 +8861,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
-      {/* === RATE HISTORY CHART (12-month SVG) === */}
+      {/* ═══ RATE HISTORY CHART (12-month SVG) ═══ */}
       {eiborHistory.length > 1 && (
         <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -10448,7 +8955,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       )}
 
-      {/* === MORTGAGE CALCULATOR === */}
+      {/* ═══ MORTGAGE CALCULATOR ═══ */}
       <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 16 }}>Mortgage Impact Calculator</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
@@ -10494,7 +9001,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       </div>
 
-      {/* === UPDATE FORM === */}
+      {/* ═══ UPDATE FORM ═══ */}
       <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "20px 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Update Rates</div>
@@ -10524,7 +9031,7 @@ function EiborRatesPanel({ db, T, I, notify }) {
         </div>
       </div>
 
-      {/* === UPDATE HISTORY === */}
+      {/* ═══ UPDATE HISTORY ═══ */}
       <div className="fade-up" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, overflow: "hidden" }}>
         <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Update History</div>
@@ -10574,10 +9081,10 @@ function EiborRatesPanel({ db, T, I, notify }) {
 
 
 
-/* ======================================================
+/* ══════════════════════════════════════════════════════
    USERS TAB COMPONENT — Professional SaaS User Management
    Full rebuild: all 36 audit issues resolved
-====================================================== */
+══════════════════════════════════════════════════════ */
 
 /* ─── PROFILE DRAWER (top-level component — stable reference, portal to root) ─── */
 const EditIcon = () => (
@@ -11369,21 +9876,19 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   };
 
   /* ─── SHARED STYLE HELPERS ─── */
-  const inputStyle = { width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.15)", borderRadius: 9, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.2s", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" };
+  const inputStyle = { width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.15)", borderRadius: 9, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" };
   const focusIn  = e => e.target.style.borderColor = T.gold;
   const focusOut = e => e.target.style.borderColor = "rgba(212,168,67,0.15)";
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const Modal     = useMemo(() => ({ children, maxWidth = 500, onClose }) => (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 20px", overflowY: "auto" }} onClick={onClose}>
-      <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+  const Modal = ({ children, maxWidth = 500, onClose }) => (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
+      <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth, maxHeight: "90vh", overflowY: "auto", animation: "slideUp 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
         {children}
       </div>
     </div>
-  ), []); // eslint-disable-line
+  );
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const ModalHeader = useMemo(() => ({ title, sub, onClose }) => (
+  const ModalHeader = ({ title, sub, onClose }) => (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22 }}>
       <div>
         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>{title}</div>
@@ -11391,24 +9896,21 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       </div>
       <button type="button" onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}></button>
     </div>
-  ), []); // eslint-disable-line
+  );
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const Field = useMemo(() => ({ label, children, hint }) => (
+  const Field = ({ label, children, hint }) => (
     <div>
       <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>{label}{hint && <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0, marginLeft: 6 }}>{hint}</span>}</label>
       {children}
     </div>
-  ), []); // eslint-disable-line
+  );
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const Btn = useMemo(() => ({ onClick, color, children, disabled, style = {} }) => (
+  const Btn      = ({ onClick, color, children, disabled, style = {} }) => (
     <button type="button" onClick={onClick} disabled={disabled} style={{ padding: "10px 20px", borderRadius: 9, border: "none", background: color, color: "#fff", fontSize: 13, fontWeight: 700, cursor: disabled ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: disabled ? 0.6 : 1, ...style }}>{children}</button>
-  ), []); // eslint-disable-line
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const BtnGhost = useMemo(() => ({ onClick, children, style = {} }) => (
+  );
+  const BtnGhost = ({ onClick, children, style = {} }) => (
     <button type="button" onClick={onClick} style={{ padding: "10px 20px", borderRadius: 9, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", ...style }}>{children}</button>
-  ), []); // eslint-disable-line
+  );
   const ColHeader = ({ label, field }) => (
     <div style={{ display: "flex", alignItems: "center", gap: 4, cursor: field ? "pointer" : "default", userSelect: "none" }} onClick={() => field && handleSort(field)}>
       <span style={{ fontSize: 9, fontWeight: 700, color: sortField === field ? T.gold : T.textMuted, letterSpacing: 1, textTransform: "uppercase" }}>{label}</span>
@@ -11416,9 +9918,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </div>
   );
 
-  /* ==============================================
+  /* ══════════════════════════════════════════════
      MODALS
-  ============================================== */
+  ══════════════════════════════════════════════ */
 
   const DeleteConfirmModal = () => confirmDelete && (
     <Modal onClose={() => setConfirmDelete(null)} maxWidth={420}>
@@ -11524,220 +10026,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   );
 
   /* FIX #14: Add User → Invite User (client SDK limitation explained) */
-  const AddUserModal = () => !showAddUser ? null : ( // rendered as function call, not component
-    <Modal onClose={() => setShowAddUser(false)} maxWidth={520}>
-      <ModalHeader title="Add New User" sub="Create a new account directly from admin" onClose={() => setShowAddUser(false)} />
-      <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 18, fontSize: 12, color: "#93C5FD", lineHeight: 1.6 }}>
-         <strong>Note:</strong> Creating an account here uses Firebase client-side auth. The new user will receive a verification email. You will remain logged in as admin.
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        {[
-          { label: "Full Name *", key: "name", type: "text", placeholder: "John Smith", full: true },
-          { label: "Email Address *", key: "email", type: "email", placeholder: "john@company.com", full: true },
-          { label: "Password *", key: "password", type: "password", placeholder: "Min 6 characters", full: true },
-        ].map(f => (
-          <div key={f.key} style={{ gridColumn: f.full ? "1 / -1" : "auto" }}>
-            <Field label={f.label}>
-              <input type={f.type} placeholder={f.placeholder} value={addUserForm[f.key] || ""} onChange={e => setAddUserForm(p => ({ ...p, [f.key]: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} />
-            </Field>
-            {/* FIX #29: password validation */}
-            {f.key === "password" && addUserForm.password && addUserForm.password.length < 6 && (
-              <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>⚡ Password must be at least 6 characters</div>
-            )}
-          </div>
-        ))}
-        {/* Phone with 190+ country codes */}
-        <div style={{ gridColumn: "1/-1" }}>
-          <Field label="Phone / WhatsApp">
-            <div style={{ display: "flex", gap: 8 }}>
-              <select value={addUserForm.phoneCode || "+971"} onChange={e => setAddUserForm(p => ({...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum||"").replace(/\s/g,"")}))} style={{...inputStyle, width: 200, flexShrink: 0, cursor: "pointer"}}>
-                {PHONE_CODES_LIST.map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
-              </select>
-              <input type="tel" placeholder="50 123 4567" value={addUserForm.phoneNum || ""} onChange={e => { const num=e.target.value.replace(/[^\d\s]/g,""); setAddUserForm(p=>({...p,phoneNum:num,phone:(p.phoneCode||"+971")+num.replace(/\s/g,"")})); }} style={{...inputStyle,flex:1}} onFocus={focusIn} onBlur={focusOut} />
-            </div>
-          </Field>
-        </div>
-        {/* Country — 190+ countries with flags */}
-        <div>
-          <Field label="Country">
-            <select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({...p, country: e.target.value}))} style={{...inputStyle, cursor:"pointer", color: addUserForm.country?"#E2E8F0":"#64748B"}}>
-              <option value="">Select Country...</option>
-              {["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","🌍 Other"].sort().map(c => <option key={c} value={c.split(" ").slice(1).join(" ")}>{c}</option>)}
-            </select>
-          </Field>
-        </div>
-        <div><Field label="Access Tier"><select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
-        </select></Field></div>
-        <div style={{ gridColumn: "1 / -1" }}><Field label="Job Role"><select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="user">— No role assigned —</option>
-          {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-        </select></Field></div>
-        <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
-      </div>
-      {addUserForm.email && users.some(u => u.email && u.email.toLowerCase() === addUserForm.email.toLowerCase()) && (
-        <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 14 }}>⚠️</span>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>Email already exists</div>
-            <div style={{ fontSize: 11, color: T.textMuted }}>A user with this email is already registered.</div>
-          </div>
-        </div>
-      )}
-      <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-        <BtnGhost onClick={() => setShowAddUser(false)} style={{ flex: 1 }}>Cancel</BtnGhost>
-        <Btn onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} color={T.gold} style={{ flex: 2, color: T.bg }}>{addUserLoading ? "Creating..." : "Create User"}</Btn>
-      </div>
-    </Modal>
-  );
-
-  /* ── BULK IMPORT MODAL ── */
-  const BulkImportModal = () => showBulkImport && (
-    <Modal onClose={() => { setShowBulkImport(false); setBulkImportData([]); }} maxWidth={700}>
-      <ModalHeader title="Bulk Import Users" sub="Upload a CSV file to import multiple users at once" onClose={() => { setShowBulkImport(false); setBulkImportData([]); }} />
-      <div style={{ background: "rgba(20,184,166,0.06)", border: "1px solid rgba(20,184,166,0.2)", borderRadius: 10, padding: "12px 16px", marginBottom: 18 }}>
-        <div style={{ fontSize: 12, color: T.teal, fontWeight: 600, marginBottom: 6 }}>CSV Format Required:</div>
-        <div style={{ fontSize: 11, color: T.textMuted, fontFamily: "monospace", background: "rgba(0,0,0,0.2)", padding: "8px 12px", borderRadius: 6 }}>
-          name,email,phone,tier,country<br/>
-          John Smith,john@email.com,+971501234567,pro,UAE<br/>
-          Jane Doe,jane@email.com,+971509876543,free,UK
-        </div>
-        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>
-          Valid tiers: free, pro_trial, pro, enterprise · Password will be auto-generated and emailed
-        </div>
-      </div>
-      
-      {bulkImportData.length === 0 ? (
-        <div style={{ border: `2px dashed ${T.border}`, borderRadius: 12, padding: "40px 20px", textAlign: "center", background: T.surfaceAlt }}>
-          <input type="file" accept=".csv" id="csvUpload" style={{ display: "none" }} onChange={e => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-              const text = ev.target?.result;
-              if (!text) return;
-              const lines = text.split("\n").filter(l => l.trim());
-              const headers = lines[0].toLowerCase().split(",").map(h => h.trim());
-              const parsed = [];
-              for (let i = 1; i < lines.length; i++) {
-                const vals = lines[i].split(",").map(v => v.trim().replace(/^"|"$/g, ""));
-                if (vals.length < 2) continue;
-                const row = {};
-                headers.forEach((h, idx) => { row[h] = vals[idx] || ""; });
-                if (row.email) parsed.push({ ...row, valid: row.email.includes("@"), imported: false });
-              }
-              setBulkImportData(parsed);
-            };
-            reader.readAsText(file);
-          }} />
-          <label htmlFor="csvUpload" style={{ cursor: "pointer" }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>📄</div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: T.white, marginBottom: 4 }}>Drop CSV file or click to upload</div>
-            <div style={{ fontSize: 12, color: T.textMuted }}>Supports .csv files up to 1000 rows</div>
-          </label>
-        </div>
-      ) : (
-        <>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{bulkImportData.length} users parsed</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <span style={{ fontSize: 11, color: T.green }}>{bulkImportData.filter(r => r.valid && !r.imported).length} valid</span>
-              <span style={{ fontSize: 11, color: T.red }}>{bulkImportData.filter(r => !r.valid).length} invalid</span>
-              <span style={{ fontSize: 11, color: T.teal }}>{bulkImportData.filter(r => r.imported).length} imported</span>
-            </div>
-          </div>
-          <div style={{ maxHeight: 280, overflowY: "auto", border: `1px solid ${T.border}`, borderRadius: 10 }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-              <thead><tr style={{ background: T.surfaceAlt }}>
-                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Name</th>
-                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Email</th>
-                <th style={{ padding: "8px 10px", textAlign: "left", color: T.textMuted, fontWeight: 600 }}>Tier</th>
-                <th style={{ padding: "8px 10px", textAlign: "center", color: T.textMuted, fontWeight: 600 }}>Status</th>
-              </tr></thead>
-              <tbody>
-                {bulkImportData.map((row, i) => (
-                  <tr key={i} style={{ borderTop: `1px solid ${T.border}` }}>
-                    <td style={{ padding: "8px 10px", color: T.white }}>{row.name || "—"}</td>
-                    <td style={{ padding: "8px 10px", color: row.valid ? T.textSecondary : T.red }}>{row.email}</td>
-                    <td style={{ padding: "8px 10px" }}><span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: row.tier === "pro" ? `${T.gold}20` : row.tier === "enterprise" ? `${T.purple}20` : `${T.textMuted}20`, color: row.tier === "pro" ? T.gold : row.tier === "enterprise" ? T.purple : T.textMuted }}>{row.tier || "free"}</span></td>
-                    <td style={{ padding: "8px 10px", textAlign: "center" }}>{row.imported ? <span style={{ color: T.green }}>✔</span> : row.valid ? <span style={{ color: T.textMuted }}>—</span> : <span style={{ color: T.red }}></span>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-      
-      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-        <BtnGhost onClick={() => { setShowBulkImport(false); setBulkImportData([]); }} style={{ flex: 1 }}>Cancel</BtnGhost>
-        {bulkImportData.length > 0 && (
-          <BtnGhost onClick={() => setBulkImportData([])} style={{ flex: 1 }}>Clear</BtnGhost>
-        )}
-        <Btn 
-          onClick={async () => {
-            if (setBulkImportLoading) setBulkImportLoading(true);
-            const validRows = bulkImportData.filter(r => r.valid && !r.imported);
-            for (const row of validRows) {
-              try {
-                const uid = `imported_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-                await setDoc(doc(db, "users", uid), {
-                  uid, name: row.name || "", email: row.email, phone: row.phone || "",
-                  tier: row.tier || "free", country: row.country || "",
-                  createdAt: new Date().toISOString(), source: "bulk_import"
-                });
-                row.imported = true;
-                setBulkImportData([...bulkImportData]);
-              } catch(e) { console.error("Import error:", e); }
-            }
-            if (setBulkImportLoading) setBulkImportLoading(false);
-            notify(`Imported ${validRows.length} users`);
-            fetchUsers();
-          }} 
-          disabled={bulkImportLoading || bulkImportData.filter(r => r.valid && !r.imported).length === 0} 
-          color={T.teal} 
-          style={{ flex: 2 }}>
-          {bulkImportLoading ? "Importing..." : `Import ${bulkImportData.filter(r => r.valid && !r.imported).length} Users`}
-        </Btn>
-      </div>
-    </Modal>
-  );
-
-  const EditUserModal = () => !editingUser ? null : (
-    <Modal onClose={() => setEditingUser(null)} maxWidth={520}>
-      <ModalHeader title="Edit User" sub={editingUser.email} onClose={() => setEditingUser(null)} />
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <div style={{ gridColumn: "1 / -1" }}><Field label="Full Name"><input type="text" placeholder="Full name" value={editUserForm.name || ""} onChange={e => setEditUserForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field></div>
-        <div style={{ gridColumn: "1 / -1" }}><Field label="Phone / WhatsApp">
-            <div style={{ display: "flex", gap: 8 }}>
-              <select value={editUserForm.phoneCode || "+971"} onChange={e => setEditUserForm(p => ({...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum||"").replace(/\s/g,"")}))} style={{...inputStyle, width: 200, flexShrink: 0, cursor: "pointer"}}>
-                {PHONE_CODES_LIST.map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
-              </select>
-              <input type="tel" placeholder="50 123 4567" value={editUserForm.phoneNum || ""} onChange={e => { const num=e.target.value.replace(/[^\d\s]/g,""); setEditUserForm(p=>({...p,phoneNum:num,phone:(p.phoneCode||"+971")+num.replace(/\s/g,"")})); }} style={{...inputStyle,flex:1}} onFocus={focusIn} onBlur={focusOut} />
-            </div>
-          </Field></div>
-        <Field label="Country"><select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="">Select Country...</option>
-          {["🇦🇫 Afghanistan","🇦🇱 Albania","🇩🇿 Algeria","🇦🇴 Angola","🇦🇷 Argentina","🇦🇲 Armenia","🇦🇺 Australia","🇦🇹 Austria","🇦🇿 Azerbaijan","🇧🇭 Bahrain","🇧🇩 Bangladesh","🇧🇾 Belarus","🇧🇪 Belgium","🇧🇴 Bolivia","🇧🇦 Bosnia","🇧🇷 Brazil","🇧🇳 Brunei","🇧🇬 Bulgaria","🇰🇭 Cambodia","🇨🇲 Cameroon","🇨🇦 Canada","🇨🇱 Chile","🇨🇳 China","🇨🇴 Colombia","🇭🇷 Croatia","🇨🇺 Cuba","🇨🇾 Cyprus","🇨🇿 Czech Republic","🇩🇰 Denmark","🇪🇬 Egypt","🇪🇹 Ethiopia","🇫🇮 Finland","🇫🇷 France","🇬🇪 Georgia","🇩🇪 Germany","🇬🇭 Ghana","🇬🇷 Greece","🇭🇺 Hungary","🇮🇸 Iceland","🇮🇳 India","🇮🇩 Indonesia","🇮🇷 Iran","🇮🇶 Iraq","🇮🇪 Ireland","🇮🇱 Israel","🇮🇹 Italy","🇯🇵 Japan","🇯🇴 Jordan","🇰🇿 Kazakhstan","🇰🇪 Kenya","🇰🇷 Korea South","🇰🇼 Kuwait","🇰🇬 Kyrgyzstan","🇱🇻 Latvia","🇱🇧 Lebanon","🇱🇾 Libya","🇱🇹 Lithuania","🇲🇾 Malaysia","🇲🇻 Maldives","🇲🇹 Malta","🇲🇽 Mexico","🇲🇩 Moldova","🇲🇳 Mongolia","🇲🇦 Morocco","🇲🇿 Mozambique","🇳🇵 Nepal","🇳🇱 Netherlands","🇳🇿 New Zealand","🇳🇬 Nigeria","🇳🇴 Norway","🇴🇲 Oman","🇵🇰 Pakistan","🇵🇸 Palestine","🇵🇦 Panama","🇵🇪 Peru","🇵🇭 Philippines","🇵🇱 Poland","🇵🇹 Portugal","🇶🇦 Qatar","🇷🇴 Romania","🇷🇺 Russia","🇷🇼 Rwanda","🇸🇦 Saudi Arabia","🇸🇳 Senegal","🇷🇸 Serbia","🇸🇬 Singapore","🇸🇰 Slovakia","🇸🇮 Slovenia","🇸🇴 Somalia","🇿🇦 South Africa","🇸🇸 South Sudan","🇪🇸 Spain","🇱🇰 Sri Lanka","🇸🇩 Sudan","🇸🇪 Sweden","🇨🇭 Switzerland","🇸🇾 Syria","🇹🇼 Taiwan","🇹🇯 Tajikistan","🇹🇿 Tanzania","🇹🇭 Thailand","🇹🇳 Tunisia","🇹🇷 Turkey","🇹🇲 Turkmenistan","🇺🇬 Uganda","🇺🇦 Ukraine","🇦🇪 UAE","🇬🇧 United Kingdom","🇺🇸 United States","🇺🇾 Uruguay","🇺🇿 Uzbekistan","🇻🇪 Venezuela","🇻🇳 Vietnam","🇾🇪 Yemen","🇿🇲 Zambia","🇿🇼 Zimbabwe","🌍 Other"].sort().map(c => <option key={c} value={c.split(" ").slice(1).join(" ")}>{c}</option>)}
-        </select></Field>
-        <Field label="Access Tier"><select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
-        </select></Field>
-        <Field label="Job Role"><select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))} style={{ ...inputStyle, cursor: "pointer" }}>
-          <option value="user">— No role assigned —</option>
-          {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-        </select></Field>
-        {/* FIX #8: normalize trial date to ISO format */}
-        <Field label="Trial End Date"><input type="date" value={editUserForm.trialEnd ? editUserForm.trialEnd.slice(0, 10) : ""} onChange={e => setEditUserForm(p => ({ ...p, trialEnd: e.target.value ? e.target.value + "T00:00:00.000Z" : "" }))} style={inputStyle} onFocus={focusIn} onBlur={focusOut} /></Field>
-        <div style={{ gridColumn: "1 / -1" }}><Field label="Admin Notes"><textarea placeholder="Internal notes..." value={editUserForm.notes || ""} onChange={e => setEditUserForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} /></Field></div>
-      </div>
-      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-        <BtnGhost onClick={() => setEditingUser(null)} style={{ flex: 1 }}>Cancel</BtnGhost>
-        <Btn onClick={saveEditUser} disabled={editUserLoading} color={T.gold} style={{ flex: 2, color: T.bg }}>{editUserLoading ? "Saving..." : "Save Changes"}</Btn>
-      </div>
-    </Modal>
-  );
-
   const NotifUserModal = () => notifUser && (
     <Modal onClose={() => setNotifUser(null)} maxWidth={440}>
       <ModalHeader title={`Notify — ${notifUser.name || notifUser.email}`} sub="Appears instantly in their notification bell" onClose={() => setNotifUser(null)} />
@@ -11770,13 +10058,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </Modal>
   );
 
-  /* ==============================================
+  /* ══════════════════════════════════════════════
      PROFILE DRAWER — rebuilt for professional SaaS quality
-  ============================================== */
+  ══════════════════════════════════════════════ */
 
-    /* ==============================================
+    /* ══════════════════════════════════════════════
      LOADING SKELETON — FIX #30
-  ============================================== */
+  ══════════════════════════════════════════════ */
   const SkeletonRow = () => (
     <div style={{ display: "grid", gridTemplateColumns: "36px 28px minmax(160px,2fr) minmax(150px,1.5fr) 100px 110px 75px 75px 140px", gap: 6, padding: "12px 16px", borderBottom: `1px solid ${T.border}`, alignItems: "center" }}>
       {[36,28,160,150,100,110,75,75,140].map((w,i) => (
@@ -11785,9 +10073,9 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
     </div>
   );
 
-  /* ==============================================
+  /* ══════════════════════════════════════════════
      MAIN RENDER
-  ============================================== */
+  ══════════════════════════════════════════════ */
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
 
@@ -11798,8 +10086,6 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       <EmailModal />
       <NoteModal />
       <TagsModal />
-      {showAddUser && AddUserModal()}
-      {editingUser && EditUserModal()}
       <NotifUserModal />
       <ProfileDrawerComponent
         drawerUser={drawerUser}
@@ -11861,7 +10147,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
       )}
 
-      {/* == HEADER == */}
+      {/* ══ HEADER ══ */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.white, margin: 0 }}>User Management</h2>
@@ -11889,7 +10175,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
       </div>
 
-      {/* == KPI CARDS — FIX #1, #2, #18 == */}
+      {/* ══ KPI CARDS — FIX #1, #2, #18 ══ */}
       <div className="users-kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10, marginBottom: 16 }}>
         {[
           { label: "Total",        value: total,          color: T.white,     sub: "All accounts",    border: T.border,         filter: "All",      tip: "Show all users" },
@@ -11913,7 +10199,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         ))}
       </div>
 
-      {/* == CONVERSION FUNNEL — FIX #16 (removed duplicate MRR), #26 == */}
+      {/* ══ CONVERSION FUNNEL — FIX #16 (removed duplicate MRR), #26 ══ */}
       <div style={{ background: T.surfaceAlt, borderRadius: 14, padding: "16px 20px", border: `1px solid ${T.border}`, marginBottom: 18 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Conversion Funnel</div>
@@ -11938,7 +10224,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
       </div>
 
-      {/* == SAVED VIEWS == */}
+      {/* ══ SAVED VIEWS ══ */}
       <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginRight: 4 }}>Quick Views:</span>
         {[
@@ -11962,7 +10248,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </div>
       </div>
 
-      {/* == SEARCH + FILTERS — FIX #32 (active sort badge) == */}
+      {/* ══ SEARCH + FILTERS — FIX #32 (active sort badge) ══ */}
       <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ position: "relative", flex: "1 1 280px", maxWidth: 360 }}>
           <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: T.textMuted }}>{I.search}</span>
@@ -12099,7 +10385,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         </Modal>
       )}
 
-      {/* == DESKTOP TABLE == */}
+      {/* ══ DESKTOP TABLE ══ */}
       <div className="users-table-desktop" style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
         {/* Header */}
         <div style={{ display: "grid", gridTemplateColumns: "36px 28px 2fr 1.6fr 110px 115px 85px 85px 145px", gap: 6, padding: "10px 16px", borderBottom: `2px solid ${T.border}`, background: T.surfaceAlt, alignItems: "center" }}>
@@ -12236,7 +10522,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         })}
       </div>
 
-      {/* == MOBILE CARD VIEW — FIX #22: Edit, Tags, Suspend added == */}
+      {/* ══ MOBILE CARD VIEW — FIX #22: Edit, Tags, Suspend added ══ */}
       <div className="users-table-mobile" style={{ flexDirection: "column", gap: 10 }}>
         {pagedUsers.length === 0 ? (
           <div style={{ textAlign: "center", padding: "40px 20px", background: T.surface, borderRadius: 16, border: `1px solid ${T.border}` }}>
@@ -12287,7 +10573,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
         })}
       </div>
 
-      {/* == PAGINATION — FIX #4 == */}
+      {/* ══ PAGINATION — FIX #4 ══ */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, padding: "0 2px", flexWrap: "wrap", gap: 10 }}>
         {/* FIX #4: handle 0 results gracefully */}
         <span style={{ fontSize: 11, color: T.textMuted }}>
@@ -12322,13 +10608,13 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   );
 }
 
-/* =======================================================
+/* ═══════════════════════════════════════════════════════
    CENTRAL AUDIT INFRASTRUCTURE
    - getAdminIP()   : cached IP fetch from ipify
    - _webhookUrl    : module-level webhook target (set from Firestore)
    - logAudit()     : single write point for ALL audit events
    - checkAlerts()  : suspicious-activity email trigger
-   ======================================================= */
+   ═══════════════════════════════════════════════════════ */
 
 let _cachedIP = null;
 async function getAdminIP() {
@@ -12615,7 +10901,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
       const ip = l.ip || "";
       const u = users.find(u => u.uid === l.uid);
       const userStr = u ? (u.name || u.email || l.uid || "") : (l.uid || "");
-      const proj = allProjects.find(p => String(p.id) === String(l.projectId));
+      const proj = emaarProjects.find(p => String(p.id) === String(l.projectId));
       const detail = l.action === "tier_change" ? `${l.from} → ${l.to}`
         : l.action === "bulk_tier_change" ? `${(l.uids||[]).length} users → ${l.newTier}`
         : l.action?.includes("project") ? (proj?.name || l.projectId || "")
@@ -12651,7 +10937,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
     if (auditSearch) {
       const u = users.find(u => u.uid === l.uid || (l.uids || []).includes(u.uid));
       const s = auditSearch.toLowerCase();
-      const proj = allProjects.find(p => String(p.id) === String(l.projectId));
+      const proj = emaarProjects.find(p => String(p.id) === String(l.projectId));
       const diffStr = l.diff ? JSON.stringify(l.diff).toLowerCase() : "";
       const rateStr = l.rates ? JSON.stringify(l.rates).toLowerCase() : "";
       if (!(
@@ -12885,7 +11171,7 @@ function AuditLogTable({ auditLog, users, emaarProjects, fetchAuditLog, setTab, 
               const isProject = ["project_update","project_create"].includes(log.action);
               const affectedUser = (isTier) ? users.find(u => u.uid === log.uid) : null;
               const isClickable = isTier && affectedUser;
-              const projName = isProject ? (allProjects.find(p => String(p.id) === String(log.projectId))?.name || `Project ${log.projectId}`) : null;
+              const projName = isProject ? (emaarProjects.find(p => String(p.id) === String(log.projectId))?.name || `Project ${log.projectId}`) : null;
 
               return (
                 <div key={log.id || idx}
@@ -14473,8 +12759,6 @@ export default function AdminPanel() {
   const [eiborCompareMode, setEiborCompareMode] = useState(false);
   // Leads Pro states
   const [leadsViewMode, setLeadsViewMode] = useState("table"); // table | kanban
-  const [kanbanDragId, setKanbanDragId] = useState(null); // id of lead being dragged
-  const [kanbanDragOver, setKanbanDragOver] = useState(null); // stage id being hovered
 
   // Phase 1A: Real-Time Analytics
   const [realtimeUsers, setRealtimeUsers] = useState(0);
@@ -15080,10 +13364,10 @@ export default function AdminPanel() {
   };
 
   /* ─── USER STATS ─── */
-  /* ==============================================
+  /* ══════════════════════════════════════════════
      DATA FOUNDATION — Single source of truth
      All calculations derived here once, used everywhere
-  ============================================== */
+  ══════════════════════════════════════════════ */
 
   // Single now reference — all time comparisons use this exact moment
   const now = new Date();
@@ -15168,28 +13452,7 @@ export default function AdminPanel() {
              d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     } catch { return false; }
   }).reduce((sum, u) => sum + (u.tier === "enterprise" ? 499 : 99), 0);
-
-  // ── EXPANSION — pro → enterprise upgrades this month ──
-  const expansionEvents = auditLog.filter(l =>
-    l.action === "tier_change" &&
-    l.from === "pro" && l.to === "enterprise"
-  );
-  const expansionThisMonth = expansionEvents.filter(l => {
-    try { const d = new Date(l.changedAt); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); } catch { return false; }
-  });
-  const expansionMRR = expansionThisMonth.length * (499 - 99); // delta = +400 per upgrade
-
-  // ── CONTRACTION — enterprise → pro downgrades this month ──
-  const contractionEvents = auditLog.filter(l =>
-    l.action === "tier_change" &&
-    l.from === "enterprise" && l.to === "pro"
-  );
-  const contractionThisMonth = contractionEvents.filter(l => {
-    try { const d = new Date(l.changedAt); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); } catch { return false; }
-  });
-  const contractionMRR = contractionThisMonth.length * (499 - 99); // delta = -400 per downgrade
-
-  const netMRR = newMRRThisMonth + expansionMRR - contractionMRR - churnedMRR;
+  const netMRR = newMRRThisMonth - churnedMRR;
 
   // ── PLATFORM HEALTH SCORE (0–100) ──
   // Based on: conversion rate, at-risk %, active rate, churn
@@ -15437,9 +13700,9 @@ export default function AdminPanel() {
     notify("Columns reset to default");
   };
   
-  // =======================================
+  // ═══════════════════════════════════════
   // DATA QUALITY SCORE SYSTEM
-  // =======================================
+  // ═══════════════════════════════════════
   
   // Quality weights for each field (total = 100)
   const QUALITY_WEIGHTS = {
@@ -15507,9 +13770,9 @@ export default function AdminPanel() {
     };
   };
   
-  // =======================================
+  // ═══════════════════════════════════════
   // DATA INTELLIGENCE & AUTOMATION
-  // =======================================
+  // ═══════════════════════════════════════
   
   // Calculate data staleness for a project
   const calculateStaleness = (project) => {
@@ -15889,7 +14152,7 @@ export default function AdminPanel() {
         Object.keys(clean).forEach(k => { if (k !== "updatedAt" && k !== "updatedBy" && clean[k] !== oldDoc[k]) diff[k] = { old: oldDoc[k] ?? "—", new: clean[k] }; });
         await logAudit(db, { action: "project_update", projectId, changes: clean, diff });
         // Save full version snapshot for rollback
-        const p = allProjects.find(x => String(x.id) === String(projectId));
+        const p = emaarProjects.find(x => String(x.id) === String(projectId));
         const versionId = String(projectId) + "_v_" + Date.now();
         await setDoc(doc(db, "projectVersions", versionId), {
           projectId: String(projectId),
@@ -15963,7 +14226,7 @@ export default function AdminPanel() {
     try {
       const timestamp = new Date().toISOString();
       for (const projectId of bulkSelected) {
-        const p = allProjects.find(x => String(x.id) === String(projectId));
+        const p = emaarProjects.find(x => String(x.id) === String(projectId));
         const merged = getMergedProject(p || { id: projectId });
         const oldPrice = merged.price || 0;
         const newPrice = changeType === 'percent' 
@@ -16384,7 +14647,7 @@ export default function AdminPanel() {
     if (data.lat && (Number(data.lat) < 24 || Number(data.lat) > 26)) { errors.push("Latitude should be ~25 for Dubai"); }
     if (data.lng && (Number(data.lng) < 54 || Number(data.lng) > 56)) { errors.push("Longitude should be ~55 for Dubai"); }
     // Check for duplicate ID
-    const existingProject = allProjects.find(p => String(p.id) === String(data.id));
+    const existingProject = emaarProjects.find(p => String(p.id) === String(data.id));
     const isUpdate = !!existingProject;
     return { data, errors, isUpdate, existingName: existingProject?.name };
   };
@@ -16638,17 +14901,11 @@ export default function AdminPanel() {
     { id: "cancellation", label: "Cancellations", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> },
     { id: "support", label: "Support Inbox", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> },
     { id: "tabcontrol", label: "Tab Control", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="18" height="4" rx="1"/><line x1="7" y1="5" x2="7" y2="5"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="7" y1="19" x2="7" y2="19"/></svg> },
-    { id: "data_health", label: "Data Health", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> },
-    { id: "referral", label: "Referral Program", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
-    { id: "billing", label: "Billing & Invoices", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> },
-    { id: "forecasting", label: "Forecasting", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> },
-    { id: "pricing_plans", label: "Pricing Plans", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
-    { id: "market_intelligence", label: "Market Intel", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> },
   ];
 
-  /* =======================================
+  /* ═══════════════════════════════════════
      RENDER
-     ======================================= */
+     ═══════════════════════════════════════ */
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit',sans-serif", color: T.textPrimary }}>
       <style>{css}</style>
@@ -16805,13 +15062,13 @@ export default function AdminPanel() {
 
         <div style={{ padding: "28px 28px 60px" }}>
 
-          {/* =======================================
+          {/* ═══════════════════════════════════════
              OVERVIEW TAB
-             ======================================= */}
+             ═══════════════════════════════════════ */}
           {tab === "overview" && (
             <>
 
-              {/* == OVERVIEW TOPBAR — health + alerts + actions in one row == */}
+              {/* ══ OVERVIEW TOPBAR — health + alerts + actions in one row ══ */}
               {(() => {
                 const urgentAlerts = [
                   stats.atRisk > 0 && { key: "atrisk", color: T.red, icon: "", label: `${stats.atRisk} at risk`, action: () => {
@@ -16868,7 +15125,7 @@ export default function AdminPanel() {
                   </div>
                 );
               })()}
-              {/* == STEP 3 — KPI CARDS WITH TRENDS == */}
+              {/* ══ STEP 3 — KPI CARDS WITH TRENDS ══ */}
               <div style={{ marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                   <div style={{ borderLeft: `3px solid ${T.gold}`, paddingLeft: 14 }}>
@@ -17058,7 +15315,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* == STEP 4 — THREE CHARTS == */}
+              {/* ══ STEP 4 — THREE CHARTS ══ */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Growth & Distribution</div>
 
               {/* Row 1: Signup Timeline (wide) + Tier Donut (narrow) */}
@@ -17139,7 +15396,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* == STEP 5 — CROSS-PLATFORM ACTIVITY FEED == */}
+              {/* ══ STEP 5 — CROSS-PLATFORM ACTIVITY FEED ══ */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Live Activity</div>
               <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
@@ -17199,7 +15456,7 @@ export default function AdminPanel() {
                 )}
               </div>
 
-              {/* == USER INTELLIGENCE + GEO == */}
+              {/* ══ USER INTELLIGENCE + GEO ══ */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>User Intelligence</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 24 }} className="charts-row-overview">
 
@@ -17354,7 +15611,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* == STEP 7 — CHURN & RETENTION PANEL == */}
+              {/* ══ STEP 7 — CHURN & RETENTION PANEL ══ */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Churn & Retention</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 24 }} className="charts-row-overview">
 
@@ -17364,12 +15621,10 @@ export default function AdminPanel() {
                   {[
                     { label: "Starting MRR",  value: mrr - netMRR,        color: T.textSecondary, bar: null },
                     { label: "New MRR",        value: newMRRThisMonth,     color: T.green,         bar: true },
-                    { label: "Expansion",      value: expansionMRR,        color: T.teal,          bar: true },
-                    { label: "Contraction",    value: -contractionMRR,     color: T.orange,        bar: true },
                     { label: "Churned MRR",    value: -churnedMRR,         color: T.red,           bar: true },
                     { label: "Net MRR",        value: netMRR,              color: netMRR >= 0 ? T.green : T.red, bar: null, bold: true },
                   ].map((row, i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: i < 5 ? `1px solid ${T.border}` : "none" }}>
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         {row.bar && <div style={{ width: 3, height: 14, borderRadius: 2, background: row.color }} />}
                         {!row.bar && <div style={{ width: 3, height: 14 }} />}
@@ -17440,7 +15695,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* == ARPU TREND == */}
+              {/* ══ ARPU TREND ══ */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Revenue Trend</div>
               <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 24 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
@@ -17593,7 +15848,7 @@ export default function AdminPanel() {
                 })()}
               </div>
 
-              {/* == TRIAL EXPIRY + CONVERSION FUNNEL == */}
+              {/* ══ TRIAL EXPIRY + CONVERSION FUNNEL ══ */}
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, marginTop: 8 }}>Trial Pipeline</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }} className="charts-row-overview">
 
@@ -17688,9 +15943,9 @@ export default function AdminPanel() {
             </>
           )}
 
-          {/* =======================================
+          {/* ═══════════════════════════════════════
              USERS TAB
-             ======================================= */}
+             ═══════════════════════════════════════ */}
           {tab === "users" && <UsersTab users={users} filteredUsers={filteredUsers} fetchUsers={fetchUsers} changeTier={changeTier} deleteUser={deleteUser} suspendUser={suspendUser} sendResetEmail={sendResetEmail} extendTrial={extendTrial} openEditUser={openEditUser} saveEditUser={saveEditUser} editingUser={editingUser} setEditingUser={setEditingUser} editUserForm={editUserForm} setEditUserForm={setEditUserForm} editUserLoading={editUserLoading} showAddUser={showAddUser} setShowAddUser={setShowAddUser} addUserForm={addUserForm} setAddUserForm={setAddUserForm} addUserManually={addUserManually} addUserLoading={addUserLoading} exportCSV={exportCSV} userSearch={userSearch} setUserSearch={setUserSearch} tierFilter={tierFilter} setTierFilter={setTierFilter} notify={notify} db={db} T={T} I={I} trialDaysLeft={trialDaysLeft} timeSince={timeSince} pendingOpenUid={pendingOpenUid} setPendingOpenUid={setPendingOpenUid} onDrawerChange={setDrawerOpen} auditLog={auditLog} showBulkImport={showBulkImport} setShowBulkImport={setShowBulkImport} bulkImportData={bulkImportData} setBulkImportData={setBulkImportData} bulkImportLoading={bulkImportLoading} setBulkImportLoading={setBulkImportLoading} />}
 
           
@@ -17723,7 +15978,7 @@ export default function AdminPanel() {
 
                   return (
                     <>
-                      {/* == STATS TOPBAR == */}
+                      {/* ══ STATS TOPBAR ══ */}
                       <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 24, overflow: "hidden" }}>
                         <button type="button" onClick={fetchAuditLog} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "10px 14px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 18px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
@@ -17756,7 +16011,7 @@ export default function AdminPanel() {
                         </div>
                       </div>
 
-                      {/* == 30-DAY ACTIVITY CHART == */}
+                      {/* ══ 30-DAY ACTIVITY CHART ══ */}
                       <div className="chart-box fade-up" style={{ marginBottom: 24, padding: "16px 20px 12px" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                           <div>
@@ -17782,19 +16037,19 @@ export default function AdminPanel() {
                         </div>
                       </div>
 
-                      {/* == SECTION LABEL == */}
+                      {/* ══ SECTION LABEL ══ */}
                       <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 12 }}>Data Update Calendar</div>
 
-                      {/* == CALENDAR + CHECKLIST == */}
+                      {/* ══ CALENDAR + CHECKLIST ══ */}
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
                         <DataCalendar T={T} now={now} />
                         <UpdateChecklist T={T} />
                       </div>
 
-                      {/* == SECTION LABEL == */}
+                      {/* ══ SECTION LABEL ══ */}
                       <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 12 }}>Action History</div>
 
-                      {/* == AUDIT LOG TABLE == */}
+                      {/* ══ AUDIT LOG TABLE ══ */}
                       <AuditLogTable
                         auditLog={auditLog}
                         users={users}
@@ -17805,7 +16060,7 @@ export default function AdminPanel() {
                         T={T}
                       />
 
-                      {/* == AUDIT SETTINGS PANEL == */}
+                      {/* ══ AUDIT SETTINGS PANEL ══ */}
                       <div style={{ marginTop: 28 }}>
                         <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 14 }}>Audit Settings & Integrations</div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
@@ -17883,7 +16138,7 @@ export default function AdminPanel() {
                         </div>
                       </div>
 
-                      {/* == REST API PANEL == */}
+                      {/* ══ REST API PANEL ══ */}
                       <div style={{ marginTop: 20 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                           <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5 }}>REST API</div>
@@ -18099,18 +16354,7 @@ export default function AdminPanel() {
 
                 return (
                   <>
-                    {/* REVENUE TAB GUIDE */}
-                    <TabHelp items={[
-                      { icon: "💰", title: "MRR & ARR", desc: "Monthly Recurring Revenue = sum of all active Pro (AED 99) + Enterprise (AED 499) subscriptions. ARR = MRR × 12. These are your core SaaS health metrics." },
-                      { icon: "📉", title: "Churn Rate", desc: "% of paying users who cancelled this month. Below 3% = healthy. Above 6% = needs urgent attention. Calculated from plan_cancelled events in the audit log." },
-                      { icon: "📊", title: "NRR (Net Revenue Retention)", desc: "Revenue retained + expanded from existing customers. 100%+ means you grow even without new signups. Built from real upgrade/downgrade/churn events." },
-                      { icon: "🌊", title: "MRR Waterfall", desc: "Visual breakdown of how MRR changed this month: new signups + upgrades - downgrades - churn = net movement. The most honest view of revenue health." },
-                      { icon: "🎯", title: "Trial Pipeline", desc: "Pro Trial users bucketed by days remaining. 1-2 days = urgent conversion opportunity. Use the Email button to send targeted conversion emails." },
-                      { icon: "🧩", title: "Cohort Retention", desc: "Shows what % of users who signed up in each month are still paying today. Click any cell to see exactly which users are retained. Benchmark: 40%+ at Month 3." },
-                      { icon: "🏆", title: "Revenue Milestones", desc: "Progress toward AED 1K → 5K → 10K → 50K → 100K MRR. Shows exactly how many more users you need at current ARPU to hit each milestone." },
-                    ]} />
-
-                    {/* == SECTION 1 — REVENUE HEALTH TOPBAR == */}
+                    {/* ══ SECTION 1 — REVENUE HEALTH TOPBAR ══ */}
                     <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, flexWrap: "wrap" }}>
                       <button type="button" onClick={() => { fetchUsers(); fetchAuditLog(); window._revenuePaymentsLoaded = false; notify("Revenue refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "6px 12px", borderRadius: 8, border: `1px solid ${T.gold}`, background: T.goldGlow, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, marginRight: 8 }}>{I.refresh}</button>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 14, borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
@@ -18118,17 +16362,15 @@ export default function AdminPanel() {
                         <span style={{ fontSize: 12, fontWeight: 700, color: mrr > 0 ? T.green : T.textMuted }}>{mrr > 0 ? "Generating Revenue" : "Pre-Revenue"}</span>
                       </div>
                       {[
-                        { label: "MRR",        value: `AED ${mrr.toLocaleString()}`,  color: T.green, tip: "Monthly Recurring Revenue — Pro users × AED 99 + Enterprise users × AED 499. The most important number in your business." },
-                        { label: "ARR",        value: `AED ${arr.toLocaleString()}`,  color: T.teal,  tip: "Annual Recurring Revenue = MRR × 12. Used for valuation (typically 8-12× ARR for early SaaS)." },
-                        { label: "Net MRR",    value: `${netMRR >= 0 ? "+" : ""}AED ${netMRR.toLocaleString()}`, color: netMRR >= 0 ? T.green : T.red, tip: "MRR change this month = New + Expansion - Contraction - Churn. Positive = growing. Negative = shrinking." },
-                        { label: "Churn Rate", value: `${churnRate}%`,               color: churnRate === 0 ? T.green : churnRate < 5 ? T.gold : T.red, tip: "% of paying users who cancelled this month.\n< 2% = Excellent\n2–5% = Healthy\n5–8% = Concerning\n> 8% = Critical — investigate immediately." },
-                        { label: "ARPU",       value: `AED ${arpu}`,                 color: T.gold, tip: "Average Revenue Per User = MRR ÷ paid users. Higher ARPU = less users needed to hit revenue targets." },
-                        mrrGrowthPct !== null ? { label: "MoM Growth", value: `${mrrGrowthPct >= 0 ? "+" : ""}${mrrGrowthPct}%`, color: mrrGrowthPct >= 0 ? T.green : T.red, tip: "Month-over-month MRR growth. Benchmark: early SaaS should target 10–20% monthly growth." } : null,
+                        { label: "MRR",        value: `AED ${mrr.toLocaleString()}`,  color: T.green },
+                        { label: "ARR",        value: `AED ${arr.toLocaleString()}`,  color: T.teal },
+                        { label: "Net MRR",    value: `${netMRR >= 0 ? "+" : ""}AED ${netMRR.toLocaleString()}`, color: netMRR >= 0 ? T.green : T.red },
+                        { label: "Churn Rate", value: `${churnRate}%`,               color: churnRate === 0 ? T.green : churnRate < 5 ? T.gold : T.red },
+                        { label: "ARPU",       value: `AED ${arpu}`,                 color: T.gold },
+                        mrrGrowthPct !== null ? { label: "MoM Growth", value: `${mrrGrowthPct >= 0 ? "+" : ""}${mrrGrowthPct}%`, color: mrrGrowthPct >= 0 ? T.green : T.red } : null,
                       ].filter(Boolean).map((item, i) => (
                         <div key={i} style={{ display: "flex", flexDirection: "column", paddingRight: 14, borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
-                          <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "flex", alignItems: "center" }}>
-                            {item.label}{item.tip && <HelpTip text={item.tip} />}
-                          </span>
+                          <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
                           <span style={{ fontSize: 13, fontWeight: 800, color: item.color, fontFamily: "'Fraunces',serif" }}>{item.value}</span>
                         </div>
                       ))}
@@ -18144,7 +16386,7 @@ export default function AdminPanel() {
                       )}
                     </div>
 
-                    {/* == SECTION 2 — MRR MOVEMENT + BREAKDOWN + LTV == */}
+                    {/* ══ SECTION 2 — MRR MOVEMENT + BREAKDOWN + LTV ══ */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Revenue Breakdown</div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 20 }} className="charts-row-overview">
 
@@ -18153,13 +16395,11 @@ export default function AdminPanel() {
                         <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 16 }}>MRR Movement — This Month</div>
                         {[
                           { label: "Starting MRR",  value: mrr - netMRR,       color: T.textSecondary },
-                          { label: "New MRR",        value: newMRRThisMonth,    color: T.green,  arrow: "+" },
-                          { label: "Expansion MRR",  value: expansionMRR,       color: T.teal,   arrow: "↑", hide: expansionMRR === 0 },
-                          { label: "Contraction MRR",value: -contractionMRR,    color: T.orange, arrow: "↓", hide: contractionMRR === 0 },
-                          { label: "Churned MRR",    value: -churnedMRR,        color: T.red,    arrow: "−" },
+                          { label: "New MRR",        value: newMRRThisMonth,    color: T.green,  arrow: "←" },
+                          { label: "Churned MRR",    value: -churnedMRR,        color: T.red,    arrow: "↑" },
                           { label: "Net MRR",        value: mrr,                color: netMRR >= 0 ? T.green : T.red, bold: true },
-                        ].filter(row => !row.hide).map((row, i, arr) => (
-                          <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                        ].map((row, i) => (
+                          <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                               {row.arrow && <span style={{ fontSize: 11, color: row.color, fontWeight: 700 }}>{row.arrow}</span>}
                               {!row.arrow && <div style={{ width: 11 }} />}
@@ -18233,7 +16473,7 @@ export default function AdminPanel() {
                       </div>
                     </div>
 
-                    {/* == SECTION 3 — MRR HISTORY + FORECAST == */}
+                    {/* ══ SECTION 3 — MRR HISTORY + FORECAST ══ */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>MRR History & Forecast</div>
                     <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 20 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
@@ -18271,7 +16511,7 @@ export default function AdminPanel() {
                       </ResponsiveContainer>
                     </div>
 
-                    {/* == SECTION 4 — TRIAL PIPELINE + CONVERSION FUNNEL == */}
+                    {/* ══ SECTION 4 — TRIAL PIPELINE + CONVERSION FUNNEL ══ */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Trial Pipeline</div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }} className="charts-row-overview">
 
@@ -18359,7 +16599,7 @@ export default function AdminPanel() {
                       </div>
                     </div>
 
-                    {/* == SECTION 5 — PAYING USERS TABLE == */}
+                    {/* ══ SECTION 5 — PAYING USERS TABLE ══ */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Paying Customers</div>
                     <div className="chart-box fade-up" style={{ padding: 0, overflow: "hidden", marginBottom: 20 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${T.border}` }}>
@@ -18441,7 +16681,7 @@ export default function AdminPanel() {
                       )}
                     </div>
 
-                    {/* == SECTION 6 — REVENUE MILESTONES == */}
+                    {/* ══ SECTION 6 — REVENUE MILESTONES ══ */}
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Revenue Milestones</div>
                     <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 20 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
@@ -18476,7 +16716,7 @@ export default function AdminPanel() {
                       </div>
                     </div>
 
-                    {/* == STAGE 2 DIVIDER == */}
+                    {/* ══ STAGE 2 DIVIDER ══ */}
                     <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "10px 0 20px" }}>
                       <div style={{ flex: 1, height: 1, background: T.border }} />
                       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 20, background: `${T.gold}10`, border: `1px solid ${T.gold}30` }}>
@@ -18486,7 +16726,7 @@ export default function AdminPanel() {
                       <div style={{ flex: 1, height: 1, background: T.border }} />
                     </div>
 
-                    {/* == SECTION 7 — PAYMENT EVENTS LOG == */}
+                    {/* ══ SECTION 7 — PAYMENT EVENTS LOG ══ */}
                     {(() => {
                       // Read from payments collection — empty until Paddle webhook is live
                       const payments = (window._revenuePayments || []);
@@ -18550,7 +16790,7 @@ export default function AdminPanel() {
                       );
                     })()}
 
-                    {/* == SECTION 8 — FAILED PAYMENTS == */}
+                    {/* ══ SECTION 8 — FAILED PAYMENTS ══ */}
                     {(() => {
                       const failedPayments = []; // Will read from payments where type === "payment_failed"
                       const hasFailed = failedPayments.length > 0;
@@ -18616,7 +16856,7 @@ export default function AdminPanel() {
                       );
                     })()}
 
-                    {/* == SECTION 9 — REAL REVENUE BY MONTH (PADDLE) == */}
+                    {/* ══ SECTION 9 — REAL REVENUE BY MONTH (PADDLE) ══ */}
                     {(() => {
                       const paddleRevenue = []; // Will read from payments collection grouped by month
                       const hasPaddleRevenue = paddleRevenue.length > 0;
@@ -18660,16 +16900,14 @@ export default function AdminPanel() {
                       );
                     })()}
 
-                    {/* == SECTION 10 — NRR + WATERFALL + LTV:CAC (ChartMogul-level) == */}
+                    {/* ══ SECTION 10 — NRR + WATERFALL + LTV:CAC (ChartMogul-level) ══ */}
                     {(() => {
                       // ── NRR Calculation ──
                       // NRR = (Starting MRR + Expansion - Contraction - Churn) / Starting MRR × 100
-                      // This measures revenue retained + grown from existing customers only
                       const startMRR = mrr - netMRR;
-                      const nrrNumerator = startMRR + expansionMRR - contractionMRR - churnedMRR;
-                      const nrr = startMRR > 0 ? Math.round((nrrNumerator / startMRR) * 100) : 100;
+                      const nrr = startMRR > 0 ? Math.round(((mrr) / startMRR) * 100) : 100;
                       const nrrColor = nrr >= 100 ? T.green : nrr >= 85 ? T.gold : T.red;
-                      const nrrLabel = nrr >= 120 ? "World-class 🏆" : nrr >= 110 ? "Excellent" : nrr >= 100 ? "Healthy ✓" : nrr >= 90 ? "Needs attention" : "At risk ⚠️";
+                      const nrrLabel = nrr >= 110 ? "World-class" : nrr >= 100 ? "Healthy" : nrr >= 90 ? "Needs attention" : "At risk";
 
                       // ── CAC & LTV:CAC ──
                       // Estimated CAC = marketing spend / new customers (using AED 0 since no spend yet)
@@ -18679,12 +16917,12 @@ export default function AdminPanel() {
 
                       // ── MRR Waterfall data ──
                       const waterfallData = [
-                        { label: "Start MRR",    value: startMRR,        type: "base",     color: T.textSecondary },
-                        { label: "New MRR",      value: newMRRThisMonth, type: "positive", color: T.green },
-                        { label: "Expansion",    value: expansionMRR,    type: "positive", color: T.teal },
-                        { label: "Contraction",  value: -contractionMRR, type: "negative", color: T.orange },
-                        { label: "Churn",        value: -churnedMRR,     type: "negative", color: T.red },
-                        { label: "Net MRR",      value: mrr,             type: "result",   color: netMRR >= 0 ? T.green : T.red },
+                        { label: "Start MRR", value: startMRR, type: "base", color: T.textSecondary },
+                        { label: "New MRR", value: newMRRThisMonth, type: "positive", color: T.green },
+                        { label: "Expansion", value: 0, type: "positive", color: T.teal },
+                        { label: "Contraction", value: 0, type: "negative", color: T.orange },
+                        { label: "Churn", value: -churnedMRR, type: "negative", color: T.red },
+                        { label: "Net MRR", value: mrr, type: "result", color: netMRR >= 0 ? T.green : T.red },
                       ];
                       const maxWaterfall = Math.max(...waterfallData.map(d => Math.abs(d.value)), 1);
 
@@ -18705,19 +16943,13 @@ export default function AdminPanel() {
 
                       return (
                         <div style={{ marginBottom: 20 }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, display: "flex", alignItems: "center" }}>
-                            Advanced Revenue Intelligence
-                            <HelpTip text={"This section shows ChartMogul-level SaaS metrics.\n\n• NRR: Revenue retained from existing customers. 100%+ means you grow without new users.\n• Waterfall: Shows exactly where MRR came from and went this month.\n• Cohort: Shows what % of users who signed up in each month are still paying customers today."} />
-                          </div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Advanced Revenue Intelligence</div>
 
                           {/* NRR + Revenue Quality Row */}
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14, marginBottom: 16 }}>
                             {/* NRR */}
                             <div className="chart-box fade-up" style={{ padding: 20 }}>
-                              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12, display: "flex", alignItems: "center" }}>
-                                Net Revenue Retention
-                                <HelpTip text={"NRR = (Start MRR + Expansion - Contraction - Churn) / Start MRR × 100\n\n• 120%+ = World-class (Slack, Snowflake level)\n• 100–120% = Healthy — growing from existing customers\n• 85–100% = Losing ground — churn > expansion\n• Below 85% = At risk — revenue shrinking"} />
-                              </div>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Net Revenue Retention</div>
                               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 36, fontWeight: 900, color: nrrColor, marginBottom: 4 }}>{nrr}%</div>
                               <div style={{ fontSize: 11, color: nrrColor, fontWeight: 600, marginBottom: 12 }}>{nrrLabel}</div>
                               <div style={{ height: 4, borderRadius: 2, background: T.border, marginBottom: 8 }}>
@@ -18785,10 +17017,7 @@ export default function AdminPanel() {
 
                           {/* MRR Waterfall Chart */}
                           <div className="chart-box fade-up" style={{ padding: 20, marginBottom: 0 }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16, display: "flex", alignItems: "center" }}>
-                              MRR Waterfall — This Month
-                              <HelpTip text={"Shows exactly how your MRR changed this month:\n\n• Start MRR: Revenue at start of month\n• New MRR: Revenue from new paid signups\n• Expansion: Pro → Enterprise upgrades (+AED 400 each)\n• Contraction: Enterprise → Pro downgrades (-AED 400 each)\n• Churn: Revenue lost from cancellations\n• Net MRR: Final result"} />
-                            </div>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>MRR Waterfall — This Month</div>
                             <div style={{ display: "flex", gap: 8, alignItems: "flex-end", height: 120 }}>
                               {waterfallData.map((item, i) => {
                                 const barH = maxWaterfall > 0 ? Math.max(4, Math.round((Math.abs(item.value) / maxWaterfall) * 100)) : 4;
@@ -18808,11 +17037,8 @@ export default function AdminPanel() {
                             <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}`, fontSize: 11, color: T.textMuted, lineHeight: 1.7 }}>
                               <span style={{ color: T.white, fontWeight: 600 }}>Interpretation: </span>
                               {netMRR >= 0
-                                ? `Revenue grew by AED ${Math.abs(netMRR).toLocaleString()} this month.`
-                                : `Revenue declined by AED ${Math.abs(netMRR).toLocaleString()} this month.`}
-                              {expansionMRR > 0 && ` ${expansionThisMonth.length} upgrade${expansionThisMonth.length > 1 ? "s" : ""} added AED ${expansionMRR.toLocaleString()} expansion MRR.`}
-                              {contractionMRR > 0 && ` ${contractionThisMonth.length} downgrade${contractionThisMonth.length > 1 ? "s" : ""} removed AED ${contractionMRR.toLocaleString()}.`}
-                              {churnedMRR > 0 ? ` Lost AED ${churnedMRR.toLocaleString()} from ${churnThisMonth.length} churn${churnThisMonth.length > 1 ? "s" : ""}.` : " Zero churn this month — excellent."}
+                                ? `Revenue grew by AED ${Math.abs(netMRR).toLocaleString()} this month. ${churnedMRR > 0 ? `Lost AED ${churnedMRR.toLocaleString()} from ${churnThisMonth.length} churn${churnThisMonth.length > 1 ? "s" : ""}.` : "Zero churn this month — excellent."}`
+                                : `Revenue declined by AED ${Math.abs(netMRR).toLocaleString()} this month. Churn exceeded new business by AED ${Math.abs(netMRR).toLocaleString()}.`}
                               {" "}Benchmark: healthy SaaS targets NRR 100%+ and monthly churn below 3%.
                             </div>
                           </div>
@@ -18820,11 +17046,11 @@ export default function AdminPanel() {
                       );
                     })()}
 
-                    {/* == SECTION 11 — COHORT RETENTION HEATMAP (ChartMogul-level) == */}
+                    {/* ══ SECTION 11 — COHORT RETENTION HEATMAP (ChartMogul-level) ══ */}
                     {(() => {
                       // Build cohort retention from real user data
                       // Each cohort = users who signed up in that month
-                      // Retention = % still PAID (pro/enterprise) in subsequent months
+                      // Retention = % still active (paid) in subsequent months
                       const months = [];
                       for (let m = 5; m >= 0; m--) {
                         const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
@@ -18835,21 +17061,15 @@ export default function AdminPanel() {
                           const created = new Date(u.createdAt || 0);
                           return created >= d && created <= end;
                         });
-                        // Month 0 = % of cohort who converted to paid at any point
-                        const paidAtM0 = cohortUsers.filter(u => u.tier === "pro" || u.tier === "enterprise").length;
-                        const retention = [cohortUsers.length > 0 ? Math.round((paidAtM0 / cohortUsers.length) * 100) : 0];
-                        // Subsequent months = check tier at that point in time via auditLog
+                        // For each subsequent month, check how many are still paid
+                        const retention = [100]; // Month 0 = 100%
                         for (let r = 1; r <= m; r++) {
-                          const checkDate = new Date(d.getFullYear(), d.getMonth() + r, 28); // end of that month
-                          const stillPaid = cohortUsers.filter(u => {
-                            // Find the user's tier at checkDate using auditLog
-                            const tierChanges = auditLog
-                              .filter(l => l.uid === u.uid && l.action === "tier_change" && new Date(l.changedAt) <= checkDate)
-                              .sort((a, b) => new Date(b.changedAt) - new Date(a.changedAt));
-                            const tierAtCheck = tierChanges.length > 0 ? tierChanges[0].to : u.tier;
-                            return tierAtCheck === "pro" || tierAtCheck === "enterprise";
-                          }).length;
-                          const pct = cohortUsers.length > 0 ? Math.round((stillPaid / cohortUsers.length) * 100) : 0;
+                          const checkDate = new Date(d.getFullYear(), d.getMonth() + r, 1);
+                          const stillActive = cohortUsers.filter(u =>
+                            ["pro", "pro_trial", "enterprise"].includes(u.tier) ||
+                            (u.createdAt && new Date(u.createdAt) <= checkDate)
+                          ).length;
+                          const pct = cohortUsers.length > 0 ? Math.round((stillActive / cohortUsers.length) * 100) : 0;
                           retention.push(pct);
                         }
                         months.push({ label, size: cohortUsers.length, retention });
@@ -18868,11 +17088,8 @@ export default function AdminPanel() {
                         <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px", marginBottom: 20 }}>
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                             <div>
-                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Cohort Retention Heatmap</div>
-                                <HelpTip text={"Each row = users who signed up in that month.\nEach column = months after signup.\nCell value = % still paying (Pro/Enterprise) in that month.\n\nMonth 0 = % who converted from free to paid.\nMonth 1 = % still paying 1 month later.\n\nBenchmark: World-class SaaS = 40%+ at Month 3.\nClick any cell to see exactly which users were retained."} />
-                              </div>
-                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Monthly cohorts — % of users still paying each month after signup</div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Cohort Retention Heatmap</div>
+                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Monthly cohorts — % of users still active each month after signup</div>
                             </div>
                             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                               {[["80%+", "rgba(16,185,129,0.7)"], ["60%+", "rgba(16,185,129,0.4)"], ["40%+", "rgba(212,168,67,0.5)"], ["20%+", "rgba(212,168,67,0.25)"], ["<20%", "rgba(239,68,68,0.2)"]].map(([label, color]) => (
@@ -18930,14 +17147,14 @@ export default function AdminPanel() {
                 );
               })()}
 
-          {/* =======================================
+          {/* ═══════════════════════════════════════
              DATA MANAGER TAB (Bloomberg-Level Design)
-             ======================================= */}
+             ═══════════════════════════════════════ */}
           {tab === "data" && (
             <>
-              {/* =======================================
+              {/* ═══════════════════════════════════════
                  CSV IMPORT PRO MODAL
-                 ======================================= */}
+                 ═══════════════════════════════════════ */}
               {showDataImport && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => importProgress.status !== "importing" && resetImport()}>
                   <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 20, width: "100%", maxWidth: 900, maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", animation: "slideUp 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
@@ -19387,9 +17604,9 @@ export default function AdminPanel() {
                     { icon: "[🗙]", title: "Linked Records", desc: "When editing a project, see community stats and quickly jump to related projects." },
                     { icon: "[b]", title: "Bulk Actions", desc: "Select multiple projects with checkboxes. Export, update prices, or delete in bulk." },
                   ]} />
-                  {/* ======================================
+                  {/* ══════════════════════════════════════
                      ADVANCED FILTER PRO SYSTEM
-                     ====================================== */}
+                     ══════════════════════════════════════ */}
                   
                   {/* Saved Filter Views Pills - Always visible */}
                   <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
@@ -19758,9 +17975,9 @@ export default function AdminPanel() {
                     </div>
                   )}
                   
-                  {/* ======================================
+                  {/* ══════════════════════════════════════
                      DATA QUALITY SCORE PANEL
-                     ====================================== */}
+                     ══════════════════════════════════════ */}
                   {(() => {
                     const quality = calculateOverallQuality();
                     if (!quality) return null;
@@ -19896,9 +18113,9 @@ export default function AdminPanel() {
                     );
                   })()}
                   
-                  {/* ======================================
+                  {/* ══════════════════════════════════════
                      DATA INTELLIGENCE PANEL
-                     ====================================== */}
+                     ══════════════════════════════════════ */}
                   {(() => {
                     const intel = calculateDataIntel();
                     if (!intel) return null;
@@ -20093,9 +18310,9 @@ export default function AdminPanel() {
                     );
                   })()}
                   
-                  {/* ======================================
+                  {/* ══════════════════════════════════════
                      DUPLICATES REVIEW MODAL
-                     ====================================== */}
+                     ══════════════════════════════════════ */}
                   {showDuplicatesModal && (() => {
                     const duplicates = findDuplicates();
                     return (
@@ -20433,7 +18650,7 @@ export default function AdminPanel() {
                         </button>
                       </div>
                     );
-                    const p = allProjects.find(x => x.id === editingProject);
+                    const p = emaarProjects.find(x => x.id === editingProject);
                     if (!p) return null;
                     const merged = getMergedProject(p);
                     const hasOverride = !!liveProjects[p.id];
@@ -20677,9 +18894,9 @@ export default function AdminPanel() {
                             );
                           })()}
                         
-                        {/* =======================================
+                        {/* ═══════════════════════════════════════
                            LINKED RECORDS PANEL
-                           ======================================= */}
+                           ═══════════════════════════════════════ */}
                         {(() => {
                           const communityName = p.community;
                           const communityProjects = emaarProjects.filter(proj => proj.community === communityName && proj.id !== p.id);
@@ -20794,7 +19011,7 @@ export default function AdminPanel() {
                   {/* ── VERSION HISTORY MODAL ── */}
                   {viewingVersions && (() => {
                     const pid = viewingVersions;
-                    const p = allProjects.find(x => String(x.id) === pid) || { name: "Project " + pid, id: pid };
+                    const p = emaarProjects.find(x => String(x.id) === pid) || { name: "Project " + pid, id: pid };
                     const versions = projectVersions[pid] || null;
                     return (
                       <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setViewingVersions(null)}>
@@ -21157,9 +19374,9 @@ export default function AdminPanel() {
                 </Section>
               )}
 
-              {/* =======================================
+              {/* ═══════════════════════════════════════
                  UNIFIED COMMUNITIES EDITOR (ROI + INTEL)
-                 ======================================= */}
+                 ═══════════════════════════════════════ */}
               {dataSubTab === "communities" && (() => {
                 const communities = Object.keys(defaultCommunityROI);
                 const activeKey = editingCommunity || communities[0];
@@ -21204,9 +19421,9 @@ export default function AdminPanel() {
                 return (
                   <div style={{ position: "fixed", top: 60, left: 240, right: 0, bottom: 0, display: "flex", zIndex: 50, background: "#04090F" }}>
 
-                    {/* ==============================
+                    {/* ══════════════════════════════
                         LEFT NAV — Community List
-                    ============================== */}
+                    ══════════════════════════════ */}
                     <div style={{ width: 280, flexShrink: 0, background: "#060D1A", borderRight: "1px solid rgba(212,168,67,0.1)", display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
 
                       {/* Back Button */}
@@ -21263,9 +19480,9 @@ export default function AdminPanel() {
                       </div>
                     </div>
 
-                    {/* ==============================
+                    {/* ══════════════════════════════
                         RIGHT — Combined Editor
-                    ============================== */}
+                    ══════════════════════════════ */}
                     <div style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100%", scrollbarWidth: "thin" }}>
 
                       {/* Hero Banner */}
@@ -21301,7 +19518,7 @@ export default function AdminPanel() {
                       {/* Editor Content */}
                       <div style={{ padding: "28px 36px" }}>
 
-                        {/* ====== INVESTMENT DATA SECTION ====== */}
+                        {/* ══════ INVESTMENT DATA SECTION ══════ */}
                         <div style={{ marginBottom: 32, padding: 24, background: "rgba(212,168,67,0.03)", border: "1px solid rgba(212,168,67,0.12)", borderRadius: 14 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
                             <div style={{ width: 4, height: 24, background: "#D4A843", borderRadius: 2 }} />
@@ -21402,7 +19619,7 @@ export default function AdminPanel() {
                           </div>
                         </div>
 
-                        {/* ====== LIFESTYLE DATA SECTION ====== */}
+                        {/* ══════ LIFESTYLE DATA SECTION ══════ */}
                         <div style={{ padding: 24, background: "rgba(0,191,165,0.03)", border: "1px solid rgba(0,191,165,0.12)", borderRadius: 14 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
                             <div style={{ width: 4, height: 24, background: "#00BFA5", borderRadius: 2 }} />
@@ -21507,9 +19724,9 @@ export default function AdminPanel() {
                           </div>
                         </div>
                         
-                        {/* =======================================
+                        {/* ═══════════════════════════════════════
                            LINKED PROJECTS PANEL
-                           ======================================= */}
+                           ═══════════════════════════════════════ */}
                         {(() => {
                           const communityProjects = emaarProjects.filter(p => p.community === activeKey);
                           
@@ -21754,7 +19971,7 @@ export default function AdminPanel() {
 
               {/* ─── PRICE HISTORY SUB-TAB ─── */}
               {dataSubTab === "pricehistory" && (() => {
-                const selectedProject = allProjects.find(p => String(p.id) === String(phSelId));
+                const selectedProject = emaarProjects.find(p => String(p.id) === String(phSelId));
                 const history         = phSelId ? (priceHistory[phSelId] || []) : [];
 
                 const loadHistory = async (id) => {
@@ -22032,16 +20249,16 @@ export default function AdminPanel() {
 
               {dataSubTab === "developers" && <DeveloperManager db={db} T={T} notify={notify} adminUser={adminUser} Section={Section} />}
 
-              {/* === LIVE DATA SYNC === */}
+              {/* ═══ LIVE DATA SYNC ═══ */}
               {dataSubTab === "livedata" && <LiveDataSync db={db} T={T} notify={notify} />}
               {dataSubTab === "launchradar" && <LaunchRadar db={db} T={T} notify={notify} />}
 
             </>
           )}
 
-          {/* =======================================
+          {/* ═══════════════════════════════════════
              LEADS TAB
-             ======================================= */}
+             ═══════════════════════════════════════ */}
           {tab === "leads" && (() => {
             /* ─── LEADS CRM — WORLD CLASS (Session 1) ─── */
             const now = new Date();
@@ -22063,10 +20280,7 @@ export default function AdminPanel() {
               else if (daysSinceCreated < 7) score += 10;
               if ((lead.notes || []).length > 0) score += 10;
               if (lead.status === "Qualified") score = Math.max(score, 60);
-              if (lead.status === "Viewing Scheduled") score = Math.max(score, 72);
-              if (lead.status === "Offer Made") score = Math.max(score, 85);
               if (lead.status === "Converted") score = 100;
-              if (lead.status === "Dormant") score = Math.min(score, 20);
               if (lead.status === "Lost") score = 0;
               return Math.min(score, 100);
             };
@@ -22090,16 +20304,13 @@ export default function AdminPanel() {
               new: leads.filter(l => (l.status || "New") === "New").length,
               contacted: leads.filter(l => l.status === "Contacted").length,
               qualified: leads.filter(l => l.status === "Qualified").length,
-              viewing: leads.filter(l => l.status === "Viewing Scheduled").length,
-              offerMade: leads.filter(l => l.status === "Offer Made").length,
               converted: leads.filter(l => l.status === "Converted").length,
-              dormant: leads.filter(l => l.status === "Dormant").length,
               lost: leads.filter(l => l.status === "Lost").length,
               today: leads.filter(l => new Date(l.createdAt) >= todayStart).length,
               thisWeek: leads.filter(l => new Date(l.createdAt) >= weekAgo).length,
               overdue: leads.filter(l => isOverdue(l) && l.status !== "Converted" && l.status !== "Lost").length,
               dueToday: leads.filter(l => isDueToday(l) && l.status !== "Converted" && l.status !== "Lost").length,
-              hot: leads.filter(l => scoreLead(l) >= 70 && l.status !== "Converted" && l.status !== "Lost" && l.status !== "Dormant").length,
+              hot: leads.filter(l => scoreLead(l) >= 70).length,
             };
             const conversionRate = stats.total > 0 ? Math.round((stats.converted / stats.total) * 100) : 0;
             const avgResponseHrs = (() => {
@@ -22113,19 +20324,11 @@ export default function AdminPanel() {
             const winRate = stats.converted + stats.lost > 0 ? Math.round((stats.converted / (stats.converted + stats.lost)) * 100) : 0;
             const sourceBreakdown = leads.reduce((acc, l) => {
               const s = l.source || "Manual";
-              if (!acc[s]) acc[s] = { total: 0, converted: 0, viewing: 0, offerMade: 0, totalBudget: 0 };
+              if (!acc[s]) acc[s] = { total: 0, converted: 0 };
               acc[s].total++;
-              if (l.status === "Converted")         acc[s].converted++;
-              if (l.status === "Viewing Scheduled") acc[s].viewing++;
-              if (l.status === "Offer Made")        acc[s].offerMade++;
-              if (l.budget) acc[s].totalBudget += parseFloat(l.budget) || 0;
+              if (l.status === "Converted") acc[s].converted++;
               return acc;
             }, {});
-            const avgBudget = (() => {
-              const withBudget = leads.filter(l => l.budget && parseFloat(l.budget) > 0);
-              if (withBudget.length === 0) return null;
-              return Math.round(withBudget.reduce((s, l) => s + parseFloat(l.budget), 0) / withBudget.length);
-            })();
             const avgDaysToClose = (() => {
               const closed = leads.filter(l => l.status === "Converted" && l.createdAt && l.convertedAt);
               if (closed.length === 0) return null;
@@ -22288,17 +20491,14 @@ export default function AdminPanel() {
               try {
                 const lead = leads.find(l => l.id === leadId);
                 const update = { status: newStatus, updatedAt: new Date().toISOString() };
-                if (newStatus === "Contacted"         && !lead?.respondedAt)  update.respondedAt  = new Date().toISOString();
-                if (newStatus === "Viewing Scheduled" && !lead?.viewingAt)    update.viewingAt    = new Date().toISOString();
-                if (newStatus === "Offer Made"        && !lead?.offerAt)      update.offerAt      = new Date().toISOString();
-                if (newStatus === "Converted")                                update.convertedAt  = new Date().toISOString();
-                if (newStatus === "Dormant")                                  update.dormantAt    = new Date().toISOString();
+                if (newStatus === "Contacted" && !lead?.respondedAt) update.respondedAt = new Date().toISOString();
                 if (newStatus === "Lost" && reason) update.lossReason = reason;
-                const activity = [...(lead?.activity || []), { type: "status_change", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Stage: ${lead?.status || "New"} → ${newStatus}${reason ? ` — ${reason}` : ""}` }];
+                if (newStatus === "Converted") update.convertedAt = new Date().toISOString();
+                const activity = [...(lead?.activity || []), { type: "status_change", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Status changed to ${newStatus}${reason ? ` — ${reason}` : ""}` }];
                 update.activity = activity;
                 await setDoc(doc(db, "leads", leadId), update, { merge: true });
-                await logAudit(db, { action: "lead_status_change", leadId, from: lead?.status, to: newStatus });
-                notify(`✅ ${newStatus}`);
+                await logAudit(db, { action: "lead_status_change", leadId, to: newStatus });
+                notify(`Status ${newStatus}`);
                 fetchLeads();
                 if (leadDrawer?.id === leadId) setLeadDrawer(prev => ({ ...prev, status: newStatus, ...update }));
               } catch (e) { notify("Error: " + e.message); }
@@ -22390,24 +20590,13 @@ export default function AdminPanel() {
             };
 
             const statusColors = {
-              New:               { bg: "rgba(59,130,246,0.12)",  color: "#3B82F6", border: "rgba(59,130,246,0.3)" },
-              Contacted:         { bg: "rgba(212,168,67,0.12)",  color: T.gold,    border: "rgba(212,168,67,0.3)" },
-              Qualified:         { bg: "rgba(139,92,246,0.12)",  color: "#8B5CF6", border: "rgba(139,92,246,0.3)" },
-              "Viewing Scheduled":{ bg: "rgba(6,182,212,0.12)",  color: "#06B6D4", border: "rgba(6,182,212,0.3)" },
-              "Offer Made":      { bg: "rgba(249,115,22,0.12)",  color: "#F97316", border: "rgba(249,115,22,0.3)" },
-              Converted:         { bg: "rgba(16,185,129,0.12)",  color: T.green,   border: "rgba(16,185,129,0.3)" },
-              Dormant:           { bg: "rgba(100,116,139,0.12)", color: "#64748B", border: "rgba(100,116,139,0.3)" },
-              Lost:              { bg: "rgba(239,68,68,0.12)",   color: T.red,     border: "rgba(239,68,68,0.3)" },
+              New: { bg: "rgba(59,130,246,0.12)", color: "#3B82F6", border: "rgba(59,130,246,0.3)" },
+              Contacted: { bg: "rgba(212,168,67,0.12)", color: T.gold, border: "rgba(212,168,67,0.3)" },
+              Qualified: { bg: "rgba(139,92,246,0.12)", color: "#8B5CF6", border: "rgba(139,92,246,0.3)" },
+              Converted: { bg: "rgba(16,185,129,0.12)", color: T.green, border: "rgba(16,185,129,0.3)" },
+              Lost: { bg: "rgba(239,68,68,0.12)", color: T.red, border: "rgba(239,68,68,0.3)" },
             };
-            const activityIcons = {
-              created:            "✦",
-              status_change:      "→",
-              stage_changed:      "⇄",
-              note:               "💬",
-              email_sent:         "✉️",
-              followup_scheduled: "📅",
-              call_logged:        "📞",
-            };
+            const activityIcons = { created: "plus", status_change: "->", note: "N", email_sent: "@", followup_scheduled: "clock", call_logged: "tel" };
             const emailTemplates = {
               followup: { subject: `Following up on ${leadDrawer?.project || "your inquiry"}`, body: `Hi ${leadDrawer?.name || "there"},\n\nI wanted to follow up on your interest in ${leadDrawer?.project || "one of our properties"}. Have you had a chance to review the details?\n\nI would love to arrange a viewing at your convenience.\n\nBest regards,\nDXB Analytics Team` },
               info: { subject: `Project Information - ${leadDrawer?.project || "DXB Analytics"}`, body: `Hi ${leadDrawer?.name || "there"},\n\nThank you for your inquiry about ${leadDrawer?.project || "our property"}.\n\nKey details:\n- Starting Price: [price]\n- Handover: [date]\n- Payment Plan: [plan]\n- Expected Yield: [yield]%\n\nWould you like to schedule a call?\n\nBest regards,\nDXB Analytics Team` },
@@ -22417,44 +20606,21 @@ export default function AdminPanel() {
 
             return (
               <>
-                {/* LEADS CRM GUIDE */}
-                <TabHelp items={[
-                  { icon: "📋", title: "Table View", desc: "See all leads in a sortable table. Click any row to open the lead drawer with full details, notes, and email history." },
-                  { icon: "🗂️", title: "Kanban View", desc: "Drag and drop leads between 8 stages: New → Contacted → Qualified → Viewing → Offer → Won → Dormant → Lost. Cards are sorted by score (Hot/Warm/Cold)." },
-                  { icon: "📊", title: "Analytics View", desc: "Full pipeline analytics — conversion funnel, source performance, lost reason analysis, lead score distribution, nationality breakdown, and hot leads list." },
-                  { icon: "🎯", title: "Lead Scoring", desc: "Every lead is scored 0–100 automatically based on: email (+20), phone (+20), budget (+15), project (+15), nationality (+10), notes (+10), recency (+20). Stage also boosts score — Offer Made = 85+, Won = 100." },
-                  { icon: "📅", title: "Follow-Up Reminders", desc: "Set a follow-up date on any lead. Overdue follow-ups appear as a red banner at the top. Due today shows as gold. Use the Kanban 'Overdue' button to jump straight to them." },
-                  { icon: "📤", title: "Bulk Actions", desc: "Tick the checkbox on multiple leads to bulk-update their stage, send a group email, or export selected leads to CSV." },
-                  { icon: "🔍", title: "Advanced Filters", desc: "Click 'Filters' to filter by community, nationality, budget range, lead score, property type, language, lead age, and 10+ more criteria." },
-                  { icon: "⬇️", title: "Export", desc: "Export filtered leads to CSV with all fields including score, follow-up date, and notes. Perfect for sharing with your team." },
-                ]} />
-
-                {/* REMINDER NOTIFICATION BANNERS */}
+                {/* OVERDUE ALERT */}
                 {stats.overdue > 0 && (
-                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(239,68,68,0.08)", border: `1px solid rgba(239,68,68,0.3)`, marginBottom: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(239,68,68,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>⚠️</div>
+                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(239,68,68,0.08)", border: `1px solid rgba(239,68,68,0.3)`, marginBottom: 16 }}>
+                    <span style={{ fontSize: 14 }}>!</span>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: T.red }}>{stats.overdue} overdue follow-up{stats.overdue > 1 ? "s" : ""}</div>
-                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>
-                        {leads.filter(l => isOverdue(l) && l.status !== "Converted" && l.status !== "Lost").slice(0,3).map(l => l.name || "Unknown").join(", ")}
-                        {stats.overdue > 3 ? ` +${stats.overdue - 3} more` : ""}
-                      </div>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: T.red }}>{stats.overdue} overdue follow-up{stats.overdue > 1 ? "s" : ""}</span>
+                      <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 8 }}>These leads need your attention today.</span>
                     </div>
-                    <button type="button" onClick={() => { setLeadDateRange("overdue"); setLeadsViewMode("table"); }} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.red}`, background: "transparent", color: T.red, cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}>View Overdue</button>
-                    <button type="button" onClick={() => { setLeadDateRange("overdue"); setLeadsViewMode("kanban"); }} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.red}`, background: "rgba(239,68,68,0.1)", color: T.red, cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}>Kanban View</button>
+                    <button type="button" onClick={() => setLeadDateRange("overdue")} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.red}`, background: "transparent", color: T.red, cursor: "pointer", fontWeight: 600 }}>View Overdue</button>
                   </div>
                 )}
-                {stats.dueToday > 0 && (
-                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(212,168,67,0.08)", border: `1px solid rgba(212,168,67,0.3)`, marginBottom: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(212,168,67,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>📅</div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{stats.dueToday} follow-up{stats.dueToday > 1 ? "s" : ""} due today</div>
-                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>
-                        {leads.filter(l => isDueToday(l)).slice(0,3).map(l => l.name || "Unknown").join(", ")}
-                        {stats.dueToday > 3 ? ` +${stats.dueToday - 3} more` : ""}
-                      </div>
-                    </div>
-                    <button type="button" onClick={() => { setLeadDateRange("today_followup"); setLeadsViewMode("table"); }} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontWeight: 600 }}>View Today</button>
+                {stats.dueToday > 0 && stats.overdue === 0 && (
+                  <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(212,168,67,0.08)", border: `1px solid rgba(212,168,67,0.3)`, marginBottom: 16 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{stats.dueToday} follow-up{stats.dueToday > 1 ? "s" : ""} due today</span>
+                    <button type="button" onClick={() => setLeadDateRange("today_followup")} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontWeight: 600, marginLeft: "auto" }}>View</button>
                   </div>
                 )}
 
@@ -22463,18 +20629,16 @@ export default function AdminPanel() {
                   <button type="button" onClick={() => { localStorage.removeItem("dxb_leads_v3"); localStorage.removeItem("dxb_leads_v3_ts"); fetchLeads(true); notify("↺ Reloading all leads..."); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                   {[
                     { label: "Total", value: stats.total, color: T.gold },
-                    { label: "New",          value: stats.new,       color: "#3B82F6", tip: "Leads that just came in and haven't been contacted yet." },
-                    { label: "Hot 🔥",        value: stats.hot,       color: T.red,     tip: "Leads scoring 70+ with email, phone, budget & project filled. Excludes dormant. These are ready to close." },
-                    { label: "This Week",    value: stats.thisWeek,  color: T.teal,    tip: "New leads added in the last 7 days." },
-                    { label: "Win Rate",     value: `${winRate}%`,   color: T.green,   tip: "Won ÷ (Won + Lost). Shows how often you close deals that reach the decision stage." },
-                    { label: "Conversion",   value: `${conversionRate}%`, color: T.purple, tip: "Total converted ÷ total leads. Includes all leads even ones that never progressed." },
-                    { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "-", color: T.orange, tip: "Average hours between lead creation and first contact. Under 1h = excellent. Over 24h = losing deals." },
-                    { label: "Days to Close",value: avgDaysToClose !== null ? `${avgDaysToClose}d` : "-", color: T.teal, tip: "Average days from lead creation to Won status. Benchmark: Dubai real estate avg is 14-45 days." },
+                    { label: "New", value: stats.new, color: "#3B82F6" },
+                    { label: "Hot", value: stats.hot, color: T.red },
+                    { label: "This Week", value: stats.thisWeek, color: T.teal },
+                    { label: "Win Rate", value: `${winRate}%`, color: T.green },
+                    { label: "Conversion", value: `${conversionRate}%`, color: T.purple },
+                    { label: "Avg Response", value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "-", color: T.orange },
+                    { label: "Days to Close", value: avgDaysToClose !== null ? `${avgDaysToClose}d` : "-", color: T.teal },
                   ].map((item, i) => (
                     <div key={i} style={{ display: "flex", flexDirection: "column", padding: "10px 16px", borderRight: `1px solid ${T.border}`, flexShrink: 0 }}>
-                      <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, display: "flex", alignItems: "center" }}>
-                        {item.label}{item.tip && <HelpTip text={item.tip} />}
-                      </span>
+                      <span style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1 }}>{item.label}</span>
                       <span style={{ fontSize: 17, fontWeight: 900, color: item.color, fontFamily: "'Fraunces',serif", lineHeight: 1.2 }}>{item.value}</span>
                     </div>
                   ))}
@@ -22490,53 +20654,46 @@ export default function AdminPanel() {
                 </div>
 
                 {/* PIPELINE CARDS */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 10, marginBottom: 20 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 20 }}>
                   {[
-                    { id: "new",               label: "New",       count: stats.new,       color: "#3B82F6", tip: "Fresh leads not yet contacted. Priority: contact within 1 hour." },
-                    { id: "contacted",         label: "Contacted", count: stats.contacted, color: T.gold,    tip: "You've made first contact. Next step: qualify their budget, project interest and timeline." },
-                    { id: "qualified",         label: "Qualified", count: stats.qualified, color: "#8B5CF6", tip: "Budget and interest confirmed. Schedule a viewing or send project details." },
-                    { id: "viewing scheduled", label: "Viewing",   count: stats.viewing,   color: "#06B6D4", tip: "Viewing is booked. Prepare project brochure and ROI sheet before the meeting." },
-                    { id: "offer made",        label: "Offer",     count: stats.offerMade, color: "#F97316", tip: "Offer submitted. Follow up within 24 hours. Address objections quickly." },
-                    { id: "converted",         label: "Won",       count: stats.converted, color: T.green,   tip: "Deal closed. Lead converted to user in the system. Check win rate in Analytics." },
-                    { id: "dormant",           label: "Dormant",   count: stats.dormant,   color: "#64748B", tip: "Not responding or gone cold. Re-engage with a new project launch or price alert. Excluded from Hot Leads." },
-                    { id: "lost",              label: "Lost",      count: stats.lost,      color: T.red,     tip: "Deal lost. Loss reason is tracked in Analytics → Lost Reason Analysis. Learn from patterns." },
+                    { id: "new", label: "New", count: stats.new, color: "#3B82F6" },
+                    { id: "contacted", label: "Contacted", count: stats.contacted, color: T.gold },
+                    { id: "qualified", label: "Qualified", count: stats.qualified, color: "#8B5CF6" },
+                    { id: "converted", label: "Converted", count: stats.converted, color: T.green },
+                    { id: "lost", label: "Lost", count: stats.lost, color: T.red },
                   ].map(s => (
-                    <div key={s.id} onClick={() => setLeadFilter(leadFilter === s.id ? "all" : s.id)} className="fade-up"
-                      title={s.tip}
-                      style={{ padding: "12px 14px", borderRadius: 10, cursor: "pointer", background: leadFilter === s.id ? `${s.color}15` : T.surface, border: `1px solid ${leadFilter === s.id ? s.color : T.border}`, transition: "all 0.15s" }}>
-                      <div style={{ fontSize: 9, fontWeight: 700, color: s.color, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{s.label}</div>
-                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 24, fontWeight: 900, color: s.color }}>{s.count}</div>
-                      <div style={{ marginTop: 6, height: 3, borderRadius: 2, background: T.border }}>
+                    <div key={s.id} onClick={() => setLeadFilter(leadFilter === s.id ? "all" : s.id)} className="fade-up" style={{ padding: "16px 18px", borderRadius: 12, cursor: "pointer", background: leadFilter === s.id ? `${s.color}15` : T.surface, border: `1px solid ${leadFilter === s.id ? s.color : T.border}`, transition: "all 0.15s" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: s.color, textTransform: "uppercase", letterSpacing: 1 }}>{s.label}</span>
+                      </div>
+                      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: s.color }}>{s.count}</div>
+                      <div style={{ marginTop: 8, height: 3, borderRadius: 2, background: T.border }}>
                         <div style={{ height: "100%", borderRadius: 2, background: s.color, width: `${stats.total > 0 ? (s.count / stats.total) * 100 : 0}%`, transition: "width 0.5s" }} />
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* ===========================================================
+                {/* ═══════════════════════════════════════════════════════════
                     SESSION 2 — FULL PIPELINE ANALYTICS DASHBOARD
                     Funnel · Source · Lost Reasons · Score · Nationality · Trend
-                =========================================================== */}
+                ═══════════════════════════════════════════════════════════ */}
                 {leadAnalyticsView && (() => {
                   // ── Pre-compute everything once ──────────────────────────
                   const pipelineStages = [
-                    { id: "New",               label: "New",       color: "#3B82F6", count: stats.new },
-                    { id: "Contacted",         label: "Contacted", color: T.gold,    count: stats.contacted },
-                    { id: "Qualified",         label: "Qualified", color: "#8B5CF6", count: stats.qualified },
-                    { id: "Viewing Scheduled", label: "Viewing",   color: "#06B6D4", count: stats.viewing },
-                    { id: "Offer Made",        label: "Offer Made",color: "#F97316", count: stats.offerMade },
-                    { id: "Converted",         label: "Won",       color: T.green,   count: stats.converted },
-                    { id: "Lost",              label: "Lost",      color: T.red,     count: stats.lost },
+                    { id: "New",       label: "New",       color: "#3B82F6", count: stats.new },
+                    { id: "Contacted", label: "Contacted", color: T.gold,    count: stats.contacted },
+                    { id: "Qualified", label: "Qualified", color: "#8B5CF6", count: stats.qualified },
+                    { id: "Converted", label: "Converted", color: T.green,   count: stats.converted },
+                    { id: "Lost",      label: "Lost",      color: T.red,     count: stats.lost },
                   ];
                   const funnelMax = Math.max(stats.new || 1, 1);
 
                   // Conversion rate stage-to-stage
                   const stageConv = [
-                    { from: "New",      to: "Contacted", rate: stats.new > 0       ? Math.round((stats.contacted / stats.new) * 100) : 0 },
-                    { from: "Contact",  to: "Qualified", rate: stats.contacted > 0 ? Math.round((stats.qualified / stats.contacted) * 100) : 0 },
-                    { from: "Qualif.",  to: "Viewing",   rate: stats.qualified > 0 ? Math.round((stats.viewing / stats.qualified) * 100) : 0 },
-                    { from: "Viewing",  to: "Offer",     rate: stats.viewing > 0   ? Math.round((stats.offerMade / stats.viewing) * 100) : 0 },
-                    { from: "Offer",    to: "Won",       rate: stats.offerMade > 0 ? Math.round((stats.converted / stats.offerMade) * 100) : 0 },
+                    { from: "New", to: "Contacted", rate: stats.new > 0 ? Math.round((stats.contacted / stats.new) * 100) : 0 },
+                    { from: "Contacted", to: "Qualified", rate: stats.contacted > 0 ? Math.round((stats.qualified / stats.contacted) * 100) : 0 },
+                    { from: "Qualified", to: "Converted", rate: stats.qualified > 0 ? Math.round((stats.converted / stats.qualified) * 100) : 0 },
                   ];
 
                   // Lost reason breakdown
@@ -22655,18 +20812,16 @@ export default function AdminPanel() {
                       {/* ── ROW 1: KPI CARDS ───────────────────────────────── */}
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 16 }}>
                         {[
-                          { label: "Win Rate",       value: `${winRate}%`,                                                                            sub: `${stats.converted} of ${stats.converted + stats.lost} closed`,   color: T.green,  tip: "Won ÷ (Won + Lost). Only counts closed deals, not dormant/open leads. 30%+ is strong for Dubai real estate." },
-                          { label: "Days to Close",  value: avgDaysToClose !== null ? `${avgDaysToClose}d` : "—",                                     sub: "Lead → Converted avg",                                           color: T.blue,   tip: "Average days from lead creation to Won. Only counts leads with a convertedAt timestamp. Benchmark: 14–45 days for Dubai off-plan." },
-                          { label: "Hot Leads",      value: stats.hot,                                                                                sub: "Score 70+ excl. dormant",                                        color: T.red,    tip: "Leads scoring 70+ with full contact info and active status. Click the Hot Leads list below to see them all and open their drawer." },
-                          { label: "Avg Budget",     value: avgBudget ? `AED ${(avgBudget/1e6).toFixed(1)}M` : "—",                                  sub: `${leads.filter(l=>l.budget).length} leads with budget`,          color: T.purple, tip: "Average budget across all leads that have a budget entered. Helps you understand your typical buyer profile." },
-                          { label: "Avg Response",   value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "—",                                    sub: "First contact speed",                                            color: T.orange, tip: "Average hours between lead creation and first Contacted status. Under 1h = excellent. Studies show 5× better conversion when contacted within 5 minutes." },
-                          { label: "This Week",      value: stats.thisWeek,                                                                           sub: "New leads (7 days)",                                             color: T.teal,   tip: "New leads added in the last 7 days. Compare to previous weeks using the weekly trend chart below." },
+                          { label: "Win Rate",       value: `${winRate}%`,                                                                            sub: `${stats.converted} of ${stats.converted + stats.lost} closed`,   color: T.green  },
+                          { label: "Days to Close",  value: avgDaysToClose !== null ? `${avgDaysToClose}d` : "—",                                     sub: "Lead → Converted avg",                                           color: T.blue   },
+                          { label: "Hot Leads",      value: stats.hot,                                                                                sub: "Score 70+ ready to close",                                       color: T.red    },
+                          { label: "Pipeline Value", value: `AED ${(totalPipelineVal/1e6).toFixed(1)}M`,                                             sub: "Total budget across all leads",                                  color: T.gold   },
+                          { label: "Avg Response",   value: avgResponseHrs !== null ? `${avgResponseHrs}h` : "—",                                    sub: "First contact speed",                                            color: T.orange },
+                          { label: "This Week",      value: stats.thisWeek,                                                                           sub: "New leads (7 days)",                                             color: T.teal   },
                         ].map((k, i) => (
                           <div key={i} style={{ padding: "16px 14px", background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, position: "relative", overflow: "hidden" }}>
                             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: k.color, opacity: 0.7 }} />
-                            <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6, display: "flex", alignItems: "center" }}>
-                              {k.label}{k.tip && <HelpTip text={k.tip} />}
-                            </div>
+                            <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>{k.label}</div>
                             <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: k.color, lineHeight: 1 }}>{k.value}</div>
                             <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{k.sub}</div>
                           </div>
@@ -22745,41 +20900,29 @@ export default function AdminPanel() {
                         {/* SOURCE PERFORMANCE */}
                         <div style={S.card}>
                           <div style={S.label}>Conversion Rate by Source</div>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                             {sourceList.length === 0 && <div style={{ fontSize: 11, color: T.textMuted }}>No source data yet.</div>}
                             {sourceList.map(([source, data]) => {
                               const wr = data.total > 0 ? Math.round((data.converted / data.total) * 100) : 0;
                               const barW = Math.round((data.total / sourceMax) * 100);
                               const col = wr >= 50 ? T.green : wr >= 25 ? T.gold : T.red;
-                              const avgBud = data.totalBudget > 0 && data.total > 0 ? Math.round(data.totalBudget / data.total) : 0;
                               return (
                                 <div key={source}>
-                                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
                                     <span style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary }}>{source}</span>
-                                    <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                                    <div style={{ display: "flex", gap: 10 }}>
                                       <span style={{ fontSize: 10, color: T.textMuted }}>{data.total} leads</span>
-                                      {avgBud > 0 && <span style={{ fontSize: 9, color: T.purple }}>~AED {(avgBud/1e6).toFixed(1)}M avg</span>}
                                       <span style={{ fontSize: 11, fontWeight: 800, color: col, minWidth: 36, textAlign: "right" }}>{wr}%</span>
                                     </div>
                                   </div>
-                                  <div style={{ height: 8, background: T.surfaceAlt, borderRadius: 4, overflow: "hidden", position: "relative" }}>
-                                    <div style={{ height: "100%", width: `${barW}%`, background: T.border, borderRadius: 4 }} />
-                                    <div style={{ position: "absolute", top: 0, left: 0, height: "100%", width: `${barW > 0 ? Math.round((data.viewing + data.offerMade) / data.total * barW) : 0}%`, background: `${T.teal}60`, borderRadius: 4 }} />
-                                    <div style={{ position: "absolute", top: 0, left: 0, height: "100%", width: `${barW > 0 ? Math.round((data.converted / data.total) * barW) : 0}%`, background: col, borderRadius: 4 }} />
-                                  </div>
-                                  <div style={{ display: "flex", gap: 8, marginTop: 3, fontSize: 9, color: T.textMuted }}>
-                                    {data.viewing > 0   && <span style={{ color: T.teal }}>🏠 {data.viewing} viewing</span>}
-                                    {data.offerMade > 0 && <span style={{ color: "#F97316" }}>💰 {data.offerMade} offer</span>}
-                                    {data.converted > 0 && <span style={{ color: T.green }}>🏆 {data.converted} won</span>}
+                                  <div style={{ height: 6, background: T.surfaceAlt, borderRadius: 3, overflow: "hidden" }}>
+                                    <div style={{ height: "100%", width: `${barW}%`, background: T.border, borderRadius: 3, position: "relative" }}>
+                                      <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${wr}%`, background: col, borderRadius: 3 }} />
+                                    </div>
                                   </div>
                                 </div>
                               );
                             })}
-                          </div>
-                          <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${T.border}`, fontSize: 9, color: T.textMuted, display: "flex", gap: 14 }}>
-                            <span>■ <span style={{ color: T.green }}>Won</span></span>
-                            <span>■ <span style={{ color: T.teal }}>Viewing + Offer</span></span>
-                            <span>■ <span style={{ color: T.border }}>Total volume</span></span>
                           </div>
                         </div>
 
@@ -22991,13 +21134,12 @@ export default function AdminPanel() {
                           ) : (
                             <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 220, overflowY: "auto" }}>
                               {leads
-                                .filter(l => scoreLead(l) >= 70 && l.status !== "Converted" && l.status !== "Lost" && l.status !== "Dormant")
+                                .filter(l => scoreLead(l) >= 70 && l.status !== "Converted" && l.status !== "Lost")
                                 .sort((a, b) => scoreLead(b) - scoreLead(a))
                                 .slice(0, 10)
                                 .map((lead, i) => {
                                   const score = scoreLead(lead);
                                   const scoreCol = score >= 90 ? T.green : score >= 70 ? T.gold : T.orange;
-                                  const sc = statusColors[lead.status || "New"] || statusColors.New;
                                   return (
                                     <div key={lead.id} onClick={() => setLeadDrawer(lead)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: T.surfaceAlt, borderRadius: 8, cursor: "pointer", border: `1px solid ${T.border}`, transition: "border-color 0.15s" }}
                                       onMouseEnter={e => e.currentTarget.style.borderColor = T.gold}
@@ -23008,8 +21150,8 @@ export default function AdminPanel() {
                                         <div style={{ fontSize: 10, color: T.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.project || lead.community || "No project"} · {lead.nationality || "—"}</div>
                                       </div>
                                       <div style={{ textAlign: "right", flexShrink: 0 }}>
-                                        <div style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: sc.bg, color: sc.color }}>{lead.status || "New"}</div>
-                                        {lead.budget && <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2 }}>AED {parseFloat(lead.budget).toLocaleString()}</div>}
+                                        <div style={{ fontSize: 10, fontWeight: 700, color: lead.status === "Qualified" ? "#8B5CF6" : T.gold }}>{lead.status || "New"}</div>
+                                        {lead.budget && <div style={{ fontSize: 9, color: T.textMuted }}>AED {parseFloat(lead.budget).toLocaleString()}</div>}
                                       </div>
                                     </div>
                                   );
@@ -23028,8 +21170,8 @@ export default function AdminPanel() {
                   <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: `rgba(59,130,246,0.08)`, border: `1px solid rgba(59,130,246,0.3)`, marginBottom: 16 }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: T.blue }}>{leadSelectedIds.length} selected</span>
                     <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
-                      {["Contacted", "Qualified", "Viewing Scheduled", "Offer Made", "Converted", "Dormant", "Lost"].map(status => (
-                        <button key={status} type="button" onClick={() => bulkUpdateStatus(status)} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${statusColors[status]?.border}`, background: statusColors[status]?.bg, color: statusColors[status]?.color, cursor: "pointer", fontWeight: 600 }}>→ {status}</button>
+                      {["Contacted", "Qualified", "Lost"].map(status => (
+                        <button key={status} type="button" onClick={() => bulkUpdateStatus(status)} style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, border: `1px solid ${statusColors[status]?.border}`, background: statusColors[status]?.bg, color: statusColors[status]?.color, cursor: "pointer", fontWeight: 600 }}>Set {status}</button>
                       ))}
                       <button type="button" onClick={() => {
                         const targets = leads.filter(l => leadSelectedIds.includes(l.id) && l.email);
@@ -23047,14 +21189,7 @@ export default function AdminPanel() {
                 {(() => {
                   // Use ALL leads for dropdowns — not filtered — so options are always complete
                   const communities = [...new Set(leads.map(l => l.community).filter(Boolean).filter(c => c !== "nan" && c !== "NaN" && c.trim()))].sort();
-                  const nationalities = [...new Set(leads.map(l => l.nationality).filter(Boolean).filter(n => n.trim() && n !== "none" && n !== "Unknown" && n !== "nan" && n !== "null" && n !== "-"))]
-                    .sort((a, b) => {
-                      const aHasFlag = /\p{Emoji_Presentation}/u.test(a[0]) || /\p{Regional_Indicator}/u.test(a[0]);
-                      const bHasFlag = /\p{Emoji_Presentation}/u.test(b[0]) || /\p{Regional_Indicator}/u.test(b[0]);
-                      if (aHasFlag && !bHasFlag) return -1;
-                      if (!aHasFlag && bHasFlag) return 1;
-                      return a.localeCompare(b);
-                    });
+                  const nationalities = [...new Set(leads.map(l => l.nationality).filter(Boolean).filter(n => n.trim() && n !== "none" && n !== "Unknown" && n !== "nan" && n !== "null" && n !== "-"))].sort();
                   const developers = [...new Set(leads.map(l => l.developer).filter(Boolean))].sort();
                   const activeFiltersCount = [
                     leadFilter !== "all", leadSourceFilter !== "all", leadDateRange !== "all", leadSearch,
@@ -23090,10 +21225,7 @@ export default function AdminPanel() {
                           <option value="new">🆕 New</option>
                           <option value="contacted">📞 Contacted</option>
                           <option value="qualified">⭐ Qualified</option>
-                          <option value="viewing scheduled">🏠 Viewing Scheduled</option>
-                          <option value="offer made">💰 Offer Made</option>
-                          <option value="converted">🏆 Won / Converted</option>
-                          <option value="dormant">💤 Dormant</option>
+                          <option value="converted">✅ Converted</option>
                           <option value="lost">❌ Lost</option>
                         </select>
                         <select value={leadSourceFilter} onChange={e => { setLeadSourceFilter(e.target.value); setLeadPage(1); }} style={sel}>
@@ -23206,118 +21338,67 @@ export default function AdminPanel() {
                   );
                 })()}
 
-                {/* KANBAN VIEW — 8 stages with drag & drop */}
-                {leadsViewMode === "kanban" && !leadAnalyticsView && (() => {
-                  const KANBAN_STAGES = [
-                    { id: "New",                label: "New",               color: "#3B82F6", icon: "🆕" },
-                    { id: "Contacted",          label: "Contacted",         color: T.gold,    icon: "📞" },
-                    { id: "Qualified",          label: "Qualified",         color: "#8B5CF6", icon: "✅" },
-                    { id: "Viewing Scheduled",  label: "Viewing",           color: "#06B6D4", icon: "🏠" },
-                    { id: "Offer Made",         label: "Offer Made",        color: "#F97316", icon: "💰" },
-                    { id: "Converted",          label: "Won",               color: T.green,   icon: "🏆" },
-                    { id: "Dormant",            label: "Dormant",           color: "#64748B", icon: "💤" },
-                    { id: "Lost",               label: "Lost",              color: T.red,     icon: "❌" },
-                  ];
-
-                  const handleDragStart = (e, leadId) => {
-                    setKanbanDragId(leadId);
-                    e.dataTransfer.effectAllowed = "move";
-                  };
-                  const handleDragOver = (e, stageId) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = "move";
-                    setKanbanDragOver(stageId);
-                  };
-                  const handleDrop = async (e, stageId) => {
-                    e.preventDefault();
-                    setKanbanDragOver(null);
-                    if (!kanbanDragId) return;
-                    const lead = leads.find(l => l.id === kanbanDragId);
-                    if (!lead || lead.status === stageId) { setKanbanDragId(null); return; }
-                    try {
-                      const activity = [...(lead.activity || []), { type: "stage_changed", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Stage moved: ${lead.status || "New"} → ${stageId}` }];
-                      await setDoc(doc(db, "leads", kanbanDragId), { status: stageId, activity, updatedAt: new Date().toISOString() }, { merge: true });
-                      setLeads(prev => prev.map(l => l.id === kanbanDragId ? { ...l, status: stageId, activity } : l));
-                      if (leadDrawer?.id === kanbanDragId) setLeadDrawer(prev => ({ ...prev, status: stageId, activity }));
-                      await logAudit(db, { action: "lead_stage_changed", leadId: kanbanDragId, from: lead.status, to: stageId });
-                      notify(`✅ ${lead.name || "Lead"} moved to ${stageId}`);
-                    } catch(err) { notify("❌ Failed to update stage"); }
-                    setKanbanDragId(null);
-                  };
-                  const handleDragEnd = () => { setKanbanDragId(null); setKanbanDragOver(null); };
-
-                  return (
-                    <div style={{ overflowX: "auto", marginBottom: 20 }}>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(8, minmax(160px, 1fr))", gap: 10, minWidth: 1280 }}>
-                        {KANBAN_STAGES.map(stage => {
-                          const stageLeads = leads.filter(l => (l.status || "New") === stage.id).sort((a, b) => {
-                            if (isOverdue(a) && !isOverdue(b)) return -1;
-                            if (!isOverdue(a) && isOverdue(b)) return 1;
-                            return scoreLead(b) - scoreLead(a);
-                          });
-                          const stageValue = stageLeads.filter(l => l.budget).reduce((sum, l) => sum + (parseFloat(l.budget) || 0), 0);
-                          const isDragTarget = kanbanDragOver === stage.id;
-                          return (
-                            <div key={stage.id}
-                              onDragOver={e => handleDragOver(e, stage.id)}
-                              onDrop={e => handleDrop(e, stage.id)}
-                              onDragLeave={() => setKanbanDragOver(null)}
-                              style={{ background: isDragTarget ? `${stage.color}12` : T.surface, borderRadius: 12, border: `1px solid ${isDragTarget ? stage.color : T.border}`, overflow: "hidden", display: "flex", flexDirection: "column", transition: "all 0.15s" }}>
-                              {/* Column header */}
-                              <div style={{ padding: "10px 12px", borderBottom: `2px solid ${stage.color}`, background: `${stage.color}08`, flexShrink: 0 }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
-                                  <span style={{ fontSize: 11, fontWeight: 700, color: stage.color }}>{stage.icon} {stage.label}</span>
-                                  <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 7px", borderRadius: 10, background: `${stage.color}20`, color: stage.color }}>{stageLeads.length}</span>
-                                </div>
-                                {stageValue > 0 && <div style={{ fontSize: 9, color: T.textMuted }}>AED {stageValue >= 1000000 ? (stageValue/1000000).toFixed(1)+"M" : (stageValue/1000).toFixed(0)+"K"}</div>}
-                              </div>
-                              {/* Drop zone */}
-                              <div style={{ padding: "6px", overflowY: "auto", flex: 1, maxHeight: 400, minHeight: 60 }}>
-                                {stageLeads.length === 0 ? (
-                                  <div style={{ padding: "20px 8px", textAlign: "center", color: isDragTarget ? stage.color : T.textMuted, fontSize: 10, border: isDragTarget ? `1px dashed ${stage.color}` : "1px dashed transparent", borderRadius: 8, transition: "all 0.15s" }}>
-                                    {isDragTarget ? "Drop here" : "Empty"}
-                                  </div>
-                                ) : stageLeads.map(lead => {
-                                  const score = scoreLead(lead);
-                                  const overdue = isOverdue(lead);
-                                  const dueToday = isDueToday(lead);
-                                  const isDragging = kanbanDragId === lead.id;
-                                  return (
-                                    <div key={lead.id}
-                                      draggable
-                                      onDragStart={e => handleDragStart(e, lead.id)}
-                                      onDragEnd={handleDragEnd}
-                                      onClick={() => !isDragging && setLeadDrawer(lead)}
-                                      style={{ padding: "9px 10px", background: overdue ? "rgba(239,68,68,0.06)" : T.surfaceAlt, borderRadius: 7, marginBottom: 5, cursor: "grab", border: `1px solid ${overdue ? "rgba(239,68,68,0.4)" : T.border}`, opacity: isDragging ? 0.4 : 1, transition: "all 0.15s", userSelect: "none" }}
-                                      onMouseEnter={e => { if (!isDragging) { e.currentTarget.style.borderColor = stage.color + "60"; e.currentTarget.style.transform = "translateY(-1px)"; } }}
-                                      onMouseLeave={e => { e.currentTarget.style.borderColor = overdue ? "rgba(239,68,68,0.4)" : T.border; e.currentTarget.style.transform = "none"; }}>
-                                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 3 }}>
-                                        <div style={{ fontSize: 11, fontWeight: 600, color: T.white, lineHeight: 1.3, flex: 1 }}>{lead.name || "Unknown"}</div>
-                                        <div style={{ fontSize: 8, padding: "1px 5px", borderRadius: 4, background: `${getScoreColor(score)}20`, color: getScoreColor(score), fontWeight: 700, flexShrink: 0, marginLeft: 3 }}>{score}</div>
-                                      </div>
-                                      {lead.project && <div style={{ fontSize: 9, color: T.gold, marginBottom: 2, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.project}</div>}
-                                      {lead.budget && <div style={{ fontSize: 9, color: T.green }}>AED {parseFloat(lead.budget).toLocaleString()}</div>}
-                                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 5 }}>
-                                        <span style={{ fontSize: 8, color: overdue ? T.red : dueToday ? T.gold : T.textMuted, fontWeight: overdue || dueToday ? 700 : 400 }}>
-                                          {overdue ? "⚠️ OVERDUE" : dueToday ? "📅 Today" : lead.createdAt ? timeSince(new Date(lead.createdAt)) : "-"}
-                                        </span>
-                                        <div style={{ display: "flex", gap: 3 }}>
-                                          {(lead.notes || []).length > 0 && <span style={{ fontSize: 8, padding: "1px 4px", borderRadius: 3, background: "rgba(20,184,166,0.2)", color: T.teal }}>{lead.notes.length}💬</span>}
-                                          {lead.phone && <span style={{ fontSize: 8, padding: "1px 4px", borderRadius: 3, background: "rgba(37,211,102,0.15)", color: "#25D366" }}>WA</span>}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
+                {/* KANBAN VIEW */}
+                {leadsViewMode === "kanban" && !leadAnalyticsView && (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 20 }}>
+                    {[
+                      { id: "New", label: "New", color: "#3B82F6" },
+                      { id: "Contacted", label: "Contacted", color: T.gold },
+                      { id: "Qualified", label: "Qualified", color: "#8B5CF6" },
+                      { id: "Converted", label: "Converted", color: T.green },
+                      { id: "Lost", label: "Lost", color: T.red },
+                    ].map(stage => {
+                      const stageLeads = leads.filter(l => (l.status || "New") === stage.id).sort((a, b) => {
+                        if (isOverdue(a) && !isOverdue(b)) return -1;
+                        if (!isOverdue(a) && isOverdue(b)) return 1;
+                        return scoreLead(b) - scoreLead(a);
+                      });
+                      const stageValue = stageLeads.filter(l => l.budget).reduce((sum, l) => sum + (parseFloat(l.budget) || 0), 0);
+                      return (
+                        <div key={stage.id} style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                          <div style={{ padding: "12px 14px", borderBottom: `2px solid ${stage.color}`, background: `${stage.color}08`, flexShrink: 0 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: stage.color }}>{stage.label}</span>
+                              <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: `${stage.color}20`, color: stage.color }}>{stageLeads.length}</span>
                             </div>
-                          );
-                        })}
-                      </div>
-                      <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted, textAlign: "center" }}>💡 Drag and drop cards between columns to update stage</div>
-                    </div>
-                  );
-                })()}
+                            {stageValue > 0 && <div style={{ fontSize: 10, color: T.textMuted }}>AED {(stageValue/1000000).toFixed(1)}M pipeline</div>}
+                          </div>
+                          <div style={{ padding: "8px", overflowY: "auto", flex: 1, maxHeight: 420 }}>
+                            {stageLeads.length === 0 ? (
+                              <div style={{ padding: "24px 10px", textAlign: "center", color: T.textMuted, fontSize: 11 }}>No leads</div>
+                            ) : stageLeads.map(lead => {
+                              const score = scoreLead(lead);
+                              const overdue = isOverdue(lead);
+                              const dueToday = isDueToday(lead);
+                              return (
+                                <div key={lead.id} onClick={() => setLeadDrawer(lead)} style={{ padding: "10px 12px", background: overdue ? "rgba(239,68,68,0.06)" : T.surfaceAlt, borderRadius: 8, marginBottom: 6, cursor: "pointer", border: `1px solid ${overdue ? "rgba(239,68,68,0.4)" : T.border}`, transition: "all 0.15s" }}
+                                  onMouseEnter={e => { e.currentTarget.style.borderColor = stage.color + "60"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                                  onMouseLeave={e => { e.currentTarget.style.borderColor = overdue ? "rgba(239,68,68,0.4)" : T.border; e.currentTarget.style.transform = "none"; }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white, lineHeight: 1.3 }}>{lead.name || "Unknown"}</div>
+                                    <div style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${getScoreColor(score)}20`, color: getScoreColor(score), fontWeight: 700, flexShrink: 0, marginLeft: 4 }}>{getScoreLabel(score)}</div>
+                                  </div>
+                                  {lead.project && <div style={{ fontSize: 10, color: T.gold, marginBottom: 2, fontWeight: 500 }}>{lead.project}</div>}
+                                  {lead.budget && <div style={{ fontSize: 10, color: T.green }}>AED {parseFloat(lead.budget).toLocaleString()}</div>}
+                                  {lead.nationality && <div style={{ fontSize: 10, color: T.textMuted }}>({lead.nationality})</div>}
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+                                    <span style={{ fontSize: 9, color: overdue ? T.red : dueToday ? T.gold : T.textMuted, fontWeight: overdue || dueToday ? 700 : 400 }}>
+                                      {overdue ? "OVERDUE" : dueToday ? "Due today" : lead.createdAt ? timeSince(new Date(lead.createdAt)) : "-"}
+                                    </span>
+                                    <div style={{ display: "flex", gap: 4 }}>
+                                      {(lead.notes || []).length > 0 && <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 4, background: `rgba(20,184,166,0.2)`, color: T.teal }}>{lead.notes.length}</span>}
+                                      {lead.phone && <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 4, background: "rgba(16,185,129,0.15)", color: T.green }}>WA</span>}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* TABLE VIEW */}
                 {leadsViewMode === "table" && !leadAnalyticsView && (
@@ -23389,7 +21470,7 @@ export default function AdminPanel() {
                                   </td>
                                   <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
                                     <select value={lead.status || "New"} onChange={e => { if (e.target.value === "Lost") setShowLossReason(lead.id); else updateLeadStatus(lead.id, e.target.value); }} style={{ padding: "4px 8px", borderRadius: 6, border: `1px solid ${sc.border}`, background: sc.bg, color: sc.color, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                                      <option value="New">New</option><option value="Contacted">Contacted</option><option value="Qualified">Qualified</option><option value="Viewing Scheduled">Viewing Scheduled</option><option value="Offer Made">Offer Made</option><option value="Converted">Won / Converted</option><option value="Dormant">Dormant</option><option value="Lost">Lost</option>
+                                      <option value="New">New</option><option value="Contacted">Contacted</option><option value="Qualified">Qualified</option><option value="Converted">Converted</option><option value="Lost">Lost</option>
                                     </select>
                                   </td>
                                   <td style={{ padding: "12px 14px" }} onClick={e => e.stopPropagation()}>
@@ -23520,6 +21601,158 @@ export default function AdminPanel() {
                 )}
 
                 {/* ADD LEAD MODAL */}
+
+                {/* ── ADD USER MODAL ── same pattern as Add Lead ── */}
+                {showAddUser && (
+                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowAddUser(false)}>
+                    <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 16, width: "95%", maxWidth: 540, padding: 28, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>+ Add New User</h3>
+                        <button type="button" onClick={() => setShowAddUser(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>
+                      </div>
+                      <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: "#93C5FD" }}>
+                        <strong>Note:</strong> The new user will receive a verification email. You will remain logged in as admin.
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                        {[
+                          { key: "name",     label: "Full Name *",      placeholder: "John Smith",         full: true },
+                          { key: "email",    label: "Email Address *",  placeholder: "john@company.com",   full: true, type: "email" },
+                          { key: "password", label: "Password *",       placeholder: "Min 6 characters",   full: true, type: "password" },
+                        ].map(f => (
+                          <div key={f.key} style={{ gridColumn: f.full ? "1/-1" : "auto" }}>
+                            <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
+                            <input type={f.type || "text"} placeholder={f.placeholder} value={addUserForm[f.key] || ""} onChange={e => setAddUserForm(p => ({ ...p, [f.key]: e.target.value }))}
+                              style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                            {f.key === "password" && addUserForm.password && addUserForm.password.length < 6 && (
+                              <div style={{ fontSize: 11, color: T.red, marginTop: 4 }}>⚡ Min 6 characters</div>
+                            )}
+                          </div>
+                        ))}
+                        <div style={{ gridColumn: "1/-1" }}>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone / WhatsApp</label>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <select value={addUserForm.phoneCode || "+971"} onChange={e => setAddUserForm(p => ({ ...p, phoneCode: e.target.value, phone: e.target.value + (p.phoneNum || "").replace(/\s/g, "") }))}
+                              style={{ width: 180, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
+                              {[["+971","🇦🇪 UAE"],["+91","🇮🇳 India"],["+92","🇵🇰 Pakistan"],["+44","🇬🇧 UK"],["+1","🇺🇸 USA"],["+966","🇸🇦 Saudi Arabia"],["+974","🇶🇦 Qatar"],["+965","🇰🇼 Kuwait"],["+968","🇴🇲 Oman"],["+973","🇧🇭 Bahrain"],["+20","🇪🇬 Egypt"],["+962","🇯🇴 Jordan"],["+961","🇱🇧 Lebanon"],["+963","🇸🇾 Syria"],["+964","🇮🇶 Iraq"],["+98","🇮🇷 Iran"],["+880","🇧🇩 Bangladesh"],["+94","🇱🇰 Sri Lanka"],["+977","🇳🇵 Nepal"],["+63","🇵🇭 Philippines"],["+234","🇳🇬 Nigeria"],["+254","🇰🇪 Kenya"],["+27","🇿🇦 South Africa"],["+33","🇫🇷 France"],["+49","🇩🇪 Germany"],["+39","🇮🇹 Italy"],["+34","🇪🇸 Spain"],["+7","🇷🇺 Russia"],["+86","🇨🇳 China"],["+81","🇯🇵 Japan"],["+82","🇰🇷 Korea"],["+55","🇧🇷 Brazil"],["+52","🇲🇽 Mexico"],["+61","🇦🇺 Australia"],["+64","🇳🇿 NZ"],["+31","🇳🇱 Netherlands"],["+46","🇸🇪 Sweden"],["+47","🇳🇴 Norway"],["+45","🇩🇰 Denmark"],["+358","🇫🇮 Finland"],["+41","🇨🇭 Switzerland"],["+43","🇦🇹 Austria"],["+32","🇧🇪 Belgium"],["+48","🇵🇱 Poland"],["+90","🇹🇷 Turkey"],["+30","🇬🇷 Greece"],["+351","🇵🇹 Portugal"],["+353","🇮🇪 Ireland"],["+420","🇨🇿 Czech"],["+36","🇭🇺 Hungary"],["+40","🇷🇴 Romania"],["+380","🇺🇦 Ukraine"],["+375","🇧🇾 Belarus"],["+7","🇰🇿 Kazakhstan"],["+994","🇦🇿 Azerbaijan"],["+374","🇦🇲 Armenia"],["+995","🇬🇪 Georgia"],["+998","🇺🇿 Uzbekistan"],["+992","🇹🇯 Tajikistan"],["+993","🇹🇲 Turkmenistan"],["+996","🇰🇬 Kyrgyzstan"],["+60","🇲🇾 Malaysia"],["+65","🇸🇬 Singapore"],["+66","🇹🇭 Thailand"],["+84","🇻🇳 Vietnam"],["+62","🇮🇩 Indonesia"],["+95","🇲🇲 Myanmar"],["+855","🇰🇭 Cambodia"],["+856","🇱🇦 Laos"],["+93","🇦🇫 Afghanistan"],["+213","🇩🇿 Algeria"],["+216","🇹🇳 Tunisia"],["+212","🇲🇦 Morocco"],["+218","🇱🇾 Libya"],["+249","🇸🇩 Sudan"],["+251","🇪🇹 Ethiopia"],["+255","🇹🇿 Tanzania"],["+256","🇺🇬 Uganda"],["+233","🇬🇭 Ghana"],["+225","🇨🇮 Ivory Coast"],["+237","🇨🇲 Cameroon"],["+243","🇨🇩 DR Congo"],["+221","🇸🇳 Senegal"],["+260","🇿🇲 Zambia"],["+263","🇿🇼 Zimbabwe"],["+57","🇨🇴 Colombia"],["+54","🇦🇷 Argentina"],["+56","🇨🇱 Chile"],["+51","🇵🇪 Peru"],["+58","🇻🇪 Venezuela"],["+593","🇪🇨 Ecuador"],["+502","🇬🇹 Guatemala"],["+506","🇨🇷 Costa Rica"],["+507","🇵🇦 Panama"]].sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => <option key={c+n} value={c}>{n} ({c})</option>)}
+                            </select>
+                            <input type="tel" placeholder="50 123 4567" value={addUserForm.phoneNum || ""}
+                              onChange={e => { const num = e.target.value.replace(/[^\d\s]/g,""); setAddUserForm(p => ({ ...p, phoneNum: num, phone: (p.phoneCode||"+971") + num.replace(/\s/g,"") })); }}
+                              style={{ flex: 1, padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
+                          </div>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Access Tier</label>
+                          <select value={addUserForm.tier || "free"} onChange={e => setAddUserForm(p => ({ ...p, tier: e.target.value }))}
+                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Job Role</label>
+                          <select value={addUserForm.role || "user"} onChange={e => setAddUserForm(p => ({ ...p, role: e.target.value }))}
+                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                            <option value="user">— No role —</option>
+                            {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Country</label>
+                          <select value={addUserForm.country || ""} onChange={e => setAddUserForm(p => ({ ...p, country: e.target.value }))}
+                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: addUserForm.country ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                            <option value="">Select country...</option>
+                            {["🇦🇪 UAE","🇸🇦 Saudi Arabia","🇶🇦 Qatar","🇰🇼 Kuwait","🇴🇲 Oman","🇧🇭 Bahrain","🇮🇳 India","🇵🇰 Pakistan","🇧🇩 Bangladesh","🇱🇰 Sri Lanka","🇳🇵 Nepal","🇵🇭 Philippines","🇪🇬 Egypt","🇯🇴 Jordan","🇱🇧 Lebanon","🇸🇾 Syria","🇮🇶 Iraq","🇮🇷 Iran","🇬🇧 United Kingdom","🇺🇸 United States","🇦🇺 Australia","🇨🇦 Canada","🇫🇷 France","🇩🇪 Germany","🇷🇺 Russia","🇨🇳 China","🇯🇵 Japan","🇰🇷 Korea","🇳🇬 Nigeria","🇰🇪 Kenya","🇿🇦 South Africa","🇪🇹 Ethiopia","🇹🇿 Tanzania","🇺🇬 Uganda","🇬🇭 Ghana","🇲🇦 Morocco","🇹🇳 Tunisia","🇩🇿 Algeria","🇱🇾 Libya","🇸🇩 Sudan","🇹🇷 Turkey","🇺🇦 Ukraine","🇵🇱 Poland","🇷🇴 Romania","🇳🇱 Netherlands","🇧🇪 Belgium","🇨🇭 Switzerland","🇦🇹 Austria","🇸🇪 Sweden","🇳🇴 Norway","🇩🇰 Denmark","🇫🇮 Finland","🇵🇹 Portugal","🇬🇷 Greece","🇨🇿 Czech","🇭🇺 Hungary","🇲🇾 Malaysia","🇸🇬 Singapore","🇹🇭 Thailand","🇮🇩 Indonesia","🇻🇳 Vietnam","🇧🇷 Brazil","🇦🇷 Argentina","🇨🇴 Colombia","🇲🇽 Mexico","🇨🇱 Chile","🇳🇿 New Zealand","🌍 Other"].sort().map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Trial End Date</label>
+                          <input type="date" value={addUserForm.trialEnd || ""} onChange={e => setAddUserForm(p => ({ ...p, trialEnd: e.target.value }))}
+                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
+                        </div>
+                        <div style={{ gridColumn: "1/-1" }}>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Admin Notes</label>
+                          <textarea placeholder="Internal notes..." value={addUserForm.notes || ""} onChange={e => setAddUserForm(p => ({ ...p, notes: e.target.value }))} rows={3}
+                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
+                        </div>
+                      </div>
+                      {addUserForm.email && users.some(u => u.email && u.email.toLowerCase() === addUserForm.email.toLowerCase()) && (
+                        <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", fontSize: 12, color: "#F59E0B" }}>
+                          ⚠️ A user with this email already exists.
+                        </div>
+                      )}
+                      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+                        <button type="button" onClick={() => setShowAddUser(false)} style={{ flex: 1, padding: "11px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                        <button type="button" onClick={addUserManually} disabled={addUserLoading || (addUserForm.password && addUserForm.password.length < 6)} style={{ flex: 2, padding: "11px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8860B)`, color: T.bg, fontWeight: 700, cursor: addUserLoading ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: addUserLoading ? 0.6 : 1 }}>
+                          {addUserLoading ? "Creating..." : "Create User"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── EDIT USER MODAL ── same pattern as Add Lead ── */}
+                {editingUser && (
+                  <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setEditingUser(null)}>
+                    <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 16, width: "95%", maxWidth: 540, padding: 28, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>Edit User</h3>
+                        <button type="button" onClick={() => setEditingUser(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 22 }}>×</button>
+                      </div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>{editingUser.email}</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                        <div style={{ gridColumn: "1/-1" }}>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Full Name</label>
+                          <input type="text" placeholder="Full name" value={editUserForm.name || ""} onChange={e => setEditUserForm(p => ({ ...p, name: e.target.value }))}
+                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Phone</label>
+                          <input type="tel" placeholder="+971 50 000 0000" value={editUserForm.phone || ""} onChange={e => setEditUserForm(p => ({ ...p, phone: e.target.value }))}
+                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Country</label>
+                          <select value={editUserForm.country || ""} onChange={e => setEditUserForm(p => ({ ...p, country: e.target.value }))}
+                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: editUserForm.country ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                            <option value="">Select country...</option>
+                            {["🇦🇪 UAE","🇸🇦 Saudi Arabia","🇶🇦 Qatar","🇰🇼 Kuwait","🇴🇲 Oman","🇧🇭 Bahrain","🇮🇳 India","🇵🇰 Pakistan","🇧🇩 Bangladesh","🇱🇰 Sri Lanka","🇳🇵 Nepal","🇵🇭 Philippines","🇪🇬 Egypt","🇯🇴 Jordan","🇱🇧 Lebanon","🇸🇾 Syria","🇮🇶 Iraq","🇮🇷 Iran","🇬🇧 United Kingdom","🇺🇸 United States","🇦🇺 Australia","🇨🇦 Canada","🇫🇷 France","🇩🇪 Germany","🇷🇺 Russia","🇨🇳 China","🇯🇵 Japan","🇰🇷 Korea","🇳🇬 Nigeria","🇰🇪 Kenya","🇿🇦 South Africa","🇪🇹 Ethiopia","🇹🇿 Tanzania","🇺🇬 Uganda","🇬🇭 Ghana","🇲🇦 Morocco","🇹🇳 Tunisia","🇩🇿 Algeria","🇱🇾 Libya","🇸🇩 Sudan","🇹🇷 Turkey","🇺🇦 Ukraine","🇵🇱 Poland","🇷🇴 Romania","🇳🇱 Netherlands","🇧🇪 Belgium","🇨🇭 Switzerland","🇦🇹 Austria","🇸🇪 Sweden","🇳🇴 Norway","🇩🇰 Denmark","🇫🇮 Finland","🇵🇹 Portugal","🇬🇷 Greece","🇨🇿 Czech","🇭🇺 Hungary","🇲🇾 Malaysia","🇸🇬 Singapore","🇹🇭 Thailand","🇮🇩 Indonesia","🇻🇳 Vietnam","🇧🇷 Brazil","🇦🇷 Argentina","🇨🇴 Colombia","🇲🇽 Mexico","🇨🇱 Chile","🇳🇿 New Zealand","🌍 Other"].sort().map(c => <option key={c} value={c.slice(3)}>{c}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Access Tier</label>
+                          <select value={editUserForm.tier || "free"} onChange={e => setEditUserForm(p => ({ ...p, tier: e.target.value }))}
+                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                            {BILLING_TIERS.map(r => <option key={r.value} value={r.value}>{r.label}{r.price ? ` · ${r.price}` : ""}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Job Role</label>
+                          <select value={editUserForm.role || "user"} onChange={e => setEditUserForm(p => ({ ...p, role: e.target.value }))}
+                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+                            <option value="user">— No role —</option>
+                            {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Trial End Date</label>
+                          <input type="date" value={editUserForm.trialEnd ? editUserForm.trialEnd.slice(0,10) : ""} onChange={e => setEditUserForm(p => ({ ...p, trialEnd: e.target.value ? e.target.value + "T00:00:00.000Z" : "" }))}
+                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
+                        </div>
+                        <div style={{ gridColumn: "1/-1" }}>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Admin Notes</label>
+                          <textarea placeholder="Internal notes..." value={editUserForm.notes || ""} onChange={e => setEditUserForm(p => ({ ...p, notes: e.target.value }))} rows={3}
+                            style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", resize: "vertical", boxSizing: "border-box" }} />
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+                        <button type="button" onClick={() => setEditingUser(null)} style={{ flex: 1, padding: "11px", borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+                        <button type="button" onClick={saveEditUser} disabled={editUserLoading} style={{ flex: 2, padding: "11px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${T.gold}, #B8860B)`, color: T.bg, fontWeight: 700, cursor: editUserLoading ? "wait" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: editUserLoading ? 0.6 : 1 }}>
+                          {editUserLoading ? "Saving..." : "Save Changes"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {showAddLead && (
                   <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowAddLead(false)}>
                     <div style={{ background: T.surface, border: `1px solid rgba(16,185,129,0.4)`, borderRadius: 16, width: "95%", maxWidth: 560, padding: 28, maxHeight: "90vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
@@ -23669,7 +21902,7 @@ export default function AdminPanel() {
                         </div>
                         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                           <select value={leadDrawer.status || "New"} onChange={e => { if (e.target.value === "Lost") setShowLossReason(leadDrawer.id); else updateLeadStatus(leadDrawer.id, e.target.value); }} style={{ padding: "7px 12px", borderRadius: 8, border: `1px solid ${(statusColors[leadDrawer.status || "New"] || statusColors.New).border}`, background: (statusColors[leadDrawer.status || "New"] || statusColors.New).bg, color: (statusColors[leadDrawer.status || "New"] || statusColors.New).color, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                            <option value="New">New</option><option value="Contacted">Contacted</option><option value="Qualified">Qualified</option><option value="Viewing Scheduled">Viewing Scheduled</option><option value="Offer Made">Offer Made</option><option value="Converted">Won / Converted</option><option value="Dormant">Dormant</option><option value="Lost">Lost</option>
+                            <option value="New">New</option><option value="Contacted">Contacted</option><option value="Qualified">Qualified</option><option value="Converted">Converted</option><option value="Lost">Lost</option>
                           </select>
                           {leadDrawer.phone && <a href={`https://wa.me/${leadDrawer.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi ${leadDrawer.name || ""}, following up on your interest in ${leadDrawer.project || "the property"}.`)}`} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 12px", borderRadius: 8, background: "rgba(37,211,102,0.15)", color: T.green, textDecoration: "none", fontWeight: 600 }}>WhatsApp</a>}
                           <button type="button" onClick={() => setShowFollowUpModal(leadDrawer)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "7px 12px", borderRadius: 8, border: `1px solid rgba(212,168,67,0.4)`, background: "rgba(212,168,67,0.08)", color: T.gold, cursor: "pointer", fontWeight: 600 }}>Follow-Up</button>
@@ -23878,15 +22111,15 @@ export default function AdminPanel() {
             );
           })()}
 
-          {/* =======================================
+          {/* ═══════════════════════════════════════
              NOTIFICATIONS TAB
-             ======================================= */}
+             ═══════════════════════════════════════ */}
           {tab === "notifications" && <NotificationsTab T={T} notify={notify} adminUser={adminUser} I={I} users={users} db={db} />}
           {tab === "campaigns" && <EmailCampaignsTab T={T} db={db} notify={notify} adminUser={adminUser} leads={leads} leadsTotal={leads.length} fetchLeads={fetchLeads} />}
 
-          {/* =======================================
+          {/* ═══════════════════════════════════════
              VERIFICATION TAB (Binance-style KYC)
-             ======================================= */}
+             ═══════════════════════════════════════ */}
           {tab === "verification" && (() => {
             /* ─── KYC VERIFICATION TAB ─── */
             const todayStart = new Date(); todayStart.setHours(0,0,0,0);
@@ -23929,7 +22162,7 @@ export default function AdminPanel() {
             const getUserContext = (uid) => users.find(u => u.uid === uid || u.id === uid);
 
             return <>
-              {/* === KPI TOPBAR === */}
+              {/* ═══ KPI TOPBAR ═══ */}
               <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, overflow: "hidden" }}>
                 <button type="button" onClick={() => { fetchVerifications(); notify("Refreshed"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                 {[
@@ -23946,7 +22179,7 @@ export default function AdminPanel() {
                 ))}
               </div>
 
-              {/* === VERIFICATION LEVELS === */}
+              {/* ═══ VERIFICATION LEVELS ═══ */}
               <div className="fade-up" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
                 {[
                   { level: "Basic", id: "basic", color: T.blue, icon: "1", desc: "Email verified", features: ["Email confirmation", "Basic profile", "Limited access"] },
@@ -23971,7 +22204,7 @@ export default function AdminPanel() {
                 ))}
               </div>
 
-              {/* === SUB-TABS: Queue | History === */}
+              {/* ═══ SUB-TABS: Queue | History ═══ */}
               <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
                 {[
                   { id: "queue", label: `Review Queue (${vPending.length})` },
@@ -23982,7 +22215,7 @@ export default function AdminPanel() {
                 ))}
               </div>
 
-              {/* === FILTERS + BATCH MODE === */}
+              {/* ═══ FILTERS + BATCH MODE ═══ */}
               <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
                 {(verifySubTab === "history" ? ["all", "approved", "rejected"] : ["all", "pending"]).map(f => (
                   <button key={f} type="button" onClick={() => setVerifyFilter(f)}
@@ -24021,7 +22254,7 @@ export default function AdminPanel() {
                   style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.surface, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", width: 200 }} />
               </div>
 
-              {/* === VERIFICATION TABLE === */}
+              {/* ═══ VERIFICATION TABLE ═══ */}
               <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
                 {filtered.length === 0 ? (
                   <div style={{ textAlign: "center", padding: 60 }}>
@@ -24119,7 +22352,7 @@ export default function AdminPanel() {
                 )}
               </div>
 
-              {/* === REVIEW DRAWER === */}
+              {/* ═══ REVIEW DRAWER ═══ */}
               {reviewingUser && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 8000 }} onClick={() => { setReviewingUser(null); setRejectReason(""); }}>
                   <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "100%", maxWidth: 540, background: T.surface, borderLeft: `1px solid ${T.gold}30`, display: "flex", flexDirection: "column", animation: "slideIn 0.2s ease-out" }} onClick={e => e.stopPropagation()}>
@@ -24246,19 +22479,19 @@ export default function AdminPanel() {
             </>;
           })()}
 
-          {/* =======================================
+          {/* ═══════════════════════════════════════
              ANALYTICS TAB
-             ======================================= */}
+             ═══════════════════════════════════════ */}
           {/* ─── EMAIL DIGEST TAB ─── */}
           {tab === "digest" && <DigestTab users={users} db={db} notify={notify} adminUser={adminUser} T={T} I={I} />}
 
 
           {tab === "analytics" && (() => {
-            /* ===================================================================
+            /* ═══════════════════════════════════════════════════════════════════
                TAB 10: ANALYTICS — PRO LEVEL
                Mixpanel + Amplitude + ChartMogul + Baremetrics
                Date range filtering, MRR charts, cohort drill-downs, export
-            =================================================================== */
+            ═══════════════════════════════════════════════════════════════════ */
             
             // Date range calculation
             const rangeMap = { "7d": 7, "30d": 30, "90d": 90, "all": 9999 };
@@ -24528,7 +22761,7 @@ export default function AdminPanel() {
 
             return (
             <>
-              {/* === HEADER BAR: Date Range + Export === */}
+              {/* ═══ HEADER BAR: Date Range + Export ═══ */}
               <div className="fade-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Analytics</div>
@@ -24567,7 +22800,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* === REAL-TIME ANALYTICS PANEL (Phase 1A) === */}
+              {/* ═══ REAL-TIME ANALYTICS PANEL (Phase 1A) ═══ */}
               <div className="fade-up" style={{ background: `linear-gradient(135deg, ${T.surface} 0%, ${T.card} 100%)`, borderRadius: 16, border: `1px solid ${T.border}`, padding: 20, marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -24701,7 +22934,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* === ENGAGEMENT ANALYTICS PANEL (Phase 2A) === */}
+              {/* ═══ ENGAGEMENT ANALYTICS PANEL (Phase 2A) ═══ */}
               {(() => {
                 // Calculate Engagement Score (0-100)
                 const engagementScore = (() => {
@@ -24914,7 +23147,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* === KPI ROW WITH SPARKLINES + DELTAS === */}
+              {/* ═══ KPI ROW WITH SPARKLINES + DELTAS ═══ */}
               <div className="fade-up" style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 20 }}>
                 {[
                   { label: "DAU", value: dau, delta: dauDelta, color: T.green, spark: dailySignups },
@@ -24944,7 +23177,7 @@ export default function AdminPanel() {
                 ))}
               </div>
 
-              {/* === USER LIFECYCLE ANALYTICS (Phase 2B) === */}
+              {/* ═══ USER LIFECYCLE ANALYTICS (Phase 2B) ═══ */}
               {(() => {
                 const now = new Date();
                 const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -25170,7 +23403,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* === ADVANCED FUNNELS & DROP-OFF ANALYSIS (Phase 2C) === */}
+              {/* ═══ ADVANCED FUNNELS & DROP-OFF ANALYSIS (Phase 2C) ═══ */}
               {(() => {
                 // Define funnel stages with user data
                 const funnelStages = [
@@ -25407,7 +23640,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* === SEGMENT BUILDER (Phase 3A) === */}
+              {/* ═══ SEGMENT BUILDER (Phase 3A) ═══ */}
               {(() => {
                 const now = new Date();
                 const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -25713,7 +23946,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* === SCHEDULED REPORTS & EXPORT CENTER (Phase 3B) === */}
+              {/* ═══ SCHEDULED REPORTS & EXPORT CENTER (Phase 3B) ═══ */}
               {(() => {
                 const metricOptions = [
                   { key: "dau", label: "Daily Active Users", icon: "\uD83D\uDC64" },
@@ -26015,7 +24248,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* === AI INSIGHTS & ANOMALY DETECTION (Phase 3C) === */}
+              {/* ═══ AI INSIGHTS & ANOMALY DETECTION (Phase 3C) ═══ */}
               {(() => {
                 const now = new Date();
                 
@@ -26280,7 +24513,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* === HEALTH SCORE DASHBOARD & CORRELATIONS (Phase 3C-2) === */}
+              {/* ═══ HEALTH SCORE DASHBOARD & CORRELATIONS (Phase 3C-2) ═══ */}
               {(() => {
                 // Calculate Health Score Components (0-100 each)
                 const healthComponents = {
@@ -26535,7 +24768,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* === FORECASTING & GOAL TRACKING (Phase 3C-3 Final) === */}
+              {/* ═══ FORECASTING & GOAL TRACKING (Phase 3C-3 Final) ═══ */}
               {(() => {
                 // Generate forecast data based on current trends
                 const generateForecast = (current, growthRate, months = 6) => {
@@ -26836,7 +25069,7 @@ export default function AdminPanel() {
                 );
               })()}
 
-              {/* === ROW 1: MRR Chart + User Growth + Funnel === */}
+              {/* ═══ ROW 1: MRR Chart + User Growth + Funnel ═══ */}
               <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.2fr 0.8fr", gap: 16, marginBottom: 20 }}>
                 <Chart title="MRR History" sub="Monthly Recurring Revenue trend">
                   <ResponsiveContainer width="100%" height={200}>
@@ -26902,7 +25135,7 @@ export default function AdminPanel() {
                 </Chart>
               </div>
 
-              {/* === COHORT RETENTION HEATMAP (Clickable) === */}
+              {/* ═══ COHORT RETENTION HEATMAP (Clickable) ═══ */}
               <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px", marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <div>
@@ -26970,7 +25203,7 @@ export default function AdminPanel() {
                 )}
               </div>
 
-              {/* === ROW 3: Geographic + Tier Movement + Churn === */}
+              {/* ═══ ROW 3: Geographic + Tier Movement + Churn ═══ */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
                 <Chart title="Signups by Country" sub={`Top 10 · ${analyticsRange}`}>
                   {geoData.length === 0 ? (
@@ -27038,7 +25271,7 @@ export default function AdminPanel() {
                 </Chart>
               </div>
 
-              {/* === ROW 4: Feature Usage + Top Users + Sources === */}
+              {/* ═══ ROW 4: Feature Usage + Top Users + Sources ═══ */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
                 <Chart title="Feature Usage" sub="Top admin actions">
                   {featureUsage.length === 0 ? (
@@ -27104,7 +25337,7 @@ export default function AdminPanel() {
                 </Chart>
               </div>
 
-              {/* === MILESTONES === */}
+              {/* ═══ MILESTONES ═══ */}
               <Section title="Growth Milestones" sub="Track progress towards key business goals">
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
                   {[
@@ -27139,9 +25372,9 @@ export default function AdminPanel() {
             );
           })()}
 
-          {/* =======================================
+          {/* ═══════════════════════════════════════
              CANCELLATION INSIGHTS TAB
-             ======================================= */}
+             ═══════════════════════════════════════ */}
           {tab === "cancellation" && (() => {
             /* Real Firestore cancellations collection */
             if (!window._cancelLoaded) {
@@ -27277,11 +25510,11 @@ export default function AdminPanel() {
           {tab === "support" && <SupportTab T={T} I={I} db={db} notify={notify} adminUser={adminUser} users={users} setTab={setTab} setPendingOpenUid={setPendingOpenUid} />}
 
           {tab === "tabcontrol" && (() => {
-            /* ===================================================================
+            /* ═══════════════════════════════════════════════════════════════════
                TAB 9: TAB CONTROL — PRO LEVEL
                LaunchDarkly + Statsig + Flagsmith inspired feature flags
                Search, badges, descriptions, usage stats, bulk actions
-            =================================================================== */
+            ═══════════════════════════════════════════════════════════════════ */
 
             const ALL_TABS = [
               { id: "Overview", category: "Core", desc: "Dashboard home with key metrics" },
@@ -27371,7 +25604,7 @@ export default function AdminPanel() {
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-                {/* === HEADER WITH SEARCH === */}
+                {/* ═══ HEADER WITH SEARCH ═══ */}
                 <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                     <div>
@@ -27397,7 +25630,7 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* === PREVIEW MODE === */}
+                {/* ═══ PREVIEW MODE ═══ */}
                 <div className="fade-up" style={{ background: previewTier ? `${TIER_COLORS[previewTier]}10` : T.surface, borderRadius: 14, border: `1px solid ${previewTier ? TIER_COLORS[previewTier] + "40" : T.border}`, padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={previewTier ? TIER_COLORS[previewTier] : T.textMuted} strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/></svg>
@@ -27438,7 +25671,7 @@ export default function AdminPanel() {
                   </div>
                 )}
 
-                {/* === BULK ACTIONS === */}
+                {/* ═══ BULK ACTIONS ═══ */}
                 <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "14px 20px" }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Bulk Actions</div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -27456,7 +25689,7 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* === TAB LIST BY CATEGORY === */}
+                {/* ═══ TAB LIST BY CATEGORY ═══ */}
                 <div className="fade-up" style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
                   <div style={{ padding: "12px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>All Tabs ({filteredTabs.length})</div>
@@ -27514,7 +25747,7 @@ export default function AdminPanel() {
                   )}
                 </div>
 
-                {/* === SELECTED TAB CONFIG === */}
+                {/* ═══ SELECTED TAB CONFIG ═══ */}
                 {selectedTabControl && (
                   <div className="fade-up" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.gold}40`, padding: "16px 20px" }}>
@@ -27592,28 +25825,6 @@ export default function AdminPanel() {
 
 
           {tab === "eibor" && <EiborRatesPanel db={db} T={T} I={I} notify={notify} />}
-          {tab === "data_health" && (
-            <div style={{ padding: "28px 32px" }}>
-              <AdminDataHealth db={db} T={T} />
-              {/* ─── MARKET DATA EDITOR ─── */}
-              <MarketDataEditor db={db} T={T} notify={notify} />
-            </div>
-          )}
-
-          {/* ─── S17: REFERRAL PROGRAM TAB ─── */}
-          {tab === "referral" && <ReferralTab db={db} T={T} notify={notify} users={users} adminUser={adminUser} />}
-
-          {/* ─── S18: BILLING & INVOICES TAB ─── */}
-          {tab === "billing" && <BillingTab db={db} T={T} notify={notify} users={users} adminUser={adminUser} />}
-
-          {/* ─── S19: FORECASTING TAB ─── */}
-          {tab === "forecasting" && <ForecastingTab db={db} T={T} notify={notify} users={users} />}
-
-          {/* ─── S19: PRICING PLANS TAB ─── */}
-          {tab === "pricing_plans" && <PricingPlansTab db={db} T={T} notify={notify} />}
-
-          {/* ─── S20: MARKET INTELLIGENCE TAB ─── */}
-          {tab === "market_intelligence" && <MarketIntelligenceTab db={db} T={T} notify={notify} users={users} />}
 
         </div>
       </main>
@@ -27662,9 +25873,9 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* =======================================
+      {/* ═══════════════════════════════════════
          BULK PRICE UPDATE MODAL
-         ======================================= */}
+         ═══════════════════════════════════════ */}
       {showBulkModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}>
           <div style={{ width: 420, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, overflow: "hidden" }}>
@@ -27729,6 +25940,5 @@ export default function AdminPanel() {
 // STABLE_RECOVERY_0945_PPSF_FIXED
 // BEAST_UI_UPGRADE_1005_MAR24
 // BEAST_BADGE_GLOBAL_1012_MAR24
-
 
 
