@@ -2152,14 +2152,14 @@ export default function EmaarDashboardV2() {
   const emaarBaseNames = new Set(emaarProjects.map(p => (p.name || "").toLowerCase().trim()));
   const activeProjects = [
     // Always include all 48 curated Emaar projects with any live overrides
-    ...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects[p.id]; return ov ? { ...p, ...ov } : p; }),
+    ...emaarProjects.map(p => { const ov = liveProjects[String(p.id)] || liveProjects[p.id]; return ov ? { ...p, ...ov, developerId:"emaar" } : { ...p, developerId:"emaar" }; }),
     // Include DAMAC projects (S22)
-    ...damacProjects,
-    ...sobhaProjects,
-    ...nakheelProjects,
-    ...meraasProjects,
-    ...binghattiProjects,
-    ...aldarProjects,
+    ...damacProjects.map(p => ({ ...p, developerId:"damac" })),
+    ...sobhaProjects.map(p => ({ ...p, developerId:"sobha" })),
+    ...nakheelProjects.map(p => ({ ...p, developerId:"nakheel" })),
+    ...meraasProjects.map(p => ({ ...p, developerId:"meraas" })),
+    ...binghattiProjects.map(p => ({ ...p, developerId:"binghatti" })),
+    ...aldarProjects.map(p => ({ ...p, developerId:"aldar" })),
     // Include ALL extra projects from Firestore (radar + other developers)
     // Skip any that duplicate the 48 Emaar base projects by name
     ...extraProjects.filter(p => !emaarBaseNames.has((p.name || "").toLowerCase().trim()))
@@ -3860,7 +3860,8 @@ export default function EmaarDashboardV2() {
                   const matchHandover = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover));
                   const matchPrice = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6;
                   const matchType = projectType === "All" || (p.type || "").includes(projectType);
-                  return matchSearch && matchFilter && matchTier && matchHandover && matchPrice && matchType;
+                  const matchDev = (p.developerId || "emaar") === selectedDeveloper;
+                  return matchSearch && matchFilter && matchTier && matchHandover && matchPrice && matchType && matchDev;
                 })
                 .sort((a, b) => {
                   switch (projectSort) {
@@ -4005,7 +4006,7 @@ export default function EmaarDashboardV2() {
                   </div>{/* end padding wrapper */}
                 </div>
               );})}
-              {activeProjects.filter(p => { const ms = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase()); const mf = projectFilter === "All" || p.community === projectFilter || (projectFilter === "Branded" && p.branded); const mt = projectTier === "All" || p.tier === projectTier; const my = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover)); const mp = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6; const mty = projectType === "All" || (p.type || "").includes(projectType); return ms && mf && mt && my && mp && mty; }).length === 0 && (
+              {activeProjects.filter(p => { const ms = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase()); const mf = projectFilter === "All" || p.community === projectFilter || (projectFilter === "Branded" && p.branded); const mt = projectTier === "All" || p.tier === projectTier; const my = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover)); const mp = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6; const mty = projectType === "All" || (p.type || "").includes(projectType); const md = (p.developerId || "emaar") === selectedDeveloper; return ms && mf && mt && my && mp && mty && md; }).length === 0 && (
                 <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 20px" }}>
                   <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>🔍</div>
                   <div style={{ fontSize: 16, fontWeight: 600, color: T.white, marginBottom: 4 }}>No projects found</div>
