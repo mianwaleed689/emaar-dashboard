@@ -2923,16 +2923,6 @@ export default function EmaarDashboardV2() {
                 <option value="condor">Condor Developers</option>
               </optgroup>
             </select>
-            {selectedDeveloper !== "emaar" && (
-              <div style={{ marginTop: 6, padding: "6px 10px", borderRadius: 6, background: ["damac","sobha","nakheel","meraas","binghatti","aldar"].includes(selectedDeveloper) ? "rgba(16,185,129,0.06)" : "rgba(212,168,67,0.06)", border: `1px solid ${["damac","sobha","nakheel","meraas","binghatti","aldar"].includes(selectedDeveloper) ? T.green : T.gold}22`, fontSize: 10, color: T.textMuted }}>
-                {["damac","sobha","nakheel","meraas","binghatti","aldar"].includes(selectedDeveloper) ? "✅ Full Intelligence Module LIVE"
-                 : ["azizi","danube"].includes(selectedDeveloper)
-                 ? "⏳ Full module coming in S31–S33"
-                 : "📊 DLD data only — full module in S34+"}
-                <button type="button" onClick={() => setSelectedDeveloper("emaar")}
-                  style={{ marginLeft: 8, color: T.gold, background: "none", border: "none", cursor: "pointer", fontSize: 10, fontWeight: 700, padding: 0 }}>← Emaar</button>
-              </div>
-            )}
           </div>
           <div role="tablist" aria-label="Dashboard sections" style={{ display: "contents" }}>
           {TABS.filter(tabItem => {
@@ -3148,7 +3138,6 @@ export default function EmaarDashboardV2() {
                     <div style={{ display:"flex", gap:8, flexShrink:0 }}>
                       {isT1Live && <span style={{ fontSize:11, padding:"4px 12px", borderRadius:8, background:`rgba(16,185,129,0.12)`, color:T.green, fontWeight:700, border:"1px solid rgba(16,185,129,0.2)" }}>T1 · LIVE DATA</span>}
                       {!isT1Live && <span style={{ fontSize:11, padding:"4px 12px", borderRadius:8, background:`rgba(212,168,67,0.1)`, color:T.gold, fontWeight:700, border:`1px solid ${T.gold}33` }}>{isT1Pending?"T1 · Full Data Coming":"T2/T3 · Limited Data"}</span>}
-                      <button type="button" onClick={() => setSelectedDeveloper("emaar")} style={{ fontSize:11, padding:"4px 14px", borderRadius:8, background:T.surfaceAlt, border:`1px solid ${T.border}`, color:T.textMuted, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>← Back to Emaar</button>
                     </div>
                   </div>
                   {isT1Live && (
