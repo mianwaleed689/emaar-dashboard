@@ -2014,6 +2014,7 @@ export default function EmaarDashboardV2() {
   const [overviewLoading, setOverviewLoading] = useState(true);
   const location = useLocation();
   const [selectedProject, setSelectedProject] = useState(null);
+  const [pdTab, setPdTab] = useState("overview");
   const [pdSendModal, setPdSendModal] = useState(false);
   const [pdCopiedLink, setPdCopiedLink] = useState(false);
   const [pdCalcPrice, setPdCalcPrice] = useState(1750000);
@@ -8172,6 +8173,7 @@ export default function EmaarDashboardV2() {
               const annualRent = price ? Math.round(price * gross / 100) : 0;
               const goldenVisa = price >= 2000000;
               // Tab state — aliases for top-level useState (hooks must not be inside IIFE)
+              const activeTab = pdTab;
               const sendModal = pdSendModal;
               const setSendModal = setPdSendModal;
               const copiedLink = pdCopiedLink;
@@ -8272,12 +8274,12 @@ _Powered by DXB Analytics — Dubai Real Estate Intelligence_`)}`} target="_blan
                   {/* TABS */}
                   <div style={{ borderBottom:"1px solid #1E293B", marginBottom:22, display:"flex", gap:6, overflowX:"auto" }}>
                     {[["overview","Overview"],["pricing","Pricing"],["location","Location"],["roi","ROI Calculator"]].map(([id,label]) => (
-                      <button key={id} type="button" onClick={() => setPdTab(id)} style={{ padding:"8px 20px", background:pdTab===id?"#D4A843":"transparent", color:pdTab===id?"#04090F":"#64748B", border:pdTab===id?"2px solid #D4A843":"2px solid #1E293B", borderRadius:8, fontSize:13, fontWeight:pdTab===id?700:600, cursor:"pointer", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, marginBottom:8, fontFamily:"'Outfit',sans-serif" }}>{label}</button>
+                      <button key={id} type="button" onClick={() => setPdTab(id)} style={{ padding:"8px 20px", background:activeTab===id?"#D4A843":"transparent", color:activeTab===id?"#04090F":"#64748B", border:activeTab===id?"2px solid #D4A843":"2px solid #1E293B", borderRadius:8, fontSize:13, fontWeight:activeTab===id?700:600, cursor:"pointer", whiteSpace:"nowrap", outline:"none", boxShadow:"none", lineHeight:1, marginBottom:8, fontFamily:"'Outfit',sans-serif" }}>{label}</button>
                     ))}
                   </div>
 
                   {/* OVERVIEW TAB */}
-                  {pdTab === "overview" && (
+                  {activeTab === "overview" && (
                     <div>
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:14 }}>
                         {/* Project Details */}
@@ -8330,7 +8332,7 @@ _Powered by DXB Analytics — Dubai Real Estate Intelligence_`)}`} target="_blan
                   )}
 
                   {/* PRICING TAB */}
-                  {pdTab === "pricing" && (
+                  {activeTab === "pricing" && (
                     <div>
                       <div style={{ background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, padding:18, marginBottom:14 }}>
                         <div style={{ fontSize:9, fontWeight:700, color:T.gold, letterSpacing:1.5, textTransform:"uppercase", marginBottom:14 }}>Construction & Payment</div>
@@ -8383,7 +8385,7 @@ _Powered by DXB Analytics — Dubai Real Estate Intelligence_`)}`} target="_blan
                   )}
 
                   {/* LOCATION TAB */}
-                  {pdTab === "location" && (
+                  {activeTab === "location" && (
                     <div>
                       {ciExists && ci.keyAmenities && (
                         <div style={{ background:"#0A1628", border:"1px solid #1E293B", borderRadius:12, padding:18, marginBottom:14 }}>
@@ -8427,7 +8429,7 @@ _Powered by DXB Analytics — Dubai Real Estate Intelligence_`)}`} target="_blan
                   )}
 
                   {/* ROI CALCULATOR TAB */}
-                  {pdTab === "roi" && (() => {
+                  {activeTab === "roi" && (() => {
                     const calcPrice = pdCalcPrice || price || 1750000;
                     const calcYears = pdCalcYears;
                     const calcBeds = pdCalcBeds;
