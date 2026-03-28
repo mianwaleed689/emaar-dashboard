@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
@@ -58,6 +58,15 @@ function HomeRoute() {
     />
   );
 }
+// ── Project redirect — opens dashboard with project modal auto-triggered ──
+function ProjectRedirect() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  useEffect(() => {
+    navigate("/dashboard", { state: { openProjectId: id }, replace: true });
+  }, [id, navigate]);
+  return <Spinner />;
+}
 function App() {
   return (
     <ErrorBoundary>
@@ -68,8 +77,8 @@ function App() {
             <Route path="/dashboard" element={<EmaarDashboardV2 />} />
             <Route path="/admin" element={<AuthGuard><AdminPanel /></AuthGuard>} />
             <Route path="/manage" element={<AuthGuard><ProjectManager /></AuthGuard>} />
-            {/* /project/:id redirects to dashboard — project details open as modal inside dashboard */}
-            <Route path="/project/:id" element={<Navigate to="/dashboard" replace />} />
+            {/* /project/:id — redirect to dashboard with project ID in state so modal auto-opens */}
+            <Route path="/project/:id" element={<ProjectRedirect />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
