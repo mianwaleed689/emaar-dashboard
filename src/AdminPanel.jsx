@@ -11201,7 +11201,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
       if (sortField === "oldest")     return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
       if (sortField === "name")       return dir * (a.name || "").localeCompare(b.name || "");
       if (sortField === "tier")       return dir * (a.tier || "").localeCompare(b.tier || "");
-      if (sortField === "trial")      return dir * ((trialDaysLeft(a) ?? 999) - (trialDaysLeft(b) ?? 999));
+      if (sortField === "trial")      return dir * ((trialDaysLeft(a)  999) - (trialDaysLeft(b)  999));
       if (sortField === "lastActive") return dir * (new Date(a.lastLoginAt || 0) - new Date(b.lastLoginAt || 0));
       return 0;
     });
@@ -13113,7 +13113,7 @@ function FinancialsEditor({ db, T, notify, adminUser, Section }) {
                 <td style={{ padding: "8px 12px", fontSize: 12, color: T.textSecondary, fontWeight: 500, whiteSpace: "nowrap" }}>{field.label}</td>
                 {finRows.map((row, ri) => (
                   <td key={ri} style={{ padding: "6px 8px", textAlign: "center" }}>
-                    <input type="number" step="0.01" value={row[field.key] ?? ""}
+                    <input type="number" step="0.01" value={row[field.key]  ""}
                       onChange={e => { const updated = [...finRows]; updated[ri] = { ...updated[ri], [field.key]: parseFloat(e.target.value) || 0 }; setFinRows(updated); }}
                       style={{ width: 80, padding: "6px 8px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, color: ri === finRows.length - 1 ? T.gold : T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", textAlign: "center", outline: "none" }} />
                   </td>
@@ -14123,7 +14123,7 @@ function DeveloperManager({ db, T, notify, adminUser, Section }) {
                   ].map(f => (
                     <div key={f.key} style={{ gridColumn: f.key === "description" ? "1/-1" : "auto" }}>
                       <label style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", display: "block", marginBottom: 4 }}>{f.label}</label>
-                      <input value={form[f.key] ?? dev[f.key] ?? ""} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
+                      <input value={form[f.key]  dev[f.key]  ""} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
                         style={{ width: "100%", padding: "8px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 7, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
                     </div>
                   ))}
@@ -15886,7 +15886,7 @@ export default function AdminPanel() {
       try {
         const oldDoc = liveProjects[projectId] || {};
         const diff = {};
-        Object.keys(clean).forEach(k => { if (k !== "updatedAt" && k !== "updatedBy" && clean[k] !== oldDoc[k]) diff[k] = { old: oldDoc[k] ?? "—", new: clean[k] }; });
+        Object.keys(clean).forEach(k => { if (k !== "updatedAt" && k !== "updatedBy" && clean[k] !== oldDoc[k]) diff[k] = { old: oldDoc[k]  "—", new: clean[k] }; });
         await logAudit(db, { action: "project_update", projectId, changes: clean, diff });
         // Save full version snapshot for rollback
         const p = allProjects.find(x => String(x.id) === String(projectId));
@@ -18902,7 +18902,7 @@ export default function AdminPanel() {
                                     <td style={{ padding: "6px 12px", fontSize: 11, color: T.textSecondary, fontWeight: 600, whiteSpace: "nowrap" }}>{cohort.label}</td>
                                     <td style={{ padding: "6px 8px", textAlign: "center", fontSize: 11, color: T.textMuted }}>{cohort.size}</td>
                                     {[...Array(6)].map((_, mi) => {
-                                      const pct = cohort.retention[mi] ?? null;
+                                      const pct = cohort.retention[mi]  null;
                                       return (
                                         <td key={mi} style={{ padding: "4px" }}>
                                           <div style={{ width: "100%", minWidth: 52, height: 32, borderRadius: 6, background: pct !== null ? getRetColor(pct) : T.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", cursor: pct !== null ? "pointer" : "default" }}
@@ -20495,19 +20495,19 @@ export default function AdminPanel() {
                                 const hasErr = validationErrors[f.key];
                                 const borderColor = hasErr ? "#EF4444" : T.border;
                                 return f.type === "select" ? (
-                                  <select value={projectForm[f.key] ?? merged[f.key] ?? ""} onChange={e => { setProjectForm(prev => ({ ...prev, [f.key]: e.target.value })); setValidationErrors(prev => ({ ...prev, [f.key]: null })); }}
+                                  <select value={projectForm[f.key]  merged[f.key]  ""} onChange={e => { setProjectForm(prev => ({ ...prev, [f.key]: e.target.value })); setValidationErrors(prev => ({ ...prev, [f.key]: null })); }}
                                     style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${borderColor}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
                                     <option value="">—</option>
                                     {f.options.map(o => <option key={o} value={o}>{o}</option>)}
                                   </select>
                                 ) : (
-                                  <input type={f.type} value={projectForm[f.key] ?? merged[f.key] ?? ""} onChange={e => { setProjectForm(prev => ({ ...prev, [f.key]: e.target.value })); setValidationErrors(prev => ({ ...prev, [f.key]: null })); }} placeholder={f.placeholder}
+                                  <input type={f.type} value={projectForm[f.key]  merged[f.key]  ""} onChange={e => { setProjectForm(prev => ({ ...prev, [f.key]: e.target.value })); setValidationErrors(prev => ({ ...prev, [f.key]: null })); }} placeholder={f.placeholder}
                                     style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${borderColor}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
                                 );
                               })()}
                               {validationErrors[f.key] && <div style={{ fontSize: 10, color: "#EF4444", marginTop: 3 }}>{validationErrors[f.key]}</div>}
                               {hasOverride && liveProjects[p.id]?.[f.key] !== undefined && (
-                                <div style={{ fontSize: 9, color: T.green, marginTop: 2 }}>Live: {liveProjects[p.id][f.key]} · Default: {p[f.key] ?? "—"}</div>
+                                <div style={{ fontSize: 9, color: T.green, marginTop: 2 }}>Live: {liveProjects[p.id][f.key]} · Default: {p[f.key]  "—"}</div>
                               )}
                             </div>
                           ))}
@@ -20537,7 +20537,7 @@ export default function AdminPanel() {
                           {/* Direct Image URL input */}
                           <div style={{ marginTop: 10 }}>
                             <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Or Paste Image URL</label>
-                            <input type="url" placeholder="https://cloudinary.com/... or any image URL" value={projectForm.imageUrl ?? liveProjects[p.id]?.imageUrl ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, imageUrl: e.target.value }))}
+                            <input type="url" placeholder="https://cloudinary.com/... or any image URL" value={projectForm.imageUrl  liveProjects[p.id]?.imageUrl  ""} onChange={e => setProjectForm(prev => ({ ...prev, imageUrl: e.target.value }))}
                               style={{ width: "100%", padding: "8px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
                           </div>
                         </div>
@@ -20554,12 +20554,12 @@ export default function AdminPanel() {
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                             <div>
                               <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "flex", alignItems: "center" }}>Latitude<HelpTip text="Latitude coordinate (e.g. 25.1234). Right-click on Google Maps and copy the first number." /></label>
-                              <input type="number" step="0.000001" placeholder="e.g. 25.197525" value={projectForm.lat ?? merged.lat ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, lat: e.target.value }))}
+                              <input type="number" step="0.000001" placeholder="e.g. 25.197525" value={projectForm.lat  merged.lat  ""} onChange={e => setProjectForm(prev => ({ ...prev, lat: e.target.value }))}
                                 style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(20,184,166,0.2)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
                             </div>
                             <div>
                               <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "flex", alignItems: "center" }}>Longitude<HelpTip text="Longitude coordinate (e.g. 55.2743). Right-click on Google Maps and copy the second number." /></label>
-                              <input type="number" step="0.000001" placeholder="e.g. 55.274288" value={projectForm.lng ?? merged.lng ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, lng: e.target.value }))}
+                              <input type="number" step="0.000001" placeholder="e.g. 55.274288" value={projectForm.lng  merged.lng  ""} onChange={e => setProjectForm(prev => ({ ...prev, lng: e.target.value }))}
                                 style={{ width: "100%", padding: "10px 12px", background: T.bg, border: "1px solid rgba(20,184,166,0.2)", borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
                             </div>
                           </div>
@@ -20630,13 +20630,13 @@ export default function AdminPanel() {
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 14 }}>
                             <div>
                               <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>Video URL</label>
-                              <input type="url" placeholder="https://youtube.com/..." value={projectForm.videoUrl ?? liveProjects[p.id]?.videoUrl ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, videoUrl: e.target.value }))}
+                              <input type="url" placeholder="https://youtube.com/..." value={projectForm.videoUrl  liveProjects[p.id]?.videoUrl  ""} onChange={e => setProjectForm(prev => ({ ...prev, videoUrl: e.target.value }))}
                                 style={{ width: "100%", padding: "8px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
                               <div style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>MP4 or YouTube link. Plays inline on dashboard.</div>
                             </div>
                             <div>
                               <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>External Link</label>
-                              <input type="url" placeholder="https://emaar.com/project/..." value={projectForm.externalLink ?? liveProjects[p.id]?.externalLink ?? ""} onChange={e => setProjectForm(prev => ({ ...prev, externalLink: e.target.value }))}
+                              <input type="url" placeholder="https://emaar.com/project/..." value={projectForm.externalLink  liveProjects[p.id]?.externalLink  ""} onChange={e => setProjectForm(prev => ({ ...prev, externalLink: e.target.value }))}
                                 style={{ width: "100%", padding: "8px 12px", background: T.bg, border: "1px solid rgba(212,168,67,0.12)", borderRadius: 8, color: T.textPrimary, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box" }} />
                               <div style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>"Visit Website" button on dashboard.</div>
                             </div>
@@ -21013,8 +21013,8 @@ export default function AdminPanel() {
                           })
                           .sort((a, b) => {
                             const ma = getMergedProject(a); const mb = getMergedProject(b);
-                            const va = ma[projectSortKey] ?? a[projectSortKey] ?? "";
-                            const vb = mb[projectSortKey] ?? b[projectSortKey] ?? "";
+                            const va = ma[projectSortKey]  a[projectSortKey]  "";
+                            const vb = mb[projectSortKey]  b[projectSortKey]  "";
                             const dir = projectSortDir === "asc" ? 1 : -1;
                             if (typeof va === "number" && typeof vb === "number") return dir * (va - vb);
                             return dir * String(va).localeCompare(String(vb));
@@ -21188,12 +21188,12 @@ export default function AdminPanel() {
                 }
 
                 const inp = (val, ph, onChange, extra) => (
-                  <input value={val ?? ""} onChange={onChange} placeholder={ph}
+                  <input value={val  ""} onChange={onChange} placeholder={ph}
                     style={{ width: "100%", padding: "10px 13px", background: "rgba(4,9,15,0.8)", border: "1px solid rgba(212,168,67,0.14)", borderRadius: 7, color: "#E2E8F0", fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s", ...(extra||{}) }}
                     onFocus={e => e.target.style.borderColor="#D4A843"} onBlur={e => e.target.style.borderColor="rgba(212,168,67,0.14)"} />
                 );
                 const ta = (val, ph, onChange, rows) => (
-                  <textarea value={val ?? ""} onChange={onChange} placeholder={ph} rows={rows||3}
+                  <textarea value={val  ""} onChange={onChange} placeholder={ph} rows={rows||3}
                     style={{ width: "100%", padding: "10px 13px", background: "rgba(4,9,15,0.8)", border: "1px solid rgba(212,168,67,0.14)", borderRadius: 7, color: "#E2E8F0", fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none", boxSizing: "border-box", resize: "vertical", transition: "border-color 0.15s", lineHeight: 1.6 }}
                     onFocus={e => e.target.style.borderColor="#D4A843"} onBlur={e => e.target.style.borderColor="rgba(212,168,67,0.14)"} />
                 );
@@ -21316,19 +21316,19 @@ export default function AdminPanel() {
                                 <div style={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", marginBottom: 10, textTransform: "uppercase" }}>{k === "apt1" ? "1 BR" : k === "apt2" ? "2 BR" : k === "apt3" ? "3 BR" : k === "th" ? "Townhouse" : "Villa"}</div>
                                 <div style={{ marginBottom: 8 }}>
                                   <div style={{ fontSize: 9, color: "#D4A843", marginBottom: 3 }}>Gross %</div>
-                                  <input type="number" step="0.1" value={communityForm.grossYield?.[k] ?? roiMerged.grossYield?.[k] ?? ""} 
+                                  <input type="number" step="0.1" value={communityForm.grossYield?.[k]  roiMerged.grossYield?.[k]  ""} 
                                     onChange={e => setCommunityForm(prev => ({ ...prev, grossYield: { ...(prev.grossYield || roiMerged.grossYield || {}), [k]: Number(e.target.value) || null } }))}
                                     style={{ width: "100%", padding: "8px", background: "#04090F", border: "1px solid rgba(212,168,67,0.2)", borderRadius: 6, color: "#D4A843", fontSize: 14, fontWeight: 700, fontFamily: "'Fraunces',serif", textAlign: "center" }} />
                                 </div>
                                 <div style={{ marginBottom: 8 }}>
                                   <div style={{ fontSize: 9, color: "#10B981", marginBottom: 3 }}>Net %</div>
-                                  <input type="number" step="0.1" value={communityForm.netYield?.[k] ?? roiMerged.netYield?.[k] ?? ""} 
+                                  <input type="number" step="0.1" value={communityForm.netYield?.[k]  roiMerged.netYield?.[k]  ""} 
                                     onChange={e => setCommunityForm(prev => ({ ...prev, netYield: { ...(prev.netYield || roiMerged.netYield || {}), [k]: Number(e.target.value) || null } }))}
                                     style={{ width: "100%", padding: "8px", background: "#04090F", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 6, color: "#10B981", fontSize: 14, fontWeight: 700, fontFamily: "'Fraunces',serif", textAlign: "center" }} />
                                 </div>
                                 <div>
                                   <div style={{ fontSize: 9, color: "#3B82F6", marginBottom: 3 }}>Rent AED/yr</div>
-                                  <input type="number" value={communityForm.estRent?.[k] ?? roiMerged.estRent?.[k] ?? ""} 
+                                  <input type="number" value={communityForm.estRent?.[k]  roiMerged.estRent?.[k]  ""} 
                                     onChange={e => setCommunityForm(prev => ({ ...prev, estRent: { ...(prev.estRent || roiMerged.estRent || {}), [k]: Number(e.target.value) || null } }))}
                                     style={{ width: "100%", padding: "8px", background: "#04090F", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 6, color: "#3B82F6", fontSize: 12, fontWeight: 600, textAlign: "center" }} />
                                 </div>
@@ -21340,25 +21340,25 @@ export default function AdminPanel() {
                           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
                             <div>
                               <Lbl>5-Year Appreciation %</Lbl>
-                              <input type="number" value={communityForm.appreciation5yr ?? roiMerged.appreciation5yr ?? ""} 
+                              <input type="number" value={communityForm.appreciation5yr  roiMerged.appreciation5yr  ""} 
                                 onChange={e => setCommunityForm(prev => ({ ...prev, appreciation5yr: Number(e.target.value) }))}
                                 style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
                             </div>
                             <div>
                               <Lbl>YoY Growth %</Lbl>
-                              <input type="number" value={communityForm.appreciationYoY ?? roiMerged.appreciationYoY ?? ""} 
+                              <input type="number" value={communityForm.appreciationYoY  roiMerged.appreciationYoY  ""} 
                                 onChange={e => setCommunityForm(prev => ({ ...prev, appreciationYoY: Number(e.target.value) }))}
                                 style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
                             </div>
                             <div>
                               <Lbl>Occupancy %</Lbl>
-                              <input type="number" value={communityForm.occupancy ?? roiMerged.occupancy ?? ""} 
+                              <input type="number" value={communityForm.occupancy  roiMerged.occupancy  ""} 
                                 onChange={e => setCommunityForm(prev => ({ ...prev, occupancy: Number(e.target.value) }))}
                                 style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
                             </div>
                             <div>
                               <Lbl>Risk Level</Lbl>
-                              <select value={communityForm.riskLevel ?? roiMerged.riskLevel ?? "Low"} 
+                              <select value={communityForm.riskLevel  roiMerged.riskLevel  "Low"} 
                                 onChange={e => setCommunityForm(prev => ({ ...prev, riskLevel: e.target.value }))}
                                 style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }}>
                                 <option value="Low">Low</option>
@@ -21370,25 +21370,25 @@ export default function AdminPanel() {
                             </div>
                             <div>
                               <Lbl>Service Charge (AED/sqft)</Lbl>
-                              <input type="number" value={communityForm.serviceCharge ?? roiMerged.serviceCharge ?? ""} 
+                              <input type="number" value={communityForm.serviceCharge  roiMerged.serviceCharge  ""} 
                                 onChange={e => setCommunityForm(prev => ({ ...prev, serviceCharge: Number(e.target.value) }))}
                                 style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
                             </div>
                             <div>
                               <Lbl>Avg Days to Lease</Lbl>
-                              <input type="number" value={communityForm.avgDaysToLease ?? roiMerged.avgDaysToLease ?? ""} 
+                              <input type="number" value={communityForm.avgDaysToLease  roiMerged.avgDaysToLease  ""} 
                                 onChange={e => setCommunityForm(prev => ({ ...prev, avgDaysToLease: Number(e.target.value) }))}
                                 style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
                             </div>
                             <div>
                               <Lbl>Short-Term Premium %</Lbl>
-                              <input type="number" value={communityForm.shortTermPremium ?? roiMerged.shortTermPremium ?? ""} 
+                              <input type="number" value={communityForm.shortTermPremium  roiMerged.shortTermPremium  ""} 
                                 onChange={e => setCommunityForm(prev => ({ ...prev, shortTermPremium: Number(e.target.value) }))}
                                 style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }} />
                             </div>
                             <div>
                               <Lbl>Golden Visa Eligible</Lbl>
-                              <select value={communityForm.goldenVisa ?? roiMerged.goldenVisa ?? true} 
+                              <select value={communityForm.goldenVisa  roiMerged.goldenVisa  true} 
                                 onChange={e => setCommunityForm(prev => ({ ...prev, goldenVisa: e.target.value === "true" }))}
                                 style={{ width: "100%", padding: "10px 12px", background: "#04090F", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E2E8F0", fontSize: 14, fontFamily: "'Outfit',sans-serif" }}>
                                 <option value="true">Yes</option>
@@ -21398,7 +21398,7 @@ export default function AdminPanel() {
                           </div>
                           <div style={{ marginTop: 16 }}>
                             <Lbl>Capital Growth Driver</Lbl>
-                            {ta(communityForm.capitalGrowthDriver ?? roiMerged.capitalGrowthDriver ?? "", "What drives value in this community?", e => setCommunityForm(prev => ({ ...prev, capitalGrowthDriver: e.target.value })), 2)}
+                            {ta(communityForm.capitalGrowthDriver  roiMerged.capitalGrowthDriver  "", "What drives value in this community?", e => setCommunityForm(prev => ({ ...prev, capitalGrowthDriver: e.target.value })), 2)}
                           </div>
                         </div>
 
@@ -21413,60 +21413,60 @@ export default function AdminPanel() {
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
                             <div>
                               <Lbl color="#00BFA5">Tagline</Lbl>
-                              {inp(communityIntelForm.tagline ?? intelMerged.tagline ?? "", "e.g. Golf-Side Family Living...", e => setCommunityIntelForm(prev => ({ ...prev, tagline: e.target.value })))}
+                              {inp(communityIntelForm.tagline  intelMerged.tagline  "", "e.g. Golf-Side Family Living...", e => setCommunityIntelForm(prev => ({ ...prev, tagline: e.target.value })))}
                             </div>
                             <div>
                               <Lbl color="#00BFA5">Master Developer</Lbl>
-                              {inp(communityIntelForm.masterDev ?? intelMerged.masterDev ?? "", "e.g. Emaar & Meraas joint venture", e => setCommunityIntelForm(prev => ({ ...prev, masterDev: e.target.value })))}
+                              {inp(communityIntelForm.masterDev  intelMerged.masterDev  "", "e.g. Emaar & Meraas joint venture", e => setCommunityIntelForm(prev => ({ ...prev, masterDev: e.target.value })))}
                             </div>
                           </div>
 
                           <div style={{ marginTop: 16 }}>
                             <Lbl color="#00BFA5">Famous For</Lbl>
-                            {ta(communityIntelForm.famousFor ?? intelMerged.famousFor ?? "", "Key attractions, landmarks, features...", e => setCommunityIntelForm(prev => ({ ...prev, famousFor: e.target.value })), 2)}
+                            {ta(communityIntelForm.famousFor  intelMerged.famousFor  "", "Key attractions, landmarks, features...", e => setCommunityIntelForm(prev => ({ ...prev, famousFor: e.target.value })), 2)}
                           </div>
 
                           <div style={{ marginTop: 16 }}>
                             <Lbl color="#00BFA5">Lifestyle Description</Lbl>
-                            {ta(communityIntelForm.lifestyle ?? intelMerged.lifestyle ?? "", "Target demographic, community vibe...", e => setCommunityIntelForm(prev => ({ ...prev, lifestyle: e.target.value })), 2)}
+                            {ta(communityIntelForm.lifestyle  intelMerged.lifestyle  "", "Target demographic, community vibe...", e => setCommunityIntelForm(prev => ({ ...prev, lifestyle: e.target.value })), 2)}
                           </div>
 
                           <div style={{ marginTop: 16 }}>
                             <Lbl color="#00BFA5">Road Connectivity</Lbl>
-                            {inp(communityIntelForm.roads ?? intelMerged.roads ?? "", "Major roads, metro connections...", e => setCommunityIntelForm(prev => ({ ...prev, roads: e.target.value })))}
+                            {inp(communityIntelForm.roads  intelMerged.roads  "", "Major roads, metro connections...", e => setCommunityIntelForm(prev => ({ ...prev, roads: e.target.value })))}
                           </div>
 
                           {/* Key Amenities */}
                           <div style={{ marginTop: 20 }}>
                             <Lbl color="#00BFA5">Key Amenities</Lbl>
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                              {(communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? []).map((am, idx) => (
+                              {(communityIntelForm.keyAmenities  intelMerged.keyAmenities  []).map((am, idx) => (
                                 <div key={idx} style={{ display: "flex", gap: 8, alignItems: "flex-start", background: "rgba(4,9,15,0.5)", padding: 12, borderRadius: 8 }}>
                                   <input value={am.icon || ""} onChange={e => {
-                                    const arr = [...(communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? [])];
+                                    const arr = [...(communityIntelForm.keyAmenities  intelMerged.keyAmenities  [])];
                                     arr[idx] = { ...arr[idx], icon: e.target.value };
                                     setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr }));
                                   }} style={{ width: 40, padding: "6px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#E2E8F0", fontSize: 16, textAlign: "center" }} />
                                   <div style={{ flex: 1 }}>
                                     <input value={am.label || ""} onChange={e => {
-                                      const arr = [...(communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? [])];
+                                      const arr = [...(communityIntelForm.keyAmenities  intelMerged.keyAmenities  [])];
                                       arr[idx] = { ...arr[idx], label: e.target.value };
                                       setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr }));
                                     }} placeholder="Label" style={{ width: "100%", padding: "6px 8px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#E2E8F0", fontSize: 12, marginBottom: 4 }} />
                                     <input value={am.items || ""} onChange={e => {
-                                      const arr = [...(communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? [])];
+                                      const arr = [...(communityIntelForm.keyAmenities  intelMerged.keyAmenities  [])];
                                       arr[idx] = { ...arr[idx], items: e.target.value };
                                       setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr }));
                                     }} placeholder="Items (comma-separated)" style={{ width: "100%", padding: "6px 8px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#94A3B8", fontSize: 11 }} />
                                   </div>
                                   <button type="button" onClick={() => {
-                                    const arr = (communityIntelForm.keyAmenities ?? intelMerged.keyAmenities ?? []).filter((_, i) => i !== idx);
+                                    const arr = (communityIntelForm.keyAmenities  intelMerged.keyAmenities  []).filter((_, i) => i !== idx);
                                     setCommunityIntelForm(prev => ({ ...prev, keyAmenities: arr }));
                                   }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>×</button>
                                 </div>
                               ))}
                             </div>
-                            <button type="button" onClick={() => setCommunityIntelForm(prev => ({ ...prev, keyAmenities: [...(prev.keyAmenities ?? intelMerged.keyAmenities ?? []), { icon: "", label: "", items: "" }] }))}
+                            <button type="button" onClick={() => setCommunityIntelForm(prev => ({ ...prev, keyAmenities: [...(prev.keyAmenities  intelMerged.keyAmenities  []), { icon: "", label: "", items: "" }] }))}
                               style={{ marginTop: 8, fontSize: 11, padding: "8px 16px", borderRadius: 6, border: "1px solid rgba(0,191,165,0.3)", background: "rgba(0,191,165,0.05)", color: "#00BFA5", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                               + Add Amenity
                             </button>
@@ -21476,31 +21476,31 @@ export default function AdminPanel() {
                           <div style={{ marginTop: 20 }}>
                             <Lbl color="#00BFA5">Distances to Key Locations</Lbl>
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                              {(communityIntelForm.distances ?? intelMerged.distances ?? []).map((d, idx) => (
+                              {(communityIntelForm.distances  intelMerged.distances  []).map((d, idx) => (
                                 <div key={idx} style={{ display: "flex", gap: 8, alignItems: "center", background: "rgba(4,9,15,0.5)", padding: 10, borderRadius: 8 }}>
                                   <input value={d.dest || ""} onChange={e => {
-                                    const arr = [...(communityIntelForm.distances ?? intelMerged.distances ?? [])];
+                                    const arr = [...(communityIntelForm.distances  intelMerged.distances  [])];
                                     arr[idx] = { ...arr[idx], dest: e.target.value };
                                     setCommunityIntelForm(prev => ({ ...prev, distances: arr }));
                                   }} placeholder="Destination" style={{ flex: 1, padding: "6px 8px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#E2E8F0", fontSize: 12 }} />
                                   <input type="number" value={d.km || ""} onChange={e => {
-                                    const arr = [...(communityIntelForm.distances ?? intelMerged.distances ?? [])];
+                                    const arr = [...(communityIntelForm.distances  intelMerged.distances  [])];
                                     arr[idx] = { ...arr[idx], km: Number(e.target.value) };
                                     setCommunityIntelForm(prev => ({ ...prev, distances: arr }));
                                   }} placeholder="km" style={{ width: 50, padding: "6px 8px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#D4A843", fontSize: 12, textAlign: "center" }} />
                                   <input type="number" value={d.min || ""} onChange={e => {
-                                    const arr = [...(communityIntelForm.distances ?? intelMerged.distances ?? [])];
+                                    const arr = [...(communityIntelForm.distances  intelMerged.distances  [])];
                                     arr[idx] = { ...arr[idx], min: Number(e.target.value) };
                                     setCommunityIntelForm(prev => ({ ...prev, distances: arr }));
                                   }} placeholder="min" style={{ width: 50, padding: "6px 8px", background: "#04090F", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#00BFA5", fontSize: 12, textAlign: "center" }} />
                                   <button type="button" onClick={() => {
-                                    const arr = (communityIntelForm.distances ?? intelMerged.distances ?? []).filter((_, i) => i !== idx);
+                                    const arr = (communityIntelForm.distances  intelMerged.distances  []).filter((_, i) => i !== idx);
                                     setCommunityIntelForm(prev => ({ ...prev, distances: arr }));
                                   }} style={{ padding: "4px 8px", background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 4, color: "#EF4444", cursor: "pointer", fontSize: 14 }}>×</button>
                                 </div>
                               ))}
                             </div>
-                            <button type="button" onClick={() => setCommunityIntelForm(prev => ({ ...prev, distances: [...(prev.distances ?? intelMerged.distances ?? []), { dest: "", km: 0, min: 0 }] }))}
+                            <button type="button" onClick={() => setCommunityIntelForm(prev => ({ ...prev, distances: [...(prev.distances  intelMerged.distances  []), { dest: "", km: 0, min: 0 }] }))}
                               style={{ marginTop: 8, fontSize: 11, padding: "8px 16px", borderRadius: 6, border: "1px solid rgba(0,191,165,0.3)", background: "rgba(0,191,165,0.05)", color: "#00BFA5", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                               + Add Distance
                             </button>
@@ -21698,12 +21698,12 @@ export default function AdminPanel() {
                             <div key={f.key}>
                               <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, display: "block" }}>{f.label}</label>
                               {f.type === "select" ? (
-                                <select value={yieldForm[f.key] ?? merged[f.key] ?? ""} onChange={e => setYieldForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                                <select value={yieldForm[f.key]  merged[f.key]  ""} onChange={e => setYieldForm(prev => ({ ...prev, [f.key]: e.target.value }))}
                                   style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
                                   {f.options.map(o => <option key={o} value={o}>{o}</option>)}
                                 </select>
                               ) : (
-                                <input type={f.type} step="0.1" value={yieldForm[f.key] ?? merged[f.key] ?? ""} onChange={e => setYieldForm(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={`e.g. ${merged[f.key] || ""}`}
+                                <input type={f.type} step="0.1" value={yieldForm[f.key]  merged[f.key]  ""} onChange={e => setYieldForm(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={`e.g. ${merged[f.key] || ""}`}
                                   style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textPrimary, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
                               )}
                             </div>
@@ -27566,7 +27566,7 @@ export default function AdminPanel() {
                             <tbody>
                               {getEditableRows().map((row, rowIdx) => (
                                 <tr key={rowIdx} style={{ borderBottom: `1px solid ${T.border}` }}>
-                                  {activeTabData.fields.map(f => <td key={f} style={{ padding: "6px 8px" }}><input value={row[f] ?? ""} onChange={e => updateCell(rowIdx, f, e.target.value)} style={{ width: "100%", minWidth: 80, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, borderRadius: 6, padding: "5px 8px", color: T.white, fontSize: 12, fontFamily: "'Outfit', sans-serif", outline: "none" }} /></td>)}
+                                  {activeTabData.fields.map(f => <td key={f} style={{ padding: "6px 8px" }}><input value={row[f]  ""} onChange={e => updateCell(rowIdx, f, e.target.value)} style={{ width: "100%", minWidth: 80, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, borderRadius: 6, padding: "5px 8px", color: T.white, fontSize: 12, fontFamily: "'Outfit', sans-serif", outline: "none" }} /></td>)}
                                   <td style={{ padding: "6px 8px" }}><button type="button" onClick={() => deleteRow(rowIdx)} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, color: "#EF4444", fontSize: 11, padding: "4px 8px", cursor: "pointer" }}></button></td>
                                 </tr>
                               ))}
@@ -27729,6 +27729,7 @@ export default function AdminPanel() {
 // STABLE_RECOVERY_0945_PPSF_FIXED
 // BEAST_UI_UPGRADE_1005_MAR24
 // BEAST_BADGE_GLOBAL_1012_MAR24
+
 
 
 
