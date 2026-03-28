@@ -5,7 +5,7 @@ import { getStorage } from "firebase/storage";
 
 export const firebaseConfig = {
   apiKey: "AIzaSyBEtQr19WTjSTxssB2TjJq-ENioG8Jpq6Q",
-  authDomain: "emaar-dashboard.vercel.app",
+  authDomain: "dxb-analytics.firebaseapp.com",
   projectId: "dxb-analytics",
   storageBucket: "dxb-analytics.firebasestorage.app",
   messagingSenderId: "329487314073",
