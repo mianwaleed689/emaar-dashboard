@@ -2515,7 +2515,7 @@ export default function EmaarDashboardV2() {
                     await emailjs.send("service_da7nshv", "template_gl1xqhy", {
                       user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
                       project_name: "DXB Analytics Platform",
-                      change_type: "? Your Pro Trial Has Expired",
+                      change_type: "🔴 Your Pro Trial Has Expired",
                       new_value: "Your 7-day trial has ended. Upgrade now to keep full access to 48+ projects, yield data, ROI tools and more.",
                       old_value: "Pro Trial", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, "USkwUhp0csGCVDkdQ");
@@ -2760,8 +2760,8 @@ export default function EmaarDashboardV2() {
 
   // KYC SUBMIT FUNCTION
   const submitKYC = async () => {
-    if (!kycForm.name.trim()) { notify("? Full name required"); return; }
-    if (!kycForm.phone.trim()) { notify("? Phone number required"); return; }
+    if (!kycForm.name.trim()) { notify("⚠️ Full name required"); return; }
+    if (!kycForm.phone.trim()) { notify("⚠️ Phone number required"); return; }
     if (!auth.currentUser) return;
     setKycSubmitting(true);
     try {
@@ -2771,9 +2771,9 @@ export default function EmaarDashboardV2() {
       });
       await setDoc(doc(db, "users", auth.currentUser.uid), { kycStatus: "pending" }, { merge: true });
       setKycStatus("pending");
-      notify("? Verification submitted! Admin will review within 24h.");
+      notify("✅ Verification submitted! Admin will review within 24h.");
       setShowKYC(false);
-    } catch(e) { notify("? " + e.message); }
+    } catch(e) { notify("❌ " + e.message); }
     setKycSubmitting(false);
   };
 
@@ -2846,7 +2846,7 @@ export default function EmaarDashboardV2() {
         } catch(e) {}
       }
     } catch (err) {
-      notify("? Failed to update tier");
+      notify("❌ Failed to update tier");
     }
   };
 
@@ -2990,7 +2990,7 @@ export default function EmaarDashboardV2() {
           {/* Trial Banner */}
           {userTier === "pro_trial" && trialDaysLeft > 0 && (
             <div style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, background: "rgba(212,168,67,0.08)", border: `1px solid ${T.border}`, textAlign: "center" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 0.5 }}>? PRO TRIAL</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 0.5 }}>⭐ PRO TRIAL</div>
               <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>{trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining</div>
             </div>
           )}
@@ -3947,7 +3947,7 @@ export default function EmaarDashboardV2() {
                           style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 8, background: `${inv.color}18`, border: `1px solid ${inv.color}40`, cursor: "default" }}>
                           <span style={{ fontSize: 11, fontWeight: 900, color: inv.color, fontFamily: "'Fraunces', serif" }}>{inv.score}</span>
                           <span style={{ fontSize: 9, color: inv.color, fontWeight: 700, letterSpacing: 0.3 }}>/10</span>
-                          <span style={{ fontSize: 9, color: inv.color, fontWeight: 600 }}>? {inv.label}</span>
+                          <span style={{ fontSize: 9, color: inv.color, fontWeight: 600 }}>🏅 {inv.label}</span>
                         </div>
                       ); })()}
                       <div style={{ display: "flex", gap: 4 }}>
@@ -4214,11 +4214,11 @@ export default function EmaarDashboardV2() {
                           </div>
                           <div style={{ textAlign: "right" }}>
                             <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{p.price ? "AED " + (p.price / 1e6).toFixed(1) + "M" : "TBD"}</div>
-                            <div style={{ fontSize: 10, color: "#10B981", fontWeight: 600, marginTop: 2 }}>? Ready</div>
+                            <div style={{ fontSize: 10, color: "#10B981", fontWeight: 600, marginTop: 2 }}>✅ Ready</div>
                           </div>
                           <div style={{ padding: "4px 10px", borderRadius: 8, background: `${p._score.color}18`, border: `1px solid ${p._score.color}40`, textAlign: "center", flexShrink: 0 }}>
                             <div style={{ fontSize: 13, fontWeight: 900, color: p._score.color, fontFamily: "'Fraunces', serif" }}>{p._score.score}</div>
-                            <div style={{ fontSize: 9, color: p._score.color }}>? Score</div>
+                            <div style={{ fontSize: 9, color: p._score.color }}>📊 Score</div>
                           </div>
                         </div>
                       ))}
@@ -6392,7 +6392,7 @@ export default function EmaarDashboardV2() {
               { name: "Downtown Hills", community: "Dubai Hills Estate", date: "Q2 2027", status: "pipeline", expectedPrice: 3100000, developer: "Emaar", type: "Apartment", beds: "2-4 BR", paymentPlan: "TBD", goldenVisa: true, notes: "Premium mid-rise adjacent to DHE Mall. High occupancy expected." },
             ];
             const statusColors = { launched: "#10B981", upcoming: T.gold, rumoured: "#8B5CF6", pipeline: T.textMuted };
-            const statusLabels = { launched: "Launched", upcoming: "Upcoming", rumoured: "Rumoured", pipeline: "? Pipeline" };
+            const statusLabels = { launched: "Launched", upcoming: "Upcoming", rumoured: "Rumoured", pipeline: "📋 Pipeline" };
             const groups = ["launched", "upcoming", "rumoured", "pipeline"];
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -6451,7 +6451,7 @@ export default function EmaarDashboardV2() {
                               <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5, marginBottom: 8 }}>{l.notes}</div>
                               <div style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 6, background: `${inv.color}15`, border: `1px solid ${inv.color}30` }}>
                                 <span style={{ fontSize: 11, fontWeight: 800, color: inv.color }}>{inv.score}/10</span>
-                                <span style={{ fontSize: 9, color: inv.color }}>? {inv.label}</span>
+                                <span style={{ fontSize: 9, color: inv.color }}>🏅 {inv.label}</span>
                               </div>
                             </div>
                           );
@@ -6822,7 +6822,7 @@ export default function EmaarDashboardV2() {
                   {/* Currency cards */}
                   {loading ? (
                     <div style={{ textAlign: "center", padding: 60, color: T.textMuted }}>
-                      <div style={{ fontSize: 32, marginBottom: 12 }}>&#x231B;</div>
+                      <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
                       <div style={{ fontSize: 13 }}>Loading live exchange rates...</div>
                     </div>
                   ) : (
@@ -7085,7 +7085,7 @@ export default function EmaarDashboardV2() {
                               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                 <div style={{ textAlign: "right" }}>
                                   <div style={{ fontSize: 11, fontWeight: 700, color: T.green }}>AED {p.price ? (p.price/1e6).toFixed(2) + "M" : "2M+"}</div>
-                                  <div style={{ fontSize: 10, color: T.gold }}>? Eligible</div>
+                                  <div style={{ fontSize: 10, color: T.gold }}>✅ Eligible</div>
                                 </div>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
                               </div>
@@ -9147,7 +9147,7 @@ _Powered by DXB Analytics - Dubai Real Estate Intelligence_`)}`} target="_blank"
                           return (
                             <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                               <div style={{ width: "100%", background: isLast ? (selectedKPI.color || T.gold) : T.border, borderRadius: "3px 3px 0 0", height: `${pct}%`, minHeight: 4, position: "relative" }}>
-                                {isLast && <div style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", fontSize: 9, color: selectedKPI.color || T.gold, fontWeight: 700, whiteSpace: "nowrap" }}>? Latest</div>}
+                                {isLast && <div style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", fontSize: 9, color: selectedKPI.color || T.gold, fontWeight: 700, whiteSpace: "nowrap" }}>🔴 Latest</div>}
                               </div>
                               <div style={{ fontSize: 9, color: T.textMuted }}>{d.y}</div>
                             </div>
@@ -9326,7 +9326,7 @@ _Powered by DXB Analytics - Dubai Real Estate Intelligence_`)}`} target="_blank"
               <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, marginBottom: 32 }}>{step.body}</p>
               <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
                 {onboardingStep > 0 && (
-                  <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "12px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>? Back</button>
+                  <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "12px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>← Back</button>
                 )}
                 <button type="button" onClick={() => { if (onboardingStep < steps.length - 1) { setOnboardingStep(s => s + 1); } else { completeOnboarding(); } }} style={{ padding: "12px 28px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                   {step.cta}
