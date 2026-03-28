@@ -1,4 +1,4 @@
-
+﻿
 
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -9230,7 +9230,7 @@ _Powered by DXB Analytics - Dubai Real Estate Intelligence_`)}`} target="_blank"
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "min(640px,95vw)", maxHeight: "80vh", overflow: "hidden", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
             <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>? My Watchlist</div>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>★ My Watchlist</div>
                 <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{watchlist.length} project{watchlist.length !== 1 ? "s" : ""} saved</div>
               </div>
               <button type="button" onClick={() => setShowWatchlist(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>?</button>
@@ -9344,5 +9344,6 @@ _Powered by DXB Analytics - Dubai Real Estate Intelligence_`)}`} target="_blank"
   );
 }
 // DXB Analytics Build: S30-v3
+
 
 
