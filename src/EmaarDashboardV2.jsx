@@ -12,21 +12,21 @@ import { T, emaarProjects, emaarFinancials, emaarCommunities, emaarYields, topDe
 import LandingPage from "./LandingPage";
 import RoiCalculator from "./RoiCalculator";
 
-/* â”€â”€â”€ DATA ALIASES (for backward compat) â”€â”€â”€ */
+/* ─── DATA ALIASES (for backward compat) ─── */
 const financials = emaarFinancials;
 const segments = emaarSegments;
 const risks = emaarRisks.map(r => ({ factor: r.factor, score: r.score, max: 150, color: r.color }));
 const yields = emaarYields.map(y => ({ label: y.unit, community: y.community, rent: y.rent/1000, price: y.price/1000, gross: y.gross, net: y.net, demand: y.demand === "Very High" ? "V.High" : y.demand === "Moderate-High" ? "High" : y.demand, visa: y.visa }));
 const developers = topDevelopers.map(d => ({ rank: d.rank, name: d.name.replace(" Properties","").replace(" Realty","").replace(" Development",""), sales: d.sales, units: d.units, delivered: d.delivered, underConst: d.underConst, color: d.color, share: d.share, segment: d.segment }));
-const communityProjects = emaarCommunities.filter(c => c.name).map(c => ({ name: c.district, full: c.name, projects: c.projects, yield: c.avgYield ? `${c.avgYield}%` : "â€”", ppsf: c.avgPpsf ? c.avgPpsf.toLocaleString() : "â€”" }));
+const communityProjects = emaarCommunities.filter(c => c.name).map(c => ({ name: c.district, full: c.name, projects: c.projects, yield: c.avgYield ? `${c.avgYield}%` : "—", ppsf: c.avgPpsf ? c.avgPpsf.toLocaleString() : "—" }));
 
-/* â”€â”€â”€ LINK LABEL HELPER â”€â”€â”€ */
+/* ─── LINK LABEL HELPER ─── */
 const getLinkLabel = (url) => {
-  if (!url) return "View â†—";
-  if (url.includes("propertyfinder.ae")) return "PropertyFinder â†—";
-  if (url.includes("bayut.com")) return "Bayut â†—";
-  if (url.includes("properties.emaar.com") || url.includes("emaar.com")) return "Emaar â†—";
-  return "View â†—";
+  if (!url) return "View ↗";
+  if (url.includes("propertyfinder.ae")) return "PropertyFinder ↗";
+  if (url.includes("bayut.com")) return "Bayut ↗";
+  if (url.includes("properties.emaar.com") || url.includes("emaar.com")) return "Emaar ↗";
+  return "View ↗";
 };
 const getLinkDomain = (url) => {
   if (!url) return "Listing";
@@ -36,7 +36,7 @@ const getLinkDomain = (url) => {
   return "Official Listing";
 };
 
-/* â”€â”€â”€ HANDOVER COUNTDOWN â”€â”€â”€ */
+/* ─── HANDOVER COUNTDOWN ─── */
 const getHandoverCountdown = (handover) => {
   if (!handover) return null;
   const match = handover.match(/Q([1-4])\s+(\d{4})/);
@@ -59,26 +59,26 @@ const getHandoverCountdown = (handover) => {
   return { label, color, urgent: diffDays <= 90, months: diffMonths, days: diffDays };
 };
 
-// â”€â”€â”€ INVESTMENT SCORE (out of 10) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── INVESTMENT SCORE (out of 10) ─────────────────────────────────────────
 const getInvestmentScore = (p) => {
   let score = 0;
   const breakdown = [];
 
-  // 1. Yield (0â€“3 pts)
+  // 1. Yield (0–3 pts)
   const gross = p.gross || p.yield || 0;
   if (gross >= 8)      { score += 3; breakdown.push({ label: "Yield", pts: 3, max: 3, note: gross + "% gross" }); }
   else if (gross >= 6) { score += 2; breakdown.push({ label: "Yield", pts: 2, max: 3, note: gross + "% gross" }); }
   else if (gross >= 4) { score += 1; breakdown.push({ label: "Yield", pts: 1, max: 3, note: gross + "% gross" }); }
   else                 { breakdown.push({ label: "Yield", pts: 0, max: 3, note: gross ? gross + "%" : "No data" }); }
 
-  // 2. Value (PPSF) (0â€“2 pts)
+  // 2. Value (PPSF) (0–2 pts)
   const ppsf = p.ppsf || 0;
   if (ppsf > 0 && ppsf <= 1500)       { score += 2; breakdown.push({ label: "Value", pts: 2, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else if (ppsf > 0 && ppsf <= 2200)  { score += 1; breakdown.push({ label: "Value", pts: 1, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else if (ppsf > 0)                  { breakdown.push({ label: "Value", pts: 0, max: 2, note: "AED " + ppsf + "/sqft" }); }
   else                                { breakdown.push({ label: "Value", pts: 0, max: 2, note: "No PPSF" }); }
 
-  // 3. Handover timing (0â€“2 pts) â€” sweet spot is 12â€“36 months
+  // 3. Handover timing (0–2 pts) — sweet spot is 12–36 months
   const cd = getHandoverCountdown(p.handover);
   if (cd) {
     if (cd.passed)              { score += 1.5; breakdown.push({ label: "Handover", pts: 1.5, max: 2, note: "Ready now" }); }
@@ -90,7 +90,7 @@ const getInvestmentScore = (p) => {
     breakdown.push({ label: "Handover", pts: 0, max: 2, note: "No date" });
   }
 
-  // 4. Payment plan (0â€“2 pts)
+  // 4. Payment plan (0–2 pts)
   const pp = (p.paymentPlan || p.payment || "").toLowerCase();
   if (pp.includes("80/20") || pp.includes("80:20"))       { score += 2;   breakdown.push({ label: "Payment", pts: 2,   max: 2, note: "80/20 plan" }); }
   else if (pp.includes("70/30") || pp.includes("60/40"))  { score += 1.5; breakdown.push({ label: "Payment", pts: 1.5, max: 2, note: pp }); }
@@ -98,7 +98,7 @@ const getInvestmentScore = (p) => {
   else if (pp.length > 0)                                 { score += 0.5; breakdown.push({ label: "Payment", pts: 0.5, max: 2, note: pp }); }
   else                                                    { breakdown.push({ label: "Payment", pts: 0, max: 2, note: "Unknown" }); }
 
-  // 5. Golden Visa eligible (0â€“1 pt)
+  // 5. Golden Visa eligible (0–1 pt)
   if (p.price && p.price >= 2000000) {
     score += 1; breakdown.push({ label: "Golden Visa", pts: 1, max: 1, note: "Eligible" });
   } else {
@@ -111,7 +111,7 @@ const getInvestmentScore = (p) => {
   return { score: final, color, label, breakdown };
 };
 
-/* â”€â”€â”€ ICONS (inline SVG) â”€â”€â”€ */
+/* ─── ICONS (inline SVG) ─── */
 const Icons = {
   overview: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
   financials: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
@@ -161,7 +161,7 @@ const TABS = [
   { key: "Price History", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> },
 ];
 
-/* â”€â”€â”€ STYLES â”€â”€â”€ */
+/* ─── STYLES ─── */
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&display=swap');
 
@@ -311,7 +311,7 @@ const css = `
   }
   .mobile-overlay.open { opacity: 1; pointer-events: auto; }
 
-  /* â”€â”€ 768px: Tablet / small laptop â”€â”€ */
+  /* ── 768px: Tablet / small laptop ── */
   @media (max-width: 768px) {
     html { font-size: 13px; }
 
@@ -343,16 +343,16 @@ const css = `
     .filter-scroll::-webkit-scrollbar { display: none; }
     .filter-scroll button { flex-shrink: 0; }
 
-    /* Tables â€” horizontal scroll with hint arrow */
+    /* Tables — horizontal scroll with hint arrow */
     .table-scroll { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
-    .table-scroll::after { content: "swipe â†’"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
+    .table-scroll::after { content: "swipe →"; position: absolute; right: 8px; top: 12px; color: ${T.gold}; font-size: 10px; opacity: 0.5; pointer-events: none; letter-spacing: 0.5px; }
     .table-scroll table { min-width: 560px; }
 
     /* Compare bar */
     .compare-bar { padding: 10px 14px !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
     .compare-bar > div { justify-content: center; flex-wrap: wrap; }
 
-    /* Mortgage calculator 2-col â†’ 1-col */
+    /* Mortgage calculator 2-col → 1-col */
     .mortgage-grid { grid-template-columns: 1fr !important; }
 
     /* AI Insights full width cards */
@@ -362,7 +362,7 @@ const css = `
     .alerts-modal { max-width: 100% !important; max-height: 100dvh !important; border-radius: 20px 20px 0 0 !important; position: fixed !important; bottom: 0 !important; top: auto !important; margin: 0 !important; }
   }
 
-  /* â”€â”€ 480px: Mobile phones â”€â”€ */
+  /* ── 480px: Mobile phones ── */
   @media (max-width: 480px) {
     html { font-size: 12px; }
 
@@ -398,18 +398,18 @@ const css = `
     .tab-content-pad { padding-bottom: 80px !important; }
   }
 
-  /* â”€â”€ 360px: Very small phones â”€â”€ */
+  /* ── 360px: Very small phones ── */
   @media (max-width: 360px) {
     .kpi-grid { grid-template-columns: 1fr !important; }
     html { font-size: 11px; }
   }
 
-  /* â”€â”€ Touch improvements â”€â”€ */
+  /* ── Touch improvements ── */
   * { -webkit-tap-highlight-color: transparent; }
   button, a, [role="button"] { touch-action: manipulation; }
   input[type="range"] { height: 32px; }
 
-  /* â”€â”€ Mobile Bottom Nav Bar â”€â”€ */
+  /* ── Mobile Bottom Nav Bar ── */
   @media (max-width: 768px) {
     .mobile-bottom-nav {
       display: flex !important;
@@ -426,7 +426,7 @@ const css = `
   }
 `;
 
-/* â”€â”€â”€ COMPONENTS â”€â”€â”€ */
+/* ─── COMPONENTS ─── */
 
 /* Loading Skeleton for data fetch */
 const LoadingSkeleton = ({ rows = 6, cols = 3 }) => (
@@ -454,14 +454,14 @@ const KPI = ({ label, value, sub, icon, delay = 0, onClick }) => {
       style={{ cursor: isClickable ? "pointer" : "default", transition: "transform 0.2s, box-shadow 0.2s, border-color 0.2s", transform: hovered ? "translateY(-3px)" : "none", boxShadow: hovered ? `0 10px 30px rgba(212,168,67,0.2)` : undefined, borderColor: hovered ? T.gold : undefined, position: "relative" }}
     >
       <div style={{ position: "absolute", top: -30, right: -30, width: 80, height: 80, borderRadius: "50%", background: `radial-gradient(circle, ${T.goldGlow} 0%, transparent 70%)` }} />
-      {isClickable && <div style={{ position: "absolute", top: 10, right: 10, fontSize: 14, color: hovered ? T.gold : T.border, transition: "color 0.2s" }}>â€º</div>}
+      {isClickable && <div style={{ position: "absolute", top: 10, right: 10, fontSize: 14, color: hovered ? T.gold : T.border, transition: "color 0.2s" }}>›</div>}
       <div style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 700, color: T.gold, lineHeight: 1.1, marginBottom: 4 }}>{value}</div>
       <div style={{ fontSize: 12, fontWeight: 500, color: T.teal, display: "flex", alignItems: "center", gap: 4 }}>
         {sub?.includes("+") && <span style={{ color: T.green }}>{Icons.up}</span>}
         {sub}
       </div>
-      {isClickable && <div style={{ marginTop: 8, fontSize: 9, color: hovered ? T.gold : T.textMuted, fontWeight: 600, letterSpacing: 0.5, transition: "color 0.2s" }}>{hovered ? "View breakdown â†’" : "Click for details"}</div>}
+      {isClickable && <div style={{ marginTop: 8, fontSize: 9, color: hovered ? T.gold : T.textMuted, fontWeight: 600, letterSpacing: 0.5, transition: "color 0.2s" }}>{hovered ? "View breakdown →" : "Click for details"}</div>}
     </div>
   );
 };
@@ -472,7 +472,7 @@ const ForecastCard = ({ firm, color, short, forecast, detail, bullets, sourceUrl
     <div className="chart-box" style={{ borderTop: `3px solid ${color}`, cursor: "pointer", transition: "all 0.2s" }} onClick={() => setExpanded(e => !e)}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <h4 style={{ color, fontSize: 15, fontWeight: 700, marginBottom: 4, fontFamily: "'Fraunces', serif" }}>{firm}</h4>
-        <span style={{ fontSize: 16, color: T.textMuted, display: "inline-block", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>âŒ„</span>
+        <span style={{ fontSize: 16, color: T.textMuted, display: "inline-block", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>⌄</span>
       </div>
       <div style={{ fontSize: 10, fontWeight: 700, color: T.white, background: color + "20", padding: "3px 8px", borderRadius: 5, display: "inline-block", marginBottom: 8 }}>{forecast}</div>
       <p style={{ color: T.textSecondary, fontSize: 12, lineHeight: 1.6 }}>{short}</p>
@@ -482,11 +482,11 @@ const ForecastCard = ({ firm, color, short, forecast, detail, bullets, sourceUrl
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 5 }}>
             {bullets.map((b, bi) => (
               <li key={bi} style={{ fontSize: 11, color: T.textSecondary, display: "flex", gap: 6, alignItems: "flex-start" }}>
-                <span style={{ color, fontWeight: 700, marginTop: 1 }}>â€º</span> {b}
+                <span style={{ color, fontWeight: 700, marginTop: 1 }}>›</span> {b}
               </li>
             ))}
           </ul>
-          <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: "inline-block", marginTop: 10, fontSize: 10, color, fontWeight: 700, textDecoration: "none" }}>Full Report â†—</a>
+          <a href={sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: "inline-block", marginTop: 10, fontSize: 10, color, fontWeight: 700, textDecoration: "none" }}>Full Report ↗</a>
         </div>
       )}
       {!expanded && <div style={{ marginTop: 8, fontSize: 10, color: T.textMuted }}>Click to expand full analysis</div>}
@@ -526,7 +526,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-/* â”€â”€â”€ LOGIN SCREEN â”€â”€â”€ */
+/* ─── LOGIN SCREEN ─── */
 const googleProvider = new GoogleAuthProvider();
 
 const PasswordStrength = ({ password }) => {
@@ -667,7 +667,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         await emailjs.send("service_da7nshv", "template_gl1xqhy", {
           user_email: email, user_name: name.trim(),
           project_name: "DXB Analytics Platform",
-          change_type: "Welcome to DXB Analytics! â€” Please verify your email",
+          change_type: "Welcome to DXB Analytics! — Please verify your email",
           new_value: "Your 7-day Pro Trial is active. Check your inbox to verify your email address.",
           old_value: "New Account",
           updated_at: now.toLocaleDateString("en-AE"),
@@ -685,13 +685,13 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     setLoading(false);
   };
 
-  // â”€â”€ Verify Email Screen â”€â”€
+  // ── Verify Email Screen ──
   if (screen === "verify") return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{css}</style>
       <div className="fade-up" style={{ width: "100%", maxWidth: 440, padding: "0 20px", textAlign: "center" }}>
         <div style={{ background: T.surface, border: "1px solid rgba(16,185,129,0.3)", borderRadius: 20, padding: 40 }}>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>ðŸ“§</div>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>📧</div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 10 }}>Check your inbox</h2>
           <p style={{ color: T.textSecondary, fontSize: 13, lineHeight: 1.7, marginBottom: 8 }}>
             We sent a verification link to <span style={{ color: T.gold, fontWeight: 600 }}>{email}</span>
@@ -708,7 +708,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             ))}
           </div>
           <button type="button" className="login-btn" onClick={() => { setScreen("form"); setMode("login"); setPass(""); setConfirmPass(""); }}>
-            Go to Sign In â†’
+            Go to Sign In →
           </button>
           <button type="button" onClick={async () => { try { if (auth.currentUser) { await sendEmailVerification(auth.currentUser); alert("Verification email resent! Check your inbox."); } } catch(e){} }} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
             Resend verification email
@@ -718,13 +718,13 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     </div>
   );
 
-  // â”€â”€ Reset Sent Screen â”€â”€
+  // ── Reset Sent Screen ──
   if (screen === "reset_sent") return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{css}</style>
       <div className="fade-up" style={{ width: "100%", maxWidth: 440, padding: "0 20px", textAlign: "center" }}>
         <div style={{ background: T.surface, border: "1px solid rgba(212,168,67,0.3)", borderRadius: 20, padding: 40 }}>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>ðŸ”‘</div>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>🔑</div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 10 }}>Password Reset Sent</h2>
           <p style={{ color: T.textSecondary, fontSize: 13, lineHeight: 1.7, marginBottom: 8 }}>
             We sent a reset link to <span style={{ color: T.gold, fontWeight: 600 }}>{email}</span>
@@ -738,7 +738,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     </div>
   );
 
-  // â”€â”€ Main Form â”€â”€
+  // ── Main Form ──
   return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
       <style>{css}</style>
@@ -746,7 +746,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         <button type="button" onClick={onBack} style={{ position: "absolute", top: 24, left: 24, display: "flex", alignItems: "center", gap: 6, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 16px", color: T.textSecondary, fontSize: 13, fontFamily: "'Outfit', sans-serif", cursor: "pointer", zIndex: 10 }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold; e.currentTarget.style.color = T.gold; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSecondary; }}>
-          â† Back to Home
+          ← Back to Home
         </button>
       )}
       <div style={{ position: "absolute", inset: 0, opacity: 0.015, backgroundImage: `radial-gradient(${T.gold} 1px, transparent 1px)`, backgroundSize: "50px 50px" }} />
@@ -773,7 +773,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             {mode === "login" ? "Welcome back" : "Start your free trial"}
           </h2>
           <p style={{ color: T.textSecondary, fontSize: 13, marginBottom: 20 }}>
-            {mode === "login" ? "Sign in to access your dashboard" : "7 days full Pro access â€” no credit card required"}
+            {mode === "login" ? "Sign in to access your dashboard" : "7 days full Pro access — no credit card required"}
           </p>
 
           {/* Google Sign-In */}
@@ -822,7 +822,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Password *</label>
               <div style={{ position: "relative" }}>
-                <input className="login-input" type={showPass ? "text" : "password"} placeholder={mode === "signup" ? "Min 8 chars + 1 number" : "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"} value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && mode === "login" && handleLogin()} style={{ paddingRight: 44 }} />
+                <input className="login-input" type={showPass ? "text" : "password"} placeholder={mode === "signup" ? "Min 8 chars + 1 number" : "••••••••"} value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && mode === "login" && handleLogin()} style={{ paddingRight: 44 }} />
                 <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }}>
                   {showPass ? Icons.eyeOff : Icons.eye}
                 </button>
@@ -839,8 +839,8 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
                     {showConfirm ? Icons.eyeOff : Icons.eye}
                   </button>
                 </div>
-                {confirmPass && confirmPass !== pass && <div style={{ fontSize: 10, color: T.red, marginTop: 4 }}>âœ— Passwords do not match</div>}
-                {confirmPass && confirmPass === pass && <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>âœ“ Passwords match</div>}
+                {confirmPass && confirmPass !== pass && <div style={{ fontSize: 10, color: T.red, marginTop: 4 }}>✗ Passwords do not match</div>}
+                {confirmPass && confirmPass === pass && <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>✓ Passwords match</div>}
               </div>
             )}
 
@@ -869,14 +869,14 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
                   <span style={{ width: 16, height: 16, border: "2px solid rgba(4,9,15,0.3)", borderTopColor: T.bg, borderRadius: "50%", animation: "spin 0.6s linear infinite", display: "inline-block" }} />
                   {mode === "login" ? "Signing in..." : "Creating account..."}
                 </span>
-              ) : mode === "login" ? "Sign In" : "Start Free Trial â†’"}
+              ) : mode === "login" ? "Sign In" : "Start Free Trial →"}
             </button>
 
             {mode === "signup" && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: "rgba(212,168,67,0.06)", borderRadius: 8, border: `1px solid ${T.border}` }}>
-                <span style={{ fontSize: 16 }}>â­</span>
+                <span style={{ fontSize: 16 }}>⭐</span>
                 <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.4 }}>
-                  <span style={{ color: T.gold, fontWeight: 600 }}>7-day Pro trial</span> â€” Full access. No credit card. Cancel anytime.
+                  <span style={{ color: T.gold, fontWeight: 600 }}>7-day Pro trial</span> — Full access. No credit card. Cancel anytime.
                 </div>
               </div>
             )}
@@ -894,7 +894,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         </div>
 
         <p style={{ textAlign: "center", color: T.textMuted, fontSize: 11, marginTop: 20 }}>
-          ðŸ”’ Secured by Firebase Â· SSL Encrypted Â· GDPR Compliant
+          🔒 Secured by Firebase · SSL Encrypted · GDPR Compliant
         </p>
       </div>
     </div>
@@ -902,7 +902,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
 };
 
 
-/* â”€â”€â”€ PRO GATE OVERLAY â”€â”€â”€ */
+/* ─── PRO GATE OVERLAY ─── */
 const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this data", onUpgrade, blur = true }) => {
   if (isPro) return children;
   return (
@@ -912,28 +912,28 @@ const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock this dat
       </div>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(4,9,15,0.75)", borderRadius: 16, backdropFilter: "blur(4px)", zIndex: 5 }}>
         <div style={{ background: T.surface, border: `1px solid ${T.gold}`, borderRadius: 16, padding: "28px 32px", textAlign: "center", maxWidth: 380, boxShadow: `0 20px 60px rgba(0,0,0,0.5), 0 0 30px ${T.gold}18` }}>
-          <div style={{ width: 48, height: 48, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}22, ${T.gold}08)`, border: `1px solid ${T.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, margin: "0 auto 12px" }}>ðŸ”’</div>
+          <div style={{ width: 48, height: 48, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}22, ${T.gold}08)`, border: `1px solid ${T.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, margin: "0 auto 12px" }}>🔒</div>
           <div style={{ fontFamily: "'Fraunces', serif", fontSize: 17, fontWeight: 800, color: T.white, marginBottom: 6 }}>{message}</div>
           <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 16, lineHeight: 1.6 }}>Join 500+ investors using DXB Analytics Pro to track the Dubai real estate market</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
             {["All 48+ active projects", "Full financials & yields", "ROI & mortgage calculator", "Currency converter", "Portfolio tracker"].map((f, i) => (
-              <div key={i} style={{ fontSize: 11, color: T.textSecondary, textAlign: "left", paddingLeft: 4 }}>âœ“ {f}</div>
+              <div key={i} style={{ fontSize: 11, color: T.textSecondary, textAlign: "left", paddingLeft: 4 }}>✓ {f}</div>
             ))}
           </div>
           <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "11px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>
-            Unlock Pro â€” AED 99/mo â†’
+            Unlock Pro — AED 99/mo →
           </button>
-          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>7-day money-back guarantee Â· Cancel anytime</div>
+          <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>7-day money-back guarantee · Cancel anytime</div>
         </div>
       </div>
     </div>
   );
 };
 
-/* â”€â”€â”€ PRO GATE FULL PAGE â”€â”€â”€ */
+/* ─── PRO GATE FULL PAGE ─── */
 const ProGateFullPage = ({ tabName, onUpgrade }) => {
   const tabBenefits = {
-    "DXB Estimate":     ["Automated property valuations", "AVM price estimates per unit", "Bayut live listings", "Â±15% accuracy model"],
+    "DXB Estimate":     ["Automated property valuations", "AVM price estimates per unit", "Bayut live listings", "±15% accuracy model"],
     "Portfolio":        ["Track your Dubai investments", "ROI calculations", "Portfolio performance chart", "Yield tracking"],
     "Yields":           ["Gross & net yield by community", "STR vs LTR comparison", "Top yielding Emaar areas", "Historical yield trends"],
     "Mortgage":         ["Live EIBOR rates", "UAE bank comparison", "Monthly payment calculator", "Affordability analysis"],
@@ -950,7 +950,7 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: "40px 20px" }}>
       <div style={{ background: T.surface, border: `1px solid ${T.gold}40`, borderRadius: 24, padding: "48px 40px", textAlign: "center", maxWidth: 480, width: "100%", boxShadow: `0 30px 80px rgba(0,0,0,0.4), 0 0 40px ${T.gold}10` }}>
-        <div style={{ width: 64, height: 64, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}20, ${T.gold}05)`, border: `1px solid ${T.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, margin: "0 auto 20px" }}>ðŸ”’</div>
+        <div style={{ width: 64, height: 64, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}20, ${T.gold}05)`, border: `1px solid ${T.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, margin: "0 auto 20px" }}>🔒</div>
         <div style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 8 }}>{tabName}</div>
         <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 28, lineHeight: 1.6 }}>This feature is available on the <span style={{ color: T.gold, fontWeight: 700 }}>Pro plan</span>. Upgrade to unlock full access.</div>
         <div style={{ background: T.surfaceAlt, borderRadius: 14, padding: "18px 20px", marginBottom: 28, textAlign: "left" }}>
@@ -965,25 +965,25 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
           ))}
         </div>
         <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "14px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3, marginBottom: 10 }}>
-          Upgrade to Pro â€” AED 99/mo â†’
+          Upgrade to Pro — AED 99/mo →
         </button>
-        <div style={{ fontSize: 11, color: T.textMuted }}>7-day free trial Â· Cancel anytime Â· Money-back guarantee</div>
+        <div style={{ fontSize: 11, color: T.textMuted }}>7-day free trial · Cancel anytime · Money-back guarantee</div>
       </div>
     </div>
   );
 };
 
-/* â”€â”€â”€ UPGRADE MODAL â”€â”€â”€ */
+/* ─── UPGRADE MODAL ─── */
 const UpgradeModal = ({ show, onClose }) => {
   if (!show) return null;
   const plans = [
-    { name: "Pro", price: "99", period: "month", features: ["48 Emaar projects â€” full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro â†’" },
-    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation â³", "API data access â³", "Custom dashboards â³", "Multi-user team accounts â³", "Developer-level raw data", "Dedicated account manager", "White-label options â³"], popular: false, note: "â³ = Launching Q3 2026", cta: "Contact Sales â†’" },
+    { name: "Pro", price: "99", period: "month", features: ["48 Emaar projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →" },
+    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation ⏳", "API data access ⏳", "Custom dashboards ⏳", "Multi-user team accounts ⏳", "Developer-level raw data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Launching Q3 2026", cta: "Contact Sales →" },
   ];
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={onClose}>
       <div className="upgrade-modal" style={{ background: T.surface, borderRadius: 24, border: `1px solid ${T.border}`, width: "95%", maxWidth: 720, padding: 36, position: "relative", boxShadow: "0 40px 100px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
-        <button type="button" onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>âœ•</button>
+        <button type="button" onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
@@ -997,7 +997,7 @@ const UpgradeModal = ({ show, onClose }) => {
 
         {/* ROI bar */}
         <div style={{ background: "rgba(16,185,129,0.08)", border: `1px solid ${T.green}30`, borderRadius: 12, padding: "12px 20px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
-          {[["ðŸ“Š", "AED 80.4B", "FY25 Sales tracked"], ["ðŸ“ˆ", "+40% YoY", "Revenue growth"], ["ðŸ ", "48 Projects", "Full intelligence"], ["ðŸ’°", "AED 155B", "Backlog visibility"]].map(([icon, val, label], i) => (
+          {[["📊", "AED 80.4B", "FY25 Sales tracked"], ["📈", "+40% YoY", "Revenue growth"], ["🏠", "48 Projects", "Full intelligence"], ["💰", "AED 155B", "Backlog visibility"]].map(([icon, val, label], i) => (
             <div key={i} style={{ textAlign: "center" }}>
               <div style={{ fontSize: 13 }}>{icon} <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: T.green }}>{val}</span></div>
               <div style={{ fontSize: 10, color: T.textMuted }}>{label}</div>
@@ -1009,7 +1009,7 @@ const UpgradeModal = ({ show, onClose }) => {
         <div className="plans-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
           {plans.map((plan, i) => (
             <div key={i} style={{ background: T.surfaceAlt, borderRadius: 16, padding: 24, border: plan.popular ? `2px solid ${T.gold}` : `1px solid ${T.border}`, position: "relative" }}>
-              {plan.popular && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 16px", borderRadius: 20, background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, fontSize: 10, fontWeight: 800, letterSpacing: 0.5, whiteSpace: "nowrap" }}>â­ MOST POPULAR</div>}
+              {plan.popular && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 16px", borderRadius: 20, background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, fontSize: 10, fontWeight: 800, letterSpacing: 0.5, whiteSpace: "nowrap" }}>⭐ MOST POPULAR</div>}
               <h3 style={{ fontSize: 18, fontWeight: 700, color: T.white, marginBottom: 4, marginTop: plan.popular ? 8 : 0 }}>{plan.name}</h3>
               <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 16 }}>
                 <span style={{ fontSize: 11, color: T.textMuted }}>AED</span>
@@ -1018,8 +1018,8 @@ const UpgradeModal = ({ show, onClose }) => {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
                 {plan.features.map((f, j) => (
-                  <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: f.includes("â³") ? T.textMuted : T.textSecondary }}>
-                    <span style={{ color: f.includes("â³") ? T.textMuted : T.green, fontSize: 11, marginTop: 1, flexShrink: 0 }}>âœ“</span>{f}
+                  <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: f.includes("⏳") ? T.textMuted : T.textSecondary }}>
+                    <span style={{ color: f.includes("⏳") ? T.textMuted : T.green, fontSize: 11, marginTop: 1, flexShrink: 0 }}>✓</span>{f}
                   </div>
                 ))}
               </div>
@@ -1033,7 +1033,7 @@ const UpgradeModal = ({ show, onClose }) => {
         </div>
 
         <div style={{ textAlign: "center", display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
-          {["ðŸ”’ Secure payment", "â†© 7-day money-back", "âš¡ Instant access", "âŒ Cancel anytime"].map((t, i) => (
+          {["🔒 Secure payment", "↩ 7-day money-back", "⚡ Instant access", "❌ Cancel anytime"].map((t, i) => (
             <span key={i} style={{ fontSize: 11, color: T.textMuted }}>{t}</span>
           ))}
         </div>
@@ -1042,7 +1042,7 @@ const UpgradeModal = ({ show, onClose }) => {
   );
 };
 
-/* â”€â”€â”€ MAIN DASHBOARD â”€â”€â”€ */
+/* ─── MAIN DASHBOARD ─── */
 // Focus trap hook for modals
 function useFocusTrap(active) {
   const ref = React.useRef(null);
@@ -1064,7 +1064,7 @@ function useFocusTrap(active) {
   return ref;
 }
 
-/* â”€â”€â”€ COMMUNITY MAP TAB COMPONENT â”€â”€â”€ */
+/* ─── COMMUNITY MAP TAB COMPONENT ─── */
 function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
   const [selectedProject, setSelectedProjectMap] = React.useState(null);
   const [filterComm, setFilterComm] = React.useState("All");
@@ -1209,7 +1209,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
     const L = window.L;
     const map = L.map(mapRef.current, { center: [25.1124, 55.2594], zoom: 11, zoomControl: true });
     L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-      attribution: "Â© OpenStreetMap Â© CARTO", maxZoom: 19,
+      attribution: "© OpenStreetMap © CARTO", maxZoom: 19,
     }).addTo(map);
     mapInstanceRef.current = map;
   }, [mapLoaded]);
@@ -1295,9 +1295,9 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: 4 }}>
         <div style={{ display: "flex", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
           {[
-            { id: "yield",  label: "ðŸŽ¯ Yield Layer",  desc: "Color by rental yield" },
-            { id: "ppsf",   label: "ðŸ“ PPSF Layer",   desc: "Color by price/sqft" },
-            { id: "volume", label: "ðŸ“Š Volume Layer",  desc: "Size by DLD transactions" },
+            { id: "yield",  label: "🎯 Yield Layer",  desc: "Color by rental yield" },
+            { id: "ppsf",   label: "📐 PPSF Layer",   desc: "Color by price/sqft" },
+            { id: "volume", label: "📊 Volume Layer",  desc: "Size by DLD transactions" },
           ].map(l => (
             <button key={l.id} type="button" onClick={() => setMapLayer(l.id)}
               style={{ padding: "7px 14px", fontSize: 11, fontWeight: 600, background: mapLayer === l.id ? `${T.gold}20` : "transparent", color: mapLayer === l.id ? T.gold : T.textMuted, border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
@@ -1362,7 +1362,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
           <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
           {/* Floating counter */}
           <div style={{ position: "absolute", bottom: 12, left: 12, background: "rgba(13,24,33,0.9)", backdropFilter: "blur(8px)", borderRadius: 8, padding: "6px 12px", border: "1px solid " + T.border, zIndex: 999, fontSize: 11, color: T.textSecondary }}>
-            <span style={{ color: T.gold, fontWeight: 700 }}>{filteredProjects.length}</span> projects Â·{" "}
+            <span style={{ color: T.gold, fontWeight: 700 }}>{filteredProjects.length}</span> projects ·{" "}
             <span style={{ color: T.teal, fontWeight: 600 }}>
               {mapLayer === "yield" ? "Yield layer" : mapLayer === "ppsf" ? "PPSF heat map" : "Volume heat map"}
             </span>
@@ -1378,7 +1378,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
                   <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.gold }}>{selectedProject.name}</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{selectedProject.community}</div>
                 </div>
-                <button type="button" onClick={() => setSelectedProjectMap(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>Ã—</button>
+                <button type="button" onClick={() => setSelectedProjectMap(null)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>×</button>
               </div>
               {selectedProject.imageUrl && <img src={selectedProject.imageUrl} alt="" style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 8, marginBottom: 12 }} onError={e => e.target.style.display="none"} />}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
@@ -1394,7 +1394,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
                   </div>
                 ))}
               </div>
-              <button type="button" onClick={() => setTab("Projects")} style={{ width: "100%", padding: "9px 0", background: "linear-gradient(135deg," + T.gold + ",#B8912F)", color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View Full Details â†’</button>
+              <button type="button" onClick={() => setTab("Projects")} style={{ width: "100%", padding: "9px 0", background: "linear-gradient(135deg," + T.gold + ",#B8912F)", color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>View Full Details →</button>
             </div>
           ) : (
             <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.border, padding: 16 }}>
@@ -1431,20 +1431,20 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab }) {
 }
 
 
-// â”€â”€â”€ Tab Data Sources Footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-/* â”€â”€â”€ DATA BADGE â€” verified data stamp â”€â”€â”€ */
+// ─── Tab Data Sources Footer ────────────────────────────────────────────────
+/* ─── DATA BADGE — verified data stamp ─── */
 const DataBadge = ({ source, date, type = "dld" }) => {
   const cfg = {
-    dld:     { label: "DLD Verified",     color: "#10B981", icon: "âœ“" },
-    reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "âœ“" },
-    emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "âœ“" },
-    live:    { label: "Live Â· Firestore", color: "#10B981", icon: "â—" },
-    ai:      { label: "AI Estimate",      color: "#8B5CF6", icon: "âœ¦" },
-    manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "âœ“" },
+    dld:     { label: "DLD Verified",     color: "#10B981", icon: "✓" },
+    reidin:  { label: "REIDIN Index",     color: "#3B82F6", icon: "✓" },
+    emaar:   { label: "Emaar IR",         color: "#D4A843", icon: "✓" },
+    live:    { label: "Live · Firestore", color: "#10B981", icon: "●" },
+    ai:      { label: "AI Estimate",      color: "#8B5CF6", icon: "✦" },
+    manual:  { label: "Admin Verified",   color: "#F59E0B", icon: "✓" },
   };
   const c = cfg[type] || cfg.dld;
   return (
-    <span title={`Source: ${source || c.label}${date ? " Â· " + date : ""}`} style={{
+    <span title={`Source: ${source || c.label}${date ? " · " + date : ""}`} style={{
       display: "inline-flex", alignItems: "center", gap: 4,
       fontSize: 9, fontWeight: 700, color: c.color, letterSpacing: 0.5,
       background: c.color + "12", border: `1px solid ${c.color}30`,
@@ -1493,7 +1493,7 @@ const TabSources = ({ sources }) => (
           }}
           onMouseEnter={e => { e.currentTarget.style.color = "#D4A843"; e.currentTarget.style.borderColor = "rgba(212,168,67,0.4)"; }}
           onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
-          >{s.label} â†—</a>
+          >{s.label} ↗</a>
         ) : (
           <span key={i} style={{
             fontSize: 10,
@@ -1533,7 +1533,7 @@ function EiborAdminPanel({ db, T }) {
         "6m": parseFloat(eiborEdit["6m"] || eiborCurrent?.["6m"] || 3.676),
         "1y": parseFloat(eiborEdit["1y"] || eiborCurrent?.["1y"] || 3.674),
         asOf: eiborEdit.asOf || new Date().toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" }),
-        source: "Live Â· UAE Central Bank",
+        source: "Live · UAE Central Bank",
         updatedAt: Date.now(),
       });
       setEiborSaved(true);
@@ -1548,22 +1548,22 @@ function EiborAdminPanel({ db, T }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
       {eiborCurrent && (
         <div style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 12, padding: "14px 18px" }}>
-          <div style={{ fontSize: 11, color: "#10B981", fontWeight: 700, marginBottom: 8 }}>ðŸ“Š Currently Live â€” {eiborCurrent.asOf || "â€”"}</div>
+          <div style={{ fontSize: 11, color: "#10B981", fontWeight: 700, marginBottom: 8 }}>📊 Currently Live — {eiborCurrent.asOf || "—"}</div>
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
             {[["1M", eiborCurrent["1m"]], ["3M", eiborCurrent["3m"]], ["6M", eiborCurrent["6m"]], ["1Y", eiborCurrent["1y"]]].map(([l, v]) => (
-              <div key={l}><span style={{ fontSize: 10, color: T.textMuted }}>{l}: </span><span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{v ? parseFloat(v).toFixed(3) : "â€”"}%</span></div>
+              <div key={l}><span style={{ fontSize: 10, color: T.textMuted }}>{l}: </span><span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{v ? parseFloat(v).toFixed(3) : "—"}%</span></div>
             ))}
           </div>
         </div>
       )}
       <div style={{ background: T.surface, border: "1px solid " + T.border, borderRadius: 12, padding: "18px 20px" }}>
         <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 12 }}>
-          Check latest rates at <a href="https://www.centralbank.ae/en/forex-eibor/eibor-rates/" target="_blank" rel="noopener noreferrer" style={{ color: T.gold }}>centralbank.ae â†—</a> or <a href="https://fcmb.ae/eibor-rate-today" target="_blank" rel="noopener noreferrer" style={{ color: T.gold }}>fcmb.ae â†—</a> then enter below:
+          Check latest rates at <a href="https://www.centralbank.ae/en/forex-eibor/eibor-rates/" target="_blank" rel="noopener noreferrer" style={{ color: T.gold }}>centralbank.ae ↗</a> or <a href="https://fcmb.ae/eibor-rate-today" target="_blank" rel="noopener noreferrer" style={{ color: T.gold }}>fcmb.ae ↗</a> then enter below:
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 12 }}>
           {[["1M EIBOR", "1m"], ["3M EIBOR", "3m"], ["6M EIBOR", "6m"], ["1Y EIBOR", "1y"]].map(([label, key]) => (
             <div key={key}>
-              <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>{label} {key === "3m" && <span style={{ color: T.gold }}>â˜… Primary</span>}</div>
+              <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>{label} {key === "3m" && <span style={{ color: T.gold }}>★ Primary</span>}</div>
               <input
                 type="number" step="0.0001" placeholder={eiborCurrent?.[key] ? eiborCurrent[key].toFixed(4) : "e.g. 3.5992"}
                 value={eiborEdit[key]}
@@ -1582,7 +1582,7 @@ function EiborAdminPanel({ db, T }) {
           </div>
           <button type="button" onClick={saveEibor} disabled={eiborSaving || !eiborEdit["3m"]}
             style={{ padding: "10px 24px", borderRadius: 10, background: eiborSaved ? "#10B981" : T.gold, border: "none", color: T.bg, fontSize: 13, fontWeight: 700, cursor: eiborEdit["3m"] ? "pointer" : "not-allowed", fontFamily: "'Outfit',sans-serif", marginTop: 20, whiteSpace: "nowrap" }}>
-            {eiborSaved ? "âœ… Saved!" : eiborSaving ? "Saving..." : "Save to Firestore â†’"}
+            {eiborSaved ? "✅ Saved!" : eiborSaving ? "Saving..." : "Save to Firestore →"}
           </button>
         </div>
       </div>
@@ -1595,8 +1595,8 @@ export default function EmaarDashboardV2() {
   const [user, setUser] = useState("");
   const [userName, setUserName] = useState("");
   const [userTier, setUserTier] = useState("free");
-  const [trialDaysLeft, setTrialDaysLeft] = useState(0);
   const [firebaseUser, setFirebaseUser] = useState(null);
+  const [trialDaysLeft, setTrialDaysLeft] = useState(0);
   const [showLogin, setShowLogin] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -1617,7 +1617,7 @@ export default function EmaarDashboardV2() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Price Alerts (old per-project alert modal â€” kept for project cards)
+  // Price Alerts (old per-project alert modal — kept for project cards)
   const [showSetAlert, setShowSetAlert] = React.useState(null);
   const [selectedNbhd, setSelectedNbhd] = React.useState(null);
   const [scSort, setScSort] = React.useState("avg");
@@ -1656,7 +1656,7 @@ export default function EmaarDashboardV2() {
   // Upgrade overlay for locked content
   const UpgradeOverlay = ({ message, compact }) => (
     <div style={{ position: "absolute", inset: 0, background: "rgba(4,9,15,0.85)", backdropFilter: "blur(8px)", borderRadius: "inherit", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, flexDirection: "column", gap: compact ? 8 : 12 }}>
-      <div style={{ fontSize: compact ? 20 : 28 }}>ðŸ”’</div>
+      <div style={{ fontSize: compact ? 20 : 28 }}>🔒</div>
       <div style={{ fontSize: compact ? 12 : 14, fontWeight: 600, color: T.white, textAlign: "center", maxWidth: 220 }}>{message || "Pro Feature"}</div>
       <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: compact ? "6px 14px" : "8px 20px", borderRadius: 8, background: T.gold, color: T.bg, border: "none", fontSize: compact ? 11 : 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro</button>
     </div>
@@ -1689,7 +1689,7 @@ export default function EmaarDashboardV2() {
   const [kycStatus, setKycStatus] = useState(null);
 
   // Set page title
-  useEffect(() => { document.title = "DXB Analytics â€” Dubai Real Estate Intelligence Platform"; }, []);
+  useEffect(() => { document.title = "DXB Analytics — Dubai Real Estate Intelligence Platform"; }, []);
   const [projectSearch, setProjectSearch] = useState("");
   const [projectFilter, setProjectFilter] = useState("All");
   const [projectTier, setProjectTier] = useState("All");
@@ -1698,12 +1698,12 @@ export default function EmaarDashboardV2() {
   const [liveProjects, setLiveProjects] = useState({});
   const [extraProjects, setExtraProjects] = useState([]);
   const [liveYields, setLiveYields] = useState([]);
-  // â”€â”€ Price Alerts â”€â”€
+  // ── Price Alerts ──
   const [showAlerts, setShowAlerts] = useState(false);
   const [myAlerts, setMyAlerts] = useState([]);
   const [alertForm, setAlertForm] = useState({ community: "Dubai Hills Estate", metric: "grossYield", condition: "above", value: "8" });
   const [alertSaving, setAlertSaving] = useState(false);
-  // â”€â”€ AI Insights â”€â”€
+  // ── AI Insights ──
   const [aiInsights, setAiInsights] = useState([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [liveDevHealth, setLiveDevHealth] = useState([]);
@@ -1745,7 +1745,7 @@ export default function EmaarDashboardV2() {
   const [gvNationality, setGvNationality] = useState("other");
   const [gvSelectedProj, setGvSelectedProj] = useState(null);
 
-  // Load projects from Firestore (runs for ALL users â€” guests and logged-in)
+  // Load projects from Firestore (runs for ALL users — guests and logged-in)
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -1759,7 +1759,7 @@ export default function EmaarDashboardV2() {
     const loadProjects = async () => {
       setProjectsLoading(true);
       try {
-        // Initial projectData load for first paint â€” onSnapshot takes over immediately
+        // Initial projectData load for first paint — onSnapshot takes over immediately
         const pdSnap = await getDocs(collection(db, "projectData"));
         const overrides = {};
         pdSnap.forEach(d => { overrides[d.id.replace("project_", "")] = d.data(); });
@@ -1775,7 +1775,7 @@ export default function EmaarDashboardV2() {
       } catch (e) { console.log("Firestore not available, using static data"); }
       setProjectsLoading(false);
     };
-    // â”€â”€ Live EMAAR stock price via Yahoo Finance (free, no key) â”€â”€
+    // ── Live EMAAR stock price via Yahoo Finance (free, no key) ──
     const fetchEmaarStock = async () => {
       try {
         const res = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/EMAAR.DU?interval=1d&range=1d");
@@ -1790,11 +1790,11 @@ export default function EmaarDashboardV2() {
     };
     fetchEmaarStock();
     const stockInterval = setInterval(fetchEmaarStock, 300000);
-    loadProjects(); // Load for everyone â€” no isLoggedIn gate
+    loadProjects(); // Load for everyone — no isLoggedIn gate
 
     // priceAlerts now live via user onSnapshot listener
 
-    // â”€â”€ AI Insights â€” generated fresh if not in cache (cache read now via onSnapshot) â”€â”€
+    // ── AI Insights — generated fresh if not in cache (cache read now via onSnapshot) ──
     (async () => {
       try {
         const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -1822,13 +1822,13 @@ export default function EmaarDashboardV2() {
       } catch(e) { setInsightsLoading(false); }
     })();
 
-    // â”€â”€ Load Paddle.js for billing â”€â”€
+    // ── Load Paddle.js for billing ──
     if (!window.Paddle) {
       const script = document.createElement("script");
       script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
       script.onload = () => {
-        // â”€â”€ PASTE YOUR PADDLE CLIENT TOKEN BELOW â”€â”€
-        // Get it from paddle.com â†’ Developer â†’ Authentication â†’ Client-side token
+        // ── PASTE YOUR PADDLE CLIENT TOKEN BELOW ──
+        // Get it from paddle.com → Developer → Authentication → Client-side token
         const PADDLE_CLIENT_TOKEN = "live_4393f28d4ec943ebe056835651f";
         if (!PADDLE_CLIENT_TOKEN.includes("PASTE")) {
           window.Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
@@ -1881,7 +1881,7 @@ export default function EmaarDashboardV2() {
 
   // Listen to Firebase auth state + fetch user profile
 
-  // â”€â”€ MASTER LIVE LISTENERS â€” all Firestore real-time subscriptions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── MASTER LIVE LISTENERS — all Firestore real-time subscriptions ──────────
   useEffect(() => {
     const unsubs = [];
 
@@ -2004,7 +2004,7 @@ export default function EmaarDashboardV2() {
     return () => unsubs.forEach(u => { try { u(); } catch {} });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // USER-SCOPED LIVE LISTENERS â€” portfolio, watchlist, price alerts
+  // USER-SCOPED LIVE LISTENERS — portfolio, watchlist, price alerts
   useEffect(() => {
     if (!isLoggedIn || !auth.currentUser) return;
     const unsubs = [];
@@ -2072,7 +2072,7 @@ export default function EmaarDashboardV2() {
                     await emailjs.send("service_da7nshv", "template_gl1xqhy", {
                       user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
                       project_name: "DXB Analytics Platform",
-                      change_type: "â° Your Pro Trial Has Expired",
+                      change_type: "⏰ Your Pro Trial Has Expired",
                       new_value: "Your 7-day trial has ended. Upgrade now to keep full access to 48+ projects, yield data, ROI tools and more.",
                       old_value: "Pro Trial", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, "USkwUhp0csGCVDkdQ");
@@ -2087,8 +2087,8 @@ export default function EmaarDashboardV2() {
                     await emailjs.send("service_da7nshv", "template_gl1xqhy", {
                       user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
                       project_name: "DXB Analytics Platform",
-                      change_type: `âš ï¸ Your Trial Expires in ${daysLeft} Day${daysLeft !== 1 ? "s" : ""}`,
-                      new_value: `Only ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left on your Pro trial. Don't lose access â€” upgrade now to keep all features.`,
+                      change_type: `⚠️ Your Trial Expires in ${daysLeft} Day${daysLeft !== 1 ? "s" : ""}`,
+                      new_value: `Only ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left on your Pro trial. Don't lose access — upgrade now to keep all features.`,
                       old_value: "Pro Trial Active", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, "USkwUhp0csGCVDkdQ");
                     await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial3d: true }, { merge: true });
@@ -2100,16 +2100,16 @@ export default function EmaarDashboardV2() {
                     await emailjs.send("service_da7nshv", "template_gl1xqhy", {
                       user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
                       project_name: "DXB Analytics Platform",
-                      change_type: "ðŸš¨ Last Day of Your Pro Trial!",
+                      change_type: "🚨 Last Day of Your Pro Trial!",
                       new_value: "Today is your last day. After midnight your account moves to Free and you lose access to 48 projects, community yields, ROI data and PDF reports.",
-                      old_value: "Pro Trial â€” Final Day", updated_at: new Date().toLocaleDateString("en-AE"),
+                      old_value: "Pro Trial — Final Day", updated_at: new Date().toLocaleDateString("en-AE"),
                     }, "USkwUhp0csGCVDkdQ");
                     await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial1d: true }, { merge: true });
                   } catch(e) {}
                 }
               }
             }
-            // Admin override â€” by role field OR by owner email
+            // Admin override — by role field OR by owner email
             if (data.role === "admin" || firebaseUser.email === "mianwaleed689@gmail.com") tier = "admin";
             setUserTier(tier);
             setIsSuspended(!!data.suspended);
@@ -2117,7 +2117,7 @@ export default function EmaarDashboardV2() {
             setVerifiedLevel(data.verifiedLevel || null);
             setKycStatus(data.kycStatus || null);
           } else {
-            // Existing user without profile (e.g. your admin account) â€” treat as admin/pro
+            // Existing user without profile (e.g. your admin account) — treat as admin/pro
             setUserTier("admin");
             setUserName("");
           }
@@ -2150,7 +2150,7 @@ export default function EmaarDashboardV2() {
     if (auth.currentUser) {
       try { await setDoc(doc(db, "watchlists", auth.currentUser.uid), { projects: updated, updatedAt: new Date().toISOString() }); } catch (e) {}
     }
-    notify(isWatched ? `Removed ${project.name} from watchlist` : `â­ ${project.name} added to watchlist`);
+    notify(isWatched ? `Removed ${project.name} from watchlist` : `⭐ ${project.name} added to watchlist`);
   };
 
   // Price alerts now live via user onSnapshot listener
@@ -2194,7 +2194,7 @@ export default function EmaarDashboardV2() {
     }
   }, [myAlerts, activeProjects]);
 
-  // NOTIFICATIONS â€” live listener so admin messages appear instantly
+  // NOTIFICATIONS — live listener so admin messages appear instantly
   useEffect(() => {
     if (!isLoggedIn || !auth.currentUser) return;
     const uid = auth.currentUser.uid;
@@ -2304,7 +2304,7 @@ export default function EmaarDashboardV2() {
     return (
       <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 20, fontFamily: "'Outfit', sans-serif", padding: 24 }}>
         <style>{css}</style>
-        <div style={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(239,68,68,0.1)", border: "2px solid rgba(239,68,68,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32 }}>ðŸš«</div>
+        <div style={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(239,68,68,0.1)", border: "2px solid rgba(239,68,68,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32 }}>🚫</div>
         <div style={{ textAlign: "center", maxWidth: 420 }}>
           <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 800, color: "#EF4444", margin: "0 0 10px" }}>Account Suspended</h1>
           <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, margin: "0 0 24px" }}>Your account has been suspended by an administrator. If you believe this is an error, please contact support.</p>
@@ -2317,8 +2317,8 @@ export default function EmaarDashboardV2() {
 
   // KYC SUBMIT FUNCTION
   const submitKYC = async () => {
-    if (!kycForm.name.trim()) { notify("âŒ Full name required"); return; }
-    if (!kycForm.phone.trim()) { notify("âŒ Phone number required"); return; }
+    if (!kycForm.name.trim()) { notify("❌ Full name required"); return; }
+    if (!kycForm.phone.trim()) { notify("❌ Phone number required"); return; }
     if (!auth.currentUser) return;
     setKycSubmitting(true);
     try {
@@ -2328,9 +2328,9 @@ export default function EmaarDashboardV2() {
       });
       await setDoc(doc(db, "users", auth.currentUser.uid), { kycStatus: "pending" }, { merge: true });
       setKycStatus("pending");
-      notify("âœ… Verification submitted! Admin will review within 24h.");
+      notify("✅ Verification submitted! Admin will review within 24h.");
       setShowKYC(false);
-    } catch(e) { notify("âŒ " + e.message); }
+    } catch(e) { notify("❌ " + e.message); }
     setKycSubmitting(false);
   };
 
@@ -2381,13 +2381,13 @@ export default function EmaarDashboardV2() {
       if (newTier === "pro_trial") { const end = new Date(); end.setDate(end.getDate() + 7); data.trialEnd = end.toISOString(); }
       await setDoc(doc(db, "users", userId), data, { merge: true });
       setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, tier: newTier, status: newTier } : u));
-      notify(`âœ… ${uName} â†’ ${newTier}`);
+      notify(`✅ ${uName} → ${newTier}`);
       // Send tier change confirmation email
       const tierMessages = {
         free: { subject: "Your DXB Analytics plan has changed to Free", body: "Your account has been updated to the Free plan. You have access to 5 featured projects and basic market data." },
         pro_trial: { subject: "Your 7-Day Pro Trial has been activated!", body: "Great news! Your Pro Trial has been activated. You now have full access to 48+ projects, community yields, ROI calculator, PDF reports and all Pro features for 7 days." },
-        pro: { subject: "Welcome to DXB Analytics Pro! â­", body: "Your account has been upgraded to the Pro Plan. You now have unlimited access to all 48+ projects, live yield data, ROI analysis, investment reports, and all Pro features." },
-        enterprise: { subject: "Welcome to DXB Analytics Enterprise! ðŸ¢", body: "Your account has been upgraded to Enterprise. You have access to all platform features including custom reports, priority support, and full data access." },
+        pro: { subject: "Welcome to DXB Analytics Pro! ⭐", body: "Your account has been upgraded to the Pro Plan. You now have unlimited access to all 48+ projects, live yield data, ROI analysis, investment reports, and all Pro features." },
+        enterprise: { subject: "Welcome to DXB Analytics Enterprise! 🏢", body: "Your account has been upgraded to Enterprise. You have access to all platform features including custom reports, priority support, and full data access." },
       };
       const msg = tierMessages[newTier] || { subject: `Your plan changed to ${newTier}`, body: `Your DXB Analytics plan has been updated to ${newTier}.` };
       if (uEmail) {
@@ -2403,7 +2403,7 @@ export default function EmaarDashboardV2() {
         } catch(e) {}
       }
     } catch (err) {
-      notify("âŒ Failed to update tier");
+      notify("❌ Failed to update tier");
     }
   };
 
@@ -2436,12 +2436,12 @@ export default function EmaarDashboardV2() {
       <a href="#main-content" style={{ position: "absolute", top: -40, left: 0, background: T.gold, color: T.bg, padding: "8px 16px", borderRadius: "0 0 8px 0", fontWeight: 700, fontSize: 13, zIndex: 99999, transition: "top 0.2s" }} onFocus={e => e.target.style.top = "0"} onBlur={e => e.target.style.top = "-40px"}>Skip to content</a>
 
       {/* Toast notification */}
-      {toast && <div className="fade-up" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("âœ…") ? T.green : toast.includes("âŒ") ? T.red : T.gold, color: "#fff", fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)", fontFamily: "'Outfit', sans-serif" }}>{toast}</div>}
+      {toast && <div className="fade-up" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 24px", borderRadius: 10, background: toast.includes("✅") ? T.green : toast.includes("❌") ? T.red : T.gold, color: "#fff", fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: "0 12px 40px rgba(0,0,0,0.4)", fontFamily: "'Outfit', sans-serif" }}>{toast}</div>}
 
       {/* Mobile overlay */}
       <div className={`mobile-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
 
-      {/* â”€â”€â”€ SIDEBAR â”€â”€â”€ */}
+      {/* ─── SIDEBAR ─── */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`} style={{
         position: "fixed", top: 0, left: 0, bottom: 0, width: 240,
         background: T.surface, borderRight: `1px solid ${T.border}`,
@@ -2495,7 +2495,7 @@ export default function EmaarDashboardV2() {
               <div style={{ fontSize: 9, fontWeight: 700, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", padding: "16px 16px 8px", marginTop: 8, borderTop: `1px solid ${T.border}` }}>Admin</div>
               <button type="button" className="sidebar-btn" onClick={() => window.location.href = "/admin"} style={{ background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.05))", border: "1px solid rgba(212,168,67,0.3)" }}>
                 {Icons.admin}
-                Admin Console â†—
+                Admin Console ↗
               </button>
             </>
           )}
@@ -2506,14 +2506,14 @@ export default function EmaarDashboardV2() {
           {/* Trial Banner */}
           {userTier === "pro_trial" && trialDaysLeft > 0 && (
             <div style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, background: "rgba(212,168,67,0.08)", border: `1px solid ${T.border}`, textAlign: "center" }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 0.5 }}>â­ PRO TRIAL</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 0.5 }}>⭐ PRO TRIAL</div>
               <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>{trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining</div>
             </div>
           )}
-          {userTier === "free" && firebaseUser && !isAdmin && (
+          {userTier === "free" && (
             <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setShowUpgrade(true); }} onClick={() => setShowUpgrade(true)} style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.15)", textAlign: "center", cursor: "pointer" }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: T.blue, letterSpacing: 0.5 }}>FREE PLAN</div>
-              <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>Upgrade to Pro â†’</div>
+              <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>Upgrade to Pro →</div>
             </div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 10, background: T.surfaceAlt }}>
@@ -2534,21 +2534,21 @@ export default function EmaarDashboardV2() {
         </div>
       </aside>
 
-      {/* â”€â”€â”€ FREE TIER BANNER â”€â”€â”€ */}
-      {userTier === "free" && firebaseUser && !isAdmin && (
+      {/* ─── FREE TIER BANNER ─── */}
+      {userTier === "free" && (
         <div style={{ position: "fixed", top: 0, left: 240, right: 0, zIndex: 60, background: `linear-gradient(90deg, ${T.gold}ee, #B8912Fee)`, padding: "8px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 14 }}>ðŸ”’</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#04090F" }}>You're on the Free plan â€” 12 tabs locked</span>
+            <span style={{ fontSize: 14 }}>🔒</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#04090F" }}>You're on the Free plan — 12 tabs locked</span>
             <span style={{ fontSize: 11, color: "rgba(4,9,15,0.7)" }}>Upgrade to Pro to unlock DXB Estimate, Yields, Mortgage, Portfolio & more</span>
           </div>
           <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "5px 16px", background: "#04090F", color: T.gold, border: "none", borderRadius: 8, fontSize: 11, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
-            Upgrade Now â†’
+            Upgrade Now →
           </button>
         </div>
       )}
 
-      {/* â”€â”€â”€ TOP BAR â”€â”€â”€ */}
+      {/* ─── TOP BAR ─── */}
       <header className="top-bar" style={{
         position: "fixed", top: 0, right: 0, left: 240, height: 60,
         background: `${T.surface}ee`, backdropFilter: "blur(16px)",
@@ -2567,7 +2567,7 @@ export default function EmaarDashboardV2() {
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button type="button" onClick={() => setShowWatchlist(true)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: watchlist.length > 0 ? T.gold : T.textSecondary, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} title="My Watchlist">
-            â˜† {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
+            ☆ {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
           </button>
           <button type="button" onClick={globalRefresh} disabled={isRefreshing} title="Refresh all data" style={{ background: isRefreshing ? T.surfaceAlt : "rgba(212,168,67,0.08)", border: "1px solid " + (isRefreshing ? T.border : "rgba(212,168,67,0.25)"), borderRadius: 10, padding: "8px 12px", cursor: isRefreshing ? "not-allowed" : "pointer", color: isRefreshing ? T.textMuted : T.gold, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: isRefreshing ? "spin 1s linear infinite" : "none" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -2580,7 +2580,7 @@ export default function EmaarDashboardV2() {
         </div>
       </header>
 
-      {/* â”€â”€â”€ MAIN CONTENT â”€â”€â”€ */}
+      {/* ─── MAIN CONTENT ─── */}
       <main role="main" id="main-content" className="main-content" style={{ marginLeft: 240, paddingTop: 60, minHeight: "100vh" }}>
         {/* Trial / Free tier banner */}
         {userTier === "pro_trial" && trialDaysLeft > 0 && (() => {
@@ -2588,49 +2588,49 @@ export default function EmaarDashboardV2() {
           const isWarning = trialDaysLeft <= 3;
           const bg = isUrgent ? "rgba(239,68,68,0.1)" : isWarning ? "rgba(245,158,11,0.1)" : "rgba(212,168,67,0.08)";
           const border = isUrgent ? "rgba(239,68,68,0.35)" : isWarning ? "rgba(245,158,11,0.35)" : T.border;
-          const icon = isUrgent ? "ðŸš¨" : isWarning ? "âš ï¸" : "â­";
+          const icon = isUrgent ? "🚨" : isWarning ? "⚠️" : "⭐";
           const label = isUrgent ? "Last day of your trial!" : isWarning ? `Trial ending soon` : "Pro Trial Active";
           const sub = isUrgent
             ? "Your trial expires today. Upgrade now to keep full access."
             : isWarning
-            ? `${trialDaysLeft} days left â€” don't lose your access to 48+ projects and yield data.`
+            ? `${trialDaysLeft} days left — don't lose your access to 48+ projects and yield data.`
             : `${trialDaysLeft} day${trialDaysLeft !== 1 ? "s" : ""} remaining. Full Pro access active.`;
           return (
             <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 16 }}>{icon}</span>
                 <span style={{ fontSize: 13, color: isUrgent ? T.red : isWarning ? T.gold : T.white, fontWeight: 700 }}>{label}</span>
-                <span style={{ fontSize: 12, color: T.textSecondary }}>â€” {sub}</span>
+                <span style={{ fontSize: 12, color: T.textSecondary }}>— {sub}</span>
               </div>
               <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: isUrgent ? T.red : T.gold, color: isUrgent ? "#fff" : T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>
-                {isUrgent ? "ðŸ”¥ Upgrade Now" : "Upgrade to Pro"}
+                {isUrgent ? "🔥 Upgrade Now" : "Upgrade to Pro"}
               </button>
             </div>
           );
         })()}
-        {userTier === "free" && firebaseUser && !isAdmin && (
+        {userTier === "free" && (
           <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 16 }}>ðŸ”’</span>
+              <span style={{ fontSize: 16 }}>🔒</span>
               <span style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>Free Plan</span>
-              <span style={{ fontSize: 12, color: T.textSecondary }}>â€” You're seeing limited data. Upgrade to unlock all projects, yields & more.</span>
+              <span style={{ fontSize: 12, color: T.textSecondary }}>— You're seeing limited data. Upgrade to unlock all projects, yields & more.</span>
             </div>
-            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro â€” AED 99/mo</button>
+            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>Upgrade to Pro — AED 99/mo</button>
           </div>
         )}
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: `0 24px ${compareList.length > 0 && tab === "Projects" ? "120px" : "60px"}` }}>
 
-          {/* â”€â”€â”€ OVERVIEW TAB â”€â”€â”€ */}
+          {/* ─── OVERVIEW TAB ─── */}
           {tab === "Overview" && <>
-            {/* â”€â”€â”€ VERIFIED BAR â”€â”€â”€ */}
+            {/* ─── VERIFIED BAR ─── */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", marginBottom: 4, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 10, height: 10 }}>
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />
                 </span>
                 <span style={{ fontSize: 11, color: T.textSecondary }}>Data verified <span style={{ color: T.gold, fontWeight: 600 }}>{new Date().toLocaleDateString("en-AE", { day: "numeric", month: "short", year: "numeric" })}</span></span>
-                <span style={{ color: T.border }}>Â·</span>
-                <a href="https://www.emaar.com/en/investor-relations/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: T.teal, textDecoration: "none" }}>Emaar IR â†—</a>
+                <span style={{ color: T.border }}>·</span>
+                <a href="https://www.emaar.com/en/investor-relations/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: T.teal, textDecoration: "none" }}>Emaar IR ↗</a>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 10, color: T.textMuted }}>Click any card for breakdown & sources</span>
@@ -2665,7 +2665,7 @@ export default function EmaarDashboardV2() {
                   pdf.setFontSize(14); pdf.setTextColor(255, 255, 255); pdf.setFont("helvetica", "bold");
                   pdf.text(`${tabLabel} Report`, M, 42);
                   pdf.setFontSize(9); pdf.setTextColor(140, 140, 140); pdf.setFont("helvetica", "normal");
-                  pdf.text(`Generated ${now} Â· ${user || "DXB Analytics"}`, M, 49);
+                  pdf.text(`Generated ${now} · ${user || "DXB Analytics"}`, M, 49);
                   // Divider
                   pdf.setDrawColor(212, 168, 67, 0.3); pdf.setLineWidth(0.3);
                   pdf.line(M, 54, W - M, 54);
@@ -2687,14 +2687,14 @@ export default function EmaarDashboardV2() {
                   };
                   const sections = {
                     "Overview": [
-                      ["KEY METRICS", [["Property Sales FY2025","AED 80.4B","+16% YoY Â· All-time record"],["Revenue FY2025","AED 49.6B","+40% YoY Â· USD 13.5B"],["Net Profit FY2025","AED 25.7B","+36% YoY Â· USD 7.0B"],["Backlog","AED 155B","3â€“4yr revenue visibility"],["Units Delivered","125,600+","Since 2002 Â· #1 GCC"]]],
-                      ["FINANCIALS", [["Market Cap","AED 128.2B","~USD 34.9B"],["P/E Ratio","7.83Ã—","Industry avg 15.5Ã—"],["Dividend Yield","7.04%","AED 1.00/share"],["Debt/Equity","0.11Ã—","Very low leverage"],["Credit Rating","BBB+ / Baa1","S&P / Moody's stable"]]]
+                      ["KEY METRICS", [["Property Sales FY2025","AED 80.4B","+16% YoY · All-time record"],["Revenue FY2025","AED 49.6B","+40% YoY · USD 13.5B"],["Net Profit FY2025","AED 25.7B","+36% YoY · USD 7.0B"],["Backlog","AED 155B","3–4yr revenue visibility"],["Units Delivered","125,600+","Since 2002 · #1 GCC"]]],
+                      ["FINANCIALS", [["Market Cap","AED 128.2B","~USD 34.9B"],["P/E Ratio","7.83×","Industry avg 15.5×"],["Dividend Yield","7.04%","AED 1.00/share"],["Debt/Equity","0.11×","Very low leverage"],["Credit Rating","BBB+ / Baa1","S&P / Moody's stable"]]]
                     ],
                     "Yields": [
-                      ["RENTAL YIELD SUMMARY", [["City Average Gross Yield","6.9%","Dubai 2025"],["JVC â€” Highest Yield","8â€“9%","Best community for yield"],["Downtown Dubai","4â€“5%","Premium pricing, lower yield"],["Palm Jumeirah","4.5â€“5.5%","Ultra-luxury, lower yield"],["Dubai Hills Estate","5.5â€“6.5%","Family community premium"]]]
+                      ["RENTAL YIELD SUMMARY", [["City Average Gross Yield","6.9%","Dubai 2025"],["JVC — Highest Yield","8–9%","Best community for yield"],["Downtown Dubai","4–5%","Premium pricing, lower yield"],["Palm Jumeirah","4.5–5.5%","Ultra-luxury, lower yield"],["Dubai Hills Estate","5.5–6.5%","Family community premium"]]]
                     ],
                     "Market": [
-                      ["DUBAI MARKET 2025", [["Total Transactions","214,912","Record â€” 5th consecutive year"],["Total Market Value","AED 682.5B","All-time high"],["Avg Price/sqft","AED 1,689","2025 Dubai average"],["Off-Plan Share","60%+","Dominant market segment"],["YoY Growth","~22%","Transaction volume growth"]]]
+                      ["DUBAI MARKET 2025", [["Total Transactions","214,912","Record — 5th consecutive year"],["Total Market Value","AED 682.5B","All-time high"],["Avg Price/sqft","AED 1,689","2025 Dubai average"],["Off-Plan Share","60%+","Dominant market segment"],["YoY Growth","~22%","Transaction volume growth"]]]
                     ]
                   };
                   const tabSections = sections[tabLabel] || sections["Overview"];
@@ -2709,7 +2709,7 @@ export default function EmaarDashboardV2() {
                       pdf.setFont("helvetica", "bold"); pdf.setFontSize(8); pdf.setTextColor(200, 200, 200);
                       pdf.text(ins.title, M + 3, y + 1);
                       pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(140, 140, 140);
-                      const insText = ins.insight.length > 90 ? ins.insight.slice(0, 90) + "â€¦" : ins.insight;
+                      const insText = ins.insight.length > 90 ? ins.insight.slice(0, 90) + "…" : ins.insight;
                       pdf.text(insText, M + 3, y + 7);
                       y += 16;
                     });
@@ -2717,29 +2717,29 @@ export default function EmaarDashboardV2() {
                   // Footer
                   pdf.setFillColor(212, 168, 67); pdf.rect(0, 293, W, 4, "F");
                   pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(100, 100, 100);
-                  pdf.text(`DXB Analytics Â· emaar-dashboard.vercel.app Â· ${now} Â· For informational purposes only`, M, 289);
+                  pdf.text(`DXB Analytics · emaar-dashboard.vercel.app · ${now} · For informational purposes only`, M, 289);
                   pdf.save(`DXB-Analytics-${tabLabel.replace(/ /g,"-")}-${new Date().toISOString().slice(0,10)}.pdf`);
                 }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif", transition: "all 0.2s" }}
                 onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.2)"}
                 onMouseLeave={e => e.currentTarget.style.background = "rgba(212,168,67,0.1)"}>
-                  â¬‡ Export PDF
+                  ⬇ Export PDF
                 </button>
               </div>
             </div>
 
-            {/* â”€â”€ AI Market Insights Feed â”€â”€ */}
+            {/* ── AI Market Insights Feed ── */}
             {(aiInsights.length > 0 || insightsLoading) && (
               <div style={{ background: "linear-gradient(135deg, rgba(14,29,53,0.8), rgba(4,9,15,0.9))", borderRadius: 16, border: `1px solid rgba(212,168,67,0.2)`, padding: "18px 20px", marginBottom: 20 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>âœ¦</span>
+                    <span style={{ fontSize: 14 }}>✦</span>
                     <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>AI Market Intelligence</span>
                     <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: T.gold, border: `1px solid ${T.gold}30` }}>Powered by Claude</span>
                   </div>
                   <span style={{ fontSize: 10, color: T.textMuted }}>Updated {new Date().toLocaleDateString("en-AE", { month: "short", year: "numeric" })}</span>
                 </div>
                 {insightsLoading
-                  ? <div style={{ display: "flex", gap: 8, alignItems: "center", color: T.textMuted, fontSize: 12 }}><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>âŸ³</span> Analysing Dubai market dataâ€¦</div>
+                  ? <div style={{ display: "flex", gap: 8, alignItems: "center", color: T.textMuted, fontSize: 12 }}><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span> Analysing Dubai market data…</div>
                   : <div className="ai-insights-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
                       {aiInsights.map((ins, i) => (
                         <div key={i} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
@@ -2749,7 +2749,7 @@ export default function EmaarDashboardV2() {
                               color: ins.tag === "Yield" ? T.green : ins.tag === "Risk" ? "#EF4444" : ins.tag === "Opportunity" ? T.gold : T.blue }}>
                               {ins.tag}
                             </span>
-                            <span style={{ fontSize: 13 }}>{ins.direction === "up" ? "â†‘" : ins.direction === "down" ? "â†“" : "â†’"}</span>
+                            <span style={{ fontSize: 13 }}>{ins.direction === "up" ? "↑" : ins.direction === "down" ? "↓" : "→"}</span>
                           </div>
                           <div style={{ fontSize: 12, fontWeight: 700, color: T.white, marginBottom: 5, lineHeight: 1.3 }}>{ins.title}</div>
                           <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>{ins.insight}</div>
@@ -2760,26 +2760,26 @@ export default function EmaarDashboardV2() {
               </div>
             )}
 
-            {/* â”€â”€ MARKET PULSE + COMMUNITY HEAT MAP â”€â”€ */}
+            {/* ── MARKET PULSE + COMMUNITY HEAT MAP ── */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }} className="chart-grid-2">
 
               {/* Dubai Market Pulse */}
               <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>ðŸ“ˆ</span>
+                    <span style={{ fontSize: 14 }}>📈</span>
                     <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Dubai Market Pulse</span>
                   </div>
-                  <span style={{ fontSize: 9, color: T.textMuted }}>FY 2025 Â· DLD Official</span>
+                  <span style={{ fontSize: 9, color: T.textMuted }}>FY 2025 · DLD Official</span>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   {[
-                    { label: "Total Transactions", value: "214,912", change: "+36%", color: T.green, icon: "ðŸ " },
-                    { label: "Market Value", value: "AED 682.5B", change: "+31%", color: T.gold, icon: "ðŸ’°" },
-                    { label: "Avg Price/sqft", value: "AED 1,689", change: "+19.8%", color: T.teal, icon: "ðŸ“" },
-                    { label: "Off-Plan Share", value: "60%+", change: "Dominant", color: T.blue, icon: "ðŸ—ï¸" },
-                    { label: "New Investors", value: "110,000+", change: "+55%", color: T.purple, icon: "ðŸ‘¥" },
-                    { label: "Nationalities", value: "175+", change: "Global demand", color: T.orange, icon: "ðŸŒ" },
+                    { label: "Total Transactions", value: "214,912", change: "+36%", color: T.green, icon: "🏠" },
+                    { label: "Market Value", value: "AED 682.5B", change: "+31%", color: T.gold, icon: "💰" },
+                    { label: "Avg Price/sqft", value: "AED 1,689", change: "+19.8%", color: T.teal, icon: "📐" },
+                    { label: "Off-Plan Share", value: "60%+", change: "Dominant", color: T.blue, icon: "🏗️" },
+                    { label: "New Investors", value: "110,000+", change: "+55%", color: T.purple, icon: "👥" },
+                    { label: "Nationalities", value: "175+", change: "Global demand", color: T.orange, icon: "🌍" },
                   ].map((item, i) => (
                     <div key={i} style={{ padding: "10px 12px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
@@ -2792,7 +2792,7 @@ export default function EmaarDashboardV2() {
                   ))}
                 </div>
                 <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.15)", fontSize: 10, color: T.textMuted }}>
-                  Source: Dubai Land Department FY2025 Â· DXBinteract Â· Knight Frank Dubai Report 2025
+                  Source: Dubai Land Department FY2025 · DXBinteract · Knight Frank Dubai Report 2025
                 </div>
               </div>
 
@@ -2800,10 +2800,10 @@ export default function EmaarDashboardV2() {
               <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>ðŸ—ºï¸</span>
+                    <span style={{ fontSize: 14 }}>🗺️</span>
                     <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Community PPSF Tracker</span>
                   </div>
-                  <span style={{ fontSize: 9, color: T.textMuted }}>AED/sqft Â· 2025</span>
+                  <span style={{ fontSize: 9, color: T.textMuted }}>AED/sqft · 2025</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {[
@@ -2840,24 +2840,24 @@ export default function EmaarDashboardV2() {
               </div>
             </div>
 
-            {/* â”€â”€ LATEST DUBAI RE NEWS â”€â”€ */}
+            {/* ── LATEST DUBAI RE NEWS ── */}
             <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 14 }}>ðŸ“°</span>
+                  <span style={{ fontSize: 14 }}>📰</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Dubai RE Market Headlines</span>
                   <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.1)", color: T.green, border: "1px solid rgba(16,185,129,0.2)" }}>Q1 2026</span>
                 </div>
-                <span style={{ fontSize: 9, color: T.textMuted }}>Curated from DLD Â· Gulf News Â· Zawya Â· Knight Frank</span>
+                <span style={{ fontSize: 9, color: T.textMuted }}>Curated from DLD · Gulf News · Zawya · Knight Frank</span>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
                 {[
-                  { headline: "Dubai H1 2025 transactions hit AED 431B â€” up 25% year-on-year", source: "DLD Official", tag: "Market", color: T.green, date: "H1 2025" },
+                  { headline: "Dubai H1 2025 transactions hit AED 431B — up 25% year-on-year", source: "DLD Official", tag: "Market", color: T.green, date: "H1 2025" },
                   { headline: "Off-plan sales account for 60%+ of all Dubai transactions in 2025", source: "DXBinteract", tag: "Off-Plan", color: T.blue, date: "FY 2025" },
-                  { headline: "Emaar records AED 80.4B in property sales â€” all-time record for any GCC developer", source: "Emaar IR", tag: "Emaar", color: T.gold, date: "FY 2025" },
-                  { headline: "Dubai average price per sqft reaches AED 1,689 â€” up 19.8% annually", source: "ValuStrat VPI", tag: "Prices", color: T.teal, date: "Dec 2025" },
+                  { headline: "Emaar records AED 80.4B in property sales — all-time record for any GCC developer", source: "Emaar IR", tag: "Emaar", color: T.gold, date: "FY 2025" },
+                  { headline: "Dubai average price per sqft reaches AED 1,689 — up 19.8% annually", source: "ValuStrat VPI", tag: "Prices", color: T.teal, date: "Dec 2025" },
                   { headline: "110,000+ new investors entered Dubai property market in 2025, up 55% YoY", source: "DLD Press Release", tag: "Demand", color: T.purple, date: "FY 2025" },
-                  { headline: "EIBOR 3-month rate at 3.593% â€” mortgage affordability improves as Fed pivots", source: "UAE Central Bank", tag: "EIBOR", color: T.orange, date: "Mar 2026" },
+                  { headline: "EIBOR 3-month rate at 3.593% — mortgage affordability improves as Fed pivots", source: "UAE Central Bank", tag: "EIBOR", color: T.orange, date: "Mar 2026" },
                 ].map((item, i) => (
                   <div key={i} style={{ padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 8 }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -2871,28 +2871,28 @@ export default function EmaarDashboardV2() {
               </div>
             </div>
 
-                        <Section title="Key Performance" sub="FY 2025 â€” All-Time Records Across Every Metric Â· Source: Emaar Annual Report 2025">
+                        <Section title="Key Performance" sub="FY 2025 — All-Time Records Across Every Metric · Source: Emaar Annual Report 2025">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 {emaarStockPrice && (
                   <div style={{ background: T.surface, border: `1px solid ${emaarStockPrice.up ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`, borderRadius: 14, padding: "14px 16px", cursor: "default", position: "relative", overflow: "hidden" }}
-                    onClick={() => setSelectedKPI({ label: "EMAAR.DU Live Price", value: `AED ${emaarStockPrice.price}`, color: emaarStockPrice.up ? T.green : "#EF4444", description: "Live Emaar Properties (EMAAR.DU) share price from Dubai Financial Market. Auto-refreshes every 5 minutes.", source: "Yahoo Finance Â· DFM Live", sourceUrl: "https://finance.yahoo.com/quote/EMAAR.DU", items: [{ label: "Current Price", value: `AED ${emaarStockPrice.price}`, note: "DFM live" }, { label: "Day Change", value: `${emaarStockPrice.up ? "+" : ""}${emaarStockPrice.change}%`, note: "vs prev close" }, { label: "Market Cap", value: "AED 128.2B", note: "~USD 34.9B" }, { label: "Analyst Target", value: "AED 19.94", note: "12/12 Strong Buy" }, { label: "Dividend Yield", value: "~7%", note: "AED 1.00/share" }], trend: null })}>
+                    onClick={() => setSelectedKPI({ label: "EMAAR.DU Live Price", value: `AED ${emaarStockPrice.price}`, color: emaarStockPrice.up ? T.green : "#EF4444", description: "Live Emaar Properties (EMAAR.DU) share price from Dubai Financial Market. Auto-refreshes every 5 minutes.", source: "Yahoo Finance · DFM Live", sourceUrl: "https://finance.yahoo.com/quote/EMAAR.DU", items: [{ label: "Current Price", value: `AED ${emaarStockPrice.price}`, note: "DFM live" }, { label: "Day Change", value: `${emaarStockPrice.up ? "+" : ""}${emaarStockPrice.change}%`, note: "vs prev close" }, { label: "Market Cap", value: "AED 128.2B", note: "~USD 34.9B" }, { label: "Analyst Target", value: "AED 19.94", note: "12/12 Strong Buy" }, { label: "Dividend Yield", value: "~7%", note: "AED 1.00/share" }], trend: null })}>
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: emaarStockPrice.up ? "#10B981" : "#EF4444" }} />
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                       <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10B981", display: "inline-block", animation: "pulse 2s infinite" }} />
-                      <span style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>EMAAR.DU Â· Live</span>
+                      <span style={{ fontSize: 9, color: T.textMuted, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>EMAAR.DU · Live</span>
                     </div>
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: emaarStockPrice.up ? T.green : "#EF4444", lineHeight: 1 }}>AED {emaarStockPrice.price}</div>
-                    <div style={{ fontSize: 11, color: emaarStockPrice.up ? T.green : "#EF4444", marginTop: 4 }}>{emaarStockPrice.up ? "â–²" : "â–¼"} {Math.abs(emaarStockPrice.change)}% today Â· DFM</div>
+                    <div style={{ fontSize: 11, color: emaarStockPrice.up ? T.green : "#EF4444", marginTop: 4 }}>{emaarStockPrice.up ? "▲" : "▼"} {Math.abs(emaarStockPrice.change)}% today · DFM</div>
                   </div>
                 )}
-                <KPI label="Property Sales" value="AED 80.4B" sub="+16% YoY Â· USD 21.9B" delay={1} onClick={() => setSelectedKPI({ label: "Property Sales", value: "AED 80.4B", color: T.gold, description: "Total off-plan and ready property sales contracted in FY2025. Includes UAE and international markets.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "FY2025 Sales", value: "AED 80.4B", note: "All-time record" }, { label: "FY2024 Sales", value: "AED 69.3B", note: "+16% YoY" }, { label: "FY2023 Sales", value: "AED 52.7B", note: "+31% YoY" }, { label: "Int'l Sales", value: "AED 9.3B", note: "+124% YoY" }, { label: "UAE Market Share", value: "~30%", note: "Largest by value" }, { label: "Units Booked", value: "12,000+", note: "FY2025 estimate" }], trend: [{ y: "2020", v: 21.5 }, { y: "2021", v: 26.2 }, { y: "2022", v: 33.5 }, { y: "2023", v: 52.7 }, { y: "2024", v: 69.3 }, { y: "2025", v: 80.4 }] })} />
-                <KPI label="Revenue" value="AED 49.6B" sub="+40% YoY Â· USD 13.5B" delay={2} onClick={() => setSelectedKPI({ label: "Revenue", value: "AED 49.6B", color: T.teal, description: "Total recognized revenue across property development, malls, hospitality, and international operations.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "UAE Dev Revenue", value: "AED 36.4B", note: "73% of total" }, { label: "Malls & Retail", value: "AED 6.3B", note: "+13% YoY" }, { label: "Hospitality", value: "AED 4.2B", note: "+12% YoY" }, { label: "International", value: "AED 2.6B", note: "+124% YoY" }, { label: "Revenue CAGR", value: "27.2%", note: "5-year 2020â€“2025" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: 49.6 }] })} />
-                <KPI label="Net Profit" value="AED 25.7B" sub="+36% YoY Â· USD 7.0B" delay={3} onClick={() => setSelectedKPI({ label: "Net Profit", value: "AED 25.7B", color: T.green, description: "Net profit before minority interest. Includes recurring revenue from Emaar Malls and hospitality.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Net Margin", value: "51.8%", note: "Industry-leading" }, { label: "EPS FY2025", value: "AED 2.00", note: "+31% YoY" }, { label: "Q4 2025 Profit", value: "AED 7.3B", note: "Strongest quarter" }, { label: "5yr Profit CAGR", value: "57.1%", note: "2020â€“2025" }, { label: "Tax Rate", value: "~9%", note: "UAE Corporate Tax" }], trend: [{ y: "2020", v: 2.6 }, { y: "2021", v: 4.1 }, { y: "2022", v: 6.2 }, { y: "2023", v: 12.6 }, { y: "2024", v: 18.9 }, { y: "2025", v: 25.7 }] })} />
-                <KPI label="EBITDA" value="AED 25.6B" sub="+33% YoY Â· USD 7.0B" delay={4} onClick={() => setSelectedKPI({ label: "EBITDA", value: "AED 25.6B", color: T.blue, description: "Earnings before interest, tax, depreciation & amortisation. Key operational profitability metric.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "EBITDA Margin", value: "51.6%", note: "5-year high" }, { label: "Recurring EBITDA", value: "AED 10.5B", note: "32% share" }, { label: "Dev EBITDA", value: "AED 15.1B", note: "Property segment" }, { label: "EV/EBITDA", value: "~5.0Ã—", note: "Vs sector 9Ã— avg" }, { label: "EBITDA CAGR", value: "44.5%", note: "2020â€“2025" }], trend: [{ y: "2020", v: 4.0 }, { y: "2021", v: 5.3 }, { y: "2022", v: 8.1 }, { y: "2023", v: 13.4 }, { y: "2024", v: 19.2 }, { y: "2025", v: 25.6 }] })} />
-                <KPI label="Backlog" value="AED 155B" sub="+39% YoY Â· 3-4yr visibility" delay={5} onClick={() => setSelectedKPI({ label: "Revenue Backlog", value: "AED 155B", color: T.purple, description: "Total contracted but unrecognized revenue. Provides 3â€“4 years of forward revenue visibility.", source: "Emaar Q4 2025 Results", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Backlog", value: "AED 155B", note: "+39% YoY record" }, { label: "FY2024 Backlog", value: "AED 111.5B", note: "Prior year" }, { label: "Coverage Ratio", value: "3â€“4 yrs", note: "Revenue visibility" }, { label: "UAE Backlog", value: "AED 140B+", note: "~90% of total" }, { label: "New Launches", value: "AED 85B+", note: "FY2025 new sales" }], trend: [{ y: "2020", v: 45 }, { y: "2021", v: 52 }, { y: "2022", v: 68 }, { y: "2023", v: 80 }, { y: "2024", v: 111.5 }, { y: "2025", v: 155 }] })} />
-                <KPI label="Recurring Rev" value="AED 10.5B" sub="+13% Â· 32% of EBITDA" delay={6} onClick={() => setSelectedKPI({ label: "Recurring Revenue", value: "AED 10.5B", color: T.cyan, description: "Stable income from Emaar Malls, hotels, serviced residences, and commercial leasing.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Malls Revenue", value: "AED 6.3B", note: "Dubai Mall + Fashion Ave" }, { label: "Hospitality", value: "AED 4.2B", note: "Hotels & serviced res." }, { label: "% of EBITDA", value: "32%", note: "Defensive income" }, { label: "Dubai Mall Footfall", value: "105M+", note: "Annual visitors" }, { label: "Occupancy", value: "95%+", note: "Malls occupancy rate" }], trend: [{ y: "2020", v: 5.8 }, { y: "2021", v: 6.8 }, { y: "2022", v: 7.9 }, { y: "2023", v: 8.6 }, { y: "2024", v: 9.3 }, { y: "2025", v: 10.5 }] })} />
-                <KPI label="Units Delivered" value="125,600+" sub="Since 2002 Â· #1 in GCC" delay={7} onClick={() => setSelectedKPI({ label: "Units Delivered", value: "125,600+", color: T.gold, description: "Total residential and commercial units delivered since inception in 2002. Largest track record in GCC.", source: "Emaar Corporate Profile 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Delivered", value: "125,600+", note: "Since 2002" }, { label: "FY2025 Deliveries", value: "~11,000", note: "Est. annual handovers" }, { label: "UAE Units", value: "~100,000+", note: "80% of total" }, { label: "On-Time Record", value: "95%+", note: "Delivery track record" }, { label: "GCC Rank", value: "#1", note: "By volume" }], trend: [{ y: "2020", v: 85000 }, { y: "2021", v: 95000 }, { y: "2022", v: 103000 }, { y: "2023", v: 110000 }, { y: "2024", v: 118000 }, { y: "2025", v: 125600 }] })} />
-                <KPI label="Land Bank" value="618M sqft" sub="344M UAE Â· AED 120B dev" delay={8} onClick={() => setSelectedKPI({ label: "Land Bank", value: "618M sqft", color: T.gold, description: "Total gross land area owned or controlled by Emaar for future development.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Land Bank", value: "618M sqft", note: "Gross area" }, { label: "UAE Land", value: "344M sqft", note: "56% of total" }, { label: "International", value: "274M sqft", note: "Egypt, India, KSA" }, { label: "Development Value", value: "AED 120B+", note: "Future GDV est." }, { label: "Dubai Hills Remaining", value: "~180M sqft", note: "Largest UAE plot" }], trend: [{ y: "2020", v: 480 }, { y: "2021", v: 510 }, { y: "2022", v: 535 }, { y: "2023", v: 570 }, { y: "2024", v: 595 }, { y: "2025", v: 618 }] })} />
+                <KPI label="Property Sales" value="AED 80.4B" sub="+16% YoY · USD 21.9B" delay={1} onClick={() => setSelectedKPI({ label: "Property Sales", value: "AED 80.4B", color: T.gold, description: "Total off-plan and ready property sales contracted in FY2025. Includes UAE and international markets.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "FY2025 Sales", value: "AED 80.4B", note: "All-time record" }, { label: "FY2024 Sales", value: "AED 69.3B", note: "+16% YoY" }, { label: "FY2023 Sales", value: "AED 52.7B", note: "+31% YoY" }, { label: "Int'l Sales", value: "AED 9.3B", note: "+124% YoY" }, { label: "UAE Market Share", value: "~30%", note: "Largest by value" }, { label: "Units Booked", value: "12,000+", note: "FY2025 estimate" }], trend: [{ y: "2020", v: 21.5 }, { y: "2021", v: 26.2 }, { y: "2022", v: 33.5 }, { y: "2023", v: 52.7 }, { y: "2024", v: 69.3 }, { y: "2025", v: 80.4 }] })} />
+                <KPI label="Revenue" value="AED 49.6B" sub="+40% YoY · USD 13.5B" delay={2} onClick={() => setSelectedKPI({ label: "Revenue", value: "AED 49.6B", color: T.teal, description: "Total recognized revenue across property development, malls, hospitality, and international operations.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "UAE Dev Revenue", value: "AED 36.4B", note: "73% of total" }, { label: "Malls & Retail", value: "AED 6.3B", note: "+13% YoY" }, { label: "Hospitality", value: "AED 4.2B", note: "+12% YoY" }, { label: "International", value: "AED 2.6B", note: "+124% YoY" }, { label: "Revenue CAGR", value: "27.2%", note: "5-year 2020–2025" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: 49.6 }] })} />
+                <KPI label="Net Profit" value="AED 25.7B" sub="+36% YoY · USD 7.0B" delay={3} onClick={() => setSelectedKPI({ label: "Net Profit", value: "AED 25.7B", color: T.green, description: "Net profit before minority interest. Includes recurring revenue from Emaar Malls and hospitality.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Net Margin", value: "51.8%", note: "Industry-leading" }, { label: "EPS FY2025", value: "AED 2.00", note: "+31% YoY" }, { label: "Q4 2025 Profit", value: "AED 7.3B", note: "Strongest quarter" }, { label: "5yr Profit CAGR", value: "57.1%", note: "2020–2025" }, { label: "Tax Rate", value: "~9%", note: "UAE Corporate Tax" }], trend: [{ y: "2020", v: 2.6 }, { y: "2021", v: 4.1 }, { y: "2022", v: 6.2 }, { y: "2023", v: 12.6 }, { y: "2024", v: 18.9 }, { y: "2025", v: 25.7 }] })} />
+                <KPI label="EBITDA" value="AED 25.6B" sub="+33% YoY · USD 7.0B" delay={4} onClick={() => setSelectedKPI({ label: "EBITDA", value: "AED 25.6B", color: T.blue, description: "Earnings before interest, tax, depreciation & amortisation. Key operational profitability metric.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "EBITDA Margin", value: "51.6%", note: "5-year high" }, { label: "Recurring EBITDA", value: "AED 10.5B", note: "32% share" }, { label: "Dev EBITDA", value: "AED 15.1B", note: "Property segment" }, { label: "EV/EBITDA", value: "~5.0×", note: "Vs sector 9× avg" }, { label: "EBITDA CAGR", value: "44.5%", note: "2020–2025" }], trend: [{ y: "2020", v: 4.0 }, { y: "2021", v: 5.3 }, { y: "2022", v: 8.1 }, { y: "2023", v: 13.4 }, { y: "2024", v: 19.2 }, { y: "2025", v: 25.6 }] })} />
+                <KPI label="Backlog" value="AED 155B" sub="+39% YoY · 3-4yr visibility" delay={5} onClick={() => setSelectedKPI({ label: "Revenue Backlog", value: "AED 155B", color: T.purple, description: "Total contracted but unrecognized revenue. Provides 3–4 years of forward revenue visibility.", source: "Emaar Q4 2025 Results", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Backlog", value: "AED 155B", note: "+39% YoY record" }, { label: "FY2024 Backlog", value: "AED 111.5B", note: "Prior year" }, { label: "Coverage Ratio", value: "3–4 yrs", note: "Revenue visibility" }, { label: "UAE Backlog", value: "AED 140B+", note: "~90% of total" }, { label: "New Launches", value: "AED 85B+", note: "FY2025 new sales" }], trend: [{ y: "2020", v: 45 }, { y: "2021", v: 52 }, { y: "2022", v: 68 }, { y: "2023", v: 80 }, { y: "2024", v: 111.5 }, { y: "2025", v: 155 }] })} />
+                <KPI label="Recurring Rev" value="AED 10.5B" sub="+13% · 32% of EBITDA" delay={6} onClick={() => setSelectedKPI({ label: "Recurring Revenue", value: "AED 10.5B", color: T.cyan, description: "Stable income from Emaar Malls, hotels, serviced residences, and commercial leasing.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Malls Revenue", value: "AED 6.3B", note: "Dubai Mall + Fashion Ave" }, { label: "Hospitality", value: "AED 4.2B", note: "Hotels & serviced res." }, { label: "% of EBITDA", value: "32%", note: "Defensive income" }, { label: "Dubai Mall Footfall", value: "105M+", note: "Annual visitors" }, { label: "Occupancy", value: "95%+", note: "Malls occupancy rate" }], trend: [{ y: "2020", v: 5.8 }, { y: "2021", v: 6.8 }, { y: "2022", v: 7.9 }, { y: "2023", v: 8.6 }, { y: "2024", v: 9.3 }, { y: "2025", v: 10.5 }] })} />
+                <KPI label="Units Delivered" value="125,600+" sub="Since 2002 · #1 in GCC" delay={7} onClick={() => setSelectedKPI({ label: "Units Delivered", value: "125,600+", color: T.gold, description: "Total residential and commercial units delivered since inception in 2002. Largest track record in GCC.", source: "Emaar Corporate Profile 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Delivered", value: "125,600+", note: "Since 2002" }, { label: "FY2025 Deliveries", value: "~11,000", note: "Est. annual handovers" }, { label: "UAE Units", value: "~100,000+", note: "80% of total" }, { label: "On-Time Record", value: "95%+", note: "Delivery track record" }, { label: "GCC Rank", value: "#1", note: "By volume" }], trend: [{ y: "2020", v: 85000 }, { y: "2021", v: 95000 }, { y: "2022", v: 103000 }, { y: "2023", v: 110000 }, { y: "2024", v: 118000 }, { y: "2025", v: 125600 }] })} />
+                <KPI label="Land Bank" value="618M sqft" sub="344M UAE · AED 120B dev" delay={8} onClick={() => setSelectedKPI({ label: "Land Bank", value: "618M sqft", color: T.gold, description: "Total gross land area owned or controlled by Emaar for future development.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Total Land Bank", value: "618M sqft", note: "Gross area" }, { label: "UAE Land", value: "344M sqft", note: "56% of total" }, { label: "International", value: "274M sqft", note: "Egypt, India, KSA" }, { label: "Development Value", value: "AED 120B+", note: "Future GDV est." }, { label: "Dubai Hills Remaining", value: "~180M sqft", note: "Largest UAE plot" }], trend: [{ y: "2020", v: 480 }, { y: "2021", v: 510 }, { y: "2022", v: 535 }, { y: "2023", v: 570 }, { y: "2024", v: 595 }, { y: "2025", v: 618 }] })} />
               </div>
             </Section>
 
@@ -2910,7 +2910,7 @@ export default function EmaarDashboardV2() {
                   {segments.map((s, i) => (
                     <span key={i} style={{ fontSize: 11, color: T.textSecondary, display: "flex", alignItems: "center", gap: 5 }}>
                       <span style={{ width: 8, height: 8, borderRadius: 3, background: s.color, display: "inline-block" }} />
-                      {s.name} ({s.revenue}B Â· {s.growth})
+                      {s.name} ({s.revenue}B · {s.growth})
                     </span>
                   ))}
                 </div>
@@ -2943,7 +2943,7 @@ export default function EmaarDashboardV2() {
               </Chart>
             </div>
 
-            <Section title="Company Strength" sub="Analyst consensus: STRONG BUY (12 of 12 analysts) Â· Source: Investing.com">
+            <Section title="Company Strength" sub="Analyst consensus: STRONG BUY (12 of 12 analysts) · Source: Investing.com">
               <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <DataBadge source="Emaar Annual Report FY2025" date="Dec 2025" type="emaar" />
                 <DataBadge source="S&P / Fitch Ratings 2025" date="2025" type="manual" />
@@ -2964,26 +2964,26 @@ export default function EmaarDashboardV2() {
                   {[
                     { label: "Founded", value: "1997", sub: "27+ years track record", kpi: { color: T.gold, description: "Emaar Properties founded in 1997 by Mohamed Alabbar. Listed on DFM in 2000.", source: "Emaar Corporate", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Founded", value: "1997", note: "Dubai, UAE" }, { label: "IPO", value: "2000", note: "Dubai Financial Market" }, { label: "Chairman", value: "M. Alabbar", note: "Founder & visionary" }, { label: "Employees", value: "9,000+", note: "Global workforce" }], trend: null } },
                     { label: "Developer Rank", value: "#1", sub: "Dubai's largest by value", kpi: { color: T.teal, description: "Consistently ranked #1 developer in Dubai by property sales value with ~30% market share.", source: "DLD & Zawya 2025", sourceUrl: "https://zawya.com", items: [{ label: "UAE Rank", value: "#1", note: "By sales value" }, { label: "Market Share", value: "~30%", note: "Dubai off-plan" }, { label: "GCC Rank", value: "#1", note: "By units delivered" }, { label: "FY2025 Sales", value: "AED 80.4B", note: "vs #2 ~AED 20B" }], trend: null } },
-                    { label: "Active Projects", value: String(activeProjects.length), sub: "Across 10+ communities", kpi: { color: T.blue, description: "48 active projects across Dubai Hills, Creek Harbour, Downtown, Beachfront and more.", source: "DXB Analytics Database", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "12+", note: "Address Â· Vida Â· Palace" }], trend: null } },
+                    { label: "Active Projects", value: String(activeProjects.length), sub: "Across 10+ communities", kpi: { color: T.blue, description: "48 active projects across Dubai Hills, Creek Harbour, Downtown, Beachfront and more.", source: "DXB Analytics Database", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "12+", note: "Address · Vida · Palace" }], trend: null } },
                     { label: "International", value: "AED 9.3B", sub: "+124% growth YoY", kpi: { color: T.green, description: "International operations across Egypt, India, Saudi Arabia, Pakistan and Turkey.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Int'l Sales", value: "AED 9.3B", note: "+124% YoY" }, { label: "Egypt", value: "Largest market", note: "Marassi, Uptown Cairo" }, { label: "India", value: "Growing", note: "Emaar India" }, { label: "Saudi Arabia", value: "Expanding", note: "New projects" }], trend: [{ y: "2022", v: 1.8 }, { y: "2023", v: 2.9 }, { y: "2024", v: 4.1 }, { y: "2025", v: 9.3 }] } },
-                    { label: "Dividend/Share", value: "AED 1.00", sub: "2Ã— increase from 2023", kpi: { color: T.gold, description: "AED 1.00 DPS for FY2025 â€” 100% of share capital, 2Ã— increase from AED 0.50 in 2023.", source: "Emaar IR 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "DPS FY2025", value: "AED 1.00", note: "100% of share capital" }, { label: "DPS FY2024", value: "AED 0.70", note: "+43% YoY" }, { label: "DPS FY2023", value: "AED 0.50", note: "Base year" }, { label: "Total Payout", value: "AED 8.8B", note: "Total dividend pool" }, { label: "Yield (15.40)", value: "6.5%", note: "Attractive vs peers" }], trend: [{ y: "2021", v: 0.25 }, { y: "2022", v: 0.40 }, { y: "2023", v: 0.50 }, { y: "2024", v: 0.70 }, { y: "2025", v: 1.00 }] } },
-                    { label: "Target Upside", value: "+21.8%", sub: "AED 20.77 consensus", kpi: { color: T.green, description: "12 analyst consensus target of AED 20.77 vs current AED 15.40 â€” all 12 rate Strong Buy.", source: "TradingView Â· Investing.com", sourceUrl: "https://www.tradingview.com/symbols/DFM-EMAAR/", items: [{ label: "Consensus Target", value: "AED 20.77", note: "12 analyst average" }, { label: "Current Price", value: "AED 15.40", note: "Mar 2026" }, { label: "High Target", value: "AED 30.00", note: "Bull case" }, { label: "Low Target", value: "AED 15.80", note: "Bear case" }, { label: "Rating", value: "Strong Buy", note: "12 of 12 analysts" }], trend: null } },
+                    { label: "Dividend/Share", value: "AED 1.00", sub: "2× increase from 2023", kpi: { color: T.gold, description: "AED 1.00 DPS for FY2025 — 100% of share capital, 2× increase from AED 0.50 in 2023.", source: "Emaar IR 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "DPS FY2025", value: "AED 1.00", note: "100% of share capital" }, { label: "DPS FY2024", value: "AED 0.70", note: "+43% YoY" }, { label: "DPS FY2023", value: "AED 0.50", note: "Base year" }, { label: "Total Payout", value: "AED 8.8B", note: "Total dividend pool" }, { label: "Yield (15.40)", value: "6.5%", note: "Attractive vs peers" }], trend: [{ y: "2021", v: 0.25 }, { y: "2022", v: 0.40 }, { y: "2023", v: 0.50 }, { y: "2024", v: 0.70 }, { y: "2025", v: 1.00 }] } },
+                    { label: "Target Upside", value: "+21.8%", sub: "AED 20.77 consensus", kpi: { color: T.green, description: "12 analyst consensus target of AED 20.77 vs current AED 15.40 — all 12 rate Strong Buy.", source: "TradingView · Investing.com", sourceUrl: "https://www.tradingview.com/symbols/DFM-EMAAR/", items: [{ label: "Consensus Target", value: "AED 20.77", note: "12 analyst average" }, { label: "Current Price", value: "AED 15.40", note: "Mar 2026" }, { label: "High Target", value: "AED 30.00", note: "Bull case" }, { label: "Low Target", value: "AED 15.80", note: "Bear case" }, { label: "Rating", value: "Strong Buy", note: "12 of 12 analysts" }], trend: null } },
                   ].map(({ label, value, sub, kpi }, i) => (
                     <KPI key={i} label={label} value={value} sub={sub} delay={Math.min(i + 1, 8)} onClick={() => setSelectedKPI({ label, value, ...kpi })} />
                   ))}
                 </div>
               </div>
-          <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM: EMAAR.DU", url: "https://www.dfm.ae" }, { label: "TradingView", url: "https://www.tradingview.com/symbols/DFM-EMAAR/" }, { label: "Yahoo Finance", url: "https://finance.yahoo.com/quote/EMAAR.DU" }, { label: "S&P Â· Moody's Â· Fitch Ratings" }]} />
+          <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM: EMAAR.DU", url: "https://www.dfm.ae" }, { label: "TradingView", url: "https://www.tradingview.com/symbols/DFM-EMAAR/" }, { label: "Yahoo Finance", url: "https://finance.yahoo.com/quote/EMAAR.DU" }, { label: "S&P · Moody's · Fitch Ratings" }]} />
             </Section>
           </>}
 
-          {/* â”€â”€â”€ FINANCIALS TAB â”€â”€â”€ */}
+          {/* ─── FINANCIALS TAB ─── */}
           {tab === "Financials" && <>
-            <Section title="Financial Performance" sub="6-year trend Â· 2020â€“2025 Â· All figures in AED Billions">
+            <Section title="Financial Performance" sub="6-year trend · 2020–2025 · All figures in AED Billions">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                <KPI label="Revenue CAGR" value="27.2%" sub="2020-2025 Â· 5-year" delay={1} onClick={() => setSelectedKPI({ label: "Revenue CAGR", value: "27.2%", color: T.gold, description: "Compound Annual Growth Rate of revenue from AED 14.6B in 2020 to AED 49.6B in 2025 â€” one of the highest CAGRs among global real estate developers.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Revenue", value: "AED 14.6B", note: "Base year" }, { label: "2025 Revenue", value: "AED 49.6B", note: "+240% total growth" }, { label: "CAGR", value: "27.2%", note: "5-year compounded" }, { label: "vs GCC Average", value: "~8â€“10%", note: "Sector benchmark" }, { label: "YoY 2025", value: "+40%", note: "Strongest single year" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: 49.6 }] })} />
-                <KPI label="Profit CAGR" value="57.1%" sub="2020-2025 Â· 5-year" delay={2} onClick={() => setSelectedKPI({ label: "Profit CAGR", value: "57.1%", color: T.green, description: "Net profit grew from AED 2.6B in 2020 to AED 25.7B in 2025 â€” a 57.1% CAGR driven by margin expansion and operating leverage.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Net Profit", value: "AED 2.6B", note: "Base year" }, { label: "2025 Net Profit", value: "AED 25.7B", note: "+888% total growth" }, { label: "CAGR", value: "57.1%", note: "5-year compounded" }, { label: "Net Margin 2020", value: "17.8%", note: "Starting margin" }, { label: "Net Margin 2025", value: "51.8%", note: "+34pp expansion" }], trend: [{ y: "2020", v: 2.6 }, { y: "2021", v: 4.1 }, { y: "2022", v: 6.2 }, { y: "2023", v: 12.6 }, { y: "2024", v: 18.9 }, { y: "2025", v: 25.7 }] })} />
-                <KPI label="Gross Margin" value="57.5%" sub="Industry-leading" delay={3} onClick={() => setSelectedKPI({ label: "Gross Margin", value: "57.5%", color: T.teal, description: "Gross profit margin of 57.5% â€” significantly above the global real estate developer average of 25â€“35%. Driven by land cost advantage and premium brand pricing.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Gross Margin", value: "57.5%", note: "FY2025" }, { label: "Gross Profit", value: "AED 28.5B", note: "On AED 49.6B revenue" }, { label: "GCC Dev Avg", value: "~30â€“35%", note: "Industry benchmark" }, { label: "vs DAMAC", value: "~45%", note: "Nearest competitor" }, { label: "Land Cost Basis", value: "AED 5â€“15/sqft", note: "Historical acquisition" }], trend: [{ y: "2020", v: 42 }, { y: "2021", v: 45 }, { y: "2022", v: 50 }, { y: "2023", v: 54 }, { y: "2024", v: 56 }, { y: "2025", v: 57.5 }] })} />
+                <KPI label="Revenue CAGR" value="27.2%" sub="2020-2025 · 5-year" delay={1} onClick={() => setSelectedKPI({ label: "Revenue CAGR", value: "27.2%", color: T.gold, description: "Compound Annual Growth Rate of revenue from AED 14.6B in 2020 to AED 49.6B in 2025 — one of the highest CAGRs among global real estate developers.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Revenue", value: "AED 14.6B", note: "Base year" }, { label: "2025 Revenue", value: "AED 49.6B", note: "+240% total growth" }, { label: "CAGR", value: "27.2%", note: "5-year compounded" }, { label: "vs GCC Average", value: "~8–10%", note: "Sector benchmark" }, { label: "YoY 2025", value: "+40%", note: "Strongest single year" }], trend: [{ y: "2020", v: 14.6 }, { y: "2021", v: 17.0 }, { y: "2022", v: 24.5 }, { y: "2023", v: 30.6 }, { y: "2024", v: 35.4 }, { y: "2025", v: 49.6 }] })} />
+                <KPI label="Profit CAGR" value="57.1%" sub="2020-2025 · 5-year" delay={2} onClick={() => setSelectedKPI({ label: "Profit CAGR", value: "57.1%", color: T.green, description: "Net profit grew from AED 2.6B in 2020 to AED 25.7B in 2025 — a 57.1% CAGR driven by margin expansion and operating leverage.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Net Profit", value: "AED 2.6B", note: "Base year" }, { label: "2025 Net Profit", value: "AED 25.7B", note: "+888% total growth" }, { label: "CAGR", value: "57.1%", note: "5-year compounded" }, { label: "Net Margin 2020", value: "17.8%", note: "Starting margin" }, { label: "Net Margin 2025", value: "51.8%", note: "+34pp expansion" }], trend: [{ y: "2020", v: 2.6 }, { y: "2021", v: 4.1 }, { y: "2022", v: 6.2 }, { y: "2023", v: 12.6 }, { y: "2024", v: 18.9 }, { y: "2025", v: 25.7 }] })} />
+                <KPI label="Gross Margin" value="57.5%" sub="Industry-leading" delay={3} onClick={() => setSelectedKPI({ label: "Gross Margin", value: "57.5%", color: T.teal, description: "Gross profit margin of 57.5% — significantly above the global real estate developer average of 25–35%. Driven by land cost advantage and premium brand pricing.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Gross Margin", value: "57.5%", note: "FY2025" }, { label: "Gross Profit", value: "AED 28.5B", note: "On AED 49.6B revenue" }, { label: "GCC Dev Avg", value: "~30–35%", note: "Industry benchmark" }, { label: "vs DAMAC", value: "~45%", note: "Nearest competitor" }, { label: "Land Cost Basis", value: "AED 5–15/sqft", note: "Historical acquisition" }], trend: [{ y: "2020", v: 42 }, { y: "2021", v: 45 }, { y: "2022", v: 50 }, { y: "2023", v: 54 }, { y: "2024", v: 56 }, { y: "2025", v: 57.5 }] })} />
                 <KPI label="Net Margin" value="35.5%" sub="Consistent expansion" delay={4} onClick={() => setSelectedKPI({ label: "Net Margin", value: "35.5%", color: T.blue, description: "Net profit margin after all costs including tax. Expanded from 17.8% in 2020 to 51.8% in 2025 on a pre-tax basis.", source: "Emaar Annual Report 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Net Margin FY2025", value: "51.8%", note: "Pre-tax" }, { label: "Net Margin FY2024", value: "53.4%", note: "Prior year" }, { label: "Net Margin FY2020", value: "17.8%", note: "5-year base" }, { label: "EBITDA Margin", value: "51.6%", note: "Operational efficiency" }, { label: "After-Tax Est.", value: "~35.5%", note: "Post UAE corp tax" }], trend: [{ y: "2020", v: 17.8 }, { y: "2021", v: 24.1 }, { y: "2022", v: 25.3 }, { y: "2023", v: 41.2 }, { y: "2024", v: 53.4 }, { y: "2025", v: 51.8 }] })} />
               </div>
             </Section>
@@ -3078,7 +3078,7 @@ export default function EmaarDashboardV2() {
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 12 }}>
                 <KPI label="EPS (2025)" value="AED 2.00" sub="+31% YoY" delay={1} />
                 <KPI label="DPS (2025)" value="AED 1.00" sub="100% of share capital" delay={2} />
-                <KPI label="EPS CAGR" value="52.8%" sub="5-year Â· 2020-2025" delay={3} />
+                <KPI label="EPS CAGR" value="52.8%" sub="5-year · 2020-2025" delay={3} />
                 <KPI label="Total Dividend" value="AED 8.8B" sub="Payout to shareholders" delay={4} />
               </div>
               <div className="chart-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
@@ -3109,7 +3109,7 @@ export default function EmaarDashboardV2() {
               </div>
             </Section>
 
-            <Section title="Full Financial Summary" sub="All key metrics Â· 2020â€“2025 Â· AED Billions">
+            <Section title="Full Financial Summary" sub="All key metrics · 2020–2025 · AED Billions">
               <div className="table-scroll" style={{ overflowX: "auto", marginTop: 12 }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 700 }}>
                   <thead>
@@ -3129,7 +3129,7 @@ export default function EmaarDashboardV2() {
                         <td style={{ padding: "10px 12px", color: T.white, fontWeight: 500, fontSize: 12 }}>{m}</td>
                         {financials.map((f, ci) => (
                           <td key={ci} style={{ padding: "10px 12px", textAlign: "right", color: ci === financials.length - 1 ? T.gold : T.textSecondary, fontFamily: "'Fraunces', serif", fontWeight: ci === financials.length - 1 ? 700 : 400, fontSize: 12 }}>
-                            {f[k] ? f[k].toFixed(1) : "â€”"}
+                            {f[k] ? f[k].toFixed(1) : "—"}
                           </td>
                         ))}
                       </tr>
@@ -3142,13 +3142,13 @@ export default function EmaarDashboardV2() {
             </ProGate>
           </>}
 
-          {/* â”€â”€â”€ PROJECTS TAB (48 Projects from Excel) â”€â”€â”€ */}
+          {/* ─── PROJECTS TAB (48 Projects from Excel) ─── */}
           {tab === "Projects" && <>
-            <Section title={`${activeProjects.length} Active Projects`} sub="Complete Emaar off-plan portfolio Â· 2026â€“2030 Â· Search & filter">
+            <Section title={`${activeProjects.length} Active Projects`} sub="Complete Emaar off-plan portfolio · 2026–2030 · Search & filter">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction Â· 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE.", source: "DXB Analytics", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "10", note: "Address, Vida, Palace" }], trend: null })} />
-                <KPI label="Communities" value="11" sub="DHE Â· DCH Â· EBF Â· GPC + 7 more" delay={2} />
-                <KPI label="Branded" value={`${activeProjects.filter(p=>p.branded).length}`} sub="Address Â· Vida Â· Palace Â· Bristol" delay={3} />
+                <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE.", source: "DXB Analytics", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch" }, { label: "Communities", value: "11", note: "Master-planned" }, { label: "Branded", value: "10", note: "Address, Vida, Palace" }], trend: null })} />
+                <KPI label="Communities" value="11" sub="DHE · DCH · EBF · GPC + 7 more" delay={2} />
+                <KPI label="Branded" value={`${activeProjects.filter(p=>p.branded).length}`} sub="Address · Vida · Palace · Bristol" delay={3} />
                 <KPI label="Avg Construction" value={`${Math.round(activeProjects.reduce((a,p)=>a+(p.construction||0),0)/activeProjects.length)}%`} sub="Weighted average progress" delay={4} />
               </div>
             </Section>
@@ -3205,21 +3205,21 @@ export default function EmaarDashboardV2() {
                   const isLocked = !isPro && i >= 5;
                   return (
                 <div key={p.id} className="chart-box fade-up" style={{ animationDelay: `${Math.min(i * 0.03, 0.5)}s`, padding: 0, overflow: "hidden", cursor: isLocked ? "default" : "pointer", outline: compareList.find(x=>x.id===p.id) ? `2px solid ${T.gold}` : "none", outlineOffset: "-1px", position: "relative", boxShadow: compareList.find(x=>x.id===p.id) ? `0 0 20px rgba(212,168,67,0.2)` : "none" }} onClick={() => !isLocked && setSelectedProject(p)}>
-                  {/* Radar project â€” data being researched overlay */}
+                  {/* Radar project — data being researched overlay */}
                   {p.fromFirestore && p.addedViaRadar && (
                     <div style={{ position: "absolute", inset: 0, background: "rgba(4,9,15,0.82)", backdropFilter: "blur(3px)", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRadius: 12, gap: 8, padding: 20 }}>
-                      <div style={{ fontSize: 22 }}>ðŸ”</div>
+                      <div style={{ fontSize: 22 }}>🔍</div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: T.white, textAlign: "center" }}>{p.name}</div>
                       <div style={{ fontSize: 11, color: T.textMuted, textAlign: "center" }}>{p.community || p.developer}</div>
-                      <div style={{ padding: "4px 12px", borderRadius: 20, background: "rgba(212,168,67,0.12)", border: "1px solid rgba(212,168,67,0.3)", fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 0.5 }}>ðŸš€ NEW LAUNCH Â· DATA INCOMING</div>
+                      <div style={{ padding: "4px 12px", borderRadius: 20, background: "rgba(212,168,67,0.12)", border: "1px solid rgba(212,168,67,0.3)", fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: 0.5 }}>🚀 NEW LAUNCH · DATA INCOMING</div>
                       <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", maxWidth: 180, lineHeight: 1.5 }}>Our research team is curating full data for this project</div>
-                      {p.sourceUrl && <a href={p.sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "4px 12px", border: "1px solid rgba(0,191,165,0.3)", borderRadius: 6 }}>View Listing â†—</a>}
+                      {p.sourceUrl && <a href={p.sourceUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "4px 12px", border: "1px solid rgba(0,191,165,0.3)", borderRadius: 6 }}>View Listing ↗</a>}
                     </div>
                   )}
                   {/* Lock overlay for free users */}
                   {isLocked && (
                     <div style={{ position: "absolute", inset: 0, background: "rgba(4,9,15,0.7)", backdropFilter: "blur(4px)", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRadius: 12 }}>
-                      <span style={{ fontSize: 24, marginBottom: 6 }}>ðŸ”’</span>
+                      <span style={{ fontSize: 24, marginBottom: 6 }}>🔒</span>
                       <span style={{ fontSize: 12, fontWeight: 600, color: T.white }}>Pro Feature</span>
                       <button type="button" onClick={(e) => { e.stopPropagation(); setShowUpgrade(true); }} style={{ marginTop: 8, padding: "6px 16px", background: T.gold, color: T.bg, border: "none", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Unlock</button>
                     </div>
@@ -3245,16 +3245,16 @@ export default function EmaarDashboardV2() {
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
                       {(() => { const inv = p.ratingOverride != null && p.ratingOverride !== '' ? { score: parseFloat(p.ratingOverride), color: parseFloat(p.ratingOverride) >= 8 ? '#10B981' : parseFloat(p.ratingOverride) >= 6 ? '#D4A843' : parseFloat(p.ratingOverride) >= 4 ? '#F59E0B' : '#EF4444', label: parseFloat(p.ratingOverride) >= 8 ? 'Excellent' : parseFloat(p.ratingOverride) >= 6 ? 'Strong' : parseFloat(p.ratingOverride) >= 4 ? 'Good' : 'Weak', breakdown: [] } : getInvestmentScore(p); return (
-                        <div title={`Investment Score: ${inv.score}/10 â€” ${inv.breakdown.map(b => b.label + ': ' + b.pts + '/' + b.max).join(' Â· ')}`}
+                        <div title={`Investment Score: ${inv.score}/10 — ${inv.breakdown.map(b => b.label + ': ' + b.pts + '/' + b.max).join(' · ')}`}
                           style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 8, background: `${inv.color}18`, border: `1px solid ${inv.color}40`, cursor: "default" }}>
                           <span style={{ fontSize: 11, fontWeight: 900, color: inv.color, fontFamily: "'Fraunces', serif" }}>{inv.score}</span>
                           <span style={{ fontSize: 9, color: inv.color, fontWeight: 700, letterSpacing: 0.3 }}>/10</span>
-                          <span style={{ fontSize: 9, color: inv.color, fontWeight: 600 }}>â˜… {inv.label}</span>
+                          <span style={{ fontSize: 9, color: inv.color, fontWeight: 600 }}>★ {inv.label}</span>
                         </div>
                       ); })()}
                       <div style={{ display: "flex", gap: 4 }}>
                         {p.branded && <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{p.brand}</span>}
-                        <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: p.status === "Completed" ? "rgba(16,185,129,0.2)" : p.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: p.status === "Completed" ? T.green : p.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{p.status === "Completed" ? "âœ“ Done" : p.status === "Under Construction" ? "Building" : "Off-Plan"}</span>
+                        <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: p.status === "Completed" ? "rgba(16,185,129,0.2)" : p.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: p.status === "Completed" ? T.green : p.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{p.status === "Completed" ? "✓ Done" : p.status === "Under Construction" ? "Building" : "Off-Plan"}</span>
                       </div>
                     </div>
                   </div>
@@ -3282,7 +3282,7 @@ export default function EmaarDashboardV2() {
                     </div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PRICE/SQFT</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.ppsf ? `AED ${p.ppsf.toLocaleString()}` : "TBD"}</span></div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>SIZE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.sizeFrom?.toLocaleString()} - {p.sizeTo?.toLocaleString()} sqft</span></div>
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TYPE</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.type} Â· {p.beds} BR</span></div>
+                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TYPE</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.type} · {p.beds} BR</span></div>
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PAYMENT</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.payment}</span></div>
                   </div>
                   {/* Unit Inventory */}
@@ -3310,13 +3310,13 @@ export default function EmaarDashboardV2() {
                       Full Details
                     </a>
                     <button type="button" onClick={(e) => { e.stopPropagation(); toggleWatchlist(p); }} style={{ padding: "8px 10px", background: watchlist.find(w => w.id === p.id) ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${watchlist.find(w => w.id === p.id) ? T.gold : T.border}`, borderRadius: 8, color: watchlist.find(w => w.id === p.id) ? T.gold : T.textMuted, fontSize: 14, cursor: "pointer" }} title={watchlist.find(w => w.id === p.id) ? "Remove from watchlist" : "Add to watchlist"}>
-                      {watchlist.find(w => w.id === p.id) ? "â˜…" : "â˜†"}
+                      {watchlist.find(w => w.id === p.id) ? "★" : "☆"}
                     </button>
                     <button type="button" onClick={(e) => { e.stopPropagation(); isPro ? toggleCompare(p) : setShowUpgrade(true); }} style={{ padding: "8px 10px", background: !isPro ? "rgba(212,168,67,0.05)" : compareList.find(x=>x.id===p.id) ? T.goldGlow : T.surfaceAlt, border: `1px solid ${!isPro ? T.border : compareList.find(x=>x.id===p.id) ? T.gold : T.border}`, borderRadius: 8, color: !isPro ? T.textMuted : compareList.find(x=>x.id===p.id) ? T.gold : T.textMuted, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                      {!isPro ? "ðŸ”’" : compareList.find(x=>x.id===p.id) ? "âœ“" : "âŠ•"}
+                      {!isPro ? "🔒" : compareList.find(x=>x.id===p.id) ? "✓" : "⊕"}
                     </button>
                     <button type="button" title={myAlerts.find(a => a.projectId === p.id && !a.triggered) ? "Alert active" : "Set Price Alert"} onClick={(e) => { e.stopPropagation(); if (!isPro) { setShowUpgrade(true); return; } setShowSetAlert(p); setAlertForm({ type: "price_below", value: p.price ? p.price.toString() : "" }); }} style={{ padding: "8px 10px", background: myAlerts.find(a => a.projectId === p.id && !a.triggered) ? "rgba(212,168,67,0.15)" : T.surfaceAlt, border: `1px solid ${myAlerts.find(a => a.projectId === p.id && !a.triggered) ? T.gold : T.border}`, borderRadius: 8, color: myAlerts.find(a => a.projectId === p.id && !a.triggered) ? T.gold : T.textMuted, fontSize: 13, cursor: "pointer" }}>
-                      {myAlerts.find(a => a.projectId === p.id && !a.triggered) ? "ðŸ””" : "ðŸ”•"}
+                      {myAlerts.find(a => a.projectId === p.id && !a.triggered) ? "🔔" : "🔕"}
                     </button>
                   </div>
                   </div>{/* end padding wrapper */}
@@ -3324,7 +3324,7 @@ export default function EmaarDashboardV2() {
               );})}
               {activeProjects.filter(p => { const ms = !projectSearch || p.name.toLowerCase().includes(projectSearch.toLowerCase()) || p.community.toLowerCase().includes(projectSearch.toLowerCase()); const mf = projectFilter === "All" || p.district === projectFilter || (projectFilter === "Branded" && p.branded); const mt = projectTier === "All" || p.tier === projectTier; const my = projectHandover === "All" || (projectHandover === "2030+" ? parseInt(p.handover) >= 2030 : p.handover?.includes(projectHandover)); const mp = projectPriceMax >= 20 || !p.price || p.price <= projectPriceMax * 1e6; return ms && mf && mt && my && mp; }).length === 0 && (
                 <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 20px" }}>
-                  <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>ðŸ”</div>
+                  <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>🔍</div>
                   <div style={{ fontSize: 16, fontWeight: 600, color: T.white, marginBottom: 4 }}>No projects found</div>
                   <div style={{ fontSize: 13, color: T.textMuted }}>Try adjusting your search or filter</div>
                 </div>
@@ -3345,11 +3345,11 @@ export default function EmaarDashboardV2() {
                       <span style={{ fontSize: 11, fontWeight: 600, color: T.teal }}>{c.projects} projects</span>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, fontSize: 11 }}>
-                      <div><span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>AVG PPSF</span><span style={{ color: T.white, fontWeight: 600 }}>{c.avgPpsf ? `AED ${c.avgPpsf.toLocaleString()}` : "â€”"}</span></div>
-                      <div><span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>YIELD</span><span style={{ color: T.white, fontWeight: 600 }}>{c.avgYield ? `${c.avgYield}%` : "â€”"}</span></div>
-                      <div><span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>ACRES</span><span style={{ color: T.white, fontWeight: 600 }}>{c.acres ? c.acres.toLocaleString() : "â€”"}</span></div>
+                      <div><span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>AVG PPSF</span><span style={{ color: T.white, fontWeight: 600 }}>{c.avgPpsf ? `AED ${c.avgPpsf.toLocaleString()}` : "—"}</span></div>
+                      <div><span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>YIELD</span><span style={{ color: T.white, fontWeight: 600 }}>{c.avgYield ? `${c.avgYield}%` : "—"}</span></div>
+                      <div><span style={{ color: T.textMuted, fontSize: 9, display: "block" }}>ACRES</span><span style={{ color: T.white, fontWeight: 600 }}>{c.acres ? c.acres.toLocaleString() : "—"}</span></div>
                     </div>
-                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{c.buyer} Â· {c.strengths}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>{c.buyer} · {c.strengths}</div>
                   </div>
                 ))}
               </div>
@@ -3357,7 +3357,7 @@ export default function EmaarDashboardV2() {
 
 
             {/* Mega Projects */}
-            <Section title="Mega Projects Pipeline" sub="Strategic developments 2026-2035 Â· AED 800B+ combined value Â· Global benchmarks & DLD price data Â· Click any project for deep analysis">
+            <Section title="Mega Projects Pipeline" sub="Strategic developments 2026-2035 · AED 800B+ combined value · Global benchmarks & DLD price data · Click any project for deep analysis">
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginTop: 16 }}>
                 {megaProjects.map((m, i) => {
                   const isOpen = expandedMega === m.name;
@@ -3416,7 +3416,7 @@ export default function EmaarDashboardV2() {
                               <div style={{ fontSize: 11, fontWeight: 700, color: T.blue, marginBottom: 8, letterSpacing: 0.5 }}>CONSTRUCTION MILESTONES</div>
                               {m.milestones.map((ms, msi) => (
                                 <div key={msi} style={{ display: "flex", gap: 8, marginBottom: 4 }}>
-                                  <span style={{ fontSize: 11, color: T.blue }}>â—</span>
+                                  <span style={{ fontSize: 11, color: T.blue }}>●</span>
                                   <span style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>{ms}</span>
                                 </div>
                               ))}
@@ -3426,7 +3426,7 @@ export default function EmaarDashboardV2() {
                         </div>
                         <div style={{ display: "flex", gap: 16, marginTop: 14, flexWrap: "wrap", padding: "10px 0 0", borderTop: `1px solid ${T.border}` }}>
                           <div style={{ fontSize: 10, color: T.textMuted }}>Developer: <span style={{ color: T.white, fontWeight: 600 }}>{m.developer || "Emaar"}</span></div>
-                          <div style={{ fontSize: 10, color: T.textMuted }}>Announced: <span style={{ color: T.white, fontWeight: 600 }}>{m.announced || "â€”"}</span></div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>Announced: <span style={{ color: T.white, fontWeight: 600 }}>{m.announced || "—"}</span></div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>Scale: <span style={{ color: T.white, fontWeight: 600 }}>{m.scale}</span></div>
                         </div>
                         {m.sources && (
@@ -3443,7 +3443,7 @@ export default function EmaarDashboardV2() {
             </Section>
           </>}
 
-          {/* â”€â”€â”€ HANDOVER TRACKER TAB â”€â”€â”€ */}
+          {/* ─── HANDOVER TRACKER TAB ─── */}
           {tab === "Handover" && (() => {
             const now = new Date();
             const thisYear = now.getFullYear();
@@ -3502,15 +3502,15 @@ export default function EmaarDashboardV2() {
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontWeight: 700, color: T.white, fontSize: 13, fontFamily: "'Fraunces', serif", marginBottom: 2 }}>{p.name}</div>
-                            <div style={{ fontSize: 11, color: T.textMuted }}>{p.community} Â· {p.handover}</div>
+                            <div style={{ fontSize: 11, color: T.textMuted }}>{p.community} · {p.handover}</div>
                           </div>
                           <div style={{ textAlign: "right" }}>
                             <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{p.price ? "AED " + (p.price / 1e6).toFixed(1) + "M" : "TBD"}</div>
-                            <div style={{ fontSize: 10, color: "#10B981", fontWeight: 600, marginTop: 2 }}>âœ“ Ready</div>
+                            <div style={{ fontSize: 10, color: "#10B981", fontWeight: 600, marginTop: 2 }}>✓ Ready</div>
                           </div>
                           <div style={{ padding: "4px 10px", borderRadius: 8, background: `${p._score.color}18`, border: `1px solid ${p._score.color}40`, textAlign: "center", flexShrink: 0 }}>
                             <div style={{ fontSize: 13, fontWeight: 900, color: p._score.color, fontFamily: "'Fraunces', serif" }}>{p._score.score}</div>
-                            <div style={{ fontSize: 9, color: p._score.color }}>â˜… Score</div>
+                            <div style={{ fontSize: 9, color: p._score.color }}>★ Score</div>
                           </div>
                         </div>
                       ))}
@@ -3518,12 +3518,12 @@ export default function EmaarDashboardV2() {
                   </div>
                 )}
 
-                {/* Next 12â€“24 months */}
+                {/* Next 12–24 months */}
                 {nextYear.length > 0 && (
                   <div style={{ background: T.surface, borderRadius: 16, border: `1px solid rgba(212,168,67,0.2)`, overflow: "hidden" }}>
                     <div style={{ padding: "16px 20px", background: "rgba(212,168,67,0.05)", borderBottom: `1px solid rgba(212,168,67,0.12)`, display: "flex", alignItems: "center", gap: 10 }}>
                       <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.gold }} />
-                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 800, color: T.gold }}>Delivering in 12â€“24 Months</div>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 800, color: T.gold }}>Delivering in 12–24 Months</div>
                       <div style={{ fontSize: 11, color: T.textMuted, marginLeft: "auto" }}>{nextYear.length} project{nextYear.length !== 1 ? "s" : ""}</div>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -3534,7 +3534,7 @@ export default function EmaarDashboardV2() {
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                             <div>
                               <div style={{ fontWeight: 700, color: T.white, fontSize: 13, fontFamily: "'Fraunces', serif" }}>{p.name}</div>
-                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{p.community} Â· {p.handover}</div>
+                              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{p.community} · {p.handover}</div>
                             </div>
                             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                               <div style={{ padding: "4px 10px", borderRadius: 8, background: `${p._score.color}18`, border: `1px solid ${p._score.color}40`, textAlign: "center" }}>
@@ -3543,7 +3543,7 @@ export default function EmaarDashboardV2() {
                               </div>
                               <div style={{ textAlign: "right" }}>
                                 <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{p.price ? "AED " + (p.price / 1e6).toFixed(1) + "M" : "TBD"}</div>
-                                <div style={{ fontSize: 10, color: T.gold, fontWeight: 600 }}>â± {p._cd?.label}</div>
+                                <div style={{ fontSize: 10, color: T.gold, fontWeight: 600 }}>⏱ {p._cd?.label}</div>
                               </div>
                             </div>
                           </div>
@@ -3578,7 +3578,7 @@ export default function EmaarDashboardV2() {
                               <div style={{ fontWeight: 700, color: T.white, fontSize: 12, fontFamily: "'Fraunces', serif" }}>{p.name}</div>
                               <div style={{ fontSize: 10, color: T.textMuted }}>{p.community}</div>
                             </div>
-                            <span style={{ fontSize: 10, fontWeight: 700, color: p._score.color, padding: "3px 7px", borderRadius: 6, background: `${p._score.color}15` }}>{p._score.score}â˜…</span>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: p._score.color, padding: "3px 7px", borderRadius: 6, background: `${p._score.color}15` }}>{p._score.score}★</span>
                           </div>
                           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
                             <span style={{ color: T.textMuted }}>{p.handover}</span>
@@ -3598,20 +3598,20 @@ export default function EmaarDashboardV2() {
             );
           })()}
 
-          {/* â”€â”€â”€ PORTFOLIO TAB â”€â”€â”€ */}
+          {/* ─── PORTFOLIO TAB ─── */}
           {tab === "Portfolio" && !isPro && <ProGateFullPage tabName="Portfolio" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Portfolio" && isPro && <>
 
             {/* ROI MODE TOGGLE */}
             {myPortfolio.length > 0 && (
               <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-                {[["summary","ðŸ“Š Summary"],["roi","ðŸ’° ROI & IRR"],["unrealised","ðŸ“ˆ Unrealised Gain"],["cashflow","ðŸ’µ Cash Flow"],["diversification","ðŸŽ¯ Diversification"],["holdings","ðŸ  Holdings"]].map(([v,l]) => (
+                {[["summary","📊 Summary"],["roi","💰 ROI & IRR"],["unrealised","📈 Unrealised Gain"],["cashflow","💵 Cash Flow"],["diversification","🎯 Diversification"],["holdings","🏠 Holdings"]].map(([v,l]) => (
                   <button key={v} type="button" onClick={() => setRoiMode(v)} style={{ padding: "7px 16px", borderRadius: 8, border: `1px solid ${roiMode === v ? T.gold : T.border}`, background: roiMode === v ? "rgba(212,168,67,0.12)" : T.surfaceAlt, color: roiMode === v ? T.gold : T.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>{l}</button>
                 ))}
               </div>
             )}
 
-            {/* â”€â”€ ROI ANALYSIS VIEW â”€â”€ */}
+            {/* ── ROI ANALYSIS VIEW ── */}
             {roiMode === "roi" && myPortfolio.length > 0 && (() => {
               const holdings = myPortfolio.map(h => {
                 const p = activeProjects.find(x => x.id === h.projectId);
@@ -3637,7 +3637,7 @@ export default function EmaarDashboardV2() {
               const totalCurrentVal = holdings.reduce((s, h) => s + h.currentValue, 0);
               const totalNetRent = holdings.reduce((s, h) => s + h.netRent, 0);
               const totalCapGain = holdings.reduce((s, h) => s + h.capitalGain, 0);
-              const avgIRR = holdings.length ? (holdings.reduce((s,h) => s + parseFloat(h.irr), 0) / holdings.length).toFixed(1) : "â€”";
+              const avgIRR = holdings.length ? (holdings.reduce((s,h) => s + parseFloat(h.irr), 0) / holdings.length).toFixed(1) : "—";
               return (
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   <div style={{ background: T.surface, borderRadius: 14, border: "1px solid rgba(212,168,67,0.3)", padding: "20px 24px" }}>
@@ -3679,7 +3679,7 @@ export default function EmaarDashboardV2() {
                               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                               <td style={{ padding: "11px 12px" }}>
                                 <div style={{ fontWeight: 700, color: T.white, fontSize: 12 }}>{h.p.name}</div>
-                                <div style={{ fontSize: 10, color: T.textMuted }}>{h.p.community} Â· {h.unitType}</div>
+                                <div style={{ fontSize: 10, color: T.textMuted }}>{h.p.community} · {h.unitType}</div>
                               </td>
                               <td style={{ padding: "11px 12px", textAlign: "right", fontSize: 12, color: T.textSecondary }}>AED {(h.investedAmount/1e6).toFixed(2)}M</td>
                               <td style={{ padding: "11px 12px", textAlign: "right", fontSize: 12, fontWeight: 700, color: "#10B981" }}>AED {(h.currentValue/1e6).toFixed(2)}M</td>
@@ -3698,7 +3698,7 @@ export default function EmaarDashboardV2() {
               );
             })()}
 
-            {/* â”€â”€ CASH FLOW VIEW â”€â”€ */}
+            {/* ── CASH FLOW VIEW ── */}
             {roiMode === "cashflow" && myPortfolio.length > 0 && (() => {
               const holdings = myPortfolio.map(h => {
                 const p = activeProjects.find(x => x.id === h.projectId);
@@ -3720,12 +3720,12 @@ export default function EmaarDashboardV2() {
                   {holdings.map((h, i) => (
                     <div key={i} style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.border, padding: "18px 22px" }}>
                       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 800, color: T.white, marginBottom: 2 }}>{h.p.name}</div>
-                      <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>{h.p.community} Â· {h.unitType} Â· AED {(h.investedAmount/1e6).toFixed(2)}M invested</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>{h.p.community} · {h.unitType} · AED {(h.investedAmount/1e6).toFixed(2)}M invested</div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                         {[
                           { l: "Gross Rental Income", v: h.annualRent, c: "#10B981", sign: "+" },
-                          { l: "Service Charges", v: h.annualSC, c: "#EF4444", sign: "âˆ’" },
-                          { l: "Property Management (9%)", v: h.mgmtFee, c: "#EF4444", sign: "âˆ’" },
+                          { l: "Service Charges", v: h.annualSC, c: "#EF4444", sign: "−" },
+                          { l: "Property Management (9%)", v: h.mgmtFee, c: "#EF4444", sign: "−" },
                           { l: "Net Annual Cash Flow", v: h.netRent, c: T.gold, sign: "=", bold: true },
                         ].map((row, ri) => (
                           <div key={ri} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: ri === 3 ? "rgba(212,168,67,0.06)" : "transparent", borderRadius: ri === 3 ? 8 : 0, borderTop: ri === 3 ? "1px solid " + T.border : "none", marginTop: ri === 3 ? 4 : 0 }}>
@@ -3746,7 +3746,7 @@ export default function EmaarDashboardV2() {
               );
             })()}
 
-            {/* â”€â”€ UNREALISED GAIN VIEW â”€â”€ */}
+            {/* ── UNREALISED GAIN VIEW ── */}
             {roiMode === "unrealised" && myPortfolio.length > 0 && (() => {
               // Research-backed appreciation rates (DLD data, ValuStrat VPI 2025)
               // Dubai overall PPSF up 19.8% in 2025, Creek Harbour +22%, Hills +18%
@@ -3828,7 +3828,7 @@ export default function EmaarDashboardV2() {
               const totalUnrealisedNetFees = holdings.reduce((s,h) => s + h.unrealisedGainNetFees, 0);
               const portfolioIRR = holdings.length > 0
                 ? (holdings.reduce((s,h) => s + parseFloat(h.irr), 0) / holdings.length).toFixed(1)
-                : "â€”";
+                : "—";
               const portfolioGainPct = totalInvested > 0
                 ? ((totalUnrealised / totalInvested) * 100).toFixed(1)
                 : "0";
@@ -3861,7 +3861,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
                     <div style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Per-Property Unrealised Gain</div>
-                      <div style={{ fontSize: 10, color: T.textMuted }}>IRR = Newton's method Â· Proper DCF calculation</div>
+                      <div style={{ fontSize: 10, color: T.textMuted }}>IRR = Newton's method · Proper DCF calculation</div>
                     </div>
                     <div style={{ overflowX: "auto" }}>
                       <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 750 }}>
@@ -3879,7 +3879,7 @@ export default function EmaarDashboardV2() {
                               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                               <td style={{ padding: "12px 14px" }}>
                                 <div style={{ fontWeight: 700, color: T.white, fontSize: 12 }}>{h.p.name}</div>
-                                <div style={{ fontSize: 10, color: T.textMuted }}>{h.p.community} Â· Held {h.yrsHeld} yrs</div>
+                                <div style={{ fontSize: 10, color: T.textMuted }}>{h.p.community} · Held {h.yrsHeld} yrs</div>
                               </td>
                               <td style={{ padding: "12px 14px", textAlign: "right", fontSize: 12, color: T.textSecondary }}>AED {(h.investedAmount/1e6).toFixed(2)}M</td>
                               <td style={{ padding: "12px 14px", textAlign: "right", fontSize: 13, fontWeight: 700, color: T.green }}>AED {(h.currentValue/1e6).toFixed(2)}M</td>
@@ -3898,14 +3898,14 @@ export default function EmaarDashboardV2() {
                       </table>
                     </div>
                     <div style={{ padding: "12px 20px", borderTop: `1px solid ${T.border}`, fontSize: 10, color: T.textMuted, lineHeight: 1.6 }}>
-                      <strong style={{ color: T.gold }}>IRR Methodology:</strong> Newton's method on discounted cash flows â€” initial investment, annual net rental income (75% of gross), and terminal sale value at estimated current price. Sources: DLD transaction records, ValuStrat VPI Index, CBRE Dubai Residential Report 2025, Knight Frank Dubai 2025.
+                      <strong style={{ color: T.gold }}>IRR Methodology:</strong> Newton's method on discounted cash flows — initial investment, annual net rental income (75% of gross), and terminal sale value at estimated current price. Sources: DLD transaction records, ValuStrat VPI Index, CBRE Dubai Residential Report 2025, Knight Frank Dubai 2025.
                     </div>
                   </div>
                 </div>
               );
             })()}
 
-            {/* â”€â”€ DIVERSIFICATION SCORE VIEW â”€â”€ */}
+            {/* ── DIVERSIFICATION SCORE VIEW ── */}
             {roiMode === "diversification" && myPortfolio.length > 0 && (() => {
               // Research: Sharpe (1964), modern portfolio theory applied to Dubai RE
               // Diversification reduces unsystematic risk (community, type, handover concentration)
@@ -3942,7 +3942,7 @@ export default function EmaarDashboardV2() {
               const handoverCount = Object.keys(byHandover).length;
 
               // Herfindahl-Hirschman Index (HHI) for concentration
-              // HHI = sum of (share^2) â€” lower = more diversified
+              // HHI = sum of (share^2) — lower = more diversified
               const communityHHI = Object.values(byCommunity).reduce((s,v) => s + Math.pow(v/totalInvested, 2), 0);
               const typeHHI = Object.values(byType).reduce((s,v) => s + Math.pow(v/totalInvested, 2), 0);
 
@@ -3955,7 +3955,7 @@ export default function EmaarDashboardV2() {
               const totalScore = Math.round(communityScore + typeScore + handoverScore + volumeScore);
 
               const scoreColor = totalScore >= 70 ? T.green : totalScore >= 45 ? T.gold : T.red;
-              const scoreLabel = totalScore >= 70 ? "Well Diversified" : totalScore >= 45 ? "Moderate Risk" : "Concentrated â€” Add More Communities";
+              const scoreLabel = totalScore >= 70 ? "Well Diversified" : totalScore >= 45 ? "Moderate Risk" : "Concentrated — Add More Communities";
 
               // Price tier split
               const byTier = { "Affordable (<AED 2M)": 0, "Mid-market (AED 2-5M)": 0, "Luxury (AED 5M+)": 0 };
@@ -4055,11 +4055,11 @@ export default function EmaarDashboardV2() {
                     <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white, marginBottom: 14 }}>Recommendations to Improve Score</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                       {[
-                        communityCount < 3 && { text: `Add properties in ${communityCount === 1 ? "2 more communities" : "1 more community"} â€” currently concentrated in ${Object.keys(byCommunity).join(", ")}`, color: T.orange, icon: "âš ï¸" },
-                        typeCount < 2 && { text: "Add a different property type â€” mix apartments with townhouses or villas for lower correlation risk", color: T.gold, icon: "ðŸ’¡" },
-                        handoverCount < 2 && { text: "Spread handover years across multiple years to reduce delivery risk concentration", color: T.blue, icon: "ðŸ“…" },
-                        holdings.length < 3 && { text: `Add ${3 - holdings.length} more holding${3 - holdings.length > 1 ? "s" : ""} to improve portfolio volume score`, color: T.teal, icon: "âž•" },
-                        totalScore >= 70 && { text: "Portfolio is well diversified â€” maintain current allocation and rebalance at handover milestones", color: T.green, icon: "âœ“" },
+                        communityCount < 3 && { text: `Add properties in ${communityCount === 1 ? "2 more communities" : "1 more community"} — currently concentrated in ${Object.keys(byCommunity).join(", ")}`, color: T.orange, icon: "⚠️" },
+                        typeCount < 2 && { text: "Add a different property type — mix apartments with townhouses or villas for lower correlation risk", color: T.gold, icon: "💡" },
+                        handoverCount < 2 && { text: "Spread handover years across multiple years to reduce delivery risk concentration", color: T.blue, icon: "📅" },
+                        holdings.length < 3 && { text: `Add ${3 - holdings.length} more holding${3 - holdings.length > 1 ? "s" : ""} to improve portfolio volume score`, color: T.teal, icon: "➕" },
+                        totalScore >= 70 && { text: "Portfolio is well diversified — maintain current allocation and rebalance at handover milestones", color: T.green, icon: "✓" },
                       ].filter(Boolean).map((rec, i) => (
                         <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 14px", borderRadius: 8, background: `${rec.color}08`, border: `1px solid ${rec.color}20` }}>
                           <span style={{ fontSize: 14, flexShrink: 0 }}>{rec.icon}</span>
@@ -4072,7 +4072,7 @@ export default function EmaarDashboardV2() {
               );
             })()}
 
-            {/* â”€â”€ HOLDINGS / SUMMARY VIEW â”€â”€ */}
+            {/* ── HOLDINGS / SUMMARY VIEW ── */}
             {(roiMode === "holdings" || roiMode === "summary" || myPortfolio.length === 0) && (<>
             <Section title="My Investments" sub={myPortfolio.length > 0 ? `${myPortfolio.length} holdings` : "Track your Emaar investments"}>
               {myPortfolio.length > 0 ? <>
@@ -4098,7 +4098,7 @@ export default function EmaarDashboardV2() {
                           <div>
                             <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 700, color: T.white }}>{p.name}</div>
                             <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                              <span style={{ fontSize: 10, color: T.textMuted }}>{p.community} Â· {h.unitType} Â· {h.units} unit{h.units > 1 ? "s" : ""}</span>
+                              <span style={{ fontSize: 10, color: T.textMuted }}>{p.community} · {h.unitType} · {h.units} unit{h.units > 1 ? "s" : ""}</span>
                               {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 4, fontWeight: 600 }}>{getLinkLabel(p.emaarUrl)}</a>}
                             </div>
                           </div>
@@ -4125,19 +4125,19 @@ export default function EmaarDashboardV2() {
                   })}
                 </div>
               </> : <div style={{ textAlign: "center", padding: "40px 20px" }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>ðŸ“Š</div>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>📊</div>
                 <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800, color: T.white, marginBottom: 8 }}>Start Tracking Your Investments</div>
                 <div style={{ fontSize: 12, color: T.textMuted, maxWidth: 360, margin: "0 auto 16px", lineHeight: 1.6 }}>Add your Emaar property investments to track performance, projected returns, and portfolio allocation.</div>
                 <button type="button" onClick={() => setShowAddPortfolio(true)} style={{ padding: "10px 24px", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>+ Add Your First Investment</button>
               </div>}
             </Section>
 
-            <Section title="Project Portfolio" sub="48 active projects Â· 10+ master communities Â· 2026â€“2030">
+            <Section title="Project Portfolio" sub="48 active projects · 10+ master communities · 2026–2030">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction Â· 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE â€” 18 under active construction and 30 in the off-plan/pre-launch phase across 10+ master communities.", source: "DXB Analytics Project Database", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned areas" }, { label: "Handover 2026", value: "7 projects", note: "Nearest deliveries" }, { label: "Handover 2029+", value: "26 projects", note: "Longest pipeline" }], trend: null })} />
-                <KPI label="Branded Projects" value="10" sub="Address Â· Vida Â· Palace" delay={2} onClick={() => setSelectedKPI({ label: "Branded Projects", value: "10", color: T.teal, description: "10 branded residences under Emaar's luxury hospitality labels â€” Address, Vida, and Palace. Branded units command 25â€“40% price premium over standard Emaar projects.", source: "Emaar Properties Portfolio 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Address Brand", value: "5 projects", note: "Ultra-luxury tier" }, { label: "Vida Brand", value: "3 projects", note: "Lifestyle tier" }, { label: "Palace Brand", value: "2 projects", note: "Heritage luxury" }, { label: "Price Premium", value: "25â€“40%", note: "vs standard Emaar" }, { label: "Resale Premium", value: "Strong", note: "Brand demand maintained" }], trend: null })} />
-                <KPI label="Avg Starting Price" value="AED 2.76M" sub="Range: 1.2M â€“ 13.8M" delay={3} onClick={() => setSelectedKPI({ label: "Avg Starting Price", value: "AED 2.76M", color: T.blue, description: "Average entry price across the active Emaar project portfolio. Range spans from AED 1.2M (Emaar South 1BR) to AED 13.8M (The Oasis ultra-luxury villas).", source: "DXB Analytics Â· Emaar Price List 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Avg Starting Price", value: "AED 2.76M", note: "Portfolio average" }, { label: "Min Price", value: "AED 1.2M", note: "Emaar South 1BR" }, { label: "Max Price", value: "AED 13.8M", note: "The Oasis villas" }, { label: "Studio Entry", value: "AED 900K+", note: "Select communities" }, { label: "Villa Entry", value: "AED 3.5M+", note: "Dubai Hills / Valley" }], trend: [{ y: "2021", v: 1.8 }, { y: "2022", v: 2.1 }, { y: "2023", v: 2.3 }, { y: "2024", v: 2.55 }, { y: "2025", v: 2.76 }] })} />
-                <KPI label="Avg Price/sqft" value="AED 2,570" sub="Across all tiers" delay={4} onClick={() => setSelectedKPI({ label: "Avg Price/sqft", value: "AED 2,570", color: T.purple, description: "Average price per square foot across all active Emaar launches. Premium branded projects push the average higher vs affordable communities.", source: "DXB Analytics Â· DLD 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Portfolio Avg", value: "AED 2,570/sqft", note: "All projects" }, { label: "Branded Avg", value: "AED 3,500+/sqft", note: "Address / Palace" }, { label: "Standard Avg", value: "AED 1,900/sqft", note: "Emaar South / Valley" }, { label: "Downtown", value: "AED 2,800+/sqft", note: "Prime location premium" }, { label: "Creek Harbour", value: "AED 2,400/sqft", note: "Waterfront" }], trend: [{ y: "2021", v: 1450 }, { y: "2022", v: 1750 }, { y: "2023", v: 2100 }, { y: "2024", v: 2350 }, { y: "2025", v: 2570 }] })} />
+                <KPI label="Total Projects" value={activeProjects.length} sub="18 under construction · 30 off-plan" delay={1} onClick={() => setSelectedKPI({ label: "Total Projects", value: "48", color: T.gold, description: "48 active Emaar projects across UAE — 18 under active construction and 30 in the off-plan/pre-launch phase across 10+ master communities.", source: "DXB Analytics Project Database", sourceUrl: "#", items: [{ label: "Under Construction", value: "18", note: "Active building" }, { label: "Off-Plan", value: "30", note: "Pre-launch / launched" }, { label: "Communities", value: "11", note: "Master-planned areas" }, { label: "Handover 2026", value: "7 projects", note: "Nearest deliveries" }, { label: "Handover 2029+", value: "26 projects", note: "Longest pipeline" }], trend: null })} />
+                <KPI label="Branded Projects" value="10" sub="Address · Vida · Palace" delay={2} onClick={() => setSelectedKPI({ label: "Branded Projects", value: "10", color: T.teal, description: "10 branded residences under Emaar's luxury hospitality labels — Address, Vida, and Palace. Branded units command 25–40% price premium over standard Emaar projects.", source: "Emaar Properties Portfolio 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Address Brand", value: "5 projects", note: "Ultra-luxury tier" }, { label: "Vida Brand", value: "3 projects", note: "Lifestyle tier" }, { label: "Palace Brand", value: "2 projects", note: "Heritage luxury" }, { label: "Price Premium", value: "25–40%", note: "vs standard Emaar" }, { label: "Resale Premium", value: "Strong", note: "Brand demand maintained" }], trend: null })} />
+                <KPI label="Avg Starting Price" value="AED 2.76M" sub="Range: 1.2M – 13.8M" delay={3} onClick={() => setSelectedKPI({ label: "Avg Starting Price", value: "AED 2.76M", color: T.blue, description: "Average entry price across the active Emaar project portfolio. Range spans from AED 1.2M (Emaar South 1BR) to AED 13.8M (The Oasis ultra-luxury villas).", source: "DXB Analytics · Emaar Price List 2025", sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "Avg Starting Price", value: "AED 2.76M", note: "Portfolio average" }, { label: "Min Price", value: "AED 1.2M", note: "Emaar South 1BR" }, { label: "Max Price", value: "AED 13.8M", note: "The Oasis villas" }, { label: "Studio Entry", value: "AED 900K+", note: "Select communities" }, { label: "Villa Entry", value: "AED 3.5M+", note: "Dubai Hills / Valley" }], trend: [{ y: "2021", v: 1.8 }, { y: "2022", v: 2.1 }, { y: "2023", v: 2.3 }, { y: "2024", v: 2.55 }, { y: "2025", v: 2.76 }] })} />
+                <KPI label="Avg Price/sqft" value="AED 2,570" sub="Across all tiers" delay={4} onClick={() => setSelectedKPI({ label: "Avg Price/sqft", value: "AED 2,570", color: T.purple, description: "Average price per square foot across all active Emaar launches. Premium branded projects push the average higher vs affordable communities.", source: "DXB Analytics · DLD 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Portfolio Avg", value: "AED 2,570/sqft", note: "All projects" }, { label: "Branded Avg", value: "AED 3,500+/sqft", note: "Address / Palace" }, { label: "Standard Avg", value: "AED 1,900/sqft", note: "Emaar South / Valley" }, { label: "Downtown", value: "AED 2,800+/sqft", note: "Prime location premium" }, { label: "Creek Harbour", value: "AED 2,400/sqft", note: "Waterfront" }], trend: [{ y: "2021", v: 1450 }, { y: "2022", v: 1750 }, { y: "2023", v: 2100 }, { y: "2024", v: 2350 }, { y: "2025", v: 2570 }] })} />
               </div>
             </Section>
 
@@ -4193,13 +4193,13 @@ export default function EmaarDashboardV2() {
               </div>
             </Section>
 
-            <Section title="Investment Allocation Guide" sub="Strategy by buyer profile Â· Based on market research">
+            <Section title="Investment Allocation Guide" sub="Strategy by buyer profile · Based on market research">
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, marginTop: 16 }}>
                 {[
-                  ["Yield Seeker", "AED 1.2Mâ€“2.5M", "Target: 5-6% gross yield. Best picks: The Valley 3BR townhouses, Emaar South 1BR apartments, Dubai Hills Estate 1BR. Payment plans (80/20) maximize leveraged returns. Hold 3-5 years minimum.", T.teal, "DHE Â· ES Â· TV"],
-                  ["Capital Growth", "AED 2.5Mâ€“5M", "Target: 15-25% appreciation by handover. Best picks: Dubai Creek Harbour waterfront, Grand Polo Club villas, Emaar Beachfront 2BR. Buy early in launch phase for maximum upside.", T.gold, "DCH Â· GPC Â· EBF"],
-                  ["Ultra-Luxury / Golden Visa", "AED 5M+", "Target: Lifestyle + 2M+ Golden Visa. Best picks: The Oasis villas, Address branded residences, Palace at Business Bay. Branded premium justifies pricing and resale.", T.purple, "TO Â· BB Â· EBF"],
-                  ["Diversified Portfolio", "AED 3Mâ€“10M", "Split: 40% yield (Valley/South), 35% growth (Creek/Polo), 25% luxury (Beachfront/Oasis). Balances cash flow with appreciation. Rebalance at handover milestones.", T.blue, "Mixed"],
+                  ["Yield Seeker", "AED 1.2M–2.5M", "Target: 5-6% gross yield. Best picks: The Valley 3BR townhouses, Emaar South 1BR apartments, Dubai Hills Estate 1BR. Payment plans (80/20) maximize leveraged returns. Hold 3-5 years minimum.", T.teal, "DHE · ES · TV"],
+                  ["Capital Growth", "AED 2.5M–5M", "Target: 15-25% appreciation by handover. Best picks: Dubai Creek Harbour waterfront, Grand Polo Club villas, Emaar Beachfront 2BR. Buy early in launch phase for maximum upside.", T.gold, "DCH · GPC · EBF"],
+                  ["Ultra-Luxury / Golden Visa", "AED 5M+", "Target: Lifestyle + 2M+ Golden Visa. Best picks: The Oasis villas, Address branded residences, Palace at Business Bay. Branded premium justifies pricing and resale.", T.purple, "TO · BB · EBF"],
+                  ["Diversified Portfolio", "AED 3M–10M", "Split: 40% yield (Valley/South), 35% growth (Creek/Polo), 25% luxury (Beachfront/Oasis). Balances cash flow with appreciation. Rebalance at handover milestones.", T.blue, "Mixed"],
                 ].map(([profile, budget, desc, color, areas], i) => (
                   <div key={i} className="chart-box fade-up" style={{ animationDelay: `${i*0.05}s`, padding: 16 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
@@ -4217,7 +4217,7 @@ export default function EmaarDashboardV2() {
           <TabSources sources={[{ label: "Firebase Firestore (live user data)" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "REIDIN 2025", url: "https://reidin.com" }, { label: "UAE Central Bank (EIBOR)", url: "https://www.cbuae.gov.ae" }]} />
           </>}
 
-          {/* â”€â”€â”€ DXB ESTIMATE AVM TAB â”€â”€â”€ */}
+          {/* ─── DXB ESTIMATE AVM TAB ─── */}
           {tab === "DXB Estimate" && !isPro && <ProGateFullPage tabName="DXB Estimate" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "DXB Estimate" && isPro && (() => {
             const avmData = {
@@ -4259,7 +4259,7 @@ export default function EmaarDashboardV2() {
                 {/* Header */}
                 <div style={{ background: T.surface, borderRadius: 14, border: "1px solid rgba(212,168,67,0.3)", padding: "20px 24px" }}>
                   <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 800, color: T.gold }}>DXB Estimate</div>
-                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Automated Valuation Model Â· Emaar Portfolio Â· DLD-calibrated pricing</div>
+                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Automated Valuation Model · Emaar Portfolio · DLD-calibrated pricing</div>
                 </div>
                 {/* Input form */}
                 <div style={{ background: T.surface, borderRadius: 14, border: "1px solid " + T.border, padding: "20px 24px" }}>
@@ -4303,13 +4303,13 @@ export default function EmaarDashboardV2() {
                       <div>
                         <div style={{ fontSize: 11, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Estimated Current Value</div>
                         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 36, fontWeight: 900, color: T.gold }}>AED {(currentValue/1e6).toFixed(3)}M</div>
-                        <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>AED {currentPpsf.toLocaleString()} /sqft Â· {avmSize.toLocaleString()} sqft Â· {avmCommunity}</div>
+                        <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>AED {currentPpsf.toLocaleString()} /sqft · {avmSize.toLocaleString()} sqft · {avmCommunity}</div>
                       </div>
                       <div style={{ textAlign: "right" }}>
                         <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 4 }}>CONFIDENCE</div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: confColor, padding: "4px 12px", borderRadius: 8, background: confColor + "15" }}>{confidence}</div>
                         <div style={{ marginTop: 8 }}>
-                          <div style={{ fontSize: 11, fontWeight: 800, color: invScore.color, padding: "4px 10px", borderRadius: 7, background: invScore.color + "15" }}>{invScore.score}/10 â˜… {invScore.label}</div>
+                          <div style={{ fontSize: 11, fontWeight: 800, color: invScore.color, padding: "4px 10px", borderRadius: 7, background: invScore.color + "15" }}>{invScore.score}/10 ★ {invScore.label}</div>
                         </div>
                       </div>
                     </div>
@@ -4332,7 +4332,7 @@ export default function EmaarDashboardV2() {
                     </div>
                     {yearsHeld > 0 && (
                       <div style={{ background: "rgba(16,185,129,0.06)", borderRadius: 12, border: "1px solid rgba(16,185,129,0.2)", padding: "16px 18px" }}>
-                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: "#10B981", marginBottom: 10 }}>ðŸ“ˆ Since {purchaseYear} â€” Capital Appreciation</div>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: "#10B981", marginBottom: 10 }}>📈 Since {purchaseYear} — Capital Appreciation</div>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: 10 }}>
                           {[
                             { l: "Purchase Price", v: "AED " + (purchaseValue/1e6).toFixed(3) + "M" },
@@ -4349,11 +4349,11 @@ export default function EmaarDashboardV2() {
                       </div>
                     )}
                     <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 8, background: T.surfaceAlt, fontSize: 11, color: T.textMuted, lineHeight: 1.7 }}>
-                      âš ï¸ DXB Estimate is an automated model using DLD transaction data, Emaar price lists, and rental index. Estimates may vary Â±15% from actual market prices. Always verify with a registered valuer before transacting.
+                      ⚠️ DXB Estimate is an automated model using DLD transaction data, Emaar price lists, and rental index. Estimates may vary ±15% from actual market prices. Always verify with a registered valuer before transacting.
                     </div>
                   </div>
                 </div>
-              {/* â”€â”€â”€ LIVE BAYUT LISTINGS â”€â”€â”€ */}
+              {/* ─── LIVE BAYUT LISTINGS ─── */}
               {(() => {
                 const BayutListings = ({ community, propType, beds }) => {
                   const [bayutListings, setBayutListings] = React.useState(null);
@@ -4417,8 +4417,8 @@ export default function EmaarDashboardV2() {
                     <div style={{ background: "rgba(59,130,246,0.04)", border: "1px solid rgba(59,130,246,0.15)", borderRadius: 14, padding: 20, marginTop: 4 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: "#60A5FA" }}>ðŸ  Live Bayut Listings</div>
-                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Real market comparables Â· {community} Â· {propType}</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: "#60A5FA" }}>🏠 Live Bayut Listings</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Real market comparables · {community} · {propType}</div>
                         </div>
                         <button type="button" onClick={fetchBayutListings} disabled={bayutLoading}
                           style={{ padding: "6px 14px", borderRadius: 8, background: bayutLoading ? T.surfaceAlt : "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)", color: bayutLoading ? T.textMuted : "#60A5FA", fontSize: 11, fontWeight: 600, cursor: bayutLoading ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
@@ -4431,7 +4431,7 @@ export default function EmaarDashboardV2() {
                           {bayutListings.map(l => (
                             l._debug ? (
                               <div key="debug" style={{ gridColumn: "1/-1", fontSize: 11, color: T.textMuted, background: T.surfaceAlt, padding: 12, borderRadius: 8, wordBreak: "break-all" }}>
-                                ðŸ” Debug: {l._debug}
+                                🔍 Debug: {l._debug}
                               </div>
                             ) : (
                             <a key={l.id} href={l.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", background: T.surface, borderRadius: 10, padding: "12px 14px", border: "1px solid " + T.border, display: "block" }}
@@ -4440,7 +4440,7 @@ export default function EmaarDashboardV2() {
                               <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{l.location}</div>
                               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 800, color: T.gold }}>AED {(l.price/1e6).toFixed(2)}M</div>
                               <div style={{ fontSize: 10, color: "#60A5FA", marginTop: 2 }}>AED {l.ppsf?.toLocaleString()} /sqft</div>
-                              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{l.beds} bed Â· {l.baths} bath Â· {Math.round(l.area).toLocaleString()} sqft</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>{l.beds} bed · {l.baths} bath · {Math.round(l.area).toLocaleString()} sqft</div>
                             </a>
                             )
                           ))}
@@ -4459,16 +4459,16 @@ export default function EmaarDashboardV2() {
             );
           })()}
 
-          {/* â”€â”€â”€ STR VS LTR YIELD TAB â”€â”€â”€ */}
+          {/* ─── STR VS LTR YIELD TAB ─── */}
           {tab === "STR vs LTR" && !isPro && <ProGateFullPage tabName="STR vs LTR" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "STR vs LTR" && isPro && (() => {
             const strDataStatic = [
               // Source: DTCM Dubai 2025, Property Monitor, DLD Rental Index, industry estimates
-              // Dubai STR avg gross: ~8% | LTR avg: 6.9% | DTCM permit: AED 1,520/yr | Mgmt: 15â€“20%
-              { community: "Emaar Beachfront", ltr: 6.8, str: 9.8, strOcc: 76, avgNight: 780, units: 42, demand: "Very High", notes: "Beachfront access drives strong STR demand. DLD data shows consistent high rental values. Winter peak season Octâ€“Apr essential for returns." },
-              { community: "Downtown Dubai", ltr: 5.4, str: 9.2, strOcc: 81, avgNight: 890, units: 38, demand: "Very High", notes: "Burj Khalifa proximity supports year-round demand. Business travel + tourism. DLD 2025: avg Downtown apt rent AED 170â€“260K/yr. LTR yield lower due to high purchase price." },
+              // Dubai STR avg gross: ~8% | LTR avg: 6.9% | DTCM permit: AED 1,520/yr | Mgmt: 15–20%
+              { community: "Emaar Beachfront", ltr: 6.8, str: 9.8, strOcc: 76, avgNight: 780, units: 42, demand: "Very High", notes: "Beachfront access drives strong STR demand. DLD data shows consistent high rental values. Winter peak season Oct–Apr essential for returns." },
+              { community: "Downtown Dubai", ltr: 5.4, str: 9.2, strOcc: 81, avgNight: 890, units: 38, demand: "Very High", notes: "Burj Khalifa proximity supports year-round demand. Business travel + tourism. DLD 2025: avg Downtown apt rent AED 170–260K/yr. LTR yield lower due to high purchase price." },
               { community: "Dubai Creek Harbour", ltr: 6.4, str: 8.6, strOcc: 69, avgNight: 640, units: 28, demand: "High", notes: "Emerging STR market growing as community matures. Creek views and proximity to Downtown. Emaar Beachfront registered 44% transaction YoY growth in 2025." },
-              { community: "Dubai Hills Estate", ltr: 6.2, str: 7.2, strOcc: 60, avgNight: 490, units: 15, demand: "Moderate", notes: "Family-oriented community. LTR preferred by tenants. Golf view units command STR premium. DLD shows DHE avg 5â€“6.8% gross LTR yield, mid-range for Dubai." },
+              { community: "Dubai Hills Estate", ltr: 6.2, str: 7.2, strOcc: 60, avgNight: 490, units: 15, demand: "Moderate", notes: "Family-oriented community. LTR preferred by tenants. Golf view units command STR premium. DLD shows DHE avg 5–6.8% gross LTR yield, mid-range for Dubai." },
               { community: "Arabian Ranches III", ltr: 5.8, str: 6.1, strOcc: 52, avgNight: 460, units: 8, demand: "Low", notes: "Suburban villa community. LTR strongly preferred. Corporate family tenants drive stable 12-month contracts. STR only viable for short summer transitions." },
               { community: "The Valley", ltr: 6.4, str: 6.9, strOcc: 55, avgNight: 420, units: 6, demand: "Low-Mod", notes: "Young community maturing. Affordable entry prices (avg AED 1.72M). LTR yield competitive at 6.4% as infrastructure grows. STR limited by distance from tourist zones." },
               { community: "The Oasis", ltr: 4.8, str: 8.4, strOcc: 65, avgNight: 1150, units: 12, demand: "High", notes: "Ultra-luxury lagoon villas. HNWI short-stay market. Limited supply drives strong nightly rates. LTR yield modest vs purchase price (AED 4M+), but STR ROI compelling." },
@@ -4481,7 +4481,7 @@ export default function EmaarDashboardV2() {
                   strOcc: parseInt(d.occupancy) || 0,
                   avgNight: parseInt(d.avgNightly) || 0,
                   units: 0,
-                  demand: d.verdict || "â€”",
+                  demand: d.verdict || "—",
                   notes: d.verdict || ""
                 }))
               : strDataStatic;
@@ -4494,7 +4494,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                     <div>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Short-Term vs Long-Term Rental Yield</div>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>AirDNA Â· Airbnb Â· Booking.com Â· DLD Rental Index Â· 2025 data</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>AirDNA · Airbnb · Booking.com · DLD Rental Index · 2025 data</div>
                     </div>
                     <select value={strCommunity} onChange={e => setStrCommunity(e.target.value)} style={{ padding: "8px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
                       <option value="All">All Communities</option>
@@ -4576,14 +4576,14 @@ export default function EmaarDashboardV2() {
                   })}
                 </div>
                 <div style={{ padding: "14px 18px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}`, fontSize: 12, color: T.textMuted, lineHeight: 1.7 }}>
-                  <strong style={{ color: T.white }}>Important:</strong> STR yields assume full DTCM permit compliance and 70%+ occupancy. Dubai requires short-term rental permits (AED 1,520/year). STR yields are estimates based on DLD rental data, DTCM permit records, and market research. Net yields typically 5â€“6% after DTCM permit (AED 1,520/yr), management fees (15â€“20%), and seasonal vacancy. Source: DTCM 2025, Property Monitor, DLD.
+                  <strong style={{ color: T.white }}>Important:</strong> STR yields assume full DTCM permit compliance and 70%+ occupancy. Dubai requires short-term rental permits (AED 1,520/year). STR yields are estimates based on DLD rental data, DTCM permit records, and market research. Net yields typically 5–6% after DTCM permit (AED 1,520/yr), management fees (15–20%), and seasonal vacancy. Source: DTCM 2025, Property Monitor, DLD.
                 </div>
-              <TabSources sources={[{ label: "DTCM Dubai 2025", url: "https://www.dtcm.gov.ae" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "Property Monitor" }, { label: "AirDNA (market estimates)" }, { label: "Ejari â€” Rental contracts" }]} />
+              <TabSources sources={[{ label: "DTCM Dubai 2025", url: "https://www.dtcm.gov.ae" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "Property Monitor" }, { label: "AirDNA (market estimates)" }, { label: "Ejari — Rental contracts" }]} />
               </div>
             );
           })()}
 
-          {/* â”€â”€â”€ DEVELOPER HEALTH SCORE TAB â”€â”€â”€ */}
+          {/* ─── DEVELOPER HEALTH SCORE TAB ─── */}
           {tab === "Developer Health" && !isPro && <ProGateFullPage tabName="Developer Health" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Developer Health" && isPro && (() => {
             const devData = liveDevHealth.length > 0
@@ -4599,7 +4599,7 @@ export default function EmaarDashboardV2() {
                   color: T.gold, notes: d.rating || "",
                 }))
               : [
-              { name: "Emaar Properties", ticker: "EMAAR", revenue: 49.6, profit: 25.7, backlog: 155, deliveries: 11000, projects: 48, debtEquity: 0.11, cashFlow: 30.5, margin: 52, deliveryRecord: 96, score: 95, color: T.gold, listed: true, notes: "AED 80.4B property sales in 2025 â€” highest ever. Revenue up 40%, net profit up 36%. AED 155B backlog = 3â€“4yr revenue visibility. S&P BBB+, Moody's Baa1." },
+              { name: "Emaar Properties", ticker: "EMAAR", revenue: 49.6, profit: 25.7, backlog: 155, deliveries: 11000, projects: 48, debtEquity: 0.11, cashFlow: 30.5, margin: 52, deliveryRecord: 96, score: 95, color: T.gold, listed: true, notes: "AED 80.4B property sales in 2025 — highest ever. Revenue up 40%, net profit up 36%. AED 155B backlog = 3–4yr revenue visibility. S&P BBB+, Moody's Baa1." },
               { name: "DAMAC Properties", ticker: "DAMAC", revenue: 21.8, profit: 7.6, backlog: 65, deliveries: 7400, projects: 38, debtEquity: 0.38, cashFlow: 8.4, margin: 35, deliveryRecord: 79, score: 72, color: "#3B82F6", listed: false, notes: "AED 32B estimated FY2025 sales. Went private 2025. Aggressive branded-luxury pipeline. DAMAC Lagoons, Hills 2 driving volume. Chelsea FC sponsorship deal secured." },
               { name: "Nakheel / Dubai Holding", ticker: "NAKHEEL", revenue: 17.2, profit: 6.8, backlog: 48, deliveries: 4600, projects: 24, debtEquity: 0.22, cashFlow: 7.4, margin: 40, deliveryRecord: 83, score: 79, color: "#10B981", listed: false, notes: "State-owned. AED 13B in sales by Aug 2025. Palm Jumeirah, Dubai Islands, Palm Jebel Ali. Part of Dubai Holding since Mar 2024. Government-backed balance sheet." },
               { name: "Aldar Properties", ticker: "ALDAR.AD", revenue: 16.4, profit: 6.1, backlog: 42, deliveries: 3800, projects: 31, debtEquity: 0.39, cashFlow: 7.1, margin: 37, deliveryRecord: 89, score: 76, color: "#8B5CF6", listed: true, notes: "Abu Dhabi's #1 listed developer. AED 8B in Dubai sales by Aug 2025. ADX listed, strong ESG credentials. Expanding into Dubai via JV projects and direct launches." },
@@ -4619,7 +4619,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                     <div>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Developer Health Score</div>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>DFM Â· ADX Â· Annual Reports Â· DLD Data Â· FY2025</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>DFM · ADX · Annual Reports · DLD Data · FY2025</div>
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
                       {[["score","By Score"],["revenue","By Revenue"],["backlog","By Backlog"],["profit","By Profit"]].map(([v,l]) => (
@@ -4690,14 +4690,14 @@ export default function EmaarDashboardV2() {
                   ))}
                 </div>
                 <div style={{ fontSize: 11, color: T.textMuted, padding: "10px 14px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
-                  ðŸ“Š Source: Dubai Land Department official data FY2025 via DXB Interact and Gulf News (Jan 2026). Total Dubai market: 214,912 transactions Â· AED 682.5B Â· +30.6% value growth YoY. Quarterly splits are proportional estimates based on DLD full-year totals; Q4 weighted higher reflecting strongest quarter on record (AED 187.5B).
+                  📊 Source: Dubai Land Department official data FY2025 via DXB Interact and Gulf News (Jan 2026). Total Dubai market: 214,912 transactions · AED 682.5B · +30.6% value growth YoY. Quarterly splits are proportional estimates based on DLD full-year totals; Q4 weighted higher reflecting strongest quarter on record (AED 187.5B).
                 </div>
-              <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM / ADX", url: "https://www.dfm.ae" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "DLD FY2025", url: "https://dubailand.gov.ae" }, { label: "Gulf News â€” Developer Reports", url: "https://gulfnews.com/business/property" }]} />
+              <TabSources sources={[{ label: "Emaar Annual Report 2025", url: "https://www.emaar.com/en/investor-relations/" }, { label: "DFM / ADX", url: "https://www.dfm.ae" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "DLD FY2025", url: "https://dubailand.gov.ae" }, { label: "Gulf News — Developer Reports", url: "https://gulfnews.com/business/property" }]} />
               </div>
             );
           })()}
 
-          {/* â”€â”€â”€ DLD TRANSACTION VOLUMES TAB â”€â”€â”€ */}
+          {/* ─── DLD TRANSACTION VOLUMES TAB ─── */}
           {tab === "DLD Volumes" && !isPro && <ProGateFullPage tabName="DLD Volumes" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "DLD Volumes" && isPro && (() => {
             const dldDataStatic = [
@@ -4776,7 +4776,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
                     <div>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>DLD Transaction Volumes</div>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Dubai Land Department Â· FY2025 Â· 214,912 total transactions Â· AED 682.5B</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Dubai Land Department · FY2025 · 214,912 total transactions · AED 682.5B</div>
                     </div>
                     {(dldCommunity !== "All" || dldDeveloper !== "All" || dldType !== "All" || dldTxType !== "All") && (
                       <button type="button" onClick={() => { setDldCommunity("All"); setDldDeveloper("All"); setDldType("All"); setDldTxType("All"); }}
@@ -4811,7 +4811,7 @@ export default function EmaarDashboardV2() {
                       { label: "Total Deals", value: totalDeals.toLocaleString(), color: T.gold },
                       { label: "Total Volume", value: "AED " + (totalVol / 1e9).toFixed(1) + "B", color: T.green },
                       { label: "Off-Plan Share", value: Math.round(filtered.reduce((s,d) => s + d.total*d.offPlanPct/100, 0) / Math.max(totalDeals, 1) * 100) + "%", color: T.blue },
-                      { label: "Avg Price", value: totalDeals > 0 ? "AED " + (totalVol / totalDeals / 1e6).toFixed(1) + "M" : "â€”", color: T.teal },
+                      { label: "Avg Price", value: totalDeals > 0 ? "AED " + (totalVol / totalDeals / 1e6).toFixed(1) + "M" : "—", color: T.teal },
                     ].map(k => (
                       <div key={k.label} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
                         <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 5 }}>{k.label}</div>
@@ -4822,7 +4822,7 @@ export default function EmaarDashboardV2() {
                 </div>
                 {/* Bar chart + table */}
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
-                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 16 }}>Transactions by Community â€” FY2025</div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 16 }}>Transactions by Community — FY2025</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {sorted.map(d => {
                       const barW = (d.total / maxTotal) * 100;
@@ -4889,7 +4889,7 @@ export default function EmaarDashboardV2() {
                   {/* Nationality Breakdown */}
                   <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                      <span style={{ fontSize: 14 }}>ðŸŒ</span>
+                      <span style={{ fontSize: 14 }}>🌍</span>
                       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Buyer Nationality Breakdown</div>
                       <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>DLD FY2025</span>
                     </div>
@@ -4913,7 +4913,7 @@ export default function EmaarDashboardV2() {
                   {/* Developer Market Share */}
                   <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                      <span style={{ fontSize: 14 }}>ðŸ—ï¸</span>
+                      <span style={{ fontSize: 14 }}>🏗️</span>
                       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Developer Market Share</div>
                       <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>By deals FY2025</span>
                     </div>
@@ -4941,7 +4941,7 @@ export default function EmaarDashboardV2() {
 
           })()}
 
-          {/* â”€â”€â”€ COMPETITORS TAB â”€â”€â”€ */}
+          {/* ─── COMPETITORS TAB ─── */}
           {tab === "Competitors" && !isPro && <ProGateFullPage tabName="Competitors" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Competitors" && isPro && (() => {
             // Use live competitor data from admin if available, else static
@@ -4955,21 +4955,21 @@ export default function EmaarDashboardV2() {
                   underConst: 0,
                   color: [T.gold,"#3B82F6","#10B981","#8B5CF6","#F59E0B","#06B6D4"][i % 6],
                   share: parseFloat(d.marketShare) || 0,
-                  segment: d.strength || "â€”",
+                  segment: d.strength || "—",
                 }))
               : developers;
             return <>
-            <Section title="Developer Rankings" sub="DXBinteract verified Â· fam Properties analysis Â· 2025">
+            <Section title="Developer Rankings" sub="DXBinteract verified · fam Properties analysis · 2025">
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-                <KPI label="Emaar % of Top 30" value="11.8%" sub="% of AED 682.5B Dubai market" delay={1} onClick={() => setSelectedKPI({ label: "Emaar % of Dubai Total", value: "11.8%", color: T.gold, description: "Emaar accounts for 22.6% of all sales among the top 30 Dubai developers â€” nearly 1 in 4 AED of premium real estate sold in Dubai.", source: "DXBinteract Â· fam Properties 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar FY2025 Sales", value: "AED 80.4B", note: "All-time record" }, { label: "Dubai Total Market", value: "AED 682.5B", note: "FY2025 DLD data" }, { label: "Emaar Share", value: "11.8%", note: "Of entire Dubai market" }, { label: "Rank", value: "#1", note: "By sales value" }, { label: "#2 DAMAC", value: "~AED 32B est.", note: "2.5Ã— smaller" }], trend: null })} />
-                <KPI label="Lead vs #2" value="AED 48.4B" sub="2.5Ã— larger than DAMAC (est.)" delay={2} onClick={() => setSelectedKPI({ label: "Lead vs #2", value: "AED 48.4B", color: T.teal, description: "Emaar leads #2 developer DAMAC by an estimated AED 48.4B in 2025 property sales â€” a 2.5Ã— advantage. Gap has widened from ~AED 12B in 2023 to AED 48B+ in 2025.", source: "DXBinteract 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar Sales FY2025", value: "AED 80.4B", note: "Official Emaar press release" }, { label: "DAMAC Est. FY2025", value: "~AED 32B", note: "Went private, est." }, { label: "Sales Gap", value: "~AED 48.4B", note: "2.5Ã— advantage" }, { label: "2023 Gap", value: "~AED 19B", note: "Gap widening fast" }, { label: "2024 Gap", value: "~AED 31B", note: "Emaar accelerating" }], trend: null })} />
-                <KPI label="% of Dubai Total" value="11.8%" sub="Of AED 682.5B market" delay={3} onClick={() => setSelectedKPI({ label: "% of Dubai Total", value: "11.8%", color: T.blue, description: "Emaar captured 11.8% of Dubai's total AED 682.5B real estate market in 2025 (AED 80.4B Ã· AED 682.5B). Nearly 1 in every 8 AED transacted in all of Dubai was an Emaar property.", source: "DLD Â· DXBinteract 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Dubai Total Market", value: "AED 682.5B", note: "All transactions 2025" }, { label: "Emaar Share", value: "AED 80.4B", note: "11.8% of total" }, { label: "2024 Share", value: "~8.1%", note: "Growing share" }, { label: "2023 Share", value: "~7.2%", note: "Consistent gain" }, { label: "Market Type", value: "Off-plan dominant", note: "60%+ of Dubai volume" }], trend: null })} />
-                <KPI label="Delivered % Top 10" value="31%" sub="7,318 of 23,576 units" delay={4} onClick={() => setSelectedKPI({ label: "Delivered % Top 10", value: "31%", color: T.green, description: "Emaar delivered 31% of all units delivered by the top 10 developers in 2025 â€” 7,318 out of 23,576 total handovers.", source: "DXBinteract 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar Delivered", value: "7,318 units", note: "FY2025" }, { label: "Top 10 Total", value: "23,576 units", note: "Combined handovers" }, { label: "Emaar Share", value: "31%", note: "Of top 10 deliveries" }, { label: "On-Time Rate", value: "95%+", note: "Industry best" }, { label: "Since 2002", value: "125,600+", note: "Cumulative delivered" }], trend: null })} />
+                <KPI label="Emaar % of Top 30" value="11.8%" sub="% of AED 682.5B Dubai market" delay={1} onClick={() => setSelectedKPI({ label: "Emaar % of Dubai Total", value: "11.8%", color: T.gold, description: "Emaar accounts for 22.6% of all sales among the top 30 Dubai developers — nearly 1 in 4 AED of premium real estate sold in Dubai.", source: "DXBinteract · fam Properties 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar FY2025 Sales", value: "AED 80.4B", note: "All-time record" }, { label: "Dubai Total Market", value: "AED 682.5B", note: "FY2025 DLD data" }, { label: "Emaar Share", value: "11.8%", note: "Of entire Dubai market" }, { label: "Rank", value: "#1", note: "By sales value" }, { label: "#2 DAMAC", value: "~AED 32B est.", note: "2.5× smaller" }], trend: null })} />
+                <KPI label="Lead vs #2" value="AED 48.4B" sub="2.5× larger than DAMAC (est.)" delay={2} onClick={() => setSelectedKPI({ label: "Lead vs #2", value: "AED 48.4B", color: T.teal, description: "Emaar leads #2 developer DAMAC by an estimated AED 48.4B in 2025 property sales — a 2.5× advantage. Gap has widened from ~AED 12B in 2023 to AED 48B+ in 2025.", source: "DXBinteract 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar Sales FY2025", value: "AED 80.4B", note: "Official Emaar press release" }, { label: "DAMAC Est. FY2025", value: "~AED 32B", note: "Went private, est." }, { label: "Sales Gap", value: "~AED 48.4B", note: "2.5× advantage" }, { label: "2023 Gap", value: "~AED 19B", note: "Gap widening fast" }, { label: "2024 Gap", value: "~AED 31B", note: "Emaar accelerating" }], trend: null })} />
+                <KPI label="% of Dubai Total" value="11.8%" sub="Of AED 682.5B market" delay={3} onClick={() => setSelectedKPI({ label: "% of Dubai Total", value: "11.8%", color: T.blue, description: "Emaar captured 11.8% of Dubai's total AED 682.5B real estate market in 2025 (AED 80.4B ÷ AED 682.5B). Nearly 1 in every 8 AED transacted in all of Dubai was an Emaar property.", source: "DLD · DXBinteract 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Dubai Total Market", value: "AED 682.5B", note: "All transactions 2025" }, { label: "Emaar Share", value: "AED 80.4B", note: "11.8% of total" }, { label: "2024 Share", value: "~8.1%", note: "Growing share" }, { label: "2023 Share", value: "~7.2%", note: "Consistent gain" }, { label: "Market Type", value: "Off-plan dominant", note: "60%+ of Dubai volume" }], trend: null })} />
+                <KPI label="Delivered % Top 10" value="31%" sub="7,318 of 23,576 units" delay={4} onClick={() => setSelectedKPI({ label: "Delivered % Top 10", value: "31%", color: T.green, description: "Emaar delivered 31% of all units delivered by the top 10 developers in 2025 — 7,318 out of 23,576 total handovers.", source: "DXBinteract 2025", sourceUrl: "https://dxbinteract.com", items: [{ label: "Emaar Delivered", value: "7,318 units", note: "FY2025" }, { label: "Top 10 Total", value: "23,576 units", note: "Combined handovers" }, { label: "Emaar Share", value: "31%", note: "Of top 10 deliveries" }, { label: "On-Time Rate", value: "95%+", note: "Industry best" }, { label: "Since 2002", value: "125,600+", note: "Cumulative delivered" }], trend: null })} />
               </div>
             </Section>
 
             <ProGate isPro={isPro} message="Unlock Competitor Analysis" onUpgrade={() => setShowUpgrade(true)}>
-            <Chart title="Sales Value (AED Billions) â€” Top 10 Developers" style={{ marginTop: 20 }}>
+            <Chart title="Sales Value (AED Billions) — Top 10 Developers" style={{ marginTop: 20 }}>
               <ResponsiveContainer width="100%" height={380}>
                 <BarChart data={devList} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
@@ -5008,7 +5008,7 @@ export default function EmaarDashboardV2() {
               </Chart>
             </div>
 
-            <Section title="Developer Profiles" sub="Verified from DXBinteract Â· Full year 2025">
+            <Section title="Developer Profiles" sub="Verified from DXBinteract · Full year 2025">
               <div className="table-scroll" style={{ overflowX: "auto", marginTop: 12 }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
                   <thead>
@@ -5043,7 +5043,7 @@ export default function EmaarDashboardV2() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginTop: 16 }}>
                 {[
                   ["Brand Premium", "20-40%", "Emaar commands higher prices per sqft vs competitors in same locations. Downtown Dubai and Emaar Beachfront average 25-40% premium over nearby non-Emaar developments.", T.gold],
-                  ["Recurring Revenue", "AED 10.5B", "Unlike pure developers (DAMAC, Binghatti), Emaar generates 32% of EBITDA from malls, hotels, and commercial leasing â€” providing stability through market cycles.", T.teal],
+                  ["Recurring Revenue", "AED 10.5B", "Unlike pure developers (DAMAC, Binghatti), Emaar generates 32% of EBITDA from malls, hotels, and commercial leasing — providing stability through market cycles.", T.teal],
                   ["Delivery Track Record", "125,600+", "More units delivered than any other UAE developer since 2002. Consistently on-time completion builds buyer confidence and justifies premium pricing.", T.green],
                   ["Revenue Backlog", "AED 155B", "3-4 years of pre-sold revenue at healthy margins. No other Dubai developer has this level of earnings visibility. De-risks future performance.", T.purple],
                 ].map(([title, value, desc, color], i) => (
@@ -5059,11 +5059,11 @@ export default function EmaarDashboardV2() {
             <TabSources sources={[{ label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "fam Properties", url: "https://famproperties.com" }, { label: "DLD", url: "https://dubailand.gov.ae" }, { label: "Gulf News", url: "https://gulfnews.com" }, { label: "Zawya", url: "https://zawya.com" }]} />
           </>; })()}
 
-          {/* â”€â”€â”€ YIELDS TAB â”€â”€â”€ */}
+          {/* ─── YIELDS TAB ─── */}
           {tab === "Yields" && !isPro && <ProGateFullPage tabName="Yields" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Yields" && isPro && <>
             <ProGate isPro={isPro} message="Unlock Rental Yield Analysis" onUpgrade={() => setShowUpgrade(true)}>
-            <Section title="Rental Yield Analysis" sub="REIDIN Dec 2025 Â· DXB Interact Â· Engel & VÃ¶lkers Â· DLD Rental Index">
+            <Section title="Rental Yield Analysis" sub="REIDIN Dec 2025 · DXB Interact · Engel & Völkers · DLD Rental Index">
               <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <DataBadge source="REIDIN Dec 2025" date="Dec 2025" type="reidin" />
                 <DataBadge source="Dubai Land Department Rental Index" date="2025" type="dld" />
@@ -5079,9 +5079,9 @@ export default function EmaarDashboardV2() {
                       const d = payload[0].payload;
                       return (
                         <div style={{ background: T.surface, border: `1px solid ${T.gold}`, borderRadius: 10, padding: "10px 14px", boxShadow: "0 12px 40px rgba(0,0,0,0.5)" }}>
-                          <p style={{ color: T.gold, fontWeight: 700, margin: 0, fontSize: 12, fontFamily: "'Fraunces', serif" }}>{d.community} â€” {d.label}</p>
-                          <p style={{ color: T.white, margin: "4px 0 0", fontSize: 12 }}>Rent: AED {d.rent}K/yr Â· Price: AED {d.price}K</p>
-                          <p style={{ color: T.teal, margin: "2px 0 0", fontSize: 12 }}>Gross: {d.gross}% Â· Net: {d.net}% Â· {d.demand}</p>
+                          <p style={{ color: T.gold, fontWeight: 700, margin: 0, fontSize: 12, fontFamily: "'Fraunces', serif" }}>{d.community} — {d.label}</p>
+                          <p style={{ color: T.white, margin: "4px 0 0", fontSize: 12 }}>Rent: AED {d.rent}K/yr · Price: AED {d.price}K</p>
+                          <p style={{ color: T.teal, margin: "2px 0 0", fontSize: 12 }}>Gross: {d.gross}% · Net: {d.net}% · {d.demand}</p>
                         </div>
                       );
                     }} />
@@ -5094,21 +5094,21 @@ export default function EmaarDashboardV2() {
             </Section>
 
             <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
-              <KPI label="Dubai Avg Gross Yield" value="6.9%" sub="Apartments 7.3% Â· Villas 5.0%" delay={1} onClick={() => setSelectedKPI({ label: "Dubai Avg Gross Yield", value: "6.9%", color: T.gold, description: "Dubai citywide average gross rental yield in 2025. Apartments outperform at 7.3% vs villas at 5.0%. Source: REIDIN Dec 2025, DXB Interact, Engel & VÃ¶lkers.", source: "REIDIN Â· DXB Interact Â· Engel & VÃ¶lkers 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "City Avg (Gross)", value: "6.9%", note: "All property types" }, { label: "Apartments Avg", value: "7.3%", note: "Highest returns" }, { label: "Villas Avg", value: "5.0%", note: "Lower but appreciation" }, { label: "Net Yield (Apt)", value: "~5.3â€“5.8%", note: "After costs" }, { label: "vs London", value: "2â€“4%", note: "Dubai 3Ã— higher" }, { label: "vs New York", value: "3â€“5%", note: "Dubai outperforms" }], trend: null })} />
-              <KPI label="Best Dubai Yield" value="8â€“9%" sub="JVC Â· International City" delay={2} onClick={() => setSelectedKPI({ label: "Best Dubai Yield", value: "8â€“9%", color: T.green, description: "Jumeirah Village Circle and International City consistently deliver 8â€“9% gross yields in 2025, the highest in Dubai. Affordable entry prices + strong tenant demand drive returns.", source: "REIDIN Â· DXB Interact Â· Bayut H1 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Top Area", value: "Int'l City / JVC", note: "8â€“9% gross" }, { label: "Al Furjan", value: "7.5â€“8.5%", note: "Strong yield" }, { label: "Dubai South", value: "7â€“8%", note: "Growing demand" }, { label: "Emaar communities", value: "5.5â€“7.5%", note: "Premium segment" }, { label: "Net Yield (JVC)", value: "6.5â€“7.5%", note: "After costs" }], trend: null })} />
-              <KPI label="Palm / Downtown Yield" value="4â€“5.5%" sub="Capital appreciation play" delay={3} onClick={() => setSelectedKPI({ label: "Palm / Downtown Yield", value: "4â€“5.5%", color: T.blue, description: "Palm Jumeirah and Downtown Dubai offer 4â€“5.5% gross yield â€” lower than city average. Capital appreciation compensates: Palm villas rose 14% YoY in 2025, Downtown apartments +12.5%.", source: "REIDIN Â· DXB Interact Â· Engel & VÃ¶lkers Q4 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Palm Jumeirah", value: "4â€“5.5%", note: "Gross yield" }, { label: "Downtown Dubai", value: "4.5â€“6%", note: "Gross yield" }, { label: "Palm YoY Appreciation", value: "+14%", note: "2025 capital gain" }, { label: "Downtown YoY Appr.", value: "+12.5%", note: "2025 capital gain" }, { label: "Net Yield (Palm)", value: "3â€“4.3%", note: "After costs" }], trend: null })} />
-              <KPI label="Avg 2BR Annual Rent" value="AED 91K" sub="Dubai citywide avg Q3 2025" delay={4} onClick={() => setSelectedKPI({ label: "Avg 2BR Annual Rent", value: "AED 91K", color: T.teal, description: "Average annual rent for a 2-bedroom apartment in Dubai is AED 91,052 (Q3 2025), per Property Monitor data compiled by Engel & VÃ¶lkers. Rents grew 8.5â€“9% YoY in 2025.", source: "Property Monitor Â· Engel & VÃ¶lkers Q3 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "2BR Avg Rent", value: "AED 91,052", note: "Q3 2025 citywide" }, { label: "Rent Growth YoY", value: "+8.5â€“9%", note: "Apartments 2025" }, { label: "Villa Rent Growth", value: "+5.7%", note: "2025 YoY" }, { label: "EIBOR Rate", value: "3.47%", note: "Dec 2025 reference" }, { label: "900K+ contracts", value: "+8% YoY", note: "Ejari registrations 2024" }], trend: null })} />
+              <KPI label="Dubai Avg Gross Yield" value="6.9%" sub="Apartments 7.3% · Villas 5.0%" delay={1} onClick={() => setSelectedKPI({ label: "Dubai Avg Gross Yield", value: "6.9%", color: T.gold, description: "Dubai citywide average gross rental yield in 2025. Apartments outperform at 7.3% vs villas at 5.0%. Source: REIDIN Dec 2025, DXB Interact, Engel & Völkers.", source: "REIDIN · DXB Interact · Engel & Völkers 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "City Avg (Gross)", value: "6.9%", note: "All property types" }, { label: "Apartments Avg", value: "7.3%", note: "Highest returns" }, { label: "Villas Avg", value: "5.0%", note: "Lower but appreciation" }, { label: "Net Yield (Apt)", value: "~5.3–5.8%", note: "After costs" }, { label: "vs London", value: "2–4%", note: "Dubai 3× higher" }, { label: "vs New York", value: "3–5%", note: "Dubai outperforms" }], trend: null })} />
+              <KPI label="Best Dubai Yield" value="8–9%" sub="JVC · International City" delay={2} onClick={() => setSelectedKPI({ label: "Best Dubai Yield", value: "8–9%", color: T.green, description: "Jumeirah Village Circle and International City consistently deliver 8–9% gross yields in 2025, the highest in Dubai. Affordable entry prices + strong tenant demand drive returns.", source: "REIDIN · DXB Interact · Bayut H1 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Top Area", value: "Int'l City / JVC", note: "8–9% gross" }, { label: "Al Furjan", value: "7.5–8.5%", note: "Strong yield" }, { label: "Dubai South", value: "7–8%", note: "Growing demand" }, { label: "Emaar communities", value: "5.5–7.5%", note: "Premium segment" }, { label: "Net Yield (JVC)", value: "6.5–7.5%", note: "After costs" }], trend: null })} />
+              <KPI label="Palm / Downtown Yield" value="4–5.5%" sub="Capital appreciation play" delay={3} onClick={() => setSelectedKPI({ label: "Palm / Downtown Yield", value: "4–5.5%", color: T.blue, description: "Palm Jumeirah and Downtown Dubai offer 4–5.5% gross yield — lower than city average. Capital appreciation compensates: Palm villas rose 14% YoY in 2025, Downtown apartments +12.5%.", source: "REIDIN · DXB Interact · Engel & Völkers Q4 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "Palm Jumeirah", value: "4–5.5%", note: "Gross yield" }, { label: "Downtown Dubai", value: "4.5–6%", note: "Gross yield" }, { label: "Palm YoY Appreciation", value: "+14%", note: "2025 capital gain" }, { label: "Downtown YoY Appr.", value: "+12.5%", note: "2025 capital gain" }, { label: "Net Yield (Palm)", value: "3–4.3%", note: "After costs" }], trend: null })} />
+              <KPI label="Avg 2BR Annual Rent" value="AED 91K" sub="Dubai citywide avg Q3 2025" delay={4} onClick={() => setSelectedKPI({ label: "Avg 2BR Annual Rent", value: "AED 91K", color: T.teal, description: "Average annual rent for a 2-bedroom apartment in Dubai is AED 91,052 (Q3 2025), per Property Monitor data compiled by Engel & Völkers. Rents grew 8.5–9% YoY in 2025.", source: "Property Monitor · Engel & Völkers Q3 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "2BR Avg Rent", value: "AED 91,052", note: "Q3 2025 citywide" }, { label: "Rent Growth YoY", value: "+8.5–9%", note: "Apartments 2025" }, { label: "Villa Rent Growth", value: "+5.7%", note: "2025 YoY" }, { label: "EIBOR Rate", value: "3.47%", note: "Dec 2025 reference" }, { label: "900K+ contracts", value: "+8% YoY", note: "Ejari registrations 2024" }], trend: null })} />
             </div>
 
-            {/* â”€â”€ 5-YEAR YIELD HISTORY + GLOBAL BENCHMARKS â”€â”€ */}
+            {/* ── 5-YEAR YIELD HISTORY + GLOBAL BENCHMARKS ── */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }} className="chart-grid-2">
 
               {/* 5-Year Dubai Yield Trend */}
               <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <span style={{ fontSize: 14 }}>ðŸ“ˆ</span>
-                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Dubai Yield Trend â€” 5 Years</div>
-                  <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>Gross % Â· Citywide avg</span>
+                  <span style={{ fontSize: 14 }}>📈</span>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Dubai Yield Trend — 5 Years</div>
+                  <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>Gross % · Citywide avg</span>
                 </div>
                 {(() => {
                   const yieldHistory = [
@@ -5162,7 +5162,7 @@ export default function EmaarDashboardV2() {
                         ))}
                       </div>
                       <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.15)", fontSize: 10, color: T.textMuted }}>
-                        Dubai gross yields grew from 5.8% (2021) to 6.9% (2025) â€” a 5-year expansion of +110bps driven by strong rental demand and controlled supply.
+                        Dubai gross yields grew from 5.8% (2021) to 6.9% (2025) — a 5-year expansion of +110bps driven by strong rental demand and controlled supply.
                       </div>
                     </div>
                   );
@@ -5172,22 +5172,22 @@ export default function EmaarDashboardV2() {
               {/* Global City Benchmark */}
               <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <span style={{ fontSize: 14 }}>ðŸŒ</span>
+                  <span style={{ fontSize: 14 }}>🌍</span>
                   <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Global Yield Benchmark</div>
-                  <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>Gross % Â· 2025</span>
+                  <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>Gross % · 2025</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {[
-                    { city: "Dubai (JVC)", yield: 8.5, flag: "ðŸ‡¦ðŸ‡ª", note: "Best affordable", color: T.green },
-                    { city: "Dubai (Avg)", yield: 6.9, flag: "ðŸ‡¦ðŸ‡ª", note: "City average", color: T.gold },
-                    { city: "Istanbul", yield: 6.1, flag: "ðŸ‡¹ðŸ‡·", note: "Growing market", color: T.teal },
-                    { city: "Bangkok", yield: 5.8, flag: "ðŸ‡¹ðŸ‡­", note: "SE Asia hub", color: T.blue },
-                    { city: "Kuala Lumpur", yield: 5.5, flag: "ðŸ‡²ðŸ‡¾", note: "Regional", color: T.blue },
-                    { city: "New York", yield: 4.2, flag: "ðŸ‡ºðŸ‡¸", note: "Global benchmark", color: T.textSecondary },
-                    { city: "Paris", yield: 3.8, flag: "ðŸ‡«ðŸ‡·", note: "Regulated market", color: T.textSecondary },
-                    { city: "Singapore", yield: 3.5, flag: "ðŸ‡¸ðŸ‡¬", note: "Cooling measures", color: T.textSecondary },
-                    { city: "London", yield: 3.2, flag: "ðŸ‡¬ðŸ‡§", note: "High entry costs", color: T.textSecondary },
-                    { city: "Hong Kong", yield: 2.8, flag: "ðŸ‡­ðŸ‡°", note: "Luxury segment", color: T.red },
+                    { city: "Dubai (JVC)", yield: 8.5, flag: "🇦🇪", note: "Best affordable", color: T.green },
+                    { city: "Dubai (Avg)", yield: 6.9, flag: "🇦🇪", note: "City average", color: T.gold },
+                    { city: "Istanbul", yield: 6.1, flag: "🇹🇷", note: "Growing market", color: T.teal },
+                    { city: "Bangkok", yield: 5.8, flag: "🇹🇭", note: "SE Asia hub", color: T.blue },
+                    { city: "Kuala Lumpur", yield: 5.5, flag: "🇲🇾", note: "Regional", color: T.blue },
+                    { city: "New York", yield: 4.2, flag: "🇺🇸", note: "Global benchmark", color: T.textSecondary },
+                    { city: "Paris", yield: 3.8, flag: "🇫🇷", note: "Regulated market", color: T.textSecondary },
+                    { city: "Singapore", yield: 3.5, flag: "🇸🇬", note: "Cooling measures", color: T.textSecondary },
+                    { city: "London", yield: 3.2, flag: "🇬🇧", note: "High entry costs", color: T.textSecondary },
+                    { city: "Hong Kong", yield: 2.8, flag: "🇭🇰", note: "Luxury segment", color: T.red },
                   ].map((c, i) => {
                     const isDubai = c.city.includes("Dubai");
                     return (
@@ -5204,25 +5204,25 @@ export default function EmaarDashboardV2() {
                   })}
                 </div>
                 <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, fontSize: 10, color: T.textMuted }}>
-                  Dubai delivers <strong style={{ color: T.gold }}>2â€“3Ã— higher yields</strong> than London, Paris and Singapore â€” with zero income tax and 10-year Golden Visa eligibility above AED 2M.
+                  Dubai delivers <strong style={{ color: T.gold }}>2–3× higher yields</strong> than London, Paris and Singapore — with zero income tax and 10-year Golden Visa eligibility above AED 2M.
                 </div>
               </div>
             </div>
 
-            {/* â”€â”€ YIELD BY UNIT TYPE BREAKDOWN â”€â”€ */}
+            {/* ── YIELD BY UNIT TYPE BREAKDOWN ── */}
             <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                <span style={{ fontSize: 14 }}>ðŸ </span>
-                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Yield by Unit Type â€” Dubai 2025</div>
-                <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>Source: DLD Rental Index Â· REIDIN</span>
+                <span style={{ fontSize: 14 }}>🏠</span>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Yield by Unit Type — Dubai 2025</div>
+                <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>Source: DLD Rental Index · REIDIN</span>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
                 {[
-                  { type: "Studio", gross: 7.8, net: 6.1, avgRent: 52000, avgPrice: 670000, color: T.green, icon: "ðŸ¢" },
-                  { type: "1 Bedroom", gross: 7.1, net: 5.5, avgRent: 78000, avgPrice: 1100000, color: T.teal, icon: "ðŸ›ï¸" },
-                  { type: "2 Bedroom", gross: 6.4, net: 4.9, avgRent: 112000, avgPrice: 1750000, color: T.gold, icon: "ðŸ›ï¸ðŸ›ï¸" },
-                  { type: "3 Bedroom", gross: 5.8, net: 4.4, avgRent: 155000, avgPrice: 2670000, color: T.blue, icon: "ðŸ " },
-                  { type: "Villa / TH", gross: 5.0, net: 3.8, avgRent: 210000, avgPrice: 4200000, color: T.purple, icon: "ðŸ¡" },
+                  { type: "Studio", gross: 7.8, net: 6.1, avgRent: 52000, avgPrice: 670000, color: T.green, icon: "🏢" },
+                  { type: "1 Bedroom", gross: 7.1, net: 5.5, avgRent: 78000, avgPrice: 1100000, color: T.teal, icon: "🛏️" },
+                  { type: "2 Bedroom", gross: 6.4, net: 4.9, avgRent: 112000, avgPrice: 1750000, color: T.gold, icon: "🛏️🛏️" },
+                  { type: "3 Bedroom", gross: 5.8, net: 4.4, avgRent: 155000, avgPrice: 2670000, color: T.blue, icon: "🏠" },
+                  { type: "Villa / TH", gross: 5.0, net: 3.8, avgRent: 210000, avgPrice: 4200000, color: T.purple, icon: "🏡" },
                 ].map((u, i) => (
                   <div key={i} style={{ padding: "16px", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}`, textAlign: "center" }}>
                     <div style={{ fontSize: 24, marginBottom: 8 }}>{u.icon}</div>
@@ -5238,11 +5238,11 @@ export default function EmaarDashboardV2() {
                 ))}
               </div>
               <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.15)", fontSize: 10, color: T.textMuted }}>
-                Studios deliver the highest gross yield (7.8%) due to lower entry prices. Villas offer the lowest yield (5.0%) but highest capital appreciation potential. Source: DLD Rental Index Â· REIDIN Dec 2025
+                Studios deliver the highest gross yield (7.8%) due to lower entry prices. Villas offer the lowest yield (5.0%) but highest capital appreciation potential. Source: DLD Rental Index · REIDIN Dec 2025
               </div>
             </div>
 
-            <Section title="Detailed Yield Data" sub="All Emaar communities Â· Annual rents Â· Launch prices Â· Demand levels">
+            <Section title="Detailed Yield Data" sub="All Emaar communities · Annual rents · Launch prices · Demand levels">
               <div className="table-scroll" style={{ overflowX: "auto", marginTop: 12 }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 750 }}>
                   <thead>
@@ -5264,7 +5264,7 @@ export default function EmaarDashboardV2() {
                         <td style={{ padding: "10px 10px", textAlign: "center" }}>
                           <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: y.demand === "V.High" ? "rgba(16,185,129,0.15)" : y.demand === "High" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", color: y.demand === "V.High" ? T.green : y.demand === "High" ? T.gold : T.blue }}>{y.demand}</span>
                         </td>
-                        <td style={{ padding: "10px 10px", textAlign: "center", color: T.teal, fontSize: 11 }}>{y.visa || "â‰¥2M"}</td>
+                        <td style={{ padding: "10px 10px", textAlign: "center", color: T.teal, fontSize: 11 }}>{y.visa || "≥2M"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -5287,22 +5287,22 @@ export default function EmaarDashboardV2() {
               </Chart>
             </Section>
             </ProGate>
-          <TabSources sources={[{ label: "REIDIN Dec 2025", url: "https://reidin.com" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "Engel & VÃ¶lkers Dubai 2025", url: "https://www.engelvoelkers.com/en-ae/dubai/" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "Bayut Rental Report 2025", url: "https://www.bayut.com" }, { label: "Property Finder", url: "https://www.propertyfinder.ae" }]} />
+          <TabSources sources={[{ label: "REIDIN Dec 2025", url: "https://reidin.com" }, { label: "DXB Interact", url: "https://dxbinteract.com" }, { label: "Engel & Völkers Dubai 2025", url: "https://www.engelvoelkers.com/en-ae/dubai/" }, { label: "DLD Rental Index", url: "https://dubailand.gov.ae" }, { label: "Bayut Rental Report 2025", url: "https://www.bayut.com" }, { label: "Property Finder", url: "https://www.propertyfinder.ae" }]} />
           </>}
 
-          {/* â”€â”€â”€ MORTGAGE CALCULATOR TAB â”€â”€â”€ */}
+          {/* ─── MORTGAGE CALCULATOR TAB ─── */}
           {tab === "Mortgage" && !isPro && <ProGateFullPage tabName="Mortgage" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Mortgage" && isPro && (() => {
             const MortgageCalc = () => {
               const [selectedProjectId, setSelectedProjectId] = React.useState("");
               const [propPrice, setPropPrice] = React.useState(2000000);
               const [downPct, setDownPct] = React.useState(20);
-              // EIBOR rates â€” updated from CBUAE (Feb 27, 2026)
+              // EIBOR rates — updated from CBUAE (Feb 27, 2026)
               const EIBOR_RATES = { on: 3.473, "1w": 3.577, "1m": 3.635, "3m": 3.593, "6m": 3.676, "1y": 3.674, asOf: "27 Feb 2026" };
               const BANK_SPREAD = 1.50; // typical UAE bank spread over 3M EIBOR
               const [rate, setRate] = React.useState(parseFloat((EIBOR_RATES["3m"] + BANK_SPREAD).toFixed(2)));
               const [liveEibor, setLiveEibor] = React.useState(EIBOR_RATES);
-              const [eiborSource, setEiborSource] = React.useState("CBUAE Â· " + EIBOR_RATES.asOf);
+              const [eiborSource, setEiborSource] = React.useState("CBUAE · " + EIBOR_RATES.asOf);
               React.useEffect(() => {
                 // Load EIBOR from Firestore (set by Admin panel)
                 getDoc(doc(db, "tabData", "eiborRates"))
@@ -5311,7 +5311,7 @@ export default function EmaarDashboardV2() {
                       const e = snap.data();
                       if (e["3m"] && e["3m"] > 1) {
                         setLiveEibor(e);
-                        setEiborSource((e.source || "CBUAE") + " Â· " + (e.asOf || ""));
+                        setEiborSource((e.source || "CBUAE") + " · " + (e.asOf || ""));
                         setRate(parseFloat((e["3m"] + BANK_SPREAD).toFixed(2)));
                       }
                     }
@@ -5351,34 +5351,34 @@ export default function EmaarDashboardV2() {
               const answers = [
                 {
                   q: "Can I afford this?",
-                  icon: "1ï¸âƒ£",
+                  icon: "1️⃣",
                   answer: fmt(monthly) + " / month",
-                  detail: "Thatâ€™s your mortgage payment every month for " + years + " years. Based on " + downPct + "% down at " + rate + "% interest.",
+                  detail: "That’s your mortgage payment every month for " + years + " years. Based on " + downPct + "% down at " + rate + "% interest.",
                   color: T.gold,
                   bg: "rgba(212,168,67,0.08)",
                   border: "rgba(212,168,67,0.25)",
                 },
                 {
                   q: "Will rent cover my mortgage?",
-                  icon: "2ï¸âƒ£",
-                  answer: cashflow >= 0 ? "Yes â€” you pocket " + fmt(cashflow) + "/mo" : "No â€” you top up " + fmt(Math.abs(cashflow)) + "/mo",
+                  icon: "2️⃣",
+                  answer: cashflow >= 0 ? "Yes — you pocket " + fmt(cashflow) + "/mo" : "No — you top up " + fmt(Math.abs(cashflow)) + "/mo",
                   detail: "Estimated rent is " + fmt(monthlyRent) + "/mo. After service charges, management fees, and your mortgage, you " + (cashflow >= 0 ? "make a profit of " + fmt(cashflow) + " every month." : "need to cover a shortfall of " + fmt(Math.abs(cashflow)) + " per month."),
                   color: cashflow >= 0 ? T.green : "#EF4444",
                   bg: cashflow >= 0 ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)",
                   border: cashflow >= 0 ? "rgba(16,185,129,0.25)" : "rgba(239,68,68,0.25)",
                 },
                 {
-                  q: "Whatâ€™s my actual return on cash?",
-                  icon: "3ï¸âƒ£",
+                  q: "What’s my actual return on cash?",
+                  icon: "3️⃣",
                   answer: cashOnCash.toFixed(1) + "% per year",
-                  detail: "You put in " + fmtM(totalUpfront) + " of your own money (down payment + fees). Your annual return on that specific cash is " + cashOnCash.toFixed(1) + "%. A savings account gives ~4%. Dubai average is 5â€“8%.",
+                  detail: "You put in " + fmtM(totalUpfront) + " of your own money (down payment + fees). Your annual return on that specific cash is " + cashOnCash.toFixed(1) + "%. A savings account gives ~4%. Dubai average is 5–8%.",
                   color: cashOnCash >= 5 ? T.green : cashOnCash >= 0 ? T.gold : "#EF4444",
                   bg: cashOnCash >= 5 ? "rgba(16,185,129,0.08)" : "rgba(212,168,67,0.08)",
                   border: cashOnCash >= 5 ? "rgba(16,185,129,0.25)" : "rgba(212,168,67,0.25)",
                 },
                 {
                   q: "How much do I need on day one?",
-                  icon: "4ï¸âƒ£",
+                  icon: "4️⃣",
                   answer: fmtM(totalUpfront),
                   detail: "Down payment " + fmtM(downAmt) + " + DLD transfer fee " + fmt(dldFee) + " (4%) + agency fee " + fmt(agencyFee) + " (2%) + mortgage registration AED 4,200 + valuation AED 580. Have this ready before you sign.",
                   color: T.blue,
@@ -5396,19 +5396,19 @@ export default function EmaarDashboardV2() {
                       <div>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                           <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 6px #10B981" }} />
-                          <span style={{ fontSize: 11, fontWeight: 700, color: "#10B981", letterSpacing: 1, textTransform: "uppercase" }}>EIBOR Â· {eiborSource}</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "#10B981", letterSpacing: 1, textTransform: "uppercase" }}>EIBOR · {eiborSource}</span>
                         </div>
-                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>Emirates Interbank Offered Rate Â· UAE Central Bank benchmark</div>
+                        <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>Emirates Interbank Offered Rate · UAE Central Bank benchmark</div>
                         <div style={{ display: "flex", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
-                          <a href="https://www.centralbank.ae/en/forex-eibor/eibor-rates/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#10B981", textDecoration: "none" }}>ðŸ”— CBUAE Official â†—</a>
-                          <a href="https://fcmb.ae/eibor-rate-today" target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#10B981", textDecoration: "none" }}>ðŸ”— FCMB Live Rates â†—</a>
-                          <a href="https://www.mortgagemarket.ae/mortgage-guides/eibor-rate" target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#10B981", textDecoration: "none" }}>ðŸ”— Mortgage Market â†—</a>
+                          <a href="https://www.centralbank.ae/en/forex-eibor/eibor-rates/" target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#10B981", textDecoration: "none" }}>🔗 CBUAE Official ↗</a>
+                          <a href="https://fcmb.ae/eibor-rate-today" target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#10B981", textDecoration: "none" }}>🔗 FCMB Live Rates ↗</a>
+                          <a href="https://www.mortgagemarket.ae/mortgage-guides/eibor-rate" target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#10B981", textDecoration: "none" }}>🔗 Mortgage Market ↗</a>
                         </div>
                         <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                           {[["1M", liveEibor?.["1m"]], ["3M", liveEibor?.["3m"]], ["6M", liveEibor?.["6m"]], ["1Y", liveEibor?.["1y"]]].map(([label, val]) => (
                             <div key={label} style={{ textAlign: "center" }}>
                               <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 2 }}>{label}</div>
-                              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: label === "3M" ? "#10B981" : T.white }}>{val ? val.toFixed(3) : "â€”"}%</div>
+                              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: label === "3M" ? "#10B981" : T.white }}>{val ? val.toFixed(3) : "—"}%</div>
                             </div>
                           ))}
                         </div>
@@ -5419,7 +5419,7 @@ export default function EmaarDashboardV2() {
                         <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>Typical variable rate</div>
                         <button type="button" onClick={() => setRate(parseFloat((liveEibor?.["3m"] + BANK_SPREAD).toFixed(2)))}
                           style={{ marginTop: 8, padding: "4px 12px", borderRadius: 6, background: "rgba(16,185,129,0.2)", border: "1px solid rgba(16,185,129,0.3)", color: "#10B981", fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-                          Apply to Calculator â†“
+                          Apply to Calculator ↓
                         </button>
                       </div>
                     </div>
@@ -5427,16 +5427,16 @@ export default function EmaarDashboardV2() {
 
                   {/* Project picker */}
                   <div style={{ background: T.surface, borderRadius: 16, border: "1px solid " + T.border, padding: 20 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Step 1 â€” Pick a project (or set price manually below)</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Step 1 — Pick a project (or set price manually below)</div>
                     <select value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)} style={{ width: "100%", padding: "11px 14px", background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 10, color: selectedProjectId ? T.white : T.textMuted, fontSize: 13, fontFamily: "'Outfit',sans-serif", cursor: "pointer" }}>
-                      <option value="">â€” Choose a project to auto-fill price â€”</option>
-                      {activeProjects.filter(p => p.price).map(p => <option key={p.id} value={String(p.id)}>{p.name} Â· {p.community} Â· AED {(p.price/1e6).toFixed(2)}M</option>)}
+                      <option value="">— Choose a project to auto-fill price —</option>
+                      {activeProjects.filter(p => p.price).map(p => <option key={p.id} value={String(p.id)}>{p.name} · {p.community} · AED {(p.price/1e6).toFixed(2)}M</option>)}
                     </select>
                   </div>
 
                   {/* Sliders */}
                   <div style={{ background: T.surface, borderRadius: 16, border: "1px solid " + T.border, padding: 24 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 18 }}>Step 2 â€” Adjust your numbers</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 18 }}>Step 2 — Adjust your numbers</div>
                     <div className="mortgage-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 32px" }}>
                       {[
                         { label: "Property Price", value: propPrice, set: setPropPrice, min: 500000, max: 20000000, step: 100000, disp: fmtM(propPrice) },
@@ -5463,7 +5463,7 @@ export default function EmaarDashboardV2() {
                   </div>
 
                   {/* The 4 plain-English answers */}
-                  <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase" }}>Step 3 â€” Your answers</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase" }}>Step 3 — Your answers</div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                     {answers.map((a, i) => (
                       <div key={i} style={{ background: a.bg, borderRadius: 16, border: "1px solid " + a.border, padding: 22 }}>
@@ -5486,29 +5486,29 @@ export default function EmaarDashboardV2() {
                 <MortgageCalc />
               </Section>
 
-              {/* â”€â”€ UAE BANKS COMPARISON â€” Always visible, live override from Firestore â”€â”€ */}
+              {/* ── UAE BANKS COMPARISON — Always visible, live override from Firestore ── */}
               {(() => {
                 const staticBanks = [
-                  { bank: "Emirates NBD", rate: 4.49, maxLTV: 80, processingFee: "1% (min AED 5,000)", minSalary: 15000, fixedYears: 3, notes: "Largest UAE bank Â· Fastest approval", badge: "Most Popular", badgeColor: T.gold },
-                  { bank: "ADCB", rate: 4.54, maxLTV: 80, processingFee: "1% (min AED 5,000)", minSalary: 15000, fixedYears: 3, notes: "Strong for expats Â· Good service", badge: "", badgeColor: "" },
+                  { bank: "Emirates NBD", rate: 4.49, maxLTV: 80, processingFee: "1% (min AED 5,000)", minSalary: 15000, fixedYears: 3, notes: "Largest UAE bank · Fastest approval", badge: "Most Popular", badgeColor: T.gold },
+                  { bank: "ADCB", rate: 4.54, maxLTV: 80, processingFee: "1% (min AED 5,000)", minSalary: 15000, fixedYears: 3, notes: "Strong for expats · Good service", badge: "", badgeColor: "" },
                   { bank: "FAB (First Abu Dhabi)", rate: 4.59, maxLTV: 80, processingFee: "0.5% (min AED 2,500)", minSalary: 12000, fixedYears: 2, notes: "Lowest processing fee", badge: "Lowest Fee", badgeColor: T.teal },
-                  { bank: "DIB (Dubai Islamic)", rate: 4.64, maxLTV: 80, processingFee: "1% (min AED 5,000)", minSalary: 10000, fixedYears: 3, notes: "Sharia-compliant Â· Ijara structure", badge: "Islamic", badgeColor: T.green },
+                  { bank: "DIB (Dubai Islamic)", rate: 4.64, maxLTV: 80, processingFee: "1% (min AED 5,000)", minSalary: 10000, fixedYears: 3, notes: "Sharia-compliant · Ijara structure", badge: "Islamic", badgeColor: T.green },
                   { bank: "HSBC UAE", rate: 4.74, maxLTV: 75, processingFee: "1% (min AED 5,000)", minSalary: 15000, fixedYears: 2, notes: "Good for international clients", badge: "", badgeColor: "" },
-                  { bank: "Mashreq Bank", rate: 4.79, maxLTV: 75, processingFee: "1% (min AED 5,000)", minSalary: 10000, fixedYears: 2, notes: "Fast processing Â· Digital-first", badge: "Fastest", badgeColor: T.blue },
+                  { bank: "Mashreq Bank", rate: 4.79, maxLTV: 75, processingFee: "1% (min AED 5,000)", minSalary: 10000, fixedYears: 2, notes: "Fast processing · Digital-first", badge: "Fastest", badgeColor: T.blue },
                   { bank: "RAK Bank", rate: 4.84, maxLTV: 75, processingFee: "1% (min AED 5,000)", minSalary: 8000, fixedYears: 1, notes: "Lowest min salary requirement", badge: "Low Entry", badgeColor: T.purple },
-                  { bank: "Abu Dhabi Islamic (ADIB)", rate: 4.89, maxLTV: 80, processingFee: "1.05%", minSalary: 10000, fixedYears: 3, notes: "Sharia-compliant Â· Competitive", badge: "Islamic", badgeColor: T.green },
+                  { bank: "Abu Dhabi Islamic (ADIB)", rate: 4.89, maxLTV: 80, processingFee: "1.05%", minSalary: 10000, fixedYears: 3, notes: "Sharia-compliant · Competitive", badge: "Islamic", badgeColor: T.green },
                   { bank: "Commercial Bank of Dubai", rate: 4.94, maxLTV: 75, processingFee: "1% (min AED 5,000)", minSalary: 12000, fixedYears: 2, notes: "Good for self-employed", badge: "", badgeColor: "" },
-                  { bank: "Standard Chartered", rate: 4.99, maxLTV: 75, processingFee: "1%", minSalary: 20000, fixedYears: 2, notes: "International profile Â· Premium", badge: "", badgeColor: "" },
+                  { bank: "Standard Chartered", rate: 4.99, maxLTV: 75, processingFee: "1%", minSalary: 20000, fixedYears: 2, notes: "International profile · Premium", badge: "", badgeColor: "" },
                 ];
                 const banks = liveMortgageRates.length > 0
                   ? [...liveMortgageRates].sort((a,b) => parseFloat(a.rate) - parseFloat(b.rate))
                   : staticBanks.sort((a,b) => a.rate - b.rate);
 
                 return (
-                  <Section title="UAE Banks Mortgage Comparison" sub="All major UAE banks Â· Rates based on 3M EIBOR + spread Â· Mar 2026">
+                  <Section title="UAE Banks Mortgage Comparison" sub="All major UAE banks · Rates based on 3M EIBOR + spread · Mar 2026">
                     {liveMortgageRates.length === 0 && (
                       <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 12, padding: "6px 12px", borderRadius: 6, background: "rgba(212,168,67,0.06)", border: `1px solid ${T.border}`, display: "inline-block" }}>
-                        Static data Â· Admin can update live rates via Admin Panel â†’ Tab Control
+                        Static data · Admin can update live rates via Admin Panel → Tab Control
                       </div>
                     )}
                     <div style={{ overflowX: "auto", marginTop: 8 }}>
@@ -5535,7 +5535,7 @@ export default function EmaarDashboardV2() {
                               <td style={{ padding: "12px 14px", textAlign: "center" }}>
                                 <span style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 900, color: i === 0 ? T.green : T.white }}>{b.rate}%</span>
                               </td>
-                              <td style={{ padding: "12px 14px", textAlign: "center", fontSize: 12, color: T.textSecondary }}>{b.fixedYears || "â€”"} yr{b.fixedYears > 1 ? "s" : ""}</td>
+                              <td style={{ padding: "12px 14px", textAlign: "center", fontSize: 12, color: T.textSecondary }}>{b.fixedYears || "—"} yr{b.fixedYears > 1 ? "s" : ""}</td>
                               <td style={{ padding: "12px 14px", textAlign: "center", fontSize: 12, color: T.textSecondary }}>{b.maxLTV}%</td>
                               <td style={{ padding: "12px 14px", textAlign: "center", fontSize: 12, color: T.textSecondary, whiteSpace: "nowrap" }}>{b.processingFee}</td>
                               <td style={{ padding: "12px 14px", textAlign: "center", fontSize: 12, color: T.textSecondary }}>AED {parseInt(b.minSalary||0).toLocaleString()}</td>
@@ -5552,7 +5552,7 @@ export default function EmaarDashboardV2() {
                 );
               })()}
 
-              {/* â”€â”€ AFFORDABILITY CHECKER â”€â”€ */}
+              {/* ── AFFORDABILITY CHECKER ── */}
               {(() => {
                 const AffordabilityChecker = () => {
                 const [salary, setSalary] = React.useState(25000);
@@ -5580,7 +5580,7 @@ export default function EmaarDashboardV2() {
                 const affordable = maxPrice > 0;
 
                 return (
-                  <Section title="Affordability Checker" sub="Based on CBUAE 50% Debt Burden Ratio (DBR) rules Â· UAE Central Bank">
+                  <Section title="Affordability Checker" sub="Based on CBUAE 50% Debt Burden Ratio (DBR) rules · UAE Central Bank">
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginTop: 16 }} className="chart-grid-2">
                       {/* Inputs */}
                       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -5609,14 +5609,14 @@ export default function EmaarDashboardV2() {
                       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                         <div style={{ padding: "20px", borderRadius: 14, background: affordable ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)", border: `1px solid ${affordable ? T.green : T.red}30`, textAlign: "center" }}>
                           <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8 }}>Maximum Property Price</div>
-                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 36, fontWeight: 900, color: affordable ? T.green : T.red }}>{affordable ? fmtM(maxPrice) : "â€”"}</div>
-                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>Based on {salary.toLocaleString()} salary Â· {affordRate}% rate Â· CBUAE 50% DBR rule</div>
+                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 36, fontWeight: 900, color: affordable ? T.green : T.red }}>{affordable ? fmtM(maxPrice) : "—"}</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>Based on {salary.toLocaleString()} salary · {affordRate}% rate · CBUAE 50% DBR rule</div>
                         </div>
                         {[
-                          { label: "Max Monthly Payment", value: fmt(Math.max(maxMonthlyPayment, 0)), color: T.gold, icon: "ðŸ’³" },
-                          { label: "Max Loan Amount", value: fmtM(Math.max(maxLoan, 0)), color: T.teal, icon: "ðŸ¦" },
-                          { label: "Down Payment Needed", value: fmtM(downNeeded), color: T.blue, icon: "ðŸ’°" },
-                          { label: "Total Cash Required", value: fmtM(totalCash), color: T.purple, icon: "ðŸ·ï¸" },
+                          { label: "Max Monthly Payment", value: fmt(Math.max(maxMonthlyPayment, 0)), color: T.gold, icon: "💳" },
+                          { label: "Max Loan Amount", value: fmtM(Math.max(maxLoan, 0)), color: T.teal, icon: "🏦" },
+                          { label: "Down Payment Needed", value: fmtM(downNeeded), color: T.blue, icon: "💰" },
+                          { label: "Total Cash Required", value: fmtM(totalCash), color: T.purple, icon: "🏷️" },
                         ].map((item, i) => (
                           <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: T.surface, border: `1px solid ${T.border}` }}>
                             <span style={{ fontSize: 20 }}>{item.icon}</span>
@@ -5637,32 +5637,32 @@ export default function EmaarDashboardV2() {
                 return <AffordabilityChecker />;
               })()}
 
-              <TabSources sources={[{ label: "CBUAE â€” UAE Base Rate", url: "https://www.cbuae.gov.ae" }, { label: "EIBOR 3M: 3.593% (Feb 2026) Â· CBUAE", url: "https://www.centralbank.ae/en/forex-eibor/eibor-rates/" }, { label: "DLD Fee Schedule (4%)", url: "https://dubailand.gov.ae" }, { label: "UAE Mortgage Law (No. 14 of 2008)" }, { label: "Property Finder Mortgage Rates", url: "https://www.propertyfinder.ae" }]} />
+              <TabSources sources={[{ label: "CBUAE — UAE Base Rate", url: "https://www.cbuae.gov.ae" }, { label: "EIBOR 3M: 3.593% (Feb 2026) · CBUAE", url: "https://www.centralbank.ae/en/forex-eibor/eibor-rates/" }, { label: "DLD Fee Schedule (4%)", url: "https://dubailand.gov.ae" }, { label: "UAE Mortgage Law (No. 14 of 2008)" }, { label: "Property Finder Mortgage Rates", url: "https://www.propertyfinder.ae" }]} />
               </>
             );
           })()}
 
-          {/* â”€â”€â”€ MAP / COMMUNITIES TAB â”€â”€â”€ */}
+          {/* ─── MAP / COMMUNITIES TAB ─── */}
           {tab === "Map" && <><CommunityMapTab activeProjects={activeProjects} liveCommunityROI={liveCommunityROI} setTab={setTab} /><TabSources sources={[{ label: "Google Maps API", url: "https://maps.google.com" }, { label: "Emaar Community Boundaries" }, { label: "DLD Zoning Data", url: "https://dubailand.gov.ae" }, { label: "OpenStreetMap", url: "https://www.openstreetmap.org" }]} /></>}
 
-          {/* â”€â”€â”€ LAUNCH CALENDAR TAB â”€â”€â”€ */}
+          {/* ─── LAUNCH CALENDAR TAB ─── */}
           {tab === "Launch Calendar" && (() => {
             const launches = [
-              { name: "Palmiera 2 â€” The Oasis", community: "The Oasis", date: "Q1 2026", status: "launched", expectedPrice: 4200000, developer: "Emaar", type: "Villa", beds: "4â€“6 BR", paymentPlan: "80/20", goldenVisa: true, notes: "Second phase of The Oasis mega-project. Lagoon-facing plots." },
-              { name: "Savanna â€” Arabian Ranches III", community: "Arabian Ranches III", date: "Q1 2026", status: "launched", expectedPrice: 2100000, developer: "Emaar", type: "Townhouse", beds: "3â€“4 BR", paymentPlan: "80/20", goldenVisa: true, notes: "Final townhouse phase in AR3. Near community centre." },
-              { name: "Address Residences â€” Dubai Creek", community: "Dubai Creek Harbour", date: "Q2 2026", status: "upcoming", expectedPrice: 3500000, developer: "Emaar", type: "Apartment", beds: "1â€“3 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Branded Address tower at Creek Marina. Expected May 2026." },
-              { name: "Grove â€” Creek Harbour", community: "Dubai Creek Harbour", date: "Q2 2026", status: "upcoming", expectedPrice: 1800000, developer: "Emaar", type: "Apartment", beds: "Studioâ€“2 BR", paymentPlan: "80/20", goldenVisa: false, notes: "Affordable entry into Creek Harbour. High rental demand community." },
-              { name: "The Valley Phase 3", community: "The Valley", date: "Q2 2026", status: "upcoming", expectedPrice: 1600000, developer: "Emaar", type: "Townhouse", beds: "3â€“5 BR", paymentPlan: "80/20", goldenVisa: false, notes: "Next phase of The Valley. Expected strong demand from end-users." },
-              { name: "Seascape â€” Emaar Beachfront", community: "Emaar Beachfront", date: "Q3 2026", status: "rumoured", expectedPrice: 4800000, developer: "Emaar", type: "Apartment", beds: "2â€“4 BR", paymentPlan: "60/40", goldenVisa: true, notes: "New beachfront tower. Expected to sell out within days of launch." },
-              { name: "Grand Bleu Tower 3", community: "Emaar Beachfront", date: "Q3 2026", status: "rumoured", expectedPrice: 6500000, developer: "Emaar", type: "Apartment", beds: "2â€“4 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Elie Saab branded. Ultra-premium pricing expected." },
-              { name: "Hills Park 2 â€” Dubai Hills", community: "Dubai Hills Estate", date: "Q3 2026", status: "rumoured", expectedPrice: 1400000, developer: "Emaar", type: "Apartment", beds: "1â€“3 BR", paymentPlan: "80/20", goldenVisa: false, notes: "Adjacent to Hills Park 1. Park-facing units expected to sell fast." },
-              { name: "The Heights â€” Dubai Hills", community: "Dubai Hills Estate", date: "Q4 2026", status: "rumoured", expectedPrice: 2800000, developer: "Emaar", type: "Villa", beds: "3â€“5 BR", paymentPlan: "80/20", goldenVisa: true, notes: "Premium villas in DHE. Limited supply expected." },
-              { name: "Riverside â€” The Oasis", community: "The Oasis", date: "Q4 2026", status: "rumoured", expectedPrice: 5200000, developer: "Emaar", type: "Villa", beds: "5â€“6 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Ultra-luxury riverside plots. AED 5M+ bracket." },
-              { name: "Creek Crescent Phase 2", community: "Dubai Creek Harbour", date: "Q1 2027", status: "pipeline", expectedPrice: 2200000, developer: "Emaar", type: "Apartment", beds: "1â€“3 BR", paymentPlan: "TBD", goldenVisa: true, notes: "Expansion of Creek Crescent. Strong resale market expected." },
-              { name: "Downtown Hills", community: "Dubai Hills Estate", date: "Q2 2027", status: "pipeline", expectedPrice: 3100000, developer: "Emaar", type: "Apartment", beds: "2â€“4 BR", paymentPlan: "TBD", goldenVisa: true, notes: "Premium mid-rise adjacent to DHE Mall. High occupancy expected." },
+              { name: "Palmiera 2 — The Oasis", community: "The Oasis", date: "Q1 2026", status: "launched", expectedPrice: 4200000, developer: "Emaar", type: "Villa", beds: "4–6 BR", paymentPlan: "80/20", goldenVisa: true, notes: "Second phase of The Oasis mega-project. Lagoon-facing plots." },
+              { name: "Savanna — Arabian Ranches III", community: "Arabian Ranches III", date: "Q1 2026", status: "launched", expectedPrice: 2100000, developer: "Emaar", type: "Townhouse", beds: "3–4 BR", paymentPlan: "80/20", goldenVisa: true, notes: "Final townhouse phase in AR3. Near community centre." },
+              { name: "Address Residences — Dubai Creek", community: "Dubai Creek Harbour", date: "Q2 2026", status: "upcoming", expectedPrice: 3500000, developer: "Emaar", type: "Apartment", beds: "1–3 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Branded Address tower at Creek Marina. Expected May 2026." },
+              { name: "Grove — Creek Harbour", community: "Dubai Creek Harbour", date: "Q2 2026", status: "upcoming", expectedPrice: 1800000, developer: "Emaar", type: "Apartment", beds: "Studio–2 BR", paymentPlan: "80/20", goldenVisa: false, notes: "Affordable entry into Creek Harbour. High rental demand community." },
+              { name: "The Valley Phase 3", community: "The Valley", date: "Q2 2026", status: "upcoming", expectedPrice: 1600000, developer: "Emaar", type: "Townhouse", beds: "3–5 BR", paymentPlan: "80/20", goldenVisa: false, notes: "Next phase of The Valley. Expected strong demand from end-users." },
+              { name: "Seascape — Emaar Beachfront", community: "Emaar Beachfront", date: "Q3 2026", status: "rumoured", expectedPrice: 4800000, developer: "Emaar", type: "Apartment", beds: "2–4 BR", paymentPlan: "60/40", goldenVisa: true, notes: "New beachfront tower. Expected to sell out within days of launch." },
+              { name: "Grand Bleu Tower 3", community: "Emaar Beachfront", date: "Q3 2026", status: "rumoured", expectedPrice: 6500000, developer: "Emaar", type: "Apartment", beds: "2–4 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Elie Saab branded. Ultra-premium pricing expected." },
+              { name: "Hills Park 2 — Dubai Hills", community: "Dubai Hills Estate", date: "Q3 2026", status: "rumoured", expectedPrice: 1400000, developer: "Emaar", type: "Apartment", beds: "1–3 BR", paymentPlan: "80/20", goldenVisa: false, notes: "Adjacent to Hills Park 1. Park-facing units expected to sell fast." },
+              { name: "The Heights — Dubai Hills", community: "Dubai Hills Estate", date: "Q4 2026", status: "rumoured", expectedPrice: 2800000, developer: "Emaar", type: "Villa", beds: "3–5 BR", paymentPlan: "80/20", goldenVisa: true, notes: "Premium villas in DHE. Limited supply expected." },
+              { name: "Riverside — The Oasis", community: "The Oasis", date: "Q4 2026", status: "rumoured", expectedPrice: 5200000, developer: "Emaar", type: "Villa", beds: "5–6 BR", paymentPlan: "70/30", goldenVisa: true, notes: "Ultra-luxury riverside plots. AED 5M+ bracket." },
+              { name: "Creek Crescent Phase 2", community: "Dubai Creek Harbour", date: "Q1 2027", status: "pipeline", expectedPrice: 2200000, developer: "Emaar", type: "Apartment", beds: "1–3 BR", paymentPlan: "TBD", goldenVisa: true, notes: "Expansion of Creek Crescent. Strong resale market expected." },
+              { name: "Downtown Hills", community: "Dubai Hills Estate", date: "Q2 2027", status: "pipeline", expectedPrice: 3100000, developer: "Emaar", type: "Apartment", beds: "2–4 BR", paymentPlan: "TBD", goldenVisa: true, notes: "Premium mid-rise adjacent to DHE Mall. High occupancy expected." },
             ];
             const statusColors = { launched: "#10B981", upcoming: T.gold, rumoured: "#8B5CF6", pipeline: T.textMuted };
-            const statusLabels = { launched: "ðŸŸ¢ Launched", upcoming: "ðŸŸ¡ Upcoming", rumoured: "ðŸŸ£ Rumoured", pipeline: "âšª Pipeline" };
+            const statusLabels = { launched: "🟢 Launched", upcoming: "🟡 Upcoming", rumoured: "🟣 Rumoured", pipeline: "⚪ Pipeline" };
             const groups = ["launched", "upcoming", "rumoured", "pipeline"];
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -5671,11 +5671,11 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                     <div>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Off-Plan Launch Calendar</div>
-                      <div style={{ fontSize: 13, color: T.textMuted, marginTop: 4 }}>Upcoming Emaar launches Â· 2026â€“2027 Â· Updated weekly</div>
+                      <div style={{ fontSize: 13, color: T.textMuted, marginTop: 4 }}>Upcoming Emaar launches · 2026–2027 · Updated weekly</div>
                     </div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       {groups.map(s => (
-                        <div key={s} style={{ padding: "5px 12px", borderRadius: 8, background: `${statusColors[s]}15`, border: `1px solid ${statusColors[s]}40`, fontSize: 11, fontWeight: 600, color: statusColors[s] }}>{statusLabels[s]} Â· {launches.filter(l => l.status === s).length}</div>
+                        <div key={s} style={{ padding: "5px 12px", borderRadius: 8, background: `${statusColors[s]}15`, border: `1px solid ${statusColors[s]}40`, fontSize: 11, fontWeight: 600, color: statusColors[s] }}>{statusLabels[s]} · {launches.filter(l => l.status === s).length}</div>
                       ))}
                     </div>
                   </div>
@@ -5688,7 +5688,7 @@ export default function EmaarDashboardV2() {
                     <div key={status} style={{ background: T.surface, borderRadius: 16, border: `1px solid ${statusColors[status]}30`, overflow: "hidden" }}>
                       <div style={{ padding: "14px 20px", background: `${statusColors[status]}08`, borderBottom: `1px solid ${statusColors[status]}20`, display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ width: 8, height: 8, borderRadius: "50%", background: statusColors[status], flexShrink: 0 }} />
-                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 800, color: statusColors[status] }}>{statusLabels[status].replace(/[ðŸŸ¢ðŸŸ¡ðŸŸ£âšª] /, "")}</div>
+                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 800, color: statusColors[status] }}>{statusLabels[status].replace(/[🟢🟡🟣⚪] /, "")}</div>
                         <div style={{ fontSize: 11, color: T.textMuted, marginLeft: "auto" }}>{items.length} project{items.length !== 1 ? "s" : ""}</div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 0 }}>
@@ -5703,13 +5703,13 @@ export default function EmaarDashboardV2() {
                                 </div>
                                 <div style={{ textAlign: "right", flexShrink: 0 }}>
                                   <div style={{ fontSize: 13, fontWeight: 700, color: statusColors[status] }}>{l.date}</div>
-                                  {l.goldenVisa && <div style={{ fontSize: 9, color: T.gold, fontWeight: 600, marginTop: 2 }}>ðŸ… GV Eligible</div>}
+                                  {l.goldenVisa && <div style={{ fontSize: 9, color: T.gold, fontWeight: 600, marginTop: 2 }}>🏅 GV Eligible</div>}
                                 </div>
                               </div>
                               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 10 }}>
                                 {[
                                   { l: "FROM", v: l.expectedPrice ? "AED " + (l.expectedPrice / 1e6).toFixed(1) + "M" : "TBD" },
-                                  { l: "TYPE", v: l.type + " Â· " + l.beds },
+                                  { l: "TYPE", v: l.type + " · " + l.beds },
                                   { l: "PAYMENT", v: l.paymentPlan },
                                 ].map(k => (
                                   <div key={k.l} style={{ background: T.surfaceAlt, borderRadius: 6, padding: "6px 8px" }}>
@@ -5721,7 +5721,7 @@ export default function EmaarDashboardV2() {
                               <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5, marginBottom: 8 }}>{l.notes}</div>
                               <div style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 6, background: `${inv.color}15`, border: `1px solid ${inv.color}30` }}>
                                 <span style={{ fontSize: 11, fontWeight: 800, color: inv.color }}>{inv.score}/10</span>
-                                <span style={{ fontSize: 9, color: inv.color }}>â˜… {inv.label}</span>
+                                <span style={{ fontSize: 9, color: inv.color }}>★ {inv.label}</span>
                               </div>
                             </div>
                           );
@@ -5731,18 +5731,18 @@ export default function EmaarDashboardV2() {
                   );
                 })}
                 <div style={{ padding: "12px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}`, fontSize: 11, color: T.textMuted }}>
-                  âš ï¸ Launch dates and prices are estimates based on market intelligence. Always verify with official Emaar sources before making investment decisions.
+                  ⚠️ Launch dates and prices are estimates based on market intelligence. Always verify with official Emaar sources before making investment decisions.
                 </div>
               <TabSources sources={[{ label: "Emaar Press Releases", url: "https://www.emaar.com/en/media/press-releases/" }, { label: "Property Finder New Launches", url: "https://www.propertyfinder.ae" }, { label: "DLD Oqood Off-Plan Registry", url: "https://oqood.dubailand.gov.ae" }, { label: "Zawya Real Estate News", url: "https://www.zawya.com" }]} />
               </div>
             );
           })()}
 
-          {/* â”€â”€â”€ NEIGHBOURHOODS TAB â”€â”€â”€ */}
+          {/* ─── NEIGHBOURHOODS TAB ─── */}
           {tab === "Neighbourhoods" && (() => {
             const neighbourhoodsStatic = [
               { name: "Dubai Hills Estate", maturity: 88, rentalDemand: 94, strPotential: 72, infrastructure: 95, schools: 92, transport: 78, retail: 90, appreciation: 82, serviceCharge: 18, visa: true, type: "Master-planned suburb", tagline: "Dubai's most complete community", color: "#10B981" },
-              { name: "Dubai Creek Harbour", maturity: 65, rentalDemand: 85, strPotential: 88, infrastructure: 82, schools: 60, transport: 72, retail: 75, appreciation: 90, serviceCharge: 22, visa: true, type: "Waterfront district", tagline: "The new Downtown â€” cheaper entry", color: T.gold },
+              { name: "Dubai Creek Harbour", maturity: 65, rentalDemand: 85, strPotential: 88, infrastructure: 82, schools: 60, transport: 72, retail: 75, appreciation: 90, serviceCharge: 22, visa: true, type: "Waterfront district", tagline: "The new Downtown — cheaper entry", color: T.gold },
               { name: "Emaar Beachfront", maturity: 70, rentalDemand: 92, strPotential: 96, infrastructure: 85, schools: 45, transport: 68, retail: 72, appreciation: 85, serviceCharge: 28, visa: true, type: "Beachfront enclave", tagline: "Highest STR yields in portfolio", color: "#3B82F6" },
               { name: "Downtown Dubai", maturity: 98, rentalDemand: 96, strPotential: 94, infrastructure: 98, schools: 70, transport: 98, retail: 98, appreciation: 65, serviceCharge: 32, visa: true, type: "Urban CBD", tagline: "Premium address, lower upside", color: "#8B5CF6" },
               { name: "Arabian Ranches III", maturity: 75, rentalDemand: 80, strPotential: 55, infrastructure: 82, schools: 88, transport: 62, retail: 75, appreciation: 75, serviceCharge: 14, visa: false, type: "Family suburb", tagline: "Best for families, low service charge", color: "#F59E0B" },
@@ -5777,7 +5777,7 @@ export default function EmaarDashboardV2() {
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
                   <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800, color: T.gold }}>Neighbourhood Scorecard</div>
-                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Click any community to see full breakdown Â· 7 factors scored out of 100</div>
+                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Click any community to see full breakdown · 7 factors scored out of 100</div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 14 }}>
                   {neighbourhoods.map(n => {
@@ -5798,7 +5798,7 @@ export default function EmaarDashboardV2() {
                             </div>
                           </div>
                           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                            {n.visa && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 5, background: "rgba(212,168,67,0.12)", color: T.gold, fontWeight: 600 }}>ðŸ… Golden Visa</span>}
+                            {n.visa && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 5, background: "rgba(212,168,67,0.12)", color: T.gold, fontWeight: 600 }}>🏅 Golden Visa</span>}
                             <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 5, background: T.surfaceAlt, color: T.textMuted, fontWeight: 600 }}>AED {n.serviceCharge}/sqft SC</span>
                             <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 5, background: "rgba(16,185,129,0.1)", color: "#10B981", fontWeight: 600 }}>STR {n.strPotential}%</span>
                           </div>
@@ -5840,7 +5840,7 @@ export default function EmaarDashboardV2() {
             );
           })()}
 
-          {/* â”€â”€â”€ SERVICE CHARGES TAB â”€â”€â”€ */}
+          {/* ─── SERVICE CHARGES TAB ─── */}
           {tab === "Service Charges" && !isPro && <ProGateFullPage tabName="Service Charges" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Service Charges" && isPro && (() => {
             const scDataStatic = [
@@ -5863,7 +5863,7 @@ export default function EmaarDashboardV2() {
                   high: parseFloat(d.chargePerSqft) * 1.15 || 0,
                   avg: parseFloat(d.chargePerSqft) || 0,
                   rera: true,
-                  notes: `${d.community} Â· AED ${d.totalFor1BR || 0}/yr for 1BR Â· AED ${d.totalFor2BR || 0}/yr for 2BR`
+                  notes: `${d.community} · AED ${d.totalFor1BR || 0}/yr for 1BR · AED ${d.totalFor2BR || 0}/yr for 2BR`
                 }))
               : scDataStatic;
             const maxSC = Math.max(...scData.map(d => d.high));
@@ -5875,10 +5875,10 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                     <div>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold }}>Service Charge Database</div>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>AED per sqft per year Â· RERA-regulated Â· Affects net yield</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>AED per sqft per year · RERA-regulated · Affects net yield</div>
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
-                      {[["avg", "By Average"], ["high", "By Highest"], ["community", "Aâ€“Z"]].map(([v, l]) => (
+                      {[["avg", "By Average"], ["high", "By Highest"], ["community", "A–Z"]].map(([v, l]) => (
                         <button key={v} type="button" onClick={() => setScSort(v)} style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${scSort === v ? T.gold : T.border}`, background: scSort === v ? "rgba(212,168,67,0.1)" : T.surfaceAlt, color: scSort === v ? T.gold : T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{l}</button>
                       ))}
                     </div>
@@ -5889,7 +5889,7 @@ export default function EmaarDashboardV2() {
                       { label: "Lowest SC", value: "AED 3/sqft", sub: "DHE Villas", color: "#10B981" },
                       { label: "Highest SC", value: "AED 55/sqft", sub: "Address Branded", color: "#EF4444" },
                       { label: "Avg Apartment", value: "AED 24/sqft", sub: "Portfolio average", color: T.gold },
-                      { label: "Impact on 1BR", value: "AED 18â€“40K/yr", sub: "800 sqft typical", color: T.blue },
+                      { label: "Impact on 1BR", value: "AED 18–40K/yr", sub: "800 sqft typical", color: T.blue },
                     ].map(k => (
                       <div key={k.label} style={{ background: T.surfaceAlt, borderRadius: 10, padding: "12px 14px", border: `1px solid ${T.border}` }}>
                         <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 5 }}>{k.label}</div>
@@ -5936,7 +5936,7 @@ export default function EmaarDashboardV2() {
                                 </div>
                               </td>
                               <td style={{ padding: "12px 14px" }}>
-                                <span style={{ fontSize: 10, fontWeight: 700, color: d.rera ? "#10B981" : T.textMuted }}>{d.rera ? "âœ“ RERA" : "Est."}</span>
+                                <span style={{ fontSize: 10, fontWeight: 700, color: d.rera ? "#10B981" : T.textMuted }}>{d.rera ? "✓ RERA" : "Est."}</span>
                               </td>
                               <td style={{ padding: "12px 14px", fontSize: 11, color: T.textMuted, maxWidth: 220 }}>{d.notes}</td>
                             </tr>
@@ -5948,23 +5948,23 @@ export default function EmaarDashboardV2() {
                 </div>
                 {/* Net yield impact calculator */}
                 <div style={{ background: T.surface, borderRadius: 14, border: `1px solid rgba(212,168,67,0.2)`, padding: "20px 24px" }}>
-                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 800, color: T.gold, marginBottom: 4 }}>ðŸ’¡ Why Service Charges Matter</div>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 800, color: T.gold, marginBottom: 4 }}>💡 Why Service Charges Matter</div>
                   <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.7 }}>
-                    A 7% gross yield on a AED 2M apartment = AED 140,000/year rental income. But on a 1,200 sqft unit with AED 28/sqft SC, you pay AED 33,600/year in service charges â€” reducing your <strong style={{ color: T.white }}>net yield to 5.3%</strong>. On a lower-SC community like Arabian Ranches (AED 14/sqft), the same calculation gives you a <strong style={{ color: "#10B981" }}>net yield of 6.2%</strong>. Always calculate net, not gross.
+                    A 7% gross yield on a AED 2M apartment = AED 140,000/year rental income. But on a 1,200 sqft unit with AED 28/sqft SC, you pay AED 33,600/year in service charges — reducing your <strong style={{ color: T.white }}>net yield to 5.3%</strong>. On a lower-SC community like Arabian Ranches (AED 14/sqft), the same calculation gives you a <strong style={{ color: "#10B981" }}>net yield of 6.2%</strong>. Always calculate net, not gross.
                   </div>
                 </div>
-              <TabSources sources={[{ label: "RERA Dubai (rera.gov.ae)", url: "https://www.rera.gov.ae" }, { label: "Mollak Service Charge Database" }, { label: "Owners Associations â€” Published Budgets" }, { label: "DLD Owner Portal" }, { label: "Asteco Facilities Management" }]} />
+              <TabSources sources={[{ label: "RERA Dubai (rera.gov.ae)", url: "https://www.rera.gov.ae" }, { label: "Mollak Service Charge Database" }, { label: "Owners Associations — Published Budgets" }, { label: "DLD Owner Portal" }, { label: "Asteco Facilities Management" }]} />
               </div>
             );
           })()}
 
-          {/* â”€â”€â”€ RISK TAB â”€â”€â”€ */}
+          {/* ─── RISK TAB ─── */}
           {tab === "Risk" && <>
-            <Section title="9-Factor Risk Assessment" sub="Overall: LOW-MODERATE Â· Investment Grade Â· BBB+/Baa1/BBB">
+            <Section title="9-Factor Risk Assessment" sub="Overall: LOW-MODERATE · Investment Grade · BBB+/Baa1/BBB">
               <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 16 }}>
-                <KPI label="Avg Risk Score" value="38.3" sub="LOW-MODERATE overall" delay={1} onClick={() => setSelectedKPI({ label: "Avg Risk Score", value: "38.3 / 140", color: T.teal, description: "Composite risk score across 9 factors. Score of 38.3 out of 140 max = LOW-MODERATE risk. Rated Investment Grade by S&P (BBB+), Moody's (Baa1), and Fitch (BBB).", source: "DXB Analytics Â· Fitch Â· S&P Â· Moody's", sourceUrl: "https://www.fitchratings.com", items: [{ label: "Overall Score", value: "38.3/140", note: "LOW-MODERATE" }, { label: "S&P Rating", value: "BBB+", note: "Stable outlook" }, { label: "Moody's", value: "Baa1", note: "Stable outlook" }, { label: "Fitch", value: "BBB", note: "Stable outlook" }, { label: "Risk Category", value: "Investment Grade", note: "3 agency consensus" }], trend: null })} />
-                <KPI label="Highest Risk" value="125" sub="Premium Pricing" delay={2} onClick={() => setSelectedKPI({ label: "Highest Risk Factor", value: "Premium Pricing", color: T.red, description: "Premium pricing (score 125/140) is Emaar's highest risk factor. At 20â€“40% above competitors, a market downturn could compress sales volumes faster than peers.", source: "DXB Analytics Risk Model", sourceUrl: "#", items: [{ label: "Risk Score", value: "125/140", note: "Highest risk factor" }, { label: "Price Premium", value: "20â€“40%", note: "vs comparable developments" }, { label: "Mitigation", value: "80/20 plans", note: "Reduces buyer barrier" }, { label: "Branded Premium", value: "Justified", note: "Address Â· Vida Â· Palace" }, { label: "Demand Buffer", value: "AED 155B backlog", note: "Pre-sold revenue" }], trend: null })} />
-                <KPI label="Lowest Risk" value="1" sub="Liquidity / Exit" delay={3} onClick={() => setSelectedKPI({ label: "Lowest Risk Factor", value: "Liquidity / Exit", color: T.green, description: "Emaar has the lowest liquidity risk (score 1/140) of any Dubai developer. DFM-listed, investment-grade rated, with AED 30.5B free cash flow and a globally recognized brand.", source: "DXB Analytics Risk Model Â· DFM", sourceUrl: "https://www.dfm.ae", items: [{ label: "Risk Score", value: "1/140", note: "Lowest risk factor" }, { label: "Free Cash Flow", value: "AED 30.5B", note: "FY2025" }, { label: "Net Cash", value: "AED 7.5B", note: "Cash vs debt" }, { label: "DFM Listed", value: "Yes", note: "High liquidity stock" }, { label: "Debt/Equity", value: "0.11Ã—", note: "Very low leverage" }], trend: null })} />
+                <KPI label="Avg Risk Score" value="38.3" sub="LOW-MODERATE overall" delay={1} onClick={() => setSelectedKPI({ label: "Avg Risk Score", value: "38.3 / 140", color: T.teal, description: "Composite risk score across 9 factors. Score of 38.3 out of 140 max = LOW-MODERATE risk. Rated Investment Grade by S&P (BBB+), Moody's (Baa1), and Fitch (BBB).", source: "DXB Analytics · Fitch · S&P · Moody's", sourceUrl: "https://www.fitchratings.com", items: [{ label: "Overall Score", value: "38.3/140", note: "LOW-MODERATE" }, { label: "S&P Rating", value: "BBB+", note: "Stable outlook" }, { label: "Moody's", value: "Baa1", note: "Stable outlook" }, { label: "Fitch", value: "BBB", note: "Stable outlook" }, { label: "Risk Category", value: "Investment Grade", note: "3 agency consensus" }], trend: null })} />
+                <KPI label="Highest Risk" value="125" sub="Premium Pricing" delay={2} onClick={() => setSelectedKPI({ label: "Highest Risk Factor", value: "Premium Pricing", color: T.red, description: "Premium pricing (score 125/140) is Emaar's highest risk factor. At 20–40% above competitors, a market downturn could compress sales volumes faster than peers.", source: "DXB Analytics Risk Model", sourceUrl: "#", items: [{ label: "Risk Score", value: "125/140", note: "Highest risk factor" }, { label: "Price Premium", value: "20–40%", note: "vs comparable developments" }, { label: "Mitigation", value: "80/20 plans", note: "Reduces buyer barrier" }, { label: "Branded Premium", value: "Justified", note: "Address · Vida · Palace" }, { label: "Demand Buffer", value: "AED 155B backlog", note: "Pre-sold revenue" }], trend: null })} />
+                <KPI label="Lowest Risk" value="1" sub="Liquidity / Exit" delay={3} onClick={() => setSelectedKPI({ label: "Lowest Risk Factor", value: "Liquidity / Exit", color: T.green, description: "Emaar has the lowest liquidity risk (score 1/140) of any Dubai developer. DFM-listed, investment-grade rated, with AED 30.5B free cash flow and a globally recognized brand.", source: "DXB Analytics Risk Model · DFM", sourceUrl: "https://www.dfm.ae", items: [{ label: "Risk Score", value: "1/140", note: "Lowest risk factor" }, { label: "Free Cash Flow", value: "AED 30.5B", note: "FY2025" }, { label: "Net Cash", value: "AED 7.5B", note: "Cash vs debt" }, { label: "DFM Listed", value: "Yes", note: "High liquidity stock" }, { label: "Debt/Equity", value: "0.11×", note: "Very low leverage" }], trend: null })} />
               </div>
             </Section>
             <ProGate isPro={isPro} message="Unlock Full Risk Analysis" onUpgrade={() => setShowUpgrade(true)}>
@@ -6158,13 +6158,13 @@ export default function EmaarDashboardV2() {
               <Section title="Currency Converter" sub="Live rates \u00b7 AED to GBP, EUR, USD, INR, PKR and 8 more currencies">
                 <CurrencyConverter />
               </Section>
-              <TabSources sources={[{ label: "ExchangeRate-API (Live Â· Authenticated)", url: "https://www.exchangerate-api.com" }, { label: "European Central Bank", url: "https://www.ecb.europa.eu" }, { label: "UAE Central Bank", url: "https://www.cbuae.gov.ae" }, { label: "XE Currency", url: "https://www.xe.com/currency/aed" }]} />
+              <TabSources sources={[{ label: "ExchangeRate-API (Live · Authenticated)", url: "https://www.exchangerate-api.com" }, { label: "European Central Bank", url: "https://www.ecb.europa.eu" }, { label: "UAE Central Bank", url: "https://www.cbuae.gov.ae" }, { label: "XE Currency", url: "https://www.xe.com/currency/aed" }]} />
               </>
             );
           })()}
 
 
-          {/* â”€â”€â”€ GOLDEN VISA TAB â”€â”€â”€ */}
+          {/* ─── GOLDEN VISA TAB ─── */}
           {tab === "Golden Visa" && (() => {
             const propPrice = gvPropPrice;
               const setPropPrice = setGvPropPrice;
@@ -6180,7 +6180,7 @@ export default function EmaarDashboardV2() {
 
               // Nationality actually changes real numbers:
               // UAE/GCC nationals: 15% min down payment (vs 20% for expats)
-              // UAE nationals: already have residency â€” visa not needed
+              // UAE nationals: already have residency — visa not needed
               const minDownPct = (nationality === "uae" || nationality === "gcc") ? 15 : 20;
               const isAlreadyResident = nationality === "uae";
               const dldExemption = nationality === "uae"; // UAE nationals get DLD fee discounts on select projects
@@ -6196,12 +6196,12 @@ export default function EmaarDashboardV2() {
               const nearProjects = activeProjects.filter(p => { const pr = p.price || 0; return pr >= 1500000 && pr < THRESHOLD; }).sort((a, b) => (a.price || 0) - (b.price || 0));
 
               const benefits = [
-                { icon: "âœ…", title: "10-Year Residency", desc: "Live, work and study in UAE. Renewable indefinitely." },
-                { icon: "ðŸ‘¨â€ðŸ‘©â€ðŸ‘§", title: "Sponsor Your Family", desc: "Spouse, children of any age, and parents included." },
-                { icon: "ðŸ’¼", title: "No Sponsor Needed", desc: "Full independence â€” no employer or local sponsor required." },
-                { icon: "ðŸ¦", title: "UAE Bank Accounts", desc: "Open accounts, get credit cards, build UAE credit history." },
-                { icon: "âœˆï¸", title: "Travel Freely", desc: "Re-enter UAE after 6+ months abroad without visa reset." },
-                { icon: "ðŸ’°", title: "0% Income Tax", desc: "No personal income tax on rental income or capital gains." },
+                { icon: "✅", title: "10-Year Residency", desc: "Live, work and study in UAE. Renewable indefinitely." },
+                { icon: "👨‍👩‍👧", title: "Sponsor Your Family", desc: "Spouse, children of any age, and parents included." },
+                { icon: "💼", title: "No Sponsor Needed", desc: "Full independence — no employer or local sponsor required." },
+                { icon: "🏦", title: "UAE Bank Accounts", desc: "Open accounts, get credit cards, build UAE credit history." },
+                { icon: "✈️", title: "Travel Freely", desc: "Re-enter UAE after 6+ months abroad without visa reset." },
+                { icon: "💰", title: "0% Income Tax", desc: "No personal income tax on rental income or capital gains." },
               ];
 
               return (
@@ -6281,7 +6281,7 @@ export default function EmaarDashboardV2() {
                       {/* Result card */}
                       <div style={{ background: eligible ? "linear-gradient(135deg,rgba(16,185,129,0.1),rgba(16,185,129,0.04))" : "linear-gradient(135deg,rgba(239,68,68,0.1),rgba(239,68,68,0.04))", borderRadius: 14, border: "1px solid " + (eligible ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"), padding: 20 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                          <div style={{ fontSize: 28 }}>{isAlreadyResident ? "ðŸ‡¦ðŸ‡ª" : eligible ? "âœ…" : "âŒ"}</div>
+                          <div style={{ fontSize: 28 }}>{isAlreadyResident ? "🇦🇪" : eligible ? "✅" : "❌"}</div>
                           <div>
                             <div style={{ fontSize: 15, fontWeight: 700, color: isAlreadyResident ? T.gold : eligible ? T.green : "#EF4444" }}>
                               {isAlreadyResident ? "You Already Have UAE Residency" : eligible ? "You Qualify for the Golden Visa!" : "Not Eligible Yet"}
@@ -6355,7 +6355,7 @@ export default function EmaarDashboardV2() {
                               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                 <div style={{ textAlign: "right" }}>
                                   <div style={{ fontSize: 11, fontWeight: 700, color: T.green }}>AED {p.price ? (p.price/1e6).toFixed(2) + "M" : "2M+"}</div>
-                                  <div style={{ fontSize: 10, color: T.gold }}>âœ“ Eligible</div>
+                                  <div style={{ fontSize: 10, color: T.gold }}>✓ Eligible</div>
                                 </div>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
                               </div>
@@ -6365,7 +6365,7 @@ export default function EmaarDashboardV2() {
 
                         {nearProjects.length > 0 && (
                           <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid " + T.border }}>
-                            <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, marginBottom: 8 }}>Almost There (AED 1.5Mâ€“2M)</div>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, marginBottom: 8 }}>Almost There (AED 1.5M–2M)</div>
                             {nearProjects.slice(0, 4).map(p => (
                               <div key={p.id} onClick={() => { setSelectedProject(p); setTab("Projects"); }} style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", borderRadius: 8, marginBottom: 4, background: T.surfaceAlt, cursor: "pointer", border: "1px solid transparent", transition: "all 0.15s" }}
                                 onMouseEnter={e => { e.currentTarget.style.background = "rgba(212,168,67,0.08)"; e.currentTarget.style.borderColor = T.gold; }}
@@ -6377,7 +6377,7 @@ export default function EmaarDashboardV2() {
                                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                   <div style={{ textAlign: "right" }}>
                                     <div style={{ fontSize: 11, fontWeight: 600, color: T.gold }}>AED {p.price ? (p.price/1e6).toFixed(2) + "M" : "TBC"}</div>
-                                    <div style={{ fontSize: 10, color: T.textMuted }}>{p.price ? "AED " + ((THRESHOLD - p.price)/1000).toFixed(0) + "K short" : "â€”"}</div>
+                                    <div style={{ fontSize: 10, color: T.textMuted }}>{p.price ? "AED " + ((THRESHOLD - p.price)/1000).toFixed(0) + "K short" : "—"}</div>
                                   </div>
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
                                 </div>
@@ -6392,11 +6392,11 @@ export default function EmaarDashboardV2() {
                   {/* Bottom info strip */}
                   <div style={{ background: T.surface, borderRadius: 12, border: "1px solid " + T.border, padding: "14px 20px", display: "flex", gap: 24, flexWrap: "wrap" }}>
                     {[
-                      ["ðŸ“…", "Visa Duration", "10 years, renewable indefinitely"],
-                      ["ðŸ ", "Property Type", "Residential & commercial â€” off-plan or ready"],
-                      ["ðŸ’³", "Mortgage OK?", "Yes â€” but title deed must show AED 2M+ value"],
-                      ["â³", "Processing Time", "Approx. 30 days after title deed issuance"],
-                      ["ðŸ‘¥", "Family", "Spouse + children of any age included"],
+                      ["📅", "Visa Duration", "10 years, renewable indefinitely"],
+                      ["🏠", "Property Type", "Residential & commercial — off-plan or ready"],
+                      ["💳", "Mortgage OK?", "Yes — but title deed must show AED 2M+ value"],
+                      ["⏳", "Processing Time", "Approx. 30 days after title deed issuance"],
+                      ["👥", "Family", "Spouse + children of any age included"],
                     ].map(([icon, title, desc]) => (
                       <div key={title} style={{ display: "flex", gap: 8, alignItems: "flex-start", minWidth: 160, flex: 1 }}>
                         <span style={{ fontSize: 18 }}>{icon}</span>
@@ -6408,13 +6408,13 @@ export default function EmaarDashboardV2() {
                     ))}
                   </div>
 
-              <TabSources sources={[{ label: "UAE ICP â€” Golden Visa", url: "https://icp.gov.ae" }, { label: "GDRFA Dubai", url: "https://gdrfad.gov.ae" }, { label: "Federal Authority for Identity (ICP)", url: "https://icp.gov.ae" }, { label: "Emaar.com/en/investor-relations â€” Project prices" }, { label: "Dubai Economy & Tourism", url: "https://www.visitdubai.com" }]} />
+              <TabSources sources={[{ label: "UAE ICP — Golden Visa", url: "https://icp.gov.ae" }, { label: "GDRFA Dubai", url: "https://gdrfad.gov.ae" }, { label: "Federal Authority for Identity (ICP)", url: "https://icp.gov.ae" }, { label: "Emaar.com/en/investor-relations — Project prices" }, { label: "Dubai Economy & Tourism", url: "https://www.visitdubai.com" }]} />
                 </div>
             );
           })()}
 
 
-          {/* â”€â”€â”€ FLIP PROFIT TAB â”€â”€â”€ */}
+          {/* ─── FLIP PROFIT TAB ─── */}
           {tab === "Flip" && !isPro && <ProGateFullPage tabName="Flip" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Flip" && isPro && (() => {
             const selectedFlipProj = activeProjects.find(p => p.id === flipProjId) || activeProjects[0] || null;
@@ -6503,7 +6503,7 @@ export default function EmaarDashboardV2() {
                         <div style={{ fontSize: 12, fontWeight: 700, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Select Project</div>
                         <select value={selectedFlipProj?.id || ""} onChange={e => { const p = activeProjects.find(x => x.id === e.target.value); if (p) handleProjSelect(p); }}
                           style={{ width: "100%", padding: "10px 12px", background: T.surfaceAlt, border: "1px solid " + T.border, borderRadius: 8, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", cursor: "pointer", marginBottom: 12 }}>
-                          {activeProjects.map(p => <option key={p.id} value={p.id}>{p.name} â€” {p.community}</option>)}
+                          {activeProjects.map(p => <option key={p.id} value={p.id}>{p.name} — {p.community}</option>)}
                         </select>
 
                         {/* Buy / Sell price */}
@@ -6610,7 +6610,7 @@ export default function EmaarDashboardV2() {
                             ["Cash You Put In", fmt(totalCashIn), T.gold, "Down payment + all buy fees"],
                             ["You Sell For", fmt(sellPrice), T.green, "Your target exit price"],
                             ["All Fees", fmt(dldBuy + agencyBuy + adminFees + totalSellCost), "#EF4444", "DLD + agency + NOC + transfer"],
-                            includeRental ? ["Rental Income", "+" + fmt(totalRent), T.teal, holdYears + " yrs Ã— " + rentalYield + "% net 85%"] : ["Gross Profit", fmt(grossProfit), T.blue, "Sell price minus buy price"],
+                            includeRental ? ["Rental Income", "+" + fmt(totalRent), T.teal, holdYears + " yrs × " + rentalYield + "% net 85%"] : ["Gross Profit", fmt(grossProfit), T.blue, "Sell price minus buy price"],
                           ].map(([l, v, c, sub]) => (
                             <div key={l} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "12px 14px" }}>
                               <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 4 }}>{l}</div>
@@ -6678,10 +6678,10 @@ export default function EmaarDashboardV2() {
                         <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, marginBottom: 4 }}>Smart Tip</div>
                         <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6 }}>
                           {paymentPlan === "80_20"
-                            ? "80/20 plan maximizes your leverage â€” you control AED " + fmt(buyPrice) + " of property with only " + fmt(downPayment) + " cash. Flip before handover to avoid paying the final 20%."
+                            ? "80/20 plan maximizes your leverage — you control AED " + fmt(buyPrice) + " of property with only " + fmt(downPayment) + " cash. Flip before handover to avoid paying the final 20%."
                             : paymentPlan === "60_40"
                             ? "On a 60/40 plan, flip before handover to avoid the 40% balloon payment. Buyer takes over your SPA and pays you the profit."
-                            : "Full cash gives you the cleanest title deed and fastest resale â€” no developer approval needed for transfer."}
+                            : "Full cash gives you the cleanest title deed and fastest resale — no developer approval needed for transfer."}
                         </div>
                       </div>
                     </div>
@@ -6691,16 +6691,16 @@ export default function EmaarDashboardV2() {
             );
           })()}
 
-          {/* â”€â”€â”€ MARKET TAB â”€â”€â”€ */}
+          {/* ─── MARKET TAB ─── */}
           {tab === "Market" && <>
-            <Section title="Dubai Real Estate â€” 2025" sub="Official DLD Data Â· 5th Consecutive Record Year">
+            <Section title="Dubai Real Estate — 2025" sub="Official DLD Data · 5th Consecutive Record Year">
               <div style={{ marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <DataBadge source="Dubai Land Department FY2025" date="Dec 2025" type="dld" />
                 <DataBadge source="REIDIN Price Index Dec 2025" date="Dec 2025" type="reidin" />
                 <DataBadge source="ValuStrat Q4 2025" date="Q4 2025" type="manual" />
               </div>
               <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 16 }}>
-                {(liveMarketData.length > 0 ? liveMarketData.map(d => ({ metric: d.metric, val2025: d.value, yoy: d.change, val2024: "" })) : dubaiMarket).map((m, i) => <KPI key={i} label={m.metric} value={m.val2025} sub={m.yoy} delay={Math.min(i + 1, 8)} onClick={() => setSelectedKPI({ label: m.metric, value: m.val2025, color: T.gold, description: `${m.metric} â€” Official DLD data for 2025. Dubai's 5th consecutive record year.`, source: "Dubai Land Department 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "2025 Value", value: m.val2025, note: "Record year" }, { label: "YoY Change", value: m.yoy, note: "vs 2024" }, { label: "2024 Value", value: m.val2024 || "â€”", note: "Prior year" }], trend: null })} />)}
+                {(liveMarketData.length > 0 ? liveMarketData.map(d => ({ metric: d.metric, val2025: d.value, yoy: d.change, val2024: "" })) : dubaiMarket).map((m, i) => <KPI key={i} label={m.metric} value={m.val2025} sub={m.yoy} delay={Math.min(i + 1, 8)} onClick={() => setSelectedKPI({ label: m.metric, value: m.val2025, color: T.gold, description: `${m.metric} — Official DLD data for 2025. Dubai's 5th consecutive record year.`, source: "Dubai Land Department 2025", sourceUrl: "https://dubailand.gov.ae", items: [{ label: "2025 Value", value: m.val2025, note: "Record year" }, { label: "YoY Change", value: m.yoy, note: "vs 2024" }, { label: "2024 Value", value: m.val2024 || "—", note: "Prior year" }], trend: null })} />)}
               </div>
             </Section>
 
@@ -6718,11 +6718,11 @@ export default function EmaarDashboardV2() {
               </ResponsiveContainer>
             </Chart>
 
-            <Section title="2026 Outlook" sub="Knight Frank, CW Core, Fitch Ratings â€” Click each for full analysis">
+            <Section title="2026 Outlook" sub="Knight Frank, CW Core, Fitch Ratings — Click each for full analysis">
               <div className="chart-grid-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 16 }}>
                 {[
                   { firm: "Knight Frank", color: T.gold, forecast: "+3% prime / +1% mainstream", short: "+3% prime, ~1% mainstream. Transitioning to sustainable growth phase.", detail: "Knight Frank's 2026 Dubai Residential Forecast projects prime property appreciation of +3% and mainstream market growth of ~1%. The report notes Dubai is entering a more mature, sustainable growth cycle after two years of double-digit gains. Key risks include oversupply in mid-market. Key tailwinds include continued HNWI inflows, Golden Visa demand, and Expo City activation.", bullets: ["+3% prime appreciation", "~1% mainstream growth", "Sustainable cycle ahead", "HNWI inflows continue", "Golden Visa demand strong"], sourceUrl: "https://www.knightfrank.com/research" },
-                  { firm: "CW Core", color: T.teal, forecast: "5â€“8% appreciation", short: "5-8% appreciation forecast. Slowdown from 12-22% in 2024-25.", detail: "Cushman & Wakefield Core's 2026 outlook projects 5â€“8% price appreciation for Dubai residential, a marked slowdown from 12â€“22% seen in 2024â€“25. The firm cites the massive 2026 pipeline (~120K units) as a price moderator, though strong end-user demand and low mortgage penetration are supportive. Off-plan launches expected to remain dominant at 60â€“65% of volume.", bullets: ["5â€“8% price appreciation", "~120K units in 2026 pipeline", "Off-plan stays 60â€“65% of volume", "Strong end-user demand", "Low mortgage penetration"], sourceUrl: "https://cwcore.com" },
+                  { firm: "CW Core", color: T.teal, forecast: "5–8% appreciation", short: "5-8% appreciation forecast. Slowdown from 12-22% in 2024-25.", detail: "Cushman & Wakefield Core's 2026 outlook projects 5–8% price appreciation for Dubai residential, a marked slowdown from 12–22% seen in 2024–25. The firm cites the massive 2026 pipeline (~120K units) as a price moderator, though strong end-user demand and low mortgage penetration are supportive. Off-plan launches expected to remain dominant at 60–65% of volume.", bullets: ["5–8% price appreciation", "~120K units in 2026 pipeline", "Off-plan stays 60–65% of volume", "Strong end-user demand", "Low mortgage penetration"], sourceUrl: "https://cwcore.com" },
                   { firm: "Fitch Ratings", color: T.orange, forecast: "Stable / Watch", short: "Moderate correction possible. ~120K units in 2026 pipeline.", detail: "Fitch Ratings maintained a Stable Outlook for UAE developers (Dec 2025), citing Emaar's strong backlog and recurring revenue as key buffers. However, Fitch warned that the 120K+ unit pipeline in 2026 could create oversupply in affordable segments. Emaar's premium positioning and AED 155B backlog provide significant earnings visibility even in a correction scenario.", bullets: ["Developer outlook: Stable", "120K unit pipeline = risk", "Affordable segment most exposed", "Emaar backlog = strong buffer", "Emaar rated BBB (Stable)"], sourceUrl: "https://www.fitchratings.com" },
                 ].map((item, i) => <ForecastCard key={i} {...item} />)}
               </div>
@@ -6745,7 +6745,7 @@ export default function EmaarDashboardV2() {
           <TabSources sources={[{ label: "Dubai Land Department (Official)", url: "https://dubailand.gov.ae" }, { label: "REIDIN Dec 2025", url: "https://reidin.com" }, { label: "ValuStrat Q4 2025" }, { label: "Knight Frank Dubai 2025", url: "https://www.knightfrank.com/research" }, { label: "Gulf News Property", url: "https://gulfnews.com/business/property" }, { label: "Zawya Real Estate", url: "https://www.zawya.com" }]} />
           </>}
 
-          {/* â”€â”€â”€ INVESTMENT SCORE TAB â”€â”€â”€ */}
+          {/* ─── INVESTMENT SCORE TAB ─── */}
           {tab === "Investment Score" && !isPro && <ProGateFullPage tabName="Investment Score" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Investment Score" && isPro && (() => {
             const COMMUNITIES = [
@@ -6773,31 +6773,31 @@ export default function EmaarDashboardV2() {
 
               // 1. Yield (0-20pts)
               const yScore = c.yield >= 8 ? 20 : c.yield >= 7 ? 16 : c.yield >= 6 ? 12 : c.yield >= 5 ? 8 : 5;
-              pts += yScore; factors.push({ label: "Yield", score: yScore, max: 20, val: c.yield + "%", icon: "ðŸ“ˆ" });
+              pts += yScore; factors.push({ label: "Yield", score: yScore, max: 20, val: c.yield + "%", icon: "📈" });
 
-              // 2. Supply Risk â€” inverted (low risk = high score) (0-15pts)
+              // 2. Supply Risk — inverted (low risk = high score) (0-15pts)
               const sScore = c.supplyRisk <= 4 ? 15 : c.supplyRisk <= 6 ? 10 : c.supplyRisk <= 8 ? 5 : 2;
-              pts += sScore; factors.push({ label: "Supply Risk", score: sScore, max: 15, val: c.supplyRisk <= 4 ? "Low" : c.supplyRisk <= 6 ? "Medium" : "High", icon: "ðŸ—ï¸" });
+              pts += sScore; factors.push({ label: "Supply Risk", score: sScore, max: 15, val: c.supplyRisk <= 4 ? "Low" : c.supplyRisk <= 6 ? "Medium" : "High", icon: "🏗️" });
 
               // 3. Price Momentum (0-15pts)
               const mScore = c.momentum >= 9 ? 15 : c.momentum >= 7 ? 10 : c.momentum >= 5 ? 6 : 3;
-              pts += mScore; factors.push({ label: "Momentum", score: mScore, max: 15, val: c.momentum + "/10", icon: "ðŸš€" });
+              pts += mScore; factors.push({ label: "Momentum", score: mScore, max: 15, val: c.momentum + "/10", icon: "🚀" });
 
               // 4. Demand (0-15pts)
               const dScore = c.demand >= 9 ? 15 : c.demand >= 7 ? 10 : c.demand >= 5 ? 6 : 3;
-              pts += dScore; factors.push({ label: "Demand", score: dScore, max: 15, val: c.demand + "/10", icon: "ðŸ‘¥" });
+              pts += dScore; factors.push({ label: "Demand", score: dScore, max: 15, val: c.demand + "/10", icon: "👥" });
 
               // 5. Golden Visa eligible (0-10pts)
               const gScore = c.goldenVisa ? 10 : 3;
-              pts += gScore; factors.push({ label: "Golden Visa", score: gScore, max: 10, val: c.goldenVisa ? "Eligible" : "Below 2M", icon: "ðŸ…" });
+              pts += gScore; factors.push({ label: "Golden Visa", score: gScore, max: 10, val: c.goldenVisa ? "Eligible" : "Below 2M", icon: "🏅" });
 
               // 6. STR Potential (0-15pts)
               const strScore = c.strPotential >= 9 ? 15 : c.strPotential >= 7 ? 10 : c.strPotential >= 5 ? 6 : 3;
-              pts += strScore; factors.push({ label: "STR Potential", score: strScore, max: 15, val: c.strPotential + "/10", icon: "ðŸ–ï¸" });
+              pts += strScore; factors.push({ label: "STR Potential", score: strScore, max: 15, val: c.strPotential + "/10", icon: "🏖️" });
 
               // 7. Developer Quality (0-10pts)
               const devScore = c.devQuality >= 9 ? 10 : c.devQuality >= 7 ? 7 : 4;
-              pts += devScore; factors.push({ label: "Dev Quality", score: devScore, max: 10, val: c.devQuality + "/10", icon: "ðŸ¢" });
+              pts += devScore; factors.push({ label: "Dev Quality", score: devScore, max: 10, val: c.devQuality + "/10", icon: "🏢" });
 
               const total = Math.round(pts);
               const pct = Math.round(pts / 100 * 10) / 10; // out of 10
@@ -6819,16 +6819,16 @@ export default function EmaarDashboardV2() {
 
             return (
               <>
-                <Section title="Investment Intelligence" sub="AI-scored community ratings across 7 factors Â· Updated Q4 2025">
+                <Section title="Investment Intelligence" sub="AI-scored community ratings across 7 factors · Updated Q4 2025">
                   {/* Market Signal Banner */}
                   <div style={{ background: marketSignal === "BULL" ? "rgba(16,185,129,0.08)" : marketSignal === "NEUTRAL" ? "rgba(212,168,67,0.08)" : "rgba(239,68,68,0.08)", border: `1px solid ${marketSignal === "BULL" ? "rgba(16,185,129,0.25)" : marketSignal === "NEUTRAL" ? "rgba(212,168,67,0.25)" : "rgba(239,68,68,0.25)"}`, borderRadius: 16, padding: "20px 24px", marginBottom: 20, display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
                     <div style={{ flex: 1, minWidth: 200 }}>
                       <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Overall Market Signal</div>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 28, fontWeight: 900, color: marketSignal === "BULL" ? T.green : marketSignal === "NEUTRAL" ? T.gold : T.red }}>
-                        {marketSignal === "BULL" ? "ðŸŸ¢ BULLISH" : marketSignal === "NEUTRAL" ? "ðŸŸ¡ NEUTRAL" : "ðŸ”´ CAUTION"}
+                        {marketSignal === "BULL" ? "🟢 BULLISH" : marketSignal === "NEUTRAL" ? "🟡 NEUTRAL" : "🔴 CAUTION"}
                       </div>
                       <div style={{ fontSize: 12, color: T.textSecondary, marginTop: 4 }}>
-                        {marketSignal === "BULL" ? "Strong buying opportunity across multiple communities" : marketSignal === "NEUTRAL" ? "Selective buying recommended â€” focus on high-score communities" : "Market showing stress â€” focus on yield over appreciation"}
+                        {marketSignal === "BULL" ? "Strong buying opportunity across multiple communities" : marketSignal === "NEUTRAL" ? "Selective buying recommended — focus on high-score communities" : "Market showing stress — focus on yield over appreciation"}
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
@@ -6886,13 +6886,13 @@ export default function EmaarDashboardV2() {
                             <div style={{ display: "inline-block", padding: "5px 12px", borderRadius: 8, background: c.signal === "BUY" ? "rgba(16,185,129,0.12)" : c.signal === "HOLD" ? "rgba(212,168,67,0.12)" : "rgba(239,68,68,0.12)", border: `1px solid ${c.signalColor}33`, color: c.signalColor, fontSize: 11, fontWeight: 900, letterSpacing: 0.5 }}>{c.signal}</div>
                           </div>
                           {/* Expand Arrow */}
-                          <div style={{ color: T.textMuted, fontSize: 14, transition: "transform 0.2s", transform: expandedComm === c.short ? "rotate(180deg)" : "none" }}>â–¾</div>
+                          <div style={{ color: T.textMuted, fontSize: 14, transition: "transform 0.2s", transform: expandedComm === c.short ? "rotate(180deg)" : "none" }}>▾</div>
                         </div>
 
                         {/* Expanded Factor Breakdown */}
                         {expandedComm === c.short && (
                           <div style={{ background: "rgba(14,25,45,0.95)", border: `1px solid ${c.color}`, borderTop: "none", borderRadius: "0 0 14px 14px", padding: "20px 20px 20px" }}>
-                            <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Score Breakdown â€” {c.name}</div>
+                            <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>Score Breakdown — {c.name}</div>
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
                               {c.factors.map((f, fi) => (
                                 <div key={fi} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: "12px 14px", border: "1px solid rgba(255,255,255,0.06)" }}>
@@ -6910,14 +6910,14 @@ export default function EmaarDashboardV2() {
                             {/* Investment Summary */}
                             <div style={{ marginTop: 16, padding: "14px 16px", background: `${c.signalColor}0D`, border: `1px solid ${c.signalColor}33`, borderRadius: 10 }}>
                               <div style={{ fontSize: 11, fontWeight: 700, color: c.signalColor, marginBottom: 6 }}>
-                                {c.signal === "BUY" ? "âœ… BUY RECOMMENDATION" : c.signal === "HOLD" ? "âš¡ HOLD RECOMMENDATION" : "âš ï¸ SELL / AVOID RECOMMENDATION"}
+                                {c.signal === "BUY" ? "✅ BUY RECOMMENDATION" : c.signal === "HOLD" ? "⚡ HOLD RECOMMENDATION" : "⚠️ SELL / AVOID RECOMMENDATION"}
                               </div>
                               <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>
                                 {c.signal === "BUY"
-                                  ? `${c.name} scores ${c.total}/100 â€” strong fundamentals across yield (${c.yield}%), demand, and momentum. ${c.note} Entry at AED ${c.avgPriceSqft.toLocaleString()}/sqft offers attractive risk-adjusted returns.`
+                                  ? `${c.name} scores ${c.total}/100 — strong fundamentals across yield (${c.yield}%), demand, and momentum. ${c.note} Entry at AED ${c.avgPriceSqft.toLocaleString()}/sqft offers attractive risk-adjusted returns.`
                                   : c.signal === "HOLD"
-                                  ? `${c.name} scores ${c.total}/100 â€” decent yield at ${c.yield}% but some factors warrant caution. ${c.note} Existing holders should maintain positions; new buyers should wait for better entry.`
-                                  : `${c.name} scores ${c.total}/100 â€” combination of compressed yield and elevated risk factors. ${c.note} Capital could be better deployed elsewhere in the portfolio.`
+                                  ? `${c.name} scores ${c.total}/100 — decent yield at ${c.yield}% but some factors warrant caution. ${c.note} Existing holders should maintain positions; new buyers should wait for better entry.`
+                                  : `${c.name} scores ${c.total}/100 — combination of compressed yield and elevated risk factors. ${c.note} Capital could be better deployed elsewhere in the portfolio.`
                                 }
                               </div>
                             </div>
@@ -6932,13 +6932,13 @@ export default function EmaarDashboardV2() {
                 <Section title="Scoring Methodology" sub="How Investment Scores are calculated">
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12, marginTop: 16 }}>
                     {[
-                      { icon: "ðŸ“ˆ", label: "Gross Yield", weight: "20pts", desc: "Higher yield = higher score. 8%+ = full marks. Based on DLD/REIDIN data." },
-                      { icon: "ðŸ—ï¸", label: "Supply Risk", weight: "15pts", desc: "Inverted â€” low pipeline risk scores highest. Based on REIDIN supply data." },
-                      { icon: "ðŸš€", label: "Price Momentum", weight: "15pts", desc: "YoY price growth trajectory. Based on Property Monitor DPI." },
-                      { icon: "ðŸ‘¥", label: "Demand Score", weight: "15pts", desc: "Transaction volume + search interest + rental absorption rate." },
-                      { icon: "ðŸ…", label: "Golden Visa", weight: "10pts", desc: "Properties â‰¥ AED 2M qualify for 10yr UAE Golden Visa â€” drives demand." },
-                      { icon: "ðŸ–ï¸", label: "STR Potential", weight: "15pts", desc: "Short-term rental income potential based on Airbnb/Booking.com data." },
-                      { icon: "ðŸ¢", label: "Developer Quality", weight: "10pts", desc: "Delivery track record, S&P rating, escrow compliance, and backlog health." },
+                      { icon: "📈", label: "Gross Yield", weight: "20pts", desc: "Higher yield = higher score. 8%+ = full marks. Based on DLD/REIDIN data." },
+                      { icon: "🏗️", label: "Supply Risk", weight: "15pts", desc: "Inverted — low pipeline risk scores highest. Based on REIDIN supply data." },
+                      { icon: "🚀", label: "Price Momentum", weight: "15pts", desc: "YoY price growth trajectory. Based on Property Monitor DPI." },
+                      { icon: "👥", label: "Demand Score", weight: "15pts", desc: "Transaction volume + search interest + rental absorption rate." },
+                      { icon: "🏅", label: "Golden Visa", weight: "10pts", desc: "Properties ≥ AED 2M qualify for 10yr UAE Golden Visa — drives demand." },
+                      { icon: "🏖️", label: "STR Potential", weight: "15pts", desc: "Short-term rental income potential based on Airbnb/Booking.com data." },
+                      { icon: "🏢", label: "Developer Quality", weight: "10pts", desc: "Delivery track record, S&P rating, escrow compliance, and backlog health." },
                     ].map((m, i) => (
                       <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
@@ -6950,7 +6950,7 @@ export default function EmaarDashboardV2() {
                     ))}
                   </div>
                   <div style={{ marginTop: 16, padding: "12px 16px", background: "rgba(255,255,255,0.03)", borderRadius: 10, fontSize: 12, color: T.textMuted, lineHeight: 1.7 }}>
-                    <strong style={{ color: T.textSecondary }}>Signal thresholds:</strong> BUY = 75+/100 Â· HOLD = 55â€“74 Â· SELL/AVOID = below 55. Scores are recalculated quarterly using latest DLD, REIDIN, and ValuStrat data. Not financial advice â€” always conduct your own due diligence.
+                    <strong style={{ color: T.textSecondary }}>Signal thresholds:</strong> BUY = 75+/100 · HOLD = 55–74 · SELL/AVOID = below 55. Scores are recalculated quarterly using latest DLD, REIDIN, and ValuStrat data. Not financial advice — always conduct your own due diligence.
                   </div>
                 </Section>
 
@@ -6966,10 +6966,10 @@ export default function EmaarDashboardV2() {
             );
           })()}
 
-          {/* â”€â”€â”€ PRICE HISTORY TAB â”€â”€â”€ */}
+          {/* ─── PRICE HISTORY TAB ─── */}
           {tab === "Price History" && !isPro && <ProGateFullPage tabName="Price History" onUpgrade={() => setShowUpgrade(true)} />}
           {tab === "Price History" && isPro && (() => {
-            // 2008â€“2025 Dubai price per sqft data by community
+            // 2008–2025 Dubai price per sqft data by community
             const HISTORY = {
               "Dubai Average": [
                 { y: "2008", v: 1420 }, { y: "2009", v: 870 }, { y: "2010", v: 780 },
@@ -7030,10 +7030,10 @@ export default function EmaarDashboardV2() {
             };
 
             const CYCLES = [
-              { year: "2008", event: "Global Financial Crisis", type: "crash", desc: "Dubai property crashed 50â€“60% from peak. Off-plan projects stalled. Nakheel restructured $16B debt." },
+              { year: "2008", event: "Global Financial Crisis", type: "crash", desc: "Dubai property crashed 50–60% from peak. Off-plan projects stalled. Nakheel restructured $16B debt." },
               { year: "2012", event: "Recovery Begins", type: "recovery", desc: "Foreign investor confidence returns. Expo 2020 bid announced. Prices start rising again." },
               { year: "2014", event: "Peak & Correction", type: "correction", desc: "Second boom peaks. Government cooling measures (double DLD fee to 4%, mortgage LTV caps) trigger 25% correction." },
-              { year: "2020", event: "COVID-19 Dip", type: "crash", desc: "Pandemic causes 15â€“20% dip. Short-lived â€” UAE's COVID response and Golden Visa expansion drive rapid recovery." },
+              { year: "2020", event: "COVID-19 Dip", type: "crash", desc: "Pandemic causes 15–20% dip. Short-lived — UAE's COVID response and Golden Visa expansion drive rapid recovery." },
               { year: "2021", event: "New Bull Run Begins", type: "recovery", desc: "Record transactions. Millionaire migration accelerates. 56+ consecutive months of growth begins." },
               { year: "2025", event: "Record Market", type: "peak", desc: "AED 682B market. 5th consecutive record year. 214,912 transactions. Prices at all-time highs in most communities." },
             ];
@@ -7058,14 +7058,14 @@ export default function EmaarDashboardV2() {
               const last = pts[pts.length - 1]?.v;
               const peak = Math.max(...pts.map(p => p.v));
               const trough = Math.min(...pts.map(p => p.v));
-              const totalGain = first && last ? ((last - first) / first * 100).toFixed(0) : "â€”";
-              const fromTrough = trough && last ? ((last - trough) / trough * 100).toFixed(0) : "â€”";
+              const totalGain = first && last ? ((last - first) / first * 100).toFixed(0) : "—";
+              const fromTrough = trough && last ? ((last - trough) / trough * 100).toFixed(0) : "—";
               return { first, last, peak, trough, totalGain, fromTrough };
             };
 
             return (
               <>
-                <Section title="Dubai Property Price History 2008â€“2025" sub="Price per sqft (AED) Â· Full market cycle including 2008 crash, 2014 correction, COVID dip, and current bull run">
+                <Section title="Dubai Property Price History 2008–2025" sub="Price per sqft (AED) · Full market cycle including 2008 crash, 2014 correction, COVID dip, and current bull run">
                   {/* Cycle Events Timeline */}
                   <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 24, scrollbarWidth: "none" }}>
                     {CYCLES.map((c, i) => (
@@ -7078,7 +7078,7 @@ export default function EmaarDashboardV2() {
                   </div>
 
                   {/* Main Price Chart */}
-                  <Chart title="Price Per Sqft (AED) â€” All Communities 2008â€“2025">
+                  <Chart title="Price Per Sqft (AED) — All Communities 2008–2025">
                     <ResponsiveContainer width="100%" height={320}>
                       <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
@@ -7113,7 +7113,7 @@ export default function EmaarDashboardV2() {
                 </Section>
 
                 {/* Community Stats Cards */}
-                <Section title="Community Performance â€” Full Cycle" sub="From 2008 peak to 2025 Â· AED/sqft">
+                <Section title="Community Performance — Full Cycle" sub="From 2008 peak to 2025 · AED/sqft">
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14, marginTop: 16 }}>
                     {ALL_COMMUNITIES.map(comm => {
                       const s = calcStats(comm);
@@ -7162,12 +7162,12 @@ export default function EmaarDashboardV2() {
                 </Section>
 
                 {/* Cycle Analysis */}
-                <Section title="Market Cycle Analysis" sub="Dubai's 3 major cycles since 2008 â€” what history tells us">
+                <Section title="Market Cycle Analysis" sub="Dubai's 3 major cycles since 2008 — what history tells us">
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14, marginTop: 16 }}>
                     {[
-                      { cycle: "Cycle 1: 2008â€“2012", icon: "ðŸ“‰", color: T.red, title: "Crash & Recovery", stats: [{ l: "Peak (2008)", v: "AED 1,420/sqft" }, { l: "Trough (2010)", v: "AED 780/sqft" }, { l: "Drawdown", v: "-45%" }, { l: "Recovery", v: "3 years" }], insight: "GFC triggered Dubai's worst crash â€” overleveraged developers, stalled projects, and Nakheel's $16B debt restructuring. Recovery driven by fundamentals: no income tax, growing expat population, infrastructure completion." },
-                      { cycle: "Cycle 2: 2012â€“2020", icon: "ðŸ“Š", color: T.gold, title: "Boom, Cooldown, Stability", stats: [{ l: "Peak (2014)", v: "AED 1,250/sqft" }, { l: "Trough (2020)", v: "AED 880/sqft" }, { l: "Drawdown", v: "-30%" }, { l: "Duration", v: "8 years" }], insight: "Government cooling measures (4% DLD, LTV caps) softened the boom. Gradual 25% correction until COVID. More orderly than 2008 â€” regulated market with escrow laws protecting off-plan buyers." },
-                      { cycle: "Cycle 3: 2020â€“2025+", icon: "ðŸš€", color: T.green, title: "The Great Bull Run", stats: [{ l: "Trough (2020)", v: "AED 880/sqft" }, { l: "Current (2025)", v: "AED 1,689/sqft" }, { l: "Gain", v: "+92%" }, { l: "Duration", v: "5+ years" }], insight: "Longest bull run in Dubai history. Driven by: Golden Visa expansion, millionaire migration, limited new supply in premium zones, post-COVID safe haven demand, and AED-USD peg stability." },
+                      { cycle: "Cycle 1: 2008–2012", icon: "📉", color: T.red, title: "Crash & Recovery", stats: [{ l: "Peak (2008)", v: "AED 1,420/sqft" }, { l: "Trough (2010)", v: "AED 780/sqft" }, { l: "Drawdown", v: "-45%" }, { l: "Recovery", v: "3 years" }], insight: "GFC triggered Dubai's worst crash — overleveraged developers, stalled projects, and Nakheel's $16B debt restructuring. Recovery driven by fundamentals: no income tax, growing expat population, infrastructure completion." },
+                      { cycle: "Cycle 2: 2012–2020", icon: "📊", color: T.gold, title: "Boom, Cooldown, Stability", stats: [{ l: "Peak (2014)", v: "AED 1,250/sqft" }, { l: "Trough (2020)", v: "AED 880/sqft" }, { l: "Drawdown", v: "-30%" }, { l: "Duration", v: "8 years" }], insight: "Government cooling measures (4% DLD, LTV caps) softened the boom. Gradual 25% correction until COVID. More orderly than 2008 — regulated market with escrow laws protecting off-plan buyers." },
+                      { cycle: "Cycle 3: 2020–2025+", icon: "🚀", color: T.green, title: "The Great Bull Run", stats: [{ l: "Trough (2020)", v: "AED 880/sqft" }, { l: "Current (2025)", v: "AED 1,689/sqft" }, { l: "Gain", v: "+92%" }, { l: "Duration", v: "5+ years" }], insight: "Longest bull run in Dubai history. Driven by: Golden Visa expansion, millionaire migration, limited new supply in premium zones, post-COVID safe haven demand, and AED-USD peg stability." },
                     ].map((cy, i) => (
                       <div key={i} style={{ background: T.card, border: `1px solid ${cy.color}33`, borderRadius: 14, padding: 20 }}>
                         <div style={{ fontSize: 22, marginBottom: 8 }}>{cy.icon}</div>
@@ -7188,7 +7188,7 @@ export default function EmaarDashboardV2() {
                 </Section>
 
                 {/* YoY Change Chart */}
-                <Section title="Year-on-Year Price Change â€” Dubai Average" sub="Annual % change in price per sqft Â· Highlights boom, bust, and recovery phases">
+                <Section title="Year-on-Year Price Change — Dubai Average" sub="Annual % change in price per sqft · Highlights boom, bust, and recovery phases">
                   <Chart>
                     <ResponsiveContainer width="100%" height={260}>
                       <BarChart data={years.slice(1).map((y, i) => {
@@ -7216,10 +7216,10 @@ export default function EmaarDashboardV2() {
                 </Section>
 
                 <TabSources sources={[
-                  { label: "REIDIN Historical Index 2008â€“2025", url: "https://reidin.com" },
+                  { label: "REIDIN Historical Index 2008–2025", url: "https://reidin.com" },
                   { label: "Property Monitor Dynamic Price Index", url: "https://propertymonitor.com" },
                   { label: "ValuStrat Price Index", url: "https://www.valustrat.com" },
-                  { label: "Dubai Land Department â€” DLD", url: "https://dubailand.gov.ae" },
+                  { label: "Dubai Land Department — DLD", url: "https://dubailand.gov.ae" },
                   { label: "Knight Frank Dubai Report 2025", url: "https://www.knightfrank.com/research" },
                   { label: "Cavendish Maxwell Market Reports" },
                 ]} />
@@ -7231,15 +7231,15 @@ export default function EmaarDashboardV2() {
 
         <footer style={{ borderTop: `1px solid ${T.border}`, padding: "20px 24px", textAlign: "center" }}>
           <p style={{ color: T.textMuted, fontSize: 11 }}>
-            Sources: Emaar IR, DLD, DXBinteract, Gulf News, Zawya, Knight Frank, CW Core, Fitch Â· Verified {new Date().toLocaleDateString("en-AE", { month: "short", year: "numeric" })} Â· Not financial advice
+            Sources: Emaar IR, DLD, DXBinteract, Gulf News, Zawya, Knight Frank, CW Core, Fitch · Verified {new Date().toLocaleDateString("en-AE", { month: "short", year: "numeric" })} · Not financial advice
           </p>
           <p style={{ color: "rgba(100,116,139,0.5)", fontSize: 10, marginTop: 4 }}>
-            DXB Analytics Â· The Address Holding Â· Â© 2026
+            DXB Analytics · The Address Holding · © 2026
           </p>
         </footer>
       </main>
 
-      {/* â”€â”€â”€ FLOATING COMPARE BAR â”€â”€â”€ */}
+      {/* ─── FLOATING COMPARE BAR ─── */}
       {compareList.length > 0 && tab === "Projects" && (
         <div className="compare-bar" style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: T.surface, borderTop: `2px solid ${T.gold}`, padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 1000, backdropFilter: "blur(12px)", flexWrap: "wrap", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -7247,7 +7247,7 @@ export default function EmaarDashboardV2() {
             {compareList.map(p => (
               <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
                 <span style={{ fontSize: 12, color: T.white }}>{p.name}</span>
-                <button type="button" onClick={() => toggleCompare(p)} style={{ background: "none", border: "none", color: T.red, cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1 }}>Ã—</button>
+                <button type="button" onClick={() => toggleCompare(p)} style={{ background: "none", border: "none", color: T.red, cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1 }}>×</button>
               </div>
             ))}
           </div>
@@ -7258,7 +7258,7 @@ export default function EmaarDashboardV2() {
         </div>
       )}
 
-            {/* â”€â”€â”€ PROJECT DETAIL MODAL â”€â”€â”€ */}
+            {/* ─── PROJECT DETAIL MODAL ─── */}
       {/* COMMUNITY DETAIL MODAL */}
       {selectedCommunity && (() => {
         const intel = communityIntel[selectedCommunity];
@@ -7284,9 +7284,9 @@ export default function EmaarDashboardV2() {
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 20 }}>
                     {[
                       { label: "Projects", value: comm.projects },
-                      { label: "Avg Price/sqft", value: comm.avgPpsf ? `AED ${comm.avgPpsf.toLocaleString()}` : "â€”" },
-                      { label: "Avg Yield", value: comm.avgYield ? `${comm.avgYield}%` : "â€”" },
-                      { label: "Area", value: comm.acres ? `${comm.acres.toLocaleString()} acres` : "â€”" },
+                      { label: "Avg Price/sqft", value: comm.avgPpsf ? `AED ${comm.avgPpsf.toLocaleString()}` : "—" },
+                      { label: "Avg Yield", value: comm.avgYield ? `${comm.avgYield}%` : "—" },
+                      { label: "Area", value: comm.acres ? `${comm.acres.toLocaleString()} acres` : "—" },
                     ].map((k, ki) => (
                       <div key={ki} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 12, textAlign: "center" }}>
                         <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4 }}>{k.label}</div>
@@ -7367,7 +7367,7 @@ export default function EmaarDashboardV2() {
                         <div key={pi} style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, cursor: "pointer" }} onClick={() => { const proj = activeProjects.find(x => x.id === p.id) || p; setBreadcrumb([{ label: selectedCommunity, action: () => { setSelectedProject(null); setBreadcrumb([]); } }]); setSelectedCommunity(null); setSelectedProject(proj); }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
                             <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{p.name}</span>
-                            {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 8, color: T.gold, textDecoration: "none", padding: "1px 4px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 3, fontWeight: 700 }}>â†—</a>}
+                            {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 8, color: T.gold, textDecoration: "none", padding: "1px 4px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 3, fontWeight: 700 }}>↗</a>}
                           </div>
                           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{p.type} &middot; {p.beds} beds &middot; {p.status}</div>
                           <div style={{ fontSize: 11, fontWeight: 600, color: T.white, marginTop: 4 }}>{p.price ? `AED ${(p.price/1e6).toFixed(2)}M` : "TBD"}</div>
@@ -7393,7 +7393,7 @@ export default function EmaarDashboardV2() {
                 {breadcrumb.map((b, i) => (
                   <React.Fragment key={i}>
                     <button type="button" onClick={b.action} style={{ background: "none", border: "none", color: T.gold, fontSize: 12, cursor: "pointer", padding: 0, fontFamily: "'Outfit', sans-serif", fontWeight: 600 }}>{b.label}</button>
-                    <span style={{ color: T.textMuted, fontSize: 12 }}>â€º</span>
+                    <span style={{ color: T.textMuted, fontSize: 12 }}>›</span>
                   </React.Fragment>
                 ))}
                 <span style={{ fontSize: 12, color: T.textSecondary }}>{selectedProject?.name}</span>
@@ -7413,7 +7413,7 @@ export default function EmaarDashboardV2() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setSelectedProject(null)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, width: "95%", maxWidth: 820, maxHeight: "92vh", overflowY: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
             {/* Close */}
-            <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>âœ•</button>
+            <button type="button" onClick={() => { setSelectedProject(null); setBreadcrumb([]); }} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             
             {/* Image */}
             {selectedProject_.imageUrl && (
@@ -7428,14 +7428,14 @@ export default function EmaarDashboardV2() {
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: T.gold, margin: 0 }}>{selectedProject_.name}</h2>
-                    {selectedProject_.emaarUrl && <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(212,168,67,0.08)", whiteSpace: "nowrap" }} title={`Official listing on ${getLinkDomain(selectedProject_.emaarUrl)}`}>SOURCE â†—</a>}
-                    <Link to={`/project/${selectedProject_.id}`} style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(0,191,165,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(0,191,165,0.08)", whiteSpace: "nowrap" }} title="Open full page">FULL PAGE â†—</Link>
+                    {selectedProject_.emaarUrl && <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: T.gold, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(212,168,67,0.08)", whiteSpace: "nowrap" }} title={`Official listing on ${getLinkDomain(selectedProject_.emaarUrl)}`}>SOURCE ↗</a>}
+                    <Link to={`/project/${selectedProject_.id}`} style={{ fontSize: 10, color: T.teal, textDecoration: "none", padding: "3px 8px", border: "1px solid rgba(0,191,165,0.4)", borderRadius: 6, fontWeight: 700, background: "rgba(0,191,165,0.08)", whiteSpace: "nowrap" }} title="Open full page">FULL PAGE ↗</Link>
                   </div>
-                  <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject_.community} Â· {selectedProject_.district} Â· {selectedProject_.type}</p>
+                  <p style={{ color: T.textSecondary, fontSize: 13, marginTop: 4 }}>{selectedProject_.community} · {selectedProject_.district} · {selectedProject_.type}</p>
                   {(selectedProject_.tagline || (ci && ci.tagline)) && <p style={{ color: T.teal, fontSize: 11, marginTop: 2, fontStyle: "italic" }}>{selectedProject_.tagline || ci.tagline}</p>}
                 </div>
                 <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                  {(selectedProject_.branded || (selectedProject_.brand && selectedProject_.brand !== 'â€”')) && <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{selectedProject_.brand}</span>}
+                  {(selectedProject_.branded || (selectedProject_.brand && selectedProject_.brand !== '—')) && <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{selectedProject_.brand}</span>}
                   <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: selectedProject_.status === "Completed" ? "rgba(16,185,129,0.15)" : selectedProject_.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: selectedProject_.status === "Completed" ? T.green : selectedProject_.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{selectedProject_.status}</span>
                 </div>
               </div>
@@ -7455,11 +7455,11 @@ export default function EmaarDashboardV2() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
                 {[
                   ["Starting From", selectedProject_.price ? `AED ${(selectedProject_.price/1000000).toFixed(1)}M` : selectedProject_.priceFrom ? `AED ${(Number(selectedProject_.priceFrom)/1000000).toFixed(1)}M` : "TBD"],
-                  ["Handover", selectedProject_.handover || "â€”"],
+                  ["Handover", selectedProject_.handover || "—"],
                   ["Price/sqft", selectedProject_.ppsf ? `AED ${selectedProject_.ppsf.toLocaleString()}` : selectedProject_.pricePerSqft ? `AED ${Number(selectedProject_.pricePerSqft).toLocaleString()}` : "TBD"],
-                  ["Size Range", selectedProject_.sizeFrom ? `${selectedProject_.sizeFrom.toLocaleString()} - ${selectedProject_.sizeTo?.toLocaleString()} sqft` : selectedProject_.sizeRange || "â€”"],
-                  ["Bedrooms", selectedProject_.beds ? selectedProject_.beds + " BR" : "â€”"],
-                  ["Payment Plan", selectedProject_.payment || selectedProject_.paymentPlan || "â€”"],
+                  ["Size Range", selectedProject_.sizeFrom ? `${selectedProject_.sizeFrom.toLocaleString()} - ${selectedProject_.sizeTo?.toLocaleString()} sqft` : selectedProject_.sizeRange || "—"],
+                  ["Bedrooms", selectedProject_.beds ? selectedProject_.beds + " BR" : "—"],
+                  ["Payment Plan", selectedProject_.payment || selectedProject_.paymentPlan || "—"],
                 ].map(([label, value], idx) => (
                   <div key={idx} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10 }}>
                     <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
@@ -7492,13 +7492,13 @@ export default function EmaarDashboardV2() {
                 </div>
               )}
 
-              {/* â”€â”€â”€ LOCATION INTELLIGENCE SECTION â”€â”€â”€ */}
+              {/* ─── LOCATION INTELLIGENCE SECTION ─── */}
               {ciExists && (
                 <ProGate isPro={isPro} message="Unlock Location Intelligence" onUpgrade={() => setShowUpgrade(true)}>
                 <>
                   {/* Community Famous For */}
                   <div style={{ marginBottom: 16, background: `linear-gradient(135deg, rgba(212,168,67,0.08), rgba(0,191,165,0.05))`, borderRadius: 12, padding: 14, border: `1px solid ${T.border}` }}>
-                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>â­ Famous For</h3>
+                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>⭐ Famous For</h3>
                     <p style={{ fontSize: 12, color: T.textPrimary, lineHeight: 1.5, margin: 0 }}>{ci.famousFor}</p>
                     <p style={{ fontSize: 10, color: T.textMuted, marginTop: 6, margin: 0 }}><span style={{ color: T.teal }}>Developer:</span> {ci.masterDev}</p>
                     <p style={{ fontSize: 10, color: T.textMuted, marginTop: 3, margin: 0 }}><span style={{ color: T.teal }}>Lifestyle:</span> {ci.lifestyle}</p>
@@ -7506,7 +7506,7 @@ export default function EmaarDashboardV2() {
 
                   {/* Key Amenities */}
                   <div style={{ marginBottom: 16 }}>
-                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>ðŸ¢ Key Amenities Nearby</h3>
+                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>🏢 Key Amenities Nearby</h3>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                       {ci.keyAmenities.map((a, i) => (
                         <div key={i} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 10, borderLeft: `3px solid ${i === 0 ? T.blue : i === 1 ? T.red : i === 2 ? T.gold : T.teal}` }}>
@@ -7519,7 +7519,7 @@ export default function EmaarDashboardV2() {
 
                   {/* Distance Table */}
                   <div style={{ marginBottom: 16 }}>
-                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>ðŸ“ Distance to Key Dubai Locations</h3>
+                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>📍 Distance to Key Dubai Locations</h3>
                     <div style={{ borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}` }}>
                       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
                         <thead>
@@ -7548,7 +7548,7 @@ export default function EmaarDashboardV2() {
                         </tbody>
                       </table>
                     </div>
-                    <p style={{ fontSize: 9, color: T.textMuted, marginTop: 6 }}>ðŸ›£ï¸ <strong>Road Access:</strong> {ci.roads}</p>
+                    <p style={{ fontSize: 9, color: T.textMuted, marginTop: 6 }}>🛣️ <strong>Road Access:</strong> {ci.roads}</p>
                   </div>
 
                   {/* Investment Quick Facts */}
@@ -7559,7 +7559,7 @@ export default function EmaarDashboardV2() {
                     </div>
                     <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
                       <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Golden Visa</div>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: ci.goldenVisa ? T.green : T.textMuted, fontFamily: "'Fraunces', serif" }}>{ci.goldenVisa ? "âœ“ Eligible" : "Below 2M"}</div>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: ci.goldenVisa ? T.green : T.textMuted, fontFamily: "'Fraunces', serif" }}>{ci.goldenVisa ? "✓ Eligible" : "Below 2M"}</div>
                     </div>
                     <div style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, textAlign: "center" }}>
                       <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>Tier</div>
@@ -7629,7 +7629,7 @@ export default function EmaarDashboardV2() {
                         <div style={{ fontSize: 9, color: T.textMuted }}>{roi.goldenVisaNote}</div>
                       </div>
                     </div>
-                    <div style={{ marginTop: 8, fontSize: 9, color: T.textMuted }}>Risk: <span style={{ color: roi.riskLevel === "Low" ? T.green : roi.riskLevel === "Medium" ? T.gold : T.red }}>{roi.riskLevel}</span> Â· Occupancy: {roi.occupancy ? roi.occupancy + "%" : "N/A"}</div>
+                    <div style={{ marginTop: 8, fontSize: 9, color: T.textMuted }}>Risk: <span style={{ color: roi.riskLevel === "Low" ? T.green : roi.riskLevel === "Medium" ? T.gold : T.red }}>{roi.riskLevel}</span> · Occupancy: {roi.occupancy ? roi.occupancy + "%" : "N/A"}</div>
                   </div>
                   </ProGate>
                 );
@@ -7655,7 +7655,7 @@ export default function EmaarDashboardV2() {
                 if (!ph || !Array.isArray(ph) || ph.length < 2) return null;
                 return (
                   <div style={{ marginBottom: 16 }}>
-                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>ðŸ“ˆ Price History</h3>
+                    <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>📈 Price History</h3>
                     <ResponsiveContainer width="100%" height={140}>
                       <AreaChart data={ph}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
@@ -7672,36 +7672,36 @@ export default function EmaarDashboardV2() {
               {/* Project Documents & Media */}
               {(selectedProject_.pdfBrochure || selectedProject_.pdfFloorPlan || selectedProject_.pdfPaymentPlan || selectedProject_.pdfFactSheet || selectedProject_.videoUrl || selectedProject_.externalLink || selectedProject_.imageUrl) && (
                 <div style={{ marginBottom: 16 }}>
-                  <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>ðŸ“Ž Documents & Media</h3>
+                  <h3 style={{ fontSize: 11, fontWeight: 600, color: T.goldLight, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>📎 Documents & Media</h3>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {selectedProject_.pdfBrochure && (
                       <a href={selectedProject_.pdfBrochure} target="_blank" rel="noreferrer"
                         style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(212,168,67,0.1)", border: "1px solid rgba(212,168,67,0.3)", color: T.gold, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-                        ðŸ“„ Brochure
+                        📄 Brochure
                       </a>
                     )}
                     {selectedProject_.pdfFloorPlan && (
                       <a href={selectedProject_.pdfFloorPlan} target="_blank" rel="noreferrer"
                         style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.3)", color: T.blue, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-                        ðŸ  Floor Plan
+                        🏠 Floor Plan
                       </a>
                     )}
                     {selectedProject_.pdfPaymentPlan && (
                       <a href={selectedProject_.pdfPaymentPlan} target="_blank" rel="noreferrer"
                         style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", color: T.green, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-                        ðŸ’³ Payment Plan
+                        💳 Payment Plan
                       </a>
                     )}
                     {selectedProject_.pdfFactSheet && (
                       <a href={selectedProject_.pdfFactSheet} target="_blank" rel="noreferrer"
                         style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(0,191,165,0.1)", border: "1px solid rgba(0,191,165,0.3)", color: T.teal, fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-                        ðŸ“Š Fact Sheet
+                        📊 Fact Sheet
                       </a>
                     )}
                     {selectedProject_.externalLink && (
                       <a href={selectedProject_.externalLink} target="_blank" rel="noreferrer"
                         style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.3)", color: "#8B5CF6", fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-                        ðŸŒ Visit Website
+                        🌐 Visit Website
                       </a>
                     )}
                   </div>
@@ -7724,7 +7724,7 @@ export default function EmaarDashboardV2() {
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                   View Full Report
                 </a>
-                <button type="button" onClick={() => { const p = selectedProject_; const txt = `${p.name} | ${p.community} | AED ${p.price ? (p.price/1000000).toFixed(2)+"M" : "TBD"} | ${p.ppsf ? p.ppsf.toLocaleString()+" PPSF" : ""} | Handover: ${p.handover} | Payment: ${p.payment} | Status: ${p.status}`; navigator.clipboard?.writeText(txt).then(() => alert("âœ… Project data copied to clipboard")).catch(() => alert(txt)); }}
+                <button type="button" onClick={() => { const p = selectedProject_; const txt = `${p.name} | ${p.community} | AED ${p.price ? (p.price/1000000).toFixed(2)+"M" : "TBD"} | ${p.ppsf ? p.ppsf.toLocaleString()+" PPSF" : ""} | Handover: ${p.handover} | Payment: ${p.payment} | Status: ${p.status}`; navigator.clipboard?.writeText(txt).then(() => alert("✅ Project data copied to clipboard")).catch(() => alert(txt)); }}
                   style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "13px 16px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, color: T.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}
                   title="Copy project data">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -7732,22 +7732,22 @@ export default function EmaarDashboardV2() {
                 </button>
               </div>
 
-              {/* â”€â”€â”€ SOURCE LINK: Official Emaar listing â”€â”€â”€ */}
+              {/* ─── SOURCE LINK: Official Emaar listing ─── */}
               {selectedProject_.emaarUrl && (
                 <a href={selectedProject_.emaarUrl} target="_blank" rel="noopener noreferrer"
                   style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", marginTop: 8, padding: "13px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.06))", border: "1px solid rgba(212,168,67,0.4)", borderRadius: 12, color: T.gold, fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.2 }}
                   onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,168,67,0.22), rgba(212,168,67,0.12))"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(212,168,67,0.15)"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.06))"; e.currentTarget.style.boxShadow = "none"; }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                  <span>View Official Listing on <strong>{getLinkDomain(selectedProject_.emaarUrl)}</strong> â†—</span>
+                  <span>View Official Listing on <strong>{getLinkDomain(selectedProject_.emaarUrl)}</strong> ↗</span>
                 </a>
               )}
 
-              {/* â”€â”€â”€ PDF REPORT BUTTON â”€â”€â”€ */}
+              {/* ─── PDF REPORT BUTTON ─── */}
               <button type="button" onClick={() => {
                 const p = selectedProject_;
                 const roiData = (liveCommunityROI && liveCommunityROI[p.community]) || communityROI[p.community] || {};
-                const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${p.name} â€” Investment Report</title>
+                const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${p.name} — Investment Report</title>
                 <style>
                   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
                   *{margin:0;padding:0;box-sizing:border-box}
@@ -7781,7 +7781,7 @@ export default function EmaarDashboardV2() {
                 </style></head><body>
                 <div class="cover">
                   <div class="logo">DXB Analytics</div>
-                  <p class="sub">${p.community} Â· ${p.district || "Dubai"} Â· ${p.type || "Residential"}</p>
+                  <p class="sub">${p.community} · ${p.district || "Dubai"} · ${p.type || "Residential"}</p>
                   <h1>${p.name}</h1>
                   <div style="margin-top:16px">
                     <span class="badge">${p.status || "Off-Plan"}</span>
@@ -7803,7 +7803,7 @@ export default function EmaarDashboardV2() {
                   </div>
 
                   <div class="section">
-                    <div class="section-title">Community ROI Analysis â€” ${p.community}</div>
+                    <div class="section-title">Community ROI Analysis — ${p.community}</div>
                     <div class="grid2">
                       <div>
                         ${[
@@ -7842,9 +7842,9 @@ export default function EmaarDashboardV2() {
                   <div class="section">
                     <div class="section-title">Available Documents</div>
                     <div style="display:flex;gap:10px;flex-wrap:wrap">
-                      ${p.brochureUrl ? `<a href="${p.brochureUrl}" target="_blank" style="padding:8px 16px;background:#fff;border:1px solid #D4A843;border-radius:8px;color:#D4A843;font-size:12px;font-weight:600;text-decoration:none">ðŸ“„ Brochure PDF</a>` : ""}
-                      ${p.floorPlanUrl ? `<a href="${p.floorPlanUrl}" target="_blank" style="padding:8px 16px;background:#fff;border:1px solid #D4A843;border-radius:8px;color:#D4A843;font-size:12px;font-weight:600;text-decoration:none">ðŸ“ Floor Plan</a>` : ""}
-                      ${p.paymentPlanUrl ? `<a href="${p.paymentPlanUrl}" target="_blank" style="padding:8px 16px;background:#fff;border:1px solid #D4A843;border-radius:8px;color:#D4A843;font-size:12px;font-weight:600;text-decoration:none">ðŸ’³ Payment Plan</a>` : ""}
+                      ${p.brochureUrl ? `<a href="${p.brochureUrl}" target="_blank" style="padding:8px 16px;background:#fff;border:1px solid #D4A843;border-radius:8px;color:#D4A843;font-size:12px;font-weight:600;text-decoration:none">📄 Brochure PDF</a>` : ""}
+                      ${p.floorPlanUrl ? `<a href="${p.floorPlanUrl}" target="_blank" style="padding:8px 16px;background:#fff;border:1px solid #D4A843;border-radius:8px;color:#D4A843;font-size:12px;font-weight:600;text-decoration:none">📐 Floor Plan</a>` : ""}
+                      ${p.paymentPlanUrl ? `<a href="${p.paymentPlanUrl}" target="_blank" style="padding:8px 16px;background:#fff;border:1px solid #D4A843;border-radius:8px;color:#D4A843;font-size:12px;font-weight:600;text-decoration:none">💳 Payment Plan</a>` : ""}
                       ${!p.brochureUrl && !p.floorPlanUrl && !p.paymentPlanUrl ? `<span style="color:#94A3B8;font-size:12px">Contact us to receive full documentation package.</span>` : ""}
                     </div>
                   </div>
@@ -7872,13 +7872,13 @@ export default function EmaarDashboardV2() {
         );
       })()}
 
-      {/* â”€â”€â”€ COMPARE MODAL â”€â”€â”€ */}
+      {/* ─── COMPARE MODAL ─── */}
       {showCompare && compareList.length >= 2 && (
         <div role="dialog" aria-modal="true" aria-label="Project comparison" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowCompare(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}`, width: "95%", maxWidth: 900, maxHeight: "90vh", overflowY: "auto", padding: 28 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: T.gold, margin: 0 }}>âš–ï¸ Project Comparison</h2>
-              <button type="button" onClick={() => setShowCompare(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>âœ•</button>
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: T.gold, margin: 0 }}>⚖️ Project Comparison</h2>
+              <button type="button" onClick={() => setShowCompare(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>✕</button>
             </div>
 
             <div className="table-scroll" style={{ overflowX: "auto" }}>
@@ -7907,10 +7907,10 @@ export default function EmaarDashboardV2() {
                     { label: "Type", fn: p => p.type },
                     { label: "Payment Plan", fn: p => p.payment },
                     { label: "Tier", fn: p => p.tier },
-                    { label: "Branded", fn: p => p.branded ? `âœ“ ${p.brand}` : "No" },
-                    { label: "Total Units", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + u.total, 0) : "â€”" },
-                    { label: "Available", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + (u.total - u.sold), 0) : "â€”", highlight: true },
-                    { label: "% Sold", fn: p => { if (!p.units) return "â€”"; const entries = getUnitEntries(p.units); const t = entries.reduce((a,[,u]) => a + u.total, 0); const s = entries.reduce((a,[,u]) => a + u.sold, 0); return t > 0 ? `${((s/t)*100).toFixed(0)}%` : "â€”"; } },
+                    { label: "Branded", fn: p => p.branded ? `✓ ${p.brand}` : "No" },
+                    { label: "Total Units", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + u.total, 0) : "—" },
+                    { label: "Available", fn: p => p.units ? getUnitEntries(p.units).reduce((a,[,u]) => a + (u.total - u.sold), 0) : "—", highlight: true },
+                    { label: "% Sold", fn: p => { if (!p.units) return "—"; const entries = getUnitEntries(p.units); const t = entries.reduce((a,[,u]) => a + u.total, 0); const s = entries.reduce((a,[,u]) => a + u.sold, 0); return t > 0 ? `${((s/t)*100).toFixed(0)}%` : "—"; } },
                   ].map((row, ri) => (
                     <tr key={ri} style={{ borderBottom: `1px solid ${T.border}`, background: row.highlight ? "rgba(212,168,67,0.04)" : "transparent" }}>
                       <td style={{ padding: "10px 16px", color: T.textMuted, fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>{row.label}</td>
@@ -7928,7 +7928,7 @@ export default function EmaarDashboardV2() {
               {compareList.map(p => (
                 <a key={p.id} href={`/project/${p.id}`}
                   style={{ flex: 1, padding: "10px 0", background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.07))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 10, color: T.gold, fontSize: 12, fontWeight: 700, textAlign: "center", textDecoration: "none" }}>
-                  ðŸ“„ {p.name.split(" ").slice(0,2).join(" ")}
+                  📄 {p.name.split(" ").slice(0,2).join(" ")}
                 </a>
               ))}
             </div>
@@ -7938,7 +7938,7 @@ export default function EmaarDashboardV2() {
                 {compareList.map(p => p.emaarUrl ? (
                   <a key={p.id} href={p.emaarUrl} target="_blank" rel="noopener noreferrer"
                     style={{ flex: 1, padding: "8px 0", background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.35)", borderRadius: 10, color: T.gold, fontSize: 11, fontWeight: 700, textAlign: "center", textDecoration: "none" }}>
-                    {p.name.split(" ").slice(0,2).join(" ")} â†— {getLinkDomain(p.emaarUrl)}
+                    {p.name.split(" ").slice(0,2).join(" ")} ↗ {getLinkDomain(p.emaarUrl)}
                   </a>
                 ) : <div key={p.id} style={{ flex: 1 }} />)}
               </div>
@@ -7968,7 +7968,7 @@ export default function EmaarDashboardV2() {
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</span>
-                        {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 4px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 3, fontWeight: 700, flexShrink: 0 }}>â†—</a>}
+                        {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 4px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 3, fontWeight: 700, flexShrink: 0 }}>↗</a>}
                       </div>
                       <div style={{ fontSize: 10, color: T.textMuted }}>{p.community} \u00b7 {p.type} \u00b7 {p.beds}</div>
                     </div>
@@ -8020,11 +8020,11 @@ export default function EmaarDashboardV2() {
       {showSetAlert && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowSetAlert(null)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "min(440px,95vw)", padding: "28px 28px 24px", position: "relative" }} onClick={e => e.stopPropagation()}>
-            <button type="button" onClick={() => setShowSetAlert(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>Ã—</button>
+            <button type="button" onClick={() => setShowSetAlert(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Price Alert</div>
               <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{showSetAlert.name}</div>
-              <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{showSetAlert.community} Â· {showSetAlert.type}</div>
+              <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{showSetAlert.community} · {showSetAlert.type}</div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
@@ -8045,7 +8045,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ fontSize: 10, color: T.gold, fontWeight: 700, marginBottom: 6 }}>EXISTING ALERTS</div>
                   {myAlerts.filter(a => a.projectId === showSetAlert.id).map(a => (
                     <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, color: T.textMuted, marginBottom: 3 }}>
-                      <span>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "âœ“ Triggered" : "â³ Watching"}</span>
+                      <span>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "✓ Triggered" : "⏳ Watching"}</span>
                       <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: "rgba(239,68,68,0.6)", cursor: "pointer", fontSize: 12, padding: 0 }}>Remove</button>
                     </div>
                   ))}
@@ -8057,13 +8057,13 @@ export default function EmaarDashboardV2() {
         </div>
       )}
 
-      {/* CHECKOUT PAYMENT MODAL */}
-      {/* â”€â”€â”€ PRICE ALERTS MODAL â”€â”€â”€ */}
+      {/* CHECKOUT PAYMENT MODAL */}}
+      {/* ─── PRICE ALERTS MODAL ─── */}
       {showAlerts && isLoggedIn && <div role="dialog" aria-modal="true" aria-label="Price Alerts" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.93)", zIndex: 3200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={() => setShowAlerts(false)}>
         <div className="alerts-modal" style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 560, maxHeight: "88vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={() => setShowAlerts(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>âœ•</button>
+          <button type="button" onClick={() => setShowAlerts(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>✕</button>
           <div style={{ padding: "28px 28px 20px", borderBottom: `1px solid ${T.border}` }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>ðŸ”” Price Alerts</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>🔔 Price Alerts</div>
             <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>Get notified when the market moves</div>
             <div style={{ fontSize: 12, color: T.textSecondary, marginTop: 4 }}>Alerts sent to {user} via email</div>
           </div>
@@ -8108,15 +8108,15 @@ export default function EmaarDashboardV2() {
                 try { await setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }); } catch(e) {}
                 setAlertSaving(false);
               }} style={{ width: "100%", padding: "10px 0", background: alertSaving ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: alertSaving ? T.textMuted : T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: alertSaving ? "default" : "pointer", fontFamily: "'Outfit',sans-serif", transition: "all 0.2s" }}>
-                {alertSaving ? "Savingâ€¦" : "+ Create Alert"}
+                {alertSaving ? "Saving…" : "+ Create Alert"}
               </button>
             </div>
             {/* Existing alerts */}
             <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Active Alerts ({myAlerts.filter(a => a.active).length})</div>
-            {myAlerts.length === 0 && <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 13 }}>No alerts yet â€” create your first one above</div>}
+            {myAlerts.length === 0 && <div style={{ textAlign: "center", padding: "24px 0", color: T.textMuted, fontSize: 13 }}>No alerts yet — create your first one above</div>}
             {myAlerts.map((a, i) => (
               <div key={a.id || i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}`, marginBottom: 8 }}>
-                <span style={{ fontSize: 18 }}>{a.condition === "above" ? "ðŸ“ˆ" : "ðŸ“‰"}</span>
+                <span style={{ fontSize: 18 }}>{a.condition === "above" ? "📈" : "📉"}</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{a.community}</div>
                   <div style={{ fontSize: 11, color: T.textSecondary }}>{a.metric === "grossYield" ? "Gross Yield" : a.metric === "netYield" ? "Net Yield" : a.metric === "avgPriceSqft" ? "Avg Price/sqft" : "Transactions"} {a.condition} {a.value}{a.metric.includes("Yield") ? "%" : ""}</div>
@@ -8126,7 +8126,7 @@ export default function EmaarDashboardV2() {
                   const updated = myAlerts.filter((_, j) => j !== i);
                   setMyAlerts(updated);
                   try { await setDoc(doc(db, "priceAlerts", user), { alerts: updated, updatedAt: new Date().toISOString() }); } catch(e) {}
-                }} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "4px 6px", borderRadius: 6, transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "#EF4444"} onMouseLeave={e => e.currentTarget.style.color = T.textMuted}>âœ•</button>
+                }} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "4px 6px", borderRadius: 6, transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "#EF4444"} onMouseLeave={e => e.currentTarget.style.color = T.textMuted}>✕</button>
               </div>
             ))}
             {myAlerts.length > 0 && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 12, textAlign: "center" }}>Alerts checked daily. Email sent to {user}</div>}
@@ -8150,16 +8150,16 @@ export default function EmaarDashboardV2() {
                 <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 12 }}><span style={{ fontSize: 10, color: T.textMuted }}>AED</span><span style={{ fontFamily: "'Fraunces', serif", fontSize: 32, fontWeight: 900, color: T.white }}>{showCheckout.price}</span><span style={{ fontSize: 12, color: T.textMuted }}>/month</span></div>
                 {showCheckout.features.slice(0,5).map((f,j) => <div key={j} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", fontSize: 12, color: T.textSecondary }}><span style={{ color: T.green }}>{"\u2713"}</span>{f}</div>)}
               </div>
-              <button type="button" onClick={() => setCheckoutStep(2)} style={{ width: "100%", padding: "12px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Continue to Payment â†’</button>
+              <button type="button" onClick={() => setCheckoutStep(2)} style={{ width: "100%", padding: "12px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Continue to Payment →</button>
             </>}
             {checkoutStep === 2 && <>
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, marginBottom: 12 }}>CHOOSE PAYMENT METHOD</div>
 
                 {/* Stripe Payment Links */}
-                {/* â”€â”€ Paddle Card Payment â”€â”€ */}
+                {/* ── Paddle Card Payment ── */}
                 {(() => {
-                  // â”€â”€â”€ PADDLE PRICE IDs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                  // ─── PADDLE PRICE IDs ─────────────────────────────────
                   // 1. Sign up at paddle.com (free)
                   // 2. Create products: Pro (AED 99/mo), Enterprise (AED 499/mo)
                   // 3. Paste the price IDs below (format: pri_XXXXXXXX)
@@ -8195,10 +8195,10 @@ export default function EmaarDashboardV2() {
                     <div onClick={openPaddle} style={{ padding: "16px", borderRadius: 12, background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.3)", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", transition: "all 0.2s", marginBottom: 8 }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = "#3B82F6"}
                       onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(59,130,246,0.3)"}>
-                      <div style={{ fontSize: 24 }}>ðŸ’³</div>
+                      <div style={{ fontSize: 24 }}>💳</div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Credit / Debit Card</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>Visa Â· Mastercard Â· Amex Â· Apple Pay Â· {paddleReady ? "Powered by Paddle" : "Powered by Paddle (setup pending)"}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>Visa · Mastercard · Amex · Apple Pay · {paddleReady ? "Powered by Paddle" : "Powered by Paddle (setup pending)"}</div>
                       </div>
                       <span style={{ fontSize: 9, padding: "3px 10px", borderRadius: 6, background: "rgba(34,197,94,0.12)", color: "#22C55E", fontWeight: 700, border: "1px solid rgba(34,197,94,0.2)" }}>RECOMMENDED</span>
                     </div>
@@ -8207,22 +8207,22 @@ export default function EmaarDashboardV2() {
 
                 {/* WhatsApp */}
                 <div onClick={() => { window.open(`https://wa.me/971542410599?text=${encodeURIComponent(`Hi Mian Waleed, I want to subscribe to DXB Analytics ${showCheckout.name} Plan (AED ${showCheckout.price}/mo). My email: ${user}`)}`, "_blank"); setCheckoutStep(3); }} style={{ padding: "16px", borderRadius: 12, background: "rgba(37,211,102,0.06)", border: "1px solid rgba(37,211,102,0.25)", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", transition: "all 0.2s", marginBottom: 8 }} onMouseEnter={e => e.currentTarget.style.borderColor = "#25D366"} onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(37,211,102,0.25)"}>
-                  <div style={{ fontSize: 24 }}>ðŸ’¬</div>
+                  <div style={{ fontSize: 24 }}>💬</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>WhatsApp + Bank Transfer</div>
-                    <div style={{ fontSize: 10, color: T.textMuted }}>Manual â€” activated within 5 minutes of payment</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>Manual — activated within 5 minutes of payment</div>
                   </div>
-                  <span style={{ color: "#25D366", fontSize: 16 }}>â†’</span>
+                  <span style={{ color: "#25D366", fontSize: 16 }}>→</span>
                 </div>
 
-                <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.04)", border: "1px solid rgba(212,168,67,0.1)", fontSize: 11, color: T.textMuted, lineHeight: 1.5, marginBottom: 12 }}>ðŸ”’ All payments secure Â· 7-day money-back guarantee</div>
+                <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.04)", border: "1px solid rgba(212,168,67,0.1)", fontSize: 11, color: T.textMuted, lineHeight: 1.5, marginBottom: 12 }}>🔒 All payments secure · 7-day money-back guarantee</div>
               </div>
               <div style={{ display: "flex", gap: 10 }}>
-                <button type="button" onClick={() => setCheckoutStep(1)} style={{ width: "100%", padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>â† Back</button>
+                <button type="button" onClick={() => setCheckoutStep(1)} style={{ width: "100%", padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>← Back</button>
               </div>
             </>}
             {checkoutStep === 3 && <div style={{ textAlign: "center", padding: "20px 0" }}>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>ðŸŽ‰</div>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
               <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold, marginBottom: 8 }}>Payment Request Sent!</div>
               <div style={{ fontSize: 13, color: T.textSecondary, maxWidth: 320, margin: "0 auto", lineHeight: 1.6, marginBottom: 20 }}>We opened WhatsApp for you. After confirming payment, your {showCheckout.name} Plan will be activated within 5 minutes.</div>
               <div style={{ padding: 12, borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}`, marginBottom: 16, fontSize: 11, color: T.textMuted }}>
@@ -8236,14 +8236,14 @@ export default function EmaarDashboardV2() {
         </div>
       </div>}
 
-      {/* â”€â”€ MOBILE BOTTOM NAV BAR â”€â”€ */}
+      {/* ── MOBILE BOTTOM NAV BAR ── */}
       <nav style={{ display: "none" }} className="mobile-bottom-nav" aria-label="Quick navigation">
         {[
-          { key: "Overview", icon: "â—ˆ", label: "Overview" },
-          { key: "Projects", icon: "âŠž", label: "Projects" },
-          { key: "Yields", icon: "â—Ž", label: "Yields" },
-          { key: "Portfolio", icon: "â—‰", label: "Portfolio" },
-          { key: "Market", icon: "âŠ¿", label: "Market" },
+          { key: "Overview", icon: "◈", label: "Overview" },
+          { key: "Projects", icon: "⊞", label: "Projects" },
+          { key: "Yields", icon: "◎", label: "Yields" },
+          { key: "Portfolio", icon: "◉", label: "Portfolio" },
+          { key: "Market", icon: "⊿", label: "Market" },
         ].map(item => (
           <button key={item.key} type="button" onClick={() => { setTab(item.key); setSidebarOpen(false); }}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: "6px 0", color: tab === item.key ? T.gold : T.textMuted, fontFamily: "'Outfit',sans-serif", transition: "color 0.2s" }}>
@@ -8254,7 +8254,7 @@ export default function EmaarDashboardV2() {
         ))}
         <button type="button" onClick={() => setSidebarOpen(s => !s)}
           style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: "6px 0", color: T.textMuted, fontFamily: "'Outfit',sans-serif" }}>
-          <span style={{ fontSize: 18 }}>â˜°</span>
+          <span style={{ fontSize: 18 }}>☰</span>
           <span style={{ fontSize: 9, letterSpacing: 0.3 }}>More</span>
         </button>
       </nav>
@@ -8262,7 +8262,7 @@ export default function EmaarDashboardV2() {
       {/* USER PROFILE MODAL */}
       {showProfile && <div role="dialog" aria-modal="true" aria-label="User profile" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)" }} onClick={() => setShowProfile(false)}>
         <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 560, maxHeight: "90vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
-          <button type="button" onClick={() => setShowProfile(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>âœ•</button>
+          <button type="button" onClick={() => setShowProfile(false)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>✕</button>
           <div style={{ padding: "32px 28px 20px", background: `linear-gradient(135deg, rgba(212,168,67,0.08), rgba(14,29,53,0.6))`, borderBottom: `1px solid ${T.border}` }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ width: 56, height: 56, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 22, color: T.bg, flexShrink: 0 }}>{user.charAt(0).toUpperCase()}</div>
@@ -8270,7 +8270,7 @@ export default function EmaarDashboardV2() {
                 <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.white }}>{userName || user.split("@")[0]}</div>
                 <div style={{ fontSize: 12, color: T.textSecondary, marginTop: 2 }}>{user}</div>
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, padding: "3px 10px", borderRadius: 6, background: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? "rgba(16,185,129,0.12)" : userTier === "pro_trial" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", fontSize: 10, fontWeight: 700, color: userTier === "admin" || userTier === "pro" || userTier === "enterprise" ? T.green : userTier === "pro_trial" ? T.gold : T.blue }}>{userTier === "admin" ? "\u26A1 Admin" : userTier === "pro" ? "\u2B50 Pro Plan" : userTier === "pro_trial" ? `\u2B50 Pro Trial \u00B7 ${trialDaysLeft}d left` : userTier === "enterprise" ? "\uD83C\uDFE2 Enterprise" : "Free Plan"}</div>
-                {isVerified && <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, marginLeft: 6, padding: "3px 10px", borderRadius: 6, background: "rgba(0,191,165,0.12)", fontSize: 10, fontWeight: 700, color: "#00BFA5" }}>âœ“ Verified {verifiedLevel ? `Â· ${verifiedLevel.charAt(0).toUpperCase() + verifiedLevel.slice(1)}` : ""}</div>}
+                {isVerified && <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, marginLeft: 6, padding: "3px 10px", borderRadius: 6, background: "rgba(0,191,165,0.12)", fontSize: 10, fontWeight: 700, color: "#00BFA5" }}>✓ Verified {verifiedLevel ? `· ${verifiedLevel.charAt(0).toUpperCase() + verifiedLevel.slice(1)}` : ""}</div>}
               </div>
             </div>
           </div>
@@ -8293,7 +8293,7 @@ export default function EmaarDashboardV2() {
               {(userTier === "free" || userTier === "pro_trial") && <button type="button" onClick={() => { setShowProfile(false); setShowUpgrade(true); }} style={{ marginTop: 12, width: "100%", padding: "10px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>{userTier === "pro_trial" ? "Subscribe Before Trial Ends" : "\u2B50 Upgrade to Pro \u2014 AED 99/mo"}</button>}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <button type="button" onClick={() => { setShowProfile(false); handleTabChange("Portfolio"); }} style={{ padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>ðŸ“Š Portfolio</button>
+              <button type="button" onClick={() => { setShowProfile(false); handleTabChange("Portfolio"); }} style={{ padding: "10px 0", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textSecondary, fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>📊 Portfolio</button>
               <button type="button" onClick={() => { signOut(auth); setShowProfile(false); }} style={{ padding: "10px 0", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, color: "#EF4444", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Sign Out</button>
             </div>
             {/* KYC VERIFICATION SECTION */}
@@ -8301,24 +8301,24 @@ export default function EmaarDashboardV2() {
               <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Identity Verification</div>
               {isVerified ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,191,165,0.15)", border: "2px solid #00BFA5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>âœ“</div>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(0,191,165,0.15)", border: "2px solid #00BFA5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>✓</div>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#00BFA5" }}>Identity Verified</div>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>Level: {verifiedLevel || "Basic"} Â· Approved by admin</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>Level: {verifiedLevel || "Basic"} · Approved by admin</div>
                   </div>
                 </div>
               ) : kycStatus === "pending" ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(245,158,11,0.15)", border: "2px solid #F59E0B", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>â³</div>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(245,158,11,0.15)", border: "2px solid #F59E0B", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⏳</div>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#F59E0B" }}>Verification Pending</div>
-                    <div style={{ fontSize: 11, color: T.textMuted }}>Admin review in progress Â· Usually within 24h</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>Admin review in progress · Usually within 24h</div>
                   </div>
                 </div>
               ) : (
                 <div>
                   <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 10, lineHeight: 1.6 }}>Verify your identity to unlock the verified badge and access exclusive features.</p>
-                  <button type="button" onClick={() => { setShowProfile(false); setShowKYC(true); }} style={{ padding: "9px 20px", background: `linear-gradient(135deg, #00BFA5, #00897B)`, color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>ðŸ›¡ Apply for Verification</button>
+                  <button type="button" onClick={() => { setShowProfile(false); setShowKYC(true); }} style={{ padding: "9px 20px", background: `linear-gradient(135deg, #00BFA5, #00897B)`, color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>🛡 Apply for Verification</button>
                 </div>
               )}
             </div>
@@ -8326,17 +8326,17 @@ export default function EmaarDashboardV2() {
         </div>
       </div>}
 
-      {/* â”€â”€â”€ KYC VERIFICATION MODAL â”€â”€â”€ */}
+      {/* ─── KYC VERIFICATION MODAL ─── */}
       {showKYC && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)", padding: 16 }} onClick={() => setShowKYC(false)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid rgba(0,191,165,0.3)`, width: "95%", maxWidth: 520, maxHeight: "90vh", overflow: "auto", boxShadow: "0 30px 80px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
             <div style={{ padding: "24px 28px 20px", background: "linear-gradient(135deg, rgba(0,191,165,0.08), rgba(14,29,53,0.6))", borderBottom: `1px solid ${T.border}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: "#00BFA5" }}>ðŸ›¡ Identity Verification</div>
-                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Submit your details for admin review Â· Usually approved within 24h</div>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: "#00BFA5" }}>🛡 Identity Verification</div>
+                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Submit your details for admin review · Usually approved within 24h</div>
                 </div>
-                <button type="button" onClick={() => setShowKYC(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>âœ•</button>
+                <button type="button" onClick={() => setShowKYC(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
               </div>
             </div>
             <div style={{ padding: "24px 28px 28px" }}>
@@ -8367,18 +8367,18 @@ export default function EmaarDashboardV2() {
                 </div>
               </div>
               <button type="button" onClick={submitKYC} disabled={kycSubmitting} style={{ width: "100%", padding: "13px 0", background: kycSubmitting ? T.surfaceAlt : "linear-gradient(135deg, #00BFA5, #00897B)", border: "none", borderRadius: 10, color: kycSubmitting ? T.textMuted : "#fff", fontWeight: 800, fontSize: 14, cursor: kycSubmitting ? "not-allowed" : "pointer", fontFamily: "'Outfit', sans-serif" }}>
-                {kycSubmitting ? "Submitting..." : "Submit for Verification â†’"}
+                {kycSubmitting ? "Submitting..." : "Submit for Verification →"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* â”€â”€â”€ KPI DETAIL MODAL â”€â”€â”€ */}
+      {/* ─── KPI DETAIL MODAL ─── */}
       {selectedKPI && (
         <div role="dialog" aria-modal="true" aria-label={`${selectedKPI?.label} details`} style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.92)", zIndex: 5000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)", padding: 16 }} onClick={() => setSelectedKPI(null)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${selectedKPI.color || T.gold}`, width: "95%", maxWidth: 640, maxHeight: "88vh", overflowY: "auto", position: "relative", boxShadow: `0 24px 80px rgba(0,0,0,0.6), 0 0 40px ${selectedKPI.color || T.gold}22` }} onClick={e => e.stopPropagation()}>
-            <button type="button" onClick={() => setSelectedKPI(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>âœ•</button>
+            <button type="button" onClick={() => setSelectedKPI(null)} style={{ position: "absolute", top: 16, right: 16, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16, zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             <div style={{ padding: 28 }}>
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>{selectedKPI.label}</div>
@@ -8412,7 +8412,7 @@ export default function EmaarDashboardV2() {
                           return (
                             <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                               <div style={{ width: "100%", background: isLast ? (selectedKPI.color || T.gold) : T.border, borderRadius: "3px 3px 0 0", height: `${pct}%`, minHeight: 4, position: "relative" }}>
-                                {isLast && <div style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", fontSize: 9, color: selectedKPI.color || T.gold, fontWeight: 700, whiteSpace: "nowrap" }}>â–² Latest</div>}
+                                {isLast && <div style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", fontSize: 9, color: selectedKPI.color || T.gold, fontWeight: 700, whiteSpace: "nowrap" }}>▲ Latest</div>}
                               </div>
                               <div style={{ fontSize: 9, color: T.textMuted }}>{d.y}</div>
                             </div>
@@ -8429,7 +8429,7 @@ export default function EmaarDashboardV2() {
                   <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 2 }}>{selectedKPI.source}</div>
                 </div>
                 {selectedKPI.sourceUrl && selectedKPI.sourceUrl !== "#" && (
-                  <a href={selectedKPI.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 16px", background: selectedKPI.color || T.gold, color: T.bg, borderRadius: 8, fontSize: 11, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>View Source â†—</a>
+                  <a href={selectedKPI.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 16px", background: selectedKPI.color || T.gold, color: T.bg, borderRadius: 8, fontSize: 11, fontWeight: 700, textDecoration: "none", fontFamily: "'Outfit', sans-serif" }}>View Source ↗</a>
                 )}
               </div>
             </div>
@@ -8437,7 +8437,7 @@ export default function EmaarDashboardV2() {
         </div>
       )}
 
-      {/* â”€â”€â”€ NOTIFICATIONS PANEL â”€â”€â”€ */}
+      {/* ─── NOTIFICATIONS PANEL ─── */}
       {showNotifications && (
         <div style={{ position: "fixed", top: 60, right: 16, width: 360, maxHeight: 480, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, boxShadow: "0 20px 60px rgba(0,0,0,0.6)", zIndex: 4000, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "16px 20px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -8445,7 +8445,7 @@ export default function EmaarDashboardV2() {
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white }}>Notifications</div>
               {unreadCount > 0 && <div style={{ fontSize: 11, color: T.gold }}>{unreadCount} unread</div>}
             </div>
-            <button type="button" onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>âœ•</button>
+            <button type="button" onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 18 }}>✕</button>
           </div>
           <div style={{ overflowY: "auto", flex: 1 }}>
             {isPro && myAlerts.filter(a => !a.triggered).length > 0 && (
@@ -8456,9 +8456,9 @@ export default function EmaarDashboardV2() {
                     <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: a.triggered ? "rgba(16,185,129,0.08)" : T.surfaceAlt, borderRadius: 8, padding: "8px 10px", border: `1px solid ${a.triggered ? "rgba(16,185,129,0.2)" : T.border}` }}>
                       <div>
                         <div style={{ fontSize: 11, fontWeight: 600, color: a.triggered ? "#10B981" : T.white }}>{a.projectName}</div>
-                        <div style={{ fontSize: 10, color: T.textMuted }}>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "âœ“ Triggered" : "â³ Watching"}</div>
+                        <div style={{ fontSize: 10, color: T.textMuted }}>{a.type.replace(/_/g," ")} {a.type.includes("yield") || a.type.includes("construction") ? a.value + "%" : "AED " + (a.value/1e6).toFixed(2) + "M"} {a.triggered ? "✓ Triggered" : "⏳ Watching"}</div>
                       </div>
-                      <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "0 4px" }}>Ã—</button>
+                      <button type="button" onClick={() => removeAlert(a.id)} style={{ background: "none", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16, padding: "0 4px" }}>×</button>
                     </div>
                   ))}
                 </div>
@@ -8466,16 +8466,16 @@ export default function EmaarDashboardV2() {
             )}
             {notifications.length === 0 ? (
               <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>ðŸ””</div>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>🔔</div>
                 <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 4 }}>No notifications yet</div>
-                <div style={{ fontSize: 11 }}>Set alerts on project cards ðŸ”• to get notified of price changes.</div>
+                <div style={{ fontSize: 11 }}>Set alerts on project cards 🔕 to get notified of price changes.</div>
               </div>
             ) : notifications.map((n, i) => (
               <div key={n.id} onClick={() => markNotifRead(n.id)} style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", background: n.read ? "transparent" : "rgba(212,168,67,0.04)", transition: "background 0.2s" }}
                 onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
                 onMouseLeave={e => e.currentTarget.style.background = n.read ? "transparent" : "rgba(212,168,67,0.04)"}>
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                  <span style={{ fontSize: 18, flexShrink: 0 }}>{n.icon || "ðŸ“¢"}</span>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>{n.icon || "📢"}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 12, fontWeight: n.read ? 400 : 700, color: n.read ? T.textSecondary : T.white, marginBottom: 3 }}>{n.title || "Update"}</div>
                     <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>{n.message}</div>
@@ -8489,23 +8489,23 @@ export default function EmaarDashboardV2() {
         </div>
       )}
 
-      {/* â”€â”€â”€ WATCHLIST PANEL â”€â”€â”€ */}
+      {/* ─── WATCHLIST PANEL ─── */}
       {showWatchlist && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.85)", zIndex: 3500, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowWatchlist(false)}>
           <div style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "min(640px,95vw)", maxHeight: "80vh", overflow: "hidden", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
             <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>â­ My Watchlist</div>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, color: T.gold }}>⭐ My Watchlist</div>
                 <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{watchlist.length} project{watchlist.length !== 1 ? "s" : ""} saved</div>
               </div>
-              <button type="button" onClick={() => setShowWatchlist(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>âœ•</button>
+              <button type="button" onClick={() => setShowWatchlist(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>✕</button>
             </div>
             <div style={{ overflowY: "auto", padding: 20, flex: 1 }}>
               {watchlist.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "48px 20px", color: T.textMuted }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>â˜†</div>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>☆</div>
                   <div style={{ fontSize: 14, color: T.textSecondary, marginBottom: 8 }}>No projects saved yet</div>
-                  <div style={{ fontSize: 12 }}>Click the â˜† star on any project card to add it here.</div>
+                  <div style={{ fontSize: 12 }}>Click the ☆ star on any project card to add it here.</div>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -8525,10 +8525,10 @@ export default function EmaarDashboardV2() {
                             <span style={{ fontSize: 11, color: T.textMuted }}>{w.community}</span>
                             {liveP?.emaarUrl && <a href={liveP.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(212,168,67,0.35)", borderRadius: 4, fontWeight: 700 }}>{getLinkLabel(liveP?.emaarUrl)}</a>}
                           </div>
-                          {priceChanged && <div style={{ fontSize: 10, color: liveP.price > w.price ? T.red : T.green, marginTop: 4, fontWeight: 600 }}>{liveP.price > w.price ? "â†‘" : "â†“"} Price changed since you saved this</div>}
+                          {priceChanged && <div style={{ fontSize: 10, color: liveP.price > w.price ? T.red : T.green, marginTop: 4, fontWeight: 600 }}>{liveP.price > w.price ? "↑" : "↓"} Price changed since you saved this</div>}
                         </div>
                         <div style={{ textAlign: "right" }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {currentPrice ? (currentPrice / 1e6).toFixed(2) + "M" : "â€”"}</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {currentPrice ? (currentPrice / 1e6).toFixed(2) + "M" : "—"}</div>
                           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>Starting from</div>
                         </div>
                         <button type="button" onClick={e => { e.stopPropagation(); toggleWatchlist(w); }} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, color: "#EF4444", padding: "4px 8px", cursor: "pointer", fontSize: 11, flexShrink: 0 }}>Remove</button>
@@ -8542,37 +8542,37 @@ export default function EmaarDashboardV2() {
         </div>
       )}
 
-      {/* â”€â”€â”€ ONBOARDING MODAL â”€â”€â”€ */}
+      {/* ─── ONBOARDING MODAL ─── */}
       {showOnboarding && (() => {
         const steps = [
           {
-            icon: "ðŸ™ï¸",
+            icon: "🏙️",
             title: `Welcome to DXB Analytics, ${userName || "Investor"}!`,
             body: "You now have access to Dubai's most comprehensive real estate intelligence platform. Let us show you around in 30 seconds.",
-            cta: "Let's Go â†’"
+            cta: "Let's Go →"
           },
           {
-            icon: "ðŸ”",
+            icon: "🔍",
             title: "Browse 48+ Emaar Projects",
             body: "Go to the Projects tab to explore every active development. Filter by community, tier, handover year, or price range. Click any card for full details, documents, and ROI analysis.",
-            cta: "Next â†’"
+            cta: "Next →"
           },
           {
-            icon: "â­",
+            icon: "⭐",
             title: "Build Your Watchlist",
-            body: "See the â˜† star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
-            cta: "Next â†’"
+            body: "See the ☆ star button on every project card? Click it to save projects you're interested in. Your watchlist syncs across devices.",
+            cta: "Next →"
           },
           {
-            icon: "ðŸ“Š",
+            icon: "📊",
             title: "Yields, ROI & Mortgage",
             body: "Use the Yields tab for rental returns by community. The Mortgage tab calculates your monthly payment + all UAE transaction costs instantly.",
-            cta: "Next â†’"
+            cta: "Next →"
           },
           {
-            icon: "ðŸš€",
+            icon: "🚀",
             title: "You're All Set!",
-            body: userTier === "free" ? "You're on the Free plan. Upgrade to Pro for compare mode, full project details, PDF reports, and portfolio tracking â€” from AED 99/month." : "You have full Pro access. Explore everything â€” compare projects, track your portfolio, and download reports.",
+            body: userTier === "free" ? "You're on the Free plan. Upgrade to Pro for compare mode, full project details, PDF reports, and portfolio tracking — from AED 99/month." : "You have full Pro access. Explore everything — compare projects, track your portfolio, and download reports.",
             cta: userTier === "free" ? "Explore Free Features" : "Start Exploring"
           },
         ];
@@ -8591,7 +8591,7 @@ export default function EmaarDashboardV2() {
               <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.7, marginBottom: 32 }}>{step.body}</p>
               <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
                 {onboardingStep > 0 && (
-                  <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "12px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>â† Back</button>
+                  <button type="button" onClick={() => setOnboardingStep(s => s - 1)} style={{ padding: "12px 20px", borderRadius: 10, border: `1px solid ${T.border}`, background: "transparent", color: T.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>← Back</button>
                 )}
                 <button type="button" onClick={() => { if (onboardingStep < steps.length - 1) { setOnboardingStep(s => s + 1); } else { completeOnboarding(); } }} style={{ padding: "12px 28px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`, color: T.bg, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                   {step.cta}
