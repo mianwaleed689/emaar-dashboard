@@ -13553,7 +13553,7 @@ export default function AdminPanel() {
 
   // ── CROSS-PLATFORM ACTIVITY FEED ──
   // Combines users, auditLog, leads, verifications into one sorted feed
-  const activityFeed = useMemo(() => (() => {
+  const activityFeed = (() => {
     const items = [];
     // New signups
     [...users]
@@ -13599,7 +13599,7 @@ export default function AdminPanel() {
       .filter(i => i.time)
       .sort((a, b) => new Date(b.time) - new Date(a.time))
       .slice(0, 10);
-  })()), [users, auditLog, leads, verifications]); // eslint-disable-line
+  })();
 
   /* ─── DATA MANAGER ACTIONS ─── */
   
