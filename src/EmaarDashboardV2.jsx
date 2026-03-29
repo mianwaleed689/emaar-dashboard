@@ -1689,7 +1689,7 @@ export default function EmaarDashboardV2() {
   const [kycStatus, setKycStatus] = useState(null);
 
   // Set page title
-  useEffect(() => { document.title = "DXB Analytics — Dubai Real Estate Intelligence Platform"; }, []);
+  useEffect(() => { document.title = "DXB Analytics"; }, []);
   const [projectSearch, setProjectSearch] = useState("");
   const [projectFilter, setProjectFilter] = useState("All");
   const [projectTier, setProjectTier] = useState("All");
