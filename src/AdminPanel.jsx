@@ -16284,7 +16284,8 @@ export default function AdminPanel() {
                     snap.forEach(d => list.push({ id: d.id, ...d.data() }));
                     list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
                     window._revenuePayments = list;
-                  }).catch(() => {});
+                    window._revenuePaymentsLoaded = true;
+                  }).catch(() => { window._revenuePaymentsLoaded = false; });
                   // Log revenue tab view
                   logAudit(db, { action: "tab_view", tabId: "revenue" }).catch(() => {});
                 }
@@ -16414,8 +16415,8 @@ export default function AdminPanel() {
                         <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 16 }}>MRR Movement — This Month</div>
                         {[
                           { label: "Starting MRR",  value: mrr - netMRR,       color: T.textSecondary },
-                          { label: "New MRR",        value: newMRRThisMonth,    color: T.green,  arrow: "←" },
-                          { label: "Churned MRR",    value: -churnedMRR,        color: T.red,    arrow: "↑" },
+                          { label: "New MRR",        value: newMRRThisMonth,    color: T.green,  arrow: "↑" },
+                          { label: "Churned MRR",    value: -churnedMRR,        color: T.red,    arrow: "↓" },
                           { label: "Net MRR",        value: mrr,                color: netMRR >= 0 ? T.green : T.red, bold: true },
                         ].map((row, i) => (
                           <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < 3 ? `1px solid ${T.border}` : "none" }}>
