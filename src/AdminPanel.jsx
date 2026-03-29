@@ -22167,8 +22167,8 @@ export default function AdminPanel() {
             // Filter + sort (FIFO - oldest pending first)
             const filtered = verifications.filter(v => {
               if (verifySubTab === "history" && v.status === "pending") return false;
-              if (verifySubTab === "queue" && v.status !== "pending" && verifyFilter === "all") return v.status === "pending";
-              if (verifyFilter !== "all" && v.status !== verifyFilter) return false;
+              if (verifySubTab === "queue" && v.status !== "pending") return false;
+              if (verifySubTab === "history" && verifyFilter !== "all" && v.status !== verifyFilter) return false;
               if (verifySearch && !((v.name || "").toLowerCase().includes(verifySearch.toLowerCase()) || (v.email || "").toLowerCase().includes(verifySearch.toLowerCase()))) return false;
               return true;
             }).sort((a, b) => {
