@@ -910,7 +910,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
 
             {mode === "signup" && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: "rgba(212,168,67,0.06)", borderRadius: 8, border: `1px solid ${T.border}` }}>
-                <span style={{ fontSize: 16 }}>◆</span>
+                <span style={{ fontSize: 16 }}>›</span>
                 <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.4 }}>
                   <span style={{ color: T.gold, fontWeight: 600 }}>7-day Pro trial</span> - Full access. No credit card. Cancel anytime.
                 </div>
@@ -3117,7 +3117,7 @@ export default function EmaarDashboardV2() {
         {userTier === "free" && (
           <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 16 }}>◆</span>
+              <span style={{ fontSize: 16 }}>›</span>
               <span style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>Free Plan</span>
               <span style={{ fontSize: 12, color: T.textSecondary }}>- You're seeing limited data. Upgrade to unlock all projects, yields & more.</span>
             </div>
@@ -3327,7 +3327,7 @@ export default function EmaarDashboardV2() {
               <div style={{ background: "linear-gradient(135deg, rgba(14,29,53,0.8), rgba(4,9,15,0.9))", borderRadius: 16, border: `1px solid rgba(212,168,67,0.2)`, padding: "18px 20px", marginBottom: 20 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>◆</span>
+                    <span style={{ fontSize: 14 }}>›</span>
                     <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>AI Market Intelligence</span>
                     <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: T.gold, border: `1px solid ${T.gold}30` }}>Powered by Claude</span>
                   </div>
@@ -3362,7 +3362,7 @@ export default function EmaarDashboardV2() {
               <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>◆</span>
+                    <span style={{ fontSize: 14 }}>›</span>
                     <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Dubai Market Pulse</span>
                   </div>
                   <span style={{ fontSize: 9, color: T.textMuted }}>{mktPeriod} - DLD Official</span>
@@ -3395,7 +3395,7 @@ export default function EmaarDashboardV2() {
               <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>◆</span>
+                    <span style={{ fontSize: 14 }}>›</span>
                     <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Community PPSF Tracker</span>
                   </div>
                   <span style={{ fontSize: 9, color: T.textMuted }}>AED/sqft - 2025</span>
@@ -3456,7 +3456,7 @@ export default function EmaarDashboardV2() {
             <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "18px 20px", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 14 }}>◆</span>
+                  <span style={{ fontSize: 14 }}>›</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1, textTransform: "uppercase" }}>Dubai RE Market Headlines</span>
                   {isLive
                     ? <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(16,185,129,0.1)", color: T.green, border: "1px solid rgba(16,185,129,0.2)" }}>● LIVE</span>
@@ -5597,7 +5597,7 @@ export default function EmaarDashboardV2() {
                   {/* Nationality Breakdown */}
                   <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                      <span style={{ fontSize: 14 }}>◆</span>
+                      <span style={{ fontSize: 14 }}>›</span>
                       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Buyer Nationality Breakdown</div>
                       <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>DLD {marketGlobal?.period || "FY2025"}</span>
                     </div>
@@ -5621,7 +5621,7 @@ export default function EmaarDashboardV2() {
                   {/* Developer Market Share */}
                   <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                      <span style={{ fontSize: 14 }}>◆</span>
+                      <span style={{ fontSize: 14 }}>›</span>
                       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Developer Market Share</div>
                       <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>By deals {marketGlobal?.period || "FY2025"}</span>
                     </div>
@@ -5824,7 +5824,7 @@ export default function EmaarDashboardV2() {
               {/* 5-Year Dubai Yield Trend */}
               <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <span style={{ fontSize: 14 }}>◆</span>
+                  <span style={{ fontSize: 14 }}>›</span>
                   <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Dubai Yield Trend - 5 Years</div>
                   <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>Gross % - Citywide avg</span>
                 </div>
@@ -5890,7 +5890,7 @@ export default function EmaarDashboardV2() {
               {/* Global City Benchmark */}
               <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <span style={{ fontSize: 14 }}>◆</span>
+                  <span style={{ fontSize: 14 }}>›</span>
                   <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Global Yield Benchmark</div>
                   <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>Gross % - 2025</span>
                 </div>
@@ -5930,7 +5930,7 @@ export default function EmaarDashboardV2() {
             {/* -- YIELD BY UNIT TYPE BREAKDOWN -- */}
             <div style={{ background: T.surface, borderRadius: 14, border: `1px solid ${T.border}`, padding: "20px 24px", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                <span style={{ fontSize: 14 }}>◆</span>
+                <span style={{ fontSize: 14 }}>›</span>
                 <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, color: T.white }}>Yield by Unit Type - Dubai 2025</div>
                 <span style={{ fontSize: 9, color: T.textMuted, marginLeft: "auto" }}>Source: DLD Rental Index - REIDIN</span>
               </div>
