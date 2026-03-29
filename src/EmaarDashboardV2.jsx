@@ -742,8 +742,9 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
   }, []);
 
   const handleGoogleSignIn = async () => {
-    setGoogleLoading(true); setError("");
+    setError("");
     try {
+      setGoogleLoading(true);
       const result = await signInWithPopup(auth, googleProvider);
       const u = result.user;
       const snap = await getDoc(doc(db, "users", u.uid));
