@@ -8057,7 +8057,7 @@ export default function EmaarDashboardV2() {
         </div>
       )}
 
-      {/* CHECKOUT PAYMENT MODAL */}}
+      {/* CHECKOUT PAYMENT MODAL */}
       {/* ─── PRICE ALERTS MODAL ─── */}
       {showAlerts && isLoggedIn && <div role="dialog" aria-modal="true" aria-label="Price Alerts" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.93)", zIndex: 3200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", padding: 16 }} onClick={() => setShowAlerts(false)}>
         <div className="alerts-modal" style={{ background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`, width: "95%", maxWidth: 560, maxHeight: "88vh", overflow: "auto", position: "relative" }} onClick={e => e.stopPropagation()}>
