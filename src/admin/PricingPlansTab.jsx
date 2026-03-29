@@ -56,7 +56,7 @@ const PricingPlansTab = ({ db, T, notify }) => {
     setPlans(prev => prev.map((p, i) => i === planIdx ? { ...p, features: p.features.filter((_, j) => j !== featIdx) } : p));
   };
 
-  if (loading) return <div style={{ padding: 40, color: T.textMuted }}>Loading pricing plans...</div>;
+  
 
   return (
     <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 24 }}>
