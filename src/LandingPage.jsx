@@ -331,7 +331,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <div style={{ fontSize: 8, padding: "3px 8px", borderRadius: 5, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#10B981", fontWeight: 600 }}>EMAAR.DU ? AED 15.40</div>
-                      <div style={{ width: 24, height: 24, borderRadius: 6, background: "rgba(212,168,67,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#D4A843" }}>??</div>
+                      <div style={{ width: 24, height: 24, borderRadius: 6, background: "rgba(212,168,67,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#D4A843" }}>✓</div>
                     </div>
                   </div>
 
