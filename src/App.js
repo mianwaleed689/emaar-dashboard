@@ -10,6 +10,7 @@ import LandingPage from "./LandingPage";
 import Terms from "./Terms";
 import Privacy from "./Privacy";
 import ErrorBoundary from "./ErrorBoundary";
+import UserGuard from "./UserGuard";
 import NotFound from "./NotFound";
 import { I18nProvider } from "./i18n";
 const Spinner = () => (
@@ -70,7 +71,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<HomeRoute />} />
-            <Route path="/dashboard" element={<EmaarDashboardV2 />} />
+            <Route path="/dashboard" element={<UserGuard><EmaarDashboardV2 /></UserGuard>} />
             <Route path="/admin" element={<AuthGuard><AdminPanel /></AuthGuard>} />
             <Route path="/manage" element={<AuthGuard><ProjectManager /></AuthGuard>} />
             <Route path="/project/:id" element={<ProjectRedirect />} />
