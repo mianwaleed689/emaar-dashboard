@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isLoggedIn() { return request.auth != null; }
+    function userData() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function isSuperAdmin() { return isLoggedIn() && userData().superAdmin == true; }
+    function isAdmin() { return isLoggedIn() && userData().role in ["admin", "superAdmin"]; }
+    function isBrokerageManager() { return isLoggedIn() && userData().role == "brokerageManager"; }
+    function isPro() { return isLoggedIn() && userData().tier in ["pro", "enterprise"]; }
+    function isOwner(uid) { return isLoggedIn() && request.auth.uid == uid; }
+    function sameBrokerage(bid) { return isLoggedIn() && userData().brokerageId == bid; }
+    function notSuspended() { return !('suspended' in userData()) || userData().suspended == false; }
+    match /{document=**} { allow read, write: if isSuperAdmin(); }
+    match /adminSettings/publicStats { allow read: if true; allow write: if isAdmin(); }
+    match /tabData/{doc} { allow read: if true; allow write: if isAdmin(); }
+    match /liveMarketData/{doc} { allow read: if true; allow write: if isAdmin(); }
+    match /marketData/{doc} { allow read: if true; allow write: if isAdmin(); }
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isLoggedIn() && request.auth.uid == userId;
+      allow update: if (isOwner(userId) && notSuspended()) || (isAdmin() && !('superAdmin' in get(/databases/$(database)/documents/users/$(userId)).data));
+      allow delete: if isSuperAdmin();
+    }
+    match /users/{userId}/watchlist/{item} { allow read, write: if isOwner(userId) || isSuperAdmin(); }
+    match /users/{userId}/portfolio/{item} { allow read, write: if isOwner(userId) || isSuperAdmin(); }
+    match /users/{userId}/preferences/{item} { allow read, write: if isOwner(userId) || isSuperAdmin(); }
+    match /users/{userId}/alerts/{item} { allow read, write: if isOwner(userId) || isSuperAdmin(); }
+    match /projects/{doc} { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
+    match /projectData/{doc} { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
+    match /communityData/{doc} { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
+    match /developers/{doc} { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
+    match /communityIntel/{doc} { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
+    match /communityROI/{doc} { allow read: if isLoggedIn() && notSuspended(); allow write: if isAdmin(); }
+    match /eiborHistory/{doc} { allow read: if isLoggedIn(); allow write: if isAdmin(); }
+    match /radarLaunches/{doc} { allow read: if isLoggedIn(); allow write: if isAdmin(); }
+    match /reports/{doc} { allow read: if isPro() || isAdmin(); allow write: if isAdmin(); }
+    match /comparisons/{doc} { allow read, write: if isPro() || isAdmin(); }
+    match /brokerages/{brokerageId} {
+      allow read: if isLoggedIn();
+      allow update: if sameBrokerage(brokerageId) && isBrokerageManager();
+      allow create, delete: if isAdmin();
+    }
+    match /brokerages/{brokerageId}/agents/{agentId} {
+      allow read: if sameBrokerage(brokerageId) || isAdmin();
+      allow write: if (sameBrokerage(brokerageId) && isBrokerageManager()) || isAdmin();
+    }
+    match /leads/{leadId} {
+      allow read: if isAdmin() || (isLoggedIn() && resource.data.agentId == request.auth.uid);
+      allow create: if isLoggedIn();
+      allow update: if isLoggedIn() && resource.data.agentId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+    match /adminSettings/{doc} { allow read, write: if isAdmin(); }
+    match /auditLog/{doc} {
+      allow read: if isAdmin();
+      allow create: if isLoggedIn();
+      allow update, delete: if isSuperAdmin();
+    }
+    match /campaigns/{doc} { allow read, write: if isAdmin(); }
+    match /notifications/{doc} {
+      allow read: if isAdmin() || (isLoggedIn() && resource.data.userId == request.auth.uid);
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin() || (isLoggedIn() && resource.data.userId == request.auth.uid);
+    }
+    match /cronLogs/{doc} { allow read, write: if isAdmin(); }
+    match /subscriptions/{userId} { allow read: if isOwner(userId) || isAdmin(); allow write: if isAdmin() || isSuperAdmin(); }
+    match /digestLog/{doc} { allow read, write: if isAdmin(); }
+    match /digestSettings/{doc} { allow read: if isLoggedIn(); allow write: if isAdmin(); }
+  }
+}
