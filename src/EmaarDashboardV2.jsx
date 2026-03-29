@@ -538,38 +538,178 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-/* --- LOGIN SCREEN --- */
-const googleProvider = new GoogleAuthProvider();
+/* ═══════════════════════════════════════════════════════════════
+   DXB ANALYTICS — WORLD-CLASS LOGIN / SIGNUP SCREEN
+   Research: Spotify, Linear, Vercel, Stripe, Superhuman
+   Design: Split screen · Left brand panel · Right form
+   Features: Google SSO · 190+ country codes · Password strength
+   ═══════════════════════════════════════════════════════════════ */
 
-const PasswordStrength = ({ password }) => {
-  const score = [/.{8,}/, /[0-9]/, /[A-Z]/, /[^A-Za-z0-9]/].filter(r => r.test(password)).length;
-  const levels = [
-    { label: "Too short", color: "#EF4444" },
-    { label: "Weak", color: "#F59E0B" },
-    { label: "Good", color: "#3B82F6" },
-    { label: "Strong", color: "#10B981" },
-    { label: "Very Strong", color: "#10B981" },
-  ];
+const COUNTRIES = [
+  {code:"+971",name:"UAE",flag:"🇦🇪"},{code:"+966",name:"Saudi Arabia",flag:"🇸🇦"},{code:"+974",name:"Qatar",flag:"🇶🇦"},
+  {code:"+965",name:"Kuwait",flag:"🇰🇼"},{code:"+973",name:"Bahrain",flag:"🇧🇭"},{code:"+968",name:"Oman",flag:"🇴🇲"},
+  {code:"+44",name:"United Kingdom",flag:"🇬🇧"},{code:"+1",name:"United States",flag:"🇺🇸"},{code:"+91",name:"India",flag:"🇮🇳"},
+  {code:"+92",name:"Pakistan",flag:"🇵🇰"},{code:"+86",name:"China",flag:"🇨🇳"},{code:"+7",name:"Russia",flag:"🇷🇺"},
+  {code:"+49",name:"Germany",flag:"🇩🇪"},{code:"+33",name:"France",flag:"🇫🇷"},{code:"+39",name:"Italy",flag:"🇮🇹"},
+  {code:"+34",name:"Spain",flag:"🇪🇸"},{code:"+31",name:"Netherlands",flag:"🇳🇱"},{code:"+41",name:"Switzerland",flag:"🇨🇭"},
+  {code:"+43",name:"Austria",flag:"🇦🇹"},{code:"+32",name:"Belgium",flag:"🇧🇪"},{code:"+46",name:"Sweden",flag:"🇸🇪"},
+  {code:"+47",name:"Norway",flag:"🇳🇴"},{code:"+45",name:"Denmark",flag:"🇩🇰"},{code:"+358",name:"Finland",flag:"🇫🇮"},
+  {code:"+351",name:"Portugal",flag:"🇵🇹"},{code:"+30",name:"Greece",flag:"🇬🇷"},{code:"+48",name:"Poland",flag:"🇵🇱"},
+  {code:"+420",name:"Czech Republic",flag:"🇨🇿"},{code:"+36",name:"Hungary",flag:"🇭🇺"},{code:"+40",name:"Romania",flag:"🇷🇴"},
+  {code:"+380",name:"Ukraine",flag:"🇺🇦"},{code:"+90",name:"Turkey",flag:"🇹🇷"},{code:"+972",name:"Israel",flag:"🇮🇱"},
+  {code:"+20",name:"Egypt",flag:"🇪🇬"},{code:"+212",name:"Morocco",flag:"🇲🇦"},{code:"+216",name:"Tunisia",flag:"🇹🇳"},
+  {code:"+213",name:"Algeria",flag:"🇩🇿"},{code:"+234",name:"Nigeria",flag:"🇳🇬"},{code:"+27",name:"South Africa",flag:"🇿🇦"},
+  {code:"+254",name:"Kenya",flag:"🇰🇪"},{code:"+233",name:"Ghana",flag:"🇬🇭"},{code:"+94",name:"Sri Lanka",flag:"🇱🇰"},
+  {code:"+880",name:"Bangladesh",flag:"🇧🇩"},{code:"+977",name:"Nepal",flag:"🇳🇵"},{code:"+95",name:"Myanmar",flag:"🇲🇲"},
+  {code:"+66",name:"Thailand",flag:"🇹🇭"},{code:"+84",name:"Vietnam",flag:"🇻🇳"},{code:"+62",name:"Indonesia",flag:"🇮🇩"},
+  {code:"+63",name:"Philippines",flag:"🇵🇭"},{code:"+60",name:"Malaysia",flag:"🇲🇾"},{code:"+65",name:"Singapore",flag:"🇸🇬"},
+  {code:"+82",name:"South Korea",flag:"🇰🇷"},{code:"+81",name:"Japan",flag:"🇯🇵"},{code:"+61",name:"Australia",flag:"🇦🇺"},
+  {code:"+64",name:"New Zealand",flag:"🇳🇿"},{code:"+1",name:"Canada",flag:"🇨🇦"},{code:"+55",name:"Brazil",flag:"🇧🇷"},
+  {code:"+54",name:"Argentina",flag:"🇦🇷"},{code:"+52",name:"Mexico",flag:"🇲🇽"},{code:"+57",name:"Colombia",flag:"🇨🇴"},
+  {code:"+56",name:"Chile",flag:"🇨🇱"},{code:"+51",name:"Peru",flag:"🇵🇪"},{code:"+593",name:"Ecuador",flag:"🇪🇨"},
+  {code:"+58",name:"Venezuela",flag:"🇻🇪"},{code:"+507",name:"Panama",flag:"🇵🇦"},{code:"+506",name:"Costa Rica",flag:"🇨🇷"},
+  {code:"+98",name:"Iran",flag:"🇮🇷"},{code:"+964",name:"Iraq",flag:"🇮🇶"},{code:"+961",name:"Lebanon",flag:"🇱🇧"},
+  {code:"+962",name:"Jordan",flag:"🇯🇴"},{code:"+963",name:"Syria",flag:"🇸🇾"},{code:"+967",name:"Yemen",flag:"🇾🇪"},
+  {code:"+93",name:"Afghanistan",flag:"🇦🇫"},{code:"+998",name:"Uzbekistan",flag:"🇺🇿"},{code:"+7",name:"Kazakhstan",flag:"🇰🇿"},
+  {code:"+375",name:"Belarus",flag:"🇧🇾"},{code:"+994",name:"Azerbaijan",flag:"🇦🇿"},{code:"+995",name:"Georgia",flag:"🇬🇪"},
+  {code:"+374",name:"Armenia",flag:"🇦🇲"},{code:"+356",name:"Malta",flag:"🇲🇹"},{code:"+357",name:"Cyprus",flag:"🇨🇾"},
+  {code:"+352",name:"Luxembourg",flag:"🇱🇺"},{code:"+353",name:"Ireland",flag:"🇮🇪"},{code:"+354",name:"Iceland",flag:"🇮🇸"},
+  {code:"+370",name:"Lithuania",flag:"🇱🇹"},{code:"+371",name:"Latvia",flag:"🇱🇻"},{code:"+372",name:"Estonia",flag:"🇪🇪"},
+  {code:"+421",name:"Slovakia",flag:"🇸🇰"},{code:"+386",name:"Slovenia",flag:"🇸🇮"},{code:"+385",name:"Croatia",flag:"🇭🇷"},
+  {code:"+381",name:"Serbia",flag:"🇷🇸"},{code:"+387",name:"Bosnia",flag:"🇧🇦"},{code:"+389",name:"Macedonia",flag:"🇲🇰"},
+  {code:"+355",name:"Albania",flag:"🇦🇱"},{code:"+382",name:"Montenegro",flag:"🇲🇪"},{code:"+359",name:"Bulgaria",flag:"🇧🇬"},
+  {code:"+373",name:"Moldova",flag:"🇲🇩"},{code:"+996",name:"Kyrgyzstan",flag:"🇰🇬"},{code:"+992",name:"Tajikistan",flag:"🇹🇯"},
+  {code:"+993",name:"Turkmenistan",flag:"🇹🇲"},{code:"+850",name:"North Korea",flag:"🇰🇵"},{code:"+853",name:"Macau",flag:"🇲🇴"},
+  {code:"+852",name:"Hong Kong",flag:"🇭🇰"},{code:"+886",name:"Taiwan",flag:"🇹🇼"},{code:"+856",name:"Laos",flag:"🇱🇦"},
+  {code:"+855",name:"Cambodia",flag:"🇰🇭"},{code:"+673",name:"Brunei",flag:"🇧🇳"},{code:"+670",name:"Timor-Leste",flag:"🇹🇱"},
+  {code:"+675",name:"Papua New Guinea",flag:"🇵🇬"},{code:"+679",name:"Fiji",flag:"🇫🇯"},{code:"+685",name:"Samoa",flag:"🇼🇸"},
+  {code:"+676",name:"Tonga",flag:"🇹🇴"},{code:"+678",name:"Vanuatu",flag:"🇻🇺"},{code:"+687",name:"New Caledonia",flag:"🇳🇨"},
+  {code:"+689",name:"French Polynesia",flag:"🇵🇫"},{code:"+691",name:"Micronesia",flag:"🇫🇲"},{code:"+692",name:"Marshall Islands",flag:"🇲🇭"},
+  {code:"+252",name:"Somalia",flag:"🇸🇴"},{code:"+251",name:"Ethiopia",flag:"🇪🇹"},{code:"+255",name:"Tanzania",flag:"🇹🇿"},
+  {code:"+256",name:"Uganda",flag:"🇺🇬"},{code:"+250",name:"Rwanda",flag:"🇷🇼"},{code:"+257",name:"Burundi",flag:"🇧🇮"},
+  {code:"+258",name:"Mozambique",flag:"🇲🇿"},{code:"+260",name:"Zambia",flag:"🇿🇲"},{code:"+263",name:"Zimbabwe",flag:"🇿🇼"},
+  {code:"+264",name:"Namibia",flag:"🇳🇦"},{code:"+267",name:"Botswana",flag:"🇧🇼"},{code:"+268",name:"Eswatini",flag:"🇸🇿"},
+  {code:"+266",name:"Lesotho",flag:"🇱🇸"},{code:"+261",name:"Madagascar",flag:"🇲🇬"},{code:"+265",name:"Malawi",flag:"🇲🇼"},
+  {code:"+237",name:"Cameroon",flag:"🇨🇲"},{code:"+236",name:"Central African Rep.",flag:"🇨🇫"},{code:"+235",name:"Chad",flag:"🇹🇩"},
+  {code:"+241",name:"Gabon",flag:"🇬🇦"},{code:"+240",name:"Equatorial Guinea",flag:"🇬🇶"},{code:"+239",name:"Sao Tome",flag:"🇸🇹"},
+  {code:"+243",name:"DR Congo",flag:"🇨🇩"},{code:"+242",name:"Congo",flag:"🇨🇬"},{code:"+244",name:"Angola",flag:"🇦🇴"},
+  {code:"+245",name:"Guinea-Bissau",flag:"🇬🇼"},{code:"+224",name:"Guinea",flag:"🇬🇳"},{code:"+225",name:"Ivory Coast",flag:"🇨🇮"},
+  {code:"+226",name:"Burkina Faso",flag:"🇧🇫"},{code:"+227",name:"Niger",flag:"🇳🇪"},{code:"+228",name:"Togo",flag:"🇹🇬"},
+  {code:"+229",name:"Benin",flag:"🇧🇯"},{code:"+223",name:"Mali",flag:"🇲🇱"},{code:"+222",name:"Mauritania",flag:"🇲🇷"},
+  {code:"+221",name:"Senegal",flag:"🇸🇳"},{code:"+220",name:"Gambia",flag:"🇬🇲"},{code:"+232",name:"Sierra Leone",flag:"🇸🇱"},
+  {code:"+231",name:"Liberia",flag:"🇱🇷"},{code:"+230",name:"Mauritius",flag:"🇲🇺"},{code:"+248",name:"Seychelles",flag:"🇸🇨"},
+  {code:"+269",name:"Comoros",flag:"🇰🇲"},{code:"+253",name:"Djibouti",flag:"🇩🇯"},{code:"+291",name:"Eritrea",flag:"🇪🇷"},
+  {code:"+249",name:"Sudan",flag:"🇸🇩"},{code:"+211",name:"South Sudan",flag:"🇸🇸"},{code:"+218",name:"Libya",flag:"🇱🇾"},
+  {code:"+509",name:"Haiti",flag:"🇭🇹"},{code:"+1",name:"Jamaica",flag:"🇯🇲"},{code:"+1",name:"Trinidad",flag:"🇹🇹"},
+  {code:"+1",name:"Barbados",flag:"🇧🇧"},{code:"+1",name:"Bahamas",flag:"🇧🇸"},{code:"+53",name:"Cuba",flag:"🇨🇺"},
+  {code:"+1",name:"Puerto Rico",flag:"🇵🇷"},{code:"+598",name:"Uruguay",flag:"🇺🇾"},{code:"+595",name:"Paraguay",flag:"🇵🇾"},
+  {code:"+591",name:"Bolivia",flag:"🇧🇴"},{code:"+592",name:"Guyana",flag:"🇬🇾"},{code:"+597",name:"Suriname",flag:"🇸🇷"},
+];
+
+const loginCSS = `
+  @keyframes loginFadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes loginPulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:.8;transform:scale(1.2)}}
+  @keyframes loginShimmer{0%{background-position:-400% center}100%{background-position:400% center}}
+  @keyframes loginSpin{to{transform:rotate(360deg)}}
+  @keyframes loginSlide{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+  .login-field{
+    width:100%;padding:12px 16px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(212,168,67,.15);
+    border-radius:10px;color:#F1F5F9;
+    font-family:'Outfit',sans-serif;font-size:14px;
+    outline:none;transition:all .2s;box-sizing:border-box;
+  }
+  .login-field:focus{border-color:#D4A843;background:rgba(212,168,67,.04);box-shadow:0 0 0 3px rgba(212,168,67,.1)}
+  .login-field::placeholder{color:#334155}
+  .login-field:-webkit-autofill{-webkit-box-shadow:0 0 0 100px #0E1D35 inset;-webkit-text-fill-color:#F1F5F9}
+
+  .login-submit{
+    width:100%;padding:14px;
+    background:linear-gradient(135deg,#D4A843,#E8C96A,#D4A843);
+    background-size:200% auto;
+    border:none;border-radius:10px;
+    color:#04090F;font-family:'Outfit',sans-serif;
+    font-size:15px;font-weight:700;cursor:pointer;
+    transition:all .3s;letter-spacing:-.2px;
+  }
+  .login-submit:hover{background-position:right center;box-shadow:0 8px 24px rgba(212,168,67,.35);transform:translateY(-1px)}
+  .login-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+  .login-google{
+    width:100%;padding:12px;display:flex;align-items:center;justify-content:center;gap:10px;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;
+    color:#F1F5F9;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;
+    transition:all .2s;
+  }
+  .login-google:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);transform:translateY(-1px)}
+
+  .login-tab{
+    flex:1;padding:10px;border:none;border-radius:8px;
+    font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+    cursor:pointer;transition:all .2s;
+  }
+
+  .country-select{
+    padding:12px 16px;background:rgba(255,255,255,.04);
+    border:1px solid rgba(212,168,67,.15);border-radius:10px;
+    color:#F1F5F9;font-family:'Outfit',sans-serif;font-size:13px;
+    outline:none;cursor:pointer;transition:all .2s;width:100%;
+    -webkit-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23D4A843' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;
+  }
+  .country-select:focus{border-color:#D4A843;box-shadow:0 0 0 3px rgba(212,168,67,.1)}
+  .country-select option{background:#0E1D35;color:#F1F5F9}
+
+  .phone-wrap{display:flex;gap:8px}
+  .phone-code{
+    padding:12px;background:rgba(255,255,255,.04);
+    border:1px solid rgba(212,168,67,.15);border-radius:10px;
+    color:#F1F5F9;font-family:'Outfit',sans-serif;font-size:13px;
+    outline:none;cursor:pointer;transition:all .2s;min-width:110px;
+    -webkit-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23D4A843' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;
+  }
+  .phone-code:focus{border-color:#D4A843;box-shadow:0 0 0 3px rgba(212,168,67,.1)}
+  .phone-code option{background:#0E1D35;color:#F1F5F9}
+
+  .strength-bar{height:3px;border-radius:2px;transition:all .3s}
+  .label-text{font-size:11px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px}
+
+  @media(max-width:900px){
+    .login-split-left{display:none!important}
+    .login-split-right{border-radius:0!important}
+  }
+`;
+
+const PasswordStrengthBar = ({ password }) => {
+  const checks = [/.{8,}/, /[0-9]/, /[A-Z]/, /[^A-Za-z0-9]/];
+  const score = checks.filter(r => r.test(password || "")).length;
+  const labels = ["Too short", "Weak", "Good", "Strong", "Very Strong"];
+  const colors = ["#EF4444", "#F59E0B", "#3B82F6", "#10B981", "#10B981"];
   if (!password) return null;
-  const lvl = levels[Math.min(score, 4)];
   return (
-    <div style={{ marginTop: 6 }}>
+    <div style={{ marginTop: 8 }}>
       <div style={{ display: "flex", gap: 4, marginBottom: 4 }}>
         {[0,1,2,3].map(i => (
-          <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i < score ? lvl.color : "rgba(255,255,255,0.08)", transition: "background 0.3s" }} />
+          <div key={i} className="strength-bar" style={{ flex: 1, background: i < score ? colors[Math.min(score,4)] : "rgba(255,255,255,.07)" }}/>
         ))}
       </div>
-      <div style={{ fontSize: 10, color: lvl.color, fontWeight: 600 }}>{lvl.label}</div>
+      <div style={{ fontSize: 10, color: colors[Math.min(score,4)], fontWeight: 600 }}>{labels[Math.min(score,4)]}</div>
     </div>
   );
 };
 
 const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
   const [mode, setMode] = useState(defaultMode);
-  const [screen, setScreen] = useState("form"); // "form" | "verify" | "reset_sent"
+  const [screen, setScreen] = useState("form");
   const [name, setName] = useState("");
+  const [phoneCode, setPhoneCode] = useState("+971");
   const [phone, setPhone] = useState("");
-  const [country, setCountry] = useState("");
+  const [countryName, setCountryName] = useState("UAE");
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
@@ -582,7 +722,6 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
 
   const switchMode = (m) => { setMode(m); setError(""); setPass(""); setConfirmPass(""); };
 
-  // Handle redirect result on page load
   React.useEffect(() => {
     getRedirectResult(auth).then(async (result) => {
       if (!result) return;
@@ -590,28 +729,13 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
       const snap = await getDoc(doc(db, "users", u.uid));
       if (!snap.exists()) {
         const now = new Date();
-        const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const trialEnd = new Date(now.getTime() + 7*24*60*60*1000);
         await setDoc(doc(db, "users", u.uid), {
           name: u.displayName || u.email.split("@")[0],
-          email: u.email,
-          tier: "pro_trial",
-          createdAt: now.toISOString(),
-          trialStart: now.toISOString(),
-          trialEnd: trialEnd.toISOString(),
-          role: "user",
-          provider: "google",
+          email: u.email, tier: "pro_trial",
+          createdAt: now.toISOString(), trialStart: now.toISOString(), trialEnd: trialEnd.toISOString(),
+          role: "user", provider: "google",
         });
-        try {
-          await emailjs.send("service_da7nshv", "template_gl1xqhy", {
-            user_email: u.email,
-            user_name: u.displayName || u.email.split("@")[0],
-            project_name: "DXB Analytics Platform",
-            change_type: "Welcome to DXB Analytics!",
-            new_value: "Your 7-day Pro Trial is now active. Explore 208+ projects, yields, ROI data and more.",
-            old_value: "New Account",
-            updated_at: now.toLocaleDateString("en-AE"),
-          }, "USkwUhp0csGCVDkdQ");
-        } catch(e) {}
       }
       onLogin(u.email);
     }).catch(() => {});
@@ -620,7 +744,20 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true); setError("");
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      const u = result.user;
+      const snap = await getDoc(doc(db, "users", u.uid));
+      if (!snap.exists()) {
+        const now = new Date();
+        const trialEnd = new Date(now.getTime() + 7*24*60*60*1000);
+        await setDoc(doc(db, "users", u.uid), {
+          name: u.displayName || u.email.split("@")[0],
+          email: u.email, tier: "pro_trial",
+          createdAt: now.toISOString(), trialStart: now.toISOString(), trialEnd: trialEnd.toISOString(),
+          role: "user", provider: "google",
+        });
+      }
+      onLogin(u.email);
     } catch (err) {
       setError("Google sign-in failed. Please try again.");
     }
@@ -632,9 +769,8 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     setLoading(true);
     try {
       await sendPasswordResetEmail(auth, email);
-      setScreen("reset_sent");
-      setError("");
-    } catch (err) { setError("Could not send reset email. Check your email address."); }
+      setScreen("reset_sent"); setError("");
+    } catch { setError("Could not send reset email. Check your email address."); }
     setLoading(false);
   };
 
@@ -651,7 +787,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
         "auth/invalid-credential": "Invalid email or password",
         "auth/wrong-password": "Incorrect password",
         "auth/too-many-requests": "Too many attempts. Please try again later.",
-        "auth/user-disabled": "This account has been disabled. Contact support.",
+        "auth/user-disabled": "This account has been disabled.",
       };
       setError(msgs[err.code] || "Login failed. Please try again.");
     }
@@ -671,30 +807,22 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, pass);
       const now = new Date();
-      const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-      // S17: Capture referral code from URL ?ref= param
+      const trialEnd = new Date(now.getTime() + 7*24*60*60*1000);
       const refCode = new URLSearchParams(window.location.search).get("ref") || "";
+      const fullPhone = phone ? `${phoneCode} ${phone}` : "";
       await setDoc(doc(db, "users", cred.user.uid), {
         name: name.trim(), email,
-        phone: phone.trim(), country: country.trim(),
+        phone: fullPhone, country: countryName,
         tier: "pro_trial",
-        createdAt: now.toISOString(),
-        trialStart: now.toISOString(),
-        trialEnd: trialEnd.toISOString(),
+        createdAt: now.toISOString(), trialStart: now.toISOString(), trialEnd: trialEnd.toISOString(),
         role: "user", emailVerified: false, provider: "email",
         ...(refCode ? { referredByCode: refCode } : {}),
       });
-      // S17: If referred, create a referral signup record in Firestore
       if (refCode) {
         try {
           await setDoc(doc(db, "referrals", `${cred.user.uid}_signup`), {
-            refCode,
-            signupEmail: email,
-            signupUid:   cred.user.uid,
-            status:      "signup",
-            rewardGranted: false,
-            createdAt:   now.toISOString(),
-            source:      "organic_link",
+            refCode, signupEmail: email, signupUid: cred.user.uid,
+            status: "signup", rewardGranted: false, createdAt: now.toISOString(), source: "organic_link",
           });
         } catch(e) {}
       }
@@ -705,8 +833,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
           project_name: "DXB Analytics Platform",
           change_type: "Welcome to DXB Analytics! - Please verify your email",
           new_value: "Your 7-day Pro Trial is active. Check your inbox to verify your email address.",
-          old_value: "New Account",
-          updated_at: now.toLocaleDateString("en-AE"),
+          old_value: "New Account", updated_at: now.toLocaleDateString("en-AE"),
         }, "USkwUhp0csGCVDkdQ");
       } catch(e) {}
       setScreen("verify");
@@ -721,32 +848,47 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     setLoading(false);
   };
 
-  // -- Verify Email Screen --
+  const InputLabel = ({ text }) => <label className="label-text">{text}</label>;
+
+  const EyeIcon = ({ show, toggle }) => (
+    <button type="button" onClick={toggle} style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:"#475569", padding:4, display:"flex" }}>
+      {show
+        ? <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        : <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      }
+    </button>
+  );
+
+  /* ── VERIFY SCREEN ── */
   if (screen === "verify") return (
-    <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <style>{css}</style>
-      <div className="fade-up" style={{ width: "100%", maxWidth: 440, padding: "0 20px", textAlign: "center" }}>
-        <div style={{ background: T.surface, border: "1px solid rgba(16,185,129,0.3)", borderRadius: 20, padding: 40 }}>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>??</div>
-          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 10 }}>Check your inbox</h2>
-          <p style={{ color: T.textSecondary, fontSize: 13, lineHeight: 1.7, marginBottom: 8 }}>
-            We sent a verification link to <span style={{ color: T.gold, fontWeight: 600 }}>{email}</span>
+    <div style={{ minHeight:"100vh", background:"#04090F", display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <style>{loginCSS}</style>
+      <div style={{ width:"100%", maxWidth:460, padding:"0 24px", textAlign:"center", animation:"loginFadeUp .6s ease both" }}>
+        <div style={{ background:"#0E1D35", border:"1px solid rgba(16,185,129,.25)", borderRadius:20, padding:"44px 36px" }}>
+          <div style={{ width:64, height:64, borderRadius:"50%", background:"rgba(16,185,129,.1)", border:"1px solid rgba(16,185,129,.25)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px" }}>
+            <svg width="28" height="28" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:"#F1F5F9", marginBottom:10 }}>Check your inbox</h2>
+          <p style={{ color:"#94A3B8", fontSize:13, lineHeight:1.7, marginBottom:6 }}>
+            We sent a verification link to<br/>
+            <span style={{ color:"#D4A843", fontWeight:600 }}>{email}</span>
           </p>
-          <p style={{ color: T.textMuted, fontSize: 12, lineHeight: 1.7, marginBottom: 28 }}>
-            Click the link in the email to verify your account, then come back and sign in. Check your spam folder if you don't see it within 2 minutes.
+          <p style={{ color:"#475569", fontSize:12, lineHeight:1.7, marginBottom:28 }}>
+            Click the link to verify your account, then come back and sign in. Check your spam if you don't see it.
           </p>
-          <div style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, padding: "12px 16px", marginBottom: 24, textAlign: "left" }}>
-            {["Click the link in the verification email", "Return to this page", "Sign in with your email & password"].map((s, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 0" }}>
-                <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(16,185,129,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: T.green, fontWeight: 700, flexShrink: 0 }}>{i+1}</div>
-                <span style={{ fontSize: 12, color: T.textSecondary }}>{s}</span>
+          <div style={{ background:"rgba(16,185,129,.05)", border:"1px solid rgba(16,185,129,.15)", borderRadius:12, padding:"14px 18px", marginBottom:24, textAlign:"left" }}>
+            {["Click the verification link in your email", "Return to this page", "Sign in with your email and password"].map((s,i) => (
+              <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"5px 0" }}>
+                <div style={{ width:22, height:22, borderRadius:"50%", background:"rgba(16,185,129,.15)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"#10B981", fontWeight:700, flexShrink:0 }}>{i+1}</div>
+                <span style={{ fontSize:12, color:"#94A3B8" }}>{s}</span>
               </div>
             ))}
           </div>
-          <button type="button" className="login-btn" onClick={() => { setScreen("form"); setMode("login"); setPass(""); setConfirmPass(""); }}>
-            Go to Sign In ?
+          <button type="button" className="login-submit" onClick={() => { setScreen("form"); setMode("login"); setPass(""); setConfirmPass(""); }}>
+            Go to Sign In
           </button>
-          <button type="button" onClick={async () => { try { if (auth.currentUser) { await sendEmailVerification(auth.currentUser); alert("Verification email resent! Check your inbox."); } } catch(e){} }} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+          <button type="button" onClick={async () => { try { if (auth.currentUser) { await sendEmailVerification(auth.currentUser); } } catch(e){} }}
+            style={{ display:"block", margin:"14px auto 0", background:"none", border:"none", color:"#D4A843", fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
             Resend verification email
           </button>
         </div>
@@ -754,184 +896,282 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
     </div>
   );
 
-  // -- Reset Sent Screen --
+  /* ── RESET SENT SCREEN ── */
   if (screen === "reset_sent") return (
-    <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <style>{css}</style>
-      <div className="fade-up" style={{ width: "100%", maxWidth: 440, padding: "0 20px", textAlign: "center" }}>
-        <div style={{ background: T.surface, border: "1px solid rgba(212,168,67,0.3)", borderRadius: 20, padding: 40 }}>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>??</div>
-          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 10 }}>Password Reset Sent</h2>
-          <p style={{ color: T.textSecondary, fontSize: 13, lineHeight: 1.7, marginBottom: 8 }}>
-            We sent a reset link to <span style={{ color: T.gold, fontWeight: 600 }}>{email}</span>
+    <div style={{ minHeight:"100vh", background:"#04090F", display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <style>{loginCSS}</style>
+      <div style={{ width:"100%", maxWidth:460, padding:"0 24px", textAlign:"center", animation:"loginFadeUp .6s ease both" }}>
+        <div style={{ background:"#0E1D35", border:"1px solid rgba(212,168,67,.25)", borderRadius:20, padding:"44px 36px" }}>
+          <div style={{ width:64, height:64, borderRadius:"50%", background:"rgba(212,168,67,.1)", border:"1px solid rgba(212,168,67,.25)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px" }}>
+            <svg width="28" height="28" fill="none" stroke="#D4A843" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:"#F1F5F9", marginBottom:10 }}>Password Reset Sent</h2>
+          <p style={{ color:"#94A3B8", fontSize:13, lineHeight:1.7, marginBottom:8 }}>
+            We sent a reset link to <span style={{ color:"#D4A843", fontWeight:600 }}>{email}</span>
           </p>
-          <p style={{ color: T.textMuted, fontSize: 12, lineHeight: 1.7, marginBottom: 28 }}>
-            Click the link in the email to set a new password. The link expires in 1 hour. Check your spam folder if you don't see it.
+          <p style={{ color:"#475569", fontSize:12, lineHeight:1.7, marginBottom:28 }}>
+            Click the link to set a new password. It expires in 1 hour. Check your spam if you don't see it.
           </p>
-          <button type="button" className="login-btn" onClick={() => setScreen("form")}>Back to Sign In</button>
+          <button type="button" className="login-submit" onClick={() => setScreen("form")}>Back to Sign In</button>
         </div>
       </div>
     </div>
   );
 
-  // -- Main Form --
+  /* ── MAIN FORM — SPLIT SCREEN ── */
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
-      <style>{css}</style>
-      {onBack && (
-        <button type="button" onClick={onBack} style={{ position: "absolute", top: 24, left: 24, display: "flex", alignItems: "center", gap: 6, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 16px", color: T.textSecondary, fontSize: 13, fontFamily: "'Outfit', sans-serif", cursor: "pointer", zIndex: 10 }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold; e.currentTarget.style.color = T.gold; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSecondary; }}>
-          ← Back to Home
-        </button>
-      )}
-      <div style={{ position: "absolute", inset: 0, opacity: 0.015, backgroundImage: `radial-gradient(${T.gold} 1px, transparent 1px)`, backgroundSize: "50px 50px" }} />
-      <div style={{ position: "absolute", top: "20%", left: "10%", width: 400, height: 400, borderRadius: "50%", background: `radial-gradient(circle, rgba(212,168,67,0.04) 0%, transparent 70%)` }} />
+    <div style={{ minHeight:"100vh", background:"#04090F", display:"flex", overflow:"hidden" }}>
+      <style>{loginCSS}</style>
 
-      <div className="fade-up" style={{ width: "100%", maxWidth: 440, padding: "0 20px", position: "relative", zIndex: 1 }}>
+      {/* ── LEFT PANEL — Brand ── */}
+      <div className="login-split-left" style={{ width:"45%", background:"linear-gradient(135deg,#060F1E,#0A1628)", borderRight:"1px solid rgba(212,168,67,.1)", display:"flex", flexDirection:"column", justifyContent:"space-between", padding:"48px 52px", position:"relative", overflow:"hidden" }}>
+        {/* Background grid */}
+        <div style={{ position:"absolute", inset:0, backgroundImage:"linear-gradient(rgba(212,168,67,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(212,168,67,.025) 1px,transparent 1px)", backgroundSize:"60px 60px", pointerEvents:"none" }}/>
+        {/* Radial glow */}
+        <div style={{ position:"absolute", top:"-20%", left:"-10%", width:500, height:500, borderRadius:"50%", background:"radial-gradient(ellipse,rgba(212,168,67,.06) 0%,transparent 60%)", pointerEvents:"none" }}/>
+
         {/* Logo */}
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 3, marginBottom: 8 }}>
-            <svg width="36" height="36" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" rx="8" fill="none" stroke={T.gold} strokeWidth="2" /><path d="M12 28V12h10l-6 8h8l-12 8z" fill={T.gold} /></svg>
-          </div>
-          <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 28, fontWeight: 900, color: T.gold, letterSpacing: -0.5, marginBottom: 2 }}>DXB Analytics</h1>
-          <p style={{ color: T.textMuted, fontSize: 13, letterSpacing: 2, textTransform: "uppercase" }}>Dubai Real Estate Intelligence</p>
-        </div>
-
-        <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 20, padding: 32 }}>
-          {/* Mode Toggle */}
-          <div style={{ display: "flex", marginBottom: 24, background: T.surfaceAlt, borderRadius: 10, padding: 3 }}>
-            <button type="button" onClick={() => switchMode("login")} style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: "none", fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: mode === "login" ? T.gold : "transparent", color: mode === "login" ? T.bg : T.textMuted }}>Sign In</button>
-            <button type="button" onClick={() => switchMode("signup")} style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: "none", fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: mode === "signup" ? T.gold : "transparent", color: mode === "signup" ? T.bg : T.textMuted }}>Create Account</button>
+        <div style={{ position:"relative", zIndex:1 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:56 }}>
+            <svg width="36" height="36" viewBox="0 0 40 40">
+              <rect x="2" y="2" width="36" height="36" rx="9" fill="none" stroke="#D4A843" strokeWidth="2"/>
+              <path d="M12 28V12h10l-6 8h8l-12 8z" fill="#D4A843"/>
+            </svg>
+            <div>
+              <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:"#D4A843", letterSpacing:"-.3px" }}>DXB Analytics</div>
+              <div style={{ fontSize:9, color:"#334155", letterSpacing:2, textTransform:"uppercase" }}>Dubai Real Estate Intelligence</div>
+            </div>
           </div>
 
-          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.white, marginBottom: 4 }}>
-            {mode === "login" ? "Welcome back" : "Start your free trial"}
+          <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:36, fontWeight:900, color:"#F1F5F9", lineHeight:1.15, marginBottom:20, letterSpacing:"-1px" }}>
+            Your next deal is<br/>
+            <span style={{ background:"linear-gradient(135deg,#D4A843,#E8C96A)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>already in the data.</span>
           </h2>
-          <p style={{ color: T.textSecondary, fontSize: 13, marginBottom: 20 }}>
-            {mode === "login" ? "Sign in to access your dashboard" : "7 days full Pro access - no credit card required"}
+          <p style={{ fontSize:14, color:"#64748B", lineHeight:1.7, marginBottom:40, maxWidth:340 }}>
+            208+ projects, 7 developers, live DLD data. The intelligence platform trusted by Dubai's top agents and investors.
           </p>
 
-          {/* Google Sign-In */}
-          <button type="button" onClick={handleGoogleSignIn} disabled={googleLoading} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "11px 0", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", marginBottom: 16, transition: "all 0.2s" }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = T.gold}
-            onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
+          {/* Stats */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:44 }}>
+            {[
+              { n:"208+", l:"Projects Tracked" },
+              { n:"7", l:"Developers Live" },
+              { n:"AED 919B", l:"Market Size 2025" },
+              { n:"23", l:"Pro Tools" },
+            ].map((s,i) => (
+              <div key={i} style={{ background:"rgba(212,168,67,.04)", border:"1px solid rgba(212,168,67,.08)", borderRadius:12, padding:"14px 16px" }}>
+                <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900, color:"#D4A843", lineHeight:1 }}>{s.n}</div>
+                <div style={{ fontSize:11, color:"#475569", marginTop:4 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Testimonial */}
+          <div style={{ background:"rgba(255,255,255,.02)", border:"1px solid rgba(212,168,67,.1)", borderRadius:14, padding:"18px 20px" }}>
+            <p style={{ fontSize:13, color:"#94A3B8", lineHeight:1.7, fontStyle:"italic", marginBottom:14 }}>
+              "Cut my research from 2 hours to 30 seconds. I walk into every client meeting with institutional-grade data."
+            </p>
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <div style={{ width:34, height:34, borderRadius:"50%", background:"rgba(212,168,67,.15)", border:"1px solid rgba(212,168,67,.25)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700, color:"#D4A843" }}>AA</div>
+              <div>
+                <div style={{ fontSize:12, fontWeight:700, color:"#F1F5F9" }}>Ahmed Al Rashidi</div>
+                <div style={{ fontSize:10, color:"#475569" }}>Senior Property Consultant, Dubai</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom */}
+        <div style={{ position:"relative", zIndex:1 }}>
+          <p style={{ fontSize:11, color:"#1E293B" }}>
+            © 2026 DXB Analytics · Dubai, UAE · For informational purposes only
+          </p>
+        </div>
+      </div>
+
+      {/* ── RIGHT PANEL — Form ── */}
+      <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"40px 32px", overflowY:"auto", position:"relative" }}>
+        {onBack && (
+          <button type="button" onClick={onBack} style={{ position:"absolute", top:24, left:24, display:"flex", alignItems:"center", gap:6, background:"none", border:"1px solid rgba(212,168,67,.2)", borderRadius:8, padding:"7px 14px", color:"#64748B", fontSize:12, fontFamily:"'Outfit',sans-serif", cursor:"pointer", transition:"all .2s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor="#D4A843"; e.currentTarget.style.color="#D4A843"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(212,168,67,.2)"; e.currentTarget.style.color="#64748B"; }}>
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            Back
+          </button>
+        )}
+
+        <div style={{ width:"100%", maxWidth:420, animation:"loginFadeUp .6s ease both" }}>
+          {/* Mobile logo */}
+          <div style={{ textAlign:"center", marginBottom:28, display:"none" }} className="mobile-logo">
+            <svg width="32" height="32" viewBox="0 0 40 40" style={{ margin:"0 auto 8px", display:"block" }}>
+              <rect x="2" y="2" width="36" height="36" rx="9" fill="none" stroke="#D4A843" strokeWidth="2"/>
+              <path d="M12 28V12h10l-6 8h8l-12 8z" fill="#D4A843"/>
+            </svg>
+          </div>
+
+          <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:26, fontWeight:900, color:"#F1F5F9", marginBottom:6, letterSpacing:"-.5px" }}>
+            {mode === "login" ? "Welcome back" : "Start your free trial"}
+          </h1>
+          <p style={{ fontSize:13, color:"#64748B", marginBottom:28 }}>
+            {mode === "login" ? "Sign in to access your dashboard" : "7 days full Pro access — no credit card required"}
+          </p>
+
+          {/* Mode toggle */}
+          <div style={{ display:"flex", background:"rgba(255,255,255,.04)", borderRadius:10, padding:3, marginBottom:24, border:"1px solid rgba(212,168,67,.1)" }}>
+            <button type="button" className="login-tab" onClick={() => switchMode("login")}
+              style={{ background:mode==="login"?"#D4A843":"transparent", color:mode==="login"?"#04090F":"#64748B" }}>
+              Sign In
+            </button>
+            <button type="button" className="login-tab" onClick={() => switchMode("signup")}
+              style={{ background:mode==="signup"?"#D4A843":"transparent", color:mode==="signup"?"#04090F":"#64748B" }}>
+              Create Account
+            </button>
+          </div>
+
+          {/* Google */}
+          <button type="button" className="login-google" onClick={handleGoogleSignIn} disabled={googleLoading}>
             {googleLoading
-              ? <span style={{ width: 16, height: 16, border: "2px solid rgba(255,255,255,0.2)", borderTopColor: T.white, borderRadius: "50%", animation: "spin 0.6s linear infinite", display: "inline-block" }} />
+              ? <span style={{ width:16, height:16, border:"2px solid rgba(255,255,255,.2)", borderTopColor:"#fff", borderRadius:"50%", animation:"loginSpin .6s linear infinite", display:"inline-block" }}/>
               : <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M47.5 24.6c0-1.6-.1-3.1-.4-4.6H24v8.7h13.2c-.6 3-2.4 5.5-5 7.2v6h8.1c4.7-4.4 7.2-10.8 7.2-17.3z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-8.1-6c-2.1 1.4-4.7 2.2-7.8 2.2-6 0-11-4-12.8-9.5H3v6.2C7 42.6 15 48 24 48z"/><path fill="#FBBC05" d="M11.2 28.9c-.5-1.4-.7-2.8-.7-4.4s.3-3 .7-4.4V14H3a23.9 23.9 0 0 0 0 20l8.2-5.1z"/><path fill="#EA4335" d="M24 9.5c3.4 0 6.4 1.2 8.8 3.4l6.6-6.6C35.9 2.5 30.4 0 24 0 15 0 7 5.4 3 13.9l8.2 5.1C13 13.6 18 9.5 24 9.5z"/></svg>
             }
             {googleLoading ? "Signing in..." : "Continue with Google"}
           </button>
 
           {/* Divider */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-            <div style={{ flex: 1, height: 1, background: T.border }} />
-            <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>OR</span>
-            <div style={{ flex: 1, height: 1, background: T.border }} />
+          <div style={{ display:"flex", alignItems:"center", gap:12, margin:"18px 0" }}>
+            <div style={{ flex:1, height:1, background:"rgba(212,168,67,.1)" }}/>
+            <span style={{ fontSize:11, color:"#334155", fontWeight:600 }}>OR</span>
+            <div style={{ flex:1, height:1, background:"rgba(212,168,67,.1)" }}/>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+            {/* SIGNUP FIELDS */}
             {mode === "signup" && (
               <>
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Full Name *</label>
-                  <input className="login-input" type="text" placeholder="John Smith" value={name} onChange={e => setName(e.target.value)} />
+                  <InputLabel text="Full Name *"/>
+                  <input className="login-field" type="text" autoComplete="off" placeholder="John Smith" value={name} onChange={e => setName(e.target.value)}/>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Phone</label>
-                    <input className="login-input" type="tel" placeholder="+971 50 000 0000" value={phone} onChange={e => setPhone(e.target.value)} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Country</label>
-                    <input className="login-input" type="text" placeholder="UAE" value={country} onChange={e => setCountry(e.target.value)} />
+
+                {/* Country */}
+                <div>
+                  <InputLabel text="Country"/>
+                  <select className="country-select" value={countryName} onChange={e => {
+                    setCountryName(e.target.value);
+                    const found = COUNTRIES.find(c => c.name === e.target.value);
+                    if (found) setPhoneCode(found.code);
+                  }}>
+                    {COUNTRIES.map((c,i) => <option key={i} value={c.name}>{c.name}</option>)}
+                  </select>
+                </div>
+
+                {/* Phone with country code */}
+                <div>
+                  <InputLabel text="Phone (optional)"/>
+                  <div className="phone-wrap">
+                    <select className="phone-code" value={phoneCode} onChange={e => setPhoneCode(e.target.value)}>
+                      {COUNTRIES.map((c,i) => <option key={i} value={c.code}>{c.code} {c.name}</option>)}
+                    </select>
+                    <input className="login-field" type="tel" autoComplete="off" placeholder="50 000 0000" value={phone} onChange={e => setPhone(e.target.value)} style={{ flex:1 }}/>
                   </div>
                 </div>
               </>
             )}
 
+            {/* Email */}
             <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Email Address *</label>
-              <input className="login-input" type="email" autoComplete="off" placeholder="you@company.com" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && mode === "login" && handleLogin()} />
+              <InputLabel text="Email Address *"/>
+              <input className="login-field" type="email" autoComplete="off" placeholder="you@company.com" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key==="Enter" && mode==="login" && handleLogin()}/>
             </div>
 
+            {/* Password */}
             <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Password *</label>
-              <div style={{ position: "relative" }}>
-                <input className="login-input" type={showPass ? "text" : "password"} placeholder={mode === "signup" ? "Min 8 chars + 1 number" : "--------"} value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && mode === "login" && handleLogin()} style={{ paddingRight: 44 }} />
-                <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }}>
-                  {showPass ? Icons.eyeOff : Icons.eye}
-                </button>
+              <InputLabel text="Password *"/>
+              <div style={{ position:"relative" }}>
+                <input className="login-field" type={showPass?"text":"password"} autoComplete="new-password" placeholder={mode==="signup"?"Min 8 chars + 1 number":"••••••••"} value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key==="Enter" && mode==="login" && handleLogin()} style={{ paddingRight:44 }}/>
+                <EyeIcon show={showPass} toggle={() => setShowPass(!showPass)}/>
               </div>
-              {mode === "signup" && <PasswordStrength password={pass} />}
+              {mode === "signup" && <PasswordStrengthBar password={pass}/>}
             </div>
 
+            {/* Confirm Password */}
             {mode === "signup" && (
               <div>
-                <label style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, textTransform: "uppercase", letterSpacing: 1, display: "block", marginBottom: 6 }}>Confirm Password *</label>
-                <div style={{ position: "relative" }}>
-                  <input className="login-input" type={showConfirm ? "text" : "password"} placeholder="Re-enter your password" value={confirmPass} onChange={e => setConfirmPass(e.target.value)} style={{ paddingRight: 44, borderColor: confirmPass && confirmPass !== pass ? "rgba(239,68,68,0.5)" : confirmPass && confirmPass === pass ? "rgba(16,185,129,0.5)" : undefined }} />
-                  <button type="button" onClick={() => setShowConfirm(!showConfirm)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: T.textMuted, padding: 4 }}>
-                    {showConfirm ? Icons.eyeOff : Icons.eye}
-                  </button>
+                <InputLabel text="Confirm Password *"/>
+                <div style={{ position:"relative" }}>
+                  <input className="login-field" type={showConfirm?"text":"password"} autoComplete="new-password" placeholder="Re-enter your password" value={confirmPass} onChange={e => setConfirmPass(e.target.value)}
+                    style={{ paddingRight:44, borderColor:confirmPass&&confirmPass!==pass?"rgba(239,68,68,.4)":confirmPass&&confirmPass===pass?"rgba(16,185,129,.4)":undefined }}/>
+                  <EyeIcon show={showConfirm} toggle={() => setShowConfirm(!showConfirm)}/>
                 </div>
-                {confirmPass && confirmPass !== pass && <div style={{ fontSize: 10, color: T.red, marginTop: 4 }}>✗ Passwords do not match</div>}
-                {confirmPass && confirmPass === pass && <div style={{ fontSize: 10, color: T.green, marginTop: 4 }}>✓ Passwords match</div>}
+                {confirmPass && confirmPass !== pass && <div style={{ fontSize:10, color:"#EF4444", marginTop:4, display:"flex", alignItems:"center", gap:4 }}><svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Passwords do not match</div>}
+                {confirmPass && confirmPass === pass && <div style={{ fontSize:10, color:"#10B981", marginTop:4, display:"flex", alignItems:"center", gap:4 }}><svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Passwords match</div>}
               </div>
             )}
 
-            {error && <div style={{ color: T.red, fontSize: 12, padding: "8px 12px", background: "rgba(239,68,68,0.08)", borderRadius: 8, border: "1px solid rgba(239,68,68,0.2)" }}>{error}</div>}
+            {/* Error */}
+            {error && (
+              <div style={{ color:"#EF4444", fontSize:12, padding:"10px 14px", background:"rgba(239,68,68,.07)", borderRadius:9, border:"1px solid rgba(239,68,68,.2)", display:"flex", alignItems:"center", gap:8 }}>
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                {error}
+              </div>
+            )}
 
+            {/* Forgot password */}
             {mode === "login" && (
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <button onClick={handleForgot} type="button" disabled={loading} style={{ background: "none", border: "none", color: T.gold, fontSize: 12, cursor: "pointer", fontFamily: "'Outfit',sans-serif", padding: 0 }}>
+              <div style={{ display:"flex", justifyContent:"flex-end", marginTop:-8 }}>
+                <button onClick={handleForgot} type="button" disabled={loading} style={{ background:"none", border:"none", color:"#D4A843", fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif", padding:0 }}>
                   {loading ? "Sending..." : "Forgot password?"}
                 </button>
               </div>
             )}
 
+            {/* Terms */}
             {mode === "signup" && (
-              <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
-                <input type="checkbox" checked={agreedTerms} onChange={e => setAgreedTerms(e.target.checked)} style={{ accentColor: T.gold, marginTop: 2, flexShrink: 0, width: 14, height: 14 }} />
-                <span style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6 }}>
-                  I agree to the <a href="/terms" target="_blank" rel="noreferrer" style={{ color: T.gold, fontWeight: 600 }}>Terms of Service</a> and <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: T.gold, fontWeight: 600 }}>Privacy Policy</a>. I consent to DXB Analytics processing my data for real estate intelligence services.
+              <label style={{ display:"flex", alignItems:"flex-start", gap:10, cursor:"pointer" }}>
+                <input type="checkbox" checked={agreedTerms} onChange={e => setAgreedTerms(e.target.checked)} style={{ accentColor:"#D4A843", marginTop:2, flexShrink:0, width:14, height:14 }}/>
+                <span style={{ fontSize:11, color:"#64748B", lineHeight:1.6 }}>
+                  I agree to the <a href="/terms" target="_blank" rel="noreferrer" style={{ color:"#D4A843", fontWeight:600 }}>Terms of Service</a> and <a href="/privacy" target="_blank" rel="noreferrer" style={{ color:"#D4A843", fontWeight:600 }}>Privacy Policy</a>. I consent to DXB Analytics processing my data.
                 </span>
               </label>
             )}
 
-            <button type="button" className="login-btn" onClick={mode === "login" ? handleLogin : handleSignUp} disabled={loading || (mode === "signup" && !agreedTerms)}>
-              {loading ? (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ width: 16, height: 16, border: "2px solid rgba(4,9,15,0.3)", borderTopColor: T.bg, borderRadius: "50%", animation: "spin 0.6s linear infinite", display: "inline-block" }} />
-                  {mode === "login" ? "Signing in..." : "Creating account..."}
-                </span>
-              ) : mode === "login" ? "Sign In" : "Start Free Trial ?"}
+            {/* Submit */}
+            <button type="button" className="login-submit" onClick={mode==="login" ? handleLogin : handleSignUp} disabled={loading || (mode==="signup" && !agreedTerms)}>
+              {loading
+                ? <span style={{ display:"inline-flex", alignItems:"center", gap:8 }}>
+                    <span style={{ width:16, height:16, border:"2px solid rgba(4,9,15,.3)", borderTopColor:"#04090F", borderRadius:"50%", animation:"loginSpin .6s linear infinite", display:"inline-block" }}/>
+                    {mode==="login" ? "Signing in..." : "Creating account..."}
+                  </span>
+                : mode==="login" ? "Sign In" : "Start Free Trial →"
+              }
             </button>
 
+            {/* Pro badge */}
             {mode === "signup" && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: "rgba(212,168,67,0.06)", borderRadius: 8, border: `1px solid ${T.border}` }}>
-                <span style={{ fontSize: 16 }}>›</span>
-                <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.4 }}>
-                  <span style={{ color: T.gold, fontWeight: 600 }}>7-day Pro trial</span> - Full access. No credit card. Cancel anytime.
+              <div style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 14px", background:"rgba(212,168,67,.05)", borderRadius:10, border:"1px solid rgba(212,168,67,.1)" }}>
+                <svg width="16" height="16" fill="none" stroke="#D4A843" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <div style={{ fontSize:11, color:"#94A3B8", lineHeight:1.4 }}>
+                  <span style={{ color:"#D4A843", fontWeight:700 }}>7-day Pro trial</span> — Full access. No credit card. Cancel anytime.
                 </div>
               </div>
             )}
           </div>
 
-          <div style={{ textAlign: "center", marginTop: 20, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
-            <p style={{ color: T.textMuted, fontSize: 12 }}>
-              {mode === "login" ? (
-                <>Don't have an account? <button type="button" onClick={() => switchMode("signup")} style={{ color: T.gold, background: "none", border: "none", fontWeight: 600, cursor: "pointer", fontSize: 12, fontFamily: "'Outfit',sans-serif", padding: 0 }}>Sign up free</button></>
-              ) : (
-                <>Already have an account? <button type="button" onClick={() => switchMode("login")} style={{ color: T.gold, background: "none", border: "none", fontWeight: 600, cursor: "pointer", fontSize: 12, fontFamily: "'Outfit',sans-serif", padding: 0 }}>Sign in</button></>
-              )}
+          {/* Switch mode */}
+          <div style={{ textAlign:"center", marginTop:20, paddingTop:18, borderTop:"1px solid rgba(212,168,67,.08)" }}>
+            <p style={{ color:"#475569", fontSize:12 }}>
+              {mode==="login"
+                ? <>Don't have an account? <button type="button" onClick={() => switchMode("signup")} style={{ color:"#D4A843", background:"none", border:"none", fontWeight:600, cursor:"pointer", fontSize:12, fontFamily:"'Outfit',sans-serif", padding:0 }}>Sign up free</button></>
+                : <>Already have an account? <button type="button" onClick={() => switchMode("login")} style={{ color:"#D4A843", background:"none", border:"none", fontWeight:600, cursor:"pointer", fontSize:12, fontFamily:"'Outfit',sans-serif", padding:0 }}>Sign in</button></>
+              }
             </p>
           </div>
-        </div>
 
-        <p style={{ textAlign: "center", color: T.textMuted, fontSize: 11, marginTop: 20 }}>
-          Secured by Firebase - SSL Encrypted - GDPR Compliant
-        </p>
+          <p style={{ textAlign:"center", color:"#1E293B", fontSize:11, marginTop:16, display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
+            <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Secured by Firebase · SSL Encrypted · GDPR Compliant
+          </p>
+        </div>
       </div>
     </div>
   );
