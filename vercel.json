@@ -1,5 +1,17 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "outputDirectory": "dist",
+  "buildCommand": "vite build",
+  "devCommand": "vite",
+  "framework": "vite",
+  "hosting": {
+    "site": "dxb-analytics",
+    "public": "dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [{"source": "**", "destination": "/index.html"}]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
   "crons": [
     {
       "path": "/api/cron-dld-daily",
