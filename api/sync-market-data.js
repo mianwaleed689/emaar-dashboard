@@ -7,7 +7,7 @@ module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const BAYUT_KEY = process.env.BAYUT_RAPIDAPI_KEY || "420de140camsh35f3baf70380d11p1e0c92jsn00005ba30591";
+  const BAYUT_KEY = process.env.BAYUT_RAPIDAPI_KEY || process.env.BAYUT_RAPIDAPI_KEY;
 
   const COMMUNITIES = [
     { name: "Downtown Dubai",           locationId: "5269" },

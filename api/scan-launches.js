@@ -2,7 +2,7 @@
 // Vercel Serverless Function — sits at PROJECT ROOT /api/
 // Multi-page, multi-category, multi-source Dubai real estate scanner
 
-const BAYUT_KEY = process.env.BAYUT_RAPIDAPI_KEY || "420de140camsh35f3baf70380d11p1e0c92jsn00005ba30591";
+const BAYUT_KEY = process.env.BAYUT_RAPIDAPI_KEY || process.env.BAYUT_RAPIDAPI_KEY;
 
 const HEADERS = {
   "x-rapidapi-key": BAYUT_KEY,

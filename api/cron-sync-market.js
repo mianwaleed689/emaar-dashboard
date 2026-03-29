@@ -20,7 +20,7 @@ function getDb() {
   return getFirestore();
 }
 
-const BAYUT_KEY = process.env.BAYUT_RAPIDAPI_KEY || "420de140camsh35f3baf70380d11p1e0c92jsn00005ba30591";
+const BAYUT_KEY = process.env.BAYUT_RAPIDAPI_KEY || process.env.BAYUT_RAPIDAPI_KEY;
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 // 49 communities with Bayut location IDs
