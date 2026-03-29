@@ -13494,7 +13494,7 @@ export default function AdminPanel() {
   const newLeadsThisWeek = leads.filter(l => { try { return (now - new Date(l.createdAt)) < msPerWeek; } catch { return false; } }).length;
 
   // ── SIGNUP TIMELINE — 14 days with last-week comparison ──
-  const signupTimeline = (() => {
+  const signupTimeline = useMemo(() => {
     const days = [];
     for (let i = 13; i >= 0; i--) {
       const d = new Date(now); d.setDate(d.getDate() - i);
@@ -13510,7 +13510,7 @@ export default function AdminPanel() {
       });
     }
     return days;
-  })();
+  }, [users]); // eslint-disable-line
   const signupThisWeek = signupTimeline.slice(-7).reduce((s, d) => s + d.count, 0);
   const signupLastWeek = signupTimeline.slice(-7).reduce((s, d) => s + d.lastWeek, 0);
   const signupTrend = weekTrend(signupThisWeek, signupLastWeek);
@@ -13553,7 +13553,7 @@ export default function AdminPanel() {
 
   // ── CROSS-PLATFORM ACTIVITY FEED ──
   // Combines users, auditLog, leads, verifications into one sorted feed
-  const activityFeed = (() => {
+  const activityFeed = useMemo(() => {
     const items = [];
     // New signups
     [...users]
@@ -13599,7 +13599,7 @@ export default function AdminPanel() {
       .filter(i => i.time)
       .sort((a, b) => new Date(b.time) - new Date(a.time))
       .slice(0, 10);
-  })();
+  }, [users, auditLog, leads, verifications]); // eslint-disable-line
 
   /* ─── DATA MANAGER ACTIONS ─── */
   
