@@ -12869,7 +12869,7 @@ export default function AdminPanel() {
         setAdminUser(u);
         try {
           const snap = await getDoc(doc(db, "users", u.uid));
-          if (snap.exists() && snap.data().role === "admin") {
+          if (snap.exists() && (snap.data().role === "admin" || snap.data().role === "superAdmin" || snap.data().superAdmin === true)) {
             setIsAdmin(true);
             // Log admin login (best-effort — audit infra may not be ready yet)
             logAudit(db, { action: "admin_login", uid: u.uid }).catch(() => {});
