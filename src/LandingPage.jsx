@@ -120,7 +120,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
       solution: "Get verified project data, yields, and ROI in 30 seconds",
       wins: ["Close faster with data-backed recommendations", "Share professional project reports via WhatsApp instantly", "Never be caught without an answer on price per sqft or handover"],
       stat: "Save 2 hrs per client meeting",
-      icon: "??",
+      icon: "●",
     },
     investor: {
       label: "Property Investor",
@@ -128,7 +128,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
       solution: "Get verified yields, risk scores, and ROI projections",
       wins: ["Compare 3 projects side-by-side in 30 seconds", "See real DLD transaction data, not marketing brochures", "Calculate exact ROI � long-term, Airbnb, or flip strategy"],
       stat: "Verify any project in 30 seconds",
-      icon: "??",
+      icon: "●",
     },
     brokerage: {
       label: "Brokerage / Agency",
@@ -136,23 +136,23 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
       solution: "One platform for your entire team � from AED 499/mo",
       wins: ["Standardize how your team researches properties", "Share professional reports that impress clients", "Track market shifts before your competitors do"],
       stat: "From AED 499/mo for your whole team",
-      icon: "??",
+      icon: "●",
     },
   };
 
   const tools = [
-    { icon: "??", label: "Overview" }, { icon: "??", label: "Financials" },
-    { icon: "???", label: "Projects" }, { icon: "??", label: "Handover" },
-    { icon: "??", label: "Launch Cal." }, { icon: "???", label: "Map" },
-    { icon: "???", label: "Neighbourhoods" }, { icon: "??", label: "Yields" },
-    { icon: "??", label: "Competitors" }, { icon: "??", label: "ROI Calc" },
-    { icon: "??", label: "Flip Calc" }, { icon: "??", label: "Mortgage" },
-    { icon: "???", label: "Risk" }, { icon: "??", label: "Price History" },
-    { icon: "??", label: "DLD Volumes" }, { icon: "??", label: "Currency" },
-    { icon: "?", label: "Inv. Score" }, { icon: "??", label: "Golden Visa" },
-    { icon: "??", label: "STR vs LTR" }, { icon: "??", label: "Portfolio" },
-    { icon: "??", label: "Srvc Charges" }, { icon: "??", label: "DXB Estimate" },
-    { icon: "??", label: "Market" },
+    { icon: "◎", label: "Overview" }, { icon: "$", label: "Financials" },
+    { icon: "⊞", label: "Projects" }, { icon: "✓", label: "Handover" },
+    { icon: "▦", label: "Launch Cal." }, { icon: "⊕", label: "Map" },
+    { icon: "⊕", label: "Neighbourhoods" }, { icon: "%", label: "Yields" },
+    { icon: "≡", label: "Competitors" }, { icon: "∑", label: "ROI Calc" },
+    { icon: "↑", label: "Flip Calc" }, { icon: "⌂", label: "Mortgage" },
+    { icon: "⚠", label: "Risk" }, { icon: "↗", label: "Price History" },
+    { icon: "▤", label: "DLD Volumes" }, { icon: "¤", label: "Currency" },
+    { icon: "★", label: "Inv. Score" }, { icon: "♦", label: "Golden Visa" },
+    { icon: "⇄", label: "STR vs LTR" }, { icon: "▣", label: "Portfolio" },
+    { icon: "⊟", label: "Srvc Charges" }, { icon: "≈", label: "DXB Estimate" },
+    { icon: "◈", label: "Market" },
   ];
 
   const faqs = [
@@ -298,13 +298,13 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                   {/* Nav tabs */}
                   <div style={{ fontSize: 7, color: "#64748B", padding: "0 12px 4px", textTransform: "uppercase", letterSpacing: 1 }}>Intelligence</div>
                   {[
-                    { t: "Overview",    active: true,  icon: "?" },
-                    { t: "Projects",    active: false, icon: "?" },
+                    { t: "Overview",    active: true,  icon: "●" },
+                    { t: "Projects",    active: false, icon: "●" },
                     { t: "Yields",      active: false, icon: "%" },
-                    { t: "Map",         active: false, icon: "?" },
-                    { t: "Mortgage",    active: false, icon: "??" },
-                    { t: "Portfolio",   active: false, icon: "?" },
-                    { t: "Risk",        active: false, icon: "?" },
+                    { t: "Map",         active: false, icon: "●" },
+                    { t: "Mortgage",    active: false, icon: "●" },
+                    { t: "Portfolio",   active: false, icon: "●" },
+                    { t: "Risk",        active: false, icon: "●" },
                   ].map(({ t, active, icon }) => (
                     <div key={t} style={{ padding: "6px 12px", fontSize: 10, color: active ? "#D4A843" : "#64748B", background: active ? "rgba(212,168,67,.08)" : "transparent", borderRight: active ? "2px solid #D4A843" : "none", display: "flex", alignItems: "center", gap: 6 }}>
                       <span style={{ fontSize: 8, opacity: active ? 1 : 0.5 }}>{icon}</span>{t}
@@ -312,8 +312,8 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                   ))}
                   <div style={{ marginTop: 8, fontSize: 7, color: "#64748B", padding: "0 12px 4px", textTransform: "uppercase", letterSpacing: 1 }}>CRM</div>
                   {[
-                    { t: "Leads",    active: false, icon: "??" },
-                    { t: "Clients",  active: false, icon: "??" },
+                    { t: "Leads",    active: false, icon: "●" },
+                    { t: "Clients",  active: false, icon: "●" },
                   ].map(({ t, active, icon }) => (
                     <div key={t} style={{ padding: "6px 12px", fontSize: 10, color: "#64748B", display: "flex", alignItems: "center", gap: 6 }}>
                       <span style={{ fontSize: 8, opacity: 0.5 }}>{icon}</span>{t}
@@ -498,7 +498,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                 ))}
               </div>
               <div style={{ marginTop: 20, padding: "10px 14px", background: "rgba(16,185,129,.1)", borderRadius: 10, display: "inline-block" }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: T.green }}>?? {r.stat}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: T.green }}>{r.stat}</span>
               </div>
             </div>
           </div>
@@ -519,9 +519,9 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 34, fontWeight: 900, color: T.white, marginTop: 10, marginBottom: 48 }}>Up and running in 60 seconds</h2>
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 24 }}>
             {[
-              { num: "01", title: "Sign Up Free", desc: "Create your account � no credit card needed. Your 7-day Pro trial starts immediately.", icon: "??" },
-              { num: "02", title: "Explore Any Project", desc: "Search 208+ projects, filter by community, price, or handover year. Click any project for full intelligence.", icon: "??" },
-              { num: "03", title: "Share & Close", desc: "WhatsApp project details to clients in one tap. PDF reports, comparison tools, and ROI calculators ready instantly.", icon: "??" },
+              { num: "01", title: "Sign Up Free", desc: "Create your account � no credit card needed. Your 7-day Pro trial starts immediately.", icon: "●" },
+              { num: "02", title: "Explore Any Project", desc: "Search 208+ projects, filter by community, price, or handover year. Click any project for full intelligence.", icon: "●" },
+              { num: "03", title: "Share & Close", desc: "WhatsApp project details to clients in one tap. PDF reports, comparison tools, and ROI calculators ready instantly.", icon: "●" },
             ].map((s, i) => (
               <div key={i} className="feature-card" style={{ textAlign: "left", position: "relative" }}>
                 <div style={{ position: "absolute", top: -12, left: 20, fontFamily: "'Fraunces',serif", fontSize: 11, fontWeight: 900, color: T.gold, background: T.bg, padding: "0 8px" }}>{s.num}</div>
@@ -544,14 +544,14 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           </div>
           <div className="features-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
             {[
-              { icon: "??", title: "Developer Financials", desc: "Multi-year revenue, profit, backlog, EPS � sourced directly from official annual reports." },
-              { icon: "???", title: "Project Intelligence", desc: "Every active project: price/sqft, payment plan, construction %, handover timeline." },
-              { icon: "??", title: "Yield & ROI Calculator", desc: "Gross/net yields by community. Calculate returns for long-term, Airbnb, or flip." },
-              { icon: "??", title: "3-Project Comparison", desc: "Side-by-side on price, yield, handover, payment plan � share via WhatsApp in one tap." },
-              { icon: "???", title: "Risk Assessment", desc: "9-factor risk matrix: market, regulatory, liquidity, construction, interest rate." },
-              { icon: "??", title: "Golden Visa Finder", desc: "Automatically flag AED 2M+ projects eligible for 10-year UAE Golden Visa." },
-              { icon: "??", title: "Mortgage Calculator", desc: "EIBOR-based, live rates. Shows monthly payment + all UAE transaction costs." },
-              { icon: "??", title: "DXB Estimate AVM", desc: "Automated valuations using DLD transaction data � per unit type, per community." },
+              { icon: "●", title: "Developer Financials", desc: "Multi-year revenue, profit, backlog, EPS � sourced directly from official annual reports." },
+              { icon: "●", title: "Project Intelligence", desc: "Every active project: price/sqft, payment plan, construction %, handover timeline." },
+              { icon: "●", title: "Yield & ROI Calculator", desc: "Gross/net yields by community. Calculate returns for long-term, Airbnb, or flip." },
+              { icon: "●", title: "3-Project Comparison", desc: "Side-by-side on price, yield, handover, payment plan � share via WhatsApp in one tap." },
+              { icon: "●", title: "Risk Assessment", desc: "9-factor risk matrix: market, regulatory, liquidity, construction, interest rate." },
+              { icon: "●", title: "Golden Visa Finder", desc: "Automatically flag AED 2M+ projects eligible for 10-year UAE Golden Visa." },
+              { icon: "●", title: "Mortgage Calculator", desc: "EIBOR-based, live rates. Shows monthly payment + all UAE transaction costs." },
+              { icon: "●", title: "DXB Estimate AVM", desc: "Automated valuations using DLD transaction data � per unit type, per community." },
             ].map((f, i) => (
               <div key={i} className="feature-card" style={{ animation: `fadeUp .6s ease-out ${i*.07}s both` }}>
                 <div style={{ fontSize: 28, marginBottom: 12 }}>{f.icon}</div>
@@ -807,7 +807,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                 </div>
                 <p style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.75, flex: 1, fontStyle: "italic" }}>"{t.quote}"</p>
                 <div style={{ padding: "6px 12px", background: `${t.color}10`, border: `1px solid ${t.color}25`, borderRadius: 8, fontSize: 11, fontWeight: 700, color: t.color, display: "inline-block", alignSelf: "flex-start" }}>
-                  ?? {t.stat}
+                  {t.stat}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
                   <div style={{ width: 40, height: 40, borderRadius: "50%", background: `${t.color}20`, border: `2px solid ${t.color}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: t.color, flexShrink: 0 }}>{t.initials}</div>
@@ -843,7 +843,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                 </div>
                 <p style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.75, flex: 1, fontStyle: "italic" }}>"{t.quote}"</p>
                 <div style={{ padding: "6px 12px", background: `${t.color}10`, border: `1px solid ${t.color}25`, borderRadius: 8, fontSize: 11, fontWeight: 700, color: t.color, display: "inline-block", alignSelf: "flex-start" }}>
-                  ?? {t.stat}
+                  {t.stat}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
                   <div style={{ width: 40, height: 40, borderRadius: "50%", background: `${t.color}20`, border: `2px solid ${t.color}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: t.color, flexShrink: 0 }}>{t.initials}</div>
@@ -873,10 +873,10 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           {/* Trust badges */}
           <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 48, flexWrap: "wrap" }}>
             {[
-              { icon: "??", label: "Bank-grade Security", sub: "Firebase encrypted" },
-              { icon: "??", label: "Verified Data", sub: "DLD � Developer IR � Knight Frank" },
-              { icon: "??", label: "20 Languages", sub: "Including Arabic & Urdu" },
-              { icon: "?", label: "Real-time Updates", sub: "Live market data" },
+              { icon: "●", label: "Bank-grade Security", sub: "Firebase encrypted" },
+              { icon: "●", label: "Verified Data", sub: "DLD � Developer IR � Knight Frank" },
+              { icon: "●", label: "20 Languages", sub: "Including Arabic & Urdu" },
+              { icon: "●", label: "Real-time Updates", sub: "Live market data" },
             ].map((badge, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 20px", borderRadius: 12, background: T.surface, border: `1px solid ${T.border}` }}>
                 <span style={{ fontSize: 20 }}>{badge.icon}</span>
@@ -907,7 +907,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             <a href="mailto:hello@dxbanalytics.com?subject=DXB%20Analytics%20Enquiry" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "18px 32px", background: "transparent", borderRadius: 12, color: T.gold, fontSize: 15, fontWeight: 700, textDecoration: "none", border: `1.5px solid ${T.gold}`, transition: "all .2s" }}
               onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,.1)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-              ?? Talk to Us
+              Talk to Us
             </a>
           </div>
         </div>
