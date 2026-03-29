@@ -15980,7 +15980,7 @@ export default function AdminPanel() {
 
                   // ── 7-DAY SPARKLINE ──
                   const last7 = Array.from({length:7}, (_,i) => {
-                    const d = new Date(); d.setDate(d.getDate() - (6-i));
+                    const d = new Date(now); d.setDate(d.getDate() - (6-i));
                     const day = d.toDateString();
                     return { day: d.toLocaleDateString("en-AE",{weekday:"short"}), count: auditLog.filter(l => { try { return new Date(l.changedAt).toDateString() === day; } catch { return false; }}).length };
                   });
@@ -15988,7 +15988,7 @@ export default function AdminPanel() {
 
                   // ── 30-DAY ACTIVITY DATA ──
                   const last30 = Array.from({ length: 30 }, (_, i) => {
-                    const d = new Date(); d.setDate(d.getDate() - (29 - i));
+                    const d = new Date(now); d.setDate(d.getDate() - (29 - i));
                     const day = d.toDateString();
                     const count = auditLog.filter(l => { try { return new Date(l.changedAt).toDateString() === day; } catch { return false; } }).length;
                     return { day: d.toLocaleDateString("en-AE", { day: "2-digit", month: "short" }), count };
