@@ -3,9 +3,6 @@
   "buildCommand": "vite build",
   "devCommand": "vite",
   "rewrites": [{"source": "/(.*)", "destination": "/index.html"}],
-  "firestore": {
-    "rules": "firestore.rules"
-  },
   "crons": [
     {
       "path": "/api/cron-dld-daily",
