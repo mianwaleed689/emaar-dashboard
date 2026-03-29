@@ -9767,6 +9767,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
   /* ─── ACTIONS ─── */
   const handleBulkAction = async () => {
     if (!bulkTier || bulkSel.length === 0) return;
+    if (bulkSel.length > 10 && !window.confirm(`You are about to change ${bulkSel.length} users to "${bulkTier}". Are you sure?`)) return;
     for (const uid of bulkSel) await changeTier(uid, bulkTier);
     await logAudit(db, { action: "bulk_tier_change", uids: bulkSel, newTier: bulkTier });
     await checkAlerts(db);
@@ -13145,6 +13146,19 @@ export default function AdminPanel() {
       leadsLoadingRef.current = false;
     }
   }, [db]);
+
+  // ── Auto sign-out after 2 hours inactivity ──
+  useEffect(() => {
+    if (!isAdmin) return;
+    let idleTimer;
+    const resetTimer = () => {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => { signOut(auth); notify("Signed out due to inactivity"); }, 2 * 60 * 60 * 1000);
+    };
+    ["mousemove","keydown","click","scroll"].forEach(e => window.addEventListener(e, resetTimer));
+    resetTimer();
+    return () => { clearTimeout(idleTimer); ["mousemove","keydown","click","scroll"].forEach(e => window.removeEventListener(e, resetTimer)); };
+  }, [isAdmin]);
 
   useEffect(() => {
     if (isAdmin) fetchLeads();
@@ -20554,6 +20568,7 @@ export default function AdminPanel() {
             // ── Bulk update ───────────────────────────────────────────────
             const bulkUpdateStatus = async (newStatus) => {
               if (leadSelectedIds.length === 0) { notify("Select leads first"); return; }
+              if (leadSelectedIds.length > 100 && !window.confirm(`You are about to update ${leadSelectedIds.length} leads to "${newStatus}". Are you sure?`)) return;
               try {
                 await Promise.all(leadSelectedIds.map(id => setDoc(doc(db, "leads", id), { status: newStatus, updatedAt: new Date().toISOString() }, { merge: true })));
                 notify(`${leadSelectedIds.length} leads -> ${newStatus}`);
