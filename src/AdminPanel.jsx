@@ -13427,11 +13427,11 @@ export default function AdminPanel() {
   }).length;
   const paidLastWeek = (() => {
     // approximate: paid users whose createdAt was in last 7 days
-    const newPaidThisWeek = users.filter(u => {
-      try { return (u.tier === "pro" || u.tier === "enterprise") && (now - new Date(u.createdAt)) < msPerWeek; } catch { return false; }
+    const newPaidThisWeek = auditLog.filter(l => {
+      try { return l.action === "tier_change" && (l.to === "pro" || l.to === "enterprise") && (now - new Date(l.changedAt)) < msPerWeek; } catch { return false; }
     }).length;
-    const newPaidLastWeek = users.filter(u => {
-      try { const ms = now - new Date(u.createdAt); return (u.tier === "pro" || u.tier === "enterprise") && ms >= msPerWeek && ms < msPerWeek * 2; } catch { return false; }
+    const newPaidLastWeek = auditLog.filter(l => {
+      try { const ms = now - new Date(l.changedAt); return l.action === "tier_change" && (l.to === "pro" || l.to === "enterprise") && ms >= msPerWeek && ms < msPerWeek * 2; } catch { return false; }
     }).length;
     return { thisWeek: newPaidThisWeek, lastWeek: newPaidLastWeek };
   })();
@@ -13440,7 +13440,7 @@ export default function AdminPanel() {
     if (previous === 0 && current === 0) return { pct: 0, dir: "flat", label: "—" };
     if (previous === 0) return { pct: 100, dir: "up", label: `+${current} new` };
     const pct = Math.round(((current - previous) / previous) * 100);
-    return { pct: Math.abs(pct), dir: pct > 0 ? "up" : pct < 0 ? "down" : "flat", label: pct > 0 ? `←${Math.abs(pct)}%` : pct < 0 ? `↑${Math.abs(pct)}%` : "=" };
+    return { pct: Math.abs(pct), dir: pct > 0 ? "up" : pct < 0 ? "down" : "flat", label: pct > 0 ? `↑${Math.abs(pct)}%` : pct < 0 ? `↓${Math.abs(pct)}%` : "=" };
   };
   const usersTrend  = weekTrend(stats.thisWeek, usersLastWeekTotal);
   const mrrTrend    = weekTrend(paidLastWeek.thisWeek, paidLastWeek.lastWeek);
@@ -13448,7 +13448,7 @@ export default function AdminPanel() {
   // ── CHURN — derived from auditLog ──
   // A churn event = tier_change where from is pro/enterprise and to is free/pro_trial
   const churnEvents = auditLog.filter(l =>
-    l.action === "tier_change" &&
+    (l.action === "tier_change" || l.action === "bulk_tier_change") &&
     (l.from === "pro" || l.from === "enterprise") &&
     (l.to === "free" || l.to === "pro_trial")
   );
@@ -13579,7 +13579,7 @@ export default function AdminPanel() {
       });
     });
     // New leads
-    leads.slice(0, 3).forEach(l => items.push({
+    [...leads].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 3).forEach(l => items.push({
       type: "lead", uid: null, user: null,
       time: l.createdAt, icon: "lead",
       label: `New lead: ${l.name || l.email || "Anonymous"}`,
@@ -15175,7 +15175,7 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>ARR: AED {arr.toLocaleString()}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 5 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: mrrTrend.dir === "up" ? T.green : mrrTrend.dir === "down" ? T.red : T.textMuted }}>
-                        {mrrTrend.dir === "up" ? "←" : mrrTrend.dir === "down" ? "↑" : "—"} {mrrTrend.label}
+                        {mrrTrend.dir === "up" ? "↑" : mrrTrend.dir === "down" ? "↓" : "—"} {mrrTrend.label}
                       </span>
                       <span style={{ fontSize: 9, color: T.textMuted }}>vs last week</span>
                     </div>
@@ -15202,7 +15202,7 @@ export default function AdminPanel() {
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>+{stats.today} today</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 5 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: usersTrend.dir === "up" ? T.green : usersTrend.dir === "down" ? T.red : T.textMuted }}>
-                        {usersTrend.dir === "up" ? "←" : usersTrend.dir === "down" ? "↑" : "—"} {usersTrend.label}
+                        {usersTrend.dir === "up" ? "↑" : usersTrend.dir === "down" ? "↓" : "—"} {usersTrend.label}
                       </span>
                       <span style={{ fontSize: 9, color: T.textMuted }}>vs last week</span>
                     </div>
@@ -15357,7 +15357,7 @@ export default function AdminPanel() {
                         <span style={{ color: T.textMuted }}>Last week</span>
                       </div>
                       <div style={{ padding: "3px 10px", borderRadius: 6, background: signupTrend.dir === "up" ? "rgba(16,185,129,0.1)" : signupTrend.dir === "down" ? "rgba(239,68,68,0.1)" : T.surfaceAlt, fontSize: 11, fontWeight: 700, color: signupTrend.dir === "up" ? T.green : signupTrend.dir === "down" ? T.red : T.textMuted }}>
-                        {signupTrend.dir === "up" ? "←" : signupTrend.dir === "down" ? "↑" : ""} {signupThisWeek} vs {signupLastWeek} last week
+                        {signupTrend.dir === "up" ? "↑" : signupTrend.dir === "down" ? "↓" : ""} {signupThisWeek} vs {signupLastWeek} last week
                       </div>
                     </div>
                   </div>
