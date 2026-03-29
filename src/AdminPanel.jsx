@@ -12899,12 +12899,15 @@ export default function AdminPanel() {
 
   /* ─── FETCH USERS ─── */
   const fetchUsers = useCallback(async () => {
+    let cancelled = false;
     try {
       const snap = await getDocs(collection(db, "users"));
+      if (cancelled) return;
       const list = [];
       snap.forEach(d => list.push({ uid: d.id, ...plainify(d.data()) }));
       setUsers(list);
-    } catch (e) { console.error("Fetch users:", e); }
+    } catch (e) { if (!cancelled) console.error("Fetch users:", e); }
+    return () => { cancelled = true; };
   }, []);
 
   // Real-time listener — auto-updates table when any user doc changes
@@ -13092,10 +13095,12 @@ export default function AdminPanel() {
 
       // ── Step 3: Background fetch remaining in batches of 500 ──
       // No re-renders until each batch completes — keeps UI smooth
+      let cancelled = false;
       let all = [...firstBatch];
       let lastDoc = snap1.empty ? null : snap1.docs[snap1.docs.length - 1];
 
       const loadNext = async () => {
+        if (cancelled) return;
         if (!lastDoc) {
           // All done — sort and update UI once
           all.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
@@ -13135,7 +13140,15 @@ export default function AdminPanel() {
     }
   }, [db]);
 
-  useEffect(() => { if (isAdmin) fetchLeads(); }, [isAdmin]); // eslint-disable-line
+  useEffect(() => {
+    if (isAdmin) fetchLeads();
+    return () => {
+      if (leadSearchTimer.current) clearTimeout(leadSearchTimer.current);
+      window._revenuePayments = null;
+      window._revenuePaymentsLoaded = false;
+      window._digestLog = null;
+    };
+  }, [isAdmin]); // eslint-disable-line
 
   /* ─── FETCH AUDIT LOG ─── */
   const fetchAuditLog = useCallback(async () => {
