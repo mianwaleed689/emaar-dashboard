@@ -20284,7 +20284,7 @@ export default function AdminPanel() {
             const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
             const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            const tomorrowEnd = new Date(todayStart.getTime() + 2 * 24 * 60 * 60 * 1000);
+            const tomorrowEnd = new Date(todayStart.getTime() + 1 * 24 * 60 * 60 * 1000);
 
             // ── Lead Scoring (0-100) ──────────────────────────────────────
             const scoreLead = (lead) => {
@@ -20400,7 +20400,6 @@ export default function AdminPanel() {
               if (lfDupEmail && !((l.tags||[]).includes("duplicate_email"))) return false;
               if (lfShortPhone && !((l.tags||[]).includes("phone_short"))) return false;
               // Fix nan project display inline
-              if (l.project === "nan" || l.project === "NaN" || l.project === "null") l.project = "";
               return true;
             }).sort((a, b) => {
               if (isOverdue(a) && !isOverdue(b)) return -1;
@@ -20498,9 +20497,11 @@ export default function AdminPanel() {
                 });
                 await logAudit(db, { action: "lead_created", leadId: id });
                 notify("Lead added!");
+                const newLead = { id, ...addLeadForm, phone: cleanPhone, status: "New", createdAt: new Date().toISOString(), activity: [], notes: addLeadForm.notes ? [{ text: addLeadForm.notes, by: adminUser?.email || "admin", at: new Date().toISOString() }] : [] };
+                setLeads(prev => [newLead, ...prev]);
+                try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
                 setShowAddLead(false);
-                setAddLeadForm({ name: "", email: "", phone: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
-                fetchLeads();
+                setAddLeadForm({ name: "", email: "", phone: "", phoneCode: "+971", phoneNum: "", source: "Manual", project: "", notes: "", budget: "", nationality: "", followUpDate: "" });
               } catch (e) { notify("Error: " + e.message); }
               setAddLeadLoading(false);
             };
@@ -20518,7 +20519,8 @@ export default function AdminPanel() {
                 await setDoc(doc(db, "leads", leadId), update, { merge: true });
                 await logAudit(db, { action: "lead_status_change", leadId, to: newStatus });
                 notify(`Status ${newStatus}`);
-                fetchLeads();
+                setLeads(prev => prev.map(l => l.id === leadId ? { ...l, ...update } : l));
+                try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
                 if (leadDrawer?.id === leadId) setLeadDrawer(prev => ({ ...prev, status: newStatus, ...update }));
               } catch (e) { notify("Error: " + e.message); }
             };
@@ -20529,8 +20531,9 @@ export default function AdminPanel() {
               try {
                 await Promise.all(leadSelectedIds.map(id => setDoc(doc(db, "leads", id), { status: newStatus, updatedAt: new Date().toISOString() }, { merge: true })));
                 notify(`${leadSelectedIds.length} leads -> ${newStatus}`);
+                setLeads(prev => prev.map(l => leadSelectedIds.includes(l.id) ? { ...l, status: newStatus, updatedAt: new Date().toISOString() } : l));
+                try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
                 setLeadSelectedIds([]);
-                fetchLeads();
               } catch (e) { notify("Error: " + e.message); }
             };
 
@@ -20561,7 +20564,8 @@ export default function AdminPanel() {
                 setLeadDrawer(prev => ({ ...prev, notes, activity }));
                 setLeadNote("");
                 notify("Note added");
-                fetchLeads();
+                setLeads(prev => prev.map(l => l.id === leadDrawer.id ? { ...l, notes, activity } : l));
+                try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
               } catch (e) { notify("Error: " + e.message); }
               setLeadNoteSaving(false);
             };
@@ -20576,7 +20580,8 @@ export default function AdminPanel() {
                 await setDoc(doc(db, "leads", leadDrawer.id), { status: "Converted", userId, convertedAt: new Date().toISOString(), updatedAt: new Date().toISOString() }, { merge: true });
                 await logAudit(db, { action: "lead_converted", leadId: leadDrawer.id, userId });
                 notify("Lead converted to user!");
-                fetchLeads();
+                setLeads(prev => prev.map(l => l.id === leadDrawer.id ? { ...l, status: "Converted", userId, convertedAt: new Date().toISOString() } : l));
+                try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
                 fetchUsers();
                 setLeadDrawer(null);
               } catch (e) { notify("Error: " + e.message); }
@@ -20592,7 +20597,8 @@ export default function AdminPanel() {
                 await setDoc(doc(db, "leads", lead.id), { respondedAt: new Date().toISOString(), updatedAt: new Date().toISOString(), activity }, { merge: true });
                 await logAudit(db, { action: "lead_email_sent", leadId: lead.id });
                 notify("Email sent!");
-                fetchLeads();
+                setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, activity } : l));
+                try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
                 if (leadDrawer?.id === lead.id) setLeadDrawer(prev => ({ ...prev, activity }));
               } catch (e) { notify("Email failed: " + e.message); }
               setSendingEmail(false);
@@ -20646,7 +20652,7 @@ export default function AdminPanel() {
 
                 {/* KPI BAR */}
                 <div className="fade-up" style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 14, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, overflow: "hidden", flexWrap: "wrap" }}>
-                  <button type="button" onClick={() => { localStorage.removeItem("dxb_leads_v3"); localStorage.removeItem("dxb_leads_v3_ts"); fetchLeads(true); notify("↺ Reloading all leads..."); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
+                  <button type="button" onClick={() => { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); fetchLeads(true); notify("↺ Reloading all leads..."); }} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, padding: "14px 16px", background: T.goldGlow, border: "none", borderRight: `1px solid ${T.border}`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600, flexShrink: 0 }}>{I.refresh}</button>
                   {[
                     { label: "Total", value: stats.total, color: T.gold },
                     { label: "New", value: stats.new, color: "#3B82F6" },
@@ -21232,7 +21238,7 @@ export default function AdminPanel() {
                     setLfGoldenVisa(false); setLfHasWhatsApp(false); setLfHasEmail(false); setLfNoWhatsApp(false);
                     setLfBedrooms("all"); setLfOffPlan("all"); setLfDeveloper("all");
                     setLfPayment("all"); setLfVisa("all"); setLfTag("all");
-                    setLfNeverContacted(false); setLfHasFollowUp(false); setLeadPage(1);
+                    setLfNeverContacted(false); setLfHasFollowUp(false); setLfUnreachable(false); setLfDupPhone(false); setLfDupEmail(false); setLfShortPhone(false); setLeadPage(1);
                   };
                   return (
                     <div style={{ marginBottom: 16 }}>
@@ -21368,7 +21374,7 @@ export default function AdminPanel() {
                       { id: "Converted", label: "Converted", color: T.green },
                       { id: "Lost", label: "Lost", color: T.red },
                     ].map(stage => {
-                      const stageLeads = leads.filter(l => (l.status || "New") === stage.id).sort((a, b) => {
+                      const stageLeads = filtered.filter(l => (l.status || "New") === stage.id).sort((a, b) => {
                         if (isOverdue(a) && !isOverdue(b)) return -1;
                         if (!isOverdue(a) && isOverdue(b)) return 1;
                         return scoreLead(b) - scoreLead(a);
@@ -21967,7 +21973,8 @@ export default function AdminPanel() {
                                         const activity = [...(leadDrawer.activity || []), { type: "edit", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `${field.label} updated` }];
                                         await setDoc(doc(db, "leads", leadDrawer.id), { [field.key]: e.target.value, activity, updatedAt: new Date().toISOString() }, { merge: true });
                                         notify(`${field.label} saved`);
-                                        fetchLeads();
+                                        setLeads(prev => prev.map(l => l.id === leadDrawer.id ? { ...l, [field.key]: e.target.value, activity } : l));
+                                        try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
                                       } catch { notify("Error saving"); }
                                     }}
                                     style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", boxSizing: "border-box" }}
@@ -21985,7 +21992,8 @@ export default function AdminPanel() {
                                     const activity = [...(leadDrawer.activity || []), { type: "edit", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Nationality updated" }];
                                     await setDoc(doc(db, "leads", leadDrawer.id), { nationality: e.target.value, activity, updatedAt: new Date().toISOString() }, { merge: true });
                                     notify("Nationality saved");
-                                    fetchLeads();
+                                    setLeads(prev => prev.map(l => l.id === leadDrawer.id ? { ...l, nationality: e.target.value, activity } : l));
+                                    try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
                                   } catch { notify("Error saving"); }
                                 }}
                                 style={{ width: "100%", padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: leadDrawer.nationality ? T.white : T.textMuted, fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
@@ -22118,7 +22126,7 @@ export default function AdminPanel() {
                           </div>
                           <button type="button" onClick={async () => {
                             if (!window.confirm(`Delete lead "${leadDrawer.name || leadDrawer.email}"?`)) return;
-                            try { await deleteDoc(doc(db, "leads", leadDrawer.id)); notify("Lead deleted"); setLeadDrawer(null); fetchLeads(); } catch (e) { notify("Error: " + e.message); }
+                            try { await deleteDoc(doc(db, "leads", leadDrawer.id)); notify("Lead deleted"); setLeads(prev => prev.filter(l => l.id !== leadDrawer.id)); try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {} setLeadDrawer(null); } catch (e) { notify("Error: " + e.message); }
                           }} style={{ width: "100%", padding: "10px", borderRadius: 8, border: `1px solid rgba(239,68,68,0.3)`, background: "rgba(239,68,68,0.08)", color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
                             Delete Lead
                           </button>
