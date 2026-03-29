@@ -10647,7 +10647,7 @@ function setAlertThreshold(n) { _alertThreshold = n; }
 
 async function logAudit(db, payload) {
   try {
-    const ip = await getAdminIP();
+    const ip = _cachedIP || await getAdminIP(); // use cached IP to avoid delay
     const changedBy = auth.currentUser?.email || "admin";
     const entry = { ...payload, changedBy, changedAt: new Date().toISOString(), ip };
     const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -12666,6 +12666,7 @@ export default function AdminPanel() {
   const [verifications, setVerifications] = useState([]);
   const [leads, setLeads] = useState([]);
   const [leadsLoading, setLeadsLoading] = useState(false);
+  const leadsLoadingRef = useRef(false); // prevents concurrent fetchLeads calls
   
   /* ─── LEADS CRM STATE ─── */
   const [leadDrawer, setLeadDrawer] = useState(null); // lead object or null
@@ -13063,6 +13064,8 @@ export default function AdminPanel() {
   }, [isAdmin, fetchVerifications]);
 
   const fetchLeads = useCallback(async (forceRefresh = false) => {
+    if (leadsLoadingRef.current && !forceRefresh) return; // prevent concurrent fetches
+    leadsLoadingRef.current = true;
     setLeadsLoading(true);
     try {
       const cacheKey = "dxb_leads_v6";
@@ -13137,6 +13140,8 @@ export default function AdminPanel() {
     } catch(e) {
       console.error("fetchLeads:", e);
       setLeadsLoading(false);
+    } finally {
+      leadsLoadingRef.current = false;
     }
   }, [db]);
 
@@ -21987,6 +21992,8 @@ export default function AdminPanel() {
                                     onBlur={async e => {
                                       try {
                                         const activity = [...(leadDrawer.activity || []), { type: "edit", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `${field.label} updated` }];
+                                        const freshDoc = await getDoc(doc(db, "leads", leadDrawer.id));
+                                        if (freshDoc.exists() && freshDoc.data().updatedAt && freshDoc.data().updatedAt > leadDrawer.updatedAt) { notify("Warning: Lead was modified by another admin — refresh to see latest"); return; }
                                         await setDoc(doc(db, "leads", leadDrawer.id), { [field.key]: e.target.value, activity, updatedAt: new Date().toISOString() }, { merge: true });
                                         notify(`${field.label} saved`);
                                         setLeads(prev => prev.map(l => l.id === leadDrawer.id ? { ...l, [field.key]: e.target.value, activity } : l));
