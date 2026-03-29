@@ -545,6 +545,7 @@ const CustomTooltip = ({ active, payload, label }) => {
    Features: Google SSO · 190+ country codes · Password strength
    ═══════════════════════════════════════════════════════════════ */
 
+const googleProvider = new GoogleAuthProvider();
 const COUNTRIES = [
   {code:"+971",name:"UAE",flag:"🇦🇪"},{code:"+966",name:"Saudi Arabia",flag:"🇸🇦"},{code:"+974",name:"Qatar",flag:"🇶🇦"},
   {code:"+965",name:"Kuwait",flag:"🇰🇼"},{code:"+973",name:"Bahrain",flag:"🇧🇭"},{code:"+968",name:"Oman",flag:"🇴🇲"},
