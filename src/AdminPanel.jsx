@@ -1,4 +1,16 @@
 import AdminDataHealth from "./AdminDataHealth";
+import EmailCampaignsTab from "./admin/EmailCampaignsTab";
+import MarketIntelligenceTab from "./admin/MarketIntelligenceTab";
+import ForecastingTab from "./admin/ForecastingTab";
+import PricingPlansTab from "./admin/PricingPlansTab";
+import BillingTab from "./admin/BillingTab";
+import ReferralTab from "./admin/ReferralTab";
+import SupportTab from "./admin/SupportTab";
+import NotificationsTab from "./admin/NotificationsTab";
+import DigestTab from "./admin/DigestTab";
+import EiborRatesPanel from "./admin/EiborRatesPanel";
+import UsersTab from "./admin/UsersTab";
+import DataManagerTab from "./admin/DataManagerTab";
 import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { auth, db, storage, firebaseConfig } from "./firebase";
