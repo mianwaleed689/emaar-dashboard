@@ -12666,7 +12666,6 @@ export default function AdminPanel() {
   const [verifications, setVerifications] = useState([]);
   const [leads, setLeads] = useState([]);
   const [leadsLoading, setLeadsLoading] = useState(false);
-  const leadsLoadingRef = useRef(false);
   const leadsLoadingRef = useRef(false); // prevents concurrent fetchLeads calls
   
   /* ─── LEADS CRM STATE ─── */
