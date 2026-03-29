@@ -13494,7 +13494,7 @@ export default function AdminPanel() {
   const newLeadsThisWeek = leads.filter(l => { try { return (now - new Date(l.createdAt)) < msPerWeek; } catch { return false; } }).length;
 
   // ── SIGNUP TIMELINE — 14 days with last-week comparison ──
-  const signupTimeline = useMemo(() => (() => {
+  const signupTimeline = (() => {
     const days = [];
     for (let i = 13; i >= 0; i--) {
       const d = new Date(now); d.setDate(d.getDate() - i);
@@ -13510,7 +13510,7 @@ export default function AdminPanel() {
       });
     }
     return days;
-  })()), [users]); // eslint-disable-line
+  })();
   const signupThisWeek = signupTimeline.slice(-7).reduce((s, d) => s + d.count, 0);
   const signupLastWeek = signupTimeline.slice(-7).reduce((s, d) => s + d.lastWeek, 0);
   const signupTrend = weekTrend(signupThisWeek, signupLastWeek);
