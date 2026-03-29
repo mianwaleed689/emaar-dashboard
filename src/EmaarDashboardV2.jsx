@@ -730,7 +730,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
           <div style={{ fontSize: 56, marginBottom: 16 }}>??</div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 10 }}>Check your inbox</h2>
           <p style={{ color: T.textSecondary, fontSize: 13, lineHeight: 1.7, marginBottom: 8 }}>
-            We sent a verification link to <span style={{ color: T.gold, fontWeight: 600 }}>{email></span>
+            We sent a verification link to <span style={{ color: T.gold, fontWeight: 600 }}>{email}</span>
           </p>
           <p style={{ color: T.textMuted, fontSize: 12, lineHeight: 1.7, marginBottom: 28 }}>
             Click the link in the email to verify your account, then come back and sign in. Check your spam folder if you don't see it within 2 minutes.
@@ -739,7 +739,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             {["Click the link in the verification email", "Return to this page", "Sign in with your email & password"].map((s, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 0" }}>
                 <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(16,185,129,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: T.green, fontWeight: 700, flexShrink: 0 }}>{i+1}</div>
-                <span style={{ fontSize: 12, color: T.textSecondary }}>{s></span>
+                <span style={{ fontSize: 12, color: T.textSecondary }}>{s}</span>
               </div>
             ))}
           </div>
@@ -763,7 +763,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
           <div style={{ fontSize: 56, marginBottom: 16 }}>??</div>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: T.white, marginBottom: 10 }}>Password Reset Sent</h2>
           <p style={{ color: T.textSecondary, fontSize: 13, lineHeight: 1.7, marginBottom: 8 }}>
-            We sent a reset link to <span style={{ color: T.gold, fontWeight: 600 }}>{email></span>
+            We sent a reset link to <span style={{ color: T.gold, fontWeight: 600 }}>{email}</span>
           </p>
           <p style={{ color: T.textMuted, fontSize: 12, lineHeight: 1.7, marginBottom: 28 }}>
             Click the link in the email to set a new password. The link expires in 1 hour. Check your spam folder if you don't see it.
@@ -996,7 +996,7 @@ const ProGateFullPage = ({ tabName, onUpgrade }) => {
               <div style={{ width: 18, height: 18, borderRadius: "50%", background: `${T.gold}20`, border: `1px solid ${T.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke={T.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
-              <span style={{ fontSize: 12, color: T.textSecondary }}>{b></span>
+              <span style={{ fontSize: 12, color: T.textSecondary }}>{b}</span>
             </div>
           ))}
         </div>
@@ -1045,7 +1045,7 @@ const UpgradeModal = ({ show, onClose }) => {
         <div style={{ background: "rgba(16,185,129,0.08)", border: `1px solid ${T.green}30`, borderRadius: 12, padding: "12px 20px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
           {[["", "AED 80.4B", "FY25 Sales tracked"], ["", "+40% YoY", "Revenue growth"], ["", "48 Projects", "Full intelligence"], ["", "AED 155B", "Backlog visibility"]].map(([icon, val, label], i) => (
             <div key={i} style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 13 }}>{icon} <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: T.green }}>{val></span></div>
+              <div style={{ fontSize: 13 }}>{icon} <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: T.green }}>{val}</span></div>
               <div style={{ fontSize: 10, color: T.textMuted }}>{label}</div>
             </div>
           ))}
@@ -1059,8 +1059,8 @@ const UpgradeModal = ({ show, onClose }) => {
               <h3 style={{ fontSize: 18, fontWeight: 700, color: T.white, marginBottom: 4, marginTop: plan.popular ? 8 : 0 }}>{plan.name}</h3>
               <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 16 }}>
                 <span style={{ fontSize: 11, color: T.textMuted }}>AED</span>
-                <span style={{ fontFamily: "'Fraunces', serif", fontSize: 38, fontWeight: 900, color: plan.popular ? T.gold : T.white, lineHeight: 1 }}>{plan.price></span>
-                <span style={{ fontSize: 12, color: T.textMuted }}>/{plan.period></span>
+                <span style={{ fontFamily: "'Fraunces', serif", fontSize: 38, fontWeight: 900, color: plan.popular ? T.gold : T.white, lineHeight: 1 }}>{plan.price}</span>
+                <span style={{ fontSize: 12, color: T.textMuted }}>/{plan.period}</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
                 {plan.features.map((f, j) => (
@@ -1080,7 +1080,7 @@ const UpgradeModal = ({ show, onClose }) => {
 
         <div style={{ textAlign: "center", display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
           {["Secure payment", "? 7-day money-back", "? Instant access", "? Cancel anytime"].map((t, i) => (
-            <span key={i} style={{ fontSize: 11, color: T.textMuted }}>{t></span>
+            <span key={i} style={{ fontSize: 11, color: T.textMuted }}>{t}</span>
           ))}
         </div>
       </div>
@@ -1458,7 +1458,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, selectedDev
             {[["#F59E0B","AED 3,500+/sqft"],["#D4A843","AED 2,500+"],["#14B8A6","AED 1,800+"],["#3B82F6","AED 1,400+"],["#10B981","<AED 1,400"]].map(([col, label]) => (
               <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
                 <div style={{ width: 10, height: 10, borderRadius: "50%", background: col, opacity: 0.8 }} />
-                <span style={{ fontSize: 9, color: T.textMuted }}>{label></span>
+                <span style={{ fontSize: 9, color: T.textMuted }}>{label}</span>
               </div>
             ))}
           </div>
@@ -1468,7 +1468,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, selectedDev
             {[["#EF4444","10,000+ deals"],["#F97316","3,000+"],["#F59E0B","1,500+"],["#10B981","800+"],["#3B82F6","<800"]].map(([col, label]) => (
               <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
                 <div style={{ width: 10, height: 10, borderRadius: "50%", background: col, opacity: 0.8 }} />
-                <span style={{ fontSize: 9, color: T.textMuted }}>{label></span>
+                <span style={{ fontSize: 9, color: T.textMuted }}>{label}</span>
               </div>
             ))}
           </div>
@@ -1497,7 +1497,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, selectedDev
           {[["#10B981", "8%+ yield"], ["#D4A843", "6-8% yield"], ["#3B82F6", "5-6% yield"], ["#94A3B8", "<5% yield"]].map(([col, label]) => (
             <div key={label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <div style={{ width: 10, height: 10, borderRadius: "50%", background: col, boxShadow: "0 0 6px " + col + "88" }} />
-              <span style={{ fontSize: 10, color: T.textMuted }}>{label></span>
+              <span style={{ fontSize: 10, color: T.textMuted }}>{label}</span>
             </div>
           ))}
         </div>
@@ -1517,7 +1517,7 @@ function CommunityMapTab({ activeProjects, liveCommunityROI, setTab, selectedDev
           <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
           {/* Floating counter */}
           <div style={{ position: "absolute", bottom: 12, left: 12, background: "rgba(13,24,33,0.9)", backdropFilter: "blur(8px)", borderRadius: 8, padding: "6px 12px", border: "1px solid " + T.border, zIndex: 999, fontSize: 11, color: T.textSecondary }}>
-            <span style={{ color: T.gold, fontWeight: 700 }}>{filteredProjects.length></span> projects -{" "}
+            <span style={{ color: T.gold, fontWeight: 700 }}>{filteredProjects.length}</span> projects -{" "}
             <span style={{ color: T.teal, fontWeight: 600 }}>
               {mapLayer === "yield" ? "Yield layer" : mapLayer === "ppsf" ? "PPSF heat map" : "Volume heat map"}
             </span>
@@ -1716,7 +1716,7 @@ const DataBadge = ({ source, date, type = "dld" }) => {
       background: c.color + "12", border: `1px solid ${c.color}30`,
       borderRadius: 5, padding: "1px 6px", cursor: "default", flexShrink: 0,
     }}>
-      <span style={{ fontSize: 8 }}>{c.icon></span>{c.label}
+      <span style={{ fontSize: 8 }}>{c.icon}</span>{c.label}
     </span>
   );
 };
@@ -1768,7 +1768,7 @@ const TabSources = ({ sources }) => (
             border: "1px solid rgba(255,255,255,0.07)",
             borderRadius: 20,
             padding: "3px 10px"
-          }}>{s.label></span>
+          }}>{s.label}</span>
         )
       ))}
     </div>
@@ -3021,7 +3021,7 @@ export default function EmaarDashboardV2() {
               <div style={{ position: "relative" }}>
                 <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", display: "flex", alignItems: "center", gap: 6 }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                  <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>{langInfo?.flag></span>
+                  <span style={{ fontSize: 11, color: T.gold, fontWeight: 600 }}>{langInfo?.flag}</span>
                 </div>
                 <select
                   value={lang}
@@ -3071,7 +3071,7 @@ export default function EmaarDashboardV2() {
         </div>
         <div className="header-badges" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button type="button" onClick={() => setShowWatchlist(true)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 10, padding: "8px 12px", cursor: "pointer", color: watchlist.length > 0 ? T.gold : T.textSecondary, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontFamily: "'Outfit',sans-serif" }} title="My Watchlist">
-            ? {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length></span>}
+            ? {watchlist.length > 0 && <span style={{ fontWeight: 700 }}>{watchlist.length}</span>}
           </button>
           <button type="button" onClick={globalRefresh} disabled={isRefreshing} title="Refresh all data" style={{ background: isRefreshing ? T.surfaceAlt : "rgba(212,168,67,0.08)", border: "1px solid " + (isRefreshing ? T.border : "rgba(212,168,67,0.25)"), borderRadius: 10, padding: "8px 12px", cursor: isRefreshing ? "not-allowed" : "pointer", color: isRefreshing ? T.textMuted : T.gold, display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 600, fontFamily: "'Outfit',sans-serif" }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: isRefreshing ? "spin 1s linear infinite" : "none" }}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -3104,9 +3104,9 @@ export default function EmaarDashboardV2() {
           return (
             <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 16 }}>{icon></span>
-                <span style={{ fontSize: 13, color: isUrgent ? T.red : isWarning ? T.gold : T.white, fontWeight: 700 }}>{label></span>
-                <span style={{ fontSize: 12, color: T.textSecondary }}>- {sub></span>
+                <span style={{ fontSize: 16 }}>{icon}</span>
+                <span style={{ fontSize: 13, color: isUrgent ? T.red : isWarning ? T.gold : T.white, fontWeight: 700 }}>{label}</span>
+                <span style={{ fontSize: 12, color: T.textSecondary }}>- {sub}</span>
               </div>
               <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: isUrgent ? T.red : T.gold, color: isUrgent ? "#fff" : T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>
                 {isUrgent ? "Upgrade Now" : "Upgrade to Pro"}
@@ -3378,8 +3378,8 @@ export default function EmaarDashboardV2() {
                   ].map((item, i) => (
                     <div key={i} style={{ padding: "10px 12px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                        <span style={{ fontSize: 13 }}>{item.icon></span>
-                        <span style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{item.label></span>
+                        <span style={{ fontSize: 13 }}>{item.icon}</span>
+                        <span style={{ fontSize: 9, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{item.label}</span>
                       </div>
                       <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 900, color: item.color, marginBottom: 2 }}>{item.value}</div>
                       <div style={{ fontSize: 10, color: item.color, fontWeight: 600 }}>{item.change} YoY</div>
@@ -3429,7 +3429,7 @@ export default function EmaarDashboardV2() {
                 </div>
                 <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {[["Ultra-Lux", "#F59E0B"], ["Luxury", T.gold], ["Premium", T.teal], ["Mid-Market", T.blue], ["Affordable", T.green]].map(([tier, color]) => (
-                    <span key={tier} style={{ fontSize: 9, padding: "2px 8px", borderRadius: 4, background: `${color}15`, color, fontWeight: 600 }}>{tier></span>
+                    <span key={tier} style={{ fontSize: 9, padding: "2px 8px", borderRadius: 4, background: `${color}15`, color, fontWeight: 600 }}>{tier}</span>
                   ))}
                 </div>
               </div>
@@ -3471,9 +3471,9 @@ export default function EmaarDashboardV2() {
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                         {item.pinned && <span style={{ fontSize: 8, color: T.gold }}>??</span>}
-                        <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 6, background: `${item.color}15`, color: item.color, fontWeight: 700 }}>{item.tag></span>
+                        <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 6, background: `${item.color}15`, color: item.color, fontWeight: 700 }}>{item.tag}</span>
                       </div>
-                      <span style={{ fontSize: 9, color: T.textMuted }}>{item.date></span>
+                      <span style={{ fontSize: 9, color: T.textMuted }}>{item.date}</span>
                     </div>
                     <div style={{ fontSize: 12, fontWeight: 600, color: T.white, lineHeight: 1.4 }}>
                       {item.sourceUrl && item.sourceUrl !== "#"
@@ -3631,7 +3631,7 @@ export default function EmaarDashboardV2() {
                 ) : (
                   <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(212,168,67,0.1)", color: "#D4A843", fontWeight: 700, border: "1px solid rgba(212,168,67,0.2)" }}>STATIC - data.js</span>
                 )}
-                {emaarLive?.updatedAtUAE && <span style={{ fontSize: 10, color: T.textMuted }}>Updated: {emaarLive.updatedAtUAE></span>}
+                {emaarLive?.updatedAtUAE && <span style={{ fontSize: 10, color: T.textMuted }}>Updated: {emaarLive.updatedAtUAE}</span>}
               </div>
               <div className="kpi-grid" style={{ display: "grid", gap: 12, marginTop: 16 }}>
                 <KPI label="Revenue CAGR" value={`${revCagr}%`} sub="2020-2025 - 5-year" delay={1} onClick={() => setSelectedKPI({ label: "Revenue CAGR", value: `${revCagr}%`, color: T.gold, description: `Compound Annual Growth Rate of revenue from AED ${baseRev}B in 2020 to AED ${rev}B - one of the highest CAGRs among global real estate developers.`, source: src, sourceUrl: "https://www.emaar.com/en/investor-relations/", items: [{ label: "2020 Revenue", value: `AED ${baseRev}B`, note: "Base year" }, { label: "Latest Revenue", value: `AED ${rev}B`, note: "+240% total growth" }, { label: "CAGR", value: `${revCagr}%`, note: "5-year compounded" }, { label: "vs GCC Average", value: "~8-10%", note: "Sector benchmark" }, { label: "YoY", value: "+40%", note: "Strongest single year" }], trend: emaarFinancials.map(f => ({ y: f.year, v: f.revenue })) })} />
@@ -3811,7 +3811,7 @@ export default function EmaarDashboardV2() {
             <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                 <div style={{ position: 'relative', flex: '1 1 250px', maxWidth: 350 }}>
-                  <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textMuted }}>{Icons.search></span>
+                  <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textMuted }}>{Icons.search}</span>
                   <input value={projectSearch} onChange={e => setProjectSearch(e.target.value)} placeholder='Search projects or community...' style={{ width: '100%', padding: '10px 12px 10px 36px', background: T.surface, border: '1px solid '+T.border, borderRadius: 10, color: T.textPrimary, fontSize: 13, fontFamily: 'Outfit, sans-serif', outline: 'none' }} />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '1 1 200px', background: T.surface, border: '1px solid '+T.border, borderRadius: 10, padding: '8px 14px' }}>
@@ -3937,7 +3937,7 @@ export default function EmaarDashboardV2() {
                     <div style={{ flex: 1 }}>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 700, color: T.gold, marginBottom: 2 }}>{p.name}</div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ fontSize: 11, color: T.textSecondary }}>{p.community></span>
+                        <span style={{ fontSize: 11, color: T.textSecondary }}>{p.community}</span>
                         {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 4, fontWeight: 600, letterSpacing: 0.3, flexShrink: 0 }} title="Official listing on Emaar.com">{getLinkLabel(p.emaarUrl)}</a>}
                       </div>
                     </div>
@@ -3945,13 +3945,13 @@ export default function EmaarDashboardV2() {
                       {(() => { const inv = p.ratingOverride != null && p.ratingOverride !== '' ? { score: parseFloat(p.ratingOverride), color: parseFloat(p.ratingOverride) >= 8 ? '#10B981' : parseFloat(p.ratingOverride) >= 6 ? '#D4A843' : parseFloat(p.ratingOverride) >= 4 ? '#F59E0B' : '#EF4444', label: parseFloat(p.ratingOverride) >= 8 ? 'Excellent' : parseFloat(p.ratingOverride) >= 6 ? 'Strong' : parseFloat(p.ratingOverride) >= 4 ? 'Good' : 'Weak', breakdown: [] } : getInvestmentScore(p); return (
                         <div title={`Investment Score: ${inv.score}/10 - ${inv.breakdown.map(b => b.label + ': ' + b.pts + '/' + b.max).join(' - ')}`}
                           style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 8, background: `${inv.color}18`, border: `1px solid ${inv.color}40`, cursor: "default" }}>
-                          <span style={{ fontSize: 11, fontWeight: 900, color: inv.color, fontFamily: "'Fraunces', serif" }}>{inv.score></span>
+                          <span style={{ fontSize: 11, fontWeight: 900, color: inv.color, fontFamily: "'Fraunces', serif" }}>{inv.score}</span>
                           <span style={{ fontSize: 9, color: inv.color, fontWeight: 700, letterSpacing: 0.3 }}>/10</span>
-                          <span style={{ fontSize: 9, color: inv.color, fontWeight: 600 }}>?? {inv.label></span>
+                          <span style={{ fontSize: 9, color: inv.color, fontWeight: 600 }}>?? {inv.label}</span>
                         </div>
                       ); })()}
                       <div style={{ display: "flex", gap: 4 }}>
-                        {p.branded && <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{p.brand></span>}
+                        {p.branded && <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: "rgba(212,168,67,0.15)", color: T.gold, fontWeight: 600 }}>{p.brand}</span>}
                         <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 6, background: p.status === "Completed" ? "rgba(16,185,129,0.2)" : p.status === "Under Construction" ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)", color: p.status === "Completed" ? T.green : p.status === "Under Construction" ? T.green : T.blue, fontWeight: 600 }}>{p.status === "Completed" ? "? Done" : p.status === "Under Construction" ? "Building" : "Off-Plan"></span>
                       </div>
                     </div>
@@ -3971,7 +3971,7 @@ export default function EmaarDashboardV2() {
                     <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>FROM</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.price ? `AED ${(p.price/1000000).toFixed(1)}M` : "TBD"></span></div>
                     <div>
                       <span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>HANDOVER</span>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.handover></span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.handover}</span>
                       {(() => { const cd = getHandoverCountdown(p.handover); return cd ? (
                         <span style={{ display: "inline-block", marginTop: 2, fontSize: 9, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, background: cd.passed ? "rgba(16,185,129,0.1)" : cd.urgent ? "rgba(239,68,68,0.12)" : "rgba(212,168,67,0.08)", padding: "1px 5px", borderRadius: 4 }}>
                           {cd.passed ? "\u2713 Ready" : "\u23F1 " + cd.label}
@@ -3990,8 +3990,8 @@ export default function EmaarDashboardV2() {
                     ) : (
                       <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>SIZE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.sizeFrom?.toLocaleString()} - {p.sizeTo?.toLocaleString()} sqft</span></div>
                     )}
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TYPE</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.type} - {p.beds></span></div>
-                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PAYMENT</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.payment></span></div>
+                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TYPE</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.type} - {p.beds}</span></div>
+                    <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>PAYMENT</span><span style={{ fontSize: 12, color: T.textSecondary }}>{p.payment}</span></div>
                   </div>
                   {/* Unit Inventory */}
                   {p.units && <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${T.border}` }}>
@@ -4001,7 +4001,7 @@ export default function EmaarDashboardV2() {
                         const avail = d.total - d.sold;
                         return (
                           <div key={type} style={{ padding: "4px 8px", borderRadius: 6, background: T.surfaceAlt, fontSize: 10, display: "flex", gap: 4, alignItems: "center" }}>
-                            <span style={{ fontWeight: 700, color: T.white, textTransform: "uppercase" }}>{type></span>
+                            <span style={{ fontWeight: 700, color: T.white, textTransform: "uppercase" }}>{type}</span>
                             <span style={{ color: avail > 0 ? T.green : T.red }}>{avail > 0 ? `${avail} left` : "Sold out"></span>
                           </div>
                         );
@@ -4009,7 +4009,7 @@ export default function EmaarDashboardV2() {
                     </div>
                   </div>}
                   <div style={{ marginTop: 8, padding: "4px 8px", borderRadius: 6, background: T.surfaceAlt, display: "inline-block" }}>
-                    <span style={{ fontSize: 10, color: T.textMuted }}>{p.tier></span>
+                    <span style={{ fontSize: 10, color: T.textMuted }}>{p.tier}</span>
                   </div>
                   {/* Action Buttons */}
                   <div style={{ display: "flex", gap: 6, marginTop: 10 }} onClick={e => e.stopPropagation()}>
@@ -4047,8 +4047,8 @@ export default function EmaarDashboardV2() {
                   <div key={c.district} className="chart-box fade-up" style={{ animationDelay: `${i*0.05}s`, padding: 14, cursor: "pointer", transition: "border 0.2s" }} onClick={() => setSelectedCommunity(c.name)} title="Click for full community details">
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                       <div>
-                        <span style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.gold }}>{c.district></span>
-                        <span style={{ fontSize: 11, color: T.textSecondary, marginLeft: 8 }}>{c.name></span>
+                        <span style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: T.gold }}>{c.district}</span>
+                        <span style={{ fontSize: 11, color: T.textSecondary, marginLeft: 8 }}>{c.name}</span>
                       </div>
                       <span style={{ fontSize: 11, fontWeight: 600, color: T.teal }}>{c.projects} projects</span>
                     </div>
@@ -4076,13 +4076,13 @@ export default function EmaarDashboardV2() {
                       <div style={{ flex: "1 1 200px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                           <div style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: T.gold }}>{m.name}</div>
-                          <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 6, background: mStatus === "Under Construction" ? "rgba(16,185,129,0.12)" : mStatus.includes("Active") || mStatus.includes("Partial") ? "rgba(234,179,8,0.12)" : "rgba(99,102,241,0.12)", color: mStatus === "Under Construction" ? T.green : mStatus.includes("Active") || mStatus.includes("Partial") ? T.gold : T.blue, fontWeight: 600 }}>{mStatus></span>
+                          <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 6, background: mStatus === "Under Construction" ? "rgba(16,185,129,0.12)" : mStatus.includes("Active") || mStatus.includes("Partial") ? "rgba(234,179,8,0.12)" : "rgba(99,102,241,0.12)", color: mStatus === "Under Construction" ? T.green : mStatus.includes("Active") || mStatus.includes("Partial") ? T.gold : T.blue, fontWeight: 600 }}>{mStatus}</span>
                         </div>
                         <div style={{ fontSize: 11, color: T.textSecondary, marginTop: 3 }}>{m.community} &middot; {m.type} &middot; {m.developer || "Emaar"}</div>
                       </div>
                       <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
-                        <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>VALUE</span><span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{m.value></span></div>
-                        <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TIMELINE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.teal }}>{m.timeline></span></div>
+                        <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>VALUE</span><span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{m.value}</span></div>
+                        <div><span style={{ fontSize: 9, color: T.textMuted, display: "block" }}>TIMELINE</span><span style={{ fontSize: 13, fontWeight: 600, color: T.teal }}>{m.timeline}</span></div>
                         <span style={{ fontSize: 14, color: T.textMuted, transition: "transform 0.3s", transform: isOpen ? "rotate(180deg)" : "rotate(0)" }}>&#9660;</span>
                       </div>
                     </div>
@@ -4094,7 +4094,7 @@ export default function EmaarDashboardV2() {
                             <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, marginBottom: 8, letterSpacing: 0.5 }}>KEY FACTS</div>
                             {m.keyFacts && m.keyFacts.map((f, fi) => (
                               <div key={fi} style={{ fontSize: 11, color: T.textSecondary, padding: "3px 0", display: "flex", gap: 6, alignItems: "flex-start" }}>
-                                <span style={{ color: T.gold, fontSize: 8, marginTop: 4, flexShrink: 0 }}>&bull;</span><span>{f></span>
+                                <span style={{ color: T.gold, fontSize: 8, marginTop: 4, flexShrink: 0 }}>&bull;</span><span>{f}</span>
                               </div>
                             ))}
                           </div>
@@ -4125,7 +4125,7 @@ export default function EmaarDashboardV2() {
                               {m.milestones.map((ms, msi) => (
                                 <div key={msi} style={{ display: "flex", gap: 8, marginBottom: 4 }}>
                                   <span style={{ fontSize: 11, color: T.blue }}>?</span>
-                                  <span style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>{ms></span>
+                                  <span style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>{ms}</span>
                                 </div>
                               ))}
                             </div>
@@ -4135,7 +4135,7 @@ export default function EmaarDashboardV2() {
                         <div style={{ display: "flex", gap: 16, marginTop: 14, flexWrap: "wrap", padding: "10px 0 0", borderTop: `1px solid ${T.border}` }}>
                           <div style={{ fontSize: 10, color: T.textMuted }}>Developer: <span style={{ color: T.white, fontWeight: 600 }}>{m.developer || "Emaar"></span></div>
                           <div style={{ fontSize: 10, color: T.textMuted }}>Announced: <span style={{ color: T.white, fontWeight: 600 }}>{m.announced || "-"></span></div>
-                          <div style={{ fontSize: 10, color: T.textMuted }}>Scale: <span style={{ color: T.white, fontWeight: 600 }}>{m.scale></span></div>
+                          <div style={{ fontSize: 10, color: T.textMuted }}>Scale: <span style={{ color: T.white, fontWeight: 600 }}>{m.scale}</span></div>
                         </div>
                         {m.sources && (
                         <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
@@ -4246,7 +4246,7 @@ export default function EmaarDashboardV2() {
                             </div>
                             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                               <div style={{ padding: "4px 10px", borderRadius: 8, background: `${p._score.color}18`, border: `1px solid ${p._score.color}40`, textAlign: "center" }}>
-                                <span style={{ fontSize: 12, fontWeight: 900, color: p._score.color, fontFamily: "'Fraunces', serif" }}>{p._score.score></span>
+                                <span style={{ fontSize: 12, fontWeight: 900, color: p._score.color, fontFamily: "'Fraunces', serif" }}>{p._score.score}</span>
                                 <span style={{ fontSize: 9, color: p._score.color }}>/10</span>
                               </div>
                               <div style={{ textAlign: "right" }}>
@@ -4289,8 +4289,8 @@ export default function EmaarDashboardV2() {
                             <span style={{ fontSize: 10, fontWeight: 700, color: p._score.color, padding: "3px 7px", borderRadius: 6, background: `${p._score.color}15` }}>{p._score.score}?</span>
                           </div>
                           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-                            <span style={{ color: T.textMuted }}>{p.handover></span>
-                            <span style={{ color: T.textSecondary }}>{p._cd?.label></span>
+                            <span style={{ color: T.textMuted }}>{p.handover}</span>
+                            <span style={{ color: T.textSecondary }}>{p._cd?.label}</span>
                           </div>
                           <div style={{ marginTop: 8, height: 4, borderRadius: 2, background: T.border, overflow: "hidden" }}>
                             <div style={{ height: "100%", width: `${p.construction || 0}%`, background: T.textMuted, borderRadius: 2 }} />
@@ -4438,8 +4438,8 @@ export default function EmaarDashboardV2() {
                         ].map((row, ri) => (
                           <div key={ri} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: ri === 3 ? "rgba(212,168,67,0.06)" : "transparent", borderRadius: ri === 3 ? 8 : 0, borderTop: ri === 3 ? "1px solid " + T.border : "none", marginTop: ri === 3 ? 4 : 0 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <span style={{ fontSize: 14, fontWeight: 700, color: row.c, width: 16 }}>{row.sign></span>
-                              <span style={{ fontSize: 12, color: row.bold ? T.white : T.textSecondary, fontWeight: row.bold ? 700 : 400 }}>{row.l></span>
+                              <span style={{ fontSize: 14, fontWeight: 700, color: row.c, width: 16 }}>{row.sign}</span>
+                              <span style={{ fontSize: 12, color: row.bold ? T.white : T.textSecondary, fontWeight: row.bold ? 700 : 400 }}>{row.l}</span>
                             </div>
                             <div style={{ textAlign: "right" }}>
                               <span style={{ fontSize: row.bold ? 15 : 13, fontWeight: row.bold ? 800 : 600, color: row.c, fontFamily: row.bold ? "'Fraunces',serif" : "inherit" }}>{yr(row.v)></span>
@@ -4702,7 +4702,7 @@ export default function EmaarDashboardV2() {
                     ].map((item, i) => (
                       <div key={i} style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: "16px 18px" }}>
                         <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>{item.label}</div>
-                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: item.color, marginBottom: 4 }}>{item.score}<span style={{ fontSize: 12, color: T.textMuted }}>/{item.max></span></div>
+                        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 900, color: item.color, marginBottom: 4 }}>{item.score}<span style={{ fontSize: 12, color: T.textMuted }}>/{item.max}</span></div>
                         <div style={{ fontSize: 10, color: T.textSecondary, marginBottom: 8 }}>{item.detail}</div>
                         <div style={{ height: 4, borderRadius: 2, background: T.border }}>
                           <div style={{ height: "100%", borderRadius: 2, background: item.color, width: `${(item.score/item.max)*100}%` }} />
@@ -4770,8 +4770,8 @@ export default function EmaarDashboardV2() {
                         totalScore >= 70 && { text: "Portfolio is well diversified - maintain current allocation and rebalance at handover milestones", color: T.green, icon: "~"?" },
                       ].filter(Boolean).map((rec, i) => (
                         <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 14px", borderRadius: 8, background: `${rec.color}08`, border: `1px solid ${rec.color}20` }}>
-                          <span style={{ fontSize: 14, flexShrink: 0 }}>{rec.icon></span>
-                          <span style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>{rec.text></span>
+                          <span style={{ fontSize: 14, flexShrink: 0 }}>{rec.icon}</span>
+                          <span style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>{rec.text}</span>
                         </div>
                       ))}
                     </div>
@@ -4817,10 +4817,10 @@ export default function EmaarDashboardV2() {
                           <div><div style={{ fontSize: 9, color: T.textMuted }}>PROJECTED</div><div style={{ fontSize: 14, fontWeight: 700, color: T.green }}>AED {(projected/1e6).toFixed(2)}M</div></div>
                         </div>
                         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
-                          <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: T.surfaceAlt, color: T.textMuted }}>{p.handover></span>
+                          <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: T.surfaceAlt, color: T.textMuted }}>{p.handover}</span>
                           {(() => { const cd = getHandoverCountdown(p.handover); return cd ? <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 700, color: cd.passed ? "#10B981" : cd.color, background: cd.passed ? "rgba(16,185,129,0.1)" : cd.urgent ? "rgba(239,68,68,0.1)" : "rgba(212,168,67,0.08)" }}>{cd.passed ? "\u2713 Ready" : "\u23F1 " + cd.label></span> : null; })()}
                           <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: T.surfaceAlt, color: T.textMuted }}>AED {p.ppsf}/sqft</span>
-                          {p.branded && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "rgba(212,168,67,0.12)", color: T.gold }}>{p.brand></span>}
+                          {p.branded && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "rgba(212,168,67,0.12)", color: T.gold }}>{p.brand}</span>}
                         </div>
                         {h.notes && <div style={{ fontSize: 10, color: T.textMuted, fontStyle: "italic", marginBottom: 6 }}>{h.notes}</div>}
                         {p.construction > 0 && <div style={{ marginBottom: 6 }}>
@@ -4911,8 +4911,8 @@ export default function EmaarDashboardV2() {
                 ].map(([profile, budget, desc, color, areas], i) => (
                   <div key={i} className="chart-box fade-up" style={{ animationDelay: `${i*0.05}s`, padding: 16 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                      <span style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 700, color }}>{profile></span>
-                      <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: T.surfaceAlt, color: T.textSecondary }}>{budget></span>
+                      <span style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 700, color }}>{profile}</span>
+                      <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: T.surfaceAlt, color: T.textSecondary }}>{budget}</span>
                     </div>
                     <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.6, marginBottom: 8 }}>{desc}</div>
                     <div style={{ fontSize: 10, color, fontWeight: 600 }}>Best communities: {areas}</div>
@@ -5237,7 +5237,7 @@ export default function EmaarDashboardV2() {
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
                           <div>
                             <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 800, color: T.white }}>{d.community}</div>
-                            <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 5, background: `${demandColor}15`, color: demandColor, fontWeight: 600, marginTop: 4, display: "inline-block" }}>STR Demand: {d.demand></span>
+                            <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 5, background: `${demandColor}15`, color: demandColor, fontWeight: 600, marginTop: 4, display: "inline-block" }}>STR Demand: {d.demand}</span>
                           </div>
                           <div style={{ textAlign: "right" }}>
                             <div style={{ fontSize: 11, color: T.textMuted }}>STR Premium</div>
@@ -5354,7 +5354,7 @@ export default function EmaarDashboardV2() {
                         <div style={{ flex: 1, minWidth: 200 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                             <div style={{ fontFamily: "'Fraunces',serif", fontSize: 17, fontWeight: 800, color: T.white }}>{d.name}</div>
-                            <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 5, background: T.surfaceAlt, color: T.textMuted, fontWeight: 600 }}>{d.ticker></span>
+                            <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 5, background: T.surfaceAlt, color: T.textMuted, fontWeight: 600 }}>{d.ticker}</span>
                             {!d.listed && <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 5, background: "rgba(59,130,246,0.1)", color: T.blue, fontWeight: 600 }}>Private</span>}
                           </div>
                           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px,1fr))", gap: 8, marginBottom: 10 }}>
@@ -5384,8 +5384,8 @@ export default function EmaarDashboardV2() {
                           ].map(b => (
                             <div key={b.l} style={{ marginBottom: 8 }}>
                               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                                <span style={{ fontSize: 9, color: T.textMuted }}>{b.l></span>
-                                <span style={{ fontSize: 9, fontWeight: 700, color: b.c }}>{b.v></span>
+                                <span style={{ fontSize: 9, color: T.textMuted }}>{b.l}</span>
+                                <span style={{ fontSize: 9, fontWeight: 700, color: b.c }}>{b.v}</span>
                               </div>
                               <div style={{ height: 4, borderRadius: 2, background: T.surfaceAlt, overflow: "hidden" }}>
                                 <div style={{ height: "100%", width: b.v + "%", background: b.c, borderRadius: 2 }} />
@@ -5736,14 +5736,14 @@ export default function EmaarDashboardV2() {
                       <tr key={i} style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                         <td style={{ padding: "10px 12px", textAlign: "center", color: i === 0 ? T.gold : T.textMuted, fontWeight: 700, fontFamily: "'Fraunces', serif" }}>{d.rank}</td>
                         <td style={{ padding: "10px 12px", color: T.white, fontWeight: 600 }}>
-                          <span style={{ borderLeft: `3px solid ${d.color}`, paddingLeft: 8 }}>{d.name></span>
+                          <span style={{ borderLeft: `3px solid ${d.color}`, paddingLeft: 8 }}>{d.name}</span>
                         </td>
                         <td style={{ padding: "10px 12px", textAlign: "center", color: i === 0 ? T.gold : T.textSecondary, fontFamily: "'Fraunces', serif", fontWeight: 600 }}>{d.sales.toFixed(1)}</td>
                         <td style={{ padding: "10px 12px", textAlign: "center", color: T.textSecondary }}>{d.units.toLocaleString()}</td>
                         <td style={{ padding: "10px 12px", textAlign: "center", color: T.teal, fontWeight: 600 }}>{d.share}%</td>
                         <td style={{ padding: "10px 12px", textAlign: "center", color: T.textSecondary }}>{d.underConst.toLocaleString()}</td>
                         <td style={{ padding: "10px 12px", textAlign: "center" }}>
-                          <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: T.surfaceAlt, color: T.textSecondary }}>{d.segment></span>
+                          <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: T.surfaceAlt, color: T.textSecondary }}>{d.segment}</span>
                         </td>
                       </tr>
                     ))}
@@ -5910,7 +5910,7 @@ export default function EmaarDashboardV2() {
                     const isDubai = c.city.includes("Dubai");
                     return (
                       <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <span style={{ fontSize: 14, flexShrink: 0 }}>{c.flag></span>
+                        <span style={{ fontSize: 14, flexShrink: 0 }}>{c.flag}</span>
                         <div style={{ width: 110, fontSize: 11, color: isDubai ? T.gold : T.textSecondary, fontWeight: isDubai ? 700 : 400, flexShrink: 0 }}>{c.city}</div>
                         <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.border, overflow: "hidden" }}>
                           <div style={{ height: "100%", width: `${(c.yield / 9) * 100}%`, background: c.color, borderRadius: 3, transition: "width 0.8s" }} />
@@ -5980,7 +5980,7 @@ export default function EmaarDashboardV2() {
                         <td style={{ padding: "10px 10px", textAlign: "center", color: y.gross >= 5 ? T.green : y.gross >= 4 ? T.gold : T.textSecondary, fontWeight: 600, fontFamily: "'Fraunces', serif" }}>{y.gross}%</td>
                         <td style={{ padding: "10px 10px", textAlign: "center", color: T.textSecondary, fontFamily: "'Fraunces', serif" }}>{y.net}%</td>
                         <td style={{ padding: "10px 10px", textAlign: "center" }}>
-                          <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: y.demand === "V.High" ? "rgba(16,185,129,0.15)" : y.demand === "High" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", color: y.demand === "V.High" ? T.green : y.demand === "High" ? T.gold : T.blue }}>{y.demand></span>
+                          <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: y.demand === "V.High" ? "rgba(16,185,129,0.15)" : y.demand === "High" ? "rgba(212,168,67,0.12)" : "rgba(59,130,246,0.12)", color: y.demand === "V.High" ? T.green : y.demand === "High" ? T.gold : T.blue }}>{y.demand}</span>
                         </td>
                         <td style={{ padding: "10px 10px", textAlign: "center", color: T.teal, fontSize: 11 }}>{y.visa || "=2M"}</td>
                       </tr>
@@ -6126,7 +6126,7 @@ export default function EmaarDashboardV2() {
                       <div>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                           <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 6px #10B981" }} />
-                          <span style={{ fontSize: 11, fontWeight: 700, color: "#10B981", letterSpacing: 1, textTransform: "uppercase" }}>EIBOR - {eiborSource></span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "#10B981", letterSpacing: 1, textTransform: "uppercase" }}>EIBOR - {eiborSource}</span>
                         </div>
                         <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>Emirates Interbank Offered Rate - UAE Central Bank benchmark</div>
                         <div style={{ display: "flex", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
@@ -6177,8 +6177,8 @@ export default function EmaarDashboardV2() {
                       ].map((f, i) => (
                         <div key={i} style={{ marginBottom: 20 }}>
                           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 7 }}>
-                            <span style={{ fontSize: 12, color: T.textSecondary }}>{f.label></span>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{f.disp></span>
+                            <span style={{ fontSize: 12, color: T.textSecondary }}>{f.label}</span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{f.disp}</span>
                           </div>
                           <input type="range" min={f.min} max={f.max} step={f.step} value={f.value} onChange={e => f.set(Number(e.target.value))} style={{ width: "100%", accentColor: T.gold, cursor: "pointer" }} />
                         </div>
@@ -6198,8 +6198,8 @@ export default function EmaarDashboardV2() {
                     {answers.map((a, i) => (
                       <div key={i} style={{ background: a.bg, borderRadius: 16, border: "1px solid " + a.border, padding: 22 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                          <span style={{ fontSize: 20 }}>{a.icon></span>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{a.q></span>
+                          <span style={{ fontSize: 20 }}>{a.icon}</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{a.q}</span>
                         </div>
                         <div style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 900, color: a.color, marginBottom: 10 }}>{a.answer}</div>
                         <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6 }}>{a.detail}</div>
@@ -6257,9 +6257,9 @@ export default function EmaarDashboardV2() {
                               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                               <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                  <span style={{ fontSize: 13, fontWeight: 700, color: i === 0 ? T.gold : T.white }}>{b.bank></span>
+                                  <span style={{ fontSize: 13, fontWeight: 700, color: i === 0 ? T.gold : T.white }}>{b.bank}</span>
                                   {i === 0 && <span style={{ fontSize: 9, color: T.green, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)" }}>BEST RATE</span>}
-                                  {b.badge && i !== 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: `${b.badgeColor}15`, border: `1px solid ${b.badgeColor}30`, color: b.badgeColor }}>{b.badge></span>}
+                                  {b.badge && i !== 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: `${b.badgeColor}15`, border: `1px solid ${b.badgeColor}30`, color: b.badgeColor }}>{b.badge}</span>}
                                 </div>
                               </td>
                               <td style={{ padding: "12px 14px", textAlign: "center" }}>
@@ -6323,8 +6323,8 @@ export default function EmaarDashboardV2() {
                         ].map((f, i) => (
                           <div key={i}>
                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                              <span style={{ fontSize: 12, color: T.textSecondary }}>{f.label></span>
-                              <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{f.disp></span>
+                              <span style={{ fontSize: 12, color: T.textSecondary }}>{f.label}</span>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{f.disp}</span>
                             </div>
                             <input type="range" min={f.min} max={f.max} step={f.step} value={f.value} onChange={e => f.set(Number(e.target.value))} style={{ width: "100%", accentColor: T.gold, cursor: "pointer" }} />
                           </div>
@@ -6349,7 +6349,7 @@ export default function EmaarDashboardV2() {
                           { label: "Total Cash Required", value: fmtM(totalCash), color: T.purple, icon: "~"??" },
                         ].map((item, i) => (
                           <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: T.surface, border: `1px solid ${T.border}` }}>
-                            <span style={{ fontSize: 20 }}>{item.icon></span>
+                            <span style={{ fontSize: 20 }}>{item.icon}</span>
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: 10, color: T.textMuted }}>{item.label}</div>
                               <div style={{ fontSize: 15, fontWeight: 800, color: item.color, fontFamily: "'Fraunces',serif" }}>{item.value}</div>
@@ -6451,7 +6451,7 @@ export default function EmaarDashboardV2() {
                               <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5, marginBottom: 8 }}>{l.notes}</div>
                               <div style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 6, background: `${inv.color}15`, border: `1px solid ${inv.color}30` }}>
                                 <span style={{ fontSize: 11, fontWeight: 800, color: inv.color }}>{inv.score}/10</span>
-                                <span style={{ fontSize: 9, color: inv.color }}>?? {inv.label></span>
+                                <span style={{ fontSize: 9, color: inv.color }}>?? {inv.label}</span>
                               </div>
                             </div>
                           );
@@ -6500,7 +6500,7 @@ export default function EmaarDashboardV2() {
                 <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.surfaceAlt, overflow: "hidden" }}>
                   <div style={{ height: "100%", width: val + "%", borderRadius: 3, background: color, transition: "width 0.5s" }} />
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 700, color, minWidth: 24, textAlign: "right" }}>{val></span>
+                <span style={{ fontSize: 10, fontWeight: 700, color, minWidth: 24, textAlign: "right" }}>{val}</span>
               </div>
             );
             return (
@@ -6548,7 +6548,7 @@ export default function EmaarDashboardV2() {
                               ].map(f => (
                                 <div key={f.label}>
                                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                                    <span style={{ fontSize: 10, color: T.textMuted }}>{f.label></span>
+                                    <span style={{ fontSize: 10, color: T.textMuted }}>{f.label}</span>
                                   </div>
                                   {scoreBar(f.val, f.color)}
                                 </div>
@@ -6652,11 +6652,11 @@ export default function EmaarDashboardV2() {
                                 <div style={{ fontWeight: 700, color: T.white, fontSize: 13 }}>{d.community}</div>
                               </td>
                               <td style={{ padding: "12px 14px" }}>
-                                <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 5, background: T.surfaceAlt, color: T.textSecondary, fontWeight: 600 }}>{d.type></span>
+                                <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 5, background: T.surfaceAlt, color: T.textSecondary, fontWeight: 600 }}>{d.type}</span>
                               </td>
                               <td style={{ padding: "12px 14px", fontSize: 12, color: T.textSecondary }}>{d.low}</td>
                               <td style={{ padding: "12px 14px" }}>
-                                <span style={{ fontSize: 14, fontWeight: 800, color: scColor, fontFamily: "'Fraunces', serif" }}>{d.avg></span>
+                                <span style={{ fontSize: 14, fontWeight: 800, color: scColor, fontFamily: "'Fraunces', serif" }}>{d.avg}</span>
                                 <span style={{ fontSize: 10, color: T.textMuted }}> /sqft</span>
                               </td>
                               <td style={{ padding: "12px 14px", fontSize: 12, color: T.textSecondary }}>{d.high}</td>
@@ -6792,7 +6792,7 @@ export default function EmaarDashboardV2() {
                       <span style={{ fontSize: 12, color: T.textSecondary }}>{loading ? "Fetching live rates..." : error ? "Could not load rates \u2014 check connection" : "Live rates"></span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      {lastUpdated && <span style={{ fontSize: 11, color: T.textMuted }}>Updated {lastUpdated></span>}
+                      {lastUpdated && <span style={{ fontSize: 11, color: T.textMuted }}>Updated {lastUpdated}</span>}
                       <button type="button" onClick={fetchRates} disabled={loading} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", background: loading ? T.surfaceAlt : "rgba(212,168,67,0.1)", border: "1px solid " + (loading ? T.border : "rgba(212,168,67,0.3)"), borderRadius: 8, color: loading ? T.textMuted : T.gold, fontSize: 11, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
                         {loading ? "Refreshing..." : "Refresh Rates"}
@@ -7060,7 +7060,7 @@ export default function EmaarDashboardV2() {
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                           {benefits.map((b, i) => (
                             <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                              <span style={{ fontSize: 16, flexShrink: 0 }}>{b.icon></span>
+                              <span style={{ fontSize: 16, flexShrink: 0 }}>{b.icon}</span>
                               <div>
                                 <div style={{ fontSize: 11, fontWeight: 700, color: T.white, marginBottom: 2 }}>{b.title}</div>
                                 <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.5 }}>{b.desc}</div>
@@ -7129,7 +7129,7 @@ export default function EmaarDashboardV2() {
                       ["", "Family", "Spouse + children of any age included"],
                     ].map(([icon, title, desc]) => (
                       <div key={title} style={{ display: "flex", gap: 8, alignItems: "flex-start", minWidth: 160, flex: 1 }}>
-                        <span style={{ fontSize: 18 }}>{icon></span>
+                        <span style={{ fontSize: 18 }}>{icon}</span>
                         <div>
                           <div style={{ fontSize: 11, fontWeight: 700, color: T.white }}>{title}</div>
                           <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.5 }}>{desc}</div>
@@ -7240,7 +7240,7 @@ export default function EmaarDashboardV2() {
                         {[["Buy Price (Launch)", buyPrice, setBuyPrice, T.gold], ["Sell Price (Target)", sellPrice, setSellPrice, T.green]].map(([label, val, setter, col]) => (
                           <div key={label} style={{ marginBottom: 14 }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                              <span style={{ fontSize: 12, color: T.textSecondary }}>{label></span>
+                              <span style={{ fontSize: 12, color: T.textSecondary }}>{label}</span>
                               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                 <span style={{ fontSize: 11, color: T.textMuted }}>AED</span>
                                 <input
@@ -7287,8 +7287,8 @@ export default function EmaarDashboardV2() {
                           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                             {Object.entries(planConfigs).map(([k, v]) => (
                               <button key={k} type="button" onClick={() => setPaymentPlan(k)} style={{ padding: "9px 14px", borderRadius: 8, border: "1px solid " + (paymentPlan === k ? T.blue : T.border), background: paymentPlan === k ? "rgba(59,130,246,0.1)" : T.surfaceAlt, color: paymentPlan === k ? T.blue : T.textSecondary, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif", textAlign: "left" }}>
-                                <span style={{ fontWeight: 700 }}>{v.name></span>
-                                <span style={{ color: T.textMuted, marginLeft: 8 }}>{v.label></span>
+                                <span style={{ fontWeight: 700 }}>{v.name}</span>
+                                <span style={{ color: T.textMuted, marginLeft: 8 }}>{v.label}</span>
                               </button>
                             ))}
                           </div>
@@ -7381,8 +7381,8 @@ export default function EmaarDashboardV2() {
                           ["Admin + Trustee", "AED 4,780", T.textSecondary],
                         ].map(([l, v, c]) => (
                           <div key={l} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid " + T.border }}>
-                            <span style={{ fontSize: 11, color: T.textMuted }}>{l></span>
-                            <span style={{ fontSize: 11, fontWeight: 600, color: c }}>{v></span>
+                            <span style={{ fontSize: 11, color: T.textMuted }}>{l}</span>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: c }}>{v}</span>
                           </div>
                         ))}
                         <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, marginTop: 12, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>When You Sell</div>
@@ -7393,8 +7393,8 @@ export default function EmaarDashboardV2() {
                           ["Transfer Fee", "AED 4,200", T.textSecondary],
                         ].map(([l, v, c]) => (
                           <div key={l} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid " + T.border }}>
-                            <span style={{ fontSize: 11, color: T.textMuted }}>{l></span>
-                            <span style={{ fontSize: 11, fontWeight: 600, color: c }}>{v></span>
+                            <span style={{ fontSize: 11, color: T.textMuted }}>{l}</span>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: c }}>{v}</span>
                           </div>
                         ))}
                         <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0 0" }}>
@@ -7466,8 +7466,8 @@ export default function EmaarDashboardV2() {
                   ["Women Investors", "AED 154B"], ["REIDIN Growth", "+12.9% YoY"], ["Investor Base", "193.1K (+24%)"],
                 ].map(([k, v], i) => (
                   <div key={i} style={{ padding: "14px 16px", background: T.surfaceAlt, borderRadius: 12, border: `1px solid ${T.border}` }}>
-                    <span style={{ color: T.textMuted, fontSize: 10, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", display: "block", marginBottom: 4 }}>{k></span>
-                    <span style={{ color: T.white, fontSize: 15, fontWeight: 700, fontFamily: "'Fraunces', serif" }}>{v></span>
+                    <span style={{ color: T.textMuted, fontSize: 10, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", display: "block", marginBottom: 4 }}>{k}</span>
+                    <span style={{ color: T.white, fontSize: 15, fontWeight: 700, fontFamily: "'Fraunces', serif" }}>{v}</span>
                   </div>
                 ))}
               </div>
@@ -7821,7 +7821,7 @@ export default function EmaarDashboardV2() {
                               <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, marginBottom: 8 }}>{label}</div>
                               {payload.map((p, i) => p.value && (
                                 <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 16, fontSize: 12, color: T.textSecondary, marginBottom: 3 }}>
-                                  <span style={{ color: p.color }}>{p.name></span>
+                                  <span style={{ color: p.color }}>{p.name}</span>
                                   <span style={{ fontWeight: 700, color: T.white }}>AED {p.value.toLocaleString()}/sqft</span>
                                 </div>
                               ))}
@@ -7853,7 +7853,7 @@ export default function EmaarDashboardV2() {
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
                             <div>
                               <div style={{ width: 10, height: 10, borderRadius: "50%", background: COLORS[comm], display: "inline-block", marginRight: 6 }} />
-                              <span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{comm></span>
+                              <span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{comm}</span>
                             </div>
                             <div style={{ fontSize: 11, fontWeight: 700, color: isPositive ? T.green : T.red, background: isPositive ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)", padding: "2px 8px", borderRadius: 6 }}>
                               {isPositive ? "+" : ""}{s.totalGain}% since 2008
@@ -7976,7 +7976,7 @@ export default function EmaarDashboardV2() {
             <span style={{ color: T.gold, fontWeight: 700, fontSize: 13 }}>Compare ({compareList.length}/3):</span>
             {compareList.map(p => (
               <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
-                <span style={{ fontSize: 12, color: T.white }}>{p.name></span>
+                <span style={{ fontSize: 12, color: T.white }}>{p.name}</span>
                 <button type="button" onClick={() => toggleCompare(p)} style={{ background: "none", border: "none", color: T.red, cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1 }}>-</button>
               </div>
             ))}
@@ -8049,7 +8049,7 @@ export default function EmaarDashboardV2() {
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
                       {intel.keyAmenities.map((a, ai) => (
                         <div key={ai} style={{ background: T.surfaceAlt, borderRadius: 10, padding: 12 }}>
-                          <div style={{ fontSize: 13, marginBottom: 4 }}>{a.icon} <span style={{ fontWeight: 700, color: T.white }}>{a.label></span></div>
+                          <div style={{ fontSize: 13, marginBottom: 4 }}>{a.icon} <span style={{ fontWeight: 700, color: T.white }}>{a.label}</span></div>
                           <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.5 }}>{a.items}</div>
                         </div>
                       ))}
@@ -8064,7 +8064,7 @@ export default function EmaarDashboardV2() {
                     <div style={{ background: T.surfaceAlt, borderRadius: 10, overflow: "hidden" }}>
                       {intel.distances.map((d, di) => (
                         <div key={di} style={{ display: "flex", justifyContent: "space-between", padding: "8px 14px", borderBottom: di < intel.distances.length - 1 ? `1px solid ${T.border}` : "none" }}>
-                          <span style={{ fontSize: 11, color: T.textSecondary }}>{d.dest></span>
+                          <span style={{ fontSize: 11, color: T.textSecondary }}>{d.dest}</span>
                           <span style={{ fontSize: 11, color: T.white, fontWeight: 600 }}>{d.km} km &middot; {d.min} min</span>
                         </div>
                       ))}
@@ -8096,7 +8096,7 @@ export default function EmaarDashboardV2() {
                       {commProjects.map((p, pi) => (
                         <div key={pi} style={{ background: T.surfaceAlt, borderRadius: 8, padding: 10, cursor: "pointer" }} onClick={() => { const proj = activeProjects.find(x => x.id === p.id) || p; setBreadcrumb([{ label: selectedCommunity, action: () => { setSelectedProject(null); setBreadcrumb([]); setPdTab("overview"); setPdSendModal(false); } }]); setSelectedCommunity(null); setSelectedProject(proj); }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{p.name></span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{p.name}</span>
                             {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 8, color: T.gold, textDecoration: "none", padding: "1px 4px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 3, fontWeight: 700 }}>?</a>}
                           </div>
                           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{p.type} &middot; {p.beds} beds &middot; {p.status}</div>
@@ -8109,7 +8109,7 @@ export default function EmaarDashboardV2() {
 
                 {comm && (
                   <div style={{ fontSize: 10, color: T.textMuted, marginTop: 16, padding: "10px 0 0", borderTop: `1px solid ${T.border}` }}>
-                    Target buyers: <span style={{ color: T.white }}>{comm.buyer></span> &middot; Key strengths: <span style={{ color: T.white }}>{comm.strengths></span>
+                    Target buyers: <span style={{ color: T.white }}>{comm.buyer}</span> &middot; Key strengths: <span style={{ color: T.white }}>{comm.strengths}</span>
                   </div>
                 )}
               </div>
@@ -8126,7 +8126,7 @@ export default function EmaarDashboardV2() {
                     <span style={{ color: T.textMuted, fontSize: 12 }}>-</span>
                   </React.Fragment>
                 ))}
-                <span style={{ fontSize: 12, color: T.textSecondary }}>{selectedProject?.name></span>
+                <span style={{ fontSize: 12, color: T.textSecondary }}>{selectedProject?.name}</span>
               </div>
             )}
             {selectedProject && (() => {
@@ -8212,8 +8212,8 @@ export default function EmaarDashboardV2() {
               };
               const ROW = ({ label, value, color }) => (
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"9px 0", borderBottom:`1px solid #0F1E35`, fontSize:13 }}>
-                  <span style={{ color:"#64748B" }}>{label></span>
-                  <span style={{ fontWeight:600, color:color||T.white }}>{value></span>
+                  <span style={{ color:"#64748B" }}>{label}</span>
+                  <span style={{ fontWeight:600, color:color||T.white }}>{value}</span>
                 </div>
               );
               return (
@@ -8223,10 +8223,10 @@ export default function EmaarDashboardV2() {
                   <div style={{ display:"grid", gridTemplateColumns:"1fr auto", gap:20, alignItems:"flex-start", marginBottom:20 }}>
                     <div>
                       <div style={{ display:"flex", flexWrap:"wrap", gap:7, marginBottom:10 }}>
-                        {sp.status && <span style={{ fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:6, background:sp.status.includes("Construction")?"rgba(16,185,129,0.1)":"rgba(59,130,246,0.1)", color:sp.status.includes("Construction")?T.green:"#60A5FA", border:`1px solid ${sp.status.includes("Construction")?T.green:"#60A5FA"}33` }}>{sp.status></span>}
+                        {sp.status && <span style={{ fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:6, background:sp.status.includes("Construction")?"rgba(16,185,129,0.1)":"rgba(59,130,246,0.1)", color:sp.status.includes("Construction")?T.green:"#60A5FA", border:`1px solid ${sp.status.includes("Construction")?T.green:"#60A5FA"}33` }}>{sp.status}</span>}
                         {goldenVisa && <span style={{ fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:6, background:"rgba(16,185,129,0.1)", color:T.green, border:`1px solid ${T.green}33` }}>Golden Visa Eligible</span>}
-                        {sp.branded && sp.brand && <span style={{ fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:6, background:"rgba(212,168,67,0.1)", color:T.gold, border:`1px solid ${T.gold}33` }}>{sp.brand></span>}
-                        {sp.tier && <span style={{ fontSize:11, fontWeight:600, padding:"4px 12px", borderRadius:6, background:"rgba(100,116,139,0.08)", color:T.textMuted, border:"1px solid #1E293B" }}>{sp.tier></span>}
+                        {sp.branded && sp.brand && <span style={{ fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:6, background:"rgba(212,168,67,0.1)", color:T.gold, border:`1px solid ${T.gold}33` }}>{sp.brand}</span>}
+                        {sp.tier && <span style={{ fontSize:11, fontWeight:600, padding:"4px 12px", borderRadius:6, background:"rgba(100,116,139,0.08)", color:T.textMuted, border:"1px solid #1E293B" }}>{sp.tier}</span>}
                       </div>
                       <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:36, fontWeight:900, color:T.white, lineHeight:1.1, marginBottom:6 }}>{sp.name}</h1>
                       {(sp.tagline || ci?.tagline) && <p style={{ color:T.teal, fontSize:13, fontStyle:"italic", marginBottom:6 }}>{sp.tagline || ci.tagline}</p>}
@@ -8374,7 +8374,7 @@ _Powered by DXB Analytics - Dubai Real Estate Intelligence_`)}`} target="_blank"
                           {sp.unitBreakdown && sp.unitBreakdown.length > 0
                             ? sp.unitBreakdown.map((u,i) => (
                               <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 1.2fr 1.3fr 1.1fr", padding:"12px 14px", borderTop:"1px solid #0F1E35", background:i%2===0?"transparent":"rgba(14,29,53,0.4)", fontSize:13 }}>
-                                <span style={{ fontWeight:700, color:T.white }}>{u.type></span>
+                                <span style={{ fontWeight:700, color:T.white }}>{u.type}</span>
                                 <span style={{ color:"#94A3B8" }}>{u.sqftFrom?.toLocaleString()} - {u.sqftTo?.toLocaleString()></span>
                                 <span style={{ fontWeight:800, color:T.gold }}>{u.priceFrom?`AED ${(u.priceFrom/1e6).toFixed(2)}M`:"-"></span>
                                 <span style={{ color:T.textMuted }}>{u.priceFrom&&u.sqftFrom?`AED ${Math.round(u.priceFrom/u.sqftFrom).toLocaleString()}`:"-"></span>
@@ -8422,7 +8422,7 @@ _Powered by DXB Analytics - Dubai Real Estate Intelligence_`)}`} target="_blank"
                             </div>
                             {ci.distances.map((d,i) => (
                               <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 80px 90px", padding:"11px 14px", borderTop:"1px solid #0F1E35", background:i%2===0?"transparent":"#0A1628", fontSize:12, alignItems:"center" }}>
-                                <span style={{ color:T.white, fontWeight:500 }}>{d.dest></span>
+                                <span style={{ color:T.white, fontWeight:500 }}>{d.dest}</span>
                                 <span style={{ textAlign:"center", color:T.textMuted }}>{d.km} km</span>
                                 <span style={{ textAlign:"center" }}>
                                   <span style={{ padding:"3px 10px", borderRadius:5, fontSize:11, fontWeight:700, background:d.min<=10?"rgba(16,185,129,0.12)":d.min<=20?"rgba(212,168,67,0.12)":"rgba(59,130,246,0.12)", color:d.min<=10?T.green:d.min<=20?T.gold:"#3B82F6" }}>{d.min} min</span>
@@ -8702,7 +8702,7 @@ _Powered by DXB Analytics - Dubai Real Estate Intelligence_`)}`} target="_blank"
                   <div key={p.id} onClick={() => setShowAddPortfolio(p)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderRadius: 8, cursor: "pointer", transition: "background 0.2s", marginBottom: 2 }} onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name></span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{p.name}</span>
                         {p.emaarUrl && <a href={p.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 4px", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 3, fontWeight: 700, flexShrink: 0 }}>?</a>}
                       </div>
                       <div style={{ fontSize: 10, color: T.textMuted }}>{p.community} \u00b7 {p.type} \u00b7 {p.beds}</div>
@@ -8882,7 +8882,7 @@ _Powered by DXB Analytics - Dubai Real Estate Intelligence_`)}`} target="_blank"
             {checkoutStep === 1 && <>
               <div style={{ padding: 16, borderRadius: 12, background: T.surfaceAlt, border: `2px solid ${T.gold}`, marginBottom: 16 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><span style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 800, color: T.gold }}>{showCheckout.name} Plan</span><span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: "rgba(212,168,67,0.12)", color: T.gold }}>SELECTED</span></div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 12 }}><span style={{ fontSize: 10, color: T.textMuted }}>AED</span><span style={{ fontFamily: "'Fraunces', serif", fontSize: 32, fontWeight: 900, color: T.white }}>{showCheckout.price></span><span style={{ fontSize: 12, color: T.textMuted }}>/month</span></div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 12 }}><span style={{ fontSize: 10, color: T.textMuted }}>AED</span><span style={{ fontFamily: "'Fraunces', serif", fontSize: 32, fontWeight: 900, color: T.white }}>{showCheckout.price}</span><span style={{ fontSize: 12, color: T.textMuted }}>/month</span></div>
                 {showCheckout.features.slice(0,5).map((f,j) => <div key={j} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", fontSize: 12, color: T.textSecondary }}><span style={{ color: T.green }}>{"\u2713"></span>{f}</div>)}
               </div>
               <button type="button" onClick={() => setCheckoutStep(2)} style={{ width: "100%", padding: "12px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Continue to Payment ?</button>
@@ -8961,9 +8961,9 @@ _Powered by DXB Analytics - Dubai Real Estate Intelligence_`)}`} target="_blank"
               <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 800, color: T.gold, marginBottom: 8 }}>Payment Request Sent!</div>
               <div style={{ fontSize: 13, color: T.textSecondary, maxWidth: 320, margin: "0 auto", lineHeight: 1.6, marginBottom: 20 }}>We opened WhatsApp for you. After confirming payment, your {showCheckout.name} Plan will be activated within 5 minutes.</div>
               <div style={{ padding: 12, borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${T.border}`, marginBottom: 16, fontSize: 11, color: T.textMuted }}>
-                <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0" }}><span>Plan</span><span style={{ color: T.gold, fontWeight: 700 }}>{showCheckout.name></span></div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0" }}><span>Plan</span><span style={{ color: T.gold, fontWeight: 700 }}>{showCheckout.name}</span></div>
                 <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0" }}><span>Amount</span><span style={{ color: T.white, fontWeight: 700 }}>AED {showCheckout.price}/mo</span></div>
-                <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0" }}><span>Account</span><span style={{ color: T.white }}>{user></span></div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0" }}><span>Account</span><span style={{ color: T.white }}>{user}</span></div>
               </div>
               <button type="button" onClick={() => { setShowCheckout(null); setCheckoutStep(1); setShowUpgrade(false); }} style={{ width: "100%", padding: "12px 0", background: T.gold, color: T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "'Outfit', sans-serif" }}>Done</button>
             </div>}
@@ -8982,8 +8982,8 @@ _Powered by DXB Analytics - Dubai Real Estate Intelligence_`)}`} target="_blank"
         ].map(item => (
           <button key={item.key} type="button" onClick={() => { setTab(item.key); setSidebarOpen(false); }}
             style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: "6px 0", color: tab === item.key ? T.gold : T.textMuted, fontFamily: "'Outfit',sans-serif", transition: "color 0.2s" }}>
-            <span style={{ fontSize: 18, lineHeight: 1 }}>{item.icon></span>
-            <span style={{ fontSize: 9, fontWeight: tab === item.key ? 700 : 400, letterSpacing: 0.3 }}>{item.label></span>
+            <span style={{ fontSize: 18, lineHeight: 1 }}>{item.icon}</span>
+            <span style={{ fontSize: 9, fontWeight: tab === item.key ? 700 : 400, letterSpacing: 0.3 }}>{item.label}</span>
             {tab === item.key && <span style={{ width: 4, height: 4, borderRadius: "50%", background: T.gold, display: "block" }} />}
           </button>
         ))}
@@ -9257,7 +9257,7 @@ _Powered by DXB Analytics - Dubai Real Estate Intelligence_`)}`} target="_blank"
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 3 }}>{w.name}</div>
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ fontSize: 11, color: T.textMuted }}>{w.community></span>
+                            <span style={{ fontSize: 11, color: T.textMuted }}>{w.community}</span>
                             {liveP?.emaarUrl && <a href={liveP.emaarUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 9, color: T.gold, textDecoration: "none", padding: "1px 5px", border: "1px solid rgba(212,168,67,0.35)", borderRadius: 4, fontWeight: 700 }}>{getLinkLabel(liveP?.emaarUrl)}</a>}
                           </div>
                           {priceChanged && <div style={{ fontSize: 10, color: liveP.price > w.price ? T.red : T.green, marginTop: 4, fontWeight: 600 }}>{liveP.price > w.price ? "?" : "?"} Price changed since you saved this</div>}
