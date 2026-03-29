@@ -11,6 +11,18 @@ import { BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, Cart
 import { emaarProjects, emaarCommunities, emaarYields, communityROI as defaultCommunityROI, communityIntel as defaultCommunityIntel } from "./data";
 import ProjectManager from "./ProjectManager";
 import { useI18n, LANGUAGES } from "./i18n";
+import AdminDataHealth from "./AdminDataHealth";
+import EmailCampaignsTab from "./admin/EmailCampaignsTab";
+import MarketIntelligenceTab from "./admin/MarketIntelligenceTab";
+import ForecastingTab from "./admin/ForecastingTab";
+import PricingPlansTab from "./admin/PricingPlansTab";
+import BillingTab from "./admin/BillingTab";
+import ReferralTab from "./admin/ReferralTab";
+import NotificationsTab from "./admin/NotificationsTab";
+import DigestTab from "./admin/DigestTab";
+import EiborRatesPanel from "./admin/EiborRatesPanel";
+import UsersTab from "./admin/UsersTab";
+import DataManagerTab from "./admin/DataManagerTab";
 
 /* ═══════════════════════════════════════════════════════
    EMAIL CAMPAIGNS TAB
