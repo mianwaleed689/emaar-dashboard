@@ -151,7 +151,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
   ];
 
   const faqs = [
-    { q: "Is there a free trial?", a: "Yes — every new account gets a 7-day Pro trial automatically. No credit card needed. You get full access to all 23 tools and all 48+ projects." },
+    { q: "Is there a free trial?", a: "Yes — every new account gets a 7-day Pro trial automatically. No credit card needed. You get full access to all 23 tools and all 208+ projects." },
     { q: "What data sources do you use?", a: "Dubai Land Department (DLD), official developer annual reports, DXBinteract, BetterHomes, Bayut, Engel & Völkers, ValuStrat, and Knight Frank. Every data point shows its source." },
     { q: "How often is data updated?", a: "Financial data is updated within 24 hours of official developer releases. Project prices and handover dates are manually verified monthly. EIBOR rates update daily." },
     { q: "Which developers are currently covered?", a: "Phase 1 (live now) covers 48 active projects across 11 Dubai communities from Dubai's largest developer. DAMAC, Sobha, Nakheel, Binghatti, and more are coming in Q3 2026." },
@@ -239,7 +239,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             {/* Social proof numbers */}
             <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
               {[
-                { n: "48+",  l: "Projects Tracked" },
+                { n: "208+",  l: "Projects Tracked" },
                 { n: "23",   l: "Pro Tools" },
                 { n: "AED 761B", l: "Market Tracked" },
                 { n: "20",   l: "Languages" },
@@ -408,7 +408,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                   {/* Bottom bar — mini stats */}
                   <div style={{ display: "flex", gap: 6, paddingTop: 6, borderTop: "1px solid rgba(212,168,67,0.06)" }}>
                     {[
-                      { l: "Projects", v: "48", c: "#3B82F6" },
+                      { l: "Projects", v: "208", c: "#3B82F6" },
                       { l: "Communities", v: "11", c: "#8B5CF6" },
                       { l: "Avg Yield", v: "6.9%", c: "#10B981" },
                       { l: "EPS 2025", v: "AED 2.00", c: "#D4A843" },
@@ -432,7 +432,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         <div className="ticker-track">
           {[...Array(2)].map((_, r) => (
             <React.Fragment key={r}>
-              {["AED 761B Dubai Market 2025", "48 Active Projects Tracked", "6 Years Financial Data", "Live DLD Transaction Data", "9-Factor Risk Assessment", "EIBOR-Based Mortgage Calculator", "20 Languages Including Arabic", "DLD · Knight Frank · ValuStrat · Bayut"].map((item, i) => (
+              {["AED 761B Dubai Market 2025", "208 Active Emaar Projects", "6 Years Financial Data", "Live DLD Transaction Data", "9-Factor Risk Assessment", "EIBOR-Based Mortgage Calculator", "20 Languages Including Arabic", "DLD · Knight Frank · ValuStrat · Bayut"].map((item, i) => (
                 <span key={`${r}-${i}`} style={{ fontSize: 12, color: T.textMuted, display: "inline-flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
                   <span style={{ width: 4, height: 4, borderRadius: "50%", background: T.gold, opacity: .6 }} />{item}
                 </span>
@@ -515,7 +515,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 24 }}>
             {[
               { num: "01", title: "Sign Up Free", desc: "Create your account — no credit card needed. Your 7-day Pro trial starts immediately.", icon: "??" },
-              { num: "02", title: "Explore Any Project", desc: "Search 48+ projects, filter by community, price, or handover year. Click any project for full intelligence.", icon: "??" },
+              { num: "02", title: "Explore Any Project", desc: "Search 208+ projects, filter by community, price, or handover year. Click any project for full intelligence.", icon: "??" },
               { num: "03", title: "Share & Close", desc: "WhatsApp project details to clients in one tap. PDF reports, comparison tools, and ROI calculators ready instantly.", icon: "??" },
             ].map((s, i) => (
               <div key={i} className="feature-card" style={{ textAlign: "left", position: "relative" }}>
@@ -676,7 +676,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                 <span style={{ fontSize: 13, color: T.textMuted }}>/month</span>
               </div>
               {billingAnnual && <p style={{ fontSize: 11, color: T.green, marginBottom: 16 }}>Billed AED {proPrice * 12}/year · Save AED {(99 - proPrice) * 12}</p>}
-              {["All 48+ projects — full data", "Multi-year developer financials", "Rental yields & ROI calculators", "Risk assessment (9 factors)", "3-project comparison tool", "Mortgage & flip calculators", "Portfolio tracker + price alerts", "WhatsApp share any project", "All 23 dashboard tools", "Arabic + 19 languages", "Priority email support"].map((f, i) => (
+              {["all 208+ projects — full data", "Multi-year developer financials", "Rental yields & ROI calculators", "Risk assessment (9 factors)", "3-project comparison tool", "Mortgage & flip calculators", "Portfolio tracker + price alerts", "WhatsApp share any project", "All 23 dashboard tools", "Arabic + 19 languages", "Priority email support"].map((f, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", fontSize: 13, color: T.textSecondary }}>
                   <span style={{ color: T.green }}>?</span>{f}
                 </div>
@@ -728,7 +728,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           </div>
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }}>
             {[
-              { phase: "Phase 1", status: "LIVE NOW", color: T.green, title: "Dubai — First Developer", desc: "48 projects across 11 communities — full financials, yields, risk, ROI, and 23 professional tools.", bg: "rgba(16,185,129,.05)" },
+              { phase: "Phase 1", status: "LIVE NOW", color: T.green, title: "Dubai — First Developer", desc: "208 projects across 13 communities — full financials, yields, risk, ROI, and 23 professional tools.", bg: "rgba(16,185,129,.05)" },
               { phase: "Phase 2", status: "Q3 2026", color: T.gold, title: "Dubai — Top 10 Developers", desc: "DAMAC, Sobha, Meraas, Nakheel, Binghatti, Azizi, Tiger, Danube — same depth, same quality.", bg: T.goldMuted },
               { phase: "Phase 3", status: "2027", color: T.blue, title: "Full GCC Market", desc: "All 228+ Dubai developers, Abu Dhabi, Saudi Arabia — every transaction, live DLD data feeds.", bg: "rgba(59,130,246,.05)" },
             ].map((item, i) => (
