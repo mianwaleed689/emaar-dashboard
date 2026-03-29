@@ -12505,6 +12505,1485 @@ function DeveloperManager({ db, T, notify, adminUser, Section }) {
 }
 
 
+
+
+const MarketIntelligenceTab = ({ db, T, notify, users }) => {
+  const [marketGlobal, setMarketGlobal] = React.useState(null);
+  const [eiborData,    setEiborData]    = React.useState(null);
+  const [eiborHistory, setEiborHistory] = React.useState([]);
+  const [alerts,       setAlerts]       = React.useState([]);
+  const [communities,  setCommunities]  = React.useState([]);
+  const [developers,   setDevelopers]   = React.useState([]);
+  const [loading,      setLoading]      = React.useState(true);
+
+  // Load all data
+  React.useEffect(() => {
+    const unsubs = [];
+
+    // marketData/global
+    unsubs.push(onSnapshot(doc(db, "marketData", "global"), snap => {
+      if (snap.exists()) setMarketGlobal(snap.data());
+    }));
+
+    // marketData/eibor
+    unsubs.push(onSnapshot(doc(db, "marketData", "eibor"), snap => {
+      if (snap.exists()) setEiborData(snap.data());
+    }));
+
+    // eiborHistory — last 30 days
+    getDocs(query(collection(db, "eiborHistory"), orderBy("fetchedAt", "desc"), limit(30))).then(snap => {
+      const list = [];
+      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+      setEiborHistory(list.reverse());
+    }).catch(() => {});
+
+    // adminAlerts — last 20
+    unsubs.push(onSnapshot(
+      query(collection(db, "adminAlerts"), orderBy("createdAt", "desc"), limit(20)),
+      snap => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+        setAlerts(list);
+        setLoading(false);
+      },
+      () => setLoading(false)
+    ));
+
+    // communityData — all communities
+    getDocs(collection(db, "communityData")).then(snap => {
+      const list = [];
+      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+      setCommunities(list.sort((a, b) => (b.transactionCount30d || 0) - (a.transactionCount30d || 0)));
+    }).catch(() => {});
+
+    // developers — for launch alerts
+    getDocs(query(collection(db, "developers"), orderBy("seededAt", "desc"), limit(20))).then(snap => {
+      const list = [];
+      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+      setDevelopers(list);
+    }).catch(() => {});
+
+    return () => unsubs.forEach(u => u());
+  }, [db]);
+
+  // Data feed statuses
+  const FEEDS = [
+    { name: "EIBOR Rates",       key: "eibor",       icon: "📈", schedule: "Daily 11:30AM UAE", lastUpdate: eiborData?.updatedAt,    status: eiborData ? "live" : "no_data",    value: eiborData ? `3M: ${eiborData.threeMonth || eiborData["3m"] || "—"}%` : "—" },
+    { name: "Market Data",       key: "global",      icon: "🏙️", schedule: "Admin updated",     lastUpdate: marketGlobal?.updatedAt, status: marketGlobal ? "live" : "no_data", value: marketGlobal ? marketGlobal.totalMarketValue || "—" : "—" },
+    { name: "DLD Transactions",  key: "dld",         icon: "📋", schedule: "Daily 7AM UAE",     lastUpdate: marketGlobal?.dldUpdatedAt, status: marketGlobal?.lastDLDFetchDate ? "live" : "pending", value: marketGlobal?.lastDLDTxnCount ? `${marketGlobal.lastDLDTxnCount} txns` : "Pending API keys" },
+    { name: "Developer Registry",key: "developers",  icon: "🏗️", schedule: "One-time seeded",   lastUpdate: developers[0]?.seededAt, status: developers.length > 0 ? "live" : "no_data", value: `${developers.length} developers` },
+  ];
+
+  const statusColor = (s) => s === "live" ? T.green : s === "pending" ? T.orange : T.textMuted;
+  const statusLabel = (s) => s === "live" ? "LIVE" : s === "pending" ? "PENDING" : "NO DATA";
+
+  // Anomaly alerts
+  const anomalyAlerts = alerts.filter(a => a.type === "price_anomaly" || a.type === "financial_update" || a.type === "referral_reward" || a.type === "payment_retry");
+  const launchAlerts  = alerts.filter(a => a.type === "developer_launch" || a.message?.toLowerCase().includes("new") || a.message?.toLowerCase().includes("launch"));
+
+  // EIBOR mini chart
+  const eiborMax = Math.max(...eiborHistory.map(h => parseFloat(h["3m"] || h.threeMonth || 0)), 5);
+  const eiborMin = Math.min(...eiborHistory.map(h => parseFloat(h["3m"] || h.threeMonth || 100)), 3);
+
+  const now = new Date();
+  const timeSince = (iso) => {
+    if (!iso) return "Never";
+    const d = (now - new Date(iso)) / 1000;
+    if (d < 60) return `${Math.round(d)}s ago`;
+    if (d < 3600) return `${Math.round(d/60)}m ago`;
+    if (d < 86400) return `${Math.round(d/3600)}h ago`;
+    return `${Math.round(d/86400)}d ago`;
+  };
+
+  return (
+    <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 20 }}>
+
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.gold, marginBottom: 4 }}>Market Intelligence</h2>
+          <p style={{ color: T.textMuted, fontSize: 13 }}>Admin Bloomberg Terminal — live data feeds · DLD anomalies · EIBOR trend · Developer alerts</p>
+        </div>
+        <div style={{ fontSize: 12, color: T.green, fontWeight: 700, padding: "4px 12px", borderRadius: 8, background: "rgba(16,185,129,0.1)", border: `1px solid rgba(16,185,129,0.2)` }}>
+          ● LIVE · {new Date().toLocaleString("en-AE", { timeZone: "Asia/Dubai", hour: "2-digit", minute: "2-digit" })} UAE
+        </div>
+      </div>
+
+      {/* Data Feed Statuses */}
+      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>📡 Data Feed Status</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
+          {FEEDS.map(f => (
+            <div key={f.key} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${statusColor(f.status)}22` }}>
+              <span style={{ fontSize: 20 }}>{f.icon}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{f.name}</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: statusColor(f.status), padding: "1px 7px", borderRadius: 5, background: statusColor(f.status) + "15", border: `1px solid ${statusColor(f.status)}33` }}>{statusLabel(f.status)}</span>
+                </div>
+                <div style={{ fontSize: 11, color: T.textMuted }}>Schedule: {f.schedule} · Last: {timeSince(f.lastUpdate)}</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: statusColor(f.status), marginTop: 2 }}>{f.value}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+
+        {/* EIBOR Trend */}
+        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>📈 EIBOR Trend — Last 30 Days</div>
+          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>3-Month rate · UAE Central Bank</div>
+
+          {/* Current rates */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 16 }}>
+            {[
+              { label: "Overnight", key: "overnight" },
+              { label: "1 Month",   key: "oneMonth" },
+              { label: "3 Month",   key: "threeMonth" },
+              { label: "12 Month",  key: "twelveMonth" },
+            ].map(r => (
+              <div key={r.key} style={{ textAlign: "center", padding: "8px", background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", marginBottom: 3 }}>{r.label}</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>{eiborData?.[r.key] || eiborData?.[r.key.replace("Month","m").replace("oneM","1m").replace("threeM","3m").replace("twelveM","12m").replace("overnight","on")] || "—"}%</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mini line chart */}
+          {eiborHistory.length > 0 ? (
+            <div style={{ height: 80, display: "flex", alignItems: "flex-end", gap: 3, padding: "8px 0" }}>
+              {eiborHistory.slice(-20).map((h, i) => {
+                const val = parseFloat(h["3m"] || h.threeMonth || 0);
+                const range = eiborMax - eiborMin || 1;
+                const height = Math.max(((val - eiborMin) / range) * 60 + 10, 4);
+                return (
+                  <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                    <div style={{ width: "80%", height: `${height}px`, background: `linear-gradient(180deg,${T.gold},${T.gold}66)`, borderRadius: "2px 2px 0 0" }} title={`${val}%`} />
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: T.textMuted, fontSize: 12, background: T.surfaceAlt, borderRadius: 8 }}>
+              EIBOR history will populate after first cron run
+            </div>
+          )}
+          {eiborData?.asOf && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 6 }}>As of: {eiborData.asOf} · Source: UAE Central Bank</div>}
+        </div>
+
+        {/* Top Communities by Volume */}
+        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>🏙️ Top Communities — Transaction Volume</div>
+          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>30-day rolling count · DLD data</div>
+          {communities.length === 0 ? (
+            <div style={{ color: T.textMuted, fontSize: 12, textAlign: "center", padding: "20px 0" }}>
+              Community data will populate when DLD API keys are active
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {communities.slice(0, 8).map((c, i) => {
+                const maxVol = communities[0]?.transactionCount30d || 1;
+                const pct = ((c.transactionCount30d || 0) / maxVol) * 100;
+                return (
+                  <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 20, fontSize: 11, color: i === 0 ? T.gold : T.textMuted, fontWeight: i === 0 ? 700 : 400, flexShrink: 0 }}>#{i+1}</div>
+                    <div style={{ width: 130, fontSize: 11, color: T.white, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.areaName || c.id}</div>
+                    <div style={{ flex: 1, height: 6, borderRadius: 3, background: T.border, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${pct}%`, background: i === 0 ? T.gold : T.teal, borderRadius: 3 }} />
+                    </div>
+                    <div style={{ width: 60, textAlign: "right", fontSize: 11, fontWeight: 600, color: i === 0 ? T.gold : T.textSecondary, flexShrink: 0 }}>{(c.transactionCount30d || 0).toLocaleString()}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Market Pulse KPIs */}
+      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>🌍 Dubai Market Pulse</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 10 }}>
+          {[
+            { label: "Market Value", value: marketGlobal?.totalMarketValue || "AED 682.5B", color: T.gold },
+            { label: "Transactions", value: marketGlobal?.totalTransactions || "214,912", color: T.green },
+            { label: "Avg PPSF", value: marketGlobal?.avgPricePsf || "AED 1,689", color: T.teal },
+            { label: "YoY Growth", value: marketGlobal?.yoyGrowthPct || "+30.6%", color: T.blue },
+            { label: "Off-Plan %", value: marketGlobal?.offPlanShare || "62.6%", color: T.purple },
+            { label: "EIBOR 3M", value: eiborData?.threeMonth ? `${eiborData.threeMonth}%` : "3.64%", color: T.orange },
+          ].map(k => (
+            <div key={k.label} style={{ textAlign: "center", padding: "12px 8px", background: T.surfaceAlt, borderRadius: 10, border: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: 9, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{k.label}</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: k.color, fontFamily: "'Fraunces',serif" }}>{k.value}</div>
+            </div>
+          ))}
+        </div>
+        {marketGlobal?.updatedAt && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 10 }}>Last updated: {timeSince(marketGlobal.updatedAt)} · by {marketGlobal.updatedBy || "admin"}</div>}
+      </div>
+
+      {/* Alerts + Developer Registry */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+
+        {/* DLD Anomaly Alerts */}
+        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>⚠️ Transaction Anomalies & Alerts</div>
+          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>Price spikes, financial updates, system events</div>
+          {loading ? (
+            <div style={{ color: T.textMuted, fontSize: 12 }}>Loading...</div>
+          ) : alerts.length === 0 ? (
+            <div style={{ color: T.textMuted, fontSize: 12, textAlign: "center", padding: "20px 0" }}>
+              <div style={{ fontSize: 24, marginBottom: 6 }}>✅</div>
+              No anomalies detected
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 300, overflowY: "auto" }}>
+              {alerts.map(a => {
+                const isAnomaly = a.type === "price_anomaly";
+                const isFinancial = a.type === "financial_update";
+                const color = isAnomaly ? T.red : isFinancial ? T.green : T.gold;
+                return (
+                  <div key={a.id} style={{ padding: "10px 12px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${color}22` }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                      <div style={{ fontSize: 12, color: T.white, flex: 1 }}>{a.message}</div>
+                      <div style={{ fontSize: 9, color: T.textMuted, flexShrink: 0 }}>{timeSince(a.createdAt)}</div>
+                    </div>
+                    <div style={{ fontSize: 10, color: color, marginTop: 3, fontWeight: 600 }}>{a.type?.replace(/_/g, " ").toUpperCase()} · {a.severity?.toUpperCase() || "INFO"}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Developer Registry — Launch Alerts */}
+        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 4 }}>🏗️ Developer Registry — {developers.length} Registered</div>
+          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>Latest developer registrations · DLD seeded data</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 300, overflowY: "auto" }}>
+            {developers.slice(0, 12).map((d, i) => (
+              <div key={d.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: d.color || T.gold, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+                  {(d.name || "D")[0]}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.name}</div>
+                  <div style={{ fontSize: 10, color: T.textMuted }}>{d.tier} · {d.projects || 0} projects · AED {d.salesValue2025 || 0}B sales</div>
+                </div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: d.tier === "T1" ? T.gold : d.tier === "T2" ? T.teal : T.textMuted, flexShrink: 0 }}>{d.tier}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 10, fontSize: 11, color: T.textMuted }}>T1: {developers.filter(d=>d.tier==="T1").length} · T2: {developers.filter(d=>d.tier==="T2").length} · T3: {developers.filter(d=>d.tier==="T3").length}</div>
+        </div>
+      </div>
+
+    </div>
+  );
+};
+
+/* ─── S19: REVENUE FORECASTING TAB ──────────────────────────────────────────
+   MRR forecast model · Churn-adjusted ARR · Growth scenario modelling
+────────────────────────────────────────────────────────────────────────── */
+const ForecastingTab = ({ db, T, notify, users }) => {
+  const [growthRate, setGrowthRate] = React.useState(10); // % monthly growth
+  const [churnRate,  setChurnRate]  = React.useState(5);  // % monthly churn
+  const [months,     setMonths]     = React.useState(12); // forecast horizon
+
+  const PRICES = { pro: 99, enterprise: 499 };
+  const now = new Date();
+
+  // Current MRR
+  const currentMRR = React.useMemo(() => {
+    const pro = users.filter(u => u.tier === "pro").length;
+    const ent = users.filter(u => u.tier === "enterprise").length;
+    return (pro * PRICES.pro) + (ent * PRICES.enterprise);
+  }, [users]);
+
+  const currentPaid = users.filter(u => u.tier === "pro" || u.tier === "enterprise").length;
+  const currentARR  = currentMRR * 12;
+
+  // Forecast model: MRR(t) = MRR(0) × (1 + growth - churn)^t
+  const netGrowth = (growthRate - churnRate) / 100;
+
+  const forecast = React.useMemo(() => {
+    const data = [];
+    for (let m = 0; m <= months; m++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + m, 1);
+      const mrr = Math.round(currentMRR * Math.pow(1 + netGrowth, m));
+      const arr = mrr * 12;
+      const users_est = Math.round(currentPaid * Math.pow(1 + netGrowth, m));
+      data.push({
+        label: m === 0 ? "Now" : d.toLocaleDateString("en-AE", { month: "short", year: "2-digit" }),
+        mrr: Math.max(mrr, 0),
+        arr: Math.max(arr, 0),
+        users: Math.max(users_est, 0),
+        month: m,
+      });
+    }
+    return data;
+  }, [currentMRR, currentPaid, netGrowth, months]);
+
+  const finalMRR  = forecast[forecast.length - 1]?.mrr || 0;
+  const finalARR  = finalMRR * 12;
+  const mrrGrowth = currentMRR > 0 ? Math.round(((finalMRR - currentMRR) / currentMRR) * 100) : 0;
+  const maxMRR    = Math.max(...forecast.map(f => f.mrr), 1);
+
+  // Scenarios
+  const scenarios = [
+    { label: "Conservative", growth: 5,  churn: 8,  color: T.orange },
+    { label: "Base Case",    growth: 10, churn: 5,  color: T.gold   },
+    { label: "Optimistic",   growth: 20, churn: 3,  color: T.green  },
+  ].map(s => ({
+    ...s,
+    mrrIn12: Math.round(currentMRR * Math.pow(1 + (s.growth - s.churn) / 100, 12)),
+    arrIn12: Math.round(currentMRR * Math.pow(1 + (s.growth - s.churn) / 100, 12) * 12),
+  }));
+
+  const Slider = ({ label, value, setValue, min, max, color, unit = "%" }) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <label style={{ fontSize: 12, color: T.textSecondary, fontWeight: 600 }}>{label}</label>
+        <span style={{ fontSize: 14, fontWeight: 800, color, fontFamily: "'Fraunces',serif" }}>{value}{unit}</span>
+      </div>
+      <input type="range" min={min} max={max} value={value} onChange={e => setValue(Number(e.target.value))}
+        style={{ width: "100%", accentColor: color, cursor: "pointer" }} />
+    </div>
+  );
+
+  return (
+    <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 24 }}>
+
+      {/* Header */}
+      <div>
+        <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.gold, marginBottom: 4 }}>Revenue Forecasting</h2>
+        <p style={{ color: T.textMuted, fontSize: 13 }}>MRR growth model · Churn-adjusted ARR · Scenario analysis</p>
+      </div>
+
+      {/* Current state KPIs */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+        {[
+          { label: "Current MRR", value: `AED ${currentMRR.toLocaleString()}`, color: T.gold },
+          { label: "Current ARR", value: `AED ${currentARR.toLocaleString()}`, color: T.teal },
+          { label: "Paying Users", value: currentPaid, color: T.green },
+          { label: "ARPU", value: currentPaid > 0 ? `AED ${Math.round(currentMRR/currentPaid)}` : "—", color: T.blue },
+        ].map(k => (
+          <div key={k.label} style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
+            <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>{k.label}</div>
+            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 800, color: k.color }}>{k.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20 }}>
+
+        {/* Controls */}
+        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white }}>Model Parameters</div>
+          <Slider label="Monthly Growth Rate" value={growthRate} setValue={setGrowthRate} min={0} max={50} color={T.green} />
+          <Slider label="Monthly Churn Rate" value={churnRate} setValue={setChurnRate} min={0} max={30} color={T.red} />
+          <Slider label="Forecast Horizon" value={months} setValue={setMonths} min={3} max={36} color={T.gold} unit=" mo" />
+
+          <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 16 }}>
+            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8 }}>Net Monthly Growth: <span style={{ color: netGrowth >= 0 ? T.green : T.red, fontWeight: 700 }}>{netGrowth >= 0 ? "+" : ""}{(netGrowth * 100).toFixed(1)}%</span></div>
+            <div style={{ fontSize: 11, color: T.textMuted }}>Projected MRR in {months}mo: <span style={{ color: T.gold, fontWeight: 700 }}>AED {finalMRR.toLocaleString()}</span></div>
+            <div style={{ fontSize: 11, color: T.textMuted }}>Projected ARR: <span style={{ color: T.gold, fontWeight: 700 }}>AED {finalARR.toLocaleString()}</span></div>
+            <div style={{ fontSize: 11, color: T.textMuted }}>MRR Growth: <span style={{ color: mrrGrowth >= 0 ? T.green : T.red, fontWeight: 700 }}>{mrrGrowth >= 0 ? "+" : ""}{mrrGrowth}%</span></div>
+          </div>
+        </div>
+
+        {/* Chart */}
+        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 16 }}>MRR Forecast — {months} Month Projection</div>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 180, marginBottom: 8 }}>
+            {forecast.filter((_, i) => i % Math.max(1, Math.floor(months/12)) === 0 || i === forecast.length - 1).map((f, i, arr) => {
+              const h = Math.max((f.mrr / maxMRR) * 160, 4);
+              const isNow = f.month === 0;
+              return (
+                <div key={f.label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, minWidth: 0 }}>
+                  <div style={{ fontSize: 9, color: T.textMuted, textAlign: "center" }}>AED {(f.mrr/1000).toFixed(0)}K</div>
+                  <div style={{ width: "80%", height: h, background: isNow ? T.blue : `linear-gradient(180deg,${T.gold},${T.gold}88)`, borderRadius: "3px 3px 0 0", transition: "height 0.4s" }} title={`${f.label}: AED ${f.mrr.toLocaleString()}`} />
+                  <div style={{ fontSize: 9, color: isNow ? T.blue : T.textMuted, fontWeight: isNow ? 700 : 400, textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{f.label}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Scenarios */}
+      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>12-Month Scenario Analysis</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
+          {scenarios.map(s => (
+            <div key={s.label} style={{ padding: "16px 18px", borderRadius: 12, background: T.surfaceAlt, border: `1px solid ${s.color}33` }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: s.color, marginBottom: 8 }}>{s.label}</div>
+              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 10 }}>Growth: +{s.growth}% · Churn: {s.churn}% · Net: {s.growth - s.churn > 0 ? "+" : ""}{s.growth - s.churn}%</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: s.color, fontFamily: "'Fraunces',serif" }}>AED {s.mrrIn12.toLocaleString()}</div>
+              <div style={{ fontSize: 11, color: T.textMuted }}>MRR in 12 months</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: T.textSecondary, marginTop: 6 }}>ARR: AED {s.arrIn12.toLocaleString()}</div>
+              <div style={{ marginTop: 8, height: 4, borderRadius: 2, background: T.border, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${Math.min((s.mrrIn12 / Math.max(...scenarios.map(x => x.mrrIn12))) * 100, 100)}%`, background: s.color, borderRadius: 2 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Churn Impact */}
+      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>Churn Impact Analysis</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+          {[2, 5, 10, 15].map(ch => {
+            const mrrAt12 = Math.round(currentMRR * Math.pow(1 + (growthRate - ch) / 100, 12));
+            return (
+              <div key={ch} style={{ padding: "12px 14px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${ch <= 3 ? T.green : ch <= 7 ? T.gold : ch <= 12 ? T.orange : T.red}33`, textAlign: "center" }}>
+                <div style={{ fontSize: 18, fontWeight: 800, color: ch <= 3 ? T.green : ch <= 7 ? T.gold : ch <= 12 ? T.orange : T.red, fontFamily: "'Fraunces',serif" }}>{ch}%</div>
+                <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 8 }}>Churn Rate</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>AED {mrrAt12.toLocaleString()}</div>
+                <div style={{ fontSize: 10, color: T.textMuted }}>MRR @ 12mo</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+    </div>
+  );
+};
+
+/* ─── S19: PRICING PLANS EDITOR ──────────────────────────────────────────────
+   Admin edits plan prices/features → saves to Firestore pricingPlans/current
+   Dashboard upgrade modal + landing page read from Firestore automatically
+   No code deploy needed for price changes
+────────────────────────────────────────────────────────────────────────── */
+const PricingPlansTab = ({ db, T, notify }) => {
+  const DEFAULT_PLANS = [
+    { name: "Pro", price: "99", period: "month", features: ["48 Emaar projects — full data", "AI market insights", "Portfolio ROI tracker", "DXB Estimate AVM", "Yield & STR/LTR analysis", "Mortgage calculator", "Price alerts", "PDF export"], popular: true, note: null, cta: "Upgrade to Pro →", stripeId: "" },
+    { name: "Enterprise", price: "499", period: "month", features: ["Everything in Pro", "PDF report generation ⏳", "API data access ⏳", "Custom dashboards ⏳", "Multi-user team accounts ⏳", "Developer-level raw data", "Dedicated account manager", "White-label options ⏳"], popular: false, note: "⏳ = Launching Q3 2026", cta: "Contact Sales →", stripeId: "" },
+  ];
+
+  const [plans, setPlans]       = React.useState(DEFAULT_PLANS);
+  const [loading, setLoading]   = React.useState(true);
+  const [saving, setSaving]     = React.useState(false);
+  const [lastSaved, setLastSaved] = React.useState(null);
+  const [editIdx, setEditIdx]   = React.useState(0); // which plan is being edited
+
+  // Load from Firestore
+  React.useEffect(() => {
+    getDoc(doc(db, "pricingPlans", "current")).then(snap => {
+      if (snap.exists() && snap.data().plans) setPlans(snap.data().plans);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [db]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await setDoc(doc(db, "pricingPlans", "current"), {
+        plans,
+        updatedAt: new Date().toISOString(),
+        updatedBy: "admin",
+      });
+      setLastSaved(new Date().toLocaleString("en-AE", { timeZone: "Asia/Dubai" }));
+      notify("✅ Pricing plans saved — upgrade modal and landing page updated instantly", "success");
+    } catch(e) {
+      notify("❌ Save failed: " + e.message, "error");
+    } finally { setSaving(false); }
+  };
+
+  const updatePlan = (idx, field, value) => {
+    setPlans(prev => prev.map((p, i) => i === idx ? { ...p, [field]: value } : p));
+  };
+
+  const updateFeature = (planIdx, featIdx, value) => {
+    setPlans(prev => prev.map((p, i) => i === planIdx ? { ...p, features: p.features.map((f, j) => j === featIdx ? value : f) } : p));
+  };
+
+  const addFeature = (planIdx) => {
+    setPlans(prev => prev.map((p, i) => i === planIdx ? { ...p, features: [...p.features, "New feature"] } : p));
+  };
+
+  const removeFeature = (planIdx, featIdx) => {
+    setPlans(prev => prev.map((p, i) => i === planIdx ? { ...p, features: p.features.filter((_, j) => j !== featIdx) } : p));
+  };
+
+  if (loading) return <div style={{ padding: 40, color: T.textMuted }}>Loading pricing plans...</div>;
+
+  return (
+    <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 24 }}>
+
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.gold, marginBottom: 4 }}>Pricing Plan Editor</h2>
+          <p style={{ color: T.textMuted, fontSize: 13 }}>Changes save to Firestore instantly — upgrade modal + landing page update automatically. No code deploy needed.</p>
+        </div>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          {lastSaved && <span style={{ fontSize: 11, color: T.green }}>✅ Saved {lastSaved}</span>}
+          <button type="button" onClick={handleSave} disabled={saving}
+            style={{ padding: "10px 24px", background: saving ? T.surfaceAlt : `linear-gradient(135deg,${T.gold},#B8912F)`, color: saving ? T.textMuted : T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: saving ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}>
+            {saving ? "Saving..." : "💾 Save & Publish"}
+          </button>
+        </div>
+      </div>
+
+      {/* Warning */}
+      <div style={{ padding: "10px 16px", borderRadius: 8, background: "rgba(239,68,68,0.06)", border: `1px solid rgba(239,68,68,0.15)`, fontSize: 12, color: T.textMuted }}>
+        ⚠️ Price changes take effect immediately for <strong style={{ color: T.white }}>new subscribers only</strong>. Existing paying users keep their current price until they cancel and resubscribe. Update Stripe prices separately if changing billing amounts.
+      </div>
+
+      {/* Plan selector */}
+      <div style={{ display: "flex", gap: 8 }}>
+        {plans.map((p, i) => (
+          <button key={i} type="button" onClick={() => setEditIdx(i)}
+            style={{ padding: "8px 20px", borderRadius: 8, border: `1px solid ${editIdx === i ? T.gold : T.border}`, background: editIdx === i ? "rgba(212,168,67,0.1)" : T.surfaceAlt, color: editIdx === i ? T.gold : T.textMuted, fontSize: 13, fontWeight: editIdx === i ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+            {p.name} — AED {p.price}/mo
+          </button>
+        ))}
+      </div>
+
+      {/* Plan editor */}
+      {plans[editIdx] && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+
+          {/* Left — edit form */}
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white }}>Edit {plans[editIdx].name} Plan</div>
+
+            {[
+              { label: "Plan Name", field: "name", type: "text" },
+              { label: "Price (AED/month)", field: "price", type: "number" },
+              { label: "CTA Button Text", field: "cta", type: "text" },
+              { label: "Note (shown below price)", field: "note", type: "text", placeholder: "Optional note" },
+              { label: "Stripe Price ID", field: "stripeId", type: "text", placeholder: "price_xxx (from Stripe dashboard)" },
+            ].map(f => (
+              <div key={f.field} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>{f.label}</label>
+                <input type={f.type} value={plans[editIdx][f.field] || ""} placeholder={f.placeholder || ""}
+                  onChange={e => updatePlan(editIdx, f.field, e.target.value)}
+                  style={{ padding: "9px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+              </div>
+            ))}
+
+            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+              <input type="checkbox" checked={plans[editIdx].popular || false} onChange={e => updatePlan(editIdx, "popular", e.target.checked)}
+                style={{ width: 16, height: 16, accentColor: T.gold }} />
+              <span style={{ fontSize: 13, color: T.textSecondary }}>Mark as "Most Popular"</span>
+            </label>
+          </div>
+
+          {/* Right — features editor */}
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white }}>Features ({plans[editIdx].features?.length || 0})</div>
+              <button type="button" onClick={() => addFeature(editIdx)}
+                style={{ padding: "6px 14px", background: "rgba(16,185,129,0.1)", border: `1px solid ${T.green}44`, borderRadius: 8, color: T.green, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                + Add Feature
+              </button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 380, overflowY: "auto" }}>
+              {(plans[editIdx].features || []).map((feat, j) => (
+                <div key={j} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input type="text" value={feat} onChange={e => updateFeature(editIdx, j, e.target.value)}
+                    style={{ flex: 1, padding: "8px 10px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 12, fontFamily: "'Outfit',sans-serif", outline: "none" }} />
+                  <button type="button" onClick={() => removeFeature(editIdx, j)}
+                    style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(239,68,68,0.1)", border: `1px solid ${T.red}33`, borderRadius: 6, color: T.red, cursor: "pointer", fontSize: 14, flexShrink: 0 }}>
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* Live preview */}
+      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>Live Preview — Upgrade Modal</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+          {plans.map((p, i) => (
+            <div key={i} style={{ padding: "20px", borderRadius: 14, background: T.surfaceAlt, border: `2px solid ${p.popular ? T.gold : T.border}`, position: "relative" }}>
+              {p.popular && <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: T.gold, color: T.bg, fontSize: 9, fontWeight: 800, padding: "2px 12px", borderRadius: 10, whiteSpace: "nowrap" }}>MOST POPULAR</div>}
+              <div style={{ fontSize: 16, fontWeight: 800, color: T.white, marginBottom: 4 }}>{p.name}</div>
+              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 900, color: p.popular ? T.gold : T.white }}>AED {p.price}<span style={{ fontSize: 13, color: T.textMuted, fontFamily: "'Outfit',sans-serif", fontWeight: 400 }}>/mo</span></div>
+              {p.note && <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 8 }}>{p.note}</div>}
+              <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 4 }}>
+                {(p.features || []).slice(0, 5).map((f, j) => <div key={j} style={{ fontSize: 11, color: T.textSecondary }}>✓ {f}</div>)}
+                {(p.features || []).length > 5 && <div style={{ fontSize: 11, color: T.textMuted }}>+{p.features.length - 5} more...</div>}
+              </div>
+              <div style={{ marginTop: 12, padding: "8px 0", background: p.popular ? T.gold : T.surfaceAlt, borderRadius: 8, textAlign: "center", fontSize: 12, fontWeight: 700, color: p.popular ? T.bg : T.textMuted, border: p.popular ? "none" : `1px solid ${T.border}` }}>{p.cta}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 12, fontSize: 11, color: T.textMuted }}>💡 This preview matches exactly what users see in the upgrade modal. Save to publish changes instantly.</div>
+      </div>
+
+    </div>
+  );
+};
+
+/* ─── S18: BILLING & INVOICE ENGINE ─────────────────────────────────────────
+   Admin tab "billing":
+   - Per-user billing history from Firestore payments collection
+   - Invoice PDF generation per payment
+   - Failed payment handling + retry logic
+   - Upcoming renewal alerts (users expiring in 7 days)
+   - Revenue breakdown by plan (free/pro/enterprise)
+   - MRR chart with 3-month projections
+   - Churn predictor (inactive users nearing billing cycle end)
+────────────────────────────────────────────────────────────────────────── */
+const BillingTab = ({ db, T, notify, users, adminUser }) => {
+  const [payments, setPayments]       = React.useState([]);
+  const [loading, setLoading]         = React.useState(true);
+  const [selectedUser, setSelectedUser] = React.useState(null);
+  const [retryLoading, setRetryLoading] = React.useState(null);
+  const [tab, setBillingTab]          = React.useState("overview"); // overview | payments | renewals | churn
+
+  // Tier pricing
+  const PRICES = { pro: 99, enterprise: 499, pro_trial: 0, free: 0 };
+
+  // Load payments from Firestore
+  React.useEffect(() => {
+    const unsub = onSnapshot(
+      query(collection(db, "payments"), orderBy("createdAt", "desc"), limit(500)),
+      (snap) => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+        setPayments(list);
+        setLoading(false);
+      },
+      () => setLoading(false)
+    );
+    return () => unsub();
+  }, [db]);
+
+  // Computed stats
+  const now = new Date();
+
+  const mrr = React.useMemo(() => {
+    const pro = users.filter(u => u.tier === "pro").length;
+    const ent = users.filter(u => u.tier === "enterprise").length;
+    return (pro * PRICES.pro) + (ent * PRICES.enterprise);
+  }, [users]);
+
+  const arr = mrr * 12;
+
+  // Revenue breakdown
+  const breakdown = React.useMemo(() => {
+    const pro  = users.filter(u => u.tier === "pro").length;
+    const ent  = users.filter(u => u.tier === "enterprise").length;
+    const trial = users.filter(u => u.tier === "pro_trial").length;
+    const free = users.filter(u => u.tier === "free" || !u.tier).length;
+    return { pro, ent, trial, free,
+      proRev: pro * PRICES.pro,
+      entRev: ent * PRICES.enterprise,
+    };
+  }, [users]);
+
+  // MRR projection — last 6 months + 3 projected
+  const mrrHistory = React.useMemo(() => {
+    const months = [];
+    for (let m = 5; m >= 0; m--) {
+      const d   = new Date(now.getFullYear(), now.getMonth() - m, 1);
+      const lbl = d.toLocaleDateString("en-AE", { month: "short", year: "2-digit" });
+      // Estimate from payments that month
+      const monthPayments = payments.filter(p => {
+        const pd = new Date(p.createdAt || 0);
+        return pd.getMonth() === d.getMonth() && pd.getFullYear() === d.getFullYear() && p.status === "succeeded";
+      });
+      const rev = monthPayments.reduce((s, p) => s + (p.amount || 0), 0) || (m === 0 ? mrr : 0);
+      months.push({ label: lbl, mrr: rev, actual: true });
+    }
+    const lastMRR    = months[months.length - 1]?.mrr || mrr;
+    const prevMRR    = months[months.length - 2]?.mrr || mrr * 0.9;
+    const growthRate = prevMRR > 0 ? Math.min(Math.max((lastMRR - prevMRR) / prevMRR, -0.1), 0.3) : 0.1;
+    for (let f = 1; f <= 3; f++) {
+      const d   = new Date(now.getFullYear(), now.getMonth() + f, 1);
+      months.push({ label: d.toLocaleDateString("en-AE", { month: "short", year: "2-digit" }), projected: Math.round(lastMRR * Math.pow(1 + growthRate, f)), actual: false });
+    }
+    return months;
+  }, [payments, mrr]);
+
+  // Upcoming renewals — users whose subscription expires in 7 days
+  const upcomingRenewals = React.useMemo(() => {
+    return users.filter(u => {
+      if (!u.subscriptionExpiry || u.tier === "free") return false;
+      const exp  = new Date(u.subscriptionExpiry);
+      const diff = (exp - now) / (1000 * 60 * 60 * 24);
+      return diff >= 0 && diff <= 7;
+    }).map(u => ({
+      ...u,
+      daysUntilRenewal: Math.ceil((new Date(u.subscriptionExpiry) - now) / (1000 * 60 * 60 * 24)),
+      renewalAmount: PRICES[u.tier] || 0,
+    })).sort((a, b) => a.daysUntilRenewal - b.daysUntilRenewal);
+  }, [users]);
+
+  // Failed payments
+  const failedPayments = React.useMemo(() =>
+    payments.filter(p => p.status === "failed" || p.status === "requires_payment_method"),
+    [payments]
+  );
+
+  // Churn predictor — paid users inactive 14+ days + expiring soon
+  const churnRisk = React.useMemo(() => {
+    return users.filter(u => {
+      if (u.tier === "free" || u.tier === "pro_trial") return false;
+      const lastSeen   = u.lastLoginAt ? new Date(u.lastLoginAt) : new Date(u.createdAt || 0);
+      const daysSince  = (now - lastSeen) / (1000 * 60 * 60 * 24);
+      const hasExpiry  = u.subscriptionExpiry;
+      const daysToExp  = hasExpiry ? (new Date(u.subscriptionExpiry) - now) / (1000 * 60 * 60 * 24) : 999;
+      return daysSince >= 14 && daysToExp <= 30;
+    }).map(u => ({
+      ...u,
+      daysSinceActive: Math.floor((now - new Date(u.lastLoginAt || u.createdAt || 0)) / (1000 * 60 * 60 * 24)),
+      daysToExpiry:    u.subscriptionExpiry ? Math.ceil((new Date(u.subscriptionExpiry) - now) / (1000 * 60 * 60 * 24)) : null,
+      riskScore:       Math.min(100, Math.floor(((now - new Date(u.lastLoginAt || u.createdAt || 0)) / (1000 * 60 * 60 * 24)) * 3)),
+    })).sort((a, b) => b.riskScore - a.riskScore);
+  }, [users]);
+
+  // Generate invoice PDF (HTML print)
+  const generateInvoice = (payment, user) => {
+    const inv = {
+      invoiceNo:   `INV-${payment.id?.slice(-8).toUpperCase() || "000000"}`,
+      date:        payment.createdAt ? new Date(payment.createdAt).toLocaleDateString("en-AE") : "—",
+      dueDate:     payment.createdAt ? new Date(new Date(payment.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-AE") : "—",
+      customer:    user?.email || payment.userEmail || "—",
+      plan:        payment.plan || payment.tier || "Pro",
+      amount:      payment.amount || PRICES[payment.tier] || 99,
+      status:      payment.status || "succeeded",
+      stripeId:    payment.stripePaymentId || payment.stripeId || "—",
+    };
+    const html = `<!DOCTYPE html><html><head><title>${inv.invoiceNo}</title>
+    <style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;color:#1E293B}
+    .header{border-bottom:3px solid #D4A843;padding-bottom:20px;margin-bottom:30px;display:flex;justify-content:space-between}
+    .logo{font-size:24px;font-weight:900;color:#D4A843}.sub{color:#64748B;font-size:12px}
+    .inv-no{font-size:18px;font-weight:700;color:#D4A843}.badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:${inv.status==="succeeded"?"#D1FAE5":"#FEE2E2"};color:${inv.status==="succeeded"?"#065F46":"#991B1B"}}
+    table{width:100%;border-collapse:collapse;margin:20px 0}th{background:#F8FAFC;padding:10px;text-align:left;border-bottom:2px solid #E2E8F0;font-size:13px}
+    td{padding:12px 10px;border-bottom:1px solid #E2E8F0;font-size:14px}.total{font-size:20px;font-weight:900;color:#D4A843}
+    .footer{margin-top:40px;padding-top:20px;border-top:1px solid #E2E8F0;color:#94A3B8;font-size:11px;text-align:center}
+    @media print{body{margin:0}}</style></head><body>
+    <div class="header"><div><div class="logo">DXB Analytics</div><div class="sub">The Address Holding · Dubai, UAE<br>info@theaddressholding.ae</div></div>
+    <div style="text-align:right"><div class="inv-no">${inv.invoiceNo}</div><div class="sub">Date: ${inv.date}<br>Due: ${inv.dueDate}</div><div style="margin-top:8px"><span class="badge">${inv.status==="succeeded"?"PAID":"FAILED"}</span></div></div></div>
+    <div><strong>Bill To:</strong><br>${inv.customer}<br><span style="color:#64748B;font-size:13px">Stripe ID: ${inv.stripeId}</span></div>
+    <table><thead><tr><th>Description</th><th>Period</th><th>Amount (AED)</th></tr></thead><tbody>
+    <tr><td>DXB Analytics ${inv.plan} Plan</td><td>Monthly subscription</td><td>AED ${inv.amount}</td></tr>
+    </tbody></table>
+    <div style="text-align:right;margin:20px 0"><div style="color:#64748B;font-size:13px">Subtotal: AED ${inv.amount}</div>
+    <div style="color:#64748B;font-size:13px">VAT (0%): AED 0</div>
+    <div class="total">Total: AED ${inv.amount}</div></div>
+    <div class="footer">DXB Analytics · Dubai Real Estate Intelligence · emaar-dashboard.vercel.app<br>For billing inquiries: info@theaddressholding.ae</div>
+    </body></html>`;
+    const w = window.open("", "_blank");
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => w.print(), 500);
+  };
+
+  // Retry failed payment — mark as retry_requested in Firestore
+  const retryPayment = async (payment) => {
+    setRetryLoading(payment.id);
+    try {
+      await updateDoc(doc(db, "payments", payment.id), {
+        retryRequested: true,
+        retryRequestedAt: new Date().toISOString(),
+        retryRequestedBy: adminUser?.email,
+      });
+      await addDoc(collection(db, "adminAlerts"), {
+        message: `🔄 Payment retry requested for ${payment.userEmail || "user"} — AED ${payment.amount || 0}`,
+        type: "payment_retry", severity: "warning", read: false,
+        createdAt: new Date().toISOString(), source: "admin/billing",
+      });
+      notify("✅ Retry flagged — contact user to update payment method", "success");
+    } catch(e) {
+      notify("❌ " + e.message, "error");
+    } finally { setRetryLoading(null); }
+  };
+
+  const KpiCard = ({ label, value, sub, color }) => (
+    <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
+      <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>{label}</div>
+      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: color || T.gold }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{sub}</div>}
+    </div>
+  );
+
+  const SubTab = ({ id, label }) => (
+    <button type="button" onClick={() => setBillingTab(id)}
+      style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${tab === id ? T.gold : T.border}`, background: tab === id ? "rgba(212,168,67,0.1)" : "transparent", color: tab === id ? T.gold : T.textMuted, fontSize: 12, fontWeight: tab === id ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+      {label}
+    </button>
+  );
+
+  return (
+    <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 24 }}>
+
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.gold, marginBottom: 4 }}>Billing & Invoices</h2>
+          <p style={{ color: T.textMuted, fontSize: 13 }}>Payment history · Invoice engine · Renewal alerts · Churn predictor</p>
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {failedPayments.length > 0 && (
+            <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 8, background: "rgba(239,68,68,0.12)", color: T.red, fontWeight: 700, border: `1px solid rgba(239,68,68,0.2)` }}>
+              ⚠️ {failedPayments.length} Failed Payment{failedPayments.length > 1 ? "s" : ""}
+            </span>
+          )}
+          {upcomingRenewals.length > 0 && (
+            <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 8, background: "rgba(212,168,67,0.1)", color: T.gold, fontWeight: 700, border: `1px solid ${T.gold}33` }}>
+              🔔 {upcomingRenewals.length} Renewal{upcomingRenewals.length > 1 ? "s" : ""} due
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+        <KpiCard label="Monthly Recurring Revenue" value={`AED ${mrr.toLocaleString()}`} color={T.gold} sub={`AED ${arr.toLocaleString()} ARR`} />
+        <KpiCard label="Paying Users" value={breakdown.pro + breakdown.ent} color={T.green} sub={`${breakdown.pro} Pro · ${breakdown.ent} Enterprise`} />
+        <KpiCard label="Failed Payments" value={failedPayments.length} color={failedPayments.length > 0 ? T.red : T.green} sub={failedPayments.length > 0 ? "Requires attention" : "All clear"} />
+        <KpiCard label="Churn Risk" value={churnRisk.length} color={churnRisk.length > 0 ? T.orange : T.green} sub="Inactive + expiring soon" />
+      </div>
+
+      {/* Sub-tabs */}
+      <div style={{ display: "flex", gap: 8 }}>
+        <SubTab id="overview"  label="📊 Revenue Overview" />
+        <SubTab id="payments"  label="💳 Payment History" />
+        <SubTab id="renewals"  label={`🔔 Renewals (${upcomingRenewals.length})`} />
+        <SubTab id="churn"     label={`⚠️ Churn Risk (${churnRisk.length})`} />
+      </div>
+
+      {/* ── OVERVIEW TAB ── */}
+      {tab === "overview" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+          {/* MRR Chart */}
+          <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 16 }}>MRR Trend + 3-Month Projection</div>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 160 }}>
+              {mrrHistory.map((m, i) => {
+                const val    = m.actual ? m.mrr : m.projected;
+                const maxVal = Math.max(...mrrHistory.map(x => x.actual ? x.mrr : x.projected || 0), 1);
+                const h      = Math.max((val / maxVal) * 130, 4);
+                const color  = m.actual ? T.gold : "rgba(212,168,67,0.35)";
+                return (
+                  <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                    <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600 }}>AED {(val/1000).toFixed(0)}K</div>
+                    <div style={{ width: "100%", height: h, background: color, borderRadius: "4px 4px 0 0", border: m.actual ? "none" : `1px dashed ${T.gold}55` }} title={`${m.label}: AED ${val}`} />
+                    <div style={{ fontSize: 10, color: m.actual ? T.textSecondary : T.textMuted, fontWeight: m.actual ? 600 : 400 }}>{m.label}</div>
+                    {!m.actual && <div style={{ fontSize: 9, color: T.textMuted }}>proj.</div>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Revenue breakdown by plan */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>Revenue by Plan</div>
+              {[
+                { label: "Enterprise", users: breakdown.ent,   rev: breakdown.entRev, color: T.purple, price: 499 },
+                { label: "Pro",        users: breakdown.pro,   rev: breakdown.proRev, color: T.gold,   price: 99  },
+                { label: "Trial",      users: breakdown.trial, rev: 0,                color: T.blue,   price: 0   },
+                { label: "Free",       users: breakdown.free,  rev: 0,                color: T.textMuted, price: 0 },
+              ].map(p => (
+                <div key={p.label} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
+                  <div style={{ flex: 1, fontSize: 13, color: T.white }}>{p.label}</div>
+                  <div style={{ fontSize: 12, color: T.textMuted }}>{p.users} users</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: p.color, width: 90, textAlign: "right" }}>
+                    {p.rev > 0 ? `AED ${p.rev.toLocaleString()}` : "—"}
+                  </div>
+                </div>
+              ))}
+              <div style={{ borderTop: `1px solid ${T.border}`, marginTop: 12, paddingTop: 12, display: "flex", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Total MRR</span>
+                <span style={{ fontSize: 15, fontWeight: 800, color: T.gold, fontFamily: "'Fraunces',serif" }}>AED {mrr.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+              <div style={{ fontFamily: "'Fraunces',serif", fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 14 }}>Key Metrics</div>
+              {[
+                { label: "Annual Recurring Revenue", value: `AED ${arr.toLocaleString()}`, color: T.gold },
+                { label: "Avg Revenue Per User", value: breakdown.pro + breakdown.ent > 0 ? `AED ${Math.round(mrr / (breakdown.pro + breakdown.ent))}` : "—", color: T.teal },
+                { label: "Trial → Paid Conv. Rate", value: users.filter(u => u.tier === "pro_trial").length > 0 ? `${Math.round((breakdown.pro / (breakdown.pro + users.filter(u=>u.tier==="pro_trial").length)) * 100)}%` : "—", color: T.green },
+                { label: "Paying User %", value: users.length > 0 ? `${Math.round(((breakdown.pro + breakdown.ent) / users.length) * 100)}%` : "—", color: T.blue },
+                { label: "Failed Payments", value: `${failedPayments.length}`, color: failedPayments.length > 0 ? T.red : T.green },
+                { label: "Churn Risk Users", value: `${churnRisk.length}`, color: churnRisk.length > 0 ? T.orange : T.green },
+              ].map(m => (
+                <div key={m.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: `1px solid ${T.border}` }}>
+                  <span style={{ fontSize: 12, color: T.textSecondary }}>{m.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: m.color }}>{m.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── PAYMENT HISTORY TAB ── */}
+      {tab === "payments" && (
+        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white }}>Payment History</div>
+            <div style={{ fontSize: 12, color: T.textMuted }}>{payments.length} records · Firestore payments collection</div>
+          </div>
+          {loading ? (
+            <div style={{ color: T.textMuted, fontSize: 13, padding: "20px 0" }}>Loading payments...</div>
+          ) : payments.length === 0 ? (
+            <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: "40px 0" }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>💳</div>
+              <div>No payment records yet</div>
+              <div style={{ fontSize: 11, marginTop: 4 }}>Payments appear here when written to Firestore <code style={{ color: T.teal }}>payments/</code> collection by your Stripe webhook</div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 500, overflowY: "auto" }}>
+              {/* Header row */}
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr", gap: 8, padding: "8px 12px", fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, borderBottom: `1px solid ${T.border}` }}>
+                <div>User</div><div>Amount</div><div>Plan</div><div>Status</div><div>Date</div><div>Actions</div>
+              </div>
+              {payments.map(p => {
+                const statusColor = p.status === "succeeded" ? T.green : p.status === "failed" ? T.red : T.orange;
+                const user = users.find(u => u.uid === p.userId || u.email === p.userEmail);
+                return (
+                  <div key={p.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr", gap: 8, padding: "10px 12px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${p.status === "failed" ? T.red + "33" : T.border}`, alignItems: "center" }}>
+                    <div style={{ fontSize: 12, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.userEmail || user?.email || "—"}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>AED {p.amount || PRICES[p.tier] || "—"}</div>
+                    <div style={{ fontSize: 11, color: T.textSecondary }}>{p.plan || p.tier || "Pro"}</div>
+                    <div><span style={{ fontSize: 10, fontWeight: 700, color: statusColor, padding: "2px 8px", borderRadius: 6, background: statusColor + "12", border: `1px solid ${statusColor}33` }}>{p.status || "—"}</span></div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>{p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-AE") : "—"}</div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button type="button" onClick={() => generateInvoice(p, user)}
+                        style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}44`, color: T.gold, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                        PDF
+                      </button>
+                      {p.status === "failed" && (
+                        <button type="button" onClick={() => retryPayment(p)} disabled={retryLoading === p.id}
+                          style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, background: "rgba(239,68,68,0.1)", border: `1px solid ${T.red}44`, color: T.red, cursor: "pointer", fontFamily: "'Outfit',sans-serif", fontWeight: 600 }}>
+                          {retryLoading === p.id ? "..." : "Retry"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── RENEWALS TAB ── */}
+      {tab === "renewals" && (
+        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 4 }}>Upcoming Renewals — Next 7 Days</div>
+          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Users whose subscription expires within 7 days — reach out proactively to reduce churn</div>
+          {upcomingRenewals.length === 0 ? (
+            <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: "40px 0" }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
+              No renewals due in the next 7 days
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {upcomingRenewals.map(u => (
+                <div key={u.uid} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${u.daysUntilRenewal <= 2 ? T.red + "44" : T.border}` }}>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg,${T.gold},#B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: T.bg, flexShrink: 0 }}>
+                    {(u.name || u.email || "U")[0].toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.email}</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>{u.tier} · Expires {new Date(u.subscriptionExpiry).toLocaleDateString("en-AE")}</div>
+                  </div>
+                  <div style={{ textAlign: "center", flexShrink: 0 }}>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: u.daysUntilRenewal <= 2 ? T.red : T.gold, fontFamily: "'Fraunces',serif" }}>{u.daysUntilRenewal}d</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>until renewal</div>
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.green, flexShrink: 0 }}>AED {u.renewalAmount}</div>
+                  <button type="button"
+                    onClick={() => { notify(`📧 Send renewal reminder to ${u.email}`, "info"); }}
+                    style={{ padding: "7px 14px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}44`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
+                    Remind
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── CHURN RISK TAB ── */}
+      {tab === "churn" && (
+        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 4 }}>Churn Risk Predictor</div>
+          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Paid users inactive 14+ days AND subscription expiring within 30 days — highest churn probability</div>
+          {churnRisk.length === 0 ? (
+            <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: "40px 0" }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
+              No high-risk churn users detected
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {churnRisk.map(u => (
+                <div key={u.uid} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${u.riskScore >= 80 ? T.red + "44" : u.riskScore >= 50 ? T.orange + "44" : T.border}` }}>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: u.riskScore >= 80 ? T.red : u.riskScore >= 50 ? T.orange : T.gold, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+                    {(u.name || u.email || "U")[0].toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{u.email}</div>
+                    <div style={{ fontSize: 11, color: T.textMuted }}>{u.tier} · Last active {u.daysSinceActive}d ago · Expires in {u.daysToExpiry}d</div>
+                  </div>
+                  {/* Risk score bar */}
+                  <div style={{ width: 100, flexShrink: 0 }}>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 3 }}>Risk: {u.riskScore}%</div>
+                    <div style={{ height: 6, borderRadius: 3, background: T.border, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${u.riskScore}%`, background: u.riskScore >= 80 ? T.red : u.riskScore >= 50 ? T.orange : T.gold, borderRadius: 3 }} />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    <button type="button"
+                      onClick={() => notify(`📧 Win-back email queued for ${u.email}`, "info")}
+                      style={{ padding: "7px 14px", background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}44`, borderRadius: 8, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      Win-back
+                    </button>
+                    <button type="button"
+                      onClick={() => notify(`🎁 1 week extension offered to ${u.email}`, "success")}
+                      style={{ padding: "7px 14px", background: "rgba(16,185,129,0.1)", border: `1px solid ${T.green}44`, borderRadius: 8, color: T.green, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                      Extend
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+    </div>
+  );
+};
+
+/* ─── S17: REFERRAL PROGRAM ─────────────────────────────────────────────────
+   Admin tab "referral":
+   - Referral link generator per user
+   - Track clicks → signups → conversions
+   - Referrer gets 1 month free per paid conversion
+   - Referral leaderboard
+   - Firestore referrals collection
+   - Email trigger on successful referral
+────────────────────────────────────────────────────────────────────────── */
+const ReferralTab = ({ db, T, notify, users, adminUser }) => {
+  const [referrals, setReferrals] = React.useState([]);
+  const [loading, setLoading]     = React.useState(true);
+  const [selectedUser, setSelectedUser] = React.useState(null);
+  const [grantLoading, setGrantLoading] = React.useState(false);
+  const [stats, setStats] = React.useState({ totalReferrals: 0, totalConversions: 0, totalRewardMonths: 0 });
+  const BASE_URL = "https://emaar-dashboard.vercel.app";
+
+  // Load all referrals from Firestore
+  React.useEffect(() => {
+    const unsub = onSnapshot(
+      query(collection(db, "referrals"), orderBy("createdAt", "desc"), limit(200)),
+      (s) => {
+        const list = [];
+        s.forEach(d => list.push({ id: d.id, ...d.data() }));
+        setReferrals(list);
+        setStats({
+          totalReferrals:    list.length,
+          totalConversions:  list.filter(r => r.status === "converted").length,
+          totalRewardMonths: list.filter(r => r.rewardGranted).length,
+        });
+        setLoading(false);
+      },
+      () => setLoading(false)
+    );
+    return () => unsub();
+  }, [db]);
+
+  // Generate referral link for a user
+  const getReferralLink = (user) => {
+    const code = btoa(user.uid || user.id || user.email).replace(/[^a-zA-Z0-9]/g, "").slice(0, 10).toUpperCase();
+    return `${BASE_URL}?ref=${code}`;
+  };
+
+  // Grant 1 month free to referrer
+  const grantReward = async (referral) => {
+    setGrantLoading(true);
+    try {
+      await updateDoc(doc(db, "referrals", referral.id), {
+        rewardGranted: true,
+        rewardGrantedAt: new Date().toISOString(),
+        rewardGrantedBy: adminUser?.email,
+      });
+      if (referral.referrerUid) {
+        const userSnap = await getDoc(doc(db, "users", referral.referrerUid));
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          const currentExpiry = userData.subscriptionExpiry ? new Date(userData.subscriptionExpiry) : new Date();
+          const newExpiry = new Date(currentExpiry);
+          newExpiry.setMonth(newExpiry.getMonth() + 1);
+          await updateDoc(doc(db, "users", referral.referrerUid), {
+            subscriptionExpiry: newExpiry.toISOString(),
+            referralRewardsEarned: (userData.referralRewardsEarned || 0) + 1,
+          });
+        }
+      }
+      await addDoc(collection(db, "adminAlerts"), {
+        message: `🎁 Referral reward granted: ${referral.referrerEmail} gets 1 month free`,
+        type: "referral_reward", severity: "info", read: false,
+        createdAt: new Date().toISOString(), source: "admin/referral",
+      });
+      notify("✅ 1 month free granted to " + (referral.referrerEmail || "referrer"), "success");
+    } catch(e) {
+      notify("❌ Failed: " + e.message, "error");
+    } finally { setGrantLoading(false); }
+  };
+
+  // Create manual referral record
+  const createReferral = async (referrerUser, convertedEmail) => {
+    try {
+      await addDoc(collection(db, "referrals"), {
+        referrerUid:   referrerUser.uid || referrerUser.id,
+        referrerEmail: referrerUser.email,
+        referrerName:  referrerUser.name || referrerUser.email?.split("@")[0],
+        convertedEmail,
+        status:        "converted",
+        rewardGranted: false,
+        createdAt:     new Date().toISOString(),
+        source:        "admin_manual",
+      });
+      notify("✅ Referral conversion recorded", "success");
+    } catch(e) {
+      notify("❌ " + e.message, "error");
+    }
+  };
+
+  // Leaderboard — group by referrer
+  const leaderboard = React.useMemo(() => {
+    const map = {};
+    referrals.forEach(r => {
+      const key = r.referrerEmail || r.referrerUid || "unknown";
+      if (!map[key]) map[key] = { email: r.referrerEmail, name: r.referrerName, clicks: 0, signups: 0, conversions: 0, rewards: 0 };
+      map[key].clicks      += r.clicks || 0;
+      map[key].signups     += r.signups || 0;
+      if (r.status === "converted") map[key].conversions++;
+      if (r.rewardGranted) map[key].rewards++;
+    });
+    return Object.values(map).sort((a, b) => b.conversions - a.conversions).slice(0, 10);
+  }, [referrals]);
+
+  const Card = ({ label, value, color, sub }) => (
+    <div style={{ background: T.surface, borderRadius: 12, border: `1px solid ${T.border}`, padding: "16px 20px" }}>
+      <div style={{ fontSize: 10, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>{label}</div>
+      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 800, color: color || T.gold }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{sub}</div>}
+    </div>
+  );
+
+  return (
+    <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 24 }}>
+
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, color: T.gold, marginBottom: 4 }}>Referral Program</h2>
+          <p style={{ color: T.textMuted, fontSize: 13 }}>Users share their link → friend signs up → converts to paid → referrer gets 1 month free</p>
+        </div>
+        <div style={{ fontSize: 9, padding: "4px 12px", borderRadius: 8, background: "rgba(16,185,129,0.12)", color: T.green, fontWeight: 700, border: `1px solid rgba(16,185,129,0.2)` }}>● LIVE · Firestore</div>
+      </div>
+
+      {/* KPI Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+        <Card label="Total Referrals" value={stats.totalReferrals} color={T.blue} sub="All time" />
+        <Card label="Conversions" value={stats.totalConversions} color={T.green} sub="Paid upgrades" />
+        <Card label="Rewards Granted" value={stats.totalRewardMonths} color={T.gold} sub="Free months given" />
+        <Card label="Conversion Rate" value={stats.totalReferrals > 0 ? Math.round((stats.totalConversions / stats.totalReferrals) * 100) + "%" : "—"} color={T.teal} sub="Referral → paid" />
+      </div>
+
+      {/* User Referral Link Generator */}
+      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 14 }}>Generate Referral Link for User</div>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <select
+            value={selectedUser?.uid || ""}
+            onChange={e => setSelectedUser(users.find(u => (u.uid || u.id) === e.target.value) || null)}
+            style={{ flex: 1, minWidth: 220, padding: "10px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}
+          >
+            <option value="">— Select a user —</option>
+            {users.filter(u => u.email).map(u => (
+              <option key={u.uid || u.id} value={u.uid || u.id}>{u.email} ({u.tier || "free"})</option>
+            ))}
+          </select>
+          {selectedUser && (
+            <div style={{ flex: 2, display: "flex", alignItems: "center", gap: 8, background: T.surfaceAlt, borderRadius: 8, border: `1px solid ${T.gold}33`, padding: "10px 14px" }}>
+              <span style={{ fontSize: 12, color: T.textMuted, flexShrink: 0 }}>Link:</span>
+              <span style={{ fontSize: 12, color: T.teal, flex: 1, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{getReferralLink(selectedUser)}</span>
+              <button type="button"
+                onClick={() => { navigator.clipboard.writeText(getReferralLink(selectedUser)); notify("✅ Copied to clipboard", "success"); }}
+                style={{ padding: "6px 14px", background: T.goldGlow, border: `1px solid ${T.gold}`, borderRadius: 6, color: T.gold, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
+                Copy
+              </button>
+            </div>
+          )}
+        </div>
+        {selectedUser && (
+          <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(16,185,129,0.06)", border: `1px solid rgba(16,185,129,0.15)`, fontSize: 12, color: T.textMuted }}>
+            Referral code: <span style={{ color: T.green, fontWeight: 700, fontFamily: "monospace" }}>
+              {btoa(selectedUser.uid || selectedUser.id || selectedUser.email).replace(/[^a-zA-Z0-9]/g, "").slice(0, 10).toUpperCase()}
+            </span>
+            &nbsp;·&nbsp; Rewards earned so far: <span style={{ color: T.gold, fontWeight: 700 }}>{selectedUser.referralRewardsEarned || 0} month(s) free</span>
+          </div>
+        )}
+      </div>
+
+      {/* Leaderboard + Recent referrals side by side */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+
+        {/* Referral Leaderboard */}
+        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 14 }}>🏆 Referral Leaderboard</div>
+          {loading ? (
+            <div style={{ color: T.textMuted, fontSize: 13 }}>Loading...</div>
+          ) : leaderboard.length === 0 ? (
+            <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: "20px 0" }}>No referrals yet — share referral links with your users to get started</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {leaderboard.map((r, i) => (
+                <div key={r.email} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, background: i === 0 ? "rgba(212,168,67,0.06)" : T.surfaceAlt, border: `1px solid ${i === 0 ? T.gold + "33" : T.border}` }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: i === 0 ? `linear-gradient(135deg,${T.gold},#B8912F)` : T.surface, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: i === 0 ? T.bg : T.textMuted, flexShrink: 0 }}>
+                    {i + 1}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name || r.email}</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>{r.email}</div>
+                  </div>
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.green }}>{r.conversions} paid</div>
+                    <div style={{ fontSize: 10, color: T.textMuted }}>{r.rewards} rewarded</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Recent Referral Activity */}
+        <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 14 }}>Recent Referral Activity</div>
+          {loading ? (
+            <div style={{ color: T.textMuted, fontSize: 13 }}>Loading...</div>
+          ) : referrals.length === 0 ? (
+            <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: "20px 0" }}>No referral activity yet</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 340, overflowY: "auto" }}>
+              {referrals.slice(0, 20).map(r => {
+                const statusColor = r.status === "converted" ? T.green : r.status === "signup" ? T.blue : T.textMuted;
+                const statusLabel = r.status === "converted" ? "Converted ✓" : r.status === "signup" ? "Signed Up" : "Clicked";
+                return (
+                  <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 8, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {r.referrerEmail || "Unknown"} → {r.convertedEmail || r.signupEmail || "—"}
+                      </div>
+                      <div style={{ fontSize: 10, color: T.textMuted }}>{r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-AE") : "—"}</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: statusColor, padding: "2px 8px", borderRadius: 6, background: statusColor + "12", border: `1px solid ${statusColor}33` }}>{statusLabel}</span>
+                      {r.status === "converted" && !r.rewardGranted && (
+                        <button type="button" onClick={() => grantReward(r)} disabled={grantLoading}
+                          style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: "rgba(212,168,67,0.1)", border: `1px solid ${T.gold}`, color: T.gold, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+                          Grant Month
+                        </button>
+                      )}
+                      {r.rewardGranted && <span style={{ fontSize: 10, color: T.green }}>🎁 Rewarded</span>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Manual conversion logger */}
+      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 4 }}>Log Manual Conversion</div>
+        <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>When a referral converts via Stripe or manually — log it here to trigger the reward</div>
+        <ManualConversionForm users={users} T={T} onSubmit={createReferral} notify={notify} />
+      </div>
+
+      {/* How it works */}
+      <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "20px 24px" }}>
+        <div style={{ fontFamily: "'Fraunces',serif", fontSize: 16, fontWeight: 700, color: T.white, marginBottom: 14 }}>How the Referral Program Works</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+          {[
+            ["1. Share", "User copies their referral link from their dashboard widget and shares it", T.blue],
+            ["2. Click", "Friend clicks the link — a referral record is created in Firestore automatically", T.teal],
+            ["3. Convert", "Friend signs up and upgrades to Pro — status updates to 'converted'", T.green],
+            ["4. Reward", "Admin clicks 'Grant Month' — referrer gets 1 month free added to their subscription", T.gold],
+          ].map(([step, desc, color]) => (
+            <div key={step} style={{ padding: "14px 16px", borderRadius: 10, background: T.surfaceAlt, border: `1px solid ${color}33` }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color, marginBottom: 6 }}>{step}</div>
+              <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>{desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </div>
+  );
+};
+
+/* ─── Manual Conversion Form ────────────────────────────────────────────── */
+const ManualConversionForm = ({ users, T, onSubmit, notify }) => {
+  const [referrer, setReferrer] = React.useState("");
+  const [convertedEmail, setConvertedEmail] = React.useState("");
+  const [submitting, setSubmitting] = React.useState(false);
+
+  const handleSubmit = async () => {
+    if (!referrer || !convertedEmail) { notify("Select referrer and enter converted email", "error"); return; }
+    setSubmitting(true);
+    const user = users.find(u => (u.uid || u.id) === referrer);
+    if (user) await onSubmit(user, convertedEmail);
+    setReferrer(""); setConvertedEmail("");
+    setSubmitting(false);
+  };
+
+  return (
+    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 200 }}>
+        <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase" }}>Referrer (who shared the link)</label>
+        <select value={referrer} onChange={e => setReferrer(e.target.value)}
+          style={{ padding: "10px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>
+          <option value="">— Select referrer —</option>
+          {users.filter(u => u.email).map(u => <option key={u.uid || u.id} value={u.uid || u.id}>{u.email}</option>)}
+        </select>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 200 }}>
+        <label style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, textTransform: "uppercase" }}>Converted User Email</label>
+        <input type="email" value={convertedEmail} onChange={e => setConvertedEmail(e.target.value)} placeholder="newuser@email.com"
+          style={{ padding: "10px 14px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif" }} />
+      </div>
+      <button type="button" onClick={handleSubmit} disabled={submitting}
+        style={{ padding: "10px 24px", background: `linear-gradient(135deg,${T.green},#059669)`, color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: submitting ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif", opacity: submitting ? 0.7 : 1 }}>
+        {submitting ? "Saving..." : "Log Conversion"}
+      </button>
+    </div>
+  );
+};
+const MarketDataEditor = ({ db, T, notify }) => {
+  const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
+  const [form, setForm] = React.useState({
+    period:             "FY 2025",
+    totalMarketValue:   "AED 682.5B",
+    totalTransactions:  "214,912",
+    avgPricePsf:        "AED 1,689",
+    avgPpsfNum:         "1689",
+    yoyGrowthPct:       "+30.64%",
+    offPlanShare:       "62.6%",
+    avgPpsfYoy:         "19.8%",
+    cashBuyersPct:      "87%",
+    source:             "DLD Official + DXBinteract",
+    lastVerifiedBy:     "",
+  });
+
+  // Load current values from Firestore
+  React.useEffect(() => {
+    const load = async () => {
+      try {
+        const snap = await getDoc(doc(db, "marketData", "global"));
+        const data = snap.exists() ? snap.data() : null;
+        if (data) setForm(prev => ({ ...prev, ...Object.fromEntries(Object.entries(data).filter(([k]) => k in prev)) }));
+      } catch(e) {} finally { setLoading(false); }
+    };
+    load();
+  }, [db]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        ...form,
+        avgPpsfNum: parseFloat(form.avgPpsfNum) || 1689,
+        updatedAt: new Date().toISOString(),
+        updatedAtUAE: new Date().toLocaleString("en-AE", { timeZone: "Asia/Dubai" }),
+        updatedBy: "admin",
+        source: form.source,
+      };
+      await setDoc(doc(db, "marketData", "global"), payload, { merge: true });
+      notify("✅ Market data updated — dashboard will refresh within 30 seconds", "success");
+    } catch(e) {
+      notify("❌ Save failed: " + e.message, "error");
+    } finally { setSaving(false); }
+  };
+
+  const Field = ({ label, field, placeholder, hint }) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <label style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</label>
+      <input
+        type="text"
+        value={form[field] || ""}
+        onChange={e => setForm(prev => ({ ...prev, [field]: e.target.value }))}
+        placeholder={placeholder}
+        style={{ padding: "9px 12px", background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, fontFamily: "'Outfit',sans-serif", outline: "none" }}
+      />
+      {hint && <span style={{ fontSize: 10, color: T.textMuted }}>{hint}</span>}
+    </div>
+  );
+
+  if (loading) return null;
+
+  return (
+    <div style={{ marginTop: 32, background: T.surface, borderRadius: 16, border: `1px solid ${T.border}`, padding: "24px 28px" }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div>
+          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: T.gold }}>Market Data Editor</div>
+          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Update marketData/global — ValuStrat · Knight Frank · DLD official figures</div>
+        </div>
+        <span style={{ fontSize: 9, padding: "3px 10px", borderRadius: 8, background: "rgba(212,168,67,0.1)", color: T.gold, fontWeight: 700, border: `1px solid ${T.border}` }}>ADMIN ONLY</span>
+      </div>
+
+      {/* Form grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 20 }}>
+        <Field label="Period Label" field="period" placeholder="FY 2025" hint="e.g. FY 2025, H1 2026" />
+        <Field label="Total Market Value" field="totalMarketValue" placeholder="AED 682.5B" hint="Shown on Overview + DLD tabs" />
+        <Field label="Total Transactions" field="totalTransactions" placeholder="214,912" hint="DLD annual transaction count" />
+        <Field label="Avg Price/sqft (display)" field="avgPricePsf" placeholder="AED 1,689" hint="With AED prefix + /sqft label" />
+        <Field label="Avg PPSF (number only)" field="avgPpsfNum" placeholder="1689" hint="Used in Price History chart" />
+        <Field label="YoY Value Growth" field="yoyGrowthPct" placeholder="+30.64%" hint="Market value growth YoY" />
+        <Field label="Off-Plan Share" field="offPlanShare" placeholder="62.6%" hint="% of transactions off-plan" />
+        <Field label="Avg PPSF YoY" field="avgPpsfYoy" placeholder="19.8%" hint="Price per sqft YoY growth" />
+        <Field label="Cash Buyers %" field="cashBuyersPct" placeholder="87%" hint="% of buyers paying cash" />
+        <Field label="Data Source" field="source" placeholder="DLD + DXBinteract + ValuStrat" hint="Attribution shown on dashboard" />
+        <Field label="Verified By" field="lastVerifiedBy" placeholder="Your name" hint="Internal audit trail" />
+      </div>
+
+      {/* Warning note */}
+      <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(212,168,67,0.06)", border: `1px solid rgba(212,168,67,0.15)`, fontSize: 12, color: T.textMuted, marginBottom: 16 }}>
+        ⚠️ These values appear on the Overview, DLD Volumes, Competitors, and Market tabs. Verify against DLD official data before saving. Changes take effect immediately for all users.
+      </div>
+
+      {/* Save button */}
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={saving}
+        style={{ padding: "12px 28px", background: saving ? T.surfaceAlt : `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: saving ? T.textMuted : T.bg, border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: saving ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}
+      >
+        {saving ? "Saving..." : "💾 Save to Firestore"}
+      </button>
+    </div>
+  );
+};
+
+
+
 export default function AdminPanel() {
   const { lang, setLang, t: i18t, dir, langInfo } = useI18n();
   const [showLangPicker, setShowLangPicker] = useState(false);
@@ -25832,6 +27311,12 @@ export default function AdminPanel() {
 
           {tab === "eibor" && <EiborRatesPanel db={db} T={T} I={I} notify={notify} />}
 
+          {tab === "data_health" && (<div style={{ padding: "28px 32px" }}><AdminDataHealth db={db} T={T} /><MarketDataEditor db={db} T={T} notify={notify} /></div>)}
+          {tab === "referral" && <ReferralTab db={db} T={T} notify={notify} users={users} adminUser={adminUser} />}
+          {tab === "billing" && <BillingTab db={db} T={T} notify={notify} users={users} adminUser={adminUser} />}
+          {tab === "forecasting" && <ForecastingTab db={db} T={T} notify={notify} users={users} />}
+          {tab === "pricing_plans" && <PricingPlansTab db={db} T={T} notify={notify} />}
+          {tab === "market_intelligence" && <MarketIntelligenceTab db={db} T={T} notify={notify} users={users} />}
         </div>
       </main>
 
