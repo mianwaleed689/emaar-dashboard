@@ -39,12 +39,10 @@ export default function UserGuard({ children }) {
   }, []);
 
   if (status === "loading") return <Spinner />;
-  
-  // If not logged in but has auth param, show children (dashboard handles the modal)
   if (status === "denied" && authParam) return children;
-  
-  // If not logged in and no auth param, redirect to landing with login
-  if (status === "denied") return <Navigate to="/?auth=login" replace />;
-  
+  if (status === "denied") {
+    const returnTo = location.pathname + location.search;
+    return <Navigate to={`/dashboard?auth=login&next=${encodeURIComponent(returnTo)}`} replace />;
+  }
   return children;
 }
