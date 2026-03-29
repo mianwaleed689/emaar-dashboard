@@ -28,7 +28,7 @@ import CancellationTab from "./admin/CancellationTab";
 /* ═══════════════════════════════════════════════════════
    EMAIL CAMPAIGNS TAB
    ═══════════════════════════════════════════════════════ */
-function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchLeads }) {
+function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal }) {
   const [campaigns, setCampaigns]       = React.useState([]);
   const [showCreate, setShowCreate]     = React.useState(false);
   const [sending, setSending]           = React.useState(false);
@@ -22564,8 +22564,8 @@ export default function AdminPanel() {
                 const monthEnd = new Date(now); monthEnd.setMonth(monthEnd.getMonth() - i);
                 const monthStart = new Date(monthEnd); monthStart.setMonth(monthStart.getMonth() - 1);
                 const label = monthEnd.toLocaleString("en", { month: "short" });
-                const proCount = users.filter(u => { try { const d = new Date(u.createdAt); return d <= monthEnd && (u.tier === "pro" || (u.tier === "free" && u.trialEnd && new Date(u.trialEnd) > monthEnd)); } catch { return false; } }).length;
-                const entCount = users.filter(u => { try { return new Date(u.createdAt) <= monthEnd && u.tier === "enterprise"; } catch { return false; } }).length;
+                const proCount = users.filter(u => { try { if (new Date(u.createdAt) > monthEnd) return false; const changes = auditLog.filter(l => l.uid === u.uid && l.action === "tier_change" && new Date(l.changedAt) <= monthEnd).sort((a,b) => new Date(b.changedAt) - new Date(a.changedAt)); const tier = changes.length > 0 ? changes[0].to : u.tier; return tier === "pro"; } catch { return false; } }).length;
+                const entCount = users.filter(u => { try { if (new Date(u.createdAt) > monthEnd) return false; const changes = auditLog.filter(l => l.uid === u.uid && l.action === "tier_change" && new Date(l.changedAt) <= monthEnd).sort((a,b) => new Date(b.changedAt) - new Date(a.changedAt)); const tier = changes.length > 0 ? changes[0].to : u.tier; return tier === "enterprise"; } catch { return false; } }).length;
                 const proMRR = proCount * 99;
                 const entMRR = entCount * 499;
                 months.push({ label, mrr: proMRR + entMRR, pro: proMRR, enterprise: entMRR, proCount, entCount });
