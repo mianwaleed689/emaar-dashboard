@@ -20323,7 +20323,7 @@ export default function AdminPanel() {
             const tomorrowEnd = new Date(todayStart.getTime() + 1 * 24 * 60 * 60 * 1000);
 
             // ── Lead Scoring (0-100) ──────────────────────────────────────
-            const scoreLead = useMemo(() => (lead) => {
+            const scoreLead = (lead) => {
               let score = 0;
               if (lead.email) score += 20;
               if (lead.phone) score += 20;
@@ -20338,7 +20338,7 @@ export default function AdminPanel() {
               if (lead.status === "Converted") score = 100;
               if (lead.status === "Lost") score = 0;
               return Math.min(score, 100);
-            }, [leads]); // eslint-disable-line
+            };
             const getScoreColor = (score) => score >= 70 ? T.green : score >= 40 ? T.gold : T.red;
             const getScoreLabel = (score) => score >= 70 ? "Hot" : score >= 40 ? "Warm" : "Cold";
 
@@ -20354,7 +20354,7 @@ export default function AdminPanel() {
             };
 
             // ── Stats ─────────────────────────────────────────────────────
-            const stats = useMemo(() => ({
+            const stats = {
               total: leads.length,
               new: leads.filter(l => (l.status || "New") === "New").length,
               contacted: leads.filter(l => l.status === "Contacted").length,
@@ -20366,7 +20366,7 @@ export default function AdminPanel() {
               overdue: leads.filter(l => isOverdue(l) && l.status !== "Converted" && l.status !== "Lost").length,
               dueToday: leads.filter(l => isDueToday(l) && l.status !== "Converted" && l.status !== "Lost").length,
               hot: leads.filter(l => scoreLead(l) >= 70).length,
-            }), [leads]); // eslint-disable-line
+            };
             const conversionRate = stats.total > 0 ? Math.round((stats.converted / stats.total) * 100) : 0;
             const avgResponseHrs = (() => {
               const responded = leads.filter(l => l.respondedAt && l.createdAt);
@@ -20392,7 +20392,7 @@ export default function AdminPanel() {
             })();
 
             // ── Filters ───────────────────────────────────────────────────
-            const filtered = useMemo(() => leads.filter(l => {
+            const filtered = leads.filter(l => {
               if (leadFilter !== "all" && (l.status || "New").toLowerCase() !== leadFilter) return false;
               if (leadSourceFilter !== "all" && l.source !== leadSourceFilter) return false;
               if (leadDateRange === "today" && new Date(l.createdAt) < todayStart) return false;
@@ -20441,12 +20441,12 @@ export default function AdminPanel() {
               if (isOverdue(a) && !isOverdue(b)) return -1;
               if (!isOverdue(a) && isOverdue(b)) return 1;
               return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-            }), [leads, leadFilter, leadSourceFilter, leadDateRange, leadSearch, lfCommunity, lfNationality, lfBudgetMin, lfBudgetMax, lfScoreMin, lfPropType, lfLanguage, lfLeadAge, lfGoldenVisa, lfHasWhatsApp, lfNoWhatsApp, lfHasEmail, lfBedrooms, lfOffPlan, lfDeveloper, lfPayment, lfVisa, lfTag, lfNeverContacted, lfHasFollowUp, lfUnreachable, lfDupPhone, lfDupEmail, lfShortPhone]); // eslint-disable-line
+            });
 
             const totalLeadPages = Math.max(1, Math.ceil(filtered.length / LEADS_PER_PAGE));
             const pagedLeads = filtered.slice((leadPage - 1) * LEADS_PER_PAGE, leadPage * LEADS_PER_PAGE);
 
-            const sources = useMemo(() => [...new Set(leads.map(l => l.source).filter(Boolean))], [leads]); // eslint-disable-line
+            const sources = [...new Set(leads.map(l => l.source).filter(Boolean))];
 
             // ── Dubai nationalities ──────────────────────────────────────
             const DUBAI_NATIONALITIES = [
