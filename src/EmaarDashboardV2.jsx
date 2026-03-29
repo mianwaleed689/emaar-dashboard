@@ -5896,16 +5896,16 @@ export default function EmaarDashboardV2() {
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {[
-                    { city: "Dubai (JVC)", yield: 8.5, flag: "????", note: "Best affordable", color: T.green },
-                    { city: "Dubai (Avg)", yield: 6.9, flag: "????", note: "City average", color: T.gold },
-                    { city: "Istanbul", yield: 6.1, flag: "????", note: "Growing market", color: T.teal },
-                    { city: "Bangkok", yield: 5.8, flag: "????", note: "SE Asia hub", color: T.blue },
-                    { city: "Kuala Lumpur", yield: 5.5, flag: "????", note: "Regional", color: T.blue },
-                    { city: "New York", yield: 4.2, flag: "????", note: "Global benchmark", color: T.textSecondary },
-                    { city: "Paris", yield: 3.8, flag: "????", note: "Regulated market", color: T.textSecondary },
-                    { city: "Singapore", yield: 3.5, flag: "????", note: "Cooling measures", color: T.textSecondary },
-                    { city: "London", yield: 3.2, flag: "????", note: "High entry costs", color: T.textSecondary },
-                    { city: "Hong Kong", yield: 2.8, flag: "????", note: "Luxury segment", color: T.red },
+                    { city: "Dubai (JVC)", yield: 8.5, flag: "", note: "Best affordable", color: T.green },
+                    { city: "Dubai (Avg)", yield: 6.9, flag: "", note: "City average", color: T.gold },
+                    { city: "Istanbul", yield: 6.1, flag: "", note: "Growing market", color: T.teal },
+                    { city: "Bangkok", yield: 5.8, flag: "", note: "SE Asia hub", color: T.blue },
+                    { city: "Kuala Lumpur", yield: 5.5, flag: "", note: "Regional", color: T.blue },
+                    { city: "New York", yield: 4.2, flag: "", note: "Global benchmark", color: T.textSecondary },
+                    { city: "Paris", yield: 3.8, flag: "", note: "Regulated market", color: T.textSecondary },
+                    { city: "Singapore", yield: 3.5, flag: "", note: "Cooling measures", color: T.textSecondary },
+                    { city: "London", yield: 3.2, flag: "", note: "High entry costs", color: T.textSecondary },
+                    { city: "Hong Kong", yield: 2.8, flag: "", note: "Luxury segment", color: T.red },
                   ].map((c, i) => {
                     const isDubai = c.city.includes("Dubai");
                     return (
@@ -6418,7 +6418,7 @@ export default function EmaarDashboardV2() {
                     <div key={status} style={{ background: T.surface, borderRadius: 16, border: `1px solid ${statusColors[status]}30`, overflow: "hidden" }}>
                       <div style={{ padding: "14px 20px", background: `${statusColors[status]}08`, borderBottom: `1px solid ${statusColors[status]}20`, display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ width: 8, height: 8, borderRadius: "50%", background: statusColors[status], flexShrink: 0 }} />
-                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 800, color: statusColors[status] }}>{statusLabels[status].replace(/[???????] /, "")}</div>
+                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 800, color: statusColors[status] }}>{statusLabels[status].replace(/[???] /, "")}</div>
                         <div style={{ fontSize: 11, color: T.textMuted, marginLeft: "auto" }}>{items.length} project{items.length !== 1 ? "s" : ""}</div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 0 }}>
@@ -6927,7 +6927,7 @@ export default function EmaarDashboardV2() {
 
               const benefits = [
                 { icon: "●", title: "10-Year Residency", desc: "Live, work and study in UAE. Renewable indefinitely." },
-                { icon: "???????????", title: "Sponsor Your Family", desc: "Spouse, children of any age, and parents included." },
+                { icon: "???", title: "Sponsor Your Family", desc: "Spouse, children of any age, and parents included." },
                 { icon: "?", title: "No Sponsor Needed", desc: "Full independence - no employer or local sponsor required." },
                 { icon: "●", title: "UAE Bank Accounts", desc: "Open accounts, get credit cards, build UAE credit history." },
                 { icon: "●", title: "Travel Freely", desc: "Re-enter UAE after 6+ months abroad without visa reset." },
@@ -7011,7 +7011,7 @@ export default function EmaarDashboardV2() {
                       {/* Result card */}
                       <div style={{ background: eligible ? "linear-gradient(135deg,rgba(16,185,129,0.1),rgba(16,185,129,0.04))" : "linear-gradient(135deg,rgba(239,68,68,0.1),rgba(239,68,68,0.04))", borderRadius: 14, border: "1px solid " + (eligible ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"), padding: 20 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                          <div style={{ fontSize: 28 }}>{isAlreadyResident ? "????" : eligible ? "?" : "?"}</div>
+                          <div style={{ fontSize: 28 }}>{isAlreadyResident ? "" : eligible ? "?" : "?"}</div>
                           <div>
                             <div style={{ fontSize: 15, fontWeight: 700, color: isAlreadyResident ? T.gold : eligible ? T.green : "#EF4444" }}>
                               {isAlreadyResident ? "You Already Have UAE Residency" : eligible ? "You Qualify for the Golden Visa!" : "Not Eligible Yet"}
