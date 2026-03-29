@@ -20541,10 +20541,11 @@ export default function AdminPanel() {
                 const activity = [...(showFollowUpModal.activity || []), { type: "followup_scheduled", by: adminUser?.email || "admin", at: new Date().toISOString(), note: `Follow-up scheduled for ${new Date(followUpDate).toLocaleDateString("en-AE", { day: "2-digit", month: "short", year: "numeric" })}${followUpNote ? ` - ${followUpNote}` : ""}` }];
                 await setDoc(doc(db, "leads", showFollowUpModal.id), { followUpDate, followUpNote, activity, updatedAt: new Date().toISOString() }, { merge: true });
                 notify("Follow-up scheduled!");
+                setLeads(prev => prev.map(l => l.id === showFollowUpModal.id ? { ...l, followUpDate, followUpNote, activity } : l));
+                try { localStorage.removeItem("dxb_leads_v6"); localStorage.removeItem("dxb_leads_v6_ts"); } catch {}
                 setShowFollowUpModal(null);
                 setFollowUpDate("");
                 setFollowUpNote("");
-                fetchLeads();
                 if (leadDrawer?.id === showFollowUpModal.id) setLeadDrawer(prev => ({ ...prev, followUpDate, followUpNote, activity }));
               } catch (e) { notify("Error: " + e.message); }
             };
