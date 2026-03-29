@@ -1,5 +1,0 @@
-﻿f = open('src/AdminPanel.jsx', 'r', encoding='utf-8')
-c = f.read()
-f.close()
-idx = c.find('Data Manager')
-print(repr(c[idx-100:idx+200]))

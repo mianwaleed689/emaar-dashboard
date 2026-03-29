@@ -1,8 +1,0 @@
-﻿f = open('src/EmaarDashboardV2.jsx', 'r', encoding='utf-8')
-c = f.read()
-f.close()
-c = c.replace('import LandingPage from "./LandingPage";', 'import LandingPage from "./LandingPage";\nimport RoiCalculator from "./RoiCalculator";')
-f = open('src/EmaarDashboardV2.jsx', 'w', encoding='utf-8')
-f.write(c)
-f.close()
-print('Done!')
