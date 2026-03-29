@@ -14,6 +14,8 @@ const Spinner = () => (
 export default function UserGuard({ children }) {
   const [status, setStatus] = useState("loading");
   const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const authParam = params.get("auth");
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -37,6 +39,12 @@ export default function UserGuard({ children }) {
   }, []);
 
   if (status === "loading") return <Spinner />;
-  if (status === "denied") return <Navigate to={`/?auth=login&next=${location.pathname}`} replace />;
+  
+  // If not logged in but has auth param, show children (dashboard handles the modal)
+  if (status === "denied" && authParam) return children;
+  
+  // If not logged in and no auth param, redirect to landing with login
+  if (status === "denied") return <Navigate to="/?auth=login" replace />;
+  
   return children;
 }
