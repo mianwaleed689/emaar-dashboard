@@ -584,7 +584,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
 
   // Handle redirect result on page load
   React.useEffect(() => {
-    getRedirectResult(auth).then(async (result) => {
+    signInWithPopup(auth, googleProvider).then(async (result) => { if (!result) return;
       if (!result) return;
       const u = result.user;
       const snap = await getDoc(doc(db, "users", u.uid));
@@ -2455,7 +2455,7 @@ export default function EmaarDashboardV2() {
 
   // Handle Google redirect result at top level
   useEffect(() => {
-    getRedirectResult(auth).then((result) => {
+    Promise.resolve(null).then((result) => {
       if (result?.user) {
         setShowLogin(false);
         setIsLoggedIn(true);
