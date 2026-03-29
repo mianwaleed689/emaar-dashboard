@@ -446,7 +446,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
       <div style={{ padding: "20px 40px", borderBottom: `1px solid ${T.border}`, background: T.surface }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
           <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>Used by professionals from</span>
-          {["???? UK", "???? India", "???? Russia", "???? Pakistan", "???? China", "???? Germany", "???? France", "???? UAE", "???? Saudi", "???? USA"].map((flag, i) => (
+          {["UK", "India", "Russia", "Pakistan", "China", "Germany", "France", "UAE", "Saudi", "USA"].map((flag, i) => (
             <span key={i} style={{ fontSize: 13, color: T.textSecondary, padding: "4px 10px", borderRadius: 6, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>{flag}</span>
           ))}
         </div>
