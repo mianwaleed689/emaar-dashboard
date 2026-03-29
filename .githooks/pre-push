@@ -1,0 +1,27 @@
+#!/bin/sh
+# DXB Analytics - Pre-push safety guard
+
+branch=$(git symbolic-ref HEAD 2>/dev/null | sed 's/refs\/heads\///')
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  DXB Analytics - Pre-Push Check"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Block pushing directly to main without confirmation
+if [ "$branch" = "main" ]; then
+  echo "  Pushing to: MAIN (production)"
+  echo "  Cloudflare will auto-deploy this push"
+  echo ""
+  printf "  Are you sure? Type YES to continue: "
+  read answer
+  if [ "$answer" != "YES" ]; then
+    echo "  Push cancelled."
+    exit 1
+  fi
+fi
+
+echo "  Push approved!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+exit 0

@@ -590,7 +590,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
           provider: "google",
         });
         try {
-          await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+          await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
             user_email: u.email,
             user_name: u.displayName || u.email.split("@")[0],
             project_name: "DXB Analytics Platform",
@@ -664,7 +664,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
       });
       try { await sendEmailVerification(cred.user); } catch(e) {}
       try {
-        await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+        await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
           user_email: email, user_name: name.trim(),
           project_name: "DXB Analytics Platform",
           change_type: "Welcome to DXB Analytics! — Please verify your email",
@@ -2069,7 +2069,7 @@ export default function EmaarDashboardV2() {
                 // Send trial expired email (once only)
                 if (!data.emailSent_trialExpired) {
                   try {
-                    await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+                    await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
                       user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
                       project_name: "DXB Analytics Platform",
                       change_type: "⏰ Your Pro Trial Has Expired",
@@ -2084,7 +2084,7 @@ export default function EmaarDashboardV2() {
                 // Send 3-day warning email (once only)
                 if (daysLeft <= 3 && !data.emailSent_trial3d) {
                   try {
-                    await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+                    await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
                       user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
                       project_name: "DXB Analytics Platform",
                       change_type: `⚠️ Your Trial Expires in ${daysLeft} Day${daysLeft !== 1 ? "s" : ""}`,
@@ -2097,7 +2097,7 @@ export default function EmaarDashboardV2() {
                 // Send 1-day urgent warning (once only)
                 if (daysLeft <= 1 && !data.emailSent_trial1d) {
                   try {
-                    await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+                    await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
                       user_email: firebaseUser.email, user_name: data.name || firebaseUser.email.split("@")[0],
                       project_name: "DXB Analytics Platform",
                       change_type: "🚨 Last Day of Your Pro Trial!",
@@ -2392,7 +2392,7 @@ export default function EmaarDashboardV2() {
       const msg = tierMessages[newTier] || { subject: `Your plan changed to ${newTier}`, body: `Your DXB Analytics plan has been updated to ${newTier}.` };
       if (uEmail) {
         try {
-          await emailjs.send("service_da7nshv", "template_gl1xqhy", {
+          await emailjs.send(import.meta.env.VITE_EMAILJS_SERVICE_ID, import.meta.env.VITE_EMAILJS_TEMPLATE_ID, {
             user_email: uEmail, user_name: uName,
             project_name: "DXB Analytics Platform",
             change_type: msg.subject,
