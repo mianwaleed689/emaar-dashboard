@@ -12666,6 +12666,7 @@ export default function AdminPanel() {
   const [verifications, setVerifications] = useState([]);
   const [leads, setLeads] = useState([]);
   const [leadsLoading, setLeadsLoading] = useState(false);
+  const leadsLoadingRef = useRef(false);
   const leadsLoadingRef = useRef(false); // prevents concurrent fetchLeads calls
   
   /* ─── LEADS CRM STATE ─── */
@@ -13064,7 +13065,7 @@ export default function AdminPanel() {
   }, [isAdmin, fetchVerifications]);
 
   const fetchLeads = useCallback(async (forceRefresh = false) => {
-    if (leadsLoadingRef.current && !forceRefresh) return; // prevent concurrent fetches
+    if (leadsLoadingRef.current && !forceRefresh) return;
     leadsLoadingRef.current = true;
     setLeadsLoading(true);
     try {
