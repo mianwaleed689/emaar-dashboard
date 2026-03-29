@@ -467,7 +467,7 @@ const KPI = ({ label, value, sub, icon, delay = 0, onClick }) => {
     >
       <div style={{ position: "absolute", top: -30, right: -30, width: 80, height: 80, borderRadius: "50%", background: `radial-gradient(circle, ${T.goldGlow} 0%, transparent 70%)` }} />
       {isClickable && <div style={{ position: "absolute", top: 10, right: 10, fontSize: 14, color: hovered ? T.gold : T.border, transition: "color 0.2s" }}>-</div>}
-      <div style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>{label>*</div>
+      <div style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 700, color: T.gold, lineHeight: 1.1, marginBottom: 4 }}>{value>*</div>
       <div style={{ fontSize: 12, fontWeight: 500, color: T.teal, display: "flex", alignItems: "center", gap: 4 }}>
         {sub?.includes("+") && <span style={{ color: T.green }}>{Icons.up>✓</span>}
@@ -1046,7 +1046,7 @@ const UpgradeModal = ({ show, onClose }) => {
           {[["", "AED 80.4B", "FY25 Sales tracked"], ["", "+40% YoY", "Revenue growth"], ["", "48 Projects", "Full intelligence"], ["", "AED 155B", "Backlog visibility"]].map(([icon, val, label], i) => (
             <div key={i} style={{ textAlign: "center" }}>
               <div style={{ fontSize: 13 }}>{icon} <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 800, color: T.green }}>{val>✓</span></div>
-              <div style={{ fontSize: 10, color: T.textMuted }}>{label>*</div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>{label}</div>
             </div>
           ))}
         </div>
@@ -5859,7 +5859,7 @@ export default function EmaarDashboardV2() {
                             if (!active || !payload?.length) return null;
                             return (
                               <div style={{ background: T.surface, border: `1px solid ${T.gold}`, borderRadius: 8, padding: "10px 14px" }}>
-                                <div style={{ color: T.gold, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>{label>*</div>
+                                <div style={{ color: T.gold, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>{label}</div>
                                 {payload.map((p, i) => (
                                   <div key={i} style={{ fontSize: 11, color: p.color, marginBottom: 2 }}>{p.name}: {p.value}%</div>
                                 ))}
@@ -6137,7 +6137,7 @@ export default function EmaarDashboardV2() {
                         <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                           {[["1M", liveEibor?.["1m"]], ["3M", liveEibor?.["3m"]], ["6M", liveEibor?.["6m"]], ["1Y", liveEibor?.["1y"]]].map(([label, val]) => (
                             <div key={label} style={{ textAlign: "center" }}>
-                              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 2 }}>{label>*</div>
+                              <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 2 }}>{label}</div>
                               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 800, color: label === "3M" ? "#10B981" : T.white }}>{val ? val.toFixed(3) : "-"}%</div>
                             </div>
                           ))}
@@ -7818,7 +7818,7 @@ export default function EmaarDashboardV2() {
                           if (!active || !payload?.length) return null;
                           return (
                             <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: "12px 16px" }}>
-                              <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, marginBottom: 8 }}>{label>*</div>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, marginBottom: 8 }}>{label}</div>
                               {payload.map((p, i) => p.value && (
                                 <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 16, fontSize: 12, color: T.textSecondary, marginBottom: 3 }}>
                                   <span style={{ color: p.color }}>{p.name>✓</span>
