@@ -82,6 +82,7 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal }) {
     if (!form.name || !form.subject || !form.body) { notify("Fill in campaign name, subject and message"); return; }
     const targets = getTargetLeads();
     if (targets.length === 0) { notify("No leads match the filter with valid emails"); return; }
+    if (targets.length > 500 && !window.confirm(`You are about to send to ${targets.length.toLocaleString()} leads. This may take several minutes and could hit Resend rate limits. Continue?`)) return;
     setSending(true); setSendProgress(0); setSendTotal(targets.length);
     const campaignId = `camp_${Date.now()}`;
     const campaignDoc = { name: form.name, subject: form.subject, template: form.template, targetFilter: form.targetFilter, targetCommunity: form.targetCommunity, targetStatus: form.targetStatus, totalTargets: targets.length, sent: 0, failed: 0, status: "sending", createdAt: new Date().toISOString(), sentBy: adminUser?.email || "admin" };
@@ -12868,7 +12869,7 @@ export default function AdminPanel() {
 
   useEffect(() => {
     if (!isHydrated.current) return;
-    try { localStorage.setItem("admin_leadFilter", leadFilter); } catch {}
+    try { if (["all","new","contacted","qualified","converted","lost"].includes(leadFilter)) { localStorage.setItem("admin_leadFilter", leadFilter); } else { localStorage.removeItem("admin_leadFilter"); } } catch {}
   }, [leadFilter]);
 
   /* ─── ESCAPE KEY ─── */
@@ -21192,7 +21193,7 @@ export default function AdminPanel() {
                                   const score = scoreLead(lead);
                                   const scoreCol = score >= 90 ? T.green : score >= 70 ? T.gold : T.orange;
                                   return (
-                                    <div key={lead.id} onClick={() => setLeadDrawer(lead)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: T.surfaceAlt, borderRadius: 8, cursor: "pointer", border: `1px solid ${T.border}`, transition: "border-color 0.15s" }}
+                                    <div key={lead.id} onClick={() => { setLeadDrawer(lead); setLeadDrawerTab("details"); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: T.surfaceAlt, borderRadius: 8, cursor: "pointer", border: `1px solid ${T.border}`, transition: "border-color 0.15s" }}
                                       onMouseEnter={e => e.currentTarget.style.borderColor = T.gold}
                                       onMouseLeave={e => e.currentTarget.style.borderColor = T.border}>
                                       <div style={{ width: 32, height: 32, borderRadius: 8, background: `${scoreCol}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, color: scoreCol, flexShrink: 0 }}>{score}</div>
@@ -21257,7 +21258,7 @@ export default function AdminPanel() {
                     <button type="button" onClick={onClick} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${active ? T.gold : T.border}`, background: active ? "rgba(212,168,67,0.12)" : T.surface, color: active ? T.gold : T.textMuted, fontSize: 11, fontWeight: active ? 700 : 400, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>{label}</button>
                   );
                   const clearAll = () => {
-                    setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch("");
+                    setLeadFilter("all"); setLeadSourceFilter("all"); setLeadDateRange("all"); setLeadSearch(""); setLeadSearchInput("");
                     setLfCommunity("all"); setLfNationality("all"); setLfBudgetMin(""); setLfBudgetMax(""); setLfScoreMin("");
                     setLfPropType("all"); setLfLanguage("all"); setLfLeadAge("all");
                     setLfGoldenVisa(false); setLfHasWhatsApp(false); setLfHasEmail(false); setLfNoWhatsApp(false);
