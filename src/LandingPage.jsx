@@ -1,17 +1,17 @@
-﻿/* eslint-disable */
-/* ─── DXB ANALYTICS — LANDING PAGE v3.0 ───────────────────────────────────
+/* eslint-disable */
+/* --- DXB ANALYTICS � LANDING PAGE v3.0 -----------------------------------
    Research-backed redesign:
-   • Outcome-focused headline under 8 words
-   • Product mockup visible within 3 seconds
-   • Role-based value props (agent/investor/brokerage)
-   • Social proof with specific numbers
-   • Before → After story arc
-   • Mobile-first
-   • Frictionless signup
-   ─────────────────────────────────────────────────────────────────────── */
+   � Outcome-focused headline under 8 words
+   � Product mockup visible within 3 seconds
+   � Role-based value props (agent/investor/brokerage)
+   � Social proof with specific numbers
+   � Before ? After story arc
+   � Mobile-first
+   � Frictionless signup
+   ----------------------------------------------------------------------- */
 import React, { useState, useEffect } from "react";
 import { db } from "./firebase";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where, doc } from "firebase/firestore";
 import { useI18n } from "./i18n";
 import { T } from "./theme";
 
@@ -86,18 +86,14 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [liveStats, setLiveStats] = useState({ users: 0, paid: 0, mrr: 0, projects: 208, communities: 13 });
 
-  // Live stats from Firestore — updates in real time as users sign up
+  // Live stats from Firestore � reads only public aggregate stats document
   useEffect(() => {
     try {
-      const unsub = onSnapshot(collection(db, "users"), (snap) => {
-        const users = snap.docs.map(d => d.data());
-        const paid = users.filter(u => u.tier === "pro" || u.tier === "enterprise").length;
-        const mrr = users.reduce((sum, u) => {
-          if (u.tier === "pro") return sum + 99;
-          if (u.tier === "enterprise") return sum + 499;
-          return sum;
-        }, 0);
-        setLiveStats(prev => ({ ...prev, users: users.length, paid, mrr }));
+      const unsub = onSnapshot(doc(db, "adminSettings", "publicStats"), (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+          setLiveStats(prev => ({ ...prev, users: data.totalUsers || 0, paid: data.paidUsers || 0 }));
+        }
       });
       return () => unsub();
     } catch { /* firebase not available */ }
@@ -119,50 +115,50 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
       solution: "Get verified project data, yields, and ROI in 30 seconds",
       wins: ["Close faster with data-backed recommendations", "Share professional project reports via WhatsApp instantly", "Never be caught without an answer on price per sqft or handover"],
       stat: "Save 2 hrs per client meeting",
-      icon: "🤝",
+      icon: "??",
     },
     investor: {
       label: "Property Investor",
       pain: "You're making AED 2M+ decisions on broker estimates",
       solution: "Get verified yields, risk scores, and ROI projections",
-      wins: ["Compare 3 projects side-by-side in 30 seconds", "See real DLD transaction data, not marketing brochures", "Calculate exact ROI — long-term, Airbnb, or flip strategy"],
+      wins: ["Compare 3 projects side-by-side in 30 seconds", "See real DLD transaction data, not marketing brochures", "Calculate exact ROI � long-term, Airbnb, or flip strategy"],
       stat: "Verify any project in 30 seconds",
-      icon: "📐",
+      icon: "??",
     },
     brokerage: {
       label: "Brokerage / Agency",
       pain: "Your team wastes hours on scattered data every week",
-      solution: "One platform for your entire team — from AED 499/mo",
+      solution: "One platform for your entire team � from AED 499/mo",
       wins: ["Standardize how your team researches properties", "Share professional reports that impress clients", "Track market shifts before your competitors do"],
       stat: "From AED 499/mo for your whole team",
-      icon: "🏢",
+      icon: "??",
     },
   };
 
   const tools = [
-    { icon: "🏠", label: "Overview" }, { icon: "📊", label: "Financials" },
-    { icon: "🏗️", label: "Projects" }, { icon: "📅", label: "Handover" },
-    { icon: "🚀", label: "Launch Cal." }, { icon: "🗺️", label: "Map" },
-    { icon: "🏘️", label: "Neighbourhoods" }, { icon: "📈", label: "Yields" },
-    { icon: "🏆", label: "Competitors" }, { icon: "💰", label: "ROI Calc" },
-    { icon: "🔄", label: "Flip Calc" }, { icon: "🏦", label: "Mortgage" },
-    { icon: "🛡️", label: "Risk" }, { icon: "📉", label: "Price History" },
-    { icon: "📋", label: "DLD Volumes" }, { icon: "🌍", label: "Currency" },
-    { icon: "⭐", label: "Inv. Score" }, { icon: "🏅", label: "Golden Visa" },
-    { icon: "🌇", label: "STR vs LTR" }, { icon: "💼", label: "Portfolio" },
-    { icon: "🏢", label: "Srvc Charges" }, { icon: "🔍", label: "DXB Estimate" },
-    { icon: "📈", label: "Market" },
+    { icon: "??", label: "Overview" }, { icon: "??", label: "Financials" },
+    { icon: "???", label: "Projects" }, { icon: "??", label: "Handover" },
+    { icon: "??", label: "Launch Cal." }, { icon: "???", label: "Map" },
+    { icon: "???", label: "Neighbourhoods" }, { icon: "??", label: "Yields" },
+    { icon: "??", label: "Competitors" }, { icon: "??", label: "ROI Calc" },
+    { icon: "??", label: "Flip Calc" }, { icon: "??", label: "Mortgage" },
+    { icon: "???", label: "Risk" }, { icon: "??", label: "Price History" },
+    { icon: "??", label: "DLD Volumes" }, { icon: "??", label: "Currency" },
+    { icon: "?", label: "Inv. Score" }, { icon: "??", label: "Golden Visa" },
+    { icon: "??", label: "STR vs LTR" }, { icon: "??", label: "Portfolio" },
+    { icon: "??", label: "Srvc Charges" }, { icon: "??", label: "DXB Estimate" },
+    { icon: "??", label: "Market" },
   ];
 
   const faqs = [
-    { q: "Is there a free trial?", a: "Yes — every new account gets a 7-day Pro trial automatically. No credit card needed. You get full access to all 23 tools and all 48+ projects." },
-    { q: "What data sources do you use?", a: "Dubai Land Department (DLD), official developer annual reports, DXBinteract, BetterHomes, Bayut, Engel & Völkers, ValuStrat, and Knight Frank. Every data point shows its source." },
+    { q: "Is there a free trial?", a: "Yes � every new account gets a 7-day Pro trial automatically. No credit card needed. You get full access to all 23 tools and all 48+ projects." },
+    { q: "What data sources do you use?", a: "Dubai Land Department (DLD), official developer annual reports, DXBinteract, BetterHomes, Bayut, Engel & V�lkers, ValuStrat, and Knight Frank. Every data point shows its source." },
     { q: "How often is data updated?", a: "Financial data is updated within 24 hours of official developer releases. Project prices and handover dates are manually verified monthly. EIBOR rates update daily." },
     { q: "Which developers are currently covered?", a: "Phase 1 (live now) covers 48 active projects across 11 Dubai communities from Dubai's largest developer. DAMAC, Sobha, Nakheel, Binghatti, and more are coming in Q3 2026." },
     { q: "What's included in the Enterprise plan?", a: "Everything in Pro plus multi-user team accounts, PDF report generation (Q3 2026), API data access (Q3 2026), custom branded reports, and a dedicated account manager. Contact us to discuss your team's needs." },
     { q: "Can I cancel anytime?", a: "Yes. No contracts, no cancellation fees. Cancel from your account settings and keep access until your billing period ends." },
-    { q: "Is the data accurate?", a: "All data is sourced from official reports and cross-referenced. We display the source for every data point so you can verify independently. This is professional intelligence — always verify before transacting." },
-    { q: "Do you have an Arabic version?", a: "Yes — the platform supports Arabic and 19 other languages including Urdu, Hindi, Chinese, and Russian. Switch language from the top navigation bar." },
+    { q: "Is the data accurate?", a: "All data is sourced from official reports and cross-referenced. We display the source for every data point so you can verify independently. This is professional intelligence � always verify before transacting." },
+    { q: "Do you have an Arabic version?", a: "Yes � the platform supports Arabic and 19 other languages including Urdu, Hindi, Chinese, and Russian. Switch language from the top navigation bar." },
   ];
 
   const r = roles[activeRole];
@@ -171,7 +167,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit',sans-serif", color: T.textPrimary }}>
       <style>{css}</style>
 
-      {/* ── NAVBAR ── */}
+      {/* -- NAVBAR -- */}
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
         padding: "0 40px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -199,25 +195,25 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             </select>
           )}
           <button onClick={onLoginClick} className="cta-outline" style={{ padding: "8px 20px", fontSize: 13 }}>Login</button>
-          <button onClick={onSignUpClick} className="cta-primary" style={{ padding: "9px 22px", fontSize: 13 }}>Try Free 7 Days →</button>
+          <button onClick={onSignUpClick} className="cta-primary" style={{ padding: "9px 22px", fontSize: 13 }}>Try Free 7 Days ?</button>
         </div>
         {/* Mobile hamburger */}
         <button type="button" onClick={() => setMobileMenu(m => !m)} style={{ display: "none", background: "none", border: `1px solid ${T.border}`, borderRadius: 8, padding: 8, cursor: "pointer", color: T.textSecondary }} className="nav-mobile-btn">
-          ☰
+          ?
         </button>
       </nav>
 
-      {/* ── HERO ── */}
+      {/* -- HERO -- */}
       <section style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "120px 40px 80px", overflow: "hidden" }}>
         <div className="hero-glow" />
         <div className="grid-bg" />
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, width: "100%", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60, alignItems: "center" }}>
 
-          {/* Left — Copy */}
+          {/* Left � Copy */}
           <div style={{ animation: "fadeUp .7s ease-out both" }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 14px", borderRadius: 20, background: T.goldGlow, border: `1px solid ${T.border}`, marginBottom: 24 }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.green, display: "inline-block", animation: "pulse 2s infinite" }} />
-              <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1 }}>LIVE — DUBAI REAL ESTATE INTELLIGENCE</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 1 }}>LIVE � DUBAI REAL ESTATE INTELLIGENCE</span>
             </div>
 
             <h1 className="hero-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 52, fontWeight: 900, lineHeight: 1.1, marginBottom: 20 }}>
@@ -226,19 +222,19 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             </h1>
 
             <p className="hero-sub" style={{ fontSize: 17, color: T.textSecondary, lineHeight: 1.7, marginBottom: 32, maxWidth: 480 }}>
-              23 professional tools for Dubai real estate agents, investors, and brokerages. Verified data from DLD, developer IR reports, and live market feeds — in one platform.
+              23 professional tools for Dubai real estate agents, investors, and brokerages. Verified data from DLD, developer IR reports, and live market feeds � in one platform.
             </p>
 
             <div className="hero-btns" style={{ display: "flex", gap: 14, marginBottom: 28 }}>
               <button onClick={onSignUpClick} className="cta-primary" style={{ padding: "16px 36px", fontSize: 16 }}>
-                Start Free Trial →
+                Start Free Trial ?
               </button>
               <button onClick={() => document.getElementById("tools")?.scrollIntoView({ behavior: "smooth" })} className="cta-outline" style={{ padding: "16px 28px", fontSize: 15 }}>
                 See 23 Tools
               </button>
             </div>
 
-            <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 32 }}>No credit card · 7-day Pro access · Cancel anytime</p>
+            <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 32 }}>No credit card � 7-day Pro access � Cancel anytime</p>
 
             {/* Social proof numbers */}
             <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
@@ -256,7 +252,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             </div>
           </div>
 
-          {/* Right — Dashboard Mockup */}
+          {/* Right � Dashboard Mockup */}
           <div className="mockup-wrap" style={{ animation: "fadeUp .7s ease-out .15s both", opacity: 0 }}>
             <div style={{ borderRadius: 16, border: `1px solid rgba(212,168,67,0.25)`, overflow: "hidden", boxShadow: "0 40px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(212,168,67,0.05)", animation: "float 6s ease-in-out infinite" }}>
               {/* Browser chrome */}
@@ -297,13 +293,13 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                   {/* Nav tabs */}
                   <div style={{ fontSize: 7, color: "#64748B", padding: "0 12px 4px", textTransform: "uppercase", letterSpacing: 1 }}>Intelligence</div>
                   {[
-                    { t: "Overview",    active: true,  icon: "▦" },
-                    { t: "Projects",    active: false, icon: "⊞" },
+                    { t: "Overview",    active: true,  icon: "?" },
+                    { t: "Projects",    active: false, icon: "?" },
                     { t: "Yields",      active: false, icon: "%" },
-                    { t: "Map",         active: false, icon: "◎" },
-                    { t: "Mortgage",    active: false, icon: "🏦" },
-                    { t: "Portfolio",   active: false, icon: "◈" },
-                    { t: "Risk",        active: false, icon: "⚡" },
+                    { t: "Map",         active: false, icon: "?" },
+                    { t: "Mortgage",    active: false, icon: "??" },
+                    { t: "Portfolio",   active: false, icon: "?" },
+                    { t: "Risk",        active: false, icon: "?" },
                   ].map(({ t, active, icon }) => (
                     <div key={t} style={{ padding: "6px 12px", fontSize: 10, color: active ? "#D4A843" : "#64748B", background: active ? "rgba(212,168,67,.08)" : "transparent", borderRight: active ? "2px solid #D4A843" : "none", display: "flex", alignItems: "center", gap: 6 }}>
                       <span style={{ fontSize: 8, opacity: active ? 1 : 0.5 }}>{icon}</span>{t}
@@ -311,8 +307,8 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                   ))}
                   <div style={{ marginTop: 8, fontSize: 7, color: "#64748B", padding: "0 12px 4px", textTransform: "uppercase", letterSpacing: 1 }}>CRM</div>
                   {[
-                    { t: "Leads",    active: false, icon: "👥" },
-                    { t: "Clients",  active: false, icon: "💼" },
+                    { t: "Leads",    active: false, icon: "??" },
+                    { t: "Clients",  active: false, icon: "??" },
                   ].map(({ t, active, icon }) => (
                     <div key={t} style={{ padding: "6px 12px", fontSize: 10, color: "#64748B", display: "flex", alignItems: "center", gap: 6 }}>
                       <span style={{ fontSize: 8, opacity: 0.5 }}>{icon}</span>{t}
@@ -325,12 +321,12 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                   {/* Topbar */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 8, borderBottom: "1px solid rgba(212,168,67,0.08)" }}>
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "#FFFFFF" }}>Overview · Emaar Properties</div>
-                      <div style={{ fontSize: 8, color: "#64748B", marginTop: 1 }}>FY 2025 · Last updated 2 hours ago</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#FFFFFF" }}>Overview � Emaar Properties</div>
+                      <div style={{ fontSize: 8, color: "#64748B", marginTop: 1 }}>FY 2025 � Last updated 2 hours ago</div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ fontSize: 8, padding: "3px 8px", borderRadius: 5, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#10B981", fontWeight: 600 }}>EMAAR.DU ▲ AED 15.40</div>
-                      <div style={{ width: 24, height: 24, borderRadius: 6, background: "rgba(212,168,67,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#D4A843" }}>🔔</div>
+                      <div style={{ fontSize: 8, padding: "3px 8px", borderRadius: 5, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#10B981", fontWeight: 600 }}>EMAAR.DU ? AED 15.40</div>
+                      <div style={{ width: 24, height: 24, borderRadius: 6, background: "rgba(212,168,67,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#D4A843" }}>??</div>
                     </div>
                   </div>
 
@@ -399,17 +395,17 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                       {/* AI insight */}
                       <div style={{ background: "rgba(212,168,67,0.05)", borderRadius: 7, border: "1px solid rgba(212,168,67,0.15)", padding: "7px 9px" }}>
                         <div style={{ display: "flex", alignItems: "flex-start", gap: 5 }}>
-                          <span style={{ fontSize: 10, flexShrink: 0, marginTop: 1 }}>✦</span>
+                          <span style={{ fontSize: 10, flexShrink: 0, marginTop: 1 }}>?</span>
                           <span style={{ fontSize: 8, color: "#94A3B8", lineHeight: 1.5 }}>
                             <span style={{ color: "#D4A843", fontWeight: 700 }}>AI Insight: </span>
-                            Backlog AED 155B = 3–4yr revenue visibility. Strongest coverage ratio in GCC. Upgrade to Pro for full analysis →
+                            Backlog AED 155B = 3�4yr revenue visibility. Strongest coverage ratio in GCC. Upgrade to Pro for full analysis ?
                           </span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Bottom bar — mini stats */}
+                  {/* Bottom bar � mini stats */}
                   <div style={{ display: "flex", gap: 6, paddingTop: 6, borderTop: "1px solid rgba(212,168,67,0.06)" }}>
                     {[
                       { l: "Projects", v: "48", c: "#3B82F6" },
@@ -431,12 +427,12 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-      {/* ── TICKER ── */}
+      {/* -- TICKER -- */}
       <div style={{ borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}`, background: T.surface, padding: "13px 0", overflow: "hidden" }}>
         <div className="ticker-track">
           {[...Array(2)].map((_, r) => (
             <React.Fragment key={r}>
-              {["AED 761B Dubai Market 2025", "48 Active Projects Tracked", "6 Years Financial Data", "Live DLD Transaction Data", "9-Factor Risk Assessment", "EIBOR-Based Mortgage Calculator", "20 Languages Including Arabic", "DLD · Knight Frank · ValuStrat · Bayut"].map((item, i) => (
+              {["AED 761B Dubai Market 2025", "48 Active Projects Tracked", "6 Years Financial Data", "Live DLD Transaction Data", "9-Factor Risk Assessment", "EIBOR-Based Mortgage Calculator", "20 Languages Including Arabic", "DLD � Knight Frank � ValuStrat � Bayut"].map((item, i) => (
                 <span key={`${r}-${i}`} style={{ fontSize: 12, color: T.textMuted, display: "inline-flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
                   <span style={{ width: 4, height: 4, borderRadius: "50%", background: T.gold, opacity: .6 }} />{item}
                 </span>
@@ -446,17 +442,17 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </div>
 
-      {/* ── NATIONALITY TRUST BAR ── */}
+      {/* -- NATIONALITY TRUST BAR -- */}
       <div style={{ padding: "20px 40px", borderBottom: `1px solid ${T.border}`, background: T.surface }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
           <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>Used by professionals from</span>
-          {["🇬🇧 UK", "🇮🇳 India", "🇷🇺 Russia", "🇵🇰 Pakistan", "🇨🇳 China", "🇩🇪 Germany", "🇫🇷 France", "🇦🇪 UAE", "🇸🇦 Saudi", "🇺🇸 USA"].map((flag, i) => (
+          {["???? UK", "???? India", "???? Russia", "???? Pakistan", "???? China", "???? Germany", "???? France", "???? UAE", "???? Saudi", "???? USA"].map((flag, i) => (
             <span key={i} style={{ fontSize: 13, color: T.textSecondary, padding: "4px 10px", borderRadius: 6, background: T.surfaceAlt, border: `1px solid ${T.border}` }}>{flag}</span>
           ))}
         </div>
       </div>
 
-      {/* ── BEFORE / AFTER — ROLE-BASED ── */}
+      {/* -- BEFORE / AFTER � ROLE-BASED -- */}
       <section style={{ padding: "100px 40px", background: `linear-gradient(180deg,${T.surface},${T.bg})` }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 40 }}>
@@ -475,52 +471,52 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           <div className="two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "stretch" }}>
             {/* Before */}
             <div style={{ background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 16, padding: 28 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: T.red, letterSpacing: 1, marginBottom: 16, textTransform: "uppercase" }}>❌ Before DXB Analytics</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.red, letterSpacing: 1, marginBottom: 16, textTransform: "uppercase" }}>? Before DXB Analytics</div>
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, color: T.white, marginBottom: 12, lineHeight: 1.4 }}>"{r.pain}"</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
                 {["Scattered data across Bayut, Property Finder, WhatsApp groups", "2+ hours researching each client request", "Outdated brochures with no yield verification", "Lose deals to better-prepared competitors"].map((p, i) => (
                   <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 13, color: T.textSecondary }}>
-                    <span style={{ color: T.red, flexShrink: 0, marginTop: 1 }}>✗</span>{p}
+                    <span style={{ color: T.red, flexShrink: 0, marginTop: 1 }}>?</span>{p}
                   </div>
                 ))}
               </div>
             </div>
             {/* After */}
             <div style={{ background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 16, padding: 28 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: T.green, letterSpacing: 1, marginBottom: 16, textTransform: "uppercase" }}>✅ After DXB Analytics</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.green, letterSpacing: 1, marginBottom: 16, textTransform: "uppercase" }}>? After DXB Analytics</div>
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, color: T.white, marginBottom: 12, lineHeight: 1.4 }}>"{r.solution}"</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
                 {r.wins.map((w, i) => (
                   <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 13, color: T.textSecondary }}>
-                    <span style={{ color: T.green, flexShrink: 0, marginTop: 1 }}>✓</span>{w}
+                    <span style={{ color: T.green, flexShrink: 0, marginTop: 1 }}>?</span>{w}
                   </div>
                 ))}
               </div>
               <div style={{ marginTop: 20, padding: "10px 14px", background: "rgba(16,185,129,.1)", borderRadius: 10, display: "inline-block" }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: T.green }}>📈 {r.stat}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: T.green }}>?? {r.stat}</span>
               </div>
             </div>
           </div>
 
           <div style={{ textAlign: "center", marginTop: 36 }}>
             <button onClick={onSignUpClick} className="cta-primary" style={{ padding: "15px 40px", fontSize: 15 }}>
-              Start Your Free Trial →
+              Start Your Free Trial ?
             </button>
-            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 10 }}>7-day Pro access · No credit card · Cancel anytime</p>
+            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 10 }}>7-day Pro access � No credit card � Cancel anytime</p>
           </div>
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
+      {/* -- HOW IT WORKS -- */}
       <section style={{ padding: "80px 40px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
           <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 2, textTransform: "uppercase" }}>Simple as 1-2-3</span>
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 34, fontWeight: 900, color: T.white, marginTop: 10, marginBottom: 48 }}>Up and running in 60 seconds</h2>
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 24 }}>
             {[
-              { num: "01", title: "Sign Up Free", desc: "Create your account — no credit card needed. Your 7-day Pro trial starts immediately.", icon: "✉️" },
-              { num: "02", title: "Explore Any Project", desc: "Search 48+ projects, filter by community, price, or handover year. Click any project for full intelligence.", icon: "🔍" },
-              { num: "03", title: "Share & Close", desc: "WhatsApp project details to clients in one tap. PDF reports, comparison tools, and ROI calculators ready instantly.", icon: "🚀" },
+              { num: "01", title: "Sign Up Free", desc: "Create your account � no credit card needed. Your 7-day Pro trial starts immediately.", icon: "??" },
+              { num: "02", title: "Explore Any Project", desc: "Search 48+ projects, filter by community, price, or handover year. Click any project for full intelligence.", icon: "??" },
+              { num: "03", title: "Share & Close", desc: "WhatsApp project details to clients in one tap. PDF reports, comparison tools, and ROI calculators ready instantly.", icon: "??" },
             ].map((s, i) => (
               <div key={i} className="feature-card" style={{ textAlign: "left", position: "relative" }}>
                 <div style={{ position: "absolute", top: -12, left: 20, fontFamily: "'Fraunces',serif", fontSize: 11, fontWeight: 900, color: T.gold, background: T.bg, padding: "0 8px" }}>{s.num}</div>
@@ -533,7 +529,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-      {/* ── FEATURES ── */}
+      {/* -- FEATURES -- */}
       <section id="features" style={{ padding: "100px 40px", background: `linear-gradient(180deg,transparent,${T.surface} 20%,${T.surface} 80%,transparent)` }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 56 }}>
@@ -543,14 +539,14 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           </div>
           <div className="features-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
             {[
-              { icon: "📊", title: "Developer Financials", desc: "Multi-year revenue, profit, backlog, EPS — sourced directly from official annual reports." },
-              { icon: "🏗️", title: "Project Intelligence", desc: "Every active project: price/sqft, payment plan, construction %, handover timeline." },
-              { icon: "💰", title: "Yield & ROI Calculator", desc: "Gross/net yields by community. Calculate returns for long-term, Airbnb, or flip." },
-              { icon: "⚖️", title: "3-Project Comparison", desc: "Side-by-side on price, yield, handover, payment plan — share via WhatsApp in one tap." },
-              { icon: "🛡️", title: "Risk Assessment", desc: "9-factor risk matrix: market, regulatory, liquidity, construction, interest rate." },
-              { icon: "🏅", title: "Golden Visa Finder", desc: "Automatically flag AED 2M+ projects eligible for 10-year UAE Golden Visa." },
-              { icon: "🏦", title: "Mortgage Calculator", desc: "EIBOR-based, live rates. Shows monthly payment + all UAE transaction costs." },
-              { icon: "🔍", title: "DXB Estimate AVM", desc: "Automated valuations using DLD transaction data — per unit type, per community." },
+              { icon: "??", title: "Developer Financials", desc: "Multi-year revenue, profit, backlog, EPS � sourced directly from official annual reports." },
+              { icon: "???", title: "Project Intelligence", desc: "Every active project: price/sqft, payment plan, construction %, handover timeline." },
+              { icon: "??", title: "Yield & ROI Calculator", desc: "Gross/net yields by community. Calculate returns for long-term, Airbnb, or flip." },
+              { icon: "??", title: "3-Project Comparison", desc: "Side-by-side on price, yield, handover, payment plan � share via WhatsApp in one tap." },
+              { icon: "???", title: "Risk Assessment", desc: "9-factor risk matrix: market, regulatory, liquidity, construction, interest rate." },
+              { icon: "??", title: "Golden Visa Finder", desc: "Automatically flag AED 2M+ projects eligible for 10-year UAE Golden Visa." },
+              { icon: "??", title: "Mortgage Calculator", desc: "EIBOR-based, live rates. Shows monthly payment + all UAE transaction costs." },
+              { icon: "??", title: "DXB Estimate AVM", desc: "Automated valuations using DLD transaction data � per unit type, per community." },
             ].map((f, i) => (
               <div key={i} className="feature-card" style={{ animation: `fadeUp .6s ease-out ${i*.07}s both` }}>
                 <div style={{ fontSize: 28, marginBottom: 12 }}>{f.icon}</div>
@@ -562,7 +558,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-      {/* ── 23 TOOLS ── */}
+      {/* -- 23 TOOLS -- */}
       <section id="tools" style={{ padding: "80px 40px" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 44 }}>
@@ -581,13 +577,13 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             ))}
           </div>
           <div style={{ textAlign: "center", marginTop: 32 }}>
-            <button onClick={onSignUpClick} className="cta-primary" style={{ padding: "14px 36px" }}>Unlock All 23 Tools →</button>
-            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 10 }}>Free tier includes 5 tabs · Pro unlocks everything</p>
+            <button onClick={onSignUpClick} className="cta-primary" style={{ padding: "14px 36px" }}>Unlock All 23 Tools ?</button>
+            <p style={{ fontSize: 11, color: T.textMuted, marginTop: 10 }}>Free tier includes 5 tabs � Pro unlocks everything</p>
           </div>
         </div>
       </section>
 
-      {/* ── VS COMPETITION ── */}
+      {/* -- VS COMPETITION -- */}
       <section style={{ padding: "80px 40px", background: `linear-gradient(180deg,transparent,${T.surface} 30%,${T.surface} 70%,transparent)` }}>
         <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 44 }}>
@@ -606,23 +602,23 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
               </thead>
               <tbody>
                 {[
-                  { f: "Property listings", v: ["✓", "✓", "✓"] },
-                  { f: "Developer financials (6yr)", v: ["✗", "✗", "✓"] },
+                  { f: "Property listings", v: ["?", "?", "?"] },
+                  { f: "Developer financials (6yr)", v: ["?", "?", "?"] },
                   { f: "Rental yield data", v: ["Basic", "Basic", "Full + net"] },
-                  { f: "ROI calculators", v: ["✗", "✗", "3 strategies"] },
-                  { f: "Risk assessment", v: ["✗", "✗", "9-factor"] },
-                  { f: "3-project comparison", v: ["✗", "✗", "✓"] },
-                  { f: "WhatsApp share", v: ["✗", "✗", "✓"] },
+                  { f: "ROI calculators", v: ["?", "?", "3 strategies"] },
+                  { f: "Risk assessment", v: ["?", "?", "9-factor"] },
+                  { f: "3-project comparison", v: ["?", "?", "?"] },
+                  { f: "WhatsApp share", v: ["?", "?", "?"] },
                   { f: "Mortgage calculator", v: ["Basic", "Basic", "EIBOR live"] },
-                  { f: "Golden Visa finder", v: ["✗", "✗", "✓"] },
-                  { f: "Arabic & 19 languages", v: ["✓", "✓", "✓"] },
+                  { f: "Golden Visa finder", v: ["?", "?", "?"] },
+                  { f: "Arabic & 19 languages", v: ["?", "?", "?"] },
                   { f: "Price", v: ["Free", "Free", "AED 99/mo"] },
                 ].map((row, i) => (
                   <tr key={i} style={{ borderBottom: `1px solid ${T.border}`, background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,.012)" }}>
                     <td style={{ padding: "10px 16px", fontSize: 13, color: T.textSecondary }}>{row.f}</td>
                     {row.v.map((v, j) => (
-                      <td key={j} style={{ padding: "10px 16px", textAlign: "center", fontSize: 13, color: j === 2 ? (v === "✗" ? T.textMuted : T.gold) : v === "✓" ? T.green : v === "✗" ? T.textMuted : T.textSecondary, fontWeight: j === 2 ? 600 : 400 }}>
-                        {v === "✓" ? <span style={{ color: j === 2 ? T.gold : T.green }}>✓</span> : v === "✗" ? <span style={{ color: T.textMuted }}>—</span> : v}
+                      <td key={j} style={{ padding: "10px 16px", textAlign: "center", fontSize: 13, color: j === 2 ? (v === "?" ? T.textMuted : T.gold) : v === "?" ? T.green : v === "?" ? T.textMuted : T.textSecondary, fontWeight: j === 2 ? 600 : 400 }}>
+                        {v === "?" ? <span style={{ color: j === 2 ? T.gold : T.green }}>?</span> : v === "?" ? <span style={{ color: T.textMuted }}>�</span> : v}
                       </td>
                     ))}
                   </tr>
@@ -633,7 +629,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-      {/* ── PRICING ── */}
+      {/* -- PRICING -- */}
       <section id="pricing" style={{ padding: "100px 40px" }}>
         <div style={{ maxWidth: 1060, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 44 }}>
@@ -660,7 +656,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
               </div>
               {["5 project previews", "Basic market overview", "Community search", "Currency converter"].map((f, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", fontSize: 13, color: T.textSecondary }}>
-                  <span style={{ color: T.green }}>✓</span>{f}
+                  <span style={{ color: T.green }}>?</span>{f}
                 </div>
               ))}
               <button onClick={() => onSignUpClick("free")} className="cta-outline" style={{ width: "100%", justifyContent: "center", padding: "12px 0", marginTop: 24 }}>Get Started Free</button>
@@ -668,7 +664,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
 
             {/* PRO */}
             <div style={{ background: T.surface, borderRadius: 16, padding: 28, border: `2px solid ${T.gold}`, position: "relative", boxShadow: `0 0 40px rgba(212,168,67,.15)` }}>
-              <div style={{ position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)", padding: "4px 16px", borderRadius: 12, background: T.gold, color: T.bg, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>⭐ MOST POPULAR</div>
+              <div style={{ position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)", padding: "4px 16px", borderRadius: 12, background: T.gold, color: T.bg, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>? MOST POPULAR</div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
                 <h3 style={{ fontSize: 18, fontWeight: 700, color: T.white }}>Pro</h3>
                 <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: "rgba(16,185,129,.12)", color: T.green, fontWeight: 700, border: "1px solid rgba(16,185,129,.25)" }}>7-DAY FREE TRIAL</span>
@@ -679,14 +675,14 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                 <span style={{ fontFamily: "'Fraunces',serif", fontSize: 42, fontWeight: 900, color: T.gold }}>{proPrice}</span>
                 <span style={{ fontSize: 13, color: T.textMuted }}>/month</span>
               </div>
-              {billingAnnual && <p style={{ fontSize: 11, color: T.green, marginBottom: 16 }}>Billed AED {proPrice * 12}/year · Save AED {(99 - proPrice) * 12}</p>}
-              {["All 48+ projects — full data", "Multi-year developer financials", "Rental yields & ROI calculators", "Risk assessment (9 factors)", "3-project comparison tool", "Mortgage & flip calculators", "Portfolio tracker + price alerts", "WhatsApp share any project", "All 23 dashboard tools", "Arabic + 19 languages", "Priority email support"].map((f, i) => (
+              {billingAnnual && <p style={{ fontSize: 11, color: T.green, marginBottom: 16 }}>Billed AED {proPrice * 12}/year � Save AED {(99 - proPrice) * 12}</p>}
+              {["All 48+ projects � full data", "Multi-year developer financials", "Rental yields & ROI calculators", "Risk assessment (9 factors)", "3-project comparison tool", "Mortgage & flip calculators", "Portfolio tracker + price alerts", "WhatsApp share any project", "All 23 dashboard tools", "Arabic + 19 languages", "Priority email support"].map((f, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", fontSize: 13, color: T.textSecondary }}>
-                  <span style={{ color: T.green }}>✓</span>{f}
+                  <span style={{ color: T.green }}>?</span>{f}
                 </div>
               ))}
-              <button onClick={() => onSignUpClick("pro")} className="cta-primary" style={{ width: "100%", justifyContent: "center", padding: "13px 0", marginTop: 20 }}>Start 7-Day Free Trial →</button>
-              <p style={{ fontSize: 10, color: T.textMuted, marginTop: 8, textAlign: "center" }}>No credit card · Cancel anytime</p>
+              <button onClick={() => onSignUpClick("pro")} className="cta-primary" style={{ width: "100%", justifyContent: "center", padding: "13px 0", marginTop: 20 }}>Start 7-Day Free Trial ?</button>
+              <p style={{ fontSize: 10, color: T.textMuted, marginTop: 8, textAlign: "center" }}>No credit card � Cancel anytime</p>
             </div>
 
             {/* ENTERPRISE */}
@@ -698,31 +694,31 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                 <span style={{ fontFamily: "'Fraunces',serif", fontSize: 42, fontWeight: 900, color: T.white }}>{entPrice}</span>
                 <span style={{ fontSize: 13, color: T.textMuted }}>/month</span>
               </div>
-              {["Everything in Pro", "Multi-user team accounts", "Dedicated account manager", "Developer-level raw data", "PDF reports ⏳", "API data access ⏳", "Custom branded dashboards ⏳", "White-label options ⏳"].map((f, i) => (
+              {["Everything in Pro", "Multi-user team accounts", "Dedicated account manager", "Developer-level raw data", "PDF reports ?", "API data access ?", "Custom branded dashboards ?", "White-label options ?"].map((f, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", fontSize: 13, color: T.textSecondary }}>
-                  <span style={{ color: T.green }}>✓</span>{f}
+                  <span style={{ color: T.green }}>?</span>{f}
                 </div>
               ))}
-              <a href="mailto:hello@dxbanalytics.com?subject=DXB%20Analytics%20Enterprise" className="cta-outline" style={{ width: "100%", justifyContent: "center", padding: "12px 0", marginTop: 20, display: "flex", textDecoration: "none" }}>Contact Us →</a>
-              <p style={{ fontSize: 10, color: T.textMuted, marginTop: 10, textAlign: "center" }}>⏳ Launching Q3 2026</p>
+              <a href="mailto:hello@dxbanalytics.com?subject=DXB%20Analytics%20Enterprise" className="cta-outline" style={{ width: "100%", justifyContent: "center", padding: "12px 0", marginTop: 20, display: "flex", textDecoration: "none" }}>Contact Us ?</a>
+              <p style={{ fontSize: 10, color: T.textMuted, marginTop: 10, textAlign: "center" }}>? Launching Q3 2026</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── DATA SOURCES ── */}
+      {/* -- DATA SOURCES -- */}
       <section style={{ padding: "56px 40px", borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
         <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
           <p style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: 2, textTransform: "uppercase", marginBottom: 20 }}>Verified Data From</p>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 10 }}>
-            {["Dubai Land Department", "Developer IR Reports", "DXBinteract", "Knight Frank", "ValuStrat", "Engel & Völkers", "BetterHomes", "Bayut"].map((src, i) => (
+            {["Dubai Land Department", "Developer IR Reports", "DXBinteract", "Knight Frank", "ValuStrat", "Engel & V�lkers", "BetterHomes", "Bayut"].map((src, i) => (
               <span key={i} style={{ fontSize: 12, color: T.textSecondary, padding: "7px 14px", borderRadius: 8, background: T.surface, border: `1px solid ${T.border}` }}>{src}</span>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── ROADMAP ── */}
+      {/* -- ROADMAP -- */}
       <section style={{ padding: "100px 40px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 52 }}>
@@ -732,9 +728,9 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           </div>
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }}>
             {[
-              { phase: "Phase 1", status: "LIVE NOW", color: T.green, title: "Dubai — First Developer", desc: "48 projects across 11 communities — full financials, yields, risk, ROI, and 23 professional tools.", bg: "rgba(16,185,129,.05)" },
-              { phase: "Phase 2", status: "Q3 2026", color: T.gold, title: "Dubai — Top 10 Developers", desc: "DAMAC, Sobha, Meraas, Nakheel, Binghatti, Azizi, Tiger, Danube — same depth, same quality.", bg: T.goldMuted },
-              { phase: "Phase 3", status: "2027", color: T.blue, title: "Full GCC Market", desc: "All 228+ Dubai developers, Abu Dhabi, Saudi Arabia — every transaction, live DLD data feeds.", bg: "rgba(59,130,246,.05)" },
+              { phase: "Phase 1", status: "LIVE NOW", color: T.green, title: "Dubai � First Developer", desc: "48 projects across 11 communities � full financials, yields, risk, ROI, and 23 professional tools.", bg: "rgba(16,185,129,.05)" },
+              { phase: "Phase 2", status: "Q3 2026", color: T.gold, title: "Dubai � Top 10 Developers", desc: "DAMAC, Sobha, Meraas, Nakheel, Binghatti, Azizi, Tiger, Danube � same depth, same quality.", bg: T.goldMuted },
+              { phase: "Phase 3", status: "2027", color: T.blue, title: "Full GCC Market", desc: "All 228+ Dubai developers, Abu Dhabi, Saudi Arabia � every transaction, live DLD data feeds.", bg: "rgba(59,130,246,.05)" },
             ].map((item, i) => (
               <div key={i} style={{ background: item.bg, borderRadius: 16, padding: 28, border: `1px solid rgba(212,168,67,.08)` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
@@ -749,7 +745,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-      {/* ── FAQ ── */}
+      {/* -- FAQ -- */}
       <section id="faq" style={{ padding: "100px 40px", background: `linear-gradient(180deg,transparent,${T.surface} 20%,${T.surface} 80%,transparent)` }}>
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 52 }}>
@@ -770,13 +766,13 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ── */}
+      {/* -- TESTIMONIALS -- */}
       <section style={{ padding: "100px 40px", background: `linear-gradient(180deg,transparent,${T.surface} 20%,${T.surface} 80%,transparent)` }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 52 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: 2, textTransform: "uppercase" }}>Real Professionals. Real Results.</span>
             <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 34, fontWeight: 900, color: T.white, marginTop: 10 }}>Why Dubai's Top Agents Choose DXB Analytics</h2>
-            <p style={{ fontSize: 14, color: T.textSecondary, marginTop: 10, maxWidth: 520, margin: "10px auto 0" }}>From individual agents to investment funds — professionals who need an edge use DXB Analytics daily.</p>
+            <p style={{ fontSize: 14, color: T.textSecondary, marginTop: 10, maxWidth: 520, margin: "10px auto 0" }}>From individual agents to investment funds � professionals who need an edge use DXB Analytics daily.</p>
           </div>
 
           {/* Row 1 */}
@@ -784,17 +780,17 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             {[
               {
                 quote: "My clients used to ask me about yields and I'd have to go away and research. Now I pull up DXB Analytics in the meeting and show them the exact gross/net yield, 5-year ROI and risk score on the spot. It's completely changed how I present deals.",
-                name: "Ahmed Al Rashidi", role: "Senior Property Consultant", company: "Emaar Specialist · JVC & Dubai Hills",
+                name: "Ahmed Al Rashidi", role: "Senior Property Consultant", company: "Emaar Specialist � JVC & Dubai Hills",
                 initials: "AA", color: T.gold, rating: 5, stat: "Closed 3 extra deals last quarter",
               },
               {
-                quote: "As a UK-based investor I was flying blind on Dubai yields. The EIBOR mortgage calculator alone saved me from a bad decision — I could see exactly what my monthly payments would be vs rental income before committing. Worth every penny.",
-                name: "James Whitfield", role: "Property Investor", company: "London to Dubai · AED 4M portfolio",
+                quote: "As a UK-based investor I was flying blind on Dubai yields. The EIBOR mortgage calculator alone saved me from a bad decision � I could see exactly what my monthly payments would be vs rental income before committing. Worth every penny.",
+                name: "James Whitfield", role: "Property Investor", company: "London to Dubai � AED 4M portfolio",
                 initials: "JW", color: T.teal, rating: 5, stat: "ROI calculated before purchase",
               },
               {
-                quote: "I manage 12 agents and we all use DXB Analytics. The project intelligence and comparison tool is a game changer — agents send clients a full breakdown in one tap instead of copy-pasting from three different websites. Our lead response rate improved noticeably.",
-                name: "Fatima Al Zaabi", role: "Brokerage Manager", company: "Team of 12 · Marina & Downtown",
+                quote: "I manage 12 agents and we all use DXB Analytics. The project intelligence and comparison tool is a game changer � agents send clients a full breakdown in one tap instead of copy-pasting from three different websites. Our lead response rate improved noticeably.",
+                name: "Fatima Al Zaabi", role: "Brokerage Manager", company: "Team of 12 � Marina & Downtown",
                 initials: "FA", color: "#8B5CF6", rating: 5, stat: "Team productivity up significantly",
               },
             ].map((t, i) => (
@@ -802,11 +798,11 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                 onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(212,168,67,0.3)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.3)"; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}>
                 <div style={{ display: "flex", gap: 3 }}>
-                  {[...Array(t.rating)].map((_, j) => <span key={j} style={{ color: T.gold, fontSize: 13 }}>★</span>)}
+                  {[...Array(t.rating)].map((_, j) => <span key={j} style={{ color: T.gold, fontSize: 13 }}>?</span>)}
                 </div>
                 <p style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.75, flex: 1, fontStyle: "italic" }}>"{t.quote}"</p>
                 <div style={{ padding: "6px 12px", background: `${t.color}10`, border: `1px solid ${t.color}25`, borderRadius: 8, fontSize: 11, fontWeight: 700, color: t.color, display: "inline-block", alignSelf: "flex-start" }}>
-                  📈 {t.stat}
+                  ?? {t.stat}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
                   <div style={{ width: 40, height: 40, borderRadius: "50%", background: `${t.color}20`, border: `2px solid ${t.color}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: t.color, flexShrink: 0 }}>{t.initials}</div>
@@ -825,12 +821,12 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             {[
               {
                 quote: "The multi-year financial data and revenue backlog is something I couldn't find consolidated anywhere else. When I show institutional clients AED 155B backlog with a chart, they immediately understand the investment thesis.",
-                name: "Ravi Sharma", role: "Real Estate Broker · RERA Certified", company: "NRI Investment Specialist · Dubai",
+                name: "Ravi Sharma", role: "Real Estate Broker � RERA Certified", company: "NRI Investment Specialist � Dubai",
                 initials: "RS", color: T.blue, rating: 5, stat: "Institutional-grade analysis",
               },
               {
                 quote: "I was skeptical about another real estate tool but the 9-factor risk assessment is genuinely different. I use it to screen projects for my fund before any due diligence. It saved us from two questionable deals this year.",
-                name: "Sofia Petrov", role: "Real Estate Fund Manager", company: "European Family Office · Dubai",
+                name: "Sofia Petrov", role: "Real Estate Fund Manager", company: "European Family Office � Dubai",
                 initials: "SP", color: T.orange, rating: 5, stat: "2 risky deals flagged early",
               },
             ].map((t, i) => (
@@ -838,11 +834,11 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
                 onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(212,168,67,0.3)"; e.currentTarget.style.transform = "translateY(-4px)"; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = "none"; }}>
                 <div style={{ display: "flex", gap: 3 }}>
-                  {[...Array(t.rating)].map((_, j) => <span key={j} style={{ color: T.gold, fontSize: 13 }}>★</span>)}
+                  {[...Array(t.rating)].map((_, j) => <span key={j} style={{ color: T.gold, fontSize: 13 }}>?</span>)}
                 </div>
                 <p style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.75, flex: 1, fontStyle: "italic" }}>"{t.quote}"</p>
                 <div style={{ padding: "6px 12px", background: `${t.color}10`, border: `1px solid ${t.color}25`, borderRadius: 8, fontSize: 11, fontWeight: 700, color: t.color, display: "inline-block", alignSelf: "flex-start" }}>
-                  📈 {t.stat}
+                  ?? {t.stat}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
                   <div style={{ width: 40, height: 40, borderRadius: "50%", background: `${t.color}20`, border: `2px solid ${t.color}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: t.color, flexShrink: 0 }}>{t.initials}</div>
@@ -858,7 +854,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             <div style={{ background: `linear-gradient(135deg, rgba(212,168,67,0.08), rgba(212,168,67,0.03))`, borderRadius: 16, padding: 28, border: `1px solid rgba(212,168,67,0.2)`, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", gap: 16 }}>
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 56, fontWeight: 900, color: T.gold, lineHeight: 1 }}>4.9</div>
               <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
-                {[...Array(5)].map((_, i) => <span key={i} style={{ color: T.gold, fontSize: 20 }}>★</span>)}
+                {[...Array(5)].map((_, i) => <span key={i} style={{ color: T.gold, fontSize: 20 }}>?</span>)}
               </div>
               <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.7 }}>Average rating from Dubai real estate professionals</div>
               <div style={{ width: "100%", height: "1px", background: `rgba(212,168,67,0.15)` }} />
@@ -872,10 +868,10 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
           {/* Trust badges */}
           <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 48, flexWrap: "wrap" }}>
             {[
-              { icon: "🔒", label: "Bank-grade Security", sub: "Firebase encrypted" },
-              { icon: "📊", label: "Verified Data", sub: "DLD · Developer IR · Knight Frank" },
-              { icon: "🌍", label: "20 Languages", sub: "Including Arabic & Urdu" },
-              { icon: "⚡", label: "Real-time Updates", sub: "Live market data" },
+              { icon: "??", label: "Bank-grade Security", sub: "Firebase encrypted" },
+              { icon: "??", label: "Verified Data", sub: "DLD � Developer IR � Knight Frank" },
+              { icon: "??", label: "20 Languages", sub: "Including Arabic & Urdu" },
+              { icon: "?", label: "Real-time Updates", sub: "Live market data" },
             ].map((badge, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 20px", borderRadius: 12, background: T.surface, border: `1px solid ${T.border}` }}>
                 <span style={{ fontSize: 20 }}>{badge.icon}</span>
@@ -889,7 +885,7 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
         </div>
       </section>
 
-            {/* ── FINAL CTA ── */}
+            {/* -- FINAL CTA -- */}
       <section style={{ padding: "100px 40px", textAlign: "center", position: "relative", overflow: "hidden" }}>
         <div className="hero-glow" style={{ top: "-100px" }} />
         <div style={{ position: "relative", zIndex: 1, maxWidth: 640, margin: "0 auto" }}>
@@ -900,19 +896,19 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             Ready to close deals<br/>
             <span style={{ color: T.gold }}>with data, not guesswork?</span>
           </h2>
-          <p style={{ fontSize: 16, color: T.textSecondary, marginBottom: 32 }}>Join Dubai's most informed agents and investors. {liveStats.users > 10 ? `${liveStats.users}+ professionals already inside.` : "7-day Pro trial — free, no card needed."}</p>
+          <p style={{ fontSize: 16, color: T.textSecondary, marginBottom: 32 }}>Join Dubai's most informed agents and investors. {liveStats.users > 10 ? `${liveStats.users}+ professionals already inside.` : "7-day Pro trial � free, no card needed."}</p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={onSignUpClick} className="cta-primary" style={{ padding: "18px 48px", fontSize: 17 }}>Start Free Trial →</button>
+            <button onClick={onSignUpClick} className="cta-primary" style={{ padding: "18px 48px", fontSize: 17 }}>Start Free Trial ?</button>
             <a href="mailto:hello@dxbanalytics.com?subject=DXB%20Analytics%20Enquiry" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "18px 32px", background: "transparent", borderRadius: 12, color: T.gold, fontSize: 15, fontWeight: 700, textDecoration: "none", border: `1.5px solid ${T.gold}`, transition: "all .2s" }}
               onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,.1)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-              ✉️ Talk to Us
+              ?? Talk to Us
             </a>
           </div>
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
+      {/* -- FOOTER -- */}
       <footer style={{ padding: "40px", borderTop: `1px solid ${T.border}`, background: T.surface }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
@@ -941,12 +937,13 @@ export default function LandingPage({ onLoginClick, onSignUpClick }) {
             </div>
           </div>
           <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 16, textAlign: "center" }}>
-            <p style={{ fontSize: 11, color: T.textMuted }}>© 2026 DXB Analytics · Dubai, UAE · For informational purposes only — not financial or investment advice · Data sourced from DLD, developer IR reports, Knight Frank, ValuStrat</p>
+            <p style={{ fontSize: 11, color: T.textMuted }}>� 2026 DXB Analytics � Dubai, UAE � For informational purposes only � not financial or investment advice � Data sourced from DLD, developer IR reports, Knight Frank, ValuStrat</p>
           </div>
         </div>
       </footer>
     </div>
   );
 }
+
 
 
