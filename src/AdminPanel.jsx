@@ -20505,6 +20505,8 @@ export default function AdminPanel() {
 
             const addLead = async () => {
               if (!addLeadForm.name && !addLeadForm.email) { notify("Name or email required"); return; }
+              if (addLeadForm.email && !/^[^s@]+@[^s@]+.[^s@]+$/.test(addLeadForm.email)) { notify("Invalid email format"); return; }
+              if (addLeadForm.phone && addLeadForm.phone.replace(/D/g, "").length < 7) { notify("Phone number too short"); return; }
               setAddLeadLoading(true);
               try {
                 const id = `lead_${Date.now()}`;
@@ -20512,6 +20514,8 @@ export default function AdminPanel() {
                 await setDoc(doc(db, "leads", id), {
                   ...addLeadForm,
                   phone: cleanPhone,
+                  budget: addLeadForm.budget ? parseFloat(String(addLeadForm.budget).replace(/[^0-9.]/g, "")) || "" : "",
+                  project: ["nan", "null", "NaN", "undefined"].includes(String(addLeadForm.project)) ? "" : addLeadForm.project,
                   status: "New",
                   createdAt: new Date().toISOString(),
                   activity: [{ type: "created", by: adminUser?.email || "admin", at: new Date().toISOString(), note: "Lead created" }],
@@ -21844,6 +21848,9 @@ export default function AdminPanel() {
                           </select>
                         </div>
                         {/* Duplicate email warning */}
+                        {addLeadForm.phone && leads.some(l => l.phone && l.phone.replace(/D/g,"") === addLeadForm.phone.replace(/D/g,"") && addLeadForm.phone.replace(/D/g,"").length > 6) && (
+                          <div style={{ fontSize: 10, color: T.red, marginTop: 4 }}>A lead with this phone already exists.</div>
+                        )}
                         {addLeadForm.email && leads.some(l => l.email && l.email.toLowerCase() === addLeadForm.email.toLowerCase()) && (
                           <div style={{ gridColumn: "1/-1", padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
                             <span style={{ fontSize: 14 }}>⚠️</span>
