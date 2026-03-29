@@ -620,7 +620,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true); setError("");
     try {
-      await signInWithRedirect(auth, googleProvider);
+      await signInWithPopup(auth, googleProvider);
     } catch (err) {
       setError("Google sign-in failed. Please try again.");
     }
