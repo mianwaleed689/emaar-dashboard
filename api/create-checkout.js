@@ -12,7 +12,7 @@
 //    NEXT_PUBLIC_URL    = https://emaar-dashboard.vercel.app  (your Vercel URL)
 // 5. Deploy — Stripe will work automatically
 
-import Stripe from "stripe";
+const Stripe = require("stripe");
 
 // ─── YOUR STRIPE PRICE IDs ─── (replace with real ones from Stripe Dashboard)
 const STRIPE_PRICES = {
@@ -20,7 +20,7 @@ const STRIPE_PRICES = {
   Enterprise: "price_REPLACE_WITH_ENTERPRISE_PRICE_ID", // AED 499/month
 };
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Only allow POST
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });

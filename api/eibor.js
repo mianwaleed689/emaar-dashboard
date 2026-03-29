@@ -1,7 +1,7 @@
 // api/eibor.js — Vercel serverless function
 // Scrapes live EIBOR from fcmb.ae (re-publishes CBUAE daily rates)
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate");
 
