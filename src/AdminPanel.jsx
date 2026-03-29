@@ -191,7 +191,7 @@ function EmailCampaignsTab({ T, db, notify, adminUser, leads, leadsTotal, fetchL
    --------------------------------------------------------------- */
 
 /* --- RESEND EMAIL HELPER --- */
-const RESEND_KEY = "re_FGZe2ET2_9pDv9iEV2MUTQXg1QHJeV3fs";
+const RESEND_KEY = process.env.REACT_APP_RESEND_API_KEY;
 const sendResend = async (to, subject, bodyText) => {
   const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
     <div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px">
@@ -10369,7 +10369,7 @@ function UsersTab({ users, filteredUsers, fetchUsers, changeTier, deleteUser, su
                     const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px"><div style="border-bottom:2px solid #D4A843;padding-bottom:12px;margin-bottom:20px"><h2 style="color:#D4A843;margin:0">DXB Analytics</h2></div><div style="color:#1E293B;font-size:14px;line-height:1.7;white-space:pre-wrap">${bodyText}</div></div>`;
                     await fetch("https://api.resend.com/emails", {
                       method: "POST",
-                      headers: { "Authorization": "Bearer re_FGZe2ET2_9pDv9iEV2MUTQXg1QHJeV3fs", "Content-Type": "application/json" },
+                      headers: { "Authorization": `Bearer ${process.env.REACT_APP_RESEND_API_KEY}`, "Content-Type": "application/json" },
                       body: JSON.stringify({ from: "DXB Analytics <onboarding@resend.dev>", to: user.email, subject: bulkEmailSubject, html }),
                     });
                     sent++;
