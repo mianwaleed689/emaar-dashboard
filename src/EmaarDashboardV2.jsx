@@ -598,7 +598,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             new_value: "Your 7-day Pro Trial is now active. Explore 48+ projects, yields, ROI data and more.",
             old_value: "New Account",
             updated_at: now.toLocaleDateString("en-AE"),
-          }, "USkwUhp0csGCVDkdQ");
+          }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
         } catch(e) {}
       }
       onLogin(u.email);
@@ -671,7 +671,7 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
           new_value: "Your 7-day Pro Trial is active. Check your inbox to verify your email address.",
           old_value: "New Account",
           updated_at: now.toLocaleDateString("en-AE"),
-        }, "USkwUhp0csGCVDkdQ");
+        }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
       } catch(e) {}
       setScreen("verify");
     } catch (err) {
@@ -2075,7 +2075,7 @@ export default function EmaarDashboardV2() {
                       change_type: "⏰ Your Pro Trial Has Expired",
                       new_value: "Your 7-day trial has ended. Upgrade now to keep full access to 48+ projects, yield data, ROI tools and more.",
                       old_value: "Pro Trial", updated_at: new Date().toLocaleDateString("en-AE"),
-                    }, "USkwUhp0csGCVDkdQ");
+                    }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
                     await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trialExpired: true }, { merge: true });
                   } catch(e) {}
                 }
@@ -2090,7 +2090,7 @@ export default function EmaarDashboardV2() {
                       change_type: `⚠️ Your Trial Expires in ${daysLeft} Day${daysLeft !== 1 ? "s" : ""}`,
                       new_value: `Only ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left on your Pro trial. Don't lose access — upgrade now to keep all features.`,
                       old_value: "Pro Trial Active", updated_at: new Date().toLocaleDateString("en-AE"),
-                    }, "USkwUhp0csGCVDkdQ");
+                    }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
                     await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial3d: true }, { merge: true });
                   } catch(e) {}
                 }
@@ -2103,7 +2103,7 @@ export default function EmaarDashboardV2() {
                       change_type: "🚨 Last Day of Your Pro Trial!",
                       new_value: "Today is your last day. After midnight your account moves to Free and you lose access to 48 projects, community yields, ROI data and PDF reports.",
                       old_value: "Pro Trial — Final Day", updated_at: new Date().toLocaleDateString("en-AE"),
-                    }, "USkwUhp0csGCVDkdQ");
+                    }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
                     await setDoc(doc(db, "users", firebaseUser.uid), { emailSent_trial1d: true }, { merge: true });
                   } catch(e) {}
                 }
@@ -2399,7 +2399,7 @@ export default function EmaarDashboardV2() {
             new_value: msg.body,
             old_value: u?.tier || "free",
             updated_at: now.toLocaleDateString("en-AE"),
-          }, "USkwUhp0csGCVDkdQ");
+          }, import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
         } catch(e) {}
       }
     } catch (err) {
