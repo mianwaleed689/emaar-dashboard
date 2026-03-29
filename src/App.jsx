@@ -51,8 +51,8 @@ function HomeRoute() {
   if (status === "loggedin") return <Navigate to="/dashboard" replace />;
   return (
     <LandingPage
-      onLoginClick={() => navigate("/?auth=login")}
-      onSignUpClick={() => navigate("/?auth=signup")}
+      onLoginClick={() => navigate("/dashboard?auth=login")}
+      onSignUpClick={() => navigate("/dashboard?auth=signup")}
     />
   );
 }
